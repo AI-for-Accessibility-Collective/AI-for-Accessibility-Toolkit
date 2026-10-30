@@ -125,10 +125,10 @@ export function buildMeta({ version = '0.0.0' } = {}) {
     },
     llm: {
       provider: 'gemini',
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       wiredVia: 'librarian.setGeminiCaller(serverGeminiCaller) at boot (server/src/gemini.js)',
       freeWithoutClientKey: ['extract', 'reflect', 'buildSkill', 'interpretNeedsPrompt'],
-      note: "Server holds GEMINI_API_KEY. Without it, the caller throws 'no-server-key' the moment the slow lane tries to use it — the fast lane (everything else) is unaffected. Applications making their own direct LLM calls keep using their own keys; nothing here proxies arbitrary LLM traffic.",
+      note: "Server holds WS_GEMINI_KEY (or GEMINI_API_KEY); GEMINI_MODEL overrides the model. Without a key, the caller throws 'no-server-key' the moment the slow lane tries to use it — the fast lane (everything else) is unaffected. Applications making their own direct LLM calls keep using their own keys; nothing here proxies arbitrary LLM traffic.",
     },
     storage: {
       kv: 'areas local/sync per uid -> users/<uid>/<area>.json',

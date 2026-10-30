@@ -72,6 +72,21 @@
             <div class="editor-actions"><div><button id="apply" class="primary" type="button" disabled>Apply to toolkit</button><button id="save" class="secondary" type="button">Save preset</button></div><span class="hint">Presets are saved in your account when you are signed in, otherwise in this browser.</span></div>
           </section>
         </div>
+        <section id="learned" class="panel learned-panel" aria-labelledby="learned-heading">
+          <div class="section-heading"><div><p class="eyebrow">LEARNING</p><h2 id="learned-heading">What your toolkit learned</h2></div><label class="toggle-control"><input type="checkbox" id="learned-paused" disabled> Pause learning</label></div>
+          <p class="hint">Your toolkit learns from what you do with your adapters, such as which ones you run in your browser and where you switch one off. It suggests changes to your profile, and your profile changes only when you accept one.</p>
+          <p id="learned-summary" class="learned-summary" aria-live="polite">Sign in to see what your toolkit learned.</p>
+          <div class="learned-columns">
+            <div><h3>Suggested changes</h3><ul id="learned-proposals" class="learned-list"></ul></div>
+            <div><h3>What it remembers</h3><ul id="learned-memories" class="learned-list"></ul></div>
+          </div>
+          <div class="card-actions learned-actions">
+            <button type="button" id="learned-now" class="secondary" disabled>Learn now</button>
+            <button type="button" id="learned-refresh" class="text-button" disabled>Refresh</button>
+            <button type="button" id="learned-reset" class="text-button" disabled>Reset suggestions</button>
+            <button type="button" id="learned-reset-all" class="text-button" disabled>Reset everything learned</button>
+          </div>
+        </section>
       </section>
       <section id="page-apps" class="page" hidden>
         <div class="page-heading"><div><p class="eyebrow">CONNECT &amp; TRY</p><h1 id="apps-heading">Apps</h1><p class="muted">Apps built with the Adapter MCP SDK, grouped by app: what each shares through the registry and installs from it, and, while an app is open, live control of its adapters. Hide an app you are not working on.</p></div><button id="connect-app-toggle" class="secondary" type="button" aria-controls="connect-app" aria-expanded="false">+ Connect an app</button></div>

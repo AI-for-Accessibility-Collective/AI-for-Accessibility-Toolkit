@@ -241,9 +241,17 @@ The host-agnostic surface a modality-neutral control layer actuates through.
 | `readPage` | `(mode?: 'outline'\|'text', chunk?: number) => Promise<ReadPageResult>` | Extract page text. |
 | `pageAction` | `(action: string, target?: string, text?: string) => Promise<PageActionResult>` | Perform one page interaction (scroll/click/type/focus-nav/navigate/etc). |
 
-**Provided default/no-op implementations:** `noopDemo` (ports/index.js), `noopSensors` (ports/index.js), `noopConsent` (ports/index.js), `noopScheduler` (ports/index.js), `systemClock` (ports/index.js), `noopActuation` (ports/actuation.js).
+**Provided default/no-op implementations:** `noopMedia` (ports/index.js), `noopDemo` (ports/index.js), `noopSensors` (ports/index.js), `noopConsent` (ports/index.js), `noopScheduler` (ports/index.js), `systemClock` (ports/index.js), `noopActuation` (ports/actuation.js).
 
 ### Supporting types (referenced by `ActuationPort`)
+
+#### Media
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `put` | `(id: string, image: {mimeType: string, data: string}) => Promise<void>` | Store one image (`data` is base64). |
+| `get` | `(id: string) => Promise<{mimeType: string, data: string}\|null>` | Read one image back, or null when it is gone. |
+| `delete` | `(id: string) => Promise<void>` | Forget one image. |
 
 #### SurfaceTab
 
@@ -365,6 +373,7 @@ Everything importable from `@ai4a11y/toolkit` (the package root).
 | `EXPORT_PREFIX` | re-export | ./sync/index.js |
 | `INBOX_KEY` | re-export | ./sync/index.js |
 | `ENVELOPE_VERSION` | re-export | ./sync/index.js |
+| `noopMedia` | star-re-export | ./ports/index.js |
 | `noopDemo` | star-re-export | ./ports/index.js |
 | `noopSensors` | star-re-export | ./ports/index.js |
 | `noopConsent` | star-re-export | ./ports/index.js |

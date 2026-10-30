@@ -13,12 +13,17 @@ import { chromium } from 'playwright';
 import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
-import { createAdapterProvider, connectToToolkit, fromToggleAdapter, defineDescriptor } from '../../toolkit/adapter-mcp/index.js';
+import { createAdapterProvider, connectToToolkit, fromToggleAdapter, defineDescriptor, createRegistryClient } from '../../toolkit/adapter-mcp/index.js';
 
 const ADMIN = 'test-admin-password';
 const dir = await mkdtemp(path.join(tmpdir(), 'console-e2e-'));
 const store = fileStore(dir);
-const app = createApp({ store, adminPassword: ADMIN, toolkitHost: createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } }) });
+// The stub LLM learning answers with: one memory and one suggested profile change.
+const LLM_ANSWER = JSON.stringify({
+  operations: [{ op: 'ADD', record: { text: 'Prefers bigger buttons when shopping.', scope: 'general', tier: 'preference' } }],
+  proposals: [{ aspect: 'profile.largeTargets', aspectLabel: 'Bigger buttons and links', change: { op: 'profile-set', path: 'fields.largeTargets', value: true }, rationale: 'You keep choosing bigger buttons.' }],
+});
+const app = createApp({ store, adminPassword: ADMIN, toolkitHost: createToolkitHost({ store, geminiCaller: async () => LLM_ANSWER }) });
 const server = http.createServer(app);
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -178,6 +183,35 @@ try {
   await dev.click('#save');
   await dev.waitForFunction(() => document.getElementById('status').textContent.includes('in your account'));
 
+  // What the toolkit learned: an observation, Learn now, a suggestion to accept, pause, reset.
+  const statusIs = (text) => dev.waitForFunction(t => document.getElementById('status').textContent.startsWith(t), text);
+  await dev.locator('#learned-summary', { hasText: 'Learning is on.' }).waitFor();
+  assert.match(await dev.locator('#learned-proposals').innerText(), /No suggestions waiting/);
+  await createRegistryClient({ url: base, token: defaultToken }).profile.observe({ text: 'Turned on Big buttons on https://example.com.', origin: 'https://example.com', type: 'setting-change' });
+  await dev.click('#learned-refresh');
+  await dev.locator('#learned-summary', { hasText: '1 observation to learn from.' }).waitFor();
+  await dev.click('#learned-now');
+  await statusIs('Learned from 1 observation.');
+  assert.match(await dev.locator('#learned-memories').innerText(), /Prefers bigger buttons when shopping\.\s*everywhere/);
+  assert.match(await dev.locator('#learned-proposals').innerText(), /Bigger buttons and links\s*Set largeTargets to true\.\s*You keep choosing bigger buttons\./);
+  await dev.getByRole('button', { name: 'Accept: Bigger buttons and links' }).click();
+  await statusIs('Accepted: Bigger buttons and links.');
+  await dev.waitForFunction(() => /"largeTargets": true/.test(document.getElementById('profile-json').value));
+  await dev.check('#learned-paused');
+  await statusIs('Learning is paused.');
+  await dev.uncheck('#learned-paused');
+  await statusIs('Learning is on again.');
+  await dev.click('#learned-reset');
+  await statusIs('Reset the suggestions: cleared 1');
+  await dev.locator('#learned-summary', { hasText: '0 of' }).waitFor();
+  dev.once('dialog', d => d.accept());
+  await dev.click('#learned-reset-all');
+  await statusIs('Reset everything learned: 1 memories');
+  assert.match(await dev.locator('#learned-memories').innerText(), /Nothing learned yet/);
+  await dev.setViewportSize({ width: 390, height: 844 });
+  assert.ok(await dev.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'the Profiles page fits a phone');
+  await dev.setViewportSize({ width: 1440, height: 1000 });
+
   // Mobile: nothing overflows the Apps page.
   await dev.setViewportSize({ width: 390, height: 844 });
   await dev.click('.nav-link[data-page="apps"]');
@@ -196,7 +230,7 @@ try {
   assert.equal(await dev.locator('#signin-form').isVisible(), true);
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Console browser workflow passed: admin accounts (single + bulk), sign-in, session reload, default and app tokens, an Adapter MCP app connecting, Try it (apply, read, undo, check), hide/show, account presets, mobile layout, sign-out.');
+  console.log('Console browser workflow passed: admin accounts (single + bulk), sign-in, session reload, default and app tokens, an Adapter MCP app connecting, Try it (apply, read, undo, check), hide/show, account presets, what the toolkit learned (learn now, accept, pause, reset), mobile layout, sign-out.');
 } finally {
   await link?.close().catch(() => {});
   await browser?.close();

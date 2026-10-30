@@ -7,6 +7,7 @@
 // be. From here a developer can also hide an app or forget one.
 
 import { createMcpClient, adapterClient, createRegistryClient } from '/sdk/adapter-mcp.js';
+import { visibilityControl } from './visibility.js';
 
 const $ = id => document.getElementById(id);
 const REDBIRD_KEY = 'ai4a11y.developer.redbird-url';
@@ -55,6 +56,7 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
   let apps = [];
   let hiddenApps = [];
   let shared = new Map(); // appId -> {published, sharedCount, installed}
+  let access = new Map(); // appId -> {declared, restricted, visibility}
   let signature = '';
   let timer = null;
   let active = false;
@@ -82,10 +84,13 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
       return;
     }
     try {
-      const [result, registry] = await Promise.all([
+      const rc = createRegistryClient({ url: client.base, token: client.token });
+      const [result, registry, visibility] = await Promise.all([
         client.apps.list(),
-        createRegistryClient({ url: client.base, token: client.token }).search({}).catch(() => ({ adapters: [] })),
+        rc.search({}).catch(() => ({ adapters: [] })),
+        rc.access.get().catch(() => ({ apps: [] })),
       ]);
+      access = new Map(visibility.apps.map(a => [a.app, a]));
       apps = result.apps;
       hiddenApps = result.hiddenApps;
       shared = new Map();
@@ -95,7 +100,7 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
         for (const app of a.installedIn || []) tally(app).installed++;
       }
       onLiveCount(apps.filter(a => a.live && !a.hidden).length);
-      const next = JSON.stringify([apps.map(a => [a.appId, a.hidden, a.live, a.connections.map(c => [c.providerId, c.live]), a.adapters.map(d => d.descriptorDigest)]), [...shared]]);
+      const next = JSON.stringify([apps.map(a => [a.appId, a.hidden, a.live, a.connections.map(c => [c.providerId, c.live]), a.adapters.map(d => d.descriptorDigest)]), [...shared], [...access]]);
       if (next !== signature || !quiet) { signature = next; render(); }
       else updateLiveDetails();
     } catch (error) {
@@ -203,6 +208,16 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
     meta.append(seen);
     group.append(meta);
     if (app.description) group.append(element('p', 'adapter-description app-description', app.description));
+    const visibility = access.get(app.appId);
+    group.append(visibilityControl({
+      id: `visibility-${app.appId}`, name: app.name, declared: visibility?.declared || 'user', restricted: visibility?.restricted || null, levels: ['app'],
+      onChange: (level) => run(async () => {
+        const client = getClient();
+        await createRegistryClient({ url: client.base, token: client.token }).access.restrict({ app: app.appId }, level);
+        await refresh();
+        status(level ? `Only ${app.name} can read what it gives the toolkit now.` : `${app.name} is back to what it declares.`);
+      }),
+    }));
     // What it shares through the registry, and what it took from others.
     const t = shared.get(app.appId);
     const line = element('p', 'adapter-group-id app-registry');

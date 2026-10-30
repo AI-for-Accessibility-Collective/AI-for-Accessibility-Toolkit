@@ -6,15 +6,17 @@
  * @param {import('../ports/index.js').Scheduler} [deps.scheduler]
  * @param {import('../ports/index.js').Consent} [deps.consent]
  * @param {import('../ports/index.js').DemoHook} [deps.demo]
+ * @param {import('../ports/index.js').Media|null} [deps.media]  Where observation images are kept; none drops them.
  * @returns the Librarian.
  */
-export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent, demo, }: {
+export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent, demo, media, }: {
     datastore: ReturnType<typeof import("./datastore.js").createDatastore>;
     taxonomy: import("./taxonomy.js").Taxonomy;
     clock: import("../ports/index.js").Clock;
     scheduler?: import("../ports/index.js").Scheduler | undefined;
     consent?: import("../ports/index.js").Consent | undefined;
     demo?: import("../ports/index.js").DemoHook | undefined;
+    media?: import("../ports/index.js").Media | null | undefined;
 }): {
     setGeminiCaller(fn: any): void;
     getProfile(): Promise<any>;
@@ -316,9 +318,15 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
     logObservation(obs: any): Promise<{
         logged: boolean;
         reason: string;
+        imagesDropped?: undefined;
+    } | {
+        logged: boolean;
+        imagesDropped: number;
+        reason?: undefined;
     } | {
         logged: boolean;
         reason?: undefined;
+        imagesDropped?: undefined;
     }>;
     _maybeProposeReusableAction(obs: any, origin: any, category: any): Promise<void>;
     setMemoryPaused(paused: any): Promise<void>;

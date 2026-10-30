@@ -22,9 +22,12 @@ import { createProviderRoutes } from './providers.js';
 import { createAccountRoutes } from './account-routes.js';
 import { createAdminAccountRoutes } from './admin-accounts.js';
 import { sendJSON, sendHttpError, bearerFrom, readJSON as readBody } from './http.js';
-import { silentLogger, safeErrorText } from './log.js';
+import { silentLogger, safeErrorText, loggedContent, MAX_LOGGED_CHARS } from './log.js';
 import { createActivityLog } from './activity.js';
 import { createRegistry, REGISTRY_PATH } from './registry.js';
+import { createLearning, pausedFor, librarianObservation } from './learning.js';
+import { createAccess } from './access.js';
+import { withAiContext } from './ai-context.js';
 import { createProfileEvents, cleanSelection, PROFILE_WRITES } from './profile-events.js';
 import { auditAccounts } from './audit.js';
 
@@ -53,7 +56,7 @@ const SDK_PREFIX = '/sdk/';
  *  @param {ReturnType<import('./log.js').createLogger>} [config.log]  structured logger (silent by default)
  *  @returns {((req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) & {relay: ReturnType<typeof createRelay>, accounts: ReturnType<typeof createAccounts>, activity: ReturnType<typeof createActivityLog>}}
  */
-export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true }) {
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
@@ -117,9 +120,16 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       log.info(type, { uid, ...fields });
     }
   });
-  const providerRoutes = createProviderRoutes({ store, relay, withUserLock, authenticate, activity });
+  // Who can read what each app and adapter gives the toolkit. The registry is
+  // bound late: access reads adapters through it, and serves tools on it.
+  const access = createAccess({ store, registry: () => registry });
+  const providerRoutes = createProviderRoutes({
+    store, relay, withUserLock, authenticate, activity,
+    onApplication: (rec, application) => access.tools.app_declare.run(rec.uid, { appId: application.appId, name: application.name, visibility: application.visibility }, rec),
+  });
   const profileEvents = createProfileEvents({ store, authenticate, toolkitHost, withUserLock });
-  const registry = createRegistry({ store, withUserLock, authenticate, log, version });
+  const learning = createLearning({ toolkitHost, withUserLock, profileEvents, access, log, ...(learningDelayMs !== undefined ? { extractDelayMs: learningDelayMs } : {}) });
+  const registry = createRegistry({ store, withUserLock, authenticate, log, version, tools: { ...learning.tools, ...access.tools }, onInstallChange: learning.fromRegistry });
   const accountRoutes = createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log });
   const adminAccountRoutes = createAdminAccountRoutes({ store, accounts, relay, wipeUser });
   const anyOrigin = corsOrigins.includes('*');
@@ -151,6 +161,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
   function listener(req, res) {
     const started = process.hrtime.bigint();
+    if (logContent) captureContent(req, res);
     res.once('close', () => logRequest(req, res, started));
     handle(req, res).catch((e) => {
       const path = pathOf(req);
@@ -177,6 +188,34 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   // string), status, duration and the authenticated uid. Liveness checks are
   // left out and successful static files are debug-level, so the log is
   // about what people and apps did.
+  // A copy of the request body as whichever handler reads it, and of a JSON
+  // response, for the request log (logContent). Up to MAX_LOGGED_CHARS + 1
+  // of each is kept, so loggedContent can say how long the rest was cut.
+  function captureContent(req, res) {
+    const cap = MAX_LOGGED_CHARS * 4;
+    const inChunks = [];
+    let inSize = 0;
+    const emit = req.emit;
+    req.emit = function (event, chunk, ...rest) {
+      if (event === 'data' && inSize < cap) { inChunks.push(Buffer.from(chunk)); inSize += chunk.length; }
+      return emit.call(this, event, chunk, ...rest);
+    };
+    req.loggedBody = () => (inChunks.length ? Buffer.concat(inChunks).toString('utf8') : undefined);
+    // Only JSON: static files and event streams start with something else.
+    const outChunks = [];
+    let outSize = 0, isJson = null;
+    const keep = (chunk) => {
+      if (!chunk || isJson === false || outSize >= cap) return;
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+      if (isJson === null) isJson = /^\s*[{[]/.test(buf.subarray(0, 64).toString('utf8'));
+      if (isJson) { outChunks.push(buf); outSize += buf.length; }
+    };
+    const write = res.write, end = res.end;
+    res.write = function (chunk, ...rest) { keep(chunk); return write.call(this, chunk, ...rest); };
+    res.end = function (chunk, ...rest) { if (typeof chunk !== 'function') keep(chunk); return end.call(this, chunk, ...rest); };
+    res.loggedBody = () => (outChunks.length ? Buffer.concat(outChunks).toString('utf8') : undefined);
+  }
+
   function logRequest(req, res, started) {
     const path = pathOf(req);
     if (path === '/v1/healthz' || path === '/favicon.ico') return;
@@ -188,6 +227,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       ...(res.writableFinished ? {} : { aborted: true }),
       client: clientIp(req),
       userAgent: String(req.headers['user-agent'] || '').slice(0, 200) || undefined,
+      ...(logContent ? { request: loggedContent(req.loggedBody?.()), response: loggedContent(res.loggedBody?.()) } : {}),
       message: `${req.method} ${path} ${status} ${ms}ms${req.auth?.uid ? ` uid=${req.auth.uid}` : ''}`,
     };
     const isStatic = req.method === 'GET' && (path.startsWith(SDK_PREFIX) || path.startsWith(ADMIN_ASSETS_PREFIX) || path.startsWith('/developer'));
@@ -374,9 +414,11 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       // session is a sign-in and cannot be minted here.
       const kind = body.kind === undefined ? 'app' : body.kind;
       if (!TOKEN_KINDS.includes(kind) || kind === 'session') return sendJSON(res, 400, { error: 'kind must be app or default' });
-      const result = await issueToken(store, { uid: body.uid, label: body.label, kind });
-      log.info('token.issued', { uid: result.uid, tokenId: result.id, kind, by: 'admin' });
-      return sendJSON(res, 200, { token: result.token, uid: result.uid });
+      let result;
+      try { result = await issueToken(store, { uid: body.uid, label: body.label, kind, ...(body.appId ? { appId: body.appId } : {}) }); }
+      catch (e) { return sendJSON(res, 400, { error: e.message }); }
+      log.info('token.issued', { uid: result.uid, tokenId: result.id, kind, ...(result.appId ? { appId: result.appId } : {}), by: 'admin' });
+      return sendJSON(res, 200, { token: result.token, uid: result.uid, ...(result.appId ? { appId: result.appId } : {}) });
     }
 
     if (method === 'GET' && pathname === ADMIN_TOKENS_PREFIX) {
@@ -438,11 +480,22 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
     let body;
     try {
-      body = await readJSONBody(req);
+      // An observation may carry images.
+      body = await readJSONBody(req, routeName === 'logObservation' ? { maxBytes: 12e6 } : undefined);
     } catch {
       return sendJSON(res, 400, { error: 'invalid-json' });
     }
     const args = Array.isArray(body?.args) ? body.args : [];
+
+    // Who can read what this call writes or reads (access.js): an observation
+    // goes to its app's or adapter's partition when that is narrower than the
+    // account; memory reads add the partitions this caller may read.
+    let partition = null;
+    if (routeName === 'logObservation') {
+      try { ({ partition } = await access.resolveWrite(rec.uid, rec, { app: args[0]?.app, adapter: args[0]?.adapter })); }
+      catch (e) { return sendJSON(res, 200, { ok: false, error: e.message }); }
+    }
+    const scoped = SCOPED_READS.has(routeName) ? await access.readable(rec.uid, rec) : [];
 
     return await withUserLock(rec.uid, async () => {
       // Re-check the credential now that it is our turn. requireUser ran before
@@ -462,7 +515,21 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       }
 
       try {
-        const result = await invokeLibrarianRoute(entry, instance, args);
+        // Any AI call the method makes is logged under this account and method (gemini.js).
+        const result = await withAiContext(rec.uid, routeName, async () => {
+          if (routeName === 'logObservation') {
+            const obs = librarianObservation(args[0] || {});
+            if (!partition) return invokeLibrarianRoute(entry, instance, [obs, ...args.slice(1)]);
+            const paused = await pausedFor(instance.librarian, instance.datastore, obs);
+            if (paused) return { logged: false, reason: paused };
+            const kept = await invokeLibrarianRoute(entry, await toolkitHost.getInstance(rec.uid, partition), [obs]);
+            return { ...kept, visibility: partition.split('~')[0] };
+          }
+          const own = await invokeLibrarianRoute(entry, instance, args);
+          return scoped.length ? mergeScoped(routeName, own, scoped, args, (p) => toolkitHost.getInstance(rec.uid, p)) : own;
+        });
+        // The service's Librarians have no scheduler: learning.js learns from it a little later.
+        if (routeName === 'logObservation' && result?.logged !== false) learning.scheduleExtract(rec.uid, partition);
         if (PROFILE_WRITES.has(routeName)) {
           // The console passes the preset it loaded as replaceProfile's second argument.
           // A failure to announce must not turn a stored write into an error.
@@ -473,7 +540,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       } catch (e) {
         // Application errors are data, not transport failures (CONTRACT.md).
         // Logged by method and error code only: the message may quote the profile.
-        log.warn('librarian.call.failed', { uid: rec.uid, method: routeName, errorCode: safeErrorText(e) });
+        log.warn('librarian.call.failed', { uid: rec.uid, method: routeName, errorCode: safeErrorText(e), ...(logContent ? { error: loggedContent(e?.message) } : {}) });
         return sendJSON(res, 200, { ok: false, error: e.message });
       }
     });
@@ -501,17 +568,44 @@ function sendAdminChallenge(res) {
 
 // readJSONBody keeps its old contract for the handlers above: a plain Error on
 // bad JSON (they answer 400 invalid-json themselves).
-async function readJSONBody(req) {
+async function readJSONBody(req, opts) {
   try {
-    return await readBody(req);
+    return await readBody(req, opts);
   } catch (e) {
     throw new Error(e.message);
   }
 }
 
+// Memory reads that also show what the caller may read in partitions (access.js).
+const SCOPED_READS = new Set(['listMemories', 'recall']);
+
+/** Add the memories of the caller's readable partitions to a listMemories or recall result. */
+async function mergeScoped(routeName, own, scoped, args, instanceFor) {
+  const tag = (p) => ({ visibility: p.level, ...(p.app ? { app: p.app } : {}), ...(p.adapter ? { adapter: p.adapter } : {}) });
+  if (routeName === 'listMemories') {
+    const memories = [...(own?.memories || [])];
+    for (const p of scoped) {
+      const { librarian } = await instanceFor(p.partition);
+      memories.push(...(await librarian.listMemories(...args)).memories.map(m => ({ ...m, ...tag(p) })));
+    }
+    return { ...own, memories };
+  }
+  // recall: the partitions' facts after the account's own, each under a heading naming who gave it.
+  const facts = [...(own?.facts || [])];
+  const lines = own?.block ? [own.block] : [];
+  for (const p of scoped) {
+    const { librarian } = await instanceFor(p.partition);
+    const found = ((await librarian.recall(...args))?.facts || []).filter(f => f.kind !== 'note');
+    if (!found.length) continue;
+    facts.push(...found.map(f => ({ ...f, ...tag(p) })));
+    lines.push(`### Only for ${p.adapter ? `the adapter ${p.adapter}` : `the app ${p.app}`}`, ...found.map(f => `- ${f.text}`));
+  }
+  return { ...own, facts, block: lines.join('\n') };
+}
+
 // Who the request authenticated as, for the request log (never the token).
 function noteAuth(req, rec) {
-  if (rec) req.auth = { uid: rec.uid, kind: rec.kind, tokenId: rec.id };
+  if (rec) req.auth = { uid: rec.uid, kind: rec.kind, tokenId: rec.id, ...(rec.appId ? { appId: rec.appId } : {}) };
   return rec;
 }
 

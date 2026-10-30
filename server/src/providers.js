@@ -52,7 +52,7 @@ export async function readConsolePrefs(store, uid) {
  * @param {(uid: string, fn: () => Promise<any>) => Promise<any>} config.withUserLock
  * @param {(req) => Promise<object|null>} config.authenticate  token record or null
  */
-export function createProviderRoutes({ store, relay, withUserLock, authenticate, activity = null }) {
+export function createProviderRoutes({ store, relay, withUserLock, authenticate, activity = null, onApplication = null }) {
   async function requireRecord(req, { appToken = false } = {}) {
     const rec = await authenticate(req);
     if (!rec) throw new HttpError(401, 'unauthorized', 'Send a toolkit token: Authorization: Bearer aat_…');
@@ -95,10 +95,15 @@ export function createProviderRoutes({ store, relay, withUserLock, authenticate,
       const ids = adapters.map(d => d.id);
       if (new Set(ids).size !== ids.length) errors.push({ path: '/adapters', message: 'adapter ids must be unique' });
     }
+    if (!errors.length && rec.kind === 'app' && rec.appId && application.appId !== rec.appId) {
+      throw new HttpError(403, 'forbidden', `This token is for the app ${rec.appId}, not ${application.appId}.`);
+    }
     if (errors.length) {
       throw new HttpError(400, 'invalid-registration', `The app's registration does not follow Adapter MCP ${PROFILE_VERSION}: ${errors.slice(0, 3).map(e => `${e.path} ${e.message}`).join('; ')}`, { errors: errors.slice(0, 50) });
     }
 
+    // An app that says who can read what it gives the toolkit declares it here (access.js).
+    if (application.visibility && onApplication) await onApplication(rec, application);
     const providerId = body.providerId || `p-${crypto.randomBytes(6).toString('hex')}`;
     const label = typeof body.label === 'string' ? body.label.slice(0, 300) : '';
     try {

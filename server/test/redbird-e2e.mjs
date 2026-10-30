@@ -19,7 +19,7 @@ import { chromium } from 'playwright';
 import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
-import { createMcpClient, adapterClient } from '../../toolkit/adapter-mcp/index.js';
+import { createMcpClient, adapterClient, createRegistryClient } from '../../toolkit/adapter-mcp/index.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const REDBIRD = path.resolve(process.env.REDBIRD_DIR || path.join(here, '../../../redbird'));
@@ -195,12 +195,21 @@ try {
   await dev.click('#refresh');
   await dev.waitForFunction(() => /screen-reader structure/.test(document.getElementById('profile-json').value));
 
+  // ── Shopping as yourself, switching an adapter tells your toolkit, which learns from it ──
+  const learning = createRegistryClient({ url: base, token }).profile;
+  const waitingBefore = (await learning.learned()).pendingObservations;
+  await shop.click('#ws-tab-profiles');
+  await shop.locator('#ws-on-list input[data-ad="skip-links"]').uncheck();
+  const learnedState = async () => (await learning.learned()).pendingObservations > waitingBefore;
+  for (let i = 0; i < 50 && !(await learnedState()); i++) await new Promise(r => setTimeout(r, 100));
+  assert.ok(await learnedState(), 'the toolkit kept an observation of the switch');
+
   // ── Closing the tab leaves the app offline in the console ──────────────
   await shop.close({ runBeforeUnload: true });
   await dev.waitForFunction(() => [...document.querySelectorAll('.app-group')].some(g => g.textContent.includes('Redbird demo') && g.textContent.includes('Offline')), null, { timeout: 20000 });
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, and going offline when the tab closes.');
+  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, a switch while shopping as yourself reaching the toolkit to learn from, and going offline when the tab closes.');
 } finally {
   await browser?.close();
   app.relay.closeAll();

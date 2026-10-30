@@ -146,8 +146,8 @@ export function createAccountPage({ getClient, isSession, status, run, onDefault
 
     // App tokens
     const appTokens = overview.tokens.filter(t => t.kind !== 'default');
-    const apps = panel('OPTIONAL', 'App tokens', element('span', 'count', String(appTokens.filter(t => !t.revoked).length)), 'account-wide');
-    apps.append(element('p', 'hint', 'Give an app its own token when you want to cut off just that app later. A new token is shown once.'));
+    const apps = panel('OPTIONAL', 'App tokens', element('span', 'count', String(appTokens.filter(t => !t.revoked).length)), 'one per app');
+    apps.append(element('p', 'hint', 'Give an app its own token when you want to cut off just that app later. Name its app id, and the token reads only what every app may read plus that app\'s own data; without one, it reads everything, like the default token. A new token is shown once.'));
     if (revealed) {
       const box = element('div', 'new-secret');
       box.append(element('strong', '', `New token “${revealed.label}” — copy it now, it is not shown again.`), tokenBox(revealed.token));
@@ -156,12 +156,14 @@ export function createAccountPage({ getClient, isSession, status, run, onDefault
     const form = element('form', 'token-form');
     const label = element('input'); label.maxLength = 120; label.placeholder = 'e.g. My XR prototype';
     form.append(field('new-token-label', 'Label', label));
+    const appId = element('input'); appId.maxLength = 64; appId.placeholder = 'e.g. redbird'; appId.pattern = '[a-z0-9][a-z0-9._\\-]*'; appId.autocomplete = 'off'; appId.spellcheck = false;
+    form.append(field('new-token-app', 'For app (optional)', appId));
     const make = element('button', 'secondary', 'Make app token'); make.type = 'submit';
     form.append(make);
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       run(async () => {
-        const made = await getClient().account.createToken(label.value.trim());
+        const made = await getClient().account.createToken(label.value.trim(), appId.value.trim() || undefined);
         revealed = { label: made.label, token: made.token };
         await refresh();
         status(`Made app token “${made.label}”. Copy it now: it is shown once.`);
@@ -172,11 +174,11 @@ export function createAccountPage({ getClient, isSession, status, run, onDefault
       apps.append(element('p', 'empty', 'No app tokens yet. Your apps can all use the default token.'));
     } else {
       const table = element('table', 'token-table');
-      table.innerHTML = '<thead><tr><th scope="col">Label</th><th scope="col">Made</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>';
+      table.innerHTML = '<thead><tr><th scope="col">Label</th><th scope="col">For</th><th scope="col">Made</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>';
       const tbody = element('tbody');
       for (const t of appTokens) {
         const tr = element('tr', t.revoked ? 'revoked-row' : '');
-        tr.append(element('td', '', t.label || '(no label)'), element('td', '', new Date(t.createdAt).toLocaleDateString()));
+        tr.append(element('td', '', t.label || '(no label)'), element('td', '', t.appId ? `the app ${t.appId}` : 'every app'), element('td', '', new Date(t.createdAt).toLocaleDateString()));
         const state = element('td');
         state.append(element('span', `badge${t.revoked ? ' offline' : ' connected'}`, t.revoked ? 'Revoked' : 'Active'));
         tr.append(state);

@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev:developer": "node server/index.js",
-    "dev:workshop": "node server/index.js --workshop",
+    "dev:workshop": "node --env-file-if-exists=.env server/index.js --workshop",
     "test:developer:e2e": "node server/test/developer-e2e.mjs",
     "test:adapters:e2e": "node server/test/adapters-e2e.mjs",
     "test:console:e2e": "node server/test/console-e2e.mjs",

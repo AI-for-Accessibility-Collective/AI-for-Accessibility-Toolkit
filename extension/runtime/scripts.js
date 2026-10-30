@@ -8,8 +8,13 @@
 //   - checks the page exactly against the adapter's URL patterns (Chrome's
 //     match patterns are only a first, broader filter) and the sites the
 //     developer switched it off on;
-//   - calls enable(parameters) and reports applied / failed / skipped to the
-//     service worker, with the page origin only.
+//   - calls enable(parameters, toolkit) and reports applied / failed /
+//     skipped to the service worker, with the page origin only. `toolkit`
+//     reaches the toolkit through the service worker, as this adapter:
+//     toolkit.data.get(key?) / .set(key, value) / .delete(key?) keep its own
+//     values, and toolkit.observe(text or {text, type, data}) tells the
+//     toolkit what the person did. Who can read either follows the adapter's
+//     visibility.
 // All adapters in a page share one USER_SCRIPT world, so a later
 // chrome.userScripts.execute can find and disable a running adapter.
 
@@ -56,6 +61,18 @@ export function buildUserScript(entry) {
   const PARAMETERS = ${JSON.stringify(entry.parameters || {})};
   const ENTRY = ${JSON.stringify(entry.package.entry || null)};
 ${PREAMBLE}
+  const ask = (message) => chrome.runtime.sendMessage({ ...message, key: KEY }).then((r) => {
+    if (!r || !r.ok) throw new Error((r && r.error) || 'the toolkit did not answer');
+    return r.result;
+  });
+  const TOOLKIT = Object.freeze({
+    data: Object.freeze({
+      get: (k) => ask({ type: 'ai4a11y:data', op: 'get', k }),
+      set: (k, value) => ask({ type: 'ai4a11y:data', op: 'set', k, value }),
+      delete: (k) => ask({ type: 'ai4a11y:data', op: 'delete', k }),
+    }),
+    observe: (o) => ask({ type: 'ai4a11y:observe', text: typeof o === 'string' ? o : o && o.text, kind: o && o.type, data: o && o.data }),
+  });
   const wasRunning = turnOff();
   const port = location.port || (location.protocol === 'https:' ? '443' : '80');
   const here = location.protocol + '//' + location.hostname.toLowerCase() + ':' + port + location.pathname;
@@ -72,7 +89,7 @@ ${PREAMBLE}
   } catch (e) { report('failed', 'Loading the adapter: ' + errorText(e)); return; }
   rt.adapters[KEY] = { adapter, revision: REVISION };
   let result;
-  try { result = adapter.enable(PARAMETERS); } catch (e) { delete rt.adapters[KEY]; report('failed', 'enable() threw: ' + errorText(e)); return; }
+  try { result = adapter.enable(PARAMETERS, TOOLKIT); } catch (e) { delete rt.adapters[KEY]; report('failed', 'enable() threw: ' + errorText(e)); return; }
   const settled = (value) => {
     if (value === false) { delete rt.adapters[KEY]; report('skipped', 'enable() returned false: nothing to change on this page'); } else report('applied');
   };

@@ -20,6 +20,8 @@ const TOOLKIT_FILES = [
   'protocol/adapter/wire.js',
   'protocol/adapter/package.js',
   'protocol/adapter/registry.js',
+  'protocol/adapter/profile.js',
+  'protocol/adapter/access.js',
   'adapter-mcp/index.js',
   'adapter-mcp/provider.js',
   'adapter-mcp/wrap.js',

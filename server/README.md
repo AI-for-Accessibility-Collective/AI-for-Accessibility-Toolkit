@@ -117,6 +117,23 @@ toolkit; **Shared with you** lists what others shared, to run in your browser
 or install into one of your apps. The panel at the top says whether this
 browser's runtime is connected, and lists your runtimes' recent reports.
 
+## What your toolkit learned
+
+The **Profiles** page ends with **What your toolkit learned**
+(`server/developer/learned.js`, `server/src/learning.js`). The toolkit learns
+from what the person does with their adapters: running one in their browser,
+removing it, switching it off on a site, and whatever apps report with
+`profile_observe` (Redbird reports its switches while you shop as yourself).
+About 30 seconds after the last observation, the server-side LLM turns them
+into memories and suggested profile changes. The panel lists both: **Accept**
+changes the profile (and the apps following it), **Not now** and **Stop
+suggesting this** leave it as it is, and each memory can be forgotten.
+**Pause learning** stops keeping observations, **Learn now** learns at once,
+**Reset suggestions** clears the suggestions and the weekly count, and **Reset
+everything learned** also clears the memories (your own notes stay). Coding
+agents and apps use the same `profile_*` tools on `/v1/mcp` (CONTRACT.md,
+"Profile and learning tools").
+
 ## The Apps page
 
 **Apps** lists every app that has connected with this account's tokens,
@@ -223,7 +240,9 @@ checkout beside this one, or `REDBIRD_DIR`): `npm run test:redbird:e2e`.
 |---|---|---|---|
 | `PORT` | no | `8080` | |
 | `ADMIN_PASSWORD` | **yes** in `NODE_ENV=production` | insecure dev default otherwise (logged loudly) | Bearer token for `/admin/*` |
-| `GEMINI_API_KEY` | no | unset | Without it, `extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt` throw `no-server-key` when actually invoked; every other route is unaffected |
+| `WS_GEMINI_KEY` | no | unset | The Gemini key every toolkit AI feature uses (`extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt`, the learning loop). `npm run dev:workshop` reads it from the repository's `.env` |
+| `GEMINI_API_KEY` | no | unset | Read when `WS_GEMINI_KEY` is unset. Without either, the AI features throw `no-server-key` when actually invoked; every other route is unaffected |
+| `GEMINI_MODEL` | no | `gemini-3.8-flash` | The model for every AI call |
 | `TOOLKIT_BUCKET` | no | unset | Set -> GCS backend; unset -> file backend |
 | `DATA_DIR` | no | `./data` | Only used when `TOOLKIT_BUCKET` is unset |
 | `CORS_ORIGINS` | no | unset | Comma-separated exact browser origins allowed on `/v1/*`, or `*` for any; same-origin developer UI needs no setting. The `--workshop` flag sets `*` (refused in production) |
@@ -241,9 +260,7 @@ string, status, duration, the authenticated uid) and one per notable event:
 outcome, duration), `librarian.call.failed` (method and error code), and
 `http.error` with the stack. On Cloud Run each entry is structured JSON, so
 Cloud Logging filters on `jsonPayload.event` and `jsonPayload.uid` and Error
-Reporting picks up stacks. Passwords, tokens, Authorization headers, request
-and response bodies and profile content are never logged.
-`node test/logging.test.mjs` checks both.
+Reporting picks up stacks.
 
 ## Storage layout
 

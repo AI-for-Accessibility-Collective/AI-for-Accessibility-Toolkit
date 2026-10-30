@@ -13,7 +13,7 @@
 import { taxonomy as defaultTaxonomy } from './core/taxonomy.js';
 import { createDatastore } from './core/datastore.js';
 import { createLibrarian } from './core/librarian.js';
-import { systemClock, noopScheduler, noopConsent, noopDemo } from './ports/index.js';
+import { systemClock, noopScheduler, noopConsent, noopDemo, noopMedia } from './ports/index.js';
 
 /**
  * @typedef {Object} ToolkitPorts
@@ -24,6 +24,7 @@ import { systemClock, noopScheduler, noopConsent, noopDemo } from './ports/index
  * @property {import('./ports/index.js').Scheduler} [scheduler]         Defaults to a no-op (drive the slow lane yourself).
  * @property {import('./ports/index.js').Consent} [consent]             Defaults to a no-op.
  * @property {import('./ports/index.js').DemoHook} [demo]               Defaults to a no-op.
+ * @property {import('./ports/index.js').Media|null} [media]          Where observation images are kept. Defaults to none: images are dropped.
  * @property {import('./core/taxonomy.js').Taxonomy} [taxonomy]         Defaults to the bundled web taxonomy.
  * @property {import('./core/skill.js').ToolsRegistry|null} [toolsRegistry]  The settings/tools registry (AA_TOOLS shape), or null.
  * @property {import('./core/skill.js').Skill[]} [builtinSkills]        Built-in SKILL.md playbooks (parsed Skill objects), or [].
@@ -57,13 +58,14 @@ export function createToolkit({
   scheduler = noopScheduler,
   consent = noopConsent,
   demo = noopDemo,
+  media = noopMedia,
   taxonomy = defaultTaxonomy,
   toolsRegistry = null,
   builtinSkills = [],
 } = {}) {
   if (!kv) throw new Error('createToolkit: a kv port is required');
   const datastore = createDatastore({ kv, clock, taxonomy, toolsRegistry, builtinSkills });
-  const librarian = createLibrarian({ datastore, taxonomy, clock, scheduler, consent, demo });
+  const librarian = createLibrarian({ datastore, taxonomy, clock, scheduler, consent, demo, media });
   return { datastore, librarian };
 }
 

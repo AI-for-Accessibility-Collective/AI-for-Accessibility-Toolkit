@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-10-30T11:29:21.205Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-10-30T13:29:14.161Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -135,11 +135,11 @@ whose wire name differs from the call it makes.
 
 ## Server-side LLM
 
-Provider: **gemini** (`gemini-3.5-flash`). Wired via librarian.setGeminiCaller(serverGeminiCaller) at boot (server/src/gemini.js).
+Provider: **gemini** (`gemini-3.8-flash`). Wired via librarian.setGeminiCaller(serverGeminiCaller) at boot (server/src/gemini.js).
 
 Free without a client-supplied key: `extract`, `reflect`, `buildSkill`, `interpretNeedsPrompt`.
 
-Server holds GEMINI_API_KEY. Without it, the caller throws 'no-server-key' the moment the slow lane tries to use it — the fast lane (everything else) is unaffected. Applications making their own direct LLM calls keep using their own keys; nothing here proxies arbitrary LLM traffic.
+Server holds WS_GEMINI_KEY (or GEMINI_API_KEY); GEMINI_MODEL overrides the model. Without a key, the caller throws 'no-server-key' the moment the slow lane tries to use it — the fast lane (everything else) is unaffected. Applications making their own direct LLM calls keep using their own keys; nothing here proxies arbitrary LLM traffic.
 
 ## Storage
 

@@ -5,7 +5,7 @@
 //   GET    /v1/account               account, default token, app tokens
 //   PUT    /v1/account               {displayName} rename the account
 //   POST   /v1/account/default-token regenerate the default token
-//   POST   /v1/account/tokens        {label} -> a new app token (shown once)
+//   POST   /v1/account/tokens        {label, appId?} -> a new app token (shown once); appId binds it to one app
 //   DELETE /v1/account/tokens/{id}   revoke one of the account's app tokens
 //   POST   /v1/account/password      {current, next}
 //   GET    /v1/account/presets       saved profile presets
@@ -95,9 +95,12 @@ export function createAccountRoutes({ store, accounts, relay, withUserLock, auth
       if (segs.length === 1 && method === 'POST') {
         const body = await readJSON(req);
         const label = typeof body?.label === 'string' && body.label.trim() ? body.label.trim().slice(0, 120) : 'App token';
-        const issued = await issueToken(store, { uid: rec.uid, label, kind: 'app' });
-        log.info('token.issued', { uid: rec.uid, tokenId: issued.id, kind: 'app', by: 'account' });
-        return sendJSON(res, 200, { ok: true, token: issued.token, id: issued.id, label });
+        const appId = typeof body?.appId === 'string' && body.appId.trim() ? body.appId.trim() : undefined;
+        let issued;
+        try { issued = await issueToken(store, { uid: rec.uid, label, kind: 'app', appId }); }
+        catch (e) { throw new HttpError(400, 'invalid-app-id', e.message); }
+        log.info('token.issued', { uid: rec.uid, tokenId: issued.id, kind: 'app', ...(appId ? { appId } : {}), by: 'account' });
+        return sendJSON(res, 200, { ok: true, token: issued.token, id: issued.id, label, ...(appId ? { appId } : {}) });
       }
       if (segs.length === 2 && method === 'DELETE') {
         const ok = await revokeToken(store, segs[1], { uid: rec.uid });

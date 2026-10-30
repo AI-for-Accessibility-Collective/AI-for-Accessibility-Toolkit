@@ -1007,6 +1007,8 @@ What exists now, so the sections above can be read against working code.
 | Toolkit service | `server/src/providers.js`, `server/src/relay.js` | Relays MCP requests to connected apps, so an app in a browser tab is reachable at `/v1/mcp/apps/{appId}` or `/v1/mcp/providers/{providerId}` without opening a port. Lists the account's apps for the developer console. See [the hosted contract](../../server/CONTRACT.md#adapter-mcp-apps). |
 | Packages and registry wire | `toolkit/protocol/adapter/package.js`, `registry.js` | The `web-module@1` format (export rewrite, adapter pick, lint, package checks, artifact digest), URL patterns as Chrome match patterns and exact regular expressions, and the registry tools' input schemas. |
 | Registry | `server/src/registry.js` | The toolkit's MCP server at `/v1/mcp` (§14): per-account adapters and revisions, the shared index, installs, runtime reports, resources and change notifications. |
+| Profile and learning tools | `toolkit/protocol/adapter/profile.js`, `server/src/learning.js` | The `profile_*` tools on the same endpoint: the profile, observations (including browser-runtime installs and switches), what was learned, answering suggested changes, pause and reset. |
+| Visibility and adapter data | `toolkit/protocol/adapter/access.js`, `server/src/access.js` | `app_declare`, `access_*` and `adapter_data_*`: user-, app- or adapter-level data with app tokens bound to an app, partitions the toolkit learns in, and each adapter's own values (§14.5). |
 | Registry client | `toolkit/adapter-mcp/registry.js` | `createRegistryClient` (publish, search, share, install, installed, report, status, watch) and `loadInstalledAdapters`. |
 | Browser runtime | `extension/` | The reference runtime for web packages (§14.4). |
 | Developer console | `server/developer/adapters.js` | The Adapters page: the coding-agent guide, edit an adapter with live lint, save revisions, run it in the browser runtime, share it, install others' and see the runtime's reports. |
@@ -1104,6 +1106,24 @@ is not a new revision), `search` and `install` others', and run what it
 installed. `loadInstalledAdapters(registry, appId)` returns working adapter
 objects for the current page, for web apps that allow evaluating code. Live
 control (§5–§8) is separate and optional.
+
+### 14.5 Who reads what an app or adapter gives
+
+An application declares a visibility for what it gives the toolkit (its
+observations, what the toolkit learns from them, its adapters' stored data):
+`user`, every app of the person's account (the default), or `app`, only
+itself; `application.visibility` or the `app_declare` tool. An adapter
+declares `visibility` in its descriptor, and may also choose `adapter`: only
+it, its own app and the apps that run it. The person narrows either in the
+developer console and cannot widen it; the narrowest level wins. App- and
+adapter-level observations are learned from in a store of their own and never
+become suggested changes to the shared profile. An app identifies itself with
+an app token bound to its `appId`; the account's own tools read everything.
+Each adapter can keep up to 4 MB of values per account (`adapter_data_*`;
+in the browser runtime, `enable(parameters, toolkit)` with `toolkit.data`
+and `toolkit.observe`). Schemas: `toolkit/protocol/adapter/access.js`; the
+service's rules: `server/CONTRACT.md`, "Who can read what an app or adapter
+gives".
 
 ### 14.4 The browser runtime
 

@@ -13,7 +13,7 @@ import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 import { createLogger } from '../src/log.js';
-import { defineDescriptor, descriptorDigest } from '../../toolkit/protocol/adapter/index.js';
+import { defineDescriptor, descriptorDigest, PROFILE_TOOLS, ACCESS_TOOLS } from '../../toolkit/protocol/adapter/index.js';
 import { createRegistryClient, loadInstalledAdapters, RegistryCallError } from '../../toolkit/adapter-mcp/index.js';
 
 const ADMIN = 'test-admin';
@@ -76,7 +76,7 @@ try {
     assert.equal(init.result.protocolVersion, '2025-11-25');
     assert.deepEqual(init.result.capabilities.resources, { listChanged: true });
     const tools = (await rpc(ada, 'tools/list')).result.tools;
-    assert.deepEqual(tools.map(t => t.name), ['adapter_search', 'adapter_get', 'adapter_publish', 'adapter_share', 'adapter_delete', 'adapter_install', 'adapter_uninstall', 'adapter_installed', 'adapter_report', 'adapter_status']);
+    assert.deepEqual(tools.map(t => t.name), ['adapter_search', 'adapter_get', 'adapter_publish', 'adapter_share', 'adapter_delete', 'adapter_install', 'adapter_uninstall', 'adapter_installed', 'adapter_report', 'adapter_status', ...PROFILE_TOOLS, ...ACCESS_TOOLS]);
     assert.equal(tools.find(t => t.name === 'adapter_delete').annotations.destructiveHint, true);
     assert.equal((await rpc(ada, 'nope')).error.code, -32601);
     const notification = await fetch(`${base}/v1/mcp`, { method: 'POST', headers: { authorization: `Bearer ${ada}`, 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) });
@@ -326,11 +326,14 @@ try {
     assert.deepEqual([view.adapters[0].available, view.adapters[0].reason], [false, 'deleted']);
   });
 
-  await test('the log names tools and outcomes, never code or parameters', () => {
-    const calls = lines.map(l => JSON.parse(l)).filter(e => e.event === 'registry.call');
+  await test('the log names tools and outcomes; the request log has the arguments, never a token', () => {
+    const entries = lines.map(l => JSON.parse(l));
+    const calls = entries.filter(e => e.event === 'registry.call');
     assert.ok(calls.some(e => e.tool === 'adapter_publish' && e.outcome === 'ok' && e.uid === 'ada'));
     assert.ok(calls.some(e => e.outcome === 'invalid-adapter'));
-    assert.ok(!lines.some(l => l.includes('BigButtons') || l.includes('"size"')));
+    assert.ok(!calls.some(e => JSON.stringify(e).includes('BigButtons')), 'a registry.call entry names the tool, not its arguments');
+    assert.ok(entries.some(e => e.event === 'http.request' && e.path === '/v1/mcp' && JSON.stringify(e.request ?? '').includes('BigButtons')));
+    assert.ok(!lines.some(l => /aat_[A-Za-z0-9_-]{10,}/.test(l)), 'no account token in the log');
   });
 
   controller.abort();

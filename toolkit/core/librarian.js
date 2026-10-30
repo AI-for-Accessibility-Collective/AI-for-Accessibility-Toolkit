@@ -34,7 +34,7 @@
 // now" → cooldown), or suppresses — and a suppression is itself a preference
 // the extraction pipeline consults before drafting.
 
-import { noopDemo, noopConsent, noopScheduler } from '../ports/index.js';
+import { noopDemo, noopConsent, noopScheduler, noopMedia } from '../ports/index.js';
 import { coerceSettings, clampSettings } from './units.js';
 import { STRENGTH_RANK, rankOf } from './strength.js';
 import { toAbilityModel } from './ability.js';
@@ -53,6 +53,7 @@ import { buildSkill } from './skill-builder.js';
  * @param {import('../ports/index.js').Scheduler} [deps.scheduler]
  * @param {import('../ports/index.js').Consent} [deps.consent]
  * @param {import('../ports/index.js').DemoHook} [deps.demo]
+ * @param {import('../ports/index.js').Media|null} [deps.media]  Where observation images are kept; none drops them.
  * @returns the Librarian.
  */
 export function createLibrarian({
@@ -62,6 +63,7 @@ export function createLibrarian({
   scheduler = noopScheduler,
   consent = noopConsent,
   demo = noopDemo,
+  media = noopMedia,
 }) {
   if (!datastore) throw new Error('createLibrarian: datastore is required');
   if (!taxonomy) throw new Error('createLibrarian: taxonomy is required');
@@ -71,11 +73,49 @@ export function createLibrarian({
   const TAX = () => taxonomy;
 
   // ---- LLM wiring -----------------------------------------------------------
-  let _gemini = null; // async (prompt) => string
+  let _gemini = null; // async (prompt, {images}?) => string
 
   // ---- helpers --------------------------------------------------------------
   function newId(prefix) {
     return `${prefix}-${clock.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  // ---- observation images ---------------------------------------------------
+  // An observation may carry a few images (what the person saw). Each one is
+  // kept through the media port, and the log entry keeps only its id, type and
+  // size. Without a media port they are dropped and the text is kept.
+  const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+  const MAX_IMAGES = 4;
+  const MAX_IMAGE_CHARS = 2_000_000;   // base64: about 1.5 MB of image
+  const MAX_EXTRACT_IMAGES = 8;
+
+  /** Check and keep an observation's images: [{id, mimeType, chars}], plus how many were dropped. */
+  async function keepImages(images) {
+    if (images === undefined || images === null) return { kept: [], dropped: 0 };
+    if (!Array.isArray(images)) throw new Error('images must be a list of {mimeType, data}');
+    if (images.length > MAX_IMAGES) throw new Error(`An observation carries at most ${MAX_IMAGES} images.`);
+    for (const img of images) {
+      if (!img || !IMAGE_TYPES.includes(img.mimeType)) throw new Error(`An image's mimeType must be one of ${IMAGE_TYPES.join(', ')}.`);
+      if (typeof img.data !== 'string' || !img.data || img.data.length > MAX_IMAGE_CHARS || !/^[A-Za-z0-9+/]+=*$/.test(img.data)) {
+        throw new Error(`An image's data must be base64, at most ${MAX_IMAGE_CHARS} characters.`);
+      }
+    }
+    if (!media) return { kept: [], dropped: images.length };
+    const kept = [];
+    for (const img of images) {
+      const id = newId('img');
+      await media.put(id, { mimeType: img.mimeType, data: img.data });
+      kept.push({ id, mimeType: img.mimeType, chars: img.data.length });
+    }
+    return { kept, dropped: 0 };
+  }
+
+  /** Forget the images of log entries that left the log. Best effort. */
+  async function forgetImages(entries) {
+    if (!media) return;
+    for (const e of entries) for (const img of e.images || []) {
+      try { await media.delete(img.id); } catch (err) { console.warn('[Librarian] could not delete an image:', err.message); }
+    }
   }
 
   // The explicit types are for the declaration emitter: with `lib` at ES2022
@@ -1518,7 +1558,9 @@ Return ONLY valid JSON with:
       // agent-task arrives with no origin. (The original declared it `const`,
       // which only ever survived because that reassignment path is unreached
       // outside demo mode; esbuild's static check surfaced the latent bug.)
-      let origin = obs.origin || originOf(obs.url || '');
+      // An origin given as a URL (https://example.com) is keyed by its hostname,
+      // like one derived from obs.url: memory scopes are origin:<hostname>.
+      let origin = (obs.origin && (originOf(obs.origin) || obs.origin)) || originOf(obs.url || '');
       // A caller-supplied category is honored only when it is a taxonomy id.
       // Anything else falls through to the site index and the host map, the
       // same way a missing category does. Everything keyed by category
@@ -1541,6 +1583,8 @@ Return ONLY valid JSON with:
       // this to resist minting "preferences" out of misclicks (tremor) or
       // exploration (setting-flipping).
       const WEIGHTS = { 'setting-change': 3, 'profile-applied': 3, 'saved-action': 3, onboarding: 3, 'agent-task': 2 };
+      const images = await keepImages(obs.images);
+      let pruned = [];
       await DS().patch('mine.episodicLog', (log) => {
         // id must stay strictly above BOTH the last entry and the cursor. The
         // cursor floor matters once the evidence-discard prune (reflect) can
@@ -1558,10 +1602,12 @@ Return ONLY valid JSON with:
           category: category || null,
           data: obs.data || {},
           text: String(obs.text || '').slice(0, 400),
+          ...(images.kept.length ? { images: images.kept } : {}),
         });
-        if (log.entries.length > 500) log.entries.splice(0, log.entries.length - 500);
+        if (log.entries.length > 500) pruned = log.entries.splice(0, log.entries.length - 500);
         return log;
       });
+      await forgetImages(pruned);
       scheduleExtraction();
       // Diagram 2's "is this a common reusable task?" diamond: a successful
       // agent run on a categorized site becomes a consent-gated proposal to
@@ -1583,7 +1629,7 @@ Return ONLY valid JSON with:
         try { await this._maybeProposeReusableAction(obs, origin, category); }
         catch (e) { console.warn('[Librarian] reusable-action proposal failed:', e.message); }
       }
-      return { logged: true };
+      return images.dropped ? { logged: true, imagesDropped: images.dropped } : { logged: true };
     },
 
     async _maybeProposeReusableAction(obs, origin, category) {
@@ -1897,6 +1943,21 @@ Return ONLY valid JSON with:
         .map(s => s.aspect);
       const profile = await getOrInitProfile();
 
+      // The newest images of these observations go to the model with the
+      // prompt, named "image 1", "image 2", … where each observation lists them.
+      const attached = [];
+      const imageNames = new Map();
+      if (media) {
+        const wanted = pending.flatMap(e => (e.images || []).map(img => ({ entry: e.id, img }))).slice(-MAX_EXTRACT_IMAGES);
+        for (const { entry, img } of wanted) {
+          const found = await media.get(img.id).catch(() => null);
+          if (!found) continue;
+          attached.push({ mimeType: found.mimeType, data: found.data });
+          if (!imageNames.has(entry)) imageNames.set(entry, []);
+          imageNames.get(entry).push(`image ${attached.length}`);
+        }
+      }
+
       // FLAG(review): the settingsVocabularyLines() call in this prompt throws
       // when the host passed no toolsRegistry; see interpretNeedsPrompt.
       const prompt = `You maintain the memory of a browser accessibility assistant. Convert raw observations into durable memory operations.
@@ -1908,8 +1969,8 @@ ${DS().global.tools().settingsVocabularyLines().join('\n')}
 ${JSON.stringify({ supportAreas: profile.supportAreas, freeText: profile.freeText }, null, 1)}
 
 ## New observations (weight 3 = deliberate user action, 1 = ambient)
-${JSON.stringify(pending.map(e => ({ type: e.type, weight: e.weight, origin: e.origin, category: e.category, text: e.text, data: e.data })), null, 1)}
-
+${JSON.stringify(pending.map(e => ({ type: e.type, weight: e.weight, origin: e.origin, category: e.category, text: e.text, data: e.data, ...(imageNames.has(e.id) ? { images: imageNames.get(e.id) } : {}) })), null, 1)}
+${attached.length ? `\nThe images an observation lists are attached in order (image 1 first). They show what the person saw or did. Learn about their needs from them; never copy names, messages or other personal details from an image into a memory.\n` : ''}
 ## Existing memories (compare candidates against these)
 ${JSON.stringify(existing, null, 1)}
 
@@ -1926,7 +1987,7 @@ Rules:
 
       let parsed;
       try {
-        parsed = parseJsonLoose(await _gemini(prompt));
+        parsed = parseJsonLoose(await (attached.length ? _gemini(prompt, { images: attached }) : _gemini(prompt)));
       } catch (e) {
         console.warn('[Librarian] extract LLM call failed:', e.message);
         return { ran: false, reason: e.message };
@@ -2256,15 +2317,19 @@ Rules:
       }
       const grace = DECAY_HALF_LIFE.fast; // ~7 days
       let discarded = 0;
+      let dropped = [];
       await DS().patch('mine.episodicLog', (log) => {
         const before = log.entries.length;
-        log.entries = log.entries.filter(e =>
+        const keep = (e) =>
           e.id > log.cursor            // unprocessed: always keep
           || cited.has(e.id)           // still grounds a live fact: keep its lineage
-          || (now - e.t) < grace);     // within the grace window: keep
+          || (now - e.t) < grace;      // within the grace window: keep
+        dropped = log.entries.filter(e => !keep(e));
+        log.entries = log.entries.filter(keep);
         discarded = before - log.entries.length;
         return log;
       });
+      await forgetImages(dropped);
 
       await updateBadge();
       return { ran: true, promoted, expired, purged, discarded };

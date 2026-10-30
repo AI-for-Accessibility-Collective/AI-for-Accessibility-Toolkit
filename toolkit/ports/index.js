@@ -102,6 +102,22 @@
  *   Resolves to the raw reading, or null if the host can't measure it.
  */
 
+/**
+ * @typedef {Object} Media
+ * Where the Librarian keeps the images an observation carries (a screenshot of
+ * what the person saw, a photo), one record per image, so the episodic log
+ * itself stays small. A host without one drops images and keeps the text.
+ * @property {(id: string, image: {mimeType: string, data: string}) => Promise<void>} put
+ *   Store one image (`data` is base64). MUST reject if the write fails.
+ * @property {(id: string) => Promise<{mimeType: string, data: string}|null>} get
+ *   Read one image back, or null when it is gone.
+ * @property {(id: string) => Promise<void>} delete
+ *   Forget one image. Deleting a missing one is not an error.
+ */
+
+/** A Media port that keeps nothing — observations keep their text only. */
+export const noopMedia = null;
+
 /** A DemoHook that does nothing — the default for every non-demo host. */
 export const noopDemo = {
   isOn: () => false,

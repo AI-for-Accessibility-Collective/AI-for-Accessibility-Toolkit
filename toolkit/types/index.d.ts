@@ -36,6 +36,10 @@ export type ToolkitPorts = {
      */
     demo?: import("./ports/index.js").DemoHook | undefined;
     /**
+     * Where observation images are kept. Defaults to none: images are dropped.
+     */
+    media?: import("./ports/index.js").Media | null | undefined;
+    /**
      * Defaults to the bundled web taxonomy.
      */
     taxonomy?: import("./core/taxonomy.js").Taxonomy | undefined;

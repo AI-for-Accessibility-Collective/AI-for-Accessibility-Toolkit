@@ -10,16 +10,23 @@
 //   node adapter.mjs share bigger-buttons
 //   node adapter.mjs extension
 //   node adapter.mjs check
+//   node adapter.mjs learned
+//   node adapter.mjs answer prop_123 accept
 //
 // publish   saves a new revision (private to your account) and installs it
 //           into browser-runtime, so the adapter runtime extension runs it on
-//           the pages it targets. --share shares it, --no-run skips the install.
+//           the pages it targets. --share shares it, --no-run skips the install,
+//           --visibility adapter keeps what it gives the toolkit to itself.
 // status    what the extension reported: running, or failed with the error.
 // share     shares an adapter with everyone on this toolkit (--stop to stop).
 // extension helps set up the adapter runtime extension: opens Chrome's
 //           extensions page and copies the extension folder's path (--no-open
 //           only prints them).
 // check     whether a browser runtime is connected to this toolkit.
+// learned   what the toolkit learned about the person: suggested profile
+//           changes waiting for an answer, and memories.
+// answer    passes on the person's answer to a suggestion: accept, not-now
+//           or never. Only ever their answer.
 //
 // It reads TOOLKIT_URL and TOOLKIT_TOKEN from a .env file in the current
 // folder or a folder above it (the developer console's New adapter guide
@@ -42,14 +49,17 @@ function parse(argv) {
   const [command, ...args] = argv;
   // The target, if any, comes before the flags.
   const target = args[0] && !args[0].startsWith('--') ? args[0] : undefined;
-  const rest = target === undefined ? args : args.slice(1);
+  let rest = target === undefined ? args : args.slice(1);
   const flags = { runsOn: [], for: [] };
+  // answer <id> <accept | not-now | never>
+  if (command === 'answer' && rest[0] && !rest[0].startsWith('--')) { flags.answer = rest[0]; rest = rest.slice(1); }
   for (let i = 0; i < rest.length; i++) {
     const flag = rest[i];
     const value = () => rest[++i] ?? fail(`${flag} needs a value.`);
     if (flag === '--name') flags.name = value();
     else if (flag === '--id') flags.id = value();
     else if (flag === '--about') flags.about = value();
+    else if (flag === '--visibility') flags.visibility = value();
     else if (flag === '--runs-on') flags.runsOn.push(value());
     else if (flag === '--for') flags.for.push(...value().split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
     else if (flag === '--app') flags.app = value();
@@ -112,6 +122,7 @@ async function publish(file, flags) {
   try { code = readFileSync(file, 'utf8'); } catch { fail(`Could not read ${file}.`); }
   const name = flags.name || fail('Give the adapter a name: --name "Bigger buttons"');
   if (!flags.runsOn.length) fail('Say which pages it runs on: --runs-on "https://example.com/*" (repeat for more).');
+  if (flags.visibility && !['user', 'app', 'adapter'].includes(flags.visibility)) fail('--visibility takes user, app or adapter.');
   const unknown = flags.for.filter(a => !AREAS.includes(a));
   if (unknown.length) fail(`--for takes ${AREAS.join(', ')}. Not: ${unknown.join(', ')}.`);
   const id = flags.id || slug(path.basename(file, path.extname(file))) || slug(name);
@@ -120,6 +131,7 @@ async function publish(file, flags) {
     appId, id, name, description: flags.about || '',
     targets: [{ platforms: ['*'], urls: flags.runsOn }],
     supportAreas: flags.for,
+    ...(flags.visibility ? { visibility: flags.visibility } : {}),
   };
   const r = await tool('adapter_publish', {
     appName: flags.app ? flags.app : APP.appName, descriptor,
@@ -217,11 +229,33 @@ async function check() {
   console.log('If an adapter does not run, check that Allow User Scripts is on in the extension\'s Details.');
 }
 
+async function learned() {
+  const s = await tool('profile_learned', {});
+  console.log(`${s.paused ? 'Learning is paused.' : 'Learning is on.'} ${s.proposalsThisWeek} of ${s.proposalsPerWeek} suggestions this week.${s.pendingObservations ? ` ${s.pendingObservations} observations to learn from.` : ''}`);
+  console.log(s.proposals.length ? '\nSuggested changes (ask the person, then: node adapter.mjs answer <id> accept | not-now | never):' : '\nNo suggestions waiting.');
+  for (const p of s.proposals) {
+    const c = p.change || {};
+    const what = c.op === 'profile-set' ? `set ${c.path.replace(/^fields\./, '')} to ${JSON.stringify(c.value)}` : c.op || '';
+    console.log(`- ${p.id}: ${p.label}${what ? ` (${what})` : ''}${p.rationale ? `. ${p.rationale}` : ''}`);
+  }
+  console.log(s.memories.length ? '\nWhat it remembers:' : '\nNothing learned yet.');
+  for (const m of s.memories) console.log(`- ${m.text}${m.kind === 'note' ? ' (their note)' : m.scope && m.scope !== 'general' ? ` (${m.scope})` : ''}`);
+}
+
+const ANSWERS = { accept: 'accept', 'not-now': 'declineOnce', never: 'suppress' };
+async function answer(id, flags) {
+  const response = ANSWERS[flags.answer];
+  if (!id || !response) fail('Use: node adapter.mjs answer <suggestion id> accept | not-now | never (the person\'s answer).');
+  const r = await tool('profile_proposal_respond', { id, response });
+  if (r.ok === false) fail(`Could not answer it: ${r.reason}.`);
+  console.log(response === 'accept' ? 'Accepted. The profile changed, and the apps following it pick it up.' : response === 'suppress' ? 'The toolkit stops suggesting this.' : 'Not now.');
+}
+
 const { command, target, flags } = parse(process.argv.slice(2));
-const COMMANDS = { publish, status, share, extension, check };
+const COMMANDS = { publish, status, share, extension, check, learned, answer };
 if (!COMMANDS[command]) {
-  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check');
+  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check | learned | answer <id> accept|not-now|never');
 }
 if (command === 'extension') { extension(target, flags); process.exit(0); }
-if (!base || !token) fail('No toolkit address or token. In the developer console, open Adapters, choose New adapter, and copy the two lines into a .env file at the top of this repository.');
+if (!base || !token) fail('No toolkit address or token. Ask the person which toolkit to use: their hosted one (in its developer console, Adapters, New adapter, copy the two lines into .env at the top of this repository), or one started on this computer.');
 await COMMANDS[command](target, flags);

@@ -49,7 +49,7 @@ gcloud run deploy toolkit-service \
   --image <region>-docker.pkg.dev/$PROJECT/toolkit/toolkit-service:$(git rev-parse --short HEAD) \
   --region <region> --allow-unauthenticated \
   --memory 512Mi --cpu 1 --cpu-boost --min-instances 0 --max-instances 1 --concurrency 250 --timeout 3600 \
-  --set-secrets "ADMIN_PASSWORD=toolkit-admin-password:latest,GEMINI_API_KEY=toolkit-gemini-key:latest" \
+  --set-secrets "ADMIN_PASSWORD=toolkit-admin-password:latest,WS_GEMINI_KEY=toolkit-gemini-key:latest" \
   --set-env-vars "TOOLKIT_BUCKET=<your-bucket>,CORS_ORIGINS=*"
 ```
 
@@ -93,9 +93,7 @@ gcloud logging read 'jsonPayload.event="auth.signin.failed"' \
   --bucket=toolkit-service-logs --location=global --view=_AllLogs --freshness=7d
 ```
 
-Logs carry uids and client addresses but never passwords, tokens or profile
-content. They are still records of who used the service and when: say so to
-the people whose accounts are on it, and delete the log bucket at teardown.
+Delete the log bucket at teardown.
 
 Liveness: `GET /v1/healthz` (the bare `/healthz` is intercepted at the
 `*.run.app` edge — see CONTRACT.md). The server holds the Gemini key, so

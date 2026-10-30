@@ -36,9 +36,9 @@ const TOOLS_REGISTRY = asAATools();
  *  mutate/write-whole algorithm as toolkit/platforms/node/kv.js's fileKV,
  *  retargeted at the store's doc interface so it works over fileStore OR
  *  gcsStore unchanged. */
-function kvStoreFor(store, uid) {
+function kvStoreFor(store, root) {
   async function readArea(area) {
-    return (await store.readJSON(`users/${uid}/${area}.json`)) || {};
+    return (await store.readJSON(`${root}/${area}.json`)) || {};
   }
   return {
     async get(area, key) {
@@ -49,7 +49,7 @@ function kvStoreFor(store, uid) {
       const data = await readArea(area);
       if (value === undefined) delete data[key];
       else data[key] = value;
-      await store.writeJSON(`users/${uid}/${area}.json`, data);
+      await store.writeJSON(`${root}/${area}.json`, data);
     },
     async getAll(area) {
       return await readArea(area);
@@ -57,21 +57,48 @@ function kvStoreFor(store, uid) {
   };
 }
 
+/** The Media port (toolkit/ports): one document per observation image,
+ *  `<root>/media/<id>.json`, so the episodic log stays small. A deleted image
+ *  is written as null (the store has no delete); the account's deletion
+ *  removes the documents. */
+function mediaFor(store, root) {
+  const doc = (id) => {
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(id)) throw new Error(`media: unsafe id ${JSON.stringify(id)}`);
+    return `${root}/media/${id}.json`;
+  };
+  return {
+    put: (id, image) => store.writeJSON(doc(id), { mimeType: image.mimeType, data: image.data }),
+    get: async (id) => (await store.readJSON(doc(id))) || null,
+    delete: (id) => store.writeJSON(doc(id), null),
+  };
+}
+
+/** Where one Librarian keeps its data: the account's own, or one of its
+ *  partitions (access.js: what one app or adapter gave, kept apart). */
+export function partitionRoot(uid, partition) {
+  if (!partition) return `users/${uid}`;
+  if (!/^(app|adapter)~[A-Za-z0-9._@~-]{1,300}$/.test(partition) || partition.includes('..')) throw new Error(`unsafe partition ${JSON.stringify(partition)}`);
+  return `users/${uid}/scoped/${partition}`;
+}
+
 /** @param {Object} deps
  *  @param {import('./store.js').fileStore|import('./store.js').gcsStore} deps.store
  *  @param {(prompt: string) => Promise<string>} deps.geminiCaller
  *  @param {number} [deps.cap]
- *  @returns {{ getInstance: (uid: string) => Promise<{librarian:object, datastore:object}> }}
+ *  @returns {{ getInstance: (uid: string, partition?: string|null) => Promise<{librarian:object, datastore:object}> }}
  */
 export function createToolkitHost({ store, geminiCaller, cap = DEFAULT_CAP }) {
   if (!store) throw new Error('createToolkitHost: store is required');
   if (typeof geminiCaller !== 'function') throw new Error('createToolkitHost: geminiCaller is required');
 
-  const cache = new Map(); // uid -> Promise<{librarian, datastore}>, insertion order = recency
+  const cache = new Map(); // uid (or uid + partition) -> Promise<{librarian, datastore}>, insertion order = recency
+  const cacheKey = (uid, partition) => (partition ? `${uid}\u0000${partition}` : uid);
 
-  async function build(uid) {
+  async function build(uid, partition) {
+    const root = partitionRoot(uid, partition);
     const instance = createToolkit({
-      kv: kvStoreFor(store, uid),
+      kv: kvStoreFor(store, root),
+      media: mediaFor(store, root),
       clock: nodeClock(),
       scheduler: noopScheduler,
       consent: noopConsent,
@@ -82,21 +109,22 @@ export function createToolkitHost({ store, geminiCaller, cap = DEFAULT_CAP }) {
     return instance;
   }
 
-  async function getInstance(uid) {
+  async function getInstance(uid, partition = null) {
     if (typeof uid !== 'string' || !uid) throw new Error('getInstance: uid is required');
-    if (cache.has(uid)) {
+    const key = cacheKey(uid, partition);
+    if (cache.has(key)) {
       // Refresh recency: delete + re-set moves this key to the end of
       // Map's iteration order, which the eviction below reads as "oldest
       // first".
-      const existing = cache.get(uid);
-      cache.delete(uid);
-      cache.set(uid, existing);
+      const existing = cache.get(key);
+      cache.delete(key);
+      cache.set(key, existing);
       return existing;
     }
-    const built = build(uid);
-    cache.set(uid, built);
+    const built = build(uid, partition);
+    cache.set(key, built);
     // Build failures shouldn't wedge an evicted slot into the cache forever.
-    built.catch(() => cache.delete(uid));
+    built.catch(() => cache.delete(key));
     while (cache.size > cap) {
       const oldestKey = cache.keys().next().value;
       cache.delete(oldestKey);
@@ -110,7 +138,9 @@ export function createToolkitHost({ store, geminiCaller, cap = DEFAULT_CAP }) {
    *  timers to leak, see the header); data is never touched, only the
    *  in-memory object. */
   function evict(uid) {
-    return cache.delete(uid);
+    let dropped = cache.delete(uid);
+    for (const key of [...cache.keys()]) if (key.startsWith(`${uid}\u0000`)) dropped = cache.delete(key) || dropped;
+    return dropped;
   }
 
   return { getInstance, evict, _cacheSizeForTest: () => cache.size };

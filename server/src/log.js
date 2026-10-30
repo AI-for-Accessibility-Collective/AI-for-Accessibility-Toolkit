@@ -58,6 +58,56 @@ export function createLogger({
   };
 }
 
+// ── content in the log ──────────────────────────────────────────────────────
+// The service logs what goes in and out (request and response bodies, AI
+// prompts and replies) unless LOG_CONTENT=off. Credentials never: values under
+// a key that names one, account tokens (aat_…) and Google API keys anywhere in
+// a string. Images and other long base64 are logged by size only. Long
+// content is cut, so one entry stays well under Cloud Logging's 256 KB limit.
+
+export const MAX_LOGGED_CHARS = 100_000;
+const SECRET_KEY = /pass(word)?|token|secret|authorization|api[-_]?key|cookie/i;
+const SECRET_TEXT = [[/aat_[A-Za-z0-9_-]{6,}/g, 'aat_[redacted]'], [/AIza[0-9A-Za-z_-]{20,}/g, '[redacted key]']];
+
+const BASE64 = /^[A-Za-z0-9+/]{1000,}=*$/;
+
+function redactText(s) {
+  let out = s;
+  for (const [re, by] of SECRET_TEXT) out = out.replace(re, by);
+  return out;
+}
+
+/** A copy of `value` with credentials replaced, for the log. */
+export function redact(value, depth = 0) {
+  if (typeof value === 'string') return value.length >= 1000 && BASE64.test(value) ? `[base64, ${value.length} characters]` : redactText(value);
+  if (!value || typeof value !== 'object' || depth > 20) return value;
+  if (Array.isArray(value)) return value.map(v => redact(v, depth + 1));
+  const out = {};
+  for (const [k, v] of Object.entries(value)) {
+    out[k] = SECRET_KEY.test(k) && v !== null && v !== undefined && typeof v !== 'boolean' && typeof v !== 'number' ? '[redacted]' : redact(v, depth + 1);
+  }
+  return out;
+}
+
+/**
+ * Content for a log entry: parsed and redacted JSON when it fits, else the
+ * text, redacted and cut at MAX_LOGGED_CHARS (with its full length).
+ */
+export function loggedContent(text) {
+  if (text === undefined || text === null || text === '') return undefined;
+  let s = String(text);
+  let parsed;
+  try { parsed = redact(JSON.parse(s)); } catch { /* not JSON */ }
+  if (parsed !== undefined) {
+    const shown = JSON.stringify(parsed);
+    if (shown.length <= MAX_LOGGED_CHARS) return parsed;
+    s = shown;
+  } else if (s.length <= MAX_LOGGED_CHARS) {
+    return redactText(s);
+  }
+  return { truncated: true, length: s.length, text: redactText(s.slice(0, MAX_LOGGED_CHARS)) };
+}
+
 /** A logger that writes nothing: the default for tests and embedders. */
 export const silentLogger = Object.freeze({ debug() {}, info() {}, warn() {}, error() {} });
 

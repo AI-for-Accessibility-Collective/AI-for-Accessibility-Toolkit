@@ -7,6 +7,7 @@
 //   const { adapters } = await registry.search({ url: location.href });
 //   await registry.install('my-app', adapters[0].adapter);
 //   const running = await loadInstalledAdapters(registry, 'my-app');         // [{entry, adapter}]
+//   await registry.data({ appId: 'redbird', id: 'big-buttons' }).set('size', 48);  // the adapter's own values
 //
 // Every method returns the tool's structured result. A tool that refuses
 // (not found, not shared, invalid) throws a RegistryCallError carrying the
@@ -60,6 +61,37 @@ export function createRegistryClient({ url, token, fetch: fetcher = globalThis.f
     installed: (app, { includeCode = false, ifEtag } = {}) => call('adapter_installed', { app, includeCode, ...(ifEtag ? { ifEtag } : {}) }),
     report: (app, instanceId, results, label) => call('adapter_report', { app, instanceId, results, ...(label ? { label } : {}) }),
     status: (filters = {}) => call('adapter_status', filters),
+
+    // The profile and learning tools on the same endpoint (protocol/adapter/profile.js).
+    profile: {
+      get: () => call('profile_get', {}),
+      observe: (observation) => call('profile_observe', observation),
+      learned: () => call('profile_learned', {}),
+      learnNow: () => call('profile_learn_now', {}),
+      respond: (id, response) => call('profile_proposal_respond', { id, response }),
+      forget: (id) => call('profile_memory_delete', { id }),
+      pause: (paused = true) => call('profile_learning_pause', { paused }),
+      reset: ({ memories = false } = {}) => call('profile_learning_reset', { memories }),
+    },
+
+    // Who can read what an app or adapter gives the toolkit (protocol/adapter/access.js).
+    access: {
+      /** Declare an app: user (every app of the person reads what it gives) or app (only itself). */
+      declare: (appId, visibility, { name } = {}) => call('app_declare', { appId, visibility, ...(name ? { name } : {}) }),
+      get: () => call('access_get', {}),
+      /** The console's setting: narrow an app ({app}) or an adapter ({adapter}); null goes back to what it declared. */
+      restrict: (which, visibility) => call('access_restrict', { ...which, visibility }),
+    },
+
+    /** An adapter's own stored values for this account: data(adapter).get(key?), .set(key, value), .delete(key?). */
+    data: (adapter) => ({
+      get: async (key) => {
+        const r = await call('adapter_data_get', { adapter, ...(key !== undefined ? { key } : {}) });
+        return key === undefined ? r.values : r.value;
+      },
+      set: (key, value) => call('adapter_data_set', { adapter, key, value }),
+      delete: (key) => call('adapter_data_delete', { adapter, ...(key !== undefined ? { key } : {}) }),
+    }),
 
     /**
      * Listen for changes (notifications/resources/list_changed) until the

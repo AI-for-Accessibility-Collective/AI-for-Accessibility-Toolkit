@@ -5,9 +5,15 @@
 //   ADMIN_PASSWORD  required in production (NODE_ENV=production); a dev
 //                   default is used otherwise so `node server/index.js` works
 //                   out of the box for local iteration, with a loud warning.
-//   GEMINI_API_KEY  optional — without it the slow lane (extract/reflect/
-//                   buildSkill/interpretNeedsPrompt) throws 'no-server-key'
-//                   when actually invoked; the fast lane is unaffected.
+//   WS_GEMINI_KEY   the Gemini key every toolkit AI feature uses (extract/
+//                   reflect/buildSkill/interpretNeedsPrompt, the learning
+//                   loop); GEMINI_API_KEY is read when it is unset. Without
+//                   either, the slow lane throws 'no-server-key' when actually
+//                   invoked; the fast lane is unaffected.
+//   GEMINI_MODEL    default gemini-3.8-flash
+//   LOG_CONTENT     off: leave request and response bodies and AI prompts and
+//                   replies out of the log (they are in it by default, with
+//                   passwords, tokens and keys redacted)
 //   TOOLKIT_BUCKET  set -> gcsStore(bucket); unset -> fileStore(DATA_DIR)
 //   DATA_DIR        default ./data (only used when TOOLKIT_BUCKET is unset)
 //   CORS_ORIGINS    comma-separated browser origins allowed to call /v1, or *
@@ -24,7 +30,7 @@ import path from 'node:path';
 
 import { createApp } from './src/app.js';
 import { createStore } from './src/store.js';
-import { createGeminiCaller } from './src/gemini.js';
+import { createGeminiCaller, GEMINI_MODEL } from './src/gemini.js';
 import { createToolkitHost } from './src/toolkit-host.js';
 import { createLogger } from './src/log.js';
 
@@ -59,8 +65,11 @@ function boot() {
   const store = createStore({ bucket, dataDir });
   if (isProd && !bucket) log.warn('config.local-storage', { message: `NODE_ENV=production without TOOLKIT_BUCKET: data is written to ${dataDir}, which a container loses when it stops.` });
 
-  const geminiApiKey = process.env.GEMINI_API_KEY || null;
-  const geminiCaller = createGeminiCaller({ apiKey: geminiApiKey });
+  const geminiKeyName = process.env.WS_GEMINI_KEY ? 'WS_GEMINI_KEY' : process.env.GEMINI_API_KEY ? 'GEMINI_API_KEY' : null;
+  const geminiApiKey = geminiKeyName ? process.env[geminiKeyName] : null;
+  const geminiModel = process.env.GEMINI_MODEL || GEMINI_MODEL;
+  const logContent = process.env.LOG_CONTENT !== 'off';
+  const geminiCaller = createGeminiCaller({ apiKey: geminiApiKey, model: geminiModel, log, logContent });
 
   const toolkitHost = createToolkitHost({ store, geminiCaller });
 
@@ -76,15 +85,16 @@ function boot() {
     corsOrigins = ['*'];
   }
   const tokenSecret = process.env.TOKEN_SECRET || undefined;
-  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log });
+  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log, logContent });
   const server = http.createServer(listener);
   server.listen(port, () => {
     log.info('server.started', {
       port, version: pkg.version,
       storage: bucket ? `gcs:${bucket}` : `file:${dataDir}`,
-      gemini: geminiApiKey ? 'configured' : 'none',
+      gemini: geminiKeyName ? `${geminiModel} (key from ${geminiKeyName})` : 'none',
       cors: corsOrigins.includes('*') ? 'any origin' : corsOrigins.join(',') || 'same origin only',
       tokenSecret: tokenSecret ? 'TOKEN_SECRET' : 'admin password',
+      content: logContent ? 'logged (credentials redacted)' : 'off',
     });
     if (!process.env.K_SERVICE) {
       console.log(`[toolkit-service] developer console: http://localhost:${port}/developer`);

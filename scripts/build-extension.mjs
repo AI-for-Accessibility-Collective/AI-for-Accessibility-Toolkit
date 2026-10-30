@@ -19,6 +19,8 @@ const FILES = [
   'protocol/adapter/wire.js',
   'protocol/adapter/package.js',
   'protocol/adapter/registry.js',
+  'protocol/adapter/profile.js',
+  'protocol/adapter/access.js',
   'adapter-mcp/client.js',
   'adapter-mcp/registry.js',
 ];

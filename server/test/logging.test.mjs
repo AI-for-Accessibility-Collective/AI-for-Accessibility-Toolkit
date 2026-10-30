@@ -13,7 +13,9 @@ import path from 'node:path';
 import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
-import { createLogger, safeErrorText } from '../src/log.js';
+import { createLogger, safeErrorText, redact, loggedContent, MAX_LOGGED_CHARS } from '../src/log.js';
+import { createGeminiCaller } from '../src/gemini.js';
+import { withAiContext } from '../src/ai-context.js';
 import { ACTIVITY_DOC } from '../src/activity.js';
 import { createAdapterProvider, connectToToolkit, fromToggleAdapter, defineDescriptor, createMcpClient } from '../../toolkit/adapter-mcp/index.js';
 
@@ -170,6 +172,79 @@ try {
     await svc.app.activity.flush();
     assert.equal(await store.readJSON(ACTIVITY_DOC('ada')), null);
     assert.equal(events('user.deleted')[0].uid, 'ada');
+  });
+
+  await test('request and response bodies are in the request log, with passwords and tokens redacted', async () => {
+    const made = await call('POST', '/admin/accounts', { admin: true, body: { uid: 'cy' } });
+    secrets.push(made.body.password);
+    lines.length = 0;
+    const signedIn = await call('POST', '/v1/auth/login', { body: { username: 'cy', password: made.body.password } });
+    const token = signedIn.body.defaultToken;
+    secrets.push(token, signedIn.body.token);
+    await fetch(`${svc.base}/v1/librarian/setProfileField`, {
+      method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ args: ['fields.textSize', 1.5] }),
+    });
+    const login = events('http.request').find(e => e.path === '/v1/auth/login');
+    assert.equal(login.request.username, 'cy');
+    assert.equal(login.request.password, '[redacted]');
+    assert.equal(login.response.defaultToken, '[redacted]');
+    assert.equal(login.response.account.uid, 'cy', 'the rest of the response is there');
+    const setField = events('http.request').find(e => e.path === '/v1/librarian/setProfileField');
+    assert.deepEqual(setField.request, { args: ['fields.textSize', 1.5] });
+    assert.equal(setField.response.ok, true);
+    assert.equal(setField.response.result.fields.textSize, 1.5, 'the response data is logged too');
+  });
+
+  await test('credentials are redacted wherever they sit, and long content is cut', () => {
+    assert.deepEqual(redact({ password: 'x', nested: { defaultToken: 'aat_abcdefgh', note: 'key AIzaSyA1234567890123456789012 and aat_abcdefghij' }, tokenCount: 3, keep: true }),
+      { password: '[redacted]', nested: { defaultToken: '[redacted]', note: 'key [redacted key] and aat_[redacted]' }, tokenCount: 3, keep: true });
+    const long = loggedContent('y'.repeat(MAX_LOGGED_CHARS + 50));
+    assert.equal(long.truncated, true);
+    assert.equal(long.length, MAX_LOGGED_CHARS + 50);
+    assert.equal(long.text.length, MAX_LOGGED_CHARS);
+  });
+
+  await test('each AI call is logged with the account, purpose, prompt, reply and token counts', async () => {
+    lines.length = 0;
+    const reply = { candidates: [{ content: { parts: [{ text: '{"operations":[]}' }] }, finishReason: 'STOP' }], usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 5, totalTokenCount: 17 } };
+    const caller = createGeminiCaller({ apiKey: 'AIzaSyFAKEFAKEFAKEFAKEFAKEFAKE', log, fetch: async (url, init) => {
+      assert.match(url, /models\/gemini-3\.8-flash:generateContent$/);
+      assert.equal(init.headers['x-goog-api-key'], 'AIzaSyFAKEFAKEFAKEFAKEFAKEFAKE');
+      return new Response(JSON.stringify(reply), { status: 200 });
+    } });
+    assert.equal(await withAiContext('ada', 'extractNow', () => caller('Observations: turned on captions.')), '{"operations":[]}');
+    const [entry] = events('ai.call');
+    assert.equal(entry.severity, 'INFO');
+    assert.deepEqual([entry.model, entry.uid, entry.purpose, entry.outcome, entry.prompt, entry.reply, entry.promptTokens, entry.outputTokens, entry.totalTokens, entry.finishReason],
+      ['gemini-3.8-flash', 'ada', 'extractNow', 'ok', 'Observations: turned on captions.', { operations: [] }, 12, 5, 17, 'STOP']);
+    assert.ok(!lines.some(l => l.includes('AIzaSyFAKE')), 'never the key');
+  });
+
+  await test('failed AI calls are logged with Google\'s answer, and without a key the call is logged as skipped', async () => {
+    lines.length = 0;
+    const failing = createGeminiCaller({ apiKey: 'k', log, fetch: async () => new Response(JSON.stringify({ error: { status: 'RESOURCE_EXHAUSTED', message: 'quota' } }), { status: 429 }) });
+    await assert.rejects(withAiContext('ada', 'buildSkill', () => failing('p')), /Gemini API error 429 RESOURCE_EXHAUSTED/);
+    const [failed] = events('ai.call');
+    assert.deepEqual([failed.severity, failed.outcome, failed.httpStatus, failed.errorStatus, failed.reply.error.message], ['WARNING', 'http-error', 429, 'RESOURCE_EXHAUSTED', 'quota']);
+    await assert.rejects(createGeminiCaller({ log })('p'), /no-server-key/);
+    assert.equal(events('ai.call')[1].outcome, 'no-key');
+  });
+
+  await test('with LOG_CONTENT off, no bodies, prompts or replies are logged', async () => {
+    const quiet = [];
+    const quietLog = createLogger({ format: 'json', level: 'debug', write: (line) => quiet.push(JSON.parse(line)) });
+    const caller = createGeminiCaller({ apiKey: 'k', log: quietLog, logContent: false, fetch: async () => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'hi' }] } }] }), { status: 200 }) });
+    await caller('secret prompt');
+    const app = createApp({ store, adminPassword: ADMIN, toolkitHost: createToolkitHost({ store, geminiCaller: caller }), log: quietLog, logContent: false });
+    const server = http.createServer(app);
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    await fetch(`http://127.0.0.1:${server.address().port}/v1/meta`);
+    await new Promise(r => setTimeout(r, 50));
+    server.close(); app.relay.closeAll();
+    assert.ok(quiet.some(e => e.event === 'ai.call' && e.outcome === 'ok'));
+    assert.ok(quiet.some(e => e.event === 'http.request' && e.path === '/v1/meta'));
+    assert.ok(!quiet.some(e => 'prompt' in e || 'reply' in e || 'request' in e || 'response' in e));
   });
 
   await test('no log line contains a password, a token or the admin password', () => {

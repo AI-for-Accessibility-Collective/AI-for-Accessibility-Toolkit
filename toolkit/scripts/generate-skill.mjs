@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { buildModel } from './introspect.mjs';
 import { QUICK_START_CODE, PACKAGE_NAME } from './generate-api-docs.mjs';
 import { renderMethodGroups, renderPorts } from './render-lib.mjs';
-import { PROFILE_NAME, PROFILE_VERSION, MCP_PROTOCOL_VERSION, TOOL_DESCRIPTIONS, REGISTRY_TOOL_DESCRIPTIONS, WEB_MODULE, BROWSER_RUNTIME_APP } from '../protocol/adapter/index.js';
+import { PROFILE_NAME, PROFILE_VERSION, MCP_PROTOCOL_VERSION, TOOL_DESCRIPTIONS, REGISTRY_TOOL_DESCRIPTIONS, PROFILE_TOOL_DESCRIPTIONS, ACCESS_TOOL_DESCRIPTIONS, WEB_MODULE, BROWSER_RUNTIME_APP } from '../protocol/adapter/index.js';
 import * as adapterMcp from '../adapter-mcp/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -103,7 +103,7 @@ function buildServerDevSection() {
   const scriptLines = Object.entries(scripts).map(([k, v]) => `- \`npm run ${k}\` — \`${v}\``).join('\n');
   return `The reference service in \`server/\` is a zero-dependency \`node:http\` app that embeds the toolkit through its public barrel — it is both the hosted deployment and the template for running your own instance.
 
-**Run locally** (file-backed storage, no cloud account needed):
+**Run locally** (file-backed storage, no cloud account needed). A coding agent starts one only when the person chooses it over their hosted toolkit, and never when \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` are already set (see "Build an adapter with a coding agent", step 1). The repository's own tests start their own servers and need none of this.
 
 \`\`\`bash
 ADMIN_PASSWORD=dev npm run dev:workshop      # from the repo root; --workshop lets any local page call /v1
@@ -121,7 +121,7 @@ of accounts and shows each password once (print or copy them then).
 **npm scripts** (\`server/package.json\`):
 ${scriptLines}
 
-**Deploying**: \`server/Dockerfile\` builds from the repo root (it copies \`toolkit/\` + \`server/\`); \`cloudbuild.yaml\` + \`server/DEPLOYMENT.md\` document the Cloud Run deployment (small instance, Secret Manager for the secrets, GCS bucket, IAM). Keep \`--max-instances 1\` (connected Adapter MCP apps live in the process's memory, so a second instance would report them offline), \`--timeout 3600\` (each connected app holds one long server-sent-event request), and \`CORS_ORIGINS=*\` when browser apps on other origins must connect (\`/v1\` accepts bearer tokens only, never cookies). Everything else — accounts, tokens, profiles, presets, each account's last 200 MCP calls — is in the store and survives a restart. Logs are structured JSON on Cloud Run (requests, sign-ins, account and token changes, apps connecting, MCP calls, errors with stacks; never passwords, tokens or profile content); DEPLOYMENT.md shows routing them to a 365-day log bucket. \`server/API.md\` is generated from the route table (\`npm run docs\` in \`server/\`) and the live service serves the same data at \`GET /v1/meta\`. Liveness: use \`/v1/healthz\` (bare \`/healthz\` is intercepted at the run.app edge).
+**Deploying**: \`server/Dockerfile\` builds from the repo root (it copies \`toolkit/\` + \`server/\`); \`cloudbuild.yaml\` + \`server/DEPLOYMENT.md\` document the Cloud Run deployment (small instance, Secret Manager for the secrets, GCS bucket, IAM). Keep \`--max-instances 1\` (connected Adapter MCP apps live in the process's memory, so a second instance would report them offline), \`--timeout 3600\` (each connected app holds one long server-sent-event request), and \`CORS_ORIGINS=*\` when browser apps on other origins must connect (\`/v1\` accepts bearer tokens only, never cookies). Everything else — accounts, tokens, profiles, presets, each account's last 200 MCP calls — is in the store and survives a restart. \`server/API.md\` is generated from the route table (\`npm run docs\` in \`server/\`) and the live service serves the same data at \`GET /v1/meta\`. Liveness: use \`/v1/healthz\` (bare \`/healthz\` is intercepted at the run.app edge).
 
 **Extending the wire surface**: add a route entry in \`server/src/routes.js\` (plain \`{route, target, kind}\`, or a custom \`invoke\` for arg-shape dispatch — see \`setPause\`), then regenerate docs and update the oracle list in \`server/test/server-test.mjs\`. A remote-mode host wraps these routes in a Librarian-shaped facade.`;
 }
@@ -130,6 +130,8 @@ ${scriptLines}
  *  read from the protocol and SDK modules, so they cannot drift. */
 function buildAdapterMcpSection() {
   const registryTools = Object.entries(REGISTRY_TOOL_DESCRIPTIONS).map(([name, text]) => `- \`${name}\` — ${text}`).join('\n');
+  const profileTools = Object.entries(PROFILE_TOOL_DESCRIPTIONS).map(([name, text]) => `- \`${name}\` — ${text}`).join('\n');
+  const accessTools = Object.entries(ACCESS_TOOL_DESCRIPTIONS).map(([name, text]) => `- \`${name}\` — ${text}`).join('\n');
   const tools = Object.entries(TOOL_DESCRIPTIONS).map(([name, text]) => `- \`${name}\` — ${text}`).join('\n');
   const helpers = ['createRegistryClient', 'loadInstalledAdapters', 'defineDescriptor', 'lintWebModule', 'createAdapterProvider', 'fromToggleAdapter', 'fromAction', 'connectToToolkit', 'detectBrowserPlatform', 'createMcpClient', 'adapterClient', 'catalogDescriptors']
     .filter((name) => typeof adapterMcp[name] === 'function');
@@ -154,6 +156,14 @@ for (const { adapter, entry } of await loadInstalledAdapters(registry, 'my-app')
 
 ${registryTools}
 
+**Profile and learning tools** (the same endpoint; SDK: \`registry.profile.get()\`, \`.observe({text, origin, type, data, images, app, adapter})\`, \`.learned()\`, \`.learnNow()\`, \`.respond(id, 'accept' | 'declineOnce' | 'suppress')\`, \`.forget(id)\`, \`.pause(true)\`, \`.reset({memories})\`). The toolkit learns about the person over time: apps report what the person did with \`profile_observe\` (one plain sentence, the site, small data, never page content), the registry adds running, removing and switching adapters in \`${BROWSER_RUNTIME_APP}\`, and about 30 seconds after the last observation the service turns them into memories and suggested profile changes. **A suggestion changes the profile only when the person accepts it**: show it to them and pass on their answer, never accept for them. The developer console's Profiles page shows the same under "What your toolkit learned", with pause and reset. See \`server/CONTRACT.md\`, "Profile and learning tools".
+
+${profileTools}
+
+**Who can read what an app or adapter gives the toolkit, and adapters' own data** (the same endpoint; SDK: \`registry.access.declare(appId, 'user' | 'app')\`, \`.get()\`, \`.restrict({app} | {adapter}, level | null)\`; \`registry.data(adapterKey).get(key?)\`, \`.set(key, value)\`, \`.delete(key?)\`). Each app and adapter declares a visibility for its observations, what the toolkit learns from them, and its stored data: \`user\` (every app of the person's account; the default), \`app\` (only that app), or \`adapter\` (only that adapter and the apps that run it). An app declares it with \`app_declare\` or \`application.visibility\` when it connects; an adapter with \`visibility\` in its descriptor. The person can narrow either in the developer console (the **Apps** and **Adapters** pages), never widen it. App- and adapter-level data is learned in a store of its own and never becomes a suggested change to the shared profile. The console session and the default token read everything; an app token bound to an app (the console's **Account** page, "For app") reads user-level data plus its own app's. An adapter's data is up to 4 MB of JSON per account.
+
+${accessTools}
+
 **The browser runtime** (\`extension/\`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app \`${BROWSER_RUNTIME_APP}\` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its popup, and reports applied / failed (with the error) / skipped per page origin with \`adapter_report\`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console → popup → **Connect with this console** (the skill's \`adapter.mjs extension\` walks a person through it, and \`adapter.mjs check\` confirms it). On connecting, the runtime checks in with an empty \`adapter_report\`, so \`adapter_status\` lists it before it runs anything. Adapters are built in code with a coding agent (the console's **+ New adapter** is a guide to that); the console's **Adapters** page edits them (live lint), saves revisions, runs them in the browser, shares them, installs others' and shows the runtime's reports.
 
 SDK helpers: ${helpers.map((h) => `\`${h}\``).join(', ')}.
@@ -168,7 +178,16 @@ A client pins the adapter it means with \`adapterRef\` = \`{appId, id, version, 
 // Plain-language steps for the most common task: build an adapter in code
 // with a coding agent. Hand-written, like WHAT_IS_IT; the helper it names is
 // scripts/adapter.mjs in this skill's folder.
-const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one barrier on a website, for example making small buttons bigger. The person says what should change, you write the file, and the toolkit runs it in their browser. The toolkit is a research project in pre-alpha and the adapters are unvalidated, so the person checks each change on the page.
+const BUILD_AN_ADAPTER = `The toolkit supports two kinds of work. Find out first which one the person means, and ask if what they said does not make it clear.
+
+- **A web adapter, run by the toolkit's browser extension.** One JavaScript file that removes one barrier on a website, for example making small buttons bigger. It works on sites the person does not own: the adapter runtime extension runs it in their Chrome on the pages it targets. See "A web adapter" below.
+- **An app with its own adaptations.** An app the person builds (a web, mobile or XR app) changes itself. Its adaptations live in its own code, and it follows the person's toolkit profile. It connects to the toolkit, so its adaptations show in the developer console under **Apps**, where the console or a coding agent can switch them on and off. See "Adaptations in your own app" below. The Redbird demo store is one.
+
+The toolkit is a research project in pre-alpha and the adaptations are unvalidated, so the person checks each change themselves.
+
+### A web adapter
+
+The person says what should change, you write the file, and the toolkit runs it in their browser.
 
 **What the person does**
 
@@ -180,13 +199,28 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
 
 **What you do**
 
-1. Check that \`.env\` exists at the top of the repository. The helper below reads \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` from it, so leave the file closed: keep the token out of your messages, other files and commits. If it is missing, ask the person to copy the two lines from the developer console (**Adapters**, **+ New adapter**).
+1. Choose the toolkit to work with. **Do not start a toolkit on this computer unless the person asks for one.**
+   - If \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` are already set, in the environment or in a \`.env\` file at the top of the repository (\`test -f .env\`; leave the file closed), use them. Do not ask.
+   - Otherwise ask the person: "Use your hosted toolkit (the usual choice), or start one on this computer?"
+   - **Hosted** (the default): ask them to open their developer console, choose **Adapters**, then **+ New adapter**, and paste the two lines it shows into \`.env\` at the top of the repository. If they give you the address and token instead, write the two lines into \`.env\` yourself, and do not repeat the token back.
+   - **On this computer**, only when they choose it: start it as in "Running or deploying your own toolkit service" (\`ADMIN_PASSWORD=dev npm run dev:workshop\`), make an account, have them sign in at \`http://localhost:8080/developer\`, and put that console's two lines into \`.env\`.
+   - The helper below reads \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` from \`.env\`. Keep the token out of your messages, other files and commits (git ignores \`.env\`).
 2. Check that the person's browser runs adapters: \`node <skill folder>/scripts/adapter.mjs check\`. It prints "Connected: Chrome … on macOS, last seen …", or says that no browser runtime is connected. If none is, help them set up the extension:
    - Run \`node <skill folder>/scripts/adapter.mjs extension\`. It opens \`chrome://extensions\` in Chrome, copies the extension folder's path, and prints the steps.
    - Chrome lets only the person install it. Give them one step at a time and wait after each: turn on **Developer mode**; choose **Load unpacked** and pick the extension folder (on a Mac, Cmd+Shift+G in the folder picker, then paste); on the extension's **Details**, turn on **Allow User Scripts**; sign in to the developer console, open the extension from the toolbar and choose **Connect with this console**.
    - Run \`check\` again to confirm.
-3. Write one file, such as \`bigger-buttons.js\`:
-   - It exports one object with \`enable(options)\` and \`disable()\`.
+3. Before you write anything, ask the person what you need, in one message. Mark each question **Needed** or **Optional**, and give each optional one the default you will use. Leave out what they already told you. If they told you everything needed, do not ask: say which defaults you will use and go on. Wait for the answers to the needed questions.
+   - **Needed**: what gets in their way on the page now, and what should change. For example: "the buttons are too small to hit", so "make them at least 44 pixels tall".
+   - **Needed**: which site or pages, for example \`https://example.com\`, or only its checkout pages. This becomes \`--runs-on\`.
+   - **Needed**: who it helps: vision, motor, hearing, cognitive, sensory or reading. This becomes \`--for\`. If what they said already points to one, suggest it and ask them to confirm.
+   - **Optional**: a name. By default you name it after the change, such as "Bigger buttons".
+   - **Optional**: how much, and where on the page, for example the size, the colors, or only the main menu. By default you pick a common value and say what it is.
+   - **Optional**: anything on the page to leave alone. By default you change only what matches the problem.
+   - **Optional**: whether to share it with everyone on their toolkit. By default it stays private to their account.
+   - **Optional**: who can read what it gives the toolkit (what the person does with it, and its stored values): every app of theirs, or only this adapter. By default, every app of theirs.
+   - **Optional**: whether it keeps values between runs, such as a size the person picked. By default, no.
+4. Write one file, such as \`bigger-buttons.js\`:
+   - It exports one object with \`enable(options, toolkit)\` and \`disable()\`. \`options\` are its parameters. \`toolkit\` is how it reaches the toolkit, as itself: \`await toolkit.data.get(key)\`, \`toolkit.data.set(key, value)\` and \`toolkit.data.delete(key)\` keep its own values, and \`toolkit.observe('Moved the ruler down the page.')\` tells the toolkit what the person did (one plain sentence; never page content or anything they typed). Each returns a promise, and rejects when the browser is not connected, so the adapter works without them.
    - \`enable()\` makes the change and remembers what it changed. \`disable()\` puts the page back exactly as it was.
    - Plain browser JavaScript only: no \`import\`, no network calls (\`fetch\`, \`XMLHttpRequest\`, \`WebSocket\`), no \`eval\`.
 
@@ -212,7 +246,7 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
      },
    };
    \`\`\`
-4. Publish it and run it in the person's browser with the helper in this skill's folder (in this repository: \`.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs\`; Node 18 or later, nothing to install):
+5. Publish it and run it in the person's browser with the helper in this skill's folder (in this repository: \`.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs\`; Node 18 or later, nothing to install):
 
    \`\`\`bash
    node <skill folder>/scripts/adapter.mjs publish bigger-buttons.js \\
@@ -221,11 +255,36 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
    \`\`\`
    - \`--runs-on\` is the pages, one flag per pattern: \`https://example.com/*\` is each page of that site, \`http://localhost/*\` is any local port.
    - \`--for\` is who it helps: vision, motor, hearing, cognitive, sensory, reading.
+   - If the person chose to share it, add \`--share\`. If only this adapter should read what it gives the toolkit, add \`--visibility adapter\`.
    - If the toolkit refuses the file, the message names the line. Fix it and run the command again.
-5. Check that it ran: \`node <skill folder>/scripts/adapter.mjs status bigger-buttons\` prints "Running on …", or "Failed on …" with the error. Fix the file and publish again. Each publish is a new revision, and open pages pick it up without a reload.
-6. When the person asks, share it with everyone on their toolkit: \`node <skill folder>/scripts/adapter.mjs share bigger-buttons\`. Until then it stays private to their account.
+6. Check that it ran: \`node <skill folder>/scripts/adapter.mjs status bigger-buttons\` prints "Running on …", or "Failed on …" with the error. Fix the file and publish again. Each publish is a new revision, and open pages pick it up without a reload.
+7. When the person asks, share it with everyone on their toolkit: \`node <skill folder>/scripts/adapter.mjs share bigger-buttons\`. Until then it stays private to their account.
+8. Over time the toolkit learns from what the person does with their adapters and suggests changes to their profile. \`node <skill folder>/scripts/adapter.mjs learned\` lists the suggestions and what it remembers. Read a suggestion to the person and pass on their answer only: \`node <skill folder>/scripts/adapter.mjs answer <id> accept\` (or \`not-now\`, \`never\`).
 
-The adapter also shows on the developer console's **Adapters** page, where the person can read the code and its reports. To publish from your own app's code instead, see "Sharing adapters between apps" below.`;
+The adapter also shows on the developer console's **Adapters** page, where the person can read the code and its reports.
+
+### Adaptations in your own app
+
+The adaptations are part of the app's code, so you work in the app's repository and follow its conventions. The app talks to the toolkit with the toolkit's address and the person's default token. Keep both in the app's configuration, such as its \`.env\`, never in its code or commits.
+
+1. Choose the toolkit to work with, as in step 1 for a web adapter. For an app that should read only its own data, ask the person for an app token made for it: the console's **Account** page, **App tokens**, with its app id under "For app". The default token reads everything.
+2. Ask what you need, in one message, as in step 3 for a web adapter, with these questions:
+   - **Needed**: what the app is and where it runs: a web, mobile or XR app.
+   - **Needed**: which adaptations it has or should have, what each one changes, and who it helps: vision, motor, hearing, cognitive, sensory or reading.
+   - **Needed**: which parts of the person's profile turn each one on, for example bigger text for someone who asked for it.
+   - **Optional**: whether the toolkit can switch the adaptations on and off while the app is open, from the console's **Apps** page or a coding agent. By default, yes.
+   - **Optional**: which observations the app sends, so the toolkit learns from them: what the person does that says something about their needs, such as switching an adaptation, or making the text bigger again after a reset. By default, only the person switching an adaptation themselves.
+   - **Optional**: which suggested profile changes (proposals) the app shows the person to answer, for example only the ones that touch its own adaptations. By default, none: the person answers them on the console's Profiles page.
+   - **Optional**: whether to share an adaptation's code with other apps through the toolkit's adapter registry. By default, no: it stays in the app.
+   - **Optional**: who can read what the app gives the toolkit (its observations and what the toolkit learns from them): every app of theirs, or only this app. By default, every app of theirs.
+   - **Optional**: whether observations carry images, such as a screenshot of what the person could not read. By default, no.
+   - **Optional**: values the app or its adaptations keep in the toolkit between sessions, such as a chosen size. By default, none: the app keeps its own.
+3. Follow the profile. Read it with \`getProfile\` (\`POST /v1/librarian/getProfile\`), and listen on \`GET /v1/profile/events\` so the app follows a change without a reload (see "Endpoints"). Turn on the adaptations the profile asks for. In JavaScript, the surface renderers in \`toolkit/surfaces/\` map the profile to platform settings.
+4. Connect, so the app shows under **Apps**. Wrap each adaptation as an object with \`enable(parameters)\`, \`disable()\` and \`enabled\`, describe it with \`defineDescriptor({ appId: '<app id>', ... })\`, and connect with \`connectToToolkit({ url, token, provider: createAdapterProvider({ application, adapters: [fromToggleAdapter({ descriptor, adapter })] }) })\` (see "Live control" in "Sharing adapters between apps"). The app is listed under **Apps** while it is open. Its adaptations stay out of the adapter registry and the console's **Adapters** page. If only the app should read what it gives the toolkit, set \`visibility: 'app'\` in \`application\`; an app without live control declares it with \`registry.access.declare('<app id>', 'app')\`.
+5. Send the observations the person chose, each one plain sentence with \`profile_observe\` or \`POST /v1/librarian/logObservation\`, for example "Turned on Calm urgency on the Redbird store." Use \`type: 'setting-change'\` for a deliberate choice. Never page content or anything they typed. If the person chose images, add up to 4 as \`images: [{ mimeType: 'image/png', data: <base64> }]\`; they are kept with the observation and shown to the model when it learns. To keep values in the toolkit, use \`registry.data({ appId, id }).set(key, value)\` for an adaptation published to the registry.
+6. If the app shows suggestions, read them with \`profile_learned\` (\`registry.profile.learned()\`), keep the ones the person chose (each has a \`change\`, such as \`{op: 'profile-set', path: 'fields.largeTargets', value: true}\`), show each in plain words, and pass on the person's answer with \`profile_proposal_respond\`: accept, declineOnce or suppress. Never answer for them. An accepted change reaches the app through \`/v1/profile/events\`, like any other profile change.
+7. Check it: open the app, then the console's **Apps** page. The app is listed, and **Try it** switches each adaptation. A coding agent can do the same through \`/v1/mcp/apps/<app id>\`.
+8. Only when the person asks to share an adaptation with other apps: publish it with \`registry.publish\` (see "Sharing adapters between apps"). A web adaptation can carry its code; any other is a description only.`;
 
 const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.claude/skills/ai4a11y-toolkit/SKILL.md\`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
 
@@ -242,7 +301,7 @@ export function renderSkillMd(model) {
   const adapterMcpSection = buildAdapterMcpSection();
   return `---
 name: ai4a11y-toolkit
-description: Use when building an accessibility adapter for a website in code (write it, publish it to the toolkit, run it in the browser, check it, share it), embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), sharing accessibility adapters between apps through Adapter MCP (the toolkit's adapter registry, the SDK, the browser runtime extension, the developer console's Adapters and Apps pages, MCP clients), talking to the hosted toolkit HTTP service with an account's default token, or running/deploying your own toolkit service instance (accounts, workshops, Cloud Run).
+description: Use when building an accessibility adapter for a website in code (write it, publish it to the toolkit, run it in the browser with the toolkit's extension, check it, share it), building adaptations into your own web, mobile or XR app that follow the person's toolkit profile and show under the console's Apps, embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), sharing accessibility adapters between apps through Adapter MCP (the toolkit's adapter registry, the SDK, the browser runtime extension, the developer console's Adapters and Apps pages, MCP clients), talking to the hosted toolkit HTTP service with an account's default token, or running/deploying your own toolkit service instance (accounts, workshops, Cloud Run).
 ---
 
 # AI for Accessibility Toolkit

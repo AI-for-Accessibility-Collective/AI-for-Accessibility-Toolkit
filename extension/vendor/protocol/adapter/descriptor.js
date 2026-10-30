@@ -26,6 +26,10 @@ export const VERIFICATION = Object.freeze(['adapter-reported', 'host-observed', 
 export const MUTATION_STATUSES = Object.freeze(['applied', 'partial', 'noop', 'unavailable', 'failed', 'cancelled']);
 export const QUERY_STATUSES = Object.freeze(['ok', 'partial', 'unavailable', 'unsupported']);
 export const SUPPORT_AREAS = Object.freeze(['vision', 'motor', 'hearing', 'cognitive', 'sensory', 'reading']);
+/** Who can read what an app or adapter gives the toolkit (access.js). */
+export const VISIBILITY = Object.freeze(['user', 'app', 'adapter']);
+/** An app declares user or app; adapter-level is for an adapter's own data. */
+export const APP_VISIBILITY = Object.freeze(['user', 'app']);
 export const REASON_CODES = Object.freeze([
   'invalid-parameters', 'permission-required', 'permission-denied', 'missing-provider',
   'target-unavailable', 'target-ambiguous', 'invalid-target-ref', 'target-out-of-scope',
@@ -59,6 +63,7 @@ export function checkApplication(app) {
   if (app.platform !== undefined && !isObject(app.platform)) err('/application/platform', 'must be an object describing the running platform');
   if (!stringList(app.surfaces) || !app.surfaces.length || app.surfaces.some(s => !SURFACES.includes(s))) err('/application/surfaces', `must be a non-empty list of ${SURFACES.join(', ')}`);
   if (app.description !== undefined && (typeof app.description !== 'string' || app.description.length > MAX_TEXT)) err('/application/description', `must be text of at most ${MAX_TEXT} characters`);
+  if (app.visibility !== undefined && !APP_VISIBILITY.includes(app.visibility)) err('/application/visibility', `must be ${APP_VISIBILITY.join(' or ')}`);
   return errors;
 }
 
@@ -143,6 +148,7 @@ export function checkDescriptor(d, { application } = {}) {
   if (d.supportAreas !== undefined && (!Array.isArray(d.supportAreas) || d.supportAreas.some(a => !SUPPORT_AREAS.includes(a)))) {
     err('/supportAreas', `must be a list of ${SUPPORT_AREAS.join(', ')}`);
   }
+  if (d.visibility !== undefined && !VISIBILITY.includes(d.visibility)) err('/visibility', `must be ${VISIBILITY.join(', ')}`);
   return errors;
 }
 

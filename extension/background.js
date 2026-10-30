@@ -186,6 +186,39 @@ function startWatching() {
 
 // ── reports from the user scripts ────────────────────────────────────────────
 
+// An adapter's own data and observations (enable's second argument, scripts.js).
+// Only an adapter installed here may ask, and only as itself.
+chrome.runtime.onUserScriptMessage?.addListener((message, sender, sendResponse) => {
+  if (message?.type !== 'ai4a11y:data' && message?.type !== 'ai4a11y:observe') return false;
+  adapterCall(message, sender).then(result => sendResponse({ ok: true, result }), error => sendResponse({ ok: false, error: error.message }));
+  return true;
+});
+
+async function adapterCall(message, sender) {
+  const key = String(message.key || '');
+  const state = await readState();
+  if (!(state.adapters || []).some(a => keyOf(a) === key)) throw new Error('This adapter is not installed in this browser.');
+  const [owner, appId, id] = key.split('/');
+  const adapter = { owner, appId, id };
+  const client = await connectionRegistry();
+  if (!client) throw new Error('This browser is not connected to a toolkit.');
+  if (message.type === 'ai4a11y:observe') {
+    const text = String(message.text || '').trim().slice(0, 400);
+    if (!text) throw new Error('observe needs a sentence saying what the person did.');
+    let origin;
+    try { origin = new URL(sender.url).origin; } catch { /* no page */ }
+    return client.profile.observe({
+      text, type: message.kind === 'setting-change' ? 'setting-change' : 'observation', app: APP, adapter,
+      ...(origin ? { origin } : {}), ...(message.data && typeof message.data === 'object' ? { data: message.data } : {}),
+    });
+  }
+  const data = client.data(adapter);
+  if (message.op === 'get') return data.get(message.k ?? undefined);
+  if (message.op === 'set') return data.set(message.k, message.value);
+  if (message.op === 'delete') return data.delete(message.k ?? undefined);
+  throw new Error(`Unknown data operation ${message.op}.`);
+}
+
 chrome.runtime.onUserScriptMessage?.addListener((message, sender) => {
   if (message?.type !== 'ai4a11y:report' || typeof message.key !== 'string') return;
   const [owner, appId, id] = message.key.split('/');

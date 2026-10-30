@@ -149,6 +149,11 @@ a.text-button:hover { text-decoration: underline; }
 .dot.is-failed { background: #b42318; }
 .install-into { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .install-into select { min-height: 36px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; font-size: .8rem; background: white; }
+/* Who can read what an app or adapter gives the toolkit (visibility.js). */
+.visibility-setting { display: grid; gap: 4px; margin: 8px 0; min-width: 0; }
+.visibility-setting label { font-size: .8rem; font-weight: 600; }
+.visibility-setting select { min-height: 36px; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; font-size: .8rem; background: white; }
+.visibility-setting .hint { margin: 0; font-size: .75rem; }
 
 /* ── New adapter guide (a modal dialog) ─────────────────────────────── */
 .guide-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; color: var(--ink); background: white; }
@@ -163,3 +168,17 @@ a.text-button:hover { text-decoration: underline; }
 .guide-steps .hint { margin: 0 0 8px; }
 .guide-steps .card-actions { margin-top: 8px; }
 .guide-actions { margin-top: 20px; align-items: center; gap: 16px; }
+
+/* ── Profiles page: what the toolkit learned ─────────────────────────── */
+.learned-panel { margin-top: 22px; padding: 22px 24px; }
+@media (max-width: 600px) { .learned-panel { padding: 16px; } }
+.learned-panel > .hint { margin: 0 0 6px; }
+.learned-summary { margin: 0 0 14px; font-weight: 600; font-size: .875rem; }
+.learned-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.learned-columns h3 { font-size: .9rem; margin: 0 0 8px; }
+.learned-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.learned-item { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.learned-item p { margin: 0; }
+.learned-memory { grid-template-columns: minmax(0, 1fr) repeat(3, auto); align-items: center; }
+.learned-actions { margin-top: 16px; flex-wrap: wrap; }
+

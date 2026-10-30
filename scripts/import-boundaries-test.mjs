@@ -83,6 +83,14 @@ const KNOWN_EDGES = {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'the adapter registry checks published descriptors and web-module packages, computes their digests and validates tool arguments with the same contract code apps use',
   },
+  'server/src/access.js': {
+    to: ['toolkit/protocol/adapter/index.js'],
+    why: 'the app_declare, access_* and adapter_data_* MCP tools use the contract\'s schemas, descriptions and visibility levels, so the server checks them exactly as apps see them',
+  },
+  'server/src/learning.js': {
+    to: ['toolkit/protocol/adapter/index.js'],
+    why: 'the profile_* MCP tools use the contract\'s tool schemas and descriptions, so the server lists and checks them exactly as apps see them',
+  },
   'server/src/adapters.js': {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'marketplace listings may carry an Adapter MCP descriptor, validated and digested with the same contract code',

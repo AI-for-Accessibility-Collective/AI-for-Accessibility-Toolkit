@@ -7,6 +7,7 @@
 import {
   createRegistryClient, lintWebModule, urlPatternError, BROWSER_RUNTIME_APP,
 } from '/sdk/toolkit/adapter-mcp/index.js';
+import { visibilityControl } from './visibility.js';
 
 const $ = id => document.getElementById(id);
 function element(tag, className, text) {
@@ -38,6 +39,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
   let registry = null;     // for the current connection
   let uid = null;
   let mine = [], shared = [], installed = new Map(), results = [], instances = [], apps = [];
+  let restrictions = new Map(); // adapter key -> the level the person narrowed it to
   let tab = 'mine';
   let editing = null;      // the adapter_get result being edited
   let active = false;
@@ -59,19 +61,21 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
   async function refresh() {
     const r = registryFor(getClient());
     if (!r) {
-      mine = []; shared = []; installed = new Map(); results = []; instances = []; apps = [];
+      mine = []; shared = []; installed = new Map(); results = []; instances = []; apps = []; restrictions = new Map();
       closeEditor();
       render();
       return;
     }
     try {
       const client = getClient();
-      const [who, a, b, inst, st, appList] = await Promise.all([
+      const [who, a, b, inst, st, appList, visibility] = await Promise.all([
         uid ? { uid } : client.whoami(),
         r.search({ scope: 'mine' }), r.search({ scope: 'shared' }),
         r.installed(BROWSER_RUNTIME_APP), r.status({ app: BROWSER_RUNTIME_APP }),
         client.apps.list().catch(() => ({ apps: [] })),
+        r.access.get().catch(() => ({ adapters: [] })),
       ]);
+      restrictions = new Map(visibility.adapters.map(x => [keyOf(x.adapter), x.restricted]));
       uid = who.uid;
       mine = a.adapters;
       shared = b.adapters.filter(x => !x.mine);
@@ -163,6 +167,18 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     card.append(list);
   }
 
+  function visibilityOf(a) {
+    return visibilityControl({
+      id: `visibility-${keyOf(a.adapter).replaceAll(/[^a-z0-9]/gi, '-')}`, name: a.name,
+      declared: a.visibility || 'user', restricted: restrictions.get(keyOf(a.adapter)) || null, levels: ['app', 'adapter'],
+      onChange: (level) => run(async () => {
+        await registry.access.restrict({ adapter: a.adapter }, level);
+        await refresh();
+        status(level ? `Narrowed who can read what ${a.name} gives the toolkit.` : `${a.name} is back to what it declares.`);
+      }),
+    });
+  }
+
   function runToggle(a) {
     const key = keyOf(a.adapter);
     const inst = installed.get(key);
@@ -184,6 +200,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     const card = cardTop(a, badges);
     details(card, a, `${a.adapter.appId}/${a.adapter.id} · revision ${a.revision} · updated ${ago(a.updatedAt)}`);
     runtimeLines(card, a);
+    card.append(visibilityOf(a));
     const actions = element('div', 'card-actions');
     if (a.portable) actions.append(button('secondary', 'Edit', () => run(() => openEditor(a)), `Edit ${a.name}`));
     if (a.portable) actions.append(runToggle(a));
@@ -212,6 +229,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     const card = cardTop(a, badges);
     details(card, a, `${a.appName} · by ${a.owner} · revision ${a.revision} · updated ${ago(a.updatedAt)}`);
     runtimeLines(card, a);
+    card.append(visibilityOf(a));
     const actions = element('div', 'card-actions');
     if (a.portable) actions.append(runToggle(a));
     if (inst?.updateAvailable) {

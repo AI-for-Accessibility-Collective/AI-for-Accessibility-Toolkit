@@ -76,7 +76,10 @@ const isOrigin = (s) => {
  * @param {{info: Function, warn: Function}} config.log
  * @param {string} [config.version]  the service version, for serverInfo
  */
-export function createRegistry({ store, withUserLock, authenticate, log, version = '0.1.0', now = () => new Date() }) {
+// tools: more MCP tools served on the same endpoint ({name: {schema, description, readOnly, run(uid, args)}},
+// the profile_* tools from learning.js). onInstallChange(uid, event): what changed in an app's installs,
+// for learning.js to learn from.
+export function createRegistry({ store, withUserLock, authenticate, log, version = '0.1.0', now = () => new Date(), tools: extraTools = {}, onInstallChange = () => {} }) {
   const shared = sharedDoc(store, SHARED_DOC, (v) => (v && v.entries && typeof v.entries === 'object' ? v : { entries: {} }));
   const streams = new Map();   // uid -> Set<res>
   const listeners = new Set(); // (uids|'*', meta) => void, for tests and the console
@@ -106,7 +109,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
       name: rec.name, description: rec.description, appName: rec.appName, owner,
       shared: rec.shared === true, revision: rec.revision, version: rec.version,
       supportAreas: rec.supportAreas || [], urlPatterns: rec.urlPatterns || [],
-      portable: !!rec.format, format: rec.format || null,
+      portable: !!rec.format, format: rec.format || null, visibility: rec.visibility || 'user',
       createdAt: rec.createdAt, updatedAt: rec.updatedAt,
     };
   }
@@ -242,6 +245,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
       const rec = {
         appId, id, appName, name: descriptor.name, description: descriptor.description || '',
         version: descriptor.version, supportAreas: descriptor.supportAreas || [],
+        ...(descriptor.visibility && descriptor.visibility !== 'user' ? { visibility: descriptor.visibility } : {}),
         urlPatterns: webUrlPatterns(descriptor.targets), format: pkg ? pkg.format : null,
         shared: sharedNow, sharedAt: sharedNow ? (existing?.shared ? existing.sharedAt : at) : null,
         revision: rev, revisions, createdAt: existing?.createdAt || at, updatedAt: at,
@@ -341,12 +345,20 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
       return next;
     });
     notify([caller], { reason: 'installed', app: args.app, adapter: full });
+    // Only what changed: a new install, switching it on or off, and sites switched off or back on.
+    const wasOn = before ? before.enabled !== false : null;
+    const sites = Object.fromEntries(Object.entries(args.sites || {}).filter(([origin, on]) => on === (before?.sites?.[origin] === false)));
+    onInstallChange(caller, {
+      app: args.app, adapter: full, name: rec.name || rec.id, supportAreas: rec.supportAreas || [],
+      kind: before ? null : 'installed', enabled: before && args.enabled !== undefined && args.enabled !== wasOn ? args.enabled : undefined, sites,
+    });
     return { app: args.app, adapter: { owner, appId: rec.appId, id: rec.id }, install: entry };
   }
 
   async function uninstall(caller, args) {
     const owner = args.adapter.owner || caller;
     const full = `${owner}/${args.adapter.appId}/${args.adapter.id}`;
+    const named = await visible(caller, args.adapter).then(({ rec }) => rec, () => null);
     const removed = await withUserLock(caller, async () => {
       const installs = await readInstalls(caller);
       const entries = installs.apps[args.app];
@@ -358,6 +370,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
     });
     if (!removed) throw new ToolError('not-installed', `${args.app} has not installed ${full}.`);
     notify([caller], { reason: 'uninstalled', app: args.app, adapter: full });
+    onInstallChange(caller, { app: args.app, adapter: full, name: named?.name || args.adapter.id, supportAreas: named?.supportAreas || [], kind: 'uninstalled', sites: {} });
     return { app: args.app, adapter: { owner, appId: args.adapter.appId, id: args.adapter.id }, uninstalled: true };
   }
 
@@ -446,13 +459,20 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
     adapter_installed: installed, adapter_report: report, adapter_status: status,
   };
 
-  /** The in-process binding: the same checks as tools/call, for the console's server code and tests. */
-  async function call(caller, name, args = {}) {
-    const run = TOOLS[name];
+  /** The in-process binding: the same checks as tools/call, for the console's server code and tests.
+   *  `auth` is who is calling (a token record); left out, the account's own tools. */
+  async function call(caller, name, args = {}, auth = null) {
+    const extra = Object.hasOwn(extraTools, name) ? extraTools[name] : null;
+    const run = TOOLS[name] || extra?.run;
     if (!run) throw new ToolError('unknown-tool', `There is no tool ${name}.`);
-    const errs = validate(REGISTRY_TOOL_SCHEMAS[name], args ?? {}, '');
+    const errs = validate(extra ? extra.schema : REGISTRY_TOOL_SCHEMAS[name], args ?? {}, '');
     if (errs.length) throw new ToolError('invalid-arguments', `The arguments do not fit ${name}: ${formatErrors(errs, 3)}`, { errors: errs.slice(0, 20) });
-    return run(caller, args ?? {});
+    if (!extra) return run(caller, args ?? {});
+    try {
+      return await run(caller, args ?? {}, auth);
+    } catch (e) {
+      throw e instanceof ToolError ? e : new ToolError(e.code || 'failed', e.message);
+    }
   }
 
   // ── notifications ────────────────────────────────────────────────────────
@@ -499,19 +519,25 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
           protocolVersion: COMPATIBLE_MCP.includes(params.protocolVersion) ? params.protocolVersion : MCP_PROTOCOL_VERSION,
           capabilities: { tools: { listChanged: false }, resources: { listChanged: true } },
           serverInfo: { name: 'ai4a11y-toolkit-registry', title: 'AI for Accessibility toolkit: adapter registry', version },
-          instructions: 'Share accessibility adapters between apps: publish yours, search what others shared, install into an app, and read what an app has installed. Adapters are private to your account until you share them.',
+          instructions: 'Share accessibility adapters between apps: publish yours, search what others shared, install into an app, and read what an app has installed. Adapters are private to your account until you share them. The profile_* tools read the person\'s profile and what the toolkit learned about them: report what they did with profile_observe, and let them answer each suggested change (profile_proposal_respond). Nothing changes the profile without their answer. adapter_data_* keep an adapter\'s own values; app_declare and access_* set who can read what an app or adapter gives the toolkit (user, app or adapter).',
         });
       case 'ping': return ok({});
       case 'tools/list':
-        return ok({ tools: REGISTRY_TOOLS.map(name => ({
-          name, description: REGISTRY_TOOL_DESCRIPTIONS[name], inputSchema: REGISTRY_TOOL_SCHEMAS[name],
-          annotations: { readOnlyHint: REGISTRY_READ_ONLY.includes(name), destructiveHint: name === 'adapter_delete' },
-        })) });
+        return ok({ tools: [
+          ...REGISTRY_TOOLS.map(name => ({
+            name, description: REGISTRY_TOOL_DESCRIPTIONS[name], inputSchema: REGISTRY_TOOL_SCHEMAS[name],
+            annotations: { readOnlyHint: REGISTRY_READ_ONLY.includes(name), destructiveHint: name === 'adapter_delete' },
+          })),
+          ...Object.entries(extraTools).map(([name, t]) => ({
+            name, description: t.description, inputSchema: t.schema,
+            annotations: { readOnlyHint: !!t.readOnly, destructiveHint: ['profile_learning_reset', 'profile_memory_delete', 'adapter_data_delete'].includes(name) },
+          })),
+        ] });
       case 'tools/call': {
-        if (typeof params.name !== 'string' || !TOOLS[params.name]) return fail(-32602, `Unknown tool: ${params.name}`);
+        if (typeof params.name !== 'string' || !(TOOLS[params.name] || Object.hasOwn(extraTools, params.name))) return fail(-32602, `Unknown tool: ${params.name}`);
         const started = Date.now();
         try {
-          const result = await call(rec.uid, params.name, params.arguments ?? {});
+          const result = await call(rec.uid, params.name, params.arguments ?? {}, rec);
           log.info('registry.call', { uid: rec.uid, tool: params.name, outcome: 'ok', ms: Date.now() - started });
           return ok(toolResult(result));
         } catch (e) {
@@ -556,7 +582,8 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
       res.setHeader('allow', 'GET, POST');
       throw new HttpError(405, 'method-not-allowed', 'This MCP endpoint takes POST, and GET for notifications.');
     }
-    const message = await readJSON(req, { maxBytes: 2e6 });
+    // Large enough for profile_observe with its images.
+    const message = await readJSON(req, { maxBytes: 12e6 });
     if (Array.isArray(message)) return sendJSON(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32600, message: 'JSON-RPC batches are not supported.' } });
     if (!message || message.jsonrpc !== '2.0') return sendJSON(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Invalid Request' } });
     if (typeof message.method !== 'string' || !Object.hasOwn(message, 'id')) { res.writeHead(202); return res.end(); }
@@ -576,8 +603,16 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
     if (removed) notify('*', { reason: 'deleted', owner: uid });
   }
 
+  /** An adapter the account can see (its own, or shared): {owner, rec}; throws not-found. */
+  const lookup = (caller, key) => visible(caller, key);
+  /** The account's apps that installed this adapter (`owner/appId/id`). */
+  async function installedIn(caller, full) {
+    const { apps } = await readInstalls(caller);
+    return Object.entries(apps).filter(([, entries]) => entries && entries[full]).map(([app]) => app);
+  }
+
   return {
-    handle, call, dropUser,
+    handle, call, dropUser, lookup, installedIn,
     onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     closeAll() { for (const set of streams.values()) for (const res of set) res.end(); streams.clear(); },
   };

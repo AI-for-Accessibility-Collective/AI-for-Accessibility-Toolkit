@@ -210,8 +210,80 @@ share adapters ([docs/design/adapter-mcp.md](../docs/design/adapter-mcp.md)
   `users/<uid>/registry/<appId>/<id>/<revision>.json`,
   `users/<uid>/installs.json` and `users/<uid>/runtime-status.json` (deleted
   with the account), and `registry/shared.json`, an index of shared adapters
-  from which a deleted account's entries are removed. The log records the tool,
-  uid, outcome and duration of each call, never code or arguments.
+  from which a deleted account's entries are removed.
+
+### Profile and learning tools
+
+The same endpoint serves the person's profile and what the toolkit learns
+about them over time (`server/src/learning.js`; schemas in
+`toolkit/protocol/adapter/profile.js`; the SDK's `createRegistryClient(…).profile`):
+`profile_get`, `profile_observe`, `profile_learned`, `profile_learn_now`,
+`profile_proposal_respond`, `profile_memory_delete`, `profile_learning_pause`,
+`profile_learning_reset`.
+
+- Observations come from apps (`profile_observe`, or `logObservation` on
+  `/v1/librarian`) and from the registry: installing an adapter into
+  `browser-runtime`, removing it, switching it off or on, and switching it
+  off or on for a site. Installs into other apps are a developer setting an
+  app up and are not observed. An observation is one plain sentence, a site
+  (kept as its hostname) and at most 1000 characters of data: never page
+  content. The Librarian's privacy floor applies (paused, per-site pauses,
+  no-memory zones).
+- The service's Librarians have no scheduler, so the service runs `extract`
+  30 seconds after an account's last observation (`profile_learn_now` runs it
+  at once). Extraction sends the observations to the server-side LLM and
+  turns them into memories and suggested profile changes, within the
+  profile's weekly limit (`metaPreferences.maxProposalsPerWeek`).
+- A suggestion changes the profile only when the person accepts it
+  (`profile_proposal_respond`); the change is announced to the apps following
+  the profile, like any profile write.
+- `profile_learning_reset` clears the suggestions (the weekly count starts
+  again) and the "stop suggesting" list; with `memories: true` also the
+  memories (the person's own notes stay) and the observations not learned from
+  yet. The profile itself is left as it is. The developer console's Profiles
+  page shows all of this under "What your toolkit learned".
+- An observation may carry up to 4 images (`images: [{mimeType, data}]`,
+  PNG, JPEG, WebP or GIF, base64, at most 2,000,000 characters each), on
+  `profile_observe` and on `logObservation` (whose body may then be up to
+  12 MB). Each image is kept in its own document beside the observation
+  (`…/media/<id>.json`) and goes away with it; the newest 8 images of the
+  observations being learned from are sent to the model with the prompt.
+
+### Who can read what an app or adapter gives
+
+Tools `app_declare`, `access_get`, `access_restrict`, `adapter_data_get`,
+`adapter_data_set`, `adapter_data_delete`; schemas in
+`toolkit/protocol/adapter/access.js`.
+
+- Levels: `user` (every app of the account; the default), `app` (only that
+  app), `adapter` (only that adapter, its own app and the apps that installed
+  it). An app declares one with `app_declare`, or `application.visibility`
+  when it registers for live control; an adapter with `visibility` in its
+  descriptor. `access_restrict` (the console's setting) narrows either and
+  never widens it: the narrowest level wins. An app token may declare only its
+  own app and may not restrict.
+- Callers: a console session, the default token and an app token without an
+  `appId` are the account's own tools and read everything. An app token with
+  an `appId` writes as that app (naming another is `forbidden`), reads
+  user-level data, its own app's, and the adapter-level data of adapters of
+  its app or installed into it.
+- Observations at `app` or `adapter` level go to a partition with its own
+  Librarian (`users/<uid>/scoped/app~<appId>/…` or
+  `…/scoped/adapter~<owner>~<appId>~<id>/…`, listed in
+  `users/<uid>/access.json`). The account's pauses hold for them, the toolkit
+  learns from them there, and they never become suggested profile changes.
+  `profile_learned`, `listMemories` and `recall` add the memories of the
+  partitions the caller may read, tagged `visibility`, `app` and `adapter`;
+  `profile_memory_delete`, `profile_learn_now` and `profile_learning_reset`
+  reach the same partitions.
+- Registry events in `browser-runtime` follow the adapter's level.
+- Adapter data: values per account and adapter
+  (`users/<uid>/adapter-data/<owner>/<appId>/<id>.json`), at most 4,000,000
+  characters of JSON in all. At `user` level any token of the account reads
+  and writes them; narrower, the account's own tools and the apps named
+  above. In the browser runtime an adapter reaches its data and
+  `profile_observe` through `enable(parameters, toolkit)` (`toolkit.data`,
+  `toolkit.observe`); the extension calls the tools as that adapter.
 
 ## Adapter MCP apps
 
@@ -225,7 +297,7 @@ open, to the account whose token they hold; see
   re-validates the application and every descriptor and recomputes each
   `descriptorDigest`; a mismatch is a 400 listing `errors`. Only adapters with
   `exposure: "mcp"` are accepted. A session token is refused (403): apps use
-  an app or default token.
+  an app or default token. An app token bound to another app is refused (403).
 - The instance then holds `GET …/channel` open (server-sent events). Each
   `request` event carries one MCP JSON-RPC message from a client, with a
   relay-local `id`; the instance answers with `POST …/channel`. The service
@@ -299,9 +371,11 @@ reaching the container; the canonical deployed liveness path is
 
 ## Server-side LLM
 
-The server holds `GEMINI_API_KEY` and calls
-`librarian.setGeminiCaller(serverGeminiCaller)` at boot. Clients therefore get
-`extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt` without any key.
+The server holds `WS_GEMINI_KEY` (or, when that is unset, `GEMINI_API_KEY`)
+and calls `librarian.setGeminiCaller(serverGeminiCaller)` at boot, with
+`gemini-3.8-flash` unless `GEMINI_MODEL` says otherwise. Clients therefore get
+`extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt`, and the learning loop
+(CONTRACT's "Profile and learning tools"), without any key.
 Applications making their own direct LLM calls keep using their own keys —
 nothing here proxies arbitrary LLM traffic (`/v1/librarian/*` only).
 
@@ -315,9 +389,11 @@ KVStore port per uid: areas `local`/`sync` → backend documents
 ## Tokens
 
 - Format: `aat_` + 32 bytes base64url randomness. Stored **hashed** (sha256).
-- Record: `{id, uid, label, kind, hash, createdAt, expiresAt?, revoked}` in
+- Record: `{id, uid, label, kind, appId?, hash, createdAt, expiresAt?, revoked}` in
   the storage backend under `admin/tokens.json`. `kind` is `app` (admin- or
-  account-minted; records without a kind read as `app`), `default` (an
+  account-minted; records without a kind read as `app`; `appId`, when given at
+  minting, binds it to one app: see "Who can read what an app or adapter
+  gives"), `default` (an
   account's default token) or `session` (a console sign-in, with
   `expiresAt`; expired and revoked sessions are pruned on the next issue).
 - A uid may hold multiple tokens; revocation is per-token.

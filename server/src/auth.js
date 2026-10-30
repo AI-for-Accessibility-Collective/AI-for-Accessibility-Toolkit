@@ -1,12 +1,14 @@
 // Token issue/verify per CONTRACT.md's Tokens section: `aat_` + 32 bytes
 // base64url, stored hashed (sha256) as
-// `{id, uid, label, kind, hash, createdAt, expiresAt?, revoked}` under
+// `{id, uid, label, kind, appId?, hash, createdAt, expiresAt?, revoked}` under
 // `admin/tokens.json`. A uid may hold multiple tokens; revocation is per-token
 // (id), not per-uid.
 //
 // Three kinds share one verification path:
 //   app      — minted by an admin or by the account holder for an app
-//              (records from before kinds existed read as app);
+//              (records from before kinds existed read as app). Bound to
+//              one appId, it reads what the toolkit keeps at user level plus
+//              its own app's data (access.js); unbound, it is account-wide;
 //   default  — the account's default token, derived from the uid and a
 //              generation (accounts.js), so it can be shown again after every
 //              sign-in without the raw value being stored anywhere;
@@ -19,6 +21,7 @@ import { sharedDoc } from './shared-doc.js';
 const TOKENS_DOC = 'admin/tokens.json';
 const TOKEN_PREFIX = 'aat_';
 export const TOKEN_KINDS = Object.freeze(['app', 'default', 'session']);
+const APP_ID = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 
 export function sha256Hex(s) {
   return crypto.createHash('sha256').update(s, 'utf8').digest('hex');
@@ -47,11 +50,12 @@ export function newTokenValue() {
  *  ONLY time it is available (the store keeps only the hash). `raw` lets a
  *  caller supply a derived value (the account's default token). Expired
  *  sessions are pruned on the way, so sign-ins do not grow the document. */
-export async function issueToken(store, { uid, label, kind = 'app', expiresAt, raw } = {}) {
+export async function issueToken(store, { uid, label, kind = 'app', appId, expiresAt, raw } = {}) {
   if (typeof uid !== 'string' || !uid.trim()) {
     throw new Error('uid is required');
   }
   if (!TOKEN_KINDS.includes(kind)) throw new Error(`unknown token kind ${kind}`);
+  if (appId !== undefined && (kind !== 'app' || typeof appId !== 'string' || !APP_ID.test(appId))) throw new Error('appId binds an app token to one app id (lowercase letters, digits, dot, dash, underscore)');
   const value = raw ?? newTokenValue();
   if (!value.startsWith(TOKEN_PREFIX)) throw new Error('a token value must start with aat_');
   const record = {
@@ -59,6 +63,7 @@ export async function issueToken(store, { uid, label, kind = 'app', expiresAt, r
     uid: uid.trim(),
     label: typeof label === 'string' ? label.slice(0, 200) : '',
     kind,
+    ...(appId ? { appId } : {}),
     hash: sha256Hex(value),
     createdAt: Date.now(),
     revoked: false,
@@ -72,7 +77,7 @@ export async function issueToken(store, { uid, label, kind = 'app', expiresAt, r
     tokens.push(record);
     return { save: true, result: true };
   });
-  return { token: value, uid: record.uid, id: record.id, kind };
+  return { token: value, uid: record.uid, id: record.id, kind, ...(appId ? { appId } : {}) };
 }
 
 /** `{id, uid, label, kind, createdAt, expiresAt, revoked}` for every token —
@@ -81,8 +86,8 @@ export async function listTokens(store, { uid } = {}) {
   const tokens = await loadTokens(store);
   return tokens
     .filter((t) => !uid || t.uid === uid)
-    .map(({ id, uid: owner, label, createdAt, revoked, expiresAt, kind }) => ({
-      id, uid: owner, label, kind: kind || 'app', createdAt, revoked, ...(expiresAt ? { expiresAt } : {}),
+    .map(({ id, uid: owner, label, createdAt, revoked, expiresAt, kind, appId }) => ({
+      id, uid: owner, label, kind: kind || 'app', ...(appId ? { appId } : {}), createdAt, revoked, ...(expiresAt ? { expiresAt } : {}),
     }));
 }
 

@@ -2,6 +2,7 @@ import { BUILTIN_PROFILES } from './profiles.js';
 import { createClient, editableProfile, profileRows, setKey, removeKey, validateProfile, readSaved, writeSaved, signIn, readSession, writeSession } from './client.js';
 import { createValueEditor, VALUE_DEFAULTS } from './value-editor.js';
 import { createAdaptersPage } from './adapters.js';
+import { createLearnedPanel } from './learned.js';
 import { createListingsPage } from './listings.js';
 import { createAppsPage } from './apps.js';
 import { createAccountPage } from './account.js';
@@ -296,6 +297,7 @@ const appsPage = createAppsPage({
   getClient: () => client, getAppToken: () => defaultToken, status, run,
   onLiveCount(n) { $('nav-live').hidden = !n; $('nav-live').textContent = String(n); $('nav-live').setAttribute('aria-label', `${n} live`); },
 });
+const learnedPanel = createLearnedPanel({ getClient: () => client, status, run, onProfileChanged: readToolkitProfile });
 const adaptersPage = createAdaptersPage({ getClient: () => client, getAppToken: () => defaultToken, status, run });
 const listingsPage = createListingsPage({ getClient: () => client, status, run, getHiddenApps: () => appsPage.hiddenApps });
 const accountPage = createAccountPage({
@@ -323,6 +325,7 @@ function showPage(name) {
   appsPage.setActive(name === 'apps');
   adaptersPage.setActive(name === 'adapters');
   if (name === 'adapters') adaptersPage.refresh();
+  if (name === 'profiles' && client) learnedPanel.refresh().catch(() => {});
   if (name === 'listings') listingsPage.refresh();
   if (name === 'account') accountPage.refresh();
 }
@@ -349,7 +352,8 @@ async function connectWith(candidate, { asSession, account = null, token = null 
   $('sidebar-token').hidden = !defaultToken;
   $('editor-heading').textContent = 'Active toolkit profile';
   showToolkitProfile(profile, chosen);
-  appsPage.reset(); adaptersPage.reset();
+  appsPage.reset(); adaptersPage.reset(); learnedPanel.reset();
+  learnedPanel.refresh().catch(() => {});
   await Promise.all([adaptersPage.refresh(), listingsPage.refresh(), appsPage.refresh({ quiet: true }), accountPage.refresh()]);
   return identity;
 }
@@ -385,7 +389,7 @@ $('disconnect').addEventListener('click', () => run(async () => {
   $('connection-state').textContent = 'Signed out'; $('connection-state').classList.remove('connected');
   $('editor-heading').textContent = 'Current profile'; $('draft-state').textContent = 'Draft';
   $('sidebar-token').hidden = true;
-  renderLibrary(); appsPage.reset(); adaptersPage.reset(); accountPage.clear();
+  renderLibrary(); appsPage.reset(); adaptersPage.reset(); accountPage.clear(); learnedPanel.reset();
   await Promise.all([adaptersPage.refresh(), listingsPage.refresh(), appsPage.refresh()]);
   status(wasSession ? 'Signed out. Your apps keep working with your default token.' : 'Disconnected. The editor draft is available to save locally.');
 }));
@@ -417,9 +421,12 @@ $('new-profile').addEventListener('click', () => {
   renderEditor(); renderLibrary(); $('draft-state').textContent = 'New draft';
   $('profile-name').focus(); status('New profile draft. Add keys, then save a preset or apply it to the toolkit.');
 });
-$('refresh').addEventListener('click', () => run(async () => {
+async function readToolkitProfile() {
   const profile = await client.call('getProfile');
   showToolkitProfile(profile, (await client.selection().catch(() => null))?.selected);
+}
+$('refresh').addEventListener('click', () => run(async () => {
+  await readToolkitProfile();
   status('Read the current profile from the toolkit.');
 }));
 $('apply').addEventListener('click', () => run(async () => {
