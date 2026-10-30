@@ -267,6 +267,9 @@ const handlers = {
     await writeState({ etag: null, adapters: [], tabs: {}, error: null });
     await registerBridge();
     await sync('reconnect');
+    // Check in with an empty report, so the toolkit knows this runtime before
+    // it runs anything (the skill's `adapter.mjs check`, the console's list).
+    await (await connectionRegistry())?.report(APP, await instanceId(), [], runtimeLabel()).catch(() => {});
     return { uid: who.uid, url: base };
   },
   async disconnect() {

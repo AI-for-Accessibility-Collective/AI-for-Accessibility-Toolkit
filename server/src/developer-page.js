@@ -14,9 +14,10 @@ export const DEVELOPER_ASSETS = new Map([
   ['/developer/apps.js', 'apps.js', 'text/javascript'],
   ['/developer/account.js', 'account.js', 'text/javascript'],
   ['/developer/console.css', 'console.css', 'text/css'],
+  ['/developer/icon.png', 'icon.png', 'image/png'],
 ].map(([path, file, type]) => [path, {
   body: readFileSync(new URL(`../developer/${file}`, import.meta.url)),
-  type: `${type}; charset=utf-8`,
+  type: type.startsWith('text/') ? `${type}; charset=utf-8` : type,
 }]));
 
 export function serveDeveloperAsset(res, asset) {

@@ -395,6 +395,11 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     $('ws-guide').showModal();
   });
   $('ws-guide-done').addEventListener('click', () => $('ws-guide').close());
+  // Chrome blocks links to chrome:// pages from web pages, so this copies it.
+  $('ws-copy-extensions').addEventListener('click', () => run(async () => {
+    await navigator.clipboard.writeText('chrome://extensions');
+    status('Copied chrome://extensions. Paste it into Chrome’s address bar.');
+  }));
   // The page's status line sits behind the modal, so the guide has its own.
   $('ws-guide-copy').addEventListener('click', async () => {
     try {

@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Profiles · Toolkit Developer</title>
+  <link rel="icon" type="image/png" href="/developer/icon.png">
+  <link rel="apple-touch-icon" href="/developer/icon.png">
   <link rel="stylesheet" href="/developer/styles.css">
   <link rel="stylesheet" href="/developer/console.css">
   <script type="module" src="/developer/app.js"></script>
@@ -11,7 +13,7 @@
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
   <header class="topbar">
-    <a class="brand" href="/developer"><span class="brand-mark" aria-hidden="true">a<span>+</span></span><span>Accessibility Toolkit <small>DEVELOPER WORKSPACE</small></span></a>
+    <a class="brand" href="/developer"><img class="brand-mark" src="/developer/icon.png" alt="" width="40" height="40"><span>Accessibility Toolkit <small>DEVELOPER WORKSPACE</small></span></a>
     <span class="environment" id="environment">PROFILE MANAGER</span>
   </header>
   <div class="shell">
@@ -117,7 +119,8 @@
           <details id="ws-runtime-setup">
             <summary>Set up the extension</summary>
             <ol class="setup-steps">
-              <li>In Chrome, open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and pick the <code>extension</code> folder of the toolkit repository.</li>
+              <li>Chrome opens <code>chrome://extensions</code> from its address bar only. <button type="button" id="ws-copy-extensions" class="text-button">Copy chrome://extensions</button>, then paste it into the address bar.</li>
+              <li>Turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and pick the <code>extension</code> folder of the toolkit repository. A coding agent with the toolkit skill can walk you through it.</li>
               <li>On the extension’s <strong>Details</strong>, turn on <strong>Allow User Scripts</strong>.</li>
               <li>Come back to this page, open the extension and choose <strong>Connect with this console</strong>.</li>
             </ol>

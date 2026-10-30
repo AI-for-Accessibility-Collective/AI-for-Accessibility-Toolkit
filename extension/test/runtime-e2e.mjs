@@ -107,6 +107,12 @@ try {
   await until(async () => (await worker()) && runtime(() => typeof chrome.userScripts === 'object' && !!globalThis.ai4a11yRuntime), 'user scripts to be allowed');
   await settings.close();
 
+  // The skill's check: no browser runtime yet.
+  const helper = fileURLToPath(new URL('../../.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs', import.meta.url));
+  const { TOOLKIT_URL: _u, TOOLKIT_TOKEN: _t, ...cleanEnv } = process.env;
+  const checkEnv = { ...cleanEnv, TOOLKIT_URL: base, TOOLKIT_TOKEN: dev.token };
+  await assert.rejects(promisify(execFile)(process.execPath, [helper, 'check'], { env: checkEnv }), e => /No browser runtime is connected/.test(e.stdout));
+
   // Connecting refuses a bad address and a bad token before it accepts the real one.
   await assert.rejects(runtime(([url, token]) => globalThis.ai4a11yRuntime.handlers.connect({ url, token }), ['http://toolkit.example', dev.token]), /https/);
   await assert.rejects(runtime(([url]) => globalThis.ai4a11yRuntime.handlers.connect({ url, token: 'aat_wrong' }), [base]), /did not accept/);
@@ -129,6 +135,9 @@ try {
   await signedIn.close();
   const connected = (await runtime(() => globalThis.ai4a11yRuntime.handlers.status())).connection;
   assert.deepEqual(connected, { url: base, uid: 'dev' });
+  // Connecting checked in, so the skill's check finds this browser at once.
+  const checked = await promisify(execFile)(process.execPath, [helper, 'check'], { env: checkEnv });
+  assert.match(checked.stdout, /^Connected: Chrome \d+ on \w+, last seen just now\./);
   const registered = await runtime(() => chrome.userScripts.getScripts().then(s => s.map(x => [x.id, x.matches])));
   assert.deepEqual(registered, [['rt-dev~console~big-buttons', ['http://localhost/*']]]);
 
@@ -250,8 +259,6 @@ try {
   enable() { document.querySelector('h1').dataset.fromConsole = 'yes'; },
   disable() { delete document.querySelector('h1').dataset.fromConsole; },
 };`);
-  const { TOOLKIT_URL: _u, TOOLKIT_TOKEN: _t, ...cleanEnv } = process.env;
-  const helper = fileURLToPath(new URL('../../.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs', import.meta.url));
   await promisify(execFile)(process.execPath, [helper, 'publish', 'heading-label.js', '--name', 'Shop heading label', '--id', 'shop-heading-label', '--runs-on', 'http://localhost/*'], { cwd: project, env: cleanEnv });
   await rm(project, { recursive: true, force: true });
   await page.waitForFunction(() => document.querySelector('h1').dataset.fromConsole === 'yes', null, background);

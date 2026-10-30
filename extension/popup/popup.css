@@ -20,8 +20,7 @@ h2 { font-size: .85rem; margin: 14px 0 6px; }
 header { display: flex; align-items: center; gap: 10px; }
 header > div { flex: 1; min-width: 0; }
 .sub { font-size: .7rem; color: var(--muted); }
-.mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--green); color: white; font-weight: 800; font-size: 1rem; }
-.mark span { font-size: .75rem; }
+.mark { width: 32px; height: 32px; flex: none; }
 .badge { border-radius: 20px; background: var(--wash); color: #34564b; font-size: .68rem; font-weight: 600; padding: 4px 9px; white-space: nowrap; }
 .badge.connected { background: #dff0e6; color: var(--green); }
 .badge.warn { background: #fff4d6; color: #6a4b00; }
@@ -55,4 +54,3 @@ details summary { cursor: pointer; color: var(--green); font-weight: 600; margin
 .actions a { color: var(--green); font-weight: 600; flex: 1; }
 #status { margin-top: 10px; font-size: .78rem; color: var(--green); min-height: 1em; }
 #status.error { color: var(--red); }
-footer { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; font-size: .68rem; color: var(--muted); }

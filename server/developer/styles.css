@@ -147,21 +147,11 @@ h3 {
   color: var(--muted);
 }
 
+/* The AI for Accessibility Collective's mark (its GitHub avatar). */
 .brand-mark {
-  background: var(--green);
-  color: white;
-  border-radius: 11px;
   width: 40px;
   height: 40px;
-  text-align: center;
-  font-size: 1.75rem;
-  line-height: 38px;
-  letter-spacing: -3px;
-  padding-right: 5px;
-}
-
-.brand-mark span {
-  font-size: 1.2rem;
+  flex: none;
 }
 
 .environment {

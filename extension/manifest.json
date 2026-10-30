@@ -4,9 +4,11 @@
   "short_name": "Adapter runtime",
   "version": "0.1.0",
   "description": "Runs the accessibility adapters you write or install in a toolkit developer console on the websites they target. Pre-alpha research prototype.",
+  "icons": { "16": "icons/icon-16.png", "32": "icons/icon-32.png", "48": "icons/icon-48.png", "128": "icons/icon-128.png" },
   "minimum_chrome_version": "135",
   "permissions": ["storage", "userScripts", "scripting", "tabs", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_popup": "popup/popup.html", "default_title": "Adapter runtime" }
+  "action": { "default_popup": "popup/popup.html", "default_title": "Adapter runtime",
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png", "48": "icons/icon-48.png" } }
 }

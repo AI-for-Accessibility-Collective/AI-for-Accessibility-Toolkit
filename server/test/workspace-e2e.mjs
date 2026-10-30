@@ -84,6 +84,10 @@ try {
   await page.waitForFunction(() => /You have no adapters yet/.test(document.getElementById('ws-groups').textContent));
   assert.equal(await page.locator('#ws-runtime-state').innerText(), 'Not found in this browser');
   assert.equal(await page.locator('#ws-runtime-setup').getAttribute('open'), '', 'setup steps are open while no runtime is found');
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+  await page.getByRole('button', { name: 'Copy chrome://extensions' }).click();
+  await statusStartsWith(page, 'Copied chrome://extensions.');
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'chrome://extensions');
 
   // ── New adapter opens the coding-agent guide, with the two .env lines ──
   await page.click('#ws-new');

@@ -8,19 +8,27 @@
 //     --about "Makes small buttons 44 pixels tall, for people who find small targets hard to hit."
 //   node adapter.mjs status bigger-buttons
 //   node adapter.mjs share bigger-buttons
+//   node adapter.mjs extension
+//   node adapter.mjs check
 //
 // publish   saves a new revision (private to your account) and installs it
 //           into browser-runtime, so the adapter runtime extension runs it on
 //           the pages it targets. --share shares it, --no-run skips the install.
 // status    what the extension reported: running, or failed with the error.
 // share     shares an adapter with everyone on this toolkit (--stop to stop).
+// extension helps set up the adapter runtime extension: opens Chrome's
+//           extensions page and copies the extension folder's path (--no-open
+//           only prints them).
+// check     whether a browser runtime is connected to this toolkit.
 //
 // It reads TOOLKIT_URL and TOOLKIT_TOKEN from a .env file in the current
 // folder or a folder above it (the developer console's New adapter guide
 // gives the two lines). Variables already set in the environment win.
 
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const AREAS = ['vision', 'motor', 'hearing', 'cognitive', 'sensory', 'reading'];
 const APP = { appId: 'agent', appName: 'Coding agent' };
@@ -31,7 +39,10 @@ function fail(message) {
 }
 
 function parse(argv) {
-  const [command, target, ...rest] = argv;
+  const [command, ...args] = argv;
+  // The target, if any, comes before the flags.
+  const target = args[0] && !args[0].startsWith('--') ? args[0] : undefined;
+  const rest = target === undefined ? args : args.slice(1);
   const flags = { runsOn: [], for: [] };
   for (let i = 0; i < rest.length; i++) {
     const flag = rest[i];
@@ -45,6 +56,7 @@ function parse(argv) {
     else if (flag === '--share') flags.share = true;
     else if (flag === '--stop') flags.stop = true;
     else if (flag === '--no-run') flags.noRun = true;
+    else if (flag === '--no-open') flags.noOpen = true;
     else fail(`Unknown option ${flag}.`);
   }
   return { command, target, flags };
@@ -148,9 +160,68 @@ async function share(id, flags) {
   console.log(r.shared ? `${appId}/${id} is shared: everyone on this toolkit can find and install it.` : `${appId}/${id} is private again.`);
 }
 
-const { command, target, flags } = parse(process.argv.slice(2));
-if (!['publish', 'status', 'share'].includes(command)) {
-  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id>');
+// The extension folder of the toolkit repository this skill sits in
+// (<repo>/.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs).
+const EXTENSION_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../extension');
+
+// Best effort: a person can always copy the path and type the address.
+function copyToClipboard(text) {
+  const tools = process.platform === 'darwin' ? [['pbcopy']] : process.platform === 'win32' ? [['clip']] : [['wl-copy'], ['xclip', '-selection', 'clipboard']];
+  return tools.some(([cmd, ...args]) => spawnSync(cmd, args, { input: text }).status === 0);
 }
+function openChromeExtensions() {
+  const url = 'chrome://extensions';
+  const [cmd, args] = process.platform === 'darwin' ? ['open', ['-a', 'Google Chrome', url]]
+    : process.platform === 'win32' ? ['cmd', ['/c', 'start', '', 'chrome', url]] : ['google-chrome', [url]];
+  try {
+    const child = spawn(cmd, args, { detached: true, stdio: 'ignore' });
+    child.on('error', () => {});
+    child.unref();
+    return true;
+  } catch { return false; }
+}
+
+function extension(_target, flags) {
+  if (!existsSync(path.join(EXTENSION_DIR, 'manifest.json'))) {
+    fail('The extension folder is not next to this skill. Use the extension folder of your toolkit repository checkout.');
+  }
+  const copied = !flags.noOpen && copyToClipboard(EXTENSION_DIR);
+  const opened = !flags.noOpen && openChromeExtensions();
+  console.log([
+    `The extension folder: ${EXTENSION_DIR}${copied ? ' (copied)' : ''}`,
+    opened ? 'Opened chrome://extensions in Chrome.' : 'Open chrome://extensions in Chrome (type it in the address bar).',
+    'Then, in Chrome (Chrome 135 or later):',
+    '1. Turn on Developer mode (top right).',
+    `2. Choose Load unpacked and pick the extension folder.${copied ? ' On a Mac, press Cmd+Shift+G in the folder picker and paste.' : ''}`,
+    '3. On the extension\'s Details, turn on Allow User Scripts.',
+    '4. Sign in to the developer console, open the extension from the toolbar (the puzzle piece) and choose Connect with this console.',
+    'Check it: node adapter.mjs check',
+  ].join('\n'));
+}
+
+const ago = iso => {
+  const s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+  return s < 90 ? 'just now' : s < 5400 ? `${Math.round(s / 60)} minutes ago` : s < 129600 ? `${Math.round(s / 3600)} hours ago` : `${Math.round(s / 86400)} days ago`;
+};
+
+async function check() {
+  const { instances = [] } = await tool('adapter_status', { app: 'browser-runtime' });
+  if (!instances.length) {
+    console.log([
+      'No browser runtime is connected to this toolkit yet.',
+      'Set up the extension (node adapter.mjs extension), then in Chrome open the extension and choose Connect with this console.',
+    ].join('\n'));
+    process.exit(1);
+  }
+  for (const i of instances) console.log(`Connected: ${i.label || 'a browser'}, last seen ${ago(i.lastSeenAt)}.`);
+  console.log('If an adapter does not run, check that Allow User Scripts is on in the extension\'s Details.');
+}
+
+const { command, target, flags } = parse(process.argv.slice(2));
+const COMMANDS = { publish, status, share, extension, check };
+if (!COMMANDS[command]) {
+  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check');
+}
+if (command === 'extension') { extension(target, flags); process.exit(0); }
 if (!base || !token) fail('No toolkit address or token. In the developer console, open Adapters, choose New adapter, and copy the two lines into a .env file at the top of this repository.');
-await ({ publish, status, share })[command](target, flags);
+await COMMANDS[command](target, flags);

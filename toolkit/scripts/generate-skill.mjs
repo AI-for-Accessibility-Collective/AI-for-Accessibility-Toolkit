@@ -154,7 +154,7 @@ for (const { adapter, entry } of await loadInstalledAdapters(registry, 'my-app')
 
 ${registryTools}
 
-**The browser runtime** (\`extension/\`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app \`${BROWSER_RUNTIME_APP}\` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its popup, and reports applied / failed (with the error) / skipped per page origin with \`adapter_report\`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console → popup → **Connect with this console**. The console's **Adapters** page is where a developer writes an adapter (live lint), saves revisions, runs it in their browser, shares it, installs others' and sees the runtime's reports.
+**The browser runtime** (\`extension/\`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app \`${BROWSER_RUNTIME_APP}\` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its popup, and reports applied / failed (with the error) / skipped per page origin with \`adapter_report\`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console → popup → **Connect with this console** (the skill's \`adapter.mjs extension\` walks a person through it, and \`adapter.mjs check\` confirms it). On connecting, the runtime checks in with an empty \`adapter_report\`, so \`adapter_status\` lists it before it runs anything. Adapters are built in code with a coding agent (the console's **+ New adapter** is a guide to that); the console's **Adapters** page edits them (live lint), saves revisions, runs them in the browser, shares them, installs others' and shows the runtime's reports.
 
 SDK helpers: ${helpers.map((h) => `\`${h}\``).join(', ')}.
 
@@ -172,7 +172,7 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
 
 **What the person does**
 
-1. Once: set up the adapter runtime extension in Chrome (\`extension/README.md\`, "Set it up": Load unpacked, Allow User Scripts, Connect with this console).
+1. Once: set up the adapter runtime extension in Chrome. You walk them through it ("What you do", step 2).
 2. In the developer console, open **Adapters** and choose **+ New adapter**. Copy the two lines it shows (the toolkit address and the default token) into a file named \`.env\` at the top of this repository. Git ignores \`.env\`, so the token stays out of commits.
 3. Open this repository in a coding agent such as Claude Code or opencode, and say what to fix, for example: "Make an adapter that makes small buttons bigger on https://example.com." The agent picks up this skill on its own.
 4. Open the page in Chrome. The change appears within a few seconds.
@@ -181,7 +181,11 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
 **What you do**
 
 1. Check that \`.env\` exists at the top of the repository. The helper below reads \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` from it, so leave the file closed: keep the token out of your messages, other files and commits. If it is missing, ask the person to copy the two lines from the developer console (**Adapters**, **+ New adapter**).
-2. Write one file, such as \`bigger-buttons.js\`:
+2. Check that the person's browser runs adapters: \`node <skill folder>/scripts/adapter.mjs check\`. It prints "Connected: Chrome … on macOS, last seen …", or says that no browser runtime is connected. If none is, help them set up the extension:
+   - Run \`node <skill folder>/scripts/adapter.mjs extension\`. It opens \`chrome://extensions\` in Chrome, copies the extension folder's path, and prints the steps.
+   - Chrome lets only the person install it. Give them one step at a time and wait after each: turn on **Developer mode**; choose **Load unpacked** and pick the extension folder (on a Mac, Cmd+Shift+G in the folder picker, then paste); on the extension's **Details**, turn on **Allow User Scripts**; sign in to the developer console, open the extension from the toolbar and choose **Connect with this console**.
+   - Run \`check\` again to confirm.
+3. Write one file, such as \`bigger-buttons.js\`:
    - It exports one object with \`enable(options)\` and \`disable()\`.
    - \`enable()\` makes the change and remembers what it changed. \`disable()\` puts the page back exactly as it was.
    - Plain browser JavaScript only: no \`import\`, no network calls (\`fetch\`, \`XMLHttpRequest\`, \`WebSocket\`), no \`eval\`.
@@ -208,7 +212,7 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
      },
    };
    \`\`\`
-3. Publish it and run it in the person's browser with the helper in this skill's folder (in this repository: \`.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs\`; Node 18 or later, nothing to install):
+4. Publish it and run it in the person's browser with the helper in this skill's folder (in this repository: \`.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs\`; Node 18 or later, nothing to install):
 
    \`\`\`bash
    node <skill folder>/scripts/adapter.mjs publish bigger-buttons.js \\
@@ -218,8 +222,8 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
    - \`--runs-on\` is the pages, one flag per pattern: \`https://example.com/*\` is each page of that site, \`http://localhost/*\` is any local port.
    - \`--for\` is who it helps: vision, motor, hearing, cognitive, sensory, reading.
    - If the toolkit refuses the file, the message names the line. Fix it and run the command again.
-4. Check that it ran: \`node <skill folder>/scripts/adapter.mjs status bigger-buttons\` prints "Running on …", or "Failed on …" with the error. Fix the file and publish again. Each publish is a new revision, and open pages pick it up without a reload.
-5. When the person asks, share it with everyone on their toolkit: \`node <skill folder>/scripts/adapter.mjs share bigger-buttons\`. Until then it stays private to their account.
+5. Check that it ran: \`node <skill folder>/scripts/adapter.mjs status bigger-buttons\` prints "Running on …", or "Failed on …" with the error. Fix the file and publish again. Each publish is a new revision, and open pages pick it up without a reload.
+6. When the person asks, share it with everyone on their toolkit: \`node <skill folder>/scripts/adapter.mjs share bigger-buttons\`. Until then it stays private to their account.
 
 The adapter also shows on the developer console's **Adapters** page, where the person can read the code and its reports. To publish from your own app's code instead, see "Sharing adapters between apps" below.`;
 

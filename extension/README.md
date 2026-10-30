@@ -22,6 +22,13 @@ and check what it changes before relying on it.
 
 The console's **Adapters** page then shows **Connected in this browser**.
 
+A coding agent with the toolkit skill can walk you through these steps:
+`node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs extension` opens
+`chrome://extensions` in Chrome, copies this folder's path for **Load
+unpacked**, and prints the steps. `… adapter.mjs check` then confirms the
+toolkit sees this browser: on connecting, the extension checks in with an
+empty report.
+
 ## Use it
 
 Build adapters with a coding agent (Claude Code, opencode) in the toolkit
