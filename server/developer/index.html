@@ -14,7 +14,15 @@
   <a class="skip-link" href="#main">Skip to main content</a>
   <header class="topbar">
     <a class="brand" href="/developer"><img class="brand-mark" src="/developer/icon.png" alt="" width="40" height="40"><span>Accessibility Toolkit <small>DEVELOPER WORKSPACE</small></span></a>
-    <span class="environment" id="environment">PROFILE MANAGER</span>
+    <div class="topbar-end">
+      <span class="environment" id="environment">PROFILE MANAGER</span>
+      <div class="text-size" role="group" aria-labelledby="text-size-label">
+        <span id="text-size-label" class="text-size-label">Text size</span>
+        <button type="button" id="text-smaller" class="text-size-step" aria-label="Smaller text"><svg class="icon" aria-hidden="true" focusable="false"><use href="/developer/icons.svg#smaller"></use></svg></button>
+        <button type="button" id="text-reset" class="text-size-value" title="Back to the default text size">100%</button>
+        <button type="button" id="text-larger" class="text-size-step" aria-label="Larger text"><svg class="icon" aria-hidden="true" focusable="false"><use href="/developer/icons.svg#larger"></use></svg></button>
+      </div>
+    </div>
   </header>
   <div class="shell">
     <nav class="sidebar" aria-label="Developer workspace">
@@ -76,7 +84,7 @@
       </section>
       <section id="page-memory" class="page" hidden>
         <div class="page-heading"><div><p class="eyebrow">LEARN &amp; REMEMBER</p><h1 id="memory-heading">Memory</h1><p class="muted">What your toolkit learned about you from your apps and adapters, and the changes it suggests to your profile.</p></div></div>
-        <p id="memory-profile" class="hint">It belongs to your active toolkit profile: accepting a suggestion changes that profile. <a href="#/profiles">Profiles</a></p>
+        <p id="memory-profile" class="current-profile">Current profile: <strong id="memory-profile-name">none</strong></p>
         <section id="learned" class="panel learned-panel" aria-labelledby="learned-heading">
           <div class="section-heading"><div><p class="eyebrow">LEARNING</p><h2 id="learned-heading">What your toolkit learned</h2></div><label class="toggle-control"><input type="checkbox" id="learned-paused" disabled> Pause learning</label></div>
           <p class="hint">Your toolkit learns from what you do with your adapters, such as which ones you run in your browser and where you switch one off. It suggests changes to your profile, and your profile changes only when you accept one.</p>

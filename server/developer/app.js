@@ -7,8 +7,10 @@ import { createListingsPage } from './listings.js';
 import { createAppsPage } from './apps.js';
 import { createAccountPage } from './account.js';
 import { icon } from './icons.js';
+import { setupTextSize } from './text-size.js';
 
 const $ = id => document.getElementById(id);
+setupTextSize();
 let client = null, saved = [], draft = {}, selectedId = null, activeId = null, filter = 'all', busy = false;
 // Editing a preset moves the edits into one temporary profile, so the preset
 // itself stays as it was until the developer saves. `selectedId` is the card
@@ -154,13 +156,10 @@ function renderNewValue() {
   $('new-value-control').replaceChildren(newValueEditor.element);
   updateControls();
 }
-// The Memory page says which profile its suggestions change: the active one.
+// The Memory page names the profile its suggestions change: the active one.
 function showMemoryProfile() {
   const name = activeId === TEMP_ID ? `${temp?.baseName || 'Your profile'} (modified)` : findPreset(activeId)?.name;
-  const line = $('memory-profile');
-  line.firstChild.textContent = client
-    ? `It belongs to your active toolkit profile${name ? `, ${name}` : ''}: accepting a suggestion changes that profile. `
-    : 'It belongs to your active toolkit profile: accepting a suggestion changes that profile. ';
+  $('memory-profile-name').textContent = client ? name || 'Your toolkit profile' : 'none (sign in)';
 }
 function renderLibrary() {
   showMemoryProfile();

@@ -19,6 +19,7 @@ export const DEVELOPER_ASSETS = new Map([
   ['/developer/icon.png', 'icon.png', 'image/png'],
   ['/developer/icons.svg', 'icons.svg', 'image/svg+xml'],
   ['/developer/icons.js', 'icons.js', 'text/javascript'],
+  ['/developer/text-size.js', 'text-size.js', 'text/javascript'],
 ].map(([path, file, type]) => [path, {
   body: readFileSync(new URL(`../developer/${file}`, import.meta.url)),
   type: type.startsWith('text/') ? `${type}; charset=utf-8` : type,

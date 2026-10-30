@@ -3,7 +3,7 @@
 
 const SVG = 'http://www.w3.org/2000/svg';
 
-/** @param {'profiles'|'memory'|'adapters'|'apps'|'listings'|'account'|'external'|'remove'} name */
+/** @param {'profiles'|'memory'|'adapters'|'apps'|'listings'|'account'|'external'|'remove'|'smaller'|'larger'} name */
 export function icon(name) {
   const svg = document.createElementNS(SVG, 'svg');
   svg.setAttribute('class', `icon icon-${name}`);

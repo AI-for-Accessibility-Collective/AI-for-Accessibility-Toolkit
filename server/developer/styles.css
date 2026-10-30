@@ -6,6 +6,8 @@
   --green: #235f4f;
   --wash: #edf4ef;
   --bg: #f5f7f4;
+  /* 2pt above the browser's default size, times the top bar's text size control. */
+  font-size: calc((100% + 2pt) * var(--text-scale, 1));
   font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   color: var(--ink);
   background: var(--bg);
@@ -119,7 +121,7 @@ h3 {
 }
 
 .topbar {
-  height: 84px;
+  min-height: 84px;
   padding: 0 max(24px,calc((100vw - 1280px)/2));
   display: flex;
   align-items: center;
@@ -158,6 +160,62 @@ h3 {
   font-size: .65rem;
   color: var(--muted);
   letter-spacing: 1.4px;
+}
+
+.topbar-end {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.text-size {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.text-size-label {
+  font-size: .75rem;
+  color: var(--muted);
+  margin-right: 4px;
+}
+
+.text-size button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font-size: .8rem;
+  font-weight: 650;
+}
+
+.text-size button:hover:not(:disabled) {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.text-size-value {
+  min-width: 56px;
+}
+
+.current-profile {
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: var(--wash);
+  font-size: 1.15rem;
+}
+
+.current-profile strong {
+  color: var(--green);
 }
 
 main {
@@ -610,7 +668,7 @@ footer {
   .topbar {
     padding: 0 20px;
   }
-  .environment {
+  .environment,.text-size-label {
     display: none;
   }
   main {
@@ -977,7 +1035,8 @@ select {
 /* ── Workspace shell: sidebar navigation + pages ─────────────────────────── */
 .shell {
   display: grid;
-  grid-template-columns: 280px minmax(0,1fr);
+  /* The sidebar grows with the text size control. */
+  grid-template-columns: minmax(280px,13rem) minmax(0,1fr);
   gap: 24px;
   align-items: start;
   max-width: 1280px;
@@ -1042,8 +1101,8 @@ main {
 }
 
 .nav-link .icon {
-  width: 18px;
-  height: 18px;
+  width: 1.15em;
+  height: 1.15em;
 }
 
 a.external {

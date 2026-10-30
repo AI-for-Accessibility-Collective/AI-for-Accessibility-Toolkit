@@ -183,9 +183,23 @@ try {
   await dev.click('#save');
   await dev.waitForFunction(() => document.getElementById('status').textContent.includes('in your account'));
 
+  // The top bar's text size control scales the console, and this browser remembers it.
+  const rootSize = () => dev.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+  const defaultSize = await rootSize();
+  assert.ok(Math.abs(defaultSize - (16 + 8 / 3)) < 0.1, `the default text is 2pt above 16px, got ${defaultSize}`);
+  await dev.getByRole('button', { name: 'Larger text' }).click();
+  await dev.getByRole('button', { name: 'Larger text' }).click();
+  assert.match(await dev.locator('#text-reset').innerText(), /125%/);
+  assert.ok(Math.abs(await rootSize() - defaultSize * 1.25) < 0.1);
+  await dev.reload();
+  await dev.waitForFunction(() => document.getElementById('connection-state').textContent === 'Signed in');
+  await dev.locator('#text-reset', { hasText: '125%' }).waitFor();
+  await dev.getByRole('button', { name: /back to the default text size/ }).click();
+  assert.ok(Math.abs(await rootSize() - defaultSize) < 0.1);
+
   // What the toolkit learned, on the Memory page: an observation, Learn now, a suggestion to accept, pause, reset.
   await dev.click('.nav-link[data-page="memory"]');
-  assert.match(await dev.locator('#memory-profile').innerText(), /It belongs to your active toolkit profile/);
+  assert.match(await dev.locator('#memory-profile').innerText(), /^Current profile: \S/);
   const statusIs = (text) => dev.waitForFunction(t => document.getElementById('status').textContent.startsWith(t), text);
   await dev.locator('#learned-summary', { hasText: 'Learning is on.' }).waitFor();
   assert.match(await dev.locator('#learned-proposals').innerText(), /No suggestions waiting/);
