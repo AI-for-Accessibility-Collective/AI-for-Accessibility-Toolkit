@@ -27,6 +27,10 @@ import { silentLogger, loggedContent } from './log.js';
 
 export const GEMINI_MODEL = 'gemini-3.8-flash';
 const REQUEST_TIMEOUT_MS = 30_000;
+// At the model's default thinking, learning from a few observations took
+// about 27 seconds, against the 30-second limit; at low it took about 4,
+// with the same memories and suggestions.
+const THINKING_LEVEL = 'low';
 
 // The key goes in the x-goog-api-key header, never the query string, so it
 // stays out of access logs and error traces on the deployer's host.
@@ -70,7 +74,7 @@ export function createGeminiCaller({ apiKey, model = GEMINI_MODEL, log = silentL
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }, ...images.map(i => ({ inline_data: { mime_type: i.mimeType, data: i.data } }))] }],
-          generationConfig: { temperature: 0.7 },
+          generationConfig: { temperature: 0.7, thinkingConfig: { thinkingLevel: THINKING_LEVEL } },
         }),
         signal: controller.signal,
       });

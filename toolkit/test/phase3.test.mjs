@@ -317,5 +317,30 @@ check('partition stamped current after activation', !!pmeta && pmeta.lastMigrati
 await libM.setActingUser(null);
 check('null partition untouched by the sweep', (await dsM.getMemoryShard('general')).length === 0);
 
+// ======================= 7. a learned suggestion about support areas =======================
+// The model sees the profile's fields; a support-areas change is top-level, so
+// accepting it changes the person's support areas, not a stray fields.supportAreas.
+const { datastore: dsS, librarian: libS } = createToolkit({ kv: memKV(), clock, toolsRegistry });
+await dsS.runMigrations();
+await libS.setProfileFields({ supportAreas: ['vision'], 'fields.largeTargets': true });
+let seenPrompt = '';
+libS.setGeminiCaller(async (prompt) => {
+  seenPrompt = prompt;
+  return JSON.stringify({ operations: [], proposals: [
+    { aspect: 'profile.supportAreas', aspectLabel: 'hearing support', change: { op: 'profile-set', path: 'fields.supportAreas', value: ['vision', 'hearing'] }, rationale: 'Turns captions on everywhere.' },
+    { aspect: 'profile.supportAreas.other', aspectLabel: 'listening', change: { op: 'profile-set', path: 'supportAreas', value: ['vision', 'auditory'] }, rationale: 'x' },
+    { aspect: 'profile.metaPreferences', aspectLabel: 'more suggestions', change: { op: 'profile-set', path: 'metaPreferences.maxProposalsPerWeek', value: 99 }, rationale: 'x' },
+  ] });
+});
+await libS.logObservation({ type: 'setting-change', text: 'Turned on captions.', origin: 'news.example' });
+await libS.extract();
+check('the extract prompt shows the profile\'s fields and the support areas to choose from', seenPrompt.includes('"largeTargets": true') && seenPrompt.includes('vision, hearing, motor'));
+const drafted = await libS.listProposals('pending');
+check('a support-areas suggestion is kept at the top-level path; an unknown area or a path it could never accept is dropped',
+  drafted.length === 1 && drafted[0].change.path === 'supportAreas');
+check('accepting it changes the support areas', (await libS.respondToProposal(drafted[0].id, 'accept')).ok !== false
+  && JSON.stringify((await libS.getProfile()).supportAreas) === '["vision","hearing"]'
+  && (await libS.getProfile()).fields.supportAreas === undefined);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

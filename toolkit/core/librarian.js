@@ -37,7 +37,7 @@
 import { noopDemo, noopConsent, noopScheduler, noopMedia } from '../ports/index.js';
 import { coerceSettings, clampSettings } from './units.js';
 import { STRENGTH_RANK, rankOf } from './strength.js';
-import { toAbilityModel } from './ability.js';
+import { toAbilityModel, SUPPORT_AREAS } from './ability.js';
 import { memoryClassOf } from './memory-class.js';
 import { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityModelByScopes,
   audienceAllowed, recordShareAudit } from '../sync/grants.js';
@@ -246,6 +246,13 @@ export function createLibrarian({
     const parts = path.split('.');
     if (parts.length < 2 || parts[0] !== 'fields') return false;
     return parts.every(seg => /^[A-Za-z0-9_]+$/.test(seg) && !PROTO_SEGMENTS.has(seg));
+  }
+  // What a locally-drafted proposal may set: an ability field, or the
+  // support areas themselves (a top-level list from SUPPORT_AREAS, never `fields.*`).
+  function isSafeProposalChange(change) {
+    if (change?.op !== 'profile-set') return true;
+    if (change.path === 'supportAreas') return Array.isArray(change.value) && change.value.every(v => SUPPORT_AREAS.includes(v));
+    return isSafeFieldsPath(change.path);
   }
 
   // Coerce a settings object into the canonical units/ranges declared in the
@@ -1707,8 +1714,8 @@ Return ONLY valid JSON with:
         // …): an inferred proposal the user only ever sees as friendly prose
         // must never silently rewrite consent or rate-limit settings. Reuses
         // the same prototype-safe path validator the cross-app insight path
-        // enforces (isSafeFieldsPath, above).
-        if (prop.change?.op === 'profile-set' && !isSafeFieldsPath(prop.change.path)) {
+        // enforces (isSafeFieldsPath, above), plus the support areas list.
+        if (!isSafeProposalChange(prop.change)) {
           return { ok: false, reason: 'profile-path-not-allowed' };
         }
         prop.status = 'accepted';
@@ -1966,7 +1973,7 @@ Return ONLY valid JSON with:
 ${DS().global.tools().settingsVocabularyLines().join('\n')}
 
 ## User profile
-${JSON.stringify({ supportAreas: profile.supportAreas, freeText: profile.freeText }, null, 1)}
+${JSON.stringify({ supportAreas: profile.supportAreas, fields: profile.fields || {}, freeText: profile.freeText }, null, 1)}
 
 ## New observations (weight 3 = deliberate user action, 1 = ambient)
 ${JSON.stringify(pending.map(e => ({ type: e.type, weight: e.weight, origin: e.origin, category: e.category, text: e.text, data: e.data, ...(imageNames.has(e.id) ? { images: imageNames.get(e.id) } : {}) })), null, 1)}
@@ -1982,7 +1989,7 @@ Rules:
 - scope: "general" | "category:<${TAX().categoryIds().join('|')}>" | "origin:<hostname>" | "context:<video|form|document>". Prefer the narrowest scope the evidence supports.
 - For each candidate, compare to existing memories: same fact → {"op":"NOOP","id":<existing id>} (we bump its count); refines/strengthens → {"op":"UPDATE","id":...,"text":...,"settings":...}; CONFIDENTLY contradicts and should replace → {"op":"SUPERSEDE","id":...,"record":{...}}; the user did the OPPOSITE of an inferred record but you are NOT sure it's permanent → {"op":"CONTRADICT","id":<existing id>} (lowers its confidence, no replacement); genuinely new → {"op":"ADD","record":{...}}.
 - record fields: text (one plain sentence), tier ("preference"|"site"|"task"), scope, kind ("preference"|"procedural"), importance 1-10, confidence 0-1, decayClass ("stable"|"slow"|"fast"), settings (object of extension setting keys like fontScale/darkMode/autoCaptions if directly actionable, else null).
-- Changes to the user's ABILITY PROFILE (their disability/needs themselves, not site preferences) must NOT be memory records. Emit them under "proposals" instead: {aspect:"profile.<field>", aspectLabel:"plain words", change:{op:"profile-set",path:"fields.<field>",value:...}, rationale:"<1 plain sentence why>", evidence:[]}. Only propose when evidence is strong and repeated.
+- Changes to the user's ABILITY PROFILE (their disability/needs themselves, not site preferences) must NOT be memory records. Emit them under "proposals" instead: {aspect:"profile.<field>", aspectLabel:"plain words", change:{op:"profile-set",path:"fields.<field>",value:...}, rationale:"<1 plain sentence why>", evidence:[]}. A field is one of the profile's "fields" above, or a new one. To change the support areas, use path "supportAreas" (top level, not under fields) and give the whole new list, each one of: ${SUPPORT_AREAS.join(', ')}. Only propose when evidence is strong and repeated.
 - Return ONLY JSON: {"operations":[...], "proposals":[...]}`;
 
       let parsed;
@@ -2082,6 +2089,10 @@ Rules:
       const cap = demoOn ? Infinity : (profile.metaPreferences?.maxProposalsPerWeek ?? 3);
       for (const d of drafts) {
         if (!d.aspect || !d.change) continue;
+        // The support areas are top-level; a model that writes them under
+        // fields.* means them. A change it could never accept is no proposal.
+        if (d.change.op === 'profile-set' && d.change.path === 'fields.supportAreas') d.change = { ...d.change, path: 'supportAreas' };
+        if (!isSafeProposalChange(d.change)) continue;
         if (weekCount >= cap) break;
         const sup = demoOn ? null : suppressions.find(s => s.aspect === d.aspect && (s.mode === 'permanent' || s.until > now));
         if (sup) continue;
