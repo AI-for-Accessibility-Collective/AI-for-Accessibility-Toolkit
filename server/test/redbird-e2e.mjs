@@ -152,6 +152,9 @@ try {
   assert.equal(elsewhere.compatible, false, 'one tab is one page');
   assert.ok(elsewhere.reasons.some(r => r.code === 'target-unavailable'), JSON.stringify(elsewhere.reasons));
 
+  // The adapters switched on in the panel (its switches carry data-ad).
+  const adaptersOn = () => shop.locator('input[data-ad]:checked').evaluateAll(els => [...new Set(els.map(e => e.dataset.ad))].sort());
+
   // ── Loading a preset in the console reaches the open store, with no refresh ──
   await shop.evaluate(() => { window.__sameLoad = true; });
   const persona = shop.locator('#ws-persona');
@@ -162,6 +165,8 @@ try {
   await persona.filter({ hasText: 'remove distracting motion' }).waitFor();
   assert.match(await persona.innerText(), /Profile 2/, 'the store shows which preset is selected');
   assert.match(await shop.locator('#ws-prof option[value="toolkit"]').innerText(), /Profile 2/);
+  const autism = ['calm-urgency', 'mute-sounds', 'reduce-brightness', 'stop-auto-advance'];
+  await shop.waitForFunction((want) => JSON.stringify([...new Set([...document.querySelectorAll('input[data-ad]:checked')].map(e => e.dataset.ad))].sort()) === JSON.stringify(want), autism).catch(async () => assert.deepEqual(await adaptersOn(), autism));
   assert.equal(await shop.evaluate(() => window.__sameLoad), true, 'the store was not reloaded');
   // An edit through the API keeps the preset's name and says it was edited.
   await fetch(`${base}/v1/librarian/setProfileField`, {
@@ -182,6 +187,8 @@ try {
   await persona.filter({ hasText: 'screen-reader structure' }).waitFor();
   assert.match(await persona.innerText(), /Profile 3/);
   assert.equal(await picker.inputValue(), 'toolkit', 'the store goes back to following the toolkit profile');
+  const blindness = ['describe-on-demand', 'live-region-announcer', 'skip-links', 'swatch-names', 'toolkit-fixes'];
+  await shop.waitForFunction((want) => JSON.stringify([...new Set([...document.querySelectorAll('input[data-ad]:checked')].map(e => e.dataset.ad))].sort()) === JSON.stringify(want), blindness).catch(async () => assert.deepEqual(await adaptersOn(), blindness));
   const chosen = await (await fetch(`${base}/v1/profile/selection`, { headers: { authorization: `Bearer ${token}` } })).json();
   assert.deepEqual(chosen.selected, { id: 'wai-3', name: 'Profile 3', edited: false });
   assert.equal(await shop.evaluate(() => window.__sameLoad), true, 'picking a preset did not reload the store either');
@@ -193,7 +200,7 @@ try {
   await dev.waitForFunction(() => [...document.querySelectorAll('.app-group')].some(g => g.textContent.includes('Redbird demo') && g.textContent.includes('Offline')), null, { timeout: 20000 });
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh, picking a toolkit preset from the store dropdown, and going offline when the tab closes.');
+  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, and going offline when the tab closes.');
 } finally {
   await browser?.close();
   app.relay.closeAll();
