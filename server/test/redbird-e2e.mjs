@@ -176,6 +176,8 @@ try {
   const picker = shop.locator('#ws-prof');
   await picker.locator('optgroup#ws-presets option', { hasText: 'Profile 3' }).waitFor({ state: 'attached' });
   assert.ok(await picker.locator('optgroup#ws-presets option').count() >= 9, 'the toolkit\'s presets are offered');
+  assert.deepEqual(await picker.locator('optgroup').evaluateAll(gs => gs.map(g => g.label)), ['Saved on your toolkit', 'Workshop shoppers'], 'the toolkit\'s saved profiles, then Redbird\'s shoppers');
+  assert.equal(await picker.locator('option', { hasText: 'selected' }).count(), 0, 'the active preset is named once, in Your toolkit profile');
   await picker.selectOption({ label: await picker.locator('optgroup#ws-presets option', { hasText: 'Profile 3' }).innerText() });
   await persona.filter({ hasText: 'screen-reader structure' }).waitFor();
   assert.match(await persona.innerText(), /Profile 3/);
