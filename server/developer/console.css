@@ -110,10 +110,8 @@ a.text-button:hover { text-decoration: underline; }
 .section-heading .row-actions { align-items: center; column-gap: calc(14px * var(--space)); }
 .admin-shell .section-heading { flex-wrap: wrap; }
 
-/* Four pages do not fit in one row on a phone: two by two instead. */
 @media (max-width: 720px) {
-  .nav-links { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .nav-link { min-width: 0; overflow-wrap: anywhere; }
+  .nav-link { min-width: 0; }
 }
 
 @media (max-width: 640px) {

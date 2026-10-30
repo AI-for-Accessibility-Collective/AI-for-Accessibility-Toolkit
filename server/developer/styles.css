@@ -135,6 +135,7 @@ h3 {
 
 .brand {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: calc(12px * var(--space));
   text-decoration: none;
@@ -166,26 +167,33 @@ h3 {
 
 .topbar-end {
   display: flex;
+  flex: none;
+  align-self: flex-start;
+  /* Always the top bar's first 84px, so the control does not move down when large text makes the bar taller. */
+  height: 84px;
   align-items: center;
   gap: calc(20px * var(--space));
 }
 
+/* The control's own sizes are in px, so its buttons stay in place while the
+   text around them grows. */
 .text-size {
   display: flex;
   align-items: center;
-  gap: calc(4px * var(--space));
+  gap: 4px;
 }
 
 .text-size-label {
   font-size: .75rem;
   color: var(--muted);
-  margin-right: calc(4px * var(--space));
+  margin-right: 4px;
 }
 
 .text-size button {
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0 calc(8px * var(--space));
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -193,7 +201,7 @@ h3 {
   border-radius: 8px;
   background: white;
   color: var(--ink);
-  font-size: .8rem;
+  font-size: 14px;
   font-weight: 650;
 }
 
@@ -202,8 +210,10 @@ h3 {
   color: var(--green);
 }
 
-.text-size-value {
-  min-width: 56px;
+.text-size .text-size-value {
+  width: 60px;
+  margin-right: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .current-profile {
@@ -668,7 +678,14 @@ footer {
 
 @media(max-width:720px) {
   .topbar {
-    padding: 0 calc(20px * var(--space));
+    padding: 0 20px;
+  }
+  /* A phone has no room for a larger name beside the text size control. */
+  .brand {
+    font-size: min(.95rem,16px);
+  }
+  .brand small {
+    font-size: min(.58rem,10px);
   }
   .environment,.text-size-label {
     display: none;
@@ -1349,9 +1366,10 @@ a.external .icon {
   .sidebar {
     position: static;
   }
+  /* As many pages to a row as fit at the current text size: one row on a
+     tablet, two on a phone, one at a phone's largest text. */
   .nav-links {
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
+    grid-template-columns: repeat(auto-fit,minmax(min(100%,8rem),1fr));
   }
   .register-grid,.register-links {
     grid-template-columns: 1fr;
