@@ -24,18 +24,17 @@ The console's **Adapters** page then shows **Connected in this browser**.
 
 ## Use it
 
-With a coding agent (Claude Code, opencode): ask it to use the
-`ai4a11y-toolkit` skill and say what should change on which site. It writes
-the adapter, publishes it with the skill's `scripts/adapter.mjs`, and this
-extension runs it. The skill's "Build an adapter with a coding agent" section
-has the steps.
-
-In the console instead: on the **Adapters** page, choose **+ New adapter**, give it a name
-and the address patterns it runs on (`https://example.com/*`), write
-`enable()` and `disable()`, and save. Within a few seconds it runs on matching
-pages, including ones that are already open, and each page's result appears
-on the adapter's card: running, failed (with the error), or switched off.
-Each save is a new revision, which replaces the running one without a reload.
+Build adapters with a coding agent (Claude Code, opencode) in the toolkit
+repository. On the console's **Adapters** page, **+ New adapter** shows two
+lines to copy into a `.env` file at the top of the repository: the toolkit
+address and your default token. Then say what should change on which site.
+The agent picks up the `ai4a11y-toolkit` skill, writes the adapter, and
+publishes it to the toolkit's registry with the skill's `scripts/adapter.mjs`.
+Within a few seconds this extension runs it on matching pages, including ones
+that are already open, and each page's result appears on the adapter's card
+in the console: running, failed (with the error), or switched off. Each
+publish is a new revision, which replaces the running one without a reload.
+**Edit** on a card changes an adapter in the console.
 
 The extension's popup lists the installed adapters that target the current
 page, what happened when they ran, and a switch to turn one off on this site.

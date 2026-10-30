@@ -3,11 +3,11 @@
 // it ran. Part of the ai4a11y-toolkit skill: a coding agent runs it for you.
 // Node 18 or later, nothing to install.
 //
-//   TOOLKIT_URL=https://… TOOLKIT_TOKEN=aat_… node adapter.mjs publish bigger-buttons.js \
+//   node adapter.mjs publish bigger-buttons.js \
 //     --name "Bigger buttons" --runs-on "https://example.com/*" --for motor \
 //     --about "Makes small buttons 44 pixels tall, for people who find small targets hard to hit."
-//   … node adapter.mjs status bigger-buttons
-//   … node adapter.mjs share bigger-buttons
+//   node adapter.mjs status bigger-buttons
+//   node adapter.mjs share bigger-buttons
 //
 // publish   saves a new revision (private to your account) and installs it
 //           into browser-runtime, so the adapter runtime extension runs it on
@@ -15,9 +15,11 @@
 // status    what the extension reported: running, or failed with the error.
 // share     shares an adapter with everyone on this toolkit (--stop to stop).
 //
-// The token stays in the environment. Never write it into a file.
+// It reads TOOLKIT_URL and TOOLKIT_TOKEN from a .env file in the current
+// folder or a folder above it (the developer console's New adapter guide
+// gives the two lines). Variables already set in the environment win.
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const AREAS = ['vision', 'motor', 'hearing', 'cognitive', 'sensory', 'reading'];
@@ -48,6 +50,22 @@ function parse(argv) {
   return { command, target, flags };
 }
 
+// KEY=value lines, # comments, optional quotes. Only the two toolkit keys.
+function loadDotEnv() {
+  for (let dir = process.cwd(); ; dir = path.dirname(dir)) {
+    const file = path.join(dir, '.env');
+    if (existsSync(file)) {
+      for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+        const m = line.match(/^\s*(?:export\s+)?(TOOLKIT_URL|TOOLKIT_TOKEN)\s*=\s*(.*?)\s*$/);
+        if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2');
+      }
+      return;
+    }
+    if (path.dirname(dir) === dir) return;
+  }
+}
+loadDotEnv();
+
 const base = (process.env.TOOLKIT_URL || '').replace(/\/+$/, '');
 const token = process.env.TOOLKIT_TOKEN || '';
 
@@ -63,7 +81,7 @@ async function tool(name, args) {
   } catch (e) {
     fail(`Could not reach the toolkit at ${base}: ${e.message}`);
   }
-  if (res.status === 401) fail('The toolkit did not accept the token. Copy your default token again from the developer console (sidebar, Copy token).');
+  if (res.status === 401) fail('The toolkit did not accept the token. Copy the two lines into .env again from the developer console (Adapters, New adapter).');
   const body = await res.json().catch(() => null);
   if (!res.ok || !body?.result) fail(`The toolkit answered ${res.status}: ${body?.error?.message || body?.message || 'no details'}`);
   const result = body.result.structuredContent ?? {};
@@ -134,5 +152,5 @@ const { command, target, flags } = parse(process.argv.slice(2));
 if (!['publish', 'status', 'share'].includes(command)) {
   fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id>');
 }
-if (!base || !token) fail('Set TOOLKIT_URL (your toolkit address) and TOOLKIT_TOKEN (your default token from the developer console sidebar).');
+if (!base || !token) fail('No toolkit address or token. In the developer console, open Adapters, choose New adapter, and copy the two lines into a .env file at the top of this repository.');
 await ({ publish, status, share })[command](target, flags);

@@ -1,6 +1,7 @@
-// Real browser + real toolkit service, the Adapters page: write an adapter
-// with live lint, save it (revision 1, running in the browser runtime,
-// private), share it, have a second developer install it at a pinned
+// Real browser + real toolkit service, the Adapters page: New adapter's
+// coding-agent guide, a coding agent publishing an adapter with the skill's
+// helper (revision 1, running in the browser runtime, private), editing it
+// here with live lint, sharing it, have a second developer install it at a pinned
 // revision, edit it, and update the second developer to the new revision;
 // runtime reports and the runtime badge show up, and the Apps page counts
 // what each app shares and installs. No extension: the runtime's reports and
@@ -10,9 +11,12 @@
 
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { chromium } from 'playwright';
 import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
@@ -20,6 +24,27 @@ import { createToolkitHost } from '../src/toolkit-host.js';
 import { createRegistryClient } from '../../toolkit/adapter-mcp/index.js';
 
 const ADMIN = 'test-admin';
+const HELPER = fileURLToPath(new URL('../../.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs', import.meta.url));
+const ADAPTER_CODE = `// Bigger buttons: makes small buttons at least 44 pixels tall.
+export const MyAdapter = {
+  enabled: false,
+  changed: [],
+  enable() {
+    if (this.enabled) return;
+    this.enabled = true;
+    for (const el of document.querySelectorAll('button, [role="button"]')) {
+      this.changed.push({ el, before: el.style.minHeight });
+      el.style.minHeight = '44px';
+    }
+  },
+  disable() {
+    if (!this.enabled) return;
+    this.enabled = false;
+    for (const { el, before } of this.changed) el.style.minHeight = before;
+    this.changed = [];
+  },
+};
+`;
 const dir = await mkdtemp(path.join(tmpdir(), 'workspace-e2e-'));
 const store = fileStore(dir);
 const host = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
@@ -60,56 +85,62 @@ try {
   assert.equal(await page.locator('#ws-runtime-state').innerText(), 'Not found in this browser');
   assert.equal(await page.locator('#ws-runtime-setup').getAttribute('open'), '', 'setup steps are open while no runtime is found');
 
-  // ── New adapter opens the coding-agent guide, filled in for this toolkit ──
+  // ── New adapter opens the coding-agent guide, with the two .env lines ──
   await page.click('#ws-new');
   await page.locator('#ws-guide[open]').waitFor();
-  assert.match(await page.locator('#ws-guide-install').innerText(), new RegExp(`curl -fsSo \\.claude/skills/ai4a11y-toolkit/SKILL\\.md ${base}/skill/ai4a11y-toolkit/SKILL\\.md`));
-  assert.match(await page.locator('#ws-guide-env').innerText(), new RegExp(`export TOOLKIT_URL=${base}\nexport TOOLKIT_TOKEN=${ada.token}`));
-  const served = await (await fetch(`${base}/skill/ai4a11y-toolkit/SKILL.md`)).text();
-  assert.match(served, /name: ai4a11y-toolkit/, 'the skill the guide installs is served');
+  const envLines = await page.locator('#ws-guide-env').innerText();
+  assert.equal(envLines, `TOOLKIT_URL=${base}\nTOOLKIT_TOKEN=${ada.token}`);
   await page.keyboard.press('Escape');
   await page.locator('#ws-guide:not([open])').waitFor({ state: 'attached' });
   assert.equal(await page.locator('#ws-new').evaluate(el => el === document.activeElement), true, 'closing the guide returns focus to New adapter');
 
-  // ── write one: the id follows the name, lint speaks up, problems block saving ──
-  await page.click('#ws-new');
-  await page.click('#ws-guide-editor');
+  // ── a coding agent publishes one with the skill's helper, which reads .env from a folder above ──
+  const project = await mkdtemp(path.join(tmpdir(), 'agent-project-'));
+  await writeFile(path.join(project, '.env'), `# toolkit\n${envLines}\n`);
+  await mkdir(path.join(project, 'fixes'));
+  await writeFile(path.join(project, 'fixes', 'bigger-buttons.js'), ADAPTER_CODE);
+  const { TOOLKIT_URL: _u, TOOLKIT_TOKEN: _t, ...cleanEnv } = process.env;
+  const { stdout } = await promisify(execFile)(process.execPath, [HELPER, 'publish', 'bigger-buttons.js',
+    '--name', 'Bigger Buttons!', '--runs-on', 'https://example.com/shop/*', '--runs-on', 'http://localhost/*',
+    '--for', 'motor', '--about', 'Makes buttons at least 44px tall.'], { cwd: path.join(project, 'fixes'), env: cleanEnv });
+  assert.match(stdout, /Published Bigger Buttons! \(agent\/bigger-buttons\), revision 1\./);
+  await rm(project, { recursive: true, force: true });
+
+  const card = page.locator('.adapter-card[data-adapter="ada/agent/bigger-buttons"]');
+  await card.waitFor();
+  assert.equal(await card.getByRole('heading', { name: 'Bigger Buttons!', exact: true }).count(), 1);
+  assert.deepEqual(await card.locator('.adapter-title .badge').allInnerTexts(), ['Private', 'In your browser']);
+  assert.match(await card.innerText(), /agent\/bigger-buttons · revision 1/);
+  assert.deepEqual(await card.locator('.pill.url').allInnerTexts(), ['https://example.com/shop/*', 'http://localhost/*']);
+  const adaRegistry = createRegistryClient({ url: base, token: ada.token });
+  const runtimeView = await adaRegistry.installed('browser-runtime');
+  assert.deepEqual(runtimeView.adapters.map(a => [a.adapter.id, a.follows]), [['bigger-buttons', true]], 'publishing installs it into the browser runtime, following edits');
+
+  // ── edit it here: lint speaks up, problems block saving, Cancel keeps revision 1 ──
+  await card.getByRole('button', { name: 'Edit Bigger Buttons!' }).click();
+  await page.locator('#ws-editor').waitFor();
   assert.equal(await page.locator('#ws-name').evaluate(el => el === document.activeElement), true, 'the editor opens with focus on the name');
-  await page.fill('#ws-name', 'Bigger Buttons!');
-  assert.equal(await page.inputValue('#ws-id'), 'bigger-buttons');
-  assert.match(await page.inputValue('#ws-code'), /export const MyAdapter/, 'a new adapter starts from the template');
-  const code = await page.inputValue('#ws-code');
-  await page.fill('#ws-code', code.replace("el.style.minHeight = '44px';", "el.style.minHeight = '44px'; fetch('/track');"));
+  assert.equal(await page.locator('#ws-id').evaluate(el => el.readOnly), true, 'the id cannot change');
+  assert.equal(await page.inputValue('#ws-code'), ADAPTER_CODE);
+  await page.fill('#ws-code', ADAPTER_CODE.replace("el.style.minHeight = '44px';", "el.style.minHeight = '44px'; fetch('/track');"));
   await page.locator('#ws-lint li.error').first().waitFor();
   assert.match(await page.locator('#ws-lint').innerText(), /Error, line \d+: sends or fetches data over the network/);
   await page.click('#ws-save');
   await statusStartsWith(page, 'Fix this before saving — Line');
-  await page.fill('#ws-code', code);
+  await page.fill('#ws-code', ADAPTER_CODE);
   await page.waitForFunction(() => !document.querySelector('#ws-lint li'));
+  await page.fill('#ws-urls', '');
   await page.click('#ws-save');
   await statusStartsWith(page, 'Fix this before saving — Runs on: add at least one address pattern');
   assert.equal(await page.locator('#ws-urls').evaluate(el => el === document.activeElement), true, 'focus goes to the field to fix');
-  await page.fill('#ws-urls', 'https://example.com/shop/*\nhttp://localhost/*');
-  await page.fill('#ws-description', 'Makes buttons at least 44px tall.');
-  await page.locator('#ws-editor').getByLabel('Motor').check();
   await page.screenshot({ path: path.join(tmpdir(), 'toolkit-adapters-editor.png'), fullPage: true });
-  await page.click('#ws-save');
-  await statusStartsWith(page, 'Saved Bigger Buttons!, revision 1. Your browser runtime runs it');
+  await page.click('#ws-cancel');
   assert.equal(await page.locator('#ws-editor').isHidden(), true);
-
-  const card = page.locator('.adapter-card[data-adapter="ada/console/bigger-buttons"]');
-  assert.equal(await card.getByRole('heading', { name: 'Bigger Buttons!', exact: true }).count(), 1);
-  assert.deepEqual(await card.locator('.adapter-title .badge').allInnerTexts(), ['Private', 'In your browser']);
-  assert.match(await card.innerText(), /console\/bigger-buttons · revision 1/);
-  assert.deepEqual(await card.locator('.pill.url').allInnerTexts(), ['https://example.com/shop/*', 'http://localhost/*']);
-  const adaRegistry = createRegistryClient({ url: base, token: ada.token });
-  const runtimeView = await adaRegistry.installed('browser-runtime');
-  assert.deepEqual(runtimeView.adapters.map(a => [a.adapter.id, a.follows]), [['bigger-buttons', true]], 'saving installs it into the browser runtime, following edits');
 
   // ── the runtime's reports and its bridge message show up ──
   await adaRegistry.report('browser-runtime', 'chrome-test', [
-    { adapter: { appId: 'console', id: 'bigger-buttons' }, revision: 1, origin: 'http://localhost:8000', status: 'applied' },
-    { adapter: { appId: 'console', id: 'bigger-buttons' }, revision: 1, origin: 'https://example.com', status: 'failed', message: 'TypeError: el is null' },
+    { adapter: { appId: 'agent', id: 'bigger-buttons' }, revision: 1, origin: 'http://localhost:8000', status: 'applied' },
+    { adapter: { appId: 'agent', id: 'bigger-buttons' }, revision: 1, origin: 'https://example.com', status: 'failed', message: 'TypeError: el is null' },
   ], 'Chrome 147 on macOS');
   await card.locator('.runtime-results li').nth(1).waitFor();
   const lines = await card.locator('.runtime-results li').allInnerTexts();
@@ -131,9 +162,9 @@ try {
   boPage.on('pageerror', e => errors.push(e.message));
   await signIn(boPage, bo);
   await boPage.click('[data-ws-tab="shared"]');
-  const boCard = boPage.locator('.adapter-card[data-adapter="ada/console/bigger-buttons"]');
+  const boCard = boPage.locator('.adapter-card[data-adapter="ada/agent/bigger-buttons"]');
   await boCard.waitFor();
-  assert.match(await boCard.innerText(), /Developer console · by ada · revision 1/);
+  assert.match(await boCard.innerText(), /Coding agent · by ada · revision 1/);
   await boCard.getByRole('button', { name: 'Run Bigger Buttons! in my browser' }).click();
   await statusStartsWith(boPage, 'Bigger Buttons! runs in your browser runtime');
   assert.deepEqual(await boCard.locator('.adapter-title .badge').allInnerTexts(), ['In your browser · revision 1']);
@@ -167,7 +198,7 @@ try {
   // ── the Apps page counts what each app shares and installs ──
   await adaRegistry.publish({
     appName: 'Redbird demo',
-    descriptor: { ...(await adaRegistry.get({ appId: 'console', id: 'bigger-buttons' })).descriptor, appId: 'redbird', id: 'swatches', name: 'Swatch names', descriptorDigest: undefined, executionArtifactDigest: undefined },
+    descriptor: { ...(await adaRegistry.get({ appId: 'agent', id: 'bigger-buttons' })).descriptor, appId: 'redbird', id: 'swatches', name: 'Swatch names', descriptorDigest: undefined, executionArtifactDigest: undefined },
     code: 'export default { enable() {}, disable() {} };',
   });
   const { createAdapterProvider, connectToToolkit, fromToggleAdapter, defineDescriptor } = await import('../../toolkit/adapter-mcp/index.js');
@@ -201,11 +232,11 @@ try {
   await page.click('#ws-new');
   const guide = await page.locator('#ws-guide').boundingBox();
   assert.ok(guide.x >= 0 && guide.x + guide.width <= 390, 'the New adapter guide fits a phone');
-  await page.click('#ws-guide-editor');
+  await page.keyboard.press('Escape');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'the Adapters page fits a phone');
   await page.screenshot({ path: path.join(tmpdir(), 'toolkit-adapters-mobile.png'), fullPage: true });
   assert.deepEqual(errors, [], 'browser must not raise JS errors');
-  console.log('Adapters workspace browser workflow passed: the coding-agent guide, template and id, lint, blocking errors with focus, save and run, runtime reports and badge, share, a second developer installing pinned, edit to revision 2, unchanged save, update offered and applied, Apps page registry counts, delete, phone layout.');
+  console.log('Adapters workspace browser workflow passed: the coding-agent guide, publishing with the skill helper from .env, lint and blocking errors with focus in the editor, runtime reports and badge, share, a second developer installing pinned, edit to revision 2, unchanged save, update offered and applied, Apps page registry counts, delete, phone layout.');
 } finally {
   await browser?.close();
   app.registry.closeAll();

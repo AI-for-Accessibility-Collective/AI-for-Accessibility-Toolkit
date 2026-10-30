@@ -100,13 +100,15 @@ reconnect by themselves.
 
 ## The Adapters page
 
-**Adapters** is where a developer writes, runs and shares adapters through
-the toolkit's adapter registry (CONTRACT.md, "Adapter registry";
-docs/design/adapter-mcp.md §14). **+ New adapter** opens an editor: a name,
-the address patterns it runs on, support areas, and the code (one file that
-exports `enable()` and `disable()`), checked as you type; problems that would
-be refused block saving and move focus to the field. Each save is a new
-revision. **Run it in my browser** installs it into `browser-runtime`, so the
+**Adapters** is where a developer runs and shares adapters through the
+toolkit's adapter registry (CONTRACT.md, "Adapter registry";
+docs/design/adapter-mcp.md §14). Adapters are built in code: **+ New adapter**
+opens a guide to building one with a coding agent and the repository's
+`ai4a11y-toolkit` skill, with the two `.env` lines (toolkit address and
+default token) the skill's helper reads to publish. **Edit** on a card opens
+an editor: the name, the address patterns it runs on, support areas, and the
+code, checked as you type; problems that would be refused block saving and
+move focus to the field. Each save or publish is a new revision. **Run it in my browser** installs it into `browser-runtime`, so the
 adapter runtime extension runs it on matching pages within seconds, without a
 reload; what happened on each site (running, failed with the error, switched
 off) appears on the card. **Share** makes it visible to everyone on this

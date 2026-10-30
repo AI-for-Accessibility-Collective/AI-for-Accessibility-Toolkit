@@ -109,7 +109,7 @@
         <div id="account-body"></div>
       </section>
       <section id="page-adapters" class="page" hidden>
-        <div class="page-heading"><div><p class="eyebrow">BUILD &amp; SHARE</p><h1 id="adapters-heading">Adapters</h1><p class="muted">Write an adapter for a website and run it in your browser with the adapter runtime extension. Share it, and every app on this toolkit can find and install it.</p></div><button id="ws-new" class="secondary" type="button">+ New adapter</button></div>
+        <div class="page-heading"><div><p class="eyebrow">BUILD &amp; SHARE</p><h1 id="adapters-heading">Adapters</h1><p class="muted">Build an adapter for a website with a coding agent and run it in your browser with the adapter runtime extension. Share it, and every app on this toolkit can find and install it.</p></div><button id="ws-new" class="secondary" type="button">+ New adapter</button></div>
         <section id="ws-runtime" class="panel runtime-panel" aria-labelledby="ws-runtime-heading">
           <div class="section-heading"><div><p class="eyebrow">BROWSER RUNTIME</p><h2 id="ws-runtime-heading">Run adapters in your browser</h2></div><span id="ws-runtime-state" class="badge">Not found in this browser</span></div>
           <p id="ws-runtime-detail" class="hint">The adapter runtime extension runs the adapters you install into <strong>browser-runtime</strong> on the pages they target, and reports back here.</p>
@@ -124,11 +124,11 @@
           </details>
         </section>
         <section id="ws-editor" class="panel adapter-editor" hidden aria-labelledby="ws-editor-heading">
-          <div class="section-heading"><div><p class="eyebrow" id="ws-editor-eyebrow">NEW ADAPTER</p><h2 id="ws-editor-heading">Write an adapter</h2></div><span id="ws-editor-revision" class="badge" hidden></span></div>
+          <div class="section-heading"><div><p class="eyebrow" id="ws-editor-eyebrow">EDIT</p><h2 id="ws-editor-heading">Edit an adapter</h2></div><span id="ws-editor-revision" class="badge"></span></div>
           <form id="ws-form" novalidate>
             <div class="register-grid">
               <div class="input-group"><label for="ws-name">Name</label><input id="ws-name" required maxlength="120" placeholder="Bigger buttons"></div>
-              <div class="input-group"><label for="ws-id">Adapter id</label><input id="ws-id" required maxlength="64" pattern="[a-z0-9][a-z0-9._-]*" spellcheck="false" placeholder="bigger-buttons" aria-describedby="ws-id-help"><span id="ws-id-help" class="hint">Lowercase letters, digits, dots and dashes. It cannot change after the first save.</span></div>
+              <div class="input-group"><label for="ws-id">Adapter id</label><input id="ws-id" readonly spellcheck="false" aria-describedby="ws-id-help"><span id="ws-id-help" class="hint">It stays the same across revisions.</span></div>
               <div class="input-group register-wide"><label for="ws-description">What it changes, and for whom</label><textarea id="ws-description" rows="2" maxlength="2000" placeholder="Makes small buttons at least 44 pixels tall, for people who find small targets hard to hit."></textarea></div>
               <div class="input-group register-wide"><label for="ws-urls">Runs on <small>(one address pattern per line)</small></label><textarea id="ws-urls" rows="2" spellcheck="false" placeholder="https://example.com/*" aria-describedby="ws-urls-help"></textarea><span id="ws-urls-help" class="hint"><code>https://example.com/*</code> is every page of that site; <code>https://*.example.com/*</code> adds its subdomains; <code>http://localhost/*</code> covers any local port.</span></div>
               <fieldset class="register-areas"><legend>Support areas</legend><label><input type="checkbox" name="ws-area" value="vision"> Vision</label><label><input type="checkbox" name="ws-area" value="motor"> Motor</label><label><input type="checkbox" name="ws-area" value="hearing"> Hearing</label><label><input type="checkbox" name="ws-area" value="cognitive"> Cognitive</label><label><input type="checkbox" name="ws-area" value="sensory"> Sensory</label><label><input type="checkbox" name="ws-area" value="reading"> Reading</label></fieldset>
@@ -189,23 +189,21 @@
   </div>
   <dialog id="ws-guide" class="guide-dialog" aria-labelledby="ws-guide-heading">
     <div class="section-heading"><div><p class="eyebrow">NEW ADAPTER</p><h2 id="ws-guide-heading">Build an adapter with a coding agent</h2></div></div>
-    <p class="hint">A coding agent such as Claude Code or opencode writes the adapter, publishes it to this toolkit and runs it in your browser. The toolkit skill shows it how.</p>
+    <p class="hint">A coding agent such as Claude Code or opencode writes the adapter, publishes it to this toolkit and runs it in your browser. The toolkit skill in the repository shows it how.</p>
     <ol class="guide-steps">
       <li>
-        <h3>Add the toolkit skill to your project</h3>
-        <p class="hint">Run this in your project folder. Claude Code and opencode both find skills in <code>.claude/skills</code>.</p>
-        <pre class="snippet" id="ws-guide-install"></pre>
-        <div class="card-actions"><button type="button" class="secondary small" data-guide-copy="ws-guide-install">Copy commands</button></div>
+        <h3>Copy these two lines into <code>.env</code></h3>
+        <p class="hint">Make a file named <code>.env</code> at the top of the toolkit repository and paste the lines into it. Git ignores <code>.env</code>, so your token stays out of commits.</p>
+        <pre class="snippet" id="ws-guide-env"></pre>
+        <div class="card-actions"><button type="button" class="secondary small" id="ws-guide-copy">Copy the two lines</button></div>
       </li>
       <li>
-        <h3>Connect it to your toolkit</h3>
-        <p class="hint">Run this in the same terminal, then start <code>claude</code> or <code>opencode</code> there. It holds your token, so keep it out of files you share.</p>
-        <pre class="snippet" id="ws-guide-env"></pre>
-        <div class="card-actions"><button type="button" class="secondary small" data-guide-copy="ws-guide-env">Copy commands</button></div>
+        <h3>Open the repository in your coding agent</h3>
+        <p class="hint">Start <code>claude</code> or <code>opencode</code> in the toolkit repository folder. The skill is already in <code>.claude/skills</code>, and the agent picks it up on its own.</p>
       </li>
       <li>
         <h3>Say what to fix</h3>
-        <p class="hint">Name the website and the barrier. The agent picks up the skill on its own. For example:</p>
+        <p class="hint">Name the website and the barrier. For example:</p>
         <pre class="snippet" id="ws-guide-ask">Make an adapter that underlines each link on https://example.com, for people who find links hard to tell apart from other text. Publish it to my toolkit so it runs in my browser.</pre>
       </li>
       <li>
@@ -215,7 +213,6 @@
     </ol>
     <div class="card-actions guide-actions">
       <button type="button" id="ws-guide-done">Done</button>
-      <button type="button" id="ws-guide-editor" class="text-button">Write it here instead</button>
       <p id="ws-guide-status" class="hint" role="status"></p>
     </div>
   </dialog>

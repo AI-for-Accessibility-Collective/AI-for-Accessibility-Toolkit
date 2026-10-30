@@ -173,14 +173,14 @@ const BUILD_AN_ADAPTER = `An adapter is one JavaScript file that removes one bar
 **What the person does**
 
 1. Once: set up the adapter runtime extension in Chrome (\`extension/README.md\`, "Set it up": Load unpacked, Allow User Scripts, Connect with this console).
-2. In the developer console, open **Adapters** and choose **+ New adapter**. The guide there gives the commands to add this skill to a project and to set the toolkit address and the default token.
-3. Tell you what to fix, for example: "Make an adapter that makes small buttons bigger on https://example.com." You pick up this skill on your own.
+2. In the developer console, open **Adapters** and choose **+ New adapter**. Copy the two lines it shows (the toolkit address and the default token) into a file named \`.env\` at the top of this repository. Git ignores \`.env\`, so the token stays out of commits.
+3. Open this repository in a coding agent such as Claude Code or opencode, and say what to fix, for example: "Make an adapter that makes small buttons bigger on https://example.com." The agent picks up this skill on its own.
 4. Open the page in Chrome. The change appears within a few seconds.
 5. Say what to change next. You edit the file and publish again.
 
 **What you do**
 
-1. Get the toolkit address and the token from the person. Keep them in the environment as \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\`. Never write the token into a file.
+1. Check that \`.env\` exists at the top of the repository. The helper below reads \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` from it, so leave the file closed: keep the token out of your messages, other files and commits. If it is missing, ask the person to copy the two lines from the developer console (**Adapters**, **+ New adapter**).
 2. Write one file, such as \`bigger-buttons.js\`:
    - It exports one object with \`enable(options)\` and \`disable()\`.
    - \`enable()\` makes the change and remembers what it changed. \`disable()\` puts the page back exactly as it was.
@@ -229,8 +229,6 @@ const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.cl
 mkdir -p .claude/skills
 cp -r <path-to-toolkit-repo>/.claude/skills/ai4a11y-toolkit .claude/skills/
 \`\`\`
-
-Or download it from any toolkit service, which serves it at \`/skill/ai4a11y-toolkit/SKILL.md\` and \`/skill/ai4a11y-toolkit/scripts/adapter.mjs\` (the developer console's **+ New adapter** guide gives the commands).
 
 Copy the whole folder: \`scripts/adapter.mjs\` (the helper in "Build an adapter with a coding agent") lives next to \`SKILL.md\`. Claude Code discovers project skills in \`.claude/skills/\` on the next session, and so does opencode (it reads \`.claude/skills/\`, \`.opencode/skills/\` and \`.agents/skills/\`). If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).`;
 

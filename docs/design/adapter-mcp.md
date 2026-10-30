@@ -1009,7 +1009,7 @@ What exists now, so the sections above can be read against working code.
 | Registry | `server/src/registry.js` | The toolkit's MCP server at `/v1/mcp` (§14): per-account adapters and revisions, the shared index, installs, runtime reports, resources and change notifications. |
 | Registry client | `toolkit/adapter-mcp/registry.js` | `createRegistryClient` (publish, search, share, install, installed, report, status, watch) and `loadInstalledAdapters`. |
 | Browser runtime | `extension/` | The reference runtime for web packages (§14.4). |
-| Developer console | `server/developer/adapters.js` | The Adapters page: write an adapter with live lint, save revisions, run it in the browser runtime, share it, install others' and see the runtime's reports. |
+| Developer console | `server/developer/adapters.js` | The Adapters page: the coding-agent guide, edit an adapter with live lint, save revisions, run it in the browser runtime, share it, install others' and see the runtime's reports. |
 | Listings | `server/src/adapters.js` | The older marketplace of descriptions. A listing may carry a `descriptor`; the service checks it and computes its digest. Listings without one are shown as legacy. |
 | Integration | the Redbird demo store (`workshop/toolkit.js` in its repository) | Exports the workshop adapters (and, from a starter folder, the participant's own `adapter.js`) as the app `redbird` for live control, keeps the rest of its library internal, and limits each tab to its own page. |
 

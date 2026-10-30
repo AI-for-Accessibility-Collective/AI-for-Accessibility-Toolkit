@@ -1,44 +1,14 @@
-// The Adapters page: write an adapter for a website, run it in your browser
+// The Adapters page: see the adapters you built, run them in your browser
 // with the adapter runtime extension, share it, and install what others
 // shared (docs/design/adapter-mcp.md §14). Everything goes through the
 // toolkit's registry at /v1/mcp with the SDK's registry client; the browser
 // runtime reports back what happened on each site.
 
 import {
-  createRegistryClient, defineDescriptor, lintWebModule, urlPatternError, BROWSER_RUNTIME_APP, SLUG,
+  createRegistryClient, lintWebModule, urlPatternError, BROWSER_RUNTIME_APP,
 } from '/sdk/toolkit/adapter-mcp/index.js';
 
 const $ = id => document.getElementById(id);
-const CONSOLE_APP = { appId: 'console', appName: 'Developer console' };
-
-const TEMPLATE = `// Bigger buttons: one sentence on what it changes on the page.
-//
-// Who it helps: which barrier it removes, and for whom.
-// enable() makes the change. disable() must put the page back exactly as it was.
-
-export const MyAdapter = {
-  enabled: false,
-  changed: [],
-
-  enable(options = {}) {
-    if (this.enabled) return;
-    this.enabled = true;
-    // Find the problem on the page and fix it, remembering what you changed.
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
-      this.changed.push({ el, before: el.style.minHeight });
-      el.style.minHeight = '44px';
-    }
-  },
-
-  disable() {
-    if (!this.enabled) return;
-    this.enabled = false;
-    for (const { el, before } of this.changed) el.style.minHeight = before;
-    this.changed = [];
-  },
-};
-`;
-
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -61,7 +31,6 @@ function ago(iso) {
   return new Date(iso).toLocaleDateString();
 }
 const keyOf = (a) => `${a.owner}/${a.appId}/${a.id}`;
-const slugify = (s) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
 
 const RESULT_TEXT = { applied: 'Running', failed: 'Failed', skipped: 'Not running', removed: 'Switched off' };
 
@@ -70,8 +39,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
   let uid = null;
   let mine = [], shared = [], installed = new Map(), results = [], instances = [], apps = [];
   let tab = 'mine';
-  let editing = null;      // the adapter_get result being edited, or null for a new one
-  let idTouched = false;
+  let editing = null;      // the adapter_get result being edited
   let active = false;
   let watching = null;
   let runtimeHere = null;  // what the extension's bridge said, in this browser
@@ -288,32 +256,20 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
 
   async function openEditor(summary) {
     // Load first, so the editor never shows one adapter's title over another's code.
-    const loaded = summary ? await registry.get(summary.adapter) : null;
-    editing = loaded;
-    idTouched = false;
+    editing = await registry.get(summary.adapter);
+    const d = editing.descriptor;
     $('ws-form').reset();
-    if (loaded) {
-      const d = editing.descriptor;
-      $('ws-editor-eyebrow').textContent = `EDIT · ${editing.appName.toUpperCase()}`;
-      $('ws-editor-heading').textContent = `Edit ${editing.name}`;
-      $('ws-editor-revision').hidden = false;
-      $('ws-editor-revision').textContent = `revision ${editing.revision}`;
-      $('ws-name').value = d.name;
-      $('ws-id').value = d.id;
-      $('ws-description').value = d.description || '';
-      $('ws-urls').value = (editing.urlPatterns || []).join('\n');
-      for (const box of document.querySelectorAll('input[name=ws-area]')) box.checked = (d.supportAreas || []).includes(box.value);
-      $('ws-code').value = editing.package.code;
-      $('ws-run').checked = installed.has(keyOf(editing.adapter));
-      $('ws-share').checked = editing.shared;
-    } else {
-      $('ws-editor-eyebrow').textContent = 'NEW ADAPTER';
-      $('ws-editor-heading').textContent = 'Write an adapter';
-      $('ws-editor-revision').hidden = true;
-      $('ws-code').value = TEMPLATE;
-      $('ws-run').checked = true;
-    }
-    $('ws-id').readOnly = !!editing;
+    $('ws-editor-eyebrow').textContent = `EDIT · ${editing.appName.toUpperCase()}`;
+    $('ws-editor-heading').textContent = `Edit ${editing.name}`;
+    $('ws-editor-revision').textContent = `revision ${editing.revision}`;
+    $('ws-name').value = d.name;
+    $('ws-id').value = d.id;
+    $('ws-description').value = d.description || '';
+    $('ws-urls').value = (editing.urlPatterns || []).join('\n');
+    for (const box of document.querySelectorAll('input[name=ws-area]')) box.checked = (d.supportAreas || []).includes(box.value);
+    $('ws-code').value = editing.package.code;
+    $('ws-run').checked = installed.has(keyOf(editing.adapter));
+    $('ws-share').checked = editing.shared;
     $('ws-editor').hidden = false;
     renderLint();
     $('ws-editor').scrollIntoView({ block: 'start' });
@@ -348,26 +304,19 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
 
   async function save() {
     const name = $('ws-name').value.trim();
-    const id = $('ws-id').value.trim();
     if (!name) { $('ws-name').focus(); throw new Error('Give the adapter a name.'); }
-    if (!SLUG.test(id)) { $('ws-id').focus(); throw new Error('The adapter id is lowercase letters, digits, dots and dashes, such as bigger-buttons.'); }
     const errors = problems().filter(p => p.level === 'error');
     if (errors.length) {
       (errors[0].where === 'Runs on' ? $('ws-urls') : $('ws-code')).focus();
       throw new Error(`Fix this before saving — ${errors[0].where}: ${errors[0].message}.`);
     }
     const areas = [...document.querySelectorAll('input[name=ws-area]:checked')].map(b => b.value);
-    const { descriptorDigest: _d, executionArtifactDigest: _e, ...before } = editing?.descriptor || {};
-    const descriptor = editing
-      ? { ...before, name, description: $('ws-description').value.trim(), targets: [{ platforms: ['*'], urls: urlsFromField() }], supportAreas: areas }
-      : defineDescriptor({
-        appId: CONSOLE_APP.appId, id, name, version: '1.0.0', description: $('ws-description').value.trim(),
-        targets: [{ platforms: ['*'], urls: urlsFromField() }], supportAreas: areas,
-      });
+    const { descriptorDigest: _d, executionArtifactDigest: _e, ...before } = editing.descriptor;
+    const descriptor = { ...before, name, description: $('ws-description').value.trim(), targets: [{ platforms: ['*'], urls: urlsFromField() }], supportAreas: areas };
     const shareIt = $('ws-share').checked;
     const result = await registry.publish({
-      appName: editing ? editing.appName : CONSOLE_APP.appName, descriptor, code: $('ws-code').value,
-      ...(editing?.package?.entry ? { entry: editing.package.entry } : {}), shared: shareIt,
+      appName: editing.appName, descriptor, code: $('ws-code').value,
+      ...(editing.package?.entry ? { entry: editing.package.entry } : {}), shared: shareIt,
     });
     const key = keyOf(result.adapter);
     const runIt = $('ws-run').checked;
@@ -435,45 +384,28 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
   // ── wiring ────────────────────────────────────────────────────────────────
 
   // New adapter opens a guide to building one with a coding agent and the
-  // toolkit skill (served by this toolkit). The in-page editor stays one
-  // step away.
+  // toolkit skill in the repository. It shows the two .env lines the skill's
+  // helper reads.
   $('ws-new').addEventListener('click', () => {
     const client = getClient();
-    if (!client) { status('Sign in before writing an adapter.', true); return; }
-    const skill = `${client.base}/skill/ai4a11y-toolkit`;
-    $('ws-guide-install').textContent = [
-      'mkdir -p .claude/skills/ai4a11y-toolkit/scripts',
-      `curl -fsSo .claude/skills/ai4a11y-toolkit/SKILL.md ${skill}/SKILL.md`,
-      `curl -fsSo .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs ${skill}/scripts/adapter.mjs`,
-    ].join('\n');
-    $('ws-guide-env').textContent = [
-      `export TOOLKIT_URL=${client.base}`,
-      `export TOOLKIT_TOKEN=${getAppToken() || '<your default token from Account>'}`,
-    ].join('\n');
+    if (!client) { status('Sign in before building an adapter.', true); return; }
+    const token = getAppToken();
+    $('ws-guide-env').textContent = `TOOLKIT_URL=${client.base}\nTOOLKIT_TOKEN=${token || '<your default token from Account & tokens>'}`;
     $('ws-guide-status').textContent = '';
     $('ws-guide').showModal();
   });
   $('ws-guide-done').addEventListener('click', () => $('ws-guide').close());
-  $('ws-guide-editor').addEventListener('click', () => {
-    $('ws-guide').close();
-    run(() => openEditor(null));
+  // The page's status line sits behind the modal, so the guide has its own.
+  $('ws-guide-copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(`${$('ws-guide-env').textContent}\n`);
+      $('ws-guide-status').textContent = 'Copied. Paste it into .env at the top of the toolkit repository.';
+    } catch (error) {
+      $('ws-guide-status').textContent = `Could not copy: ${error.message}. Select the two lines and copy them instead.`;
+    }
   });
-  for (const copy of document.querySelectorAll('[data-guide-copy]')) {
-    // The page's status line sits behind the modal, so the guide has its own.
-    copy.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText($(copy.dataset.guideCopy).textContent);
-        $('ws-guide-status').textContent = copy.dataset.guideCopy === 'ws-guide-env'
-          ? 'Copied. It includes your token, so paste it only into your own terminal.' : 'Copied.';
-      } catch (error) {
-        $('ws-guide-status').textContent = `Could not copy: ${error.message}. Select the text and copy it instead.`;
-      }
-    });
-  }
   $('ws-cancel').addEventListener('click', closeEditor);
   $('ws-form').addEventListener('submit', (event) => { event.preventDefault(); run(save); });
-  $('ws-name').addEventListener('input', () => { if (!editing && !idTouched) $('ws-id').value = slugify($('ws-name').value); });
-  $('ws-id').addEventListener('input', () => { idTouched = true; });
   let lintTimer = null;
   $('ws-code').addEventListener('input', () => { clearTimeout(lintTimer); lintTimer = setTimeout(renderLint, 250); });
   $('ws-search').addEventListener('input', render);

@@ -10,9 +10,12 @@
 
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { chromium } from 'playwright';
 import { createApp } from '../../server/src/app.js';
 import { fileStore } from '../../server/src/store.js';
@@ -233,25 +236,26 @@ try {
   await registry.uninstall('browser-runtime', { owner: 'other', appId: 'redbird', id: 'labels' });
   await page.waitForFunction(() => !document.getElementById('buy').hasAttribute('aria-label'), null, background);
 
-  // ── the whole loop from the console: write an adapter there, it runs here, the console shows it ──
+  // ── the whole loop: a coding agent publishes an adapter, it runs here, the console shows it ──
   const consoleUi = await context.newPage();
   consoleUi.on('pageerror', e => pageErrors.push(`console: ${e.message}`));
   await consoleUi.goto(`${base}/developer#/adapters`);
   // Still signed in from the popup connect above: the console keeps its session.
   await consoleUi.waitForFunction(() => document.getElementById('connection-state').textContent.includes('Signed in'));
   await consoleUi.waitForFunction(() => document.getElementById('ws-runtime-state').textContent === 'Connected in this browser', null, { timeout: 15000 });
-  await consoleUi.click('#ws-new');
-  await consoleUi.click('#ws-guide-editor');
-  await consoleUi.fill('#ws-name', 'Shop heading label');
-  await consoleUi.fill('#ws-urls', 'http://localhost/*');
-  await consoleUi.fill('#ws-code', `export const HeadingLabel = {
+  // A coding agent publishes it with the skill's helper; the extension runs it.
+  const project = await mkdtemp(path.join(tmpdir(), 'agent-project-'));
+  await writeFile(path.join(project, '.env'), `TOOLKIT_URL=${base}\nTOOLKIT_TOKEN=${dev.token}\n`);
+  await writeFile(path.join(project, 'heading-label.js'), `export const HeadingLabel = {
   enable() { document.querySelector('h1').dataset.fromConsole = 'yes'; },
   disable() { delete document.querySelector('h1').dataset.fromConsole; },
 };`);
-  await consoleUi.click('#ws-save');
-  await consoleUi.waitForFunction(() => document.getElementById('status').textContent.startsWith('Saved Shop heading label, revision 1.'));
+  const { TOOLKIT_URL: _u, TOOLKIT_TOKEN: _t, ...cleanEnv } = process.env;
+  const helper = fileURLToPath(new URL('../../.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs', import.meta.url));
+  await promisify(execFile)(process.execPath, [helper, 'publish', 'heading-label.js', '--name', 'Shop heading label', '--id', 'shop-heading-label', '--runs-on', 'http://localhost/*'], { cwd: project, env: cleanEnv });
+  await rm(project, { recursive: true, force: true });
   await page.waitForFunction(() => document.querySelector('h1').dataset.fromConsole === 'yes', null, background);
-  const consoleCard = consoleUi.locator('.adapter-card[data-adapter="dev/console/shop-heading-label"]');
+  const consoleCard = consoleUi.locator('.adapter-card[data-adapter="dev/agent/shop-heading-label"]');
   await consoleCard.locator('.runtime-results li.applied').first().waitFor({ timeout: 15000 });
   assert.match(await consoleCard.locator('.runtime-results').innerText(), new RegExp(`Running on ${shop.replaceAll('.', '\\.')} · revision 1 · Chrome \\d+`));
   await consoleCard.getByRole('button', { name: 'Stop running Shop heading label in my browser' }).click();
@@ -263,7 +267,7 @@ try {
   await page.waitForFunction(() => document.body.dataset.bigButtons === undefined, null, background);
   assert.deepEqual(await runtime(() => chrome.userScripts.getScripts().then(s => s.length)), 0);
   assert.deepEqual(pageErrors, [], 'the adapters raised no page errors');
-  console.log('Adapter runtime browser workflow passed: user-scripts switch, connect checks, run on target pages with parameters, live edit without reload, exact scope, per-site off and on, a shared pinned adapter, a failing adapter reported, popup, console bridge wake-up, uninstall, writing an adapter in the console that runs here and reports back, disconnect.');
+  console.log('Adapter runtime browser workflow passed: user-scripts switch, connect checks, run on target pages with parameters, live edit without reload, exact scope, per-site off and on, a shared pinned adapter, a failing adapter reported, popup, console bridge wake-up, uninstall, an adapter a coding agent published running here and reporting back to the console, disconnect.');
 } finally {
   await context?.close().catch(() => {});
   app.registry.closeAll();

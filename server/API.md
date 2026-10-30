@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-10-30T11:01:55.810Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-10-30T11:29:21.205Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -24,7 +24,6 @@ Version: `0.1.0`
 | PUT | `/v1/adapters/{appId}/{id}/install` | bearer | mark installed in the calling uid's state -> {ok, installed:true} |
 | DELETE | `/v1/adapters/{appId}/{id}/install` | bearer | clear it -> {ok, installed:false} |
 | GET | `/sdk/adapter-mcp.js` | none (public code, any origin) | the Adapter MCP SDK entry point for apps; its modules are under /sdk/toolkit/ |
-| GET | `/skill/ai4a11y-toolkit/SKILL.md` | none (public, any origin) | the toolkit skill for coding agents (Claude Code, opencode); its helper is /skill/ai4a11y-toolkit/scripts/adapter.mjs |
 | POST | `/v1/auth/login` | none (rate limited) | developer sign-in {username, password} -> {token (session, expires), expiresAt, account, defaultToken} |
 | POST | `/v1/auth/logout` | session | end this sign-in session |
 | GET | `/v1/account` | session | {account, defaultToken, tokens, session, liveApps} for the signed-in account |

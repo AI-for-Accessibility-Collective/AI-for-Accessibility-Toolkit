@@ -41,7 +41,6 @@ const PROFILE_PREFIX = '/v1/profile';
 const MCP_PREFIX = '/v1/mcp/';
 const APPS_PREFIX = '/v1/apps';
 const SDK_PREFIX = '/sdk/';
-const SKILL_PREFIX = '/skill/';
 
 /** @param {Object} config
  *  @param {import('./store.js').fileStore} config.store
@@ -191,7 +190,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       userAgent: String(req.headers['user-agent'] || '').slice(0, 200) || undefined,
       message: `${req.method} ${path} ${status} ${ms}ms${req.auth?.uid ? ` uid=${req.auth.uid}` : ''}`,
     };
-    const isStatic = req.method === 'GET' && (path.startsWith(SDK_PREFIX) || path.startsWith(SKILL_PREFIX) || path.startsWith(ADMIN_ASSETS_PREFIX) || path.startsWith('/developer'));
+    const isStatic = req.method === 'GET' && (path.startsWith(SDK_PREFIX) || path.startsWith(ADMIN_ASSETS_PREFIX) || path.startsWith('/developer'));
     if (status >= 500) log.error('http.request', fields);
     else if (status >= 400) log.warn('http.request', fields);
     else if (isStatic) log.debug('http.request', fields);
@@ -236,9 +235,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       }
     }
 
-    // The Adapter MCP SDK, for apps to import straight from their toolkit,
-    // and the coding-agent skill (the same explicit list of files).
-    if (pathname.startsWith(SDK_PREFIX) || pathname.startsWith(SKILL_PREFIX)) {
+    // The Adapter MCP SDK, for apps to import straight from their toolkit.
+    if (pathname.startsWith(SDK_PREFIX)) {
       if (method === 'OPTIONS') return serveSdkAsset(res, null, req);
       if ((method === 'GET' || method === 'HEAD') && SDK_ASSETS.has(pathname)) return serveSdkAsset(res, SDK_ASSETS.get(pathname), req);
       return sendJSON(res, 404, { error: 'not-found' });
