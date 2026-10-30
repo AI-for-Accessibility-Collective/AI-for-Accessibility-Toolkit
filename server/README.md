@@ -119,7 +119,7 @@ browser's runtime is connected, and lists your runtimes' recent reports.
 
 ## What your toolkit learned
 
-The **Profiles** page ends with **What your toolkit learned**
+The **Memory** page (in the sidebar) shows **What your toolkit learned**
 (`server/developer/learned.js`, `server/src/learning.js`). The toolkit learns
 from what the person does with their adapters: running one in their browser,
 removing it, switching it off on a site, and whatever apps report with

@@ -152,7 +152,16 @@ function renderNewValue() {
   $('new-value-control').replaceChildren(newValueEditor.element);
   updateControls();
 }
+// The Memory page says which profile its suggestions change: the active one.
+function showMemoryProfile() {
+  const name = activeId === TEMP_ID ? `${temp?.baseName || 'Your profile'} (modified)` : findPreset(activeId)?.name;
+  const line = $('memory-profile');
+  line.firstChild.textContent = client
+    ? `It belongs to your active toolkit profile${name ? `, ${name}` : ''}: accepting a suggestion changes that profile. `
+    : 'It belongs to your active toolkit profile: accepting a suggestion changes that profile. ';
+}
 function renderLibrary() {
+  showMemoryProfile();
   const all = [...BUILTIN_PROFILES, ...saved];
   $('profile-count').textContent = all.length;
   const search = $('profile-search').value.trim().toLowerCase();
@@ -309,8 +318,8 @@ const accountPage = createAccountPage({
     if (account) { $('account-name').textContent = account.displayName; $('account-uid').textContent = `(${account.uid})`; }
   },
 });
-const pages = new Map([['profiles', $('page-profiles')], ['adapters', $('page-adapters')], ['apps', $('page-apps')], ['listings', $('page-listings')], ['account', $('page-account')]]);
-const PAGE_LABELS = { profiles: ['PROFILE MANAGER', 'Profiles'], adapters: ['ADAPTERS', 'Adapters'], apps: ['CONNECTED APPS', 'Apps'], listings: ['ADAPTER LISTINGS', 'Listings'], account: ['ACCOUNT', 'Account & tokens'] };
+const pages = new Map([['profiles', $('page-profiles')], ['memory', $('page-memory')], ['adapters', $('page-adapters')], ['apps', $('page-apps')], ['listings', $('page-listings')], ['account', $('page-account')]]);
+const PAGE_LABELS = { profiles: ['PROFILE MANAGER', 'Profiles'], memory: ['MEMORY', 'Memory'], adapters: ['ADAPTERS', 'Adapters'], apps: ['CONNECTED APPS', 'Apps'], listings: ['ADAPTER LISTINGS', 'Listings'], account: ['ACCOUNT', 'Account & tokens'] };
 function showPage(name) {
   if (!pages.has(name)) name = 'profiles';
   for (const [key, node] of pages) node.hidden = key !== name;
@@ -325,7 +334,7 @@ function showPage(name) {
   appsPage.setActive(name === 'apps');
   adaptersPage.setActive(name === 'adapters');
   if (name === 'adapters') adaptersPage.refresh();
-  if (name === 'profiles' && client) learnedPanel.refresh().catch(() => {});
+  if (name === 'memory' && client) learnedPanel.refresh().catch(() => {});
   if (name === 'listings') listingsPage.refresh();
   if (name === 'account') accountPage.refresh();
 }

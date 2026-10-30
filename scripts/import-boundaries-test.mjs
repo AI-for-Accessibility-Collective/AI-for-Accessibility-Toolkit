@@ -88,8 +88,8 @@ const KNOWN_EDGES = {
     why: 'the app_declare, access_* and adapter_data_* MCP tools use the contract\'s schemas, descriptions and visibility levels, so the server checks them exactly as apps see them',
   },
   'server/src/learning.js': {
-    to: ['toolkit/protocol/adapter/index.js'],
-    why: 'the profile_* MCP tools use the contract\'s tool schemas and descriptions, so the server lists and checks them exactly as apps see them',
+    to: ['toolkit/protocol/adapter/index.js', 'toolkit/index.js'],
+    why: 'the profile_* MCP tools use the contract\'s tool schemas and descriptions, so the server lists and checks them exactly as apps see them; the weekly suggestion limit it reports falls back to the core\'s own default',
   },
   'server/src/adapters.js': {
     to: ['toolkit/protocol/adapter/index.js'],

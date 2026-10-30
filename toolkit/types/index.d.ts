@@ -5,7 +5,6 @@
  */
 export function createToolkit(ports: ToolkitPorts): Toolkit;
 export { createDatastore } from "./core/datastore.js";
-export { createLibrarian } from "./core/librarian.js";
 export { taxonomy } from "./core/taxonomy.js";
 export { createSurfaceAdapter } from "./core/surface.js";
 export * from "./ports/index.js";
@@ -58,6 +57,7 @@ export type Toolkit = {
 };
 import { createDatastore } from './core/datastore.js';
 import { createLibrarian } from './core/librarian.js';
+export { createLibrarian, DEFAULT_PROPOSALS_PER_WEEK } from "./core/librarian.js";
 export { UNIT, SETTING_UNITS, unitOf, coerceSetting, coerceSettings, clampSetting, clampSettings } from "./core/units.js";
 export { toAbilityModel, normalizeNeed, SUPPORT_AREAS } from "./core/ability.js";
 export { STRENGTH_RANK, rankOf } from "./core/strength.js";

@@ -45,6 +45,10 @@ import { buildProfileBlob, validateProfileBlob } from '../sync/blob.js';
 import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill, vocabList } from './skill.js';
 import { buildSkill } from './skill-builder.js';
 
+// How many profile suggestions the Librarian drafts a week when the profile
+// does not say (a preset's metaPreferences often leave it out).
+export const DEFAULT_PROPOSALS_PER_WEEK = 30;
+
 /**
  * @param {Object} deps
  * @param {ReturnType<typeof import('./datastore.js').createDatastore>} deps.datastore   The Datastore facade (../core/datastore).
@@ -358,7 +362,7 @@ export function createLibrarian({
     metaPreferences: {
       consentBoundary: 'profile-only',  // 'profile-only' | 'all-tiers'
       language: 'standard',             // 'standard' | 'plain'
-      maxProposalsPerWeek: 30,
+      maxProposalsPerWeek: DEFAULT_PROPOSALS_PER_WEEK,
     },
     memoryPaused: false,
     // Global cross-app OFF switch (Phase 3): checked FIRST in every cross-app
@@ -2086,7 +2090,7 @@ Rules:
       let weekCount = props.filter(p => p.createdAt > weekAgo).length;
       // Demo mode lifts the weekly cap and ignores suppressions so the beat
       // stays repeatable; normal use honors both.
-      const cap = demoOn ? Infinity : (profile.metaPreferences?.maxProposalsPerWeek ?? 3);
+      const cap = demoOn ? Infinity : (profile.metaPreferences?.maxProposalsPerWeek ?? DEFAULT_PROPOSALS_PER_WEEK);
       for (const d of drafts) {
         if (!d.aspect || !d.change) continue;
         // The support areas are top-level; a model that writes them under

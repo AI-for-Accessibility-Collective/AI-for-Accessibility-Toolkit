@@ -70,7 +70,7 @@ export function createToolkit({
 }
 
 export { createDatastore } from './core/datastore.js';
-export { createLibrarian } from './core/librarian.js';
+export { createLibrarian, DEFAULT_PROPOSALS_PER_WEEK } from './core/librarian.js';
 export { taxonomy } from './core/taxonomy.js';
 export { createSurfaceAdapter } from './core/surface.js';
 export { UNIT, SETTING_UNITS, unitOf, coerceSetting, coerceSettings, clampSetting, clampSettings } from './core/units.js';

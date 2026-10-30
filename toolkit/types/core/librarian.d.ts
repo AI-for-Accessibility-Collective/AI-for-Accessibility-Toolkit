@@ -371,6 +371,7 @@ export function createLibrarian({ datastore, taxonomy, clock, scheduler, consent
         discarded: number;
     }>;
 };
+export const DEFAULT_PROPOSALS_PER_WEEK: 30;
 export default createLibrarian;
 import { resolveSkill } from './skill.js';
 //# sourceMappingURL=librarian.d.ts.map

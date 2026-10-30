@@ -240,7 +240,7 @@ about them over time (`server/src/learning.js`; schemas in
 - `profile_learning_reset` clears the suggestions (the weekly count starts
   again) and the "stop suggesting" list; with `memories: true` also the
   memories (the person's own notes stay) and the observations not learned from
-  yet. The profile itself is left as it is. The developer console's Profiles
+  yet. The profile itself is left as it is. The developer console's Memory
   page shows all of this under "What your toolkit learned".
 - An observation may carry up to 4 images (`images: [{mimeType, data}]`,
   PNG, JPEG, WebP or GIF, base64, at most 2,000,000 characters each), on

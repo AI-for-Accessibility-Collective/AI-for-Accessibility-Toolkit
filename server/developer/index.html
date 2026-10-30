@@ -20,6 +20,7 @@
     <nav class="sidebar" aria-label="Developer workspace">
       <div class="nav-links" role="navigation" aria-label="Pages">
         <a class="nav-link active" href="#/profiles" data-page="profiles" aria-current="page"><span aria-hidden="true">◧</span> Profiles</a>
+        <a class="nav-link" href="#/memory" data-page="memory"><span aria-hidden="true">◌</span> Memory</a>
         <a class="nav-link" href="#/adapters" data-page="adapters"><span aria-hidden="true">⚙</span> Adapters</a>
         <a class="nav-link" href="#/apps" data-page="apps"><span aria-hidden="true">▣</span> Apps <span id="nav-live" class="nav-count" hidden></span></a>
         <a class="nav-link" href="#/listings" data-page="listings"><span aria-hidden="true">⧉</span> Listings</a>
@@ -72,6 +73,10 @@
             <div class="editor-actions"><div><button id="apply" class="primary" type="button" disabled>Apply to toolkit</button><button id="save" class="secondary" type="button">Save preset</button></div><span class="hint">Presets are saved in your account when you are signed in, otherwise in this browser.</span></div>
           </section>
         </div>
+      </section>
+      <section id="page-memory" class="page" hidden>
+        <div class="page-heading"><div><p class="eyebrow">LEARN &amp; REMEMBER</p><h1 id="memory-heading">Memory</h1><p class="muted">What your toolkit learned about you from your apps and adapters, and the changes it suggests to your profile.</p></div></div>
+        <p id="memory-profile" class="hint">It belongs to your active toolkit profile: accepting a suggestion changes that profile. <a href="#/profiles">Profiles</a></p>
         <section id="learned" class="panel learned-panel" aria-labelledby="learned-heading">
           <div class="section-heading"><div><p class="eyebrow">LEARNING</p><h2 id="learned-heading">What your toolkit learned</h2></div><label class="toggle-control"><input type="checkbox" id="learned-paused" disabled> Pause learning</label></div>
           <p class="hint">Your toolkit learns from what you do with your adapters, such as which ones you run in your browser and where you switch one off. It suggests changes to your profile, and your profile changes only when you accept one.</p>

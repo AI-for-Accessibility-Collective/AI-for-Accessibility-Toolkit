@@ -17,6 +17,7 @@
 // partitions it may read, next to the account's own.
 
 import { withAiContext } from './ai-context.js';
+import { DEFAULT_PROPOSALS_PER_WEEK } from '../../toolkit/index.js';
 import { PROFILE_TOOL_SCHEMAS, PROFILE_TOOL_DESCRIPTIONS, PROFILE_READ_ONLY, BROWSER_RUNTIME_APP } from '../../toolkit/protocol/adapter/index.js';
 
 const EXTRACT_DELAY_MS = 30_000;
@@ -143,7 +144,7 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
           rationale: p.rationale, createdAt: p.createdAt, source: p.source,
         })),
         proposalsThisWeek: proposals.filter(p => p.createdAt > since).length,
-        proposalsPerWeek: profile.metaPreferences?.maxProposalsPerWeek ?? 3,
+        proposalsPerWeek: profile.metaPreferences?.maxProposalsPerWeek ?? DEFAULT_PROPOSALS_PER_WEEK,
         pendingObservations,
       };
     });

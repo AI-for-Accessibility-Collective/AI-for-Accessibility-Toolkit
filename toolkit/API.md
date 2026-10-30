@@ -346,6 +346,7 @@ Everything importable from `@ai4a11y/toolkit` (the package root).
 | `createToolkit` | default | index.js |
 | `createDatastore` | re-export | ./core/datastore.js |
 | `createLibrarian` | re-export | ./core/librarian.js |
+| `DEFAULT_PROPOSALS_PER_WEEK` | re-export | ./core/librarian.js |
 | `taxonomy` | re-export | ./core/taxonomy.js |
 | `createSurfaceAdapter` | re-export | ./core/surface.js |
 | `UNIT` | re-export | ./core/units.js |

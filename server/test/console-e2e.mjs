@@ -183,7 +183,9 @@ try {
   await dev.click('#save');
   await dev.waitForFunction(() => document.getElementById('status').textContent.includes('in your account'));
 
-  // What the toolkit learned: an observation, Learn now, a suggestion to accept, pause, reset.
+  // What the toolkit learned, on the Memory page: an observation, Learn now, a suggestion to accept, pause, reset.
+  await dev.click('.nav-link[data-page="memory"]');
+  assert.match(await dev.locator('#memory-profile').innerText(), /It belongs to your active toolkit profile/);
   const statusIs = (text) => dev.waitForFunction(t => document.getElementById('status').textContent.startsWith(t), text);
   await dev.locator('#learned-summary', { hasText: 'Learning is on.' }).waitFor();
   assert.match(await dev.locator('#learned-proposals').innerText(), /No suggestions waiting/);
@@ -209,6 +211,8 @@ try {
   await statusIs('Reset everything learned: 1 memories');
   assert.match(await dev.locator('#learned-memories').innerText(), /Nothing learned yet/);
   await dev.setViewportSize({ width: 390, height: 844 });
+  assert.ok(await dev.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'the Memory page fits a phone');
+  await dev.click('.nav-link[data-page="profiles"]');
   assert.ok(await dev.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'the Profiles page fits a phone');
   await dev.setViewportSize({ width: 1440, height: 1000 });
 
@@ -230,7 +234,7 @@ try {
   assert.equal(await dev.locator('#signin-form').isVisible(), true);
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Console browser workflow passed: admin accounts (single + bulk), sign-in, session reload, default and app tokens, an Adapter MCP app connecting, Try it (apply, read, undo, check), hide/show, account presets, what the toolkit learned (learn now, accept, pause, reset), mobile layout, sign-out.');
+  console.log('Console browser workflow passed: admin accounts (single + bulk), sign-in, session reload, default and app tokens, an Adapter MCP app connecting, Try it (apply, read, undo, check), hide/show, account presets, what the toolkit learned on the Memory page (learn now, accept, pause, reset), mobile layout, sign-out.');
 } finally {
   await link?.close().catch(() => {});
   await browser?.close();

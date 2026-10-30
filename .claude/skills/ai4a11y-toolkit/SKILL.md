@@ -114,7 +114,7 @@ The adaptations are part of the app's code, so you work in the app's repository 
    - **Needed**: which parts of the person's profile turn each one on, for example bigger text for someone who asked for it.
    - **Optional**: whether the toolkit can switch the adaptations on and off while the app is open, from the console's **Apps** page or a coding agent. By default, yes.
    - **Optional**: which observations the app sends, so the toolkit learns from them: what the person does that says something about their needs, such as switching an adaptation, or making the text bigger again after a reset. By default, only the person switching an adaptation themselves.
-   - **Optional**: which suggested profile changes (proposals) the app shows the person to answer, for example only the ones that touch its own adaptations. By default, none: the person answers them on the console's Profiles page.
+   - **Optional**: which suggested profile changes (proposals) the app shows the person to answer, for example only the ones that touch its own adaptations. By default, none: the person answers them on the console's Memory page.
    - **Optional**: whether to share an adaptation's code with other apps through the toolkit's adapter registry. By default, no: it stays in the app.
    - **Optional**: who can read what the app gives the toolkit (its observations and what the toolkit learns from them): every app of theirs (`user`), or only this app (`app`). By default, every app of theirs.
    - **Optional**: whether observations carry images, such as a screenshot of what the person could not read. By default, no.
