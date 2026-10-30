@@ -5,6 +5,8 @@
 // Talks to /v1/adapters through the shared client; all async work runs
 // through the workspace's busy-aware run().
 
+import { icon } from './icons.js';
+
 const $ = id => document.getElementById(id);
 
 function element(tag, className, text) {
@@ -158,13 +160,15 @@ export function createListingsPage({ getClient, status, run, getHiddenApps = () 
       showCode(card, payload);
     }), `View code of ${adapter.name}`));
     if (adapter.sourceUrl) {
-      const link = element('a', '', 'Source ↗');
+      const link = element('a', 'external', 'Source');
+      link.append(icon('external'));
       link.href = adapter.sourceUrl; link.target = '_blank'; link.rel = 'noreferrer';
       link.setAttribute('aria-label', `Source of ${adapter.name} (opens in a new tab)`);
       actions.append(link);
     }
     if (adapter.docsUrl) {
-      const link = element('a', '', 'Docs ↗');
+      const link = element('a', 'external', 'Docs');
+      link.append(icon('external'));
       link.href = adapter.docsUrl; link.target = '_blank'; link.rel = 'noreferrer';
       link.setAttribute('aria-label', `Docs for ${adapter.name} (opens in a new tab)`);
       actions.append(link);

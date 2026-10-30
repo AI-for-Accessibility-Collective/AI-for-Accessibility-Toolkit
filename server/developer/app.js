@@ -6,6 +6,7 @@ import { createLearnedPanel } from './learned.js';
 import { createListingsPage } from './listings.js';
 import { createAppsPage } from './apps.js';
 import { createAccountPage } from './account.js';
+import { icon } from './icons.js';
 
 const $ = id => document.getElementById(id);
 let client = null, saved = [], draft = {}, selectedId = null, activeId = null, filter = 'all', busy = false;
@@ -130,7 +131,8 @@ function renderEditor() {
       editor.element.setAttribute('aria-labelledby', label.id);
     }
     if (path.join('.') === 'fields.needs') row.classList.add('needs-row');
-    const remove = element('button', 'remove', '×');
+    const remove = element('button', 'remove');
+    remove.append(icon('remove'));
     remove.type = 'button';
     remove.setAttribute('aria-label', `Remove ${path.join('.')}`);
     remove.addEventListener('click', () => run(async () => {
@@ -187,7 +189,8 @@ function renderLibrary() {
     }));
     actions.append(load);
     if (item.source) {
-      const link = element('a', '', 'WAI story ↗');
+      const link = element('a', 'external', 'WAI story');
+      link.append(icon('external'));
       link.href = item.source; link.target = '_blank'; link.rel = 'noreferrer';
       link.setAttribute('aria-label', `WAI source story for ${item.name}`);
       actions.append(link);

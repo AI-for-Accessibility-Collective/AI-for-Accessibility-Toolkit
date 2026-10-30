@@ -54,3 +54,11 @@ details summary { cursor: pointer; color: var(--green); font-weight: 600; margin
 .actions a { color: var(--green); font-weight: 600; flex: 1; }
 #status { margin-top: 10px; font-size: .78rem; color: var(--green); min-height: 1em; }
 #status.error { color: var(--red); }
+
+/* An icon after a link's text (popup.html): the text colour, a little smaller. */
+.icon {
+  width: .8em;
+  height: .8em;
+  fill: currentColor;
+  vertical-align: -0.05em;
+}

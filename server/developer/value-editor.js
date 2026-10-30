@@ -1,4 +1,6 @@
 // Native, labelled controls. Readers return typed values without JSON coercion.
+import { icon } from './icons.js';
+
 const ENUMS = {
   'metaPreferences.consentBoundary': ['profile-only', 'all-tiers'],
   'metaPreferences.language': ['standard', 'plain'],
@@ -94,9 +96,11 @@ function pillsEditor(value, path, id, onChange) {
     pills.replaceChildren();
     items.forEach((item, index) => {
       const pill = node('span', 'pill');
-      pill.append(node('span', '', item), button('×', () => {
+      const remove = button('', () => {
         items.splice(index, 1); draw(); input.focus(); onChange();
-      }, `Remove ${item} from ${path.join('.')}`));
+      }, `Remove ${item} from ${path.join('.')}`);
+      remove.append(icon('remove'));
+      pill.append(node('span', '', item), remove);
       pills.append(pill);
     });
   }

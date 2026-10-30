@@ -1032,9 +1032,29 @@ main {
   color: white;
 }
 
-.nav-link span[aria-hidden] {
-  width: 20px;
-  text-align: center;
+/* Icons (icons.svg, Font Awesome Free): the text colour, at the text size. */
+.icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  fill: currentColor;
+  vertical-align: -0.125em;
+}
+
+.nav-link .icon {
+  width: 18px;
+  height: 18px;
+}
+
+a.external {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+a.external .icon {
+  width: .8em;
+  height: .8em;
 }
 
 .sidebar .connection {
