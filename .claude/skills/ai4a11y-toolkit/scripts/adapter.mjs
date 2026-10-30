@@ -20,9 +20,9 @@
 //           --visibility adapter keeps what it gives the toolkit to itself.
 // status    what the extension reported: running, or failed with the error.
 // share     shares an adapter with everyone on this toolkit (--stop to stop).
-// extension helps set up the adapter runtime extension: opens Chrome's
-//           extensions page and copies the extension folder's path (--no-open
-//           only prints them).
+// extension helps set up the adapter runtime extension: finds its folder (or
+//           says how to get it), opens Chrome's extensions page and copies the
+//           folder's path (--no-open only prints them; --dir names the folder).
 // check     whether a browser runtime is connected to this toolkit.
 // profile   the person's profile as apps read it (supportAreas, fields.needs, …).
 // learned   what the toolkit learned about the person: suggested profile
@@ -70,6 +70,7 @@ function parse(argv) {
     else if (flag === '--stop') flags.stop = true;
     else if (flag === '--no-run') flags.noRun = true;
     else if (flag === '--no-open') flags.noOpen = true;
+    else if (flag === '--dir') flags.dir = value();
     else fail(`Unknown option ${flag}.`);
   }
   return { command, target, flags };
@@ -177,9 +178,21 @@ async function share(id, flags) {
   console.log(r.shared ? `${appId}/${id} is shared: everyone on this toolkit can find and install it.` : `${appId}/${id} is private again.`);
 }
 
-// The extension folder of the toolkit repository this skill sits in
-// (<repo>/.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs).
-const EXTENSION_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../extension');
+// The extension folder: --dir or AI4A11Y_EXTENSION_DIR, the toolkit repository
+// this skill sits in (<repo>/.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs),
+// or a toolkit checkout in the current folder or a folder above it.
+const TOOLKIT_REPO = 'https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit.git';
+function findExtensionDir(flags) {
+  const places = [flags.dir, process.env.AI4A11Y_EXTENSION_DIR,
+    path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../extension')];
+  for (let dir = process.cwd(); ; dir = path.dirname(dir)) {
+    places.push(path.join(dir, 'extension'), path.join(dir, 'AI-for-Accessibility-Toolkit', 'extension'));
+    if (path.dirname(dir) === dir) break;
+  }
+  return places.filter(Boolean).map(p => path.resolve(p)).find((dir) => {
+    try { return /adapter runtime/i.test(JSON.parse(readFileSync(path.join(dir, 'manifest.json'), 'utf8')).name); } catch { return false; }
+  });
+}
 
 // Best effort: a person can always copy the path and type the address.
 function copyToClipboard(text) {
@@ -199,13 +212,18 @@ function openChromeExtensions() {
 }
 
 function extension(_target, flags) {
-  if (!existsSync(path.join(EXTENSION_DIR, 'manifest.json'))) {
-    fail('The extension folder is not next to this skill. Use the extension folder of your toolkit repository checkout.');
+  const folder = findExtensionDir(flags);
+  if (!folder) {
+    fail([
+      'The extension is not on this computer yet. It is the extension folder of the toolkit repository:',
+      `  git clone ${TOOLKIT_REPO}`,
+      'Then run this again from that folder, or with --dir <the cloned folder>/extension.',
+    ].join('\n'));
   }
-  const copied = !flags.noOpen && copyToClipboard(EXTENSION_DIR);
+  const copied = !flags.noOpen && copyToClipboard(folder);
   const opened = !flags.noOpen && openChromeExtensions();
   console.log([
-    `The extension folder: ${EXTENSION_DIR}${copied ? ' (copied)' : ''}`,
+    `The extension folder: ${folder}${copied ? ' (copied)' : ''}`,
     opened ? 'Opened chrome://extensions in Chrome.' : 'Open chrome://extensions in Chrome (type it in the address bar).',
     'Then, in Chrome (Chrome 135 or later):',
     '1. Turn on Developer mode (top right).',

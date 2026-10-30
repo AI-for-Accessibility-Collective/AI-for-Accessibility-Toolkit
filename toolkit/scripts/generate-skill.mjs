@@ -25,6 +25,10 @@ const TOOLKIT_ROOT = path.join(__dirname, '..');       // toolkit/
 const REPO_ROOT = path.join(TOOLKIT_ROOT, '..');        // repo root
 const SKILL_DIR = path.join(REPO_ROOT, '.claude', 'skills', 'ai4a11y-toolkit');
 const SKILL_PATH = path.join(SKILL_DIR, 'SKILL.md');
+// Reference material an agent reads when it needs it. Kept out of SKILL.md so
+// that file stays whole: opencode cuts a tool's output at about 50 KB, and a
+// cut SKILL.md loses its end, where the agent learns the skill's folder.
+const REFERENCE_DIR = path.join(SKILL_DIR, 'reference');
 const CONTRACT_PATH = path.join(REPO_ROOT, 'server', 'CONTRACT.md');
 
 // A fixed, hand-authored 3-sentence identity blurb (per the mission: "from a
@@ -201,6 +205,8 @@ The person says what should change, you write the file, and the toolkit runs it 
 
 **What you do**
 
+\`<skill folder>\` below is the folder this SKILL.md is in: \`.claude/skills/ai4a11y-toolkit\` in this repository, or wherever the skill is installed (\`.opencode/skills/…\`, \`.claude/skills/…\` in a project, or the same under your home folder). These folders are hidden, so a plain file search may skip them; look there by path. Its helper, \`scripts/adapter.mjs\`, does every step below that talks to the toolkit: run it rather than writing those calls or steps yourself.
+
 1. Choose the toolkit to work with. **Do not start a toolkit on this computer unless the person asks for one.**
    - If \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` are already set, in the environment or in a \`.env\` file at the top of the repository, use them. Do not ask. An older \`.env\` may name them \`TOOLKIT_SERVER_URL\` and \`TOOLKIT_SERVER_TOKEN\`; the helper reads those too. To check without showing the token: \`grep -cE '^(TOOLKIT_URL|TOOLKIT_SERVER_URL)=' .env\`.
    - Otherwise ask the person: "Use your hosted toolkit (the usual choice), or start one on this computer?"
@@ -208,7 +214,7 @@ The person says what should change, you write the file, and the toolkit runs it 
    - **On this computer**, only when they choose it: start it as in "Running or deploying your own toolkit service" (\`ADMIN_PASSWORD=dev npm run dev:workshop\`), make an account, have them sign in at \`http://localhost:8080/developer\`, and put that console's two lines into \`.env\`.
    - The helper below reads \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` from \`.env\`. Keep the token out of your messages, other files and commits (git ignores \`.env\`).
 2. Check that the person's browser runs adapters: \`node <skill folder>/scripts/adapter.mjs check\`. It prints "Connected: Chrome … on macOS, last seen …", or says that no browser runtime is connected. If none is, help them set up the extension:
-   - Run \`node <skill folder>/scripts/adapter.mjs extension\`. It opens \`chrome://extensions\` in Chrome, copies the extension folder's path, and prints the steps.
+   - Run \`node <skill folder>/scripts/adapter.mjs extension\` (with \`--no-open\` if the person does not want windows opened). It finds the extension folder, opens \`chrome://extensions\` in Chrome, copies the folder's path, and prints the steps. Always run it rather than giving the steps from memory: the person needs the folder's path. If the extension is not on their computer, it prints the \`git clone\` that gets it; run that where they agree, then \`extension\` again with \`--dir <the cloned folder>/extension\`.
    - Chrome lets only the person install it. Give them one step at a time and wait after each: turn on **Developer mode**; choose **Load unpacked** and pick the extension folder (on a Mac, Cmd+Shift+G in the folder picker, then paste); on the extension's **Details**, turn on **Allow User Scripts**; sign in to the developer console, open the extension from the toolbar and choose **Connect with this console**.
    - Run \`check\` again to confirm.
 3. Before you write any code, send the person one message with these questions, then stop and wait for their answer. This holds even when their request seems complete: they choose, not you.
@@ -284,14 +290,14 @@ The adaptations are part of the app's code, so you work in the app's repository 
    - **Optional**: who can read what the app gives the toolkit (its observations and what the toolkit learns from them): every app of theirs (\`user\`), or only this app (\`app\`). By default, every app of theirs.
    - **Optional**: whether observations carry images, such as a screenshot of what the person could not read. By default, no.
    - **Optional**: values the app or its adaptations keep in the toolkit between sessions, such as a chosen size. By default, none: the app keeps its own.
-3. Follow the profile. Read it with \`getProfile\` (\`POST /v1/librarian/getProfile\`), and listen on \`GET /v1/profile/events\` so the app follows a change without a reload (see "Endpoints"). Turn on the adaptations the profile asks for. In JavaScript, the surface renderers in \`toolkit/surfaces/\` map the profile to platform settings.
+3. Follow the profile. Read it with \`getProfile\` (\`POST /v1/librarian/getProfile\`), and listen on \`GET /v1/profile/events\` so the app follows a change without a reload (see \`reference/http-api.md\`). Turn on the adaptations the profile asks for. In JavaScript, the surface renderers in \`toolkit/surfaces/\` map the profile to platform settings.
    - A profile looks like \`{ supportAreas: ['vision'], fields: { needs: [{ dimension: 'textSize', value: 1.5, strength: 'preference' }], visionKind: 'lowVision', readingLevel: 6, largeTargets: true } }\`. Most of what an app acts on is in \`fields.needs\`. The developer console's dimensions include \`textSize\` (a multiplier, 1.0–2.0), \`lineSpacing\`, \`letterSpacing\`, \`contrast\`, \`darkTheme\`, \`reduceMotion\`, \`simplify\`, \`dyslexiaFont\`, \`captions\`, \`readAloud\`, \`describeImages\`, \`labelControls\` and \`keyboardAccess\`; \`visionKind\` is \`blind\`, \`lowVision\` or \`colorBlind\`. Read a missing one as "not asked for".
    - \`node <skill folder>/scripts/adapter.mjs profile\` prints the person's current profile, so you can see the real values. The console's Profiles page has nine built-in presets (Profile 1–9) to try the app with.
-4. Connect, so the app shows under **Apps**. Wrap each adaptation as an object with \`enable(parameters)\`, \`disable()\` and \`enabled\`, describe it with \`defineDescriptor({ appId: '<app id>', ... })\`, and connect with \`connectToToolkit({ url, token, provider: createAdapterProvider({ application, adapters: [fromToggleAdapter({ descriptor, adapter })] }) })\` (see "Live control" in "Sharing adapters between apps"). The app is listed under **Apps** while it is open. Its adaptations stay out of the adapter registry and the console's **Adapters** page. If only the app should read what it gives the toolkit, set \`visibility: 'app'\` in \`application\`; an app without live control declares it with \`registry.access.declare('<app id>', 'app')\`.
+4. Connect, so the app shows under **Apps**. Wrap each adaptation as an object with \`enable(parameters)\`, \`disable()\` and \`enabled\`, describe it with \`defineDescriptor({ appId: '<app id>', ... })\`, and connect with \`connectToToolkit({ url, token, provider: createAdapterProvider({ application, adapters: [fromToggleAdapter({ descriptor, adapter })] }) })\` (see "Live control" in \`reference/adapter-mcp.md\`). The app is listed under **Apps** while it is open. Its adaptations stay out of the adapter registry and the console's **Adapters** page. If only the app should read what it gives the toolkit, set \`visibility: 'app'\` in \`application\`; an app without live control declares it with \`registry.access.declare('<app id>', 'app')\`.
 5. Send the observations the person chose, each one plain sentence with \`profile_observe\` or \`POST /v1/librarian/logObservation\`, for example "Turned on Calm urgency on the Redbird store." Use \`type: 'setting-change'\` for a deliberate choice. Put \`app: '<app id>'\` in every observation: the app's visibility applies only to observations that name it. (An app token made for the app names it by itself; with the default token, an observation without \`app\` is kept for every app.) Never page content or anything they typed. If the person chose images, add up to 4 as \`images: [{ mimeType: 'image/png', data: <base64> }]\`; they are kept with the observation and shown to the model when it learns. To keep values in the toolkit, use \`registry.data({ appId, id }).set(key, value)\` for an adaptation published to the registry.
 6. If the app shows suggestions, read them with \`profile_learned\` (\`registry.profile.learned()\`), keep the ones the person chose (each has a \`change\`, such as \`{op: 'profile-set', path: 'fields.largeTargets', value: true}\`), show each in plain words, and pass on the person's answer with \`profile_proposal_respond\`: accept, declineOnce or suppress. Never answer for them. An accepted change reaches the app through \`/v1/profile/events\`, like any other profile change.
 7. Check it: open the app, then the console's **Apps** page. The app is listed, and **Try it** switches each adaptation. A coding agent can do the same through \`/v1/mcp/apps/<app id>\`.
-8. Only when the person asks to share an adaptation with other apps: publish it with \`registry.publish\` (see "Sharing adapters between apps"). A web adaptation can carry its code; any other is a description only.`;
+8. Only when the person asks to share an adaptation with other apps: publish it with \`registry.publish\` (see \`reference/adapter-mcp.md\`). A web adaptation can carry its code; any other is a description only.`;
 
 const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.claude/skills/ai4a11y-toolkit/SKILL.md\`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
 
@@ -300,12 +306,48 @@ mkdir -p .claude/skills
 cp -r <path-to-toolkit-repo>/.claude/skills/ai4a11y-toolkit .claude/skills/
 \`\`\`
 
-Copy the whole folder: \`scripts/adapter.mjs\` (the helper in "Build an adapter with a coding agent") lives next to \`SKILL.md\`. Claude Code discovers project skills in \`.claude/skills/\` on the next session, and so does opencode (it reads \`.claude/skills/\`, \`.opencode/skills/\` and \`.agents/skills/\`). If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).`;
+Copy the whole folder: \`scripts/adapter.mjs\` (the helper in "Build an adapter with a coding agent") and \`reference/\` live next to \`SKILL.md\`. Claude Code discovers project skills in \`.claude/skills/\` on the next session, and so does opencode (it reads \`.claude/skills/\`, \`.opencode/skills/\` and \`.agents/skills/\`). If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).`;
+
+const GENERATED = 'Generated by \`toolkit/scripts/generate-skill.mjs\` with the skill: do not hand-edit.';
+
+/** The reference files beside SKILL.md, by path relative to the skill folder. */
+export function renderReferences(model) {
+  return {
+    'reference/adapter-mcp.md': `# Sharing adapters between apps (Adapter MCP)
+
+${GENERATED}
+
+${buildAdapterMcpSection()}
+`,
+    'reference/http-api.md': `# Talking to the hosted service
+
+${GENERATED}
+
+Instead of embedding the toolkit in-process, a client can call a hosted instance over HTTP — same Librarian methods, one call per method, behind a bearer token. Full wire contract: \`server/CONTRACT.md\`.
+
+${buildServiceMappingSection()}
+`,
+    'reference/core-api.md': `# Embedding the core
+
+${GENERATED}
+
+## Methods by Concern
+
+Read directly off a live \`createToolkit(...)\` instance — call as \`toolkit.librarian.<method>(...)\` / \`toolkit.datastore.<method>(...)\`.
+
+${renderMethodGroups(model.methodGroups)}
+
+## Ports contract
+
+A host implements these to construct a toolkit instance (\`createToolkit({ kv, clock, scheduler, consent, demo, ... })\`) and, separately, \`ActuationPort\` for voice/agent control surfaces.
+
+${renderPorts(model.ports)}
+`,
+  };
+}
 
 export function renderSkillMd(model) {
-  const serviceMapping = buildServiceMappingSection();
   const serverDev = buildServerDevSection();
-  const adapterMcpSection = buildAdapterMcpSection();
   return `---
 name: ai4a11y-toolkit
 description: Ask the person what they need before building anything with it. Use when building an accessibility adapter for a website in code (write it, publish it to the toolkit, run it in the browser with the toolkit's extension, check it, share it), building adaptations into your own web, mobile or XR app that follow the person's toolkit profile and show under the console's Apps, embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), sharing accessibility adapters between apps through Adapter MCP (the toolkit's adapter registry, the SDK, the browser runtime extension, the developer console's Adapters and Apps pages, MCP clients), talking to the hosted toolkit HTTP service with an account's default token, or running/deploying your own toolkit service instance (accounts, workshops, Cloud Run).
@@ -328,23 +370,13 @@ Paths below are relative to the \`toolkit/\` package root (run from there, or ad
 \`\`\`javascript
 ${QUICK_START_CODE}\`\`\`
 
-## Methods by Concern
+## Reference
 
-Read directly off a live \`createToolkit(...)\` instance — call as \`toolkit.librarian.<method>(...)\` / \`toolkit.datastore.<method>(...)\`.
+Read these from this skill's folder when a task needs them:
 
-${renderMethodGroups(model.methodGroups)}
-
-## Ports contract
-
-A host implements these to construct a toolkit instance (\`createToolkit({ kv, clock, scheduler, consent, demo, ... })\`) and, separately, \`ActuationPort\` for voice/agent control surfaces.
-
-${renderPorts(model.ports)}
-
-## Talking to the hosted service instead
-
-Instead of embedding the toolkit in-process, a client can call a hosted instance over HTTP — same Librarian methods, one call per method, behind a bearer token. Full wire contract: \`server/CONTRACT.md\`.
-
-${serviceMapping}
+- \`reference/adapter-mcp.md\`: sharing adapters between apps through the toolkit's registry, the SDK (\`createRegistryClient\`, \`connectToToolkit\`, live control), the registry's MCP tools, the browser runtime, visibility and adapter data.
+- \`reference/http-api.md\`: the hosted service's HTTP endpoints and the \`/v1/librarian/{method}\` mapping, for a client in any language.
+- \`reference/core-api.md\`: embedding the core in-process: every Librarian and Datastore method by concern, and the ports a host implements.
 
 ## Connecting to a hosted instance (URL + token)
 
@@ -386,10 +418,6 @@ extension lives in its own repository and keeps them in \`chrome.storage.sync\`
 (\`toolkitServerUrl\` / \`toolkitServerToken\`), written by its Options page.
 Do not write a token into any file in this repository other than \`.env\`.
 
-## Sharing adapters between apps (Adapter MCP)
-
-${adapterMcpSection}
-
 ## Running or deploying your own toolkit service
 
 ${serverDev}
@@ -414,4 +442,9 @@ if (isMain) {
   mkdirSync(SKILL_DIR, { recursive: true });
   writeFileSync(SKILL_PATH, md, 'utf8');
   process.stdout.write(`Wrote ${SKILL_PATH} (${md.length} bytes)\n`);
+  mkdirSync(REFERENCE_DIR, { recursive: true });
+  for (const [file, text] of Object.entries(renderReferences(model))) {
+    writeFileSync(path.join(SKILL_DIR, file), text, 'utf8');
+    process.stdout.write(`Wrote ${path.join(SKILL_DIR, file)} (${text.length} bytes)\n`);
+  }
 }

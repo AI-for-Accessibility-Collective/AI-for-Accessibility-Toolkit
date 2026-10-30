@@ -60,7 +60,12 @@ const ADMIN = 'test-admin-password';
 const dir = await mkdtemp(path.join(tmpdir(), 'redbird-e2e-'));
 const dataStore = fileStore(dir);
 const app = createApp({ store: dataStore, adminPassword: ADMIN, corsOrigins: ['*'], toolkitHost: createToolkitHost({ store: dataStore, geminiCaller: async () => { throw new Error('LLM disabled in test'); } }) });
-const server = http.createServer(app);
+// An app's answers arrive late, as from a toolkit across the internet: a page
+// that reloads before its answer has gone cuts it off.
+const server = http.createServer((req, res) => {
+  if (req.method === 'POST' && /^\/v1\/providers\/[^/]+\/channel$/.test(req.url)) setTimeout(() => app(req, res), 700);
+  else app(req, res);
+});
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
 
@@ -152,6 +157,14 @@ try {
   assert.equal(elsewhere.compatible, false, 'one tab is one page');
   assert.ok(elsewhere.reasons.some(r => r.code === 'target-unavailable'), JSON.stringify(elsewhere.reasons));
 
+  // A switch that comes off with a reload answers first: the reload waits for the answer to go.
+  await shop.evaluate(() => { window.__beforeReload = true; });
+  const fixes = (await api.describe('redbird', 'toolkit-fixes')).descriptor;
+  assert.equal((await api.apply(fixes, target, { enabled: true, parameters: {} }, 'e2e-fixes-on')).status, 'applied');
+  const fixesOff = await api.apply(fixes, target, { enabled: false }, 'e2e-fixes-off');
+  assert.equal(fixesOff.status, 'applied', JSON.stringify(fixesOff.reasons));
+  await shop.waitForFunction(() => !window.__beforeReload);
+
   // The adapters switched on in the panel (its switches carry data-ad).
   const adaptersOn = () => shop.locator('input[data-ad]:checked').evaluateAll(els => [...new Set(els.map(e => e.dataset.ad))].sort());
 
@@ -215,7 +228,7 @@ try {
   await dev.waitForFunction(() => [...document.querySelectorAll('.app-group')].some(g => g.textContent.includes('Redbird demo') && g.textContent.includes('Offline')), null, { timeout: 20000 });
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, a switch while shopping as yourself reaching the toolkit to learn from (kept to Redbird alone once the console narrows it), and going offline when the tab closes.');
+  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets, a switch that reloads the page still answering), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, a switch while shopping as yourself reaching the toolkit to learn from (kept to Redbird alone once the console narrows it), and going offline when the tab closes.');
 } finally {
   await browser?.close();
   app.relay.closeAll();
