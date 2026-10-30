@@ -30,6 +30,12 @@ export function auditAccounts(accounts, log) {
     create: wrap('create',
       (r) => log.info('account.created', { uid: r?.account?.uid ?? r?.uid }),
       (e, input) => log.warn('account.create.failed', { uid: uidOf(input?.uid), errorCode: e.code })),
+    createMany: wrap('createMany', (results) => {
+      for (const r of results) {
+        if (r.ok) log.info('account.created', { uid: r.uid });
+        else log.warn('account.create.failed', { uid: uidOf(r.uid), errorCode: r.error });
+      }
+    }),
     login: wrap('login',
       (r, input) => log.info('auth.signin', { uid: r.account.uid, client: input?.client }),
       (e, input) => log.warn('auth.signin.failed', { uid: uidOf(input?.username), client: input?.client, errorCode: e.code || 'error' })),
@@ -39,7 +45,9 @@ export function auditAccounts(accounts, log) {
       (e, uid) => log.warn('account.password.change.failed', { uid, errorCode: e.code })),
     resetPassword: wrap('resetPassword', (_r, uid) => log.info('account.password.reset', { uid, by: 'admin' })),
     setDisabled: wrap('setDisabled', (_r, uid, disabled) => log.info(disabled ? 'account.disabled' : 'account.enabled', { uid, by: 'admin' })),
-    setDisplayName: wrap('setDisplayName', (_r, uid) => log.info('account.renamed', { uid, by: 'admin' })),
+    issuedPassword: wrap('issuedPassword', (r, uid) => log.info('account.password.viewed', { uid, by: 'admin', shown: r.password != null })),
+    issuedPasswords: wrap('issuedPasswords', (r) => log.info('account.passwords.viewed', { by: 'admin', shown: r.filter(x => x.password != null).length })),
+    setDisplayName: wrap('setDisplayName', (_r, uid, _name, by = 'admin') => log.info('account.renamed', { uid, by })),
     remove: wrap('remove', (removed, uid) => { if (removed) log.info('account.deleted', { uid, by: 'admin' }); }),
     rotateDefaultToken: wrap('rotateDefaultToken', (_r, uid) => log.info('token.default.rotated', { uid })),
   };

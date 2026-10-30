@@ -1,24 +1,32 @@
-# The adapter marketplace
+# The adapter marketplace (Listings)
 
-**Where adapters from every app get discovered.** The toolkit's adapter
+**Where apps list what they offer, as descriptions.** The toolkit's adapter
 catalog (`tools/adapters/`) is what ships *in* this repository. The
-*marketplace* is something different: a registry on a running toolkit
-instance where each **host application** — the browser extension, the XR
-guide, any future host — publishes the adapters *it* offers, so a developer
-can see what exists per app, and another host can discover and adopt them.
+*marketplace* is a catalog on a running toolkit instance where each **host
+application** (the browser extension, the XR guide, any future host) lists
+the adapters it offers, so a developer can see what exists per app. The
+developer console shows it on the **Listings** page.
+
+**To share an adapter other apps can run, use the adapter registry instead.**
+The registry is the toolkit's own MCP server (`/v1/mcp`, the console's
+**Adapters** page, [design/adapter-mcp.md](design/adapter-mcp.md) §14): apps
+publish adapters with code in a format others can run, keep them private or
+share them, and install each other's, and the browser runtime extension runs
+them. The marketplace predates it and stays for description-only listings and
+for the apps that already sync their catalogs here.
 
 The wire contract is [server/CONTRACT.md](../server/CONTRACT.md)'s "Adapter
 marketplace" section; the generated endpoint table is in
 [server/API.md](../server/API.md); the implementation is
 `server/src/adapters.js`.
 
-The marketplace describes adapters; it does not run them. Running them is
-the job of [Adapter MCP](design/adapter-mcp.md): an app that uses the Adapter
-MCP SDK connects to the toolkit with its developer's token, appears in the
-developer console under **Apps**, and can be called by the console or by any
-MCP client on the same account. That contract is a pre-alpha draft, so its
-shapes can still change. A listing can carry an Adapter MCP descriptor (below),
-which connects the two.
+The marketplace describes adapters; it does not run them. Live control of an
+open app is [Adapter MCP](design/adapter-mcp.md)'s optional relay: an app that
+uses the SDK connects with its developer's token, appears in the developer
+console under **Apps**, and can be called by the console or by any MCP client
+on the same account. That contract is a pre-alpha draft, so its shapes can
+still change. A listing can carry an Adapter MCP descriptor (below), which
+connects the two.
 
 ## Two kinds of listing
 
@@ -39,7 +47,7 @@ Every entry belongs to an app (`appId`, a lowercase slug) and the two-level
 key is `appId/id` — the browser extension and the XR app can each have an
 adapter called `one-step`. `GET /v1/adapters` returns the flat list plus an
 `apps` summary (display name, count); the developer console
-(`/developer` → **Marketplace**) renders one group per app. An app the
+(`/developer` → **Listings**) renders one group per app. An app the
 developer has hidden on the Apps page is hidden here too, with a **Show
 hidden** switch to bring it back.
 

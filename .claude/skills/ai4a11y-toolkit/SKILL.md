@@ -1,6 +1,6 @@
 ---
 name: ai4a11y-toolkit
-description: Use when embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), exposing an app's accessibility adapters through Adapter MCP (the SDK, the developer console's Apps page, calling adapters from an MCP client), talking to the hosted toolkit HTTP service with an account's default token, or running/deploying your own toolkit service instance (accounts, workshops, Cloud Run).
+description: Use when building an accessibility adapter for a website in code (write it, publish it to the toolkit, run it in the browser, check it, share it), embedding the AI for Accessibility personalization toolkit (the Librarian/Datastore core) into a host app, calling its API directly, implementing a platform port (KVStore, Clock, Scheduler, Consent, ActuationPort, ...), sharing accessibility adapters between apps through Adapter MCP (the toolkit's adapter registry, the SDK, the browser runtime extension, the developer console's Adapters and Apps pages, MCP clients), talking to the hosted toolkit HTTP service with an account's default token, or running/deploying your own toolkit service instance (accounts, workshops, Cloud Run).
 ---
 
 # AI for Accessibility Toolkit
@@ -8,6 +8,63 @@ description: Use when embedding the AI for Accessibility personalization toolkit
 The AI for Accessibility Toolkit is a platform-agnostic core (a Librarian personal-memory/profile agent plus a Datastore) that turns per-app accessibility settings into one portable, consent-gated understanding of a person's needs — the `AbilityModel` — shared across web, XR, and mobile hosts. A host wires a small set of injected ports (`KVStore`, `Clock`, `Scheduler`, `Consent`, ...) into `createToolkit(...)` and gets back a `{ datastore, librarian }` pair; every write an inference could be wrong about goes through the same proposal/consent machinery, never silently. Surface renderers (`toolkit/surfaces/*.js`) turn the same `AbilityModel` into platform-specific settings, and a hosted HTTP service (see below) lets non-JS clients call the same Librarian methods remotely.
 
 This file is **generated** by `toolkit/scripts/generate-skill.mjs` from the same introspected model as `toolkit/API.md` — do not hand-edit; see "Regenerate" at the bottom.
+
+## Build an adapter with a coding agent
+
+An adapter is one JavaScript file that removes one barrier on a website, for example making small buttons bigger. The person says what should change, you write the file, and the toolkit runs it in their browser. The toolkit is a research project in pre-alpha and the adapters are unvalidated, so the person checks each change on the page.
+
+**What the person does**
+
+1. Once: set up the adapter runtime extension in Chrome (`extension/README.md`, "Set it up": Load unpacked, Allow User Scripts, Connect with this console).
+2. Copy two things from the developer console: the toolkit address, and the default token (sidebar, **Copy token**).
+3. Tell you what to fix, for example: "Use the ai4a11y-toolkit skill. Make an adapter that makes small buttons bigger on https://example.com."
+4. Open the page in Chrome. The change appears within a few seconds.
+5. Say what to change next. You edit the file and publish again.
+
+**What you do**
+
+1. Get the toolkit address and the token from the person. Keep them in the environment as `TOOLKIT_URL` and `TOOLKIT_TOKEN`. Never write the token into a file.
+2. Write one file, such as `bigger-buttons.js`:
+   - It exports one object with `enable(options)` and `disable()`.
+   - `enable()` makes the change and remembers what it changed. `disable()` puts the page back exactly as it was.
+   - Plain browser JavaScript only: no `import`, no network calls (`fetch`, `XMLHttpRequest`, `WebSocket`), no `eval`.
+
+   ```javascript
+   // Bigger buttons: makes small buttons at least 44 pixels tall,
+   // for people who find small targets hard to hit.
+   export const BiggerButtons = {
+     enabled: false,
+     changed: [],
+     enable() {
+       if (this.enabled) return;
+       this.enabled = true;
+       for (const el of document.querySelectorAll('button, [role="button"]')) {
+         this.changed.push({ el, before: el.style.minHeight });
+         el.style.minHeight = '44px';
+       }
+     },
+     disable() {
+       if (!this.enabled) return;
+       this.enabled = false;
+       for (const { el, before } of this.changed) el.style.minHeight = before;
+       this.changed = [];
+     },
+   };
+   ```
+3. Publish it and run it in the person's browser with the helper in this skill's folder (in this repository: `.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs`; Node 18 or later, nothing to install):
+
+   ```bash
+   node <skill folder>/scripts/adapter.mjs publish bigger-buttons.js \
+     --name "Bigger buttons" --runs-on "https://example.com/*" --for motor \
+     --about "Makes small buttons 44 pixels tall, for people who find small targets hard to hit."
+   ```
+   - `--runs-on` is the pages, one flag per pattern: `https://example.com/*` is each page of that site, `http://localhost/*` is any local port.
+   - `--for` is who it helps: vision, motor, hearing, cognitive, sensory, reading.
+   - If the toolkit refuses the file, the message names the line. Fix it and run the command again.
+4. Check that it ran: `node <skill folder>/scripts/adapter.mjs status bigger-buttons` prints "Running on …", or "Failed on …" with the error. Fix the file and publish again. Each publish is a new revision, and open pages pick it up without a reload.
+5. When the person asks, share it with everyone on their toolkit: `node <skill folder>/scripts/adapter.mjs share bigger-buttons`. Until then it stays private to their account.
+
+The adapter also shows on the developer console's **Adapters** page, where the person can read the code and its reports. To publish from your own app's code instead, see "Sharing adapters between apps" below.
 
 ## Quick Start
 
@@ -302,19 +359,25 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 | GET | `/healthz` | liveness: `{ok:true, version}` (no auth) |
 | GET | `/v1/healthz` | the same payload; deployed probes must use this path, because bare `/healthz` is intercepted at the run.app edge |
 | GET | `/v1/meta` | generated service+API description (no auth) |
-| GET | `/developer` | developer profile manager; static assets under `/developer/` (API calls require bearer) |
+| GET | `/developer` | developer console (profiles, adapters, apps, listings, account); static assets under `/developer/` (API calls require bearer) |
+| POST, GET | `/v1/mcp` | the adapter registry, an MCP server (CONTRACT.md, "Adapter registry") |
 | POST | `/v1/librarian/{method}` | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | `{uid, label, kind}` for the presented token |
 | GET | `/sdk/adapter-mcp.js` | the Adapter MCP SDK for apps (public code, any origin); its modules are under `/sdk/toolkit/` |
 | POST | `/v1/auth/login` | developer sign-in `{username, password}` → `{token, expiresAt, account, defaultToken}`; `token` is a session |
 | POST | `/v1/auth/logout` | end this session (session token) |
 | GET | `/v1/account` | `{account, defaultToken, tokens, session, liveApps}` (session token) |
+| PUT | `/v1/account` | rename the account `{displayName}` → `{account}`; the username stays (session token) |
 | POST | `/v1/account/default-token` | regenerate the default token → `{defaultToken}` (session token) |
 | POST | `/v1/account/tokens` | make an app token `{label?}` → `{token, id, label}`, shown once (session token) |
 | DELETE | `/v1/account/tokens/{id}` | revoke one of the account's tokens (session token) |
 | POST | `/v1/account/password` | change password `{current, next}` (session token) |
 | GET | `/v1/account/presets` | `{presets}` saved profile presets (session token) |
 | PUT | `/v1/account/presets` | replace saved presets `{presets}` (session token) |
+| GET | `/v1/profile/selection` | `{revision, selected, updatedAt}`: the preset last loaded with `replaceProfile`, `selected` is `{id, name, edited}` or null (any token) |
+| GET | `/v1/profile/events` | server-sent events: a `profile` event with that same object on connecting and on every profile write, so an app follows the profile without a refresh. It carries no profile content; read that with `getProfile` (any token) |
+| GET | `/v1/profile/presets` | `{presets: [{id, name, description, builtIn}]}`: the console's built-in presets, then the account's saved ones (any token) |
+| POST | `/v1/profile/select` | `{id}` makes that preset the active profile, as the console's Load profile does → `{revision, selected, updatedAt, profile}` (any token) |
 | POST | `/v1/providers` | register an Adapter MCP app instance → `{providerId, endpoints}` (app or default token) |
 | DELETE | `/v1/providers/{providerId}` | sign the instance off |
 | GET | `/v1/providers/{providerId}/channel` | server-sent events: relayed MCP requests for the instance |
@@ -334,10 +397,11 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 | GET | `/v1/adapters/{appId}/{id}/code` | `{code, sha256, size, updatedAt}` for a kind-`code` listing |
 | PUT | `/v1/adapters/{appId}/{id}/install` | mark installed for the calling uid |
 | DELETE | `/v1/adapters/{appId}/{id}/install` | clear installed for the calling uid |
-| GET | `/admin/accounts` | list developer accounts with token and live-app counts |
+| GET | `/admin/accounts` | list developer accounts with token and live-app counts; `?passwords=1` → `{passwords: [{uid, displayName, password\|null, reason?}]}`, every admin-issued password; `?format=csv` → the same as a CSV download (username, name, password, password_note, status, last_sign_in, created, app_tokens, has_data) |
 | POST | `/admin/accounts` | make an account `{uid, displayName?, password?}` → 201 `{account, password?}` |
 | POST | `/admin/accounts/bulk` | make many `{accounts: [{uid, displayName?}]}` → `{results}` |
 | PUT | `/admin/accounts/{uid}` | rename `{displayName}` |
+| GET | `/admin/accounts/{uid}/password` | the password an admin issued `{password\|null, reason?}`; `null` once the developer changed it themselves |
 | POST | `/admin/accounts/{uid}/password` | reset the password `{password?}` → `{password?}` |
 | POST | `/admin/accounts/{uid}/disable` | turn off: revoke every token, disconnect its apps |
 | POST | `/admin/accounts/{uid}/enable` | turn back on |
@@ -387,6 +451,13 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   write, removing omitted keys. It rejects non-JSON values, unsafe object keys,
   and malformed structured fields. The service manages `schemaVersion`,
   `createdAt`, and `updatedAt`. Memories, grants, and skills remain separate.
+  An optional second argument `{id, name}` names the preset being loaded; the
+  service keeps it as the selected profile (stored with the console's
+  preferences). `{id, name, edited: true}` says the profile is that preset with
+  changes (the console's temporary profile). A later `setProfileField`, `setProfileFields` or
+  `respondToProposal` marks it `edited`, and a `replaceProfile` with no
+  preset clears it. Every one of those writes also announces itself on
+  `/v1/profile/events`.
 - 49 routes total.
 
 ## Connecting to a hosted instance (URL + token)
@@ -428,32 +499,43 @@ repository. Their config lives in `chrome.storage.sync` (`toolkitServerUrl` /
 token into any file in this repository; the extension repository documents its
 own demo-build configuration.
 
-## Exposing an app's adapters (Adapter MCP)
+## Sharing adapters between apps (Adapter MCP)
 
-**Adapter MCP** (profile `ai4a11y.adapter-mcp` `0.1.0`, on MCP `2025-11-25`) is how an app makes its own accessibility adapters callable: the app keeps running them, and the toolkit relays standard MCP tool calls to it. A pre-alpha draft — the wire shapes can still change, and the adapters it carries are not validated with the people they are meant for, so treat what you build as a prototype. Design: `docs/design/adapter-mcp.md`; SDK guide: `toolkit/adapter-mcp/README.md`; wire checks: `toolkit/protocol/adapter/`.
+**Adapter MCP** (profile `ai4a11y.adapter-mcp` `0.1.0`, on MCP `2025-11-25`) is how apps built with the toolkit **share adapters**: the toolkit service is an MCP server (the adapter registry, `/v1/mcp`) where an app publishes its adapters and other apps find and install them. A pre-alpha draft — the wire shapes can still change, and the adapters it carries are not validated with the people they are meant for, so treat what you build as a prototype. Design: `docs/design/adapter-mcp.md` (§14 is the registry); SDK guide: `toolkit/adapter-mcp/README.md`; wire checks: `toolkit/protocol/adapter/`.
 
-**Connect an app** (a web page loads the SDK from the toolkit itself; in Node import `@ai4a11y/toolkit/adapter-mcp`):
+**What gets shared.** An adapter is `{owner, appId, id}` (owner = the publishing account). A portable one carries a `web-module@1` package: one self-contained JavaScript file exporting an object with `enable(options)` and `disable()` (disable puts the page back), no `import`s, no network, no eval (`lintWebModule` says what is refused). Without a package it is a description only (XR, native). Each publish is a new revision; the registry computes `executionArtifactDigest` and `descriptorDigest`. **Private until the owner shares it**; installing your own follows the latest revision, installing someone else's pins the revision you chose.
 
 ```javascript
-const { createAdapterProvider, connectToToolkit, defineDescriptor, fromToggleAdapter, detectBrowserPlatform } =
-  await import(`${TOOLKIT_URL}/sdk/adapter-mcp.js`);
-const provider = createAdapterProvider({
-  application: { appId: 'my-app', name: 'My app', version: '0.1.0',
-    supportedPlatforms: [{ environment: 'web-page' }], platform: detectBrowserPlatform(), surfaces: ['web'] },
-  adapters: [fromToggleAdapter({
-    adapter: bigText,               // any object with enable(options), disable() and `enabled`
-    descriptor: defineDescriptor({ appId: 'my-app', id: 'big-text', name: 'Big text', version: '0.1.0',
-      description: 'Makes the text bigger.', targets: [{ platforms: ['*'], urls: [location.origin + '/*'] }],
-      inputSchema: { type: 'object', properties: { scale: { type: 'number', minimum: 1, maximum: 2 } }, additionalProperties: false } }),
-  })],
-});
-const link = connectToToolkit({ url: TOOLKIT_URL, token: DEFAULT_TOKEN, provider, label: 'My app tab' });
-await link.ready;                   // now live under Apps in the developer console, grouped by appId
+const { createRegistryClient, loadInstalledAdapters, defineDescriptor } =
+  await import(`${TOOLKIT_URL}/sdk/adapter-mcp.js`);   // in Node: @ai4a11y/toolkit/adapter-mcp
+const registry = createRegistryClient({ url: TOOLKIT_URL, token: DEFAULT_TOKEN });
+const descriptor = defineDescriptor({ appId: 'my-app', id: 'big-text', name: 'Big text', version: '0.1.0',
+  description: 'Makes the text bigger.', targets: [{ platforms: ['*'], urls: ['https://example.com/*'] }] });
+await registry.publish({ appName: 'My app', descriptor, code: BIG_TEXT_SOURCE });  // a new revision, private
+await registry.share({ appId: 'my-app', id: 'big-text' });                        // everyone on this toolkit can find it
+const { adapters } = await registry.search({ url: location.href });                // yours + shared with you
+await registry.install('my-app', adapters[0].adapter);                              // or 'browser-runtime'
+for (const { adapter, entry } of await loadInstalledAdapters(registry, 'my-app')) adapter?.enable(entry.parameters);
 ```
 
-`createAdapterProvider` checks every descriptor when it is created and throws `AdapterMcpError` with the reasons; read them rather than loosening the descriptor. Adapters with `exposure: 'internal'` are never exported. SDK helpers: `createAdapterProvider`, `defineDescriptor`, `fromToggleAdapter`, `fromAction`, `connectToToolkit`, `detectBrowserPlatform`, `createMcpClient`, `adapterClient`, `catalogDescriptors`.
+**Registry tools** (`POST /v1/mcp` with any token of the account; `GET /v1/mcp` streams `notifications/resources/list_changed`; adapters are also resources `adapter://owner/appId/id`):
 
-**Tools every connected app answers** (plus an `apply_<id>` shortcut per adapter, taking `{enabled, parameters?, target?, requestKey?}` with the adapter's parameter schema inlined; `target` may be left out only when the adapter has exactly one current target):
+- `adapter_search` — Find adapters to adopt: your own and those other accounts shared on this toolkit. Returns summaries with each adapter's key, latest revision and where it runs.
+- `adapter_get` — Read one adapter: its descriptor and, for a portable adapter, its package code, at the latest or a given revision.
+- `adapter_publish` — Publish an adapter from your application as a new revision. With a package (web-module@1 code) other applications can run it; without one it is a description only. Private until shared.
+- `adapter_share` — Share one of your adapters with everyone on this toolkit, or stop sharing it.
+- `adapter_delete` — Delete one of your adapters and all its revisions. Apps that installed it stop receiving it.
+- `adapter_install` — Install an adapter into one of your apps (for example browser-runtime), or change an installation: pin a revision, switch it off, turn it off on a site, set its parameters.
+- `adapter_uninstall` — Remove an adapter from one of your apps.
+- `adapter_installed` — What an app has installed, resolved to revisions, with packages when asked. A runtime calls this to stay in step.
+- `adapter_report` — A runtime reports what happened when it ran adapters: applied, failed (with the error), skipped or removed, per page origin.
+- `adapter_status` — The latest reports from your runtimes, per adapter and app.
+
+**The browser runtime** (`extension/`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app `browser-runtime` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its popup, and reports applied / failed (with the error) / skipped per page origin with `adapter_report`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console → popup → **Connect with this console**. The console's **Adapters** page is where a developer writes an adapter (live lint), saves revisions, runs it in their browser, shares it, installs others' and sees the runtime's reports.
+
+SDK helpers: `createRegistryClient`, `loadInstalledAdapters`, `defineDescriptor`, `lintWebModule`, `createAdapterProvider`, `fromToggleAdapter`, `fromAction`, `connectToToolkit`, `detectBrowserPlatform`, `createMcpClient`, `adapterClient`, `catalogDescriptors`.
+
+**Live control (optional).** An app that is open can also connect for live control: `connectToToolkit({ url, token, provider: createAdapterProvider({ application, adapters: [fromToggleAdapter({ adapter, descriptor })] }) })`. The toolkit relays standard MCP calls to it while it is connected: `POST /v1/mcp/apps/{appId}` (its single live instance) or `/v1/mcp/providers/{providerId}`; the console's **Apps** page offers the same as Try it. `createAdapterProvider` throws `AdapterMcpError` with the reasons for a bad descriptor; read them rather than loosening it. Tools a connected app answers (plus an `apply_<id>` shortcut per adapter, taking `{enabled, parameters?, target?, requestKey?}`):
 
 - `adapter_list` — List the accessibility adapters this application exposes, with its platform and the guarantees it supports. Read-only.
 - `adapter_describe` — Get one adapter's full descriptor (parameters, targets, effects) and whether it is available now. Read-only.
@@ -463,9 +545,7 @@ await link.ready;                   // now live under Apps in the developer cons
 - `adapter_apply` — Apply, update, or turn off an adapter on one target. Stateful adapters take the complete desired configuration.
 - `adapter_revert` — Undo an earlier apply using its receipt, if the adapter offered undo and nothing changed since.
 
-A client pins the adapter it means with `adapterRef` = `{appId, id, version, descriptorDigest}` from `adapter_list`; a changed adapter refuses the call instead of running something else. Undo works only through the receipt an apply returned, and refuses if anything changed the adapter since.
-
-**Calling an app's adapters** (same account only): `POST /v1/mcp/apps/{appId}` reaches the app's single live instance, `POST /v1/mcp/providers/{providerId}` one particular instance. From Claude Code: `claude mcp add --transport http <name> $TOOLKIT_SERVER_URL/v1/mcp/apps/<appId> --header "Authorization: Bearer <default token>"`. From code: `adapterClient(createMcpClient({ url, token }))`. The developer console's **Apps** page does the same from a form (Try it), lists each app's connections and recent calls, and can hide an app; the Redbird demo store connects as `redbird` ("Redbird demo") via **Connect an app → Open Redbird**.
+A client pins the adapter it means with `adapterRef` = `{appId, id, version, descriptorDigest}`; undo works only through the receipt an apply returned. From Claude Code: `claude mcp add --transport http ai4a11y-toolkit $TOOLKIT_SERVER_URL/v1/mcp --header "Authorization: Bearer <default token>"` for the registry, and `…/v1/mcp/apps/<appId>` for one connected app.
 
 ## Running or deploying your own toolkit service
 
@@ -488,7 +568,7 @@ of accounts and shows each password once (print or copy them then).
 
 **npm scripts** (`server/package.json`):
 - `npm run start` — `node index.js`
-- `npm run test` — `node test/server-test.mjs && node test/adapters.test.mjs && node test/developer.test.mjs && node test/accounts.test.mjs && node test/apps.test.mjs && node test/logging.test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs && node test/token-conflict.test.mjs`
+- `npm run test` — `node test/server-test.mjs && node test/adapters.test.mjs && node test/developer.test.mjs && node test/accounts.test.mjs && node test/apps.test.mjs && node test/profile-events.test.mjs && node test/logging.test.mjs && node test/delete-cascade.test.mjs && node test/gcs-pagination.test.mjs && node test/gcs-write-retry.test.mjs && node test/token-conflict.test.mjs`
 - `npm run docs` — `node scripts/generate-docs.mjs`
 
 **Deploying**: `server/Dockerfile` builds from the repo root (it copies `toolkit/` + `server/`); `cloudbuild.yaml` + `server/DEPLOYMENT.md` document the Cloud Run deployment (small instance, Secret Manager for the secrets, GCS bucket, IAM). Keep `--max-instances 1` (connected Adapter MCP apps live in the process's memory, so a second instance would report them offline), `--timeout 3600` (each connected app holds one long server-sent-event request), and `CORS_ORIGINS=*` when browser apps on other origins must connect (`/v1` accepts bearer tokens only, never cookies). Everything else — accounts, tokens, profiles, presets, each account's last 200 MCP calls — is in the store and survives a restart. Logs are structured JSON on Cloud Run (requests, sign-ins, account and token changes, apps connecting, MCP calls, errors with stacks; never passwords, tokens or profile content); DEPLOYMENT.md shows routing them to a 365-day log bucket. `server/API.md` is generated from the route table (`npm run docs` in `server/`) and the live service serves the same data at `GET /v1/meta`. Liveness: use `/v1/healthz` (bare `/healthz` is intercepted at the run.app edge).
@@ -504,7 +584,7 @@ mkdir -p .claude/skills
 cp -r <path-to-toolkit-repo>/.claude/skills/ai4a11y-toolkit .claude/skills/
 ```
 
-Claude Code discovers project skills in `.claude/skills/` on the next session. If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).
+Copy the whole folder: `scripts/adapter.mjs` (the helper in "Build an adapter with a coding agent") lives next to `SKILL.md`. Claude Code discovers project skills in `.claude/skills/` on the next session, and so does opencode (it reads `.claude/skills/`, `.opencode/skills/` and `.agents/skills/`). If you vendor or depend on the toolkit, re-copy after upgrades (the file is generated from the toolkit source, so it always matches the version you copied it from — check the "Regenerate" line at the bottom to rebuild it against your checkout).
 
 ---
 

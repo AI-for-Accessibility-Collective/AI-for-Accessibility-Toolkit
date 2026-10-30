@@ -55,8 +55,10 @@ gcloud run deploy toolkit-service \
 
 Why these settings:
 
-- `--max-instances 1`: apps connected through Adapter MCP are held in the
-  process's memory (`src/relay.js`). With two instances, an app could connect
+- `--max-instances 1`: apps connected for live control are held in the
+  process's memory (`src/relay.js`), and so are the registry's notification
+  streams (`src/registry.js`; a runtime on another instance would only hear
+  about changes at its next 30-second check). With two instances, an app could connect
   to one while the console or an MCP client asks the other, which reports it
   offline. Everything else is in the bucket, so a restart loses nothing but
   the live connections, and apps reconnect by themselves.

@@ -64,7 +64,7 @@
 .try-result pre { margin: 8px 0 0; font-size: .7rem; max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* ── Account page: panels like the Profiles editor ─────────────────────── */
-.account-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; align-items: start; }
+.account-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 22px; align-items: start; }
 .account-panel { padding: 22px 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
 .account-panel > .section-heading { margin-bottom: 0; }
 .account-panel > .hint { margin: -6px 0 0; }
@@ -95,6 +95,7 @@
 .admin-tabs button { background: transparent; border-radius: 7px 7px 0 0; border: 1px solid transparent; border-bottom: 0; color: var(--muted); }
 .admin-tabs button[aria-selected="true"] { background: white; border-color: var(--line); color: var(--ink); margin-bottom: -1px; }
 .admin-section { display: grid; gap: 20px; }
+.admin-section > *, .account-grid > * { min-width: 0; }
 .admin-shell .panel { padding: 20px 24px; }
 .admin-shell .panel h2 { margin-top: 0; }
 .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
@@ -102,6 +103,12 @@
 .credentials { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .credentials td, .credentials th { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }
 .credentials code { font-size: .85rem; }
+.password-reveal { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; font-size: .85rem; }
+.password-reveal code { font-size: .85rem; user-select: all; white-space: nowrap; }
+a.text-button { display: inline-flex; align-items: center; min-height: 42px; font-size: .875rem; font-weight: 600; text-decoration: none; }
+a.text-button:hover { text-decoration: underline; }
+.section-heading .row-actions { align-items: center; column-gap: 14px; }
+.admin-shell .section-heading { flex-wrap: wrap; }
 
 /* Four pages do not fit in one row on a phone: two by two instead. */
 @media (max-width: 720px) {
@@ -118,3 +125,27 @@
 @media print {
   .admin-tabs, .topbar, .no-print { display: none !important; }
 }
+
+/* ── Adapters page: the browser runtime, the editor, runtime results ──── */
+.runtime-panel { padding: 22px 24px; margin-bottom: 22px; }
+.runtime-panel .hint { margin: 0 0 8px; }
+.runtime-panel .connection-list { font-size: .75rem; color: var(--muted); margin-bottom: 6px; }
+.setup-steps { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: .8125rem; }
+#ws-runtime-setup summary { cursor: pointer; color: var(--green); font-weight: 600; font-size: .8125rem; }
+.adapter-editor { padding: 22px 24px; margin-bottom: 22px; }
+.code-input { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .78rem; line-height: 1.55; background: #f6f8f6; color: var(--ink); tab-size: 2; white-space: pre; overflow: auto; }
+.lint { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; font-size: .75rem; }
+.lint li { border-radius: 6px; padding: 5px 9px; }
+.lint li.error { background: #fde8e8; color: #8a1c1c; }
+.lint li.warning { background: #fff4d6; color: #6a4b00; }
+.ws-options { display: flex; gap: 22px; flex-wrap: wrap; margin: 14px 0 4px; }
+#ws-list-heading + .count { margin-left: auto; }
+.adapters-browser .tabs { margin: 4px 0 12px; }
+.pill.url { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .68rem; overflow-wrap: anywhere; }
+.runtime-results { list-style: none; margin: 4px 0 8px; padding: 8px 10px; background: #f6f8f6; border: 1px solid var(--line); border-radius: 8px; display: grid; gap: 4px; font-size: .72rem; color: var(--muted); }
+.runtime-results li { display: flex; gap: 8px; align-items: baseline; overflow-wrap: anywhere; }
+.runtime-results li.failed { color: #8a1c1c; }
+.runtime-results .dot { transform: translateY(1px); }
+.dot.is-failed { background: #b42318; }
+.install-into { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.install-into select { min-height: 36px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; font-size: .8rem; background: white; }

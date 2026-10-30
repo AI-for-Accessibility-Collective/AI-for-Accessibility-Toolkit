@@ -46,12 +46,12 @@
       </div>
       <section id="credentials" class="panel new-secret" hidden aria-labelledby="credentials-heading">
         <h2 id="credentials-heading">New sign-in details</h2>
-        <p class="hint">Passwords are shown once. Print or copy them now; afterwards you can only reset them.</p>
+        <p class="hint">Print or copy them for the teams. You can show them again from the account list, until a team changes its own password.</p>
         <div id="credentials-body"></div>
         <div class="row-actions no-print"><button id="credentials-copy" class="secondary small" type="button">Copy as text</button><button id="credentials-print" class="secondary small" type="button">Print</button><button id="credentials-close" class="text-button" type="button">Done</button></div>
       </section>
       <section class="panel" aria-labelledby="accounts-heading">
-        <div class="section-heading"><h2 id="accounts-heading">Accounts</h2><span id="account-count" class="count">0</span></div>
+        <div class="section-heading"><h2 id="accounts-heading">Accounts</h2><span class="row-actions"><button id="show-all-passwords" class="text-button" type="button">Show all passwords</button><a id="download-csv" class="text-button" href="/admin/accounts?format=csv" download>Download CSV</a><span id="account-count" class="count">0</span></span></div>
         <div style="overflow-x:auto"><table class="data-table" id="accounts-table">
           <thead><tr><th scope="col">Account</th><th scope="col">Status</th><th scope="col">Last sign-in</th><th scope="col">Tokens</th><th scope="col">Apps live</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
           <tbody></tbody>

@@ -27,11 +27,13 @@ in `docs/architecture.md`. This section is the code map.
   - `skills/builtin/` — starter `SKILL.md` recipes.
   - `sync/`, `protocol/` — profile-blob transport + JSON-schema wire contracts.
     `protocol/adapter/` is the Adapter MCP wire contract (descriptor checks,
-    target matching, the JSON Schema subset validator, canonical digests).
-  - `adapter-mcp/` — the Adapter MCP SDK: `createAdapterProvider`,
+    target matching, the JSON Schema subset validator, canonical digests, the
+    `web-module@1` package format, the registry tools' schemas).
+  - `adapter-mcp/` — the Adapter MCP SDK: `createRegistryClient` and
+    `loadInstalledAdapters` (share and install adapters through the registry),
+    and for optional live control `createAdapterProvider`,
     `fromToggleAdapter`/`fromAction`, `connectToToolkit`, a small MCP client.
-    Apps use it to expose adapters; the service also serves it at
-    `/sdk/adapter-mcp.js`.
+    The service also serves it at `/sdk/adapter-mcp.js`.
   - `hosts/` — runnable demos (`xr-demo`, `skill-demo`).
 - `tools/` — the developer **catalog**: `adapters/` (executable fixes),
   `auditors/` (issue detectors), `validators/` (the verifier engine for agentic
@@ -39,11 +41,19 @@ in `docs/architecture.md`. This section is the code map.
   ArtInsight), `utils/`.
 - `server/` — hosted HTTP service exposing the Librarian methods to any
   language/runtime. Also: developer accounts (`src/accounts.js`; `/admin` is
-  the admin console, `/developer` the developer console), the adapter
-  marketplace (`src/adapters.js`), and the Adapter MCP relay
-  (`src/relay.js`, `src/providers.js`) that puts connected apps under
-  **Apps** and at `/v1/mcp/…`. The relay is in memory, one process. A
-  Redbird checkout at `../redbird` is used by `npm run test:redbird:e2e`.
+  the admin console, `/developer` the developer console), the **adapter
+  registry** (`src/registry.js`): the toolkit's MCP server at `/v1/mcp`, where
+  apps publish, share and install adapters; the older adapter marketplace
+  (`src/adapters.js`, the console's Listings); and the Adapter MCP relay
+  (`src/relay.js`, `src/providers.js`) for live control of connected apps
+  under **Apps** and at `/v1/mcp/apps/…`. The relay and the registry's
+  notification streams are in memory, one process. A Redbird checkout at
+  `../redbird` is used by `npm run test:redbird:e2e`.
+- `extension/` — the **browser adapter runtime**, an unpacked Chrome extension
+  (a host, not part of the core): runs what an account installed into
+  `browser-runtime` as user scripts on the pages each adapter targets, and
+  reports back. `extension/vendor/` is generated (`npm run build:extension`,
+  copies of toolkit modules); `npm test` fails on drift.
 - `cli/` — an experimental Python CLI (`ai4a11y`) that drives a real page over the
   DevTools Protocol and bundles the catalog as `cli/cli-tools.bundle.js`.
   Rebuild the bundle with `npm run build:cli` and commit it; CI fails on drift.

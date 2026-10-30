@@ -1,5 +1,5 @@
 // The Account & tokens page: the default token every app uses, extra app
-// tokens that can be revoked on their own, and the password. Needs a
+// tokens that can be revoked on their own, the account's name and password. Needs a
 // sign-in session; a console connected with a bare token shows why not.
 
 const $ = id => document.getElementById(id);
@@ -102,6 +102,26 @@ export function createAccountPage({ getClient, isSession, status, run, onDefault
       dl.append(element('dt', '', k), element('dd', '', v));
     }
     acct.append(dl);
+    const rename = element('form', 'password-form');
+    rename.append(element('h3', '', 'Change name'));
+    const name = element('input'); name.required = true; name.maxLength = 120; name.value = overview.account.displayName || '';
+    const nameFields = element('div', 'editor-meta');
+    nameFields.append(field('account-display-name', 'Name', name));
+    rename.append(nameFields);
+    const renameButton = element('button', 'secondary', 'Save name'); renameButton.type = 'submit';
+    const renameRow = element('div', 'card-actions');
+    renameRow.append(renameButton, element('span', 'hint', 'Your username stays the same; sign in with it as before.'));
+    rename.append(renameRow);
+    rename.addEventListener('submit', (event) => {
+      event.preventDefault();
+      run(async () => {
+        if (!name.value.trim()) throw new Error('Enter a name.');
+        const account = await getClient().account.rename(name.value.trim());
+        await refresh();
+        status(`Renamed to ${account.displayName}.`);
+      });
+    });
+    acct.append(rename);
     const pw = element('form', 'password-form');
     pw.append(element('h3', '', 'Change password'));
     const current = element('input'); current.type = 'password'; current.autocomplete = 'current-password'; current.required = true;

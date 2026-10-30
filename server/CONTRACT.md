@@ -26,19 +26,25 @@
 | GET | `/healthz` | liveness: `{ok:true, version}` (no auth) |
 | GET | `/v1/healthz` | the same payload; deployed probes must use this path, because bare `/healthz` is intercepted at the run.app edge |
 | GET | `/v1/meta` | generated service+API description (no auth) |
-| GET | `/developer` | developer profile manager; static assets under `/developer/` (API calls require bearer) |
+| GET | `/developer` | developer console (profiles, adapters, apps, listings, account); static assets under `/developer/` (API calls require bearer) |
+| POST, GET | `/v1/mcp` | the adapter registry, an MCP server (CONTRACT.md, "Adapter registry") |
 | POST | `/v1/librarian/{method}` | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | `{uid, label, kind}` for the presented token |
 | GET | `/sdk/adapter-mcp.js` | the Adapter MCP SDK for apps (public code, any origin); its modules are under `/sdk/toolkit/` |
 | POST | `/v1/auth/login` | developer sign-in `{username, password}` → `{token, expiresAt, account, defaultToken}`; `token` is a session |
 | POST | `/v1/auth/logout` | end this session (session token) |
 | GET | `/v1/account` | `{account, defaultToken, tokens, session, liveApps}` (session token) |
+| PUT | `/v1/account` | rename the account `{displayName}` → `{account}`; the username stays (session token) |
 | POST | `/v1/account/default-token` | regenerate the default token → `{defaultToken}` (session token) |
 | POST | `/v1/account/tokens` | make an app token `{label?}` → `{token, id, label}`, shown once (session token) |
 | DELETE | `/v1/account/tokens/{id}` | revoke one of the account's tokens (session token) |
 | POST | `/v1/account/password` | change password `{current, next}` (session token) |
 | GET | `/v1/account/presets` | `{presets}` saved profile presets (session token) |
 | PUT | `/v1/account/presets` | replace saved presets `{presets}` (session token) |
+| GET | `/v1/profile/selection` | `{revision, selected, updatedAt}`: the preset last loaded with `replaceProfile`, `selected` is `{id, name, edited}` or null (any token) |
+| GET | `/v1/profile/events` | server-sent events: a `profile` event with that same object on connecting and on every profile write, so an app follows the profile without a refresh. It carries no profile content; read that with `getProfile` (any token) |
+| GET | `/v1/profile/presets` | `{presets: [{id, name, description, builtIn}]}`: the console's built-in presets, then the account's saved ones (any token) |
+| POST | `/v1/profile/select` | `{id}` makes that preset the active profile, as the console's Load profile does → `{revision, selected, updatedAt, profile}` (any token) |
 | POST | `/v1/providers` | register an Adapter MCP app instance → `{providerId, endpoints}` (app or default token) |
 | DELETE | `/v1/providers/{providerId}` | sign the instance off |
 | GET | `/v1/providers/{providerId}/channel` | server-sent events: relayed MCP requests for the instance |
@@ -58,10 +64,11 @@
 | GET | `/v1/adapters/{appId}/{id}/code` | `{code, sha256, size, updatedAt}` for a kind-`code` listing |
 | PUT | `/v1/adapters/{appId}/{id}/install` | mark installed for the calling uid |
 | DELETE | `/v1/adapters/{appId}/{id}/install` | clear installed for the calling uid |
-| GET | `/admin/accounts` | list developer accounts with token and live-app counts |
+| GET | `/admin/accounts` | list developer accounts with token and live-app counts; `?passwords=1` → `{passwords: [{uid, displayName, password\|null, reason?}]}`, every admin-issued password; `?format=csv` → the same as a CSV download (username, name, password, password_note, status, last_sign_in, created, app_tokens, has_data) |
 | POST | `/admin/accounts` | make an account `{uid, displayName?, password?}` → 201 `{account, password?}` |
 | POST | `/admin/accounts/bulk` | make many `{accounts: [{uid, displayName?}]}` → `{results}` |
 | PUT | `/admin/accounts/{uid}` | rename `{displayName}` |
+| GET | `/admin/accounts/{uid}/password` | the password an admin issued `{password\|null, reason?}`; `null` once the developer changed it themselves |
 | POST | `/admin/accounts/{uid}/password` | reset the password `{password?}` → `{password?}` |
 | POST | `/admin/accounts/{uid}/disable` | turn off: revoke every token, disconnect its apps |
 | POST | `/admin/accounts/{uid}/enable` | turn back on |
@@ -111,6 +118,13 @@
   write, removing omitted keys. It rejects non-JSON values, unsafe object keys,
   and malformed structured fields. The service manages `schemaVersion`,
   `createdAt`, and `updatedAt`. Memories, grants, and skills remain separate.
+  An optional second argument `{id, name}` names the preset being loaded; the
+  service keeps it as the selected profile (stored with the console's
+  preferences). `{id, name, edited: true}` says the profile is that preset with
+  changes (the console's temporary profile). A later `setProfileField`, `setProfileFields` or
+  `respondToProposal` marks it `edited`, and a `replaceProfile` with no
+  preset clears it. Every one of those writes also announces itself on
+  `/v1/profile/events`.
 - 49 routes total.
 
 ## Developer interface and CORS
@@ -135,11 +149,17 @@ be same-origin `application/json`, so a foreign page cannot forge one.
 
 ## Accounts and sign-in
 
-- An account is `{uid, displayName, passwordHash, createdAt, updatedAt,
-  lastLoginAt, disabled, defaultTokenGeneration}` in `admin/accounts.json`.
-  The username **is** the uid, so an account reaches the same profile
-  partition an admin-minted token for that uid does. Passwords are scrypt
-  hashes; generated passwords are returned once.
+- An account is `{uid, displayName, passwordHash, issuedPassword?,
+  passwordSetBy, createdAt, updatedAt, lastLoginAt, disabled,
+  defaultTokenGeneration}` in `admin/accounts.json`. The username **is** the
+  uid, so an account reaches the same profile partition an admin-minted token
+  for that uid does. Passwords are scrypt hashes. The password an admin
+  issued (made or typed) is also kept in `issuedPassword`, AES-256-GCM under a
+  key derived from `TOKEN_SECRET` or the admin password, so the admin console
+  can show it again. When the developer changes their password, that copy is
+  deleted and `passwordSetBy` becomes `account`: a password they chose may be
+  one they use elsewhere. Changing the secret makes kept copies unreadable;
+  resetting the password keeps a new one.
 - `POST /v1/auth/login` returns two credentials. `token` is a **session**
   (kind `session`, 24 hours) for the developer console; only a session may
   call `/v1/account/*`. `defaultToken` is the account's **default token**
@@ -152,11 +172,53 @@ be same-origin `application/json`, so a foreign page cannot forge one.
   15 minutes, in memory). A disabled account cannot sign in, and disabling
   revokes all its tokens.
 
+## Adapter registry
+
+The service is an MCP server at `/v1/mcp` where apps built with the toolkit
+share adapters ([docs/design/adapter-mcp.md](../docs/design/adapter-mcp.md)
+§14). Any token of an account works (session, default or app).
+
+- `POST /v1/mcp`: JSON-RPC `initialize`, `ping`, `tools/list`, `tools/call`,
+  `resources/list`, `resources/read`; notifications answer 202; no batches.
+  Tools: `adapter_search`, `adapter_get`, `adapter_publish`, `adapter_share`,
+  `adapter_delete`, `adapter_install`, `adapter_uninstall`,
+  `adapter_installed`, `adapter_report`, `adapter_status`. Their input
+  schemas are `toolkit/protocol/adapter/registry.js`; arguments that do not
+  fit are a tool error (`isError`, `structuredContent.error =
+  "invalid-arguments"`), as are refusals (`not-found`, `forbidden`,
+  `invalid-adapter`, `revision-gone`, `invalid-site`, `invalid-parameters`).
+- `GET /v1/mcp` with `Accept: text/event-stream`: `notifications/resources/list_changed`
+  whenever an adapter the account can see changes, its installs change, or
+  one of its runtimes reports; the reason is in `params._meta["ai4a11y/registry"]`.
+  A comment line every 25 seconds keeps the stream open.
+- `adapter_publish` takes a short descriptor too: without `adapterProtocol`,
+  `{appId, id, name, description, targets, supportAreas}` is enough, and the
+  rest takes `defineDescriptor`'s defaults (an on/off web adapter with no
+  settings, version 1.0.0). The skill's `scripts/adapter.mjs` publishes this way.
+- An adapter is `{owner, appId, id}`. It is private to its owner until
+  shared; a shared adapter is visible to every account on this instance.
+  Publishing checks the descriptor and any `web-module@1` package (including
+  its lint) and computes both digests; an unchanged publish is not a new
+  revision. The newest 20 revisions are kept.
+- Installing your own adapter follows `"latest"`; installing someone else's
+  pins the current revision. Sites are origins; only sites switched off are
+  stored.
+- Reports carry an origin, a status and at most 500 characters of message;
+  the newest 500 per account are kept, and runtimes not heard from for a week
+  are forgotten.
+- Storage: `users/<uid>/registry.json`,
+  `users/<uid>/registry/<appId>/<id>/<revision>.json`,
+  `users/<uid>/installs.json` and `users/<uid>/runtime-status.json` (deleted
+  with the account), and `registry/shared.json`, an index of shared adapters
+  from which a deleted account's entries are removed. The log records the tool,
+  uid, outcome and duration of each call, never code or arguments.
+
 ## Adapter MCP apps
 
 Apps built with the Adapter MCP SDK (`toolkit/adapter-mcp/`, served at
-`/sdk/adapter-mcp.js`) connect to the account whose token they hold; see
-[docs/design/adapter-mcp.md](../docs/design/adapter-mcp.md) for the contract.
+`/sdk/adapter-mcp.js`) can also connect for **live control** while they are
+open, to the account whose token they hold; see
+[docs/design/adapter-mcp.md](../docs/design/adapter-mcp.md) §5–§8.
 
 - `POST /v1/providers` registers one running instance:
   `{providerId?, label?, application, adapters: [descriptor]}`. The service
@@ -187,8 +249,10 @@ Apps built with the Adapter MCP SDK (`toolkit/adapter-mcp/`, served at
 
 ## Adapter marketplace
 
-A registry of adapters published by host applications, so a developer
-interface or another host can discover what each app offers, grouped by app.
+Listings of adapters published by host applications, so a developer
+interface or another host can discover what each app offers, grouped by app
+(the console's **Listings** page). It predates the registry above, which is
+where apps share adapters other apps can run.
 
 - An entry is `{appId, id, name, description, version, settingsKeys[],
   supportAreas[], requiresAI, sourceUrl, docsUrl, kind, codeSize, codeSha256,

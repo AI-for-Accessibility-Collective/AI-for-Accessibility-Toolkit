@@ -102,6 +102,8 @@ export function createClient(baseUrl, token, fetcher = fetch) {
     async call(method, ...args) {
       return (await request(`/v1/librarian/${method}`, { args })).result;
     },
+    // Which preset is selected, and whether it has been edited since (CONTRACT.md "Profile selection").
+    selection: () => request('/v1/profile/selection'),
     // The adapter marketplace (CONTRACT.md "Adapter marketplace").
     adapters: {
       list: async () => request('/v1/adapters'),
@@ -114,6 +116,7 @@ export function createClient(baseUrl, token, fetcher = fetch) {
     // The signed-in account (session tokens only).
     account: {
       get: () => request('/v1/account'),
+      rename: async (displayName) => (await request('/v1/account', { displayName }, 'PUT')).account,
       logout: () => request('/v1/auth/logout', {}),
       rotateDefaultToken: async () => (await request('/v1/account/default-token', {})).defaultToken,
       createToken: (label) => request('/v1/account/tokens', { label }),

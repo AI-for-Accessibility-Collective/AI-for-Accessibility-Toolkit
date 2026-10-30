@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-10-29T10:37:00.861Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-10-30T10:42:33.266Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -27,26 +27,34 @@ Version: `0.1.0`
 | POST | `/v1/auth/login` | none (rate limited) | developer sign-in {username, password} -> {token (session, expires), expiresAt, account, defaultToken} |
 | POST | `/v1/auth/logout` | session | end this sign-in session |
 | GET | `/v1/account` | session | {account, defaultToken, tokens, session, liveApps} for the signed-in account |
+| PUT | `/v1/account` | session | rename the signed-in account {displayName} -> {account}; the username stays the same |
 | POST | `/v1/account/default-token` | session | regenerate the default token -> {defaultToken}; the old one is revoked and its apps disconnect |
 | POST | `/v1/account/tokens` | session | make an app token {label?} -> {token, id, label} (shown once) |
 | DELETE | `/v1/account/tokens/{id}` | session | revoke one of the account's tokens |
 | POST | `/v1/account/password` | session | change password {current, next}; signs out other sessions |
 | GET | `/v1/account/presets` | session | {presets} saved profile presets for the developer console |
 | PUT | `/v1/account/presets` | session | replace the saved presets {presets: [{id, name, description?, profile}]} |
+| POST | `/v1/mcp` | bearer | the adapter registry, an MCP server (POST JSON-RPC): tools adapter_search, adapter_get, adapter_publish, adapter_share, adapter_delete, adapter_install, adapter_uninstall, adapter_installed, adapter_report, adapter_status; resources adapter://owner/appId/id |
+| GET | `/v1/mcp` | bearer | server-sent events (Accept: text/event-stream): notifications/resources/list_changed when an adapter the account can see changes, its installs change, or a runtime reports |
 | POST | `/v1/providers` | bearer (app or default token) | register an Adapter MCP app instance {providerId?, label?, application, adapters: [descriptor]} -> {providerId, endpoints} |
 | DELETE | `/v1/providers/{providerId}` | bearer (the registering token) | sign the instance off |
 | GET | `/v1/providers/{providerId}/channel` | bearer (the registering token) | server-sent events: each `request` event is one relayed MCP JSON-RPC message |
 | POST | `/v1/providers/{providerId}/channel` | bearer (the registering token) | the instance answers one relayed request with its JSON-RPC response -> 204 |
 | POST | `/v1/mcp/providers/{providerId}` | bearer (same account) | MCP Streamable HTTP endpoint (POST JSON-RPC, JSON response) for one connected instance |
 | POST | `/v1/mcp/apps/{appId}` | bearer (same account) | MCP endpoint for the app's one live instance; an error names the instance endpoints when several are connected |
+| GET | `/v1/profile/selection` | bearer | the preset last loaded with replaceProfile: {revision, selected: {id, name, edited} or null, updatedAt} |
+| GET | `/v1/profile/events` | bearer | server-sent events: a `profile` event (the same object as /v1/profile/selection) on connecting and on every profile write, with no profile content; read that with getProfile |
+| GET | `/v1/profile/presets` | bearer | the presets an app can choose from, the console's built-in ones then the account's saved ones: {presets: [{id, name, description, builtIn}]} |
+| POST | `/v1/profile/select` | bearer | make a preset the active profile, as the console does when it loads one {id} -> {revision, selected, updatedAt, profile} |
 | GET | `/v1/apps` | bearer | the account's connected apps grouped by app: {apps: [{appId, name, live, hidden, connections, adapters, endpoint}], hiddenApps} |
 | DELETE | `/v1/apps/{appId}` | bearer | forget an app that is not connected (it returns when it connects again) |
-| PUT | `/v1/apps/{appId}/hidden` | bearer | hide the app in the developer console (Apps and Marketplace) |
+| PUT | `/v1/apps/{appId}/hidden` | bearer | hide the app in the developer console (Apps and Listings) |
 | DELETE | `/v1/apps/{appId}/hidden` | bearer | show it again |
-| GET | `/admin/accounts` | admin | list accounts {accounts: [{uid, displayName, disabled, createdAt, lastLoginAt, appTokens, sessions, liveApps, hasData}]} |
-| POST | `/admin/accounts` | admin | make an account {uid, displayName?, password?} -> 201 {account, password?} (a generated password is shown once) |
+| GET | `/admin/accounts` | admin | list accounts {accounts: [{uid, displayName, disabled, createdAt, lastLoginAt, passwordSetBy, passwordKept, appTokens, sessions, liveApps, hasData}]}; with ?passwords=1, every account's admin-issued password {passwords: [{uid, displayName, password\|null, reason?}]} (reason: changed-by-account, not-kept or unreadable); with ?format=csv, a download of every account with its password, status and last sign-in |
+| POST | `/admin/accounts` | admin | make an account {uid, displayName?, password?} -> 201 {account, password?} (a generated password is returned; GET …/password shows it again) |
 | POST | `/admin/accounts/bulk` | admin | make many {accounts: [{uid, displayName?}]} -> {results: [{uid, ok, password?\|error}]} |
 | PUT | `/admin/accounts/{uid}` | admin | rename {displayName} |
+| GET | `/admin/accounts/{uid}/password` | admin | the password an admin issued {uid, password\|null, reason?}; null once the developer changed it themselves |
 | POST | `/admin/accounts/{uid}/password` | admin | reset the password {password?} -> {password?}; signs the account out everywhere |
 | POST | `/admin/accounts/{uid}/disable` | admin | turn the account off: revokes every token and disconnects its apps |
 | POST | `/admin/accounts/{uid}/enable` | admin | turn it back on (a new default token at the next sign-in) |

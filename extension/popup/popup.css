@@ -1,0 +1,58 @@
+/* The developer console's palette and controls, at popup size. */
+:root {
+  color-scheme: light;
+  --ink: #202c2c;
+  --muted: #586968;
+  --line: #d9e3de;
+  --green: #235f4f;
+  --wash: #edf4ef;
+  --bg: #f5f7f4;
+  --red: #8a1c1c;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+* { box-sizing: border-box; }
+body { margin: 0; width: 360px; padding: 14px 16px 12px; font-size: .875rem; line-height: 1.45; }
+h1, h2, p { margin: 0; }
+h1 { font-size: 1rem; }
+h2 { font-size: .85rem; margin: 14px 0 6px; }
+header { display: flex; align-items: center; gap: 10px; }
+header > div { flex: 1; min-width: 0; }
+.sub { font-size: .7rem; color: var(--muted); }
+.mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--green); color: white; font-weight: 800; font-size: 1rem; }
+.mark span { font-size: .75rem; }
+.badge { border-radius: 20px; background: var(--wash); color: #34564b; font-size: .68rem; font-weight: 600; padding: 4px 9px; white-space: nowrap; }
+.badge.connected { background: #dff0e6; color: var(--green); }
+.badge.warn { background: #fff4d6; color: #6a4b00; }
+.notice { margin-top: 12px; border: 1px solid #e7cf8c; background: #fffaf0; border-radius: 8px; padding: 10px 12px; }
+.notice h2 { margin-top: 0; }
+.notice p { margin-bottom: 8px; }
+label { display: block; font-weight: 600; font-size: .78rem; margin: 8px 0 4px; }
+input[type=url], input[type=password] { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: white; }
+button { font: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+.primary, .secondary { min-height: 36px; border-radius: 6px; padding: 6px 12px; font-weight: 600; margin-top: 10px; }
+.primary { background: var(--green); color: white; border: 1px solid var(--green); }
+.secondary { background: white; color: var(--green); border: 1px solid #b6cdc3; }
+.text-button { border: 0; background: none; color: var(--green); font-weight: 600; padding: 4px 2px; }
+:focus-visible { outline: 3px solid #3d7fd9; outline-offset: 2px; }
+details summary { cursor: pointer; color: var(--green); font-weight: 600; margin-top: 10px; }
+.hint { color: var(--muted); font-size: .75rem; margin-top: 6px; }
+.who { margin-top: 12px; overflow-wrap: anywhere; }
+.adapters { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.adapters li { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; }
+.adapter-top { display: flex; align-items: center; gap: 8px; }
+.adapter-top strong { flex: 1; min-width: 0; }
+.from { font-size: .72rem; color: var(--muted); }
+.result { font-size: .75rem; }
+.result.applied { color: var(--green); }
+.result.failed { color: var(--red); overflow-wrap: anywhere; }
+.switch { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600; margin: 0; }
+.switch input { width: 32px; height: 18px; accent-color: var(--green); }
+.empty { color: var(--muted); font-size: .8rem; background: white; border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; }
+.actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.actions a { color: var(--green); font-weight: 600; flex: 1; }
+#status { margin-top: 10px; font-size: .78rem; color: var(--green); min-height: 1em; }
+#status.error { color: var(--red); }
+footer { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; font-size: .68rem; color: var(--muted); }

@@ -21,9 +21,11 @@ import { createRelay } from './relay.js';
 import { createProviderRoutes } from './providers.js';
 import { createAccountRoutes } from './account-routes.js';
 import { createAdminAccountRoutes } from './admin-accounts.js';
-import { sendJSON, bearerFrom, readJSON as readBody } from './http.js';
+import { sendJSON, sendHttpError, bearerFrom, readJSON as readBody } from './http.js';
 import { silentLogger, safeErrorText } from './log.js';
 import { createActivityLog } from './activity.js';
+import { createRegistry, REGISTRY_PATH } from './registry.js';
+import { createProfileEvents, cleanSelection, PROFILE_WRITES } from './profile-events.js';
 import { auditAccounts } from './audit.js';
 
 const ADMIN_TOKENS_PREFIX = '/admin/tokens';
@@ -35,6 +37,7 @@ const ADAPTERS_PREFIX = '/v1/adapters';
 const AUTH_PREFIX = '/v1/auth/';
 const ACCOUNT_PREFIX = '/v1/account';
 const PROVIDERS_PREFIX = '/v1/providers';
+const PROFILE_PREFIX = '/v1/profile';
 const MCP_PREFIX = '/v1/mcp/';
 const APPS_PREFIX = '/v1/apps';
 const SDK_PREFIX = '/sdk/';
@@ -115,6 +118,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     }
   });
   const providerRoutes = createProviderRoutes({ store, relay, withUserLock, authenticate, activity });
+  const profileEvents = createProfileEvents({ store, authenticate, toolkitHost, withUserLock });
+  const registry = createRegistry({ store, withUserLock, authenticate, log, version });
   const accountRoutes = createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log });
   const adminAccountRoutes = createAdminAccountRoutes({ store, accounts, relay, wipeUser });
   const anyOrigin = corsOrigins.includes('*');
@@ -131,7 +136,9 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       // and the call can simply be repeated.
       toolkitHost.evict?.(uid);
       relay.dropUser(uid);
+      profileEvents.dropUser(uid);
       activity.forget(uid);
+      await registry.dropUser(uid);
       const revoked = await revokeTokensFor(store, uid);
       const wiped = await store.deleteUser(uid);
       // Evict again. Anything that read the partition during the wipe could
@@ -163,6 +170,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   listener.relay = relay;
   listener.accounts = accounts;
   listener.activity = activity;
+  listener.registry = registry;
   return listener;
 
   // One entry per request, after it ends: method, path (never the query
@@ -310,8 +318,13 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       return accountRoutes(req, res, method, pathname);
     }
 
-    // Adapter MCP: apps connecting (providers), their MCP endpoints, and the
-    // account's grouped view of them.
+    // Adapter MCP. The toolkit's own MCP server (the adapter registry, where
+    // apps share adapters) is /v1/mcp itself; under it, live control of apps
+    // that are connected right now: their providers, their MCP endpoints and
+    // the account's grouped view of them.
+    if (pathname === REGISTRY_PATH) {
+      try { return await registry.handle(req, res, method); } catch (e) { return sendHttpError(res, e); }
+    }
     if (pathname === PROVIDERS_PREFIX || pathname.startsWith(PROVIDERS_PREFIX + '/')
       || pathname.startsWith(MCP_PREFIX)
       || pathname === APPS_PREFIX || pathname.startsWith(APPS_PREFIX + '/')) {
@@ -323,6 +336,10 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     // for moderation.
     if (pathname === ADAPTERS_PREFIX || pathname.startsWith(ADAPTERS_PREFIX + '/')) {
       return adaptersRouter(req, res, method, pathname, url);
+    }
+
+    if (pathname.startsWith(PROFILE_PREFIX + '/')) {
+      return profileEvents.route(req, res, method, pathname);
     }
 
     if (method === 'POST' && pathname.startsWith(LIBRARIAN_PREFIX)) {
@@ -446,6 +463,12 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
       try {
         const result = await invokeLibrarianRoute(entry, instance, args);
+        if (PROFILE_WRITES.has(routeName)) {
+          // The console passes the preset it loaded as replaceProfile's second argument.
+          // A failure to announce must not turn a stored write into an error.
+          try { await profileEvents.changed(rec.uid, routeName === 'replaceProfile' ? cleanSelection(args[1]) : undefined); }
+          catch (e) { log.warn('profile.announce.failed', { uid: rec.uid, errorCode: safeErrorText(e) }); }
+        }
         return sendJSON(res, 200, { ok: true, result });
       } catch (e) {
         // Application errors are data, not transport failures (CONTRACT.md).

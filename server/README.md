@@ -56,8 +56,8 @@ DATA_DIR=./data ADMIN_PASSWORD=dev PORT=8080 npm start
 
 Open **http://localhost:8080/admin** (any username, the admin password) to
 make developer accounts, and **http://localhost:8080/developer** to sign in
-with one. The developer console has four pages in a left sidebar —
-**Profiles**, **Apps**, **Marketplace** and **Account & tokens** — and works on
+with one. The developer console has five pages in a left sidebar —
+**Profiles**, **Adapters**, **Apps**, **Listings** and **Account & tokens** — and works on
 the signed-in account's profile and apps. Connecting with a bare token (under
 **Connect with an access token instead**) still works, for instances without accounts.
 
@@ -72,31 +72,57 @@ information.
    participants' own pages can connect from other ports. It refuses to start
    with `NODE_ENV=production`.
 2. Open `/admin`, then **Fill in team-1 … team-10** and **Make accounts**
-   (or list your own usernames). Print or copy the sign-in details: passwords
-   are shown once; after that you can only reset them.
+   (or list your own usernames). Print or copy the sign-in details. To find
+   them again, choose **Show password** on an account or **Show all
+   passwords**, or keep a copy with **Download CSV**. A password a team
+   changes itself is not kept, so you can then only reset it.
 3. Each team signs in at `/developer`. Their **default token** is in the
    sidebar; every app or adapter they build uses it.
-4. Under **Apps**, **Open Redbird** opens the Redbird demo store (run it with
+4. Under **Adapters**, each team writes adapters for any website and runs
+   them in their own browser with the adapter runtime extension
+   (`extension/`, [its README](../extension/README.md): Load unpacked, turn on
+   **Allow User Scripts**, then **Connect with this console** from its popup).
+   **Share** makes an adapter visible to every team; others run it from
+   **Shared with you**.
+5. Under **Apps**, **Open Redbird** opens the Redbird demo store (run it with
    `python3 tools/serve.py` in a Redbird checkout, on `http://localhost:8000`)
    already connected. Each tab shows up as **Redbird demo**, live, and its
    adapters can be tried from the console. Apps the team builds with the
    Adapter MCP SDK show up the same way, grouped by app; **Hide** keeps one
    out of the way.
-5. A coding agent can call the same adapters over MCP: **Copy MCP endpoint**
-   on an app, or the `claude mcp add` command under **Connect an app**.
+6. A coding agent can use the same registry and apps over MCP: the
+   `claude mcp add` commands under **Connect an app**, or **Copy MCP endpoint**
+   on an app.
 
 Turning an account off in `/admin` revokes all its tokens and disconnects its
 apps at once. Connected apps are kept in memory: after a restart they
 reconnect by themselves.
 
+## The Adapters page
+
+**Adapters** is where a developer writes, runs and shares adapters through
+the toolkit's adapter registry (CONTRACT.md, "Adapter registry";
+docs/design/adapter-mcp.md §14). **+ New adapter** opens an editor: a name,
+the address patterns it runs on, support areas, and the code (one file that
+exports `enable()` and `disable()`), checked as you type; problems that would
+be refused block saving and move focus to the field. Each save is a new
+revision. **Run it in my browser** installs it into `browser-runtime`, so the
+adapter runtime extension runs it on matching pages within seconds, without a
+reload; what happened on each site (running, failed with the error, switched
+off) appears on the card. **Share** makes it visible to everyone on this
+toolkit; **Shared with you** lists what others shared, to run in your browser
+(pinned to the revision you chose, with **Update** when there is a newer one)
+or install into one of your apps. The panel at the top says whether this
+browser's runtime is connected, and lists your runtimes' recent reports.
+
 ## The Apps page
 
 **Apps** lists every app that has connected with this account's tokens,
-grouped by `appId`, with a **Live** or **Offline** badge, each connection, and
-its recent calls. **Try it** builds a form from an adapter's parameter schema
+grouped by `appId`, with a **Live** or **Offline** badge, what it published to
+and installed from the registry, each connection, and its recent calls. **Try it** builds a form from an adapter's parameter schema
 and can turn it on or update it, turn it off, check whether it can run without
 changing anything, read its state, undo the last change, and find targets.
-**Hide** is saved in the account and also hides the app in the Marketplace;
+**Hide** is saved in the account and also hides the app in Listings;
 **Show hidden** brings hidden apps back, and **Forget** removes an offline app.
 The page refreshes every few seconds while it is open.
 
@@ -104,9 +130,10 @@ Programmatic access: `GET /v1/apps`, `PUT/DELETE /v1/apps/{appId}/hidden`,
 and the MCP endpoints `POST /v1/mcp/apps/{appId}` and
 `POST /v1/mcp/providers/{providerId}` — see CONTRACT.md, "Adapter MCP apps".
 
-## The Marketplace page
+## The Listings page
 
-**Marketplace** is the developer view of the adapter marketplace
+**Listings** is the developer view of the adapter marketplace, an older
+catalog of descriptions that predates the registry
 (CONTRACT.md's "Adapter marketplace" section): adapters registered on this
 instance, grouped by the app that registered them (the browser extension
 publishes its catalog automatically in remote mode;
@@ -141,6 +168,17 @@ toolkit profile; **Apply to toolkit** applies editor changes in one write.
 Omitted keys are removed. Schema version and timestamps are service-managed.
 **Read from toolkit** and loading a preset replace the editor draft.
 
+The library marks the profile in the editor **Selected** (outlined and
+tinted) and the one the toolkit holds **Active in toolkit**. The first edit
+to a preset moves the work into a **Temporary profile** at the top of the
+library, "based on" that preset, so the preset itself stays as it was. Apply
+it, load other presets and come back to it, save it (over the custom preset
+it came from, or as a new preset from a built-in), or **Discard** it, which
+returns the editor (and the toolkit, if it held the changes) to the preset.
+There is one temporary profile; editing another preset replaces it. Applying
+it records the toolkit's selection as that preset `edited`, so **Read from
+toolkit** or the next sign-in shows it as the temporary profile again.
+
 Nine built-in presets use `Profile 1` through `Profile 9` in the order of
 [W3C WAI Stories of Web Users](https://www.w3.org/WAI/people-use-web/user-stories/),
 with descriptive text retained in parentheses and links to each story.
@@ -169,7 +207,7 @@ when connecting from an HTTPS page. No proxy is involved.
 Profile manager checks: `node test/developer.test.mjs`; browser workflow:
 `npm run test:developer:e2e` from the repository root (requires Playwright
 Chromium, install with `npx playwright install chromium`). Adapter
-marketplace checks: `node test/adapters.test.mjs`; Marketplace-page browser
+marketplace checks: `node test/adapters.test.mjs`; Listings-page browser
 workflow: `npm run test:adapters:e2e`; real-extension adoption workflow
 (needs the extension repo checked out beside this one):
 `npm run test:extension:e2e`. Accounts and apps: `node test/accounts.test.mjs`
@@ -189,7 +227,7 @@ checkout beside this one, or `REDBIRD_DIR`): `npm run test:redbird:e2e`.
 | `CORS_ORIGINS` | no | unset | Comma-separated exact browser origins allowed on `/v1/*`, or `*` for any; same-origin developer UI needs no setting. The `--workshop` flag sets `*` (refused in production) |
 | `LOG_FORMAT` | no | `json` on Cloud Run, else `text` | `json` writes one Cloud Logging entry per line |
 | `LOG_LEVEL` | no | `info` | `debug` also logs successful static-file requests |
-| `TOKEN_SECRET` | no | the admin password | Key that derives each account's default token. When it changes, each account gets a new default token at its next sign-in |
+| `TOKEN_SECRET` | no | the admin password | Key that derives each account's default token and encrypts the passwords an admin issued. When it changes, each account gets a new default token at its next sign-in, and issued passwords can no longer be shown until they are reset |
 
 ## Logs
 

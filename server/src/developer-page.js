@@ -7,6 +7,7 @@ export const DEVELOPER_ASSETS = new Map([
   ['/developer/styles.css', 'styles.css', 'text/css'],
   ['/developer/app.js', 'app.js', 'text/javascript'],
   ['/developer/adapters.js', 'adapters.js', 'text/javascript'],
+  ['/developer/listings.js', 'listings.js', 'text/javascript'],
   ['/developer/client.js', 'client.js', 'text/javascript'],
   ['/developer/value-editor.js', 'value-editor.js', 'text/javascript'],
   ['/developer/profiles.js', 'profiles.js', 'text/javascript'],

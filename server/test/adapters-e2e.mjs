@@ -1,5 +1,5 @@
-// Real browser + real toolkit service, Adapters page: sidebar navigation,
-// marketplace grouped by app, registration (data-only and data + code),
+// Real browser + real toolkit service, Listings page (the adapter
+// marketplace): sidebar navigation, listings grouped by app, registration (data-only and data + code),
 // filters, install state, code viewing, and deletion. No LLM required.
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -40,18 +40,18 @@ try {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
 
-  await page.goto(`${base}/developer#/adapters`);
-  assert.match(await page.locator('#environment').innerText(), /ADAPTER MARKETPLACE/);
-  assert.equal(await page.locator('#page-profiles').isHidden(), true, 'the hash opens the Adapters page');
+  await page.goto(`${base}/developer#/listings`);
+  assert.match(await page.locator('#environment').innerText(), /ADAPTER LISTINGS/);
+  assert.equal(await page.locator('#page-profiles').isHidden(), true, 'the hash opens the Listings page');
   assert.match(await page.locator('#adapter-groups').innerText(), /Sign in \(or connect with a token\)/);
 
   // Sidebar navigation switches pages without losing the shell.
   await page.click('.nav-link[data-page="profiles"]');
   await page.waitForFunction(() => document.getElementById('environment').textContent.includes('PROFILE MANAGER'));
   assert.equal(await page.locator('#page-profiles').isHidden(), false);
-  await page.click('.nav-link[data-page="adapters"]');
-  await page.waitForFunction(() => document.getElementById('environment').textContent.includes('ADAPTER MARKETPLACE'));
-  assert.equal(await page.locator('#page-adapters').isHidden(), false);
+  await page.click('.nav-link[data-page="listings"]');
+  await page.waitForFunction(() => document.getElementById('environment').textContent.includes('ADAPTER LISTINGS'));
+  assert.equal(await page.locator('#page-listings').isHidden(), false);
 
   // Connect; the marketplace loads.
   await page.click('#token-connect summary');
@@ -118,12 +118,12 @@ try {
   assert.equal(await page.locator('.profile-card').count(), 9);
 
   // Mobile layout must not overflow with the sidebar stacked above.
-  await page.click('.nav-link[data-page="adapters"]');
+  await page.click('.nav-link[data-page="listings"]');
   await page.setViewportSize({ width: 390, height: 844 });
-  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'adapters page fits the mobile viewport');
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'listings page fits the mobile viewport');
 
   assert.deepEqual(errors, [], 'browser must not raise JS errors');
-  console.log('Adapters browser workflow passed: sidebar navigation, grouped marketplace, filters, code viewing, install state, registration, deletion, and mobile layout.');
+  console.log('Listings browser workflow passed: sidebar navigation, grouped listings, filters, code viewing, install state, registration, deletion, and mobile layout.');
 } finally {
   await browser?.close();
   await new Promise(resolve => server.close(resolve));

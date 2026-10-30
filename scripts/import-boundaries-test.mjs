@@ -79,6 +79,10 @@ const KNOWN_EDGES = {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'app registrations are re-validated against the Adapter MCP contract (descriptors, digests) before the service stores or relays them',
   },
+  'server/src/registry.js': {
+    to: ['toolkit/protocol/adapter/index.js'],
+    why: 'the adapter registry checks published descriptors and web-module packages, computes their digests and validates tool arguments with the same contract code apps use',
+  },
   'server/src/adapters.js': {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'marketplace listings may carry an Adapter MCP descriptor, validated and digested with the same contract code',

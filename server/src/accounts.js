@@ -2,9 +2,9 @@
 // signs in to /developer instead of copying tokens around.
 //
 // Stored in one shared document, `admin/accounts.json`:
-//   { accounts: { <uid>: { uid, displayName, passwordHash, createdAt,
-//                          updatedAt, lastLoginAt, disabled,
-//                          defaultTokenGeneration } } }
+//   { accounts: { <uid>: { uid, displayName, passwordHash, issuedPassword?,
+//                          passwordSetBy, createdAt, updatedAt, lastLoginAt,
+//                          disabled, defaultTokenGeneration } } }
 // The username IS the uid: the account's profile partition is
 // `users/<uid>/`, the same one an admin-minted token for that uid reaches.
 //
@@ -25,7 +25,13 @@
 // longer matches, revokes it and issues a new generation, so apps must be
 // given the new token. That is the documented cost of rotating the secret.
 //
-// Passwords are scrypt hashes (N=2^15, r=8, p=1, 16-byte salt). Sign-in is
+// Passwords are scrypt hashes (N=2^15, r=8, p=1, 16-byte salt). So a
+// workshop host can look a team's password up again, the password an ADMIN
+// issued (made or typed) is also kept encrypted, AES-256-GCM under a key
+// derived from the same secret. When the developer changes it themselves the
+// copy is dropped: that password may be one they use elsewhere, and only its
+// hash is kept. Changing the secret makes the kept copies unreadable (reset
+// to show one again). Sign-in is
 // rate limited per username and per client address in memory (one process),
 // which is proportionate for a prototype service; a multi-instance deployment
 // would want a shared limiter.
@@ -66,6 +72,24 @@ async function checkPassword(password, stored) {
   const want = Buffer.from(expected, 'base64url');
   const key = await scrypt(String(password), Buffer.from(salt, 'base64url'), want.length, { N: Number(N), r: Number(r), p: Number(p), maxmem: SCRYPT.maxmem });
   return key.length === want.length && crypto.timingSafeEqual(key, want);
+}
+
+// The encrypted copy of an admin-issued password: v1.<iv>.<ciphertext>.<tag>.
+function sealPassword(key, plain) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const sealed = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+  return ['v1', iv, sealed, cipher.getAuthTag()].map(p => (typeof p === 'string' ? p : p.toString('base64url'))).join('.');
+}
+
+function openPassword(key, value) {
+  const [v, iv, sealed, tag] = String(value || '').split('.');
+  if (v !== 'v1' || !iv || !sealed || !tag) return null;
+  try {
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'base64url'));
+    decipher.setAuthTag(Buffer.from(tag, 'base64url'));
+    return Buffer.concat([decipher.update(Buffer.from(sealed, 'base64url')), decipher.final()]).toString('utf8');
+  } catch { return null; } // sealed under another secret
 }
 
 // Spent on unknown usernames so a miss takes as long as a wrong password.
@@ -125,6 +149,7 @@ export function createAccounts({ store, secret, relay = {} }) {
   if (!secret) throw new Error('createAccounts: a secret is required');
   const doc = sharedDoc(store, ACCOUNTS_DOC, (v) => ({ accounts: v && typeof v.accounts === 'object' && v.accounts ? v.accounts : {} }));
   const failures = new Map(); // key -> {count, since}
+  const passwordKey = crypto.createHmac('sha256', secret).update('ai4a11y-issued-password:v1').digest();
 
   function deriveDefaultToken(uid, generation) {
     const mac = crypto.createHmac('sha256', secret).update(`ai4a11y-default-token:v1:${uid}:${generation}`).digest();
@@ -141,9 +166,11 @@ export function createAccounts({ store, secret, relay = {} }) {
     return (await doc.read()).accounts[uid] || null;
   }
 
-  async function list() {
+  /** Every account. `admin` adds where the password came from (never it). */
+  async function list({ admin = false } = {}) {
     const { accounts } = await doc.read();
-    return Object.values(accounts).map(publicAccount).sort((a, b) => a.uid.localeCompare(b.uid, 'en', { numeric: true }));
+    const view = admin ? (a) => ({ ...publicAccount(a), passwordSetBy: a.passwordSetBy || 'admin', passwordKept: !!a.issuedPassword }) : publicAccount;
+    return Object.values(accounts).map(view).sort((a, b) => a.uid.localeCompare(b.uid, 'en', { numeric: true }));
   }
 
   async function create({ uid: rawUid, displayName, password }) {
@@ -154,11 +181,46 @@ export function createAccounts({ store, secret, relay = {} }) {
     const now = Date.now();
     const created = await doc.mutate(({ accounts }) => {
       if (accounts[uid]) return { save: false, result: null };
-      accounts[uid] = { uid, displayName: cleanDisplayName(displayName, uid), passwordHash, createdAt: now, updatedAt: now, lastLoginAt: null, disabled: false, defaultTokenGeneration: 0 };
+      accounts[uid] = { uid, displayName: cleanDisplayName(displayName, uid), passwordHash, issuedPassword: sealPassword(passwordKey, plain), passwordSetBy: 'admin', createdAt: now, updatedAt: now, lastLoginAt: null, disabled: false, defaultTokenGeneration: 0 };
       return { save: true, result: accounts[uid] };
     });
     if (!created) throw new AccountError(409, 'account-exists', `An account named ${uid} already exists.`);
     return { account: publicAccount(created), ...(generated ? { password: plain } : {}) };
+  }
+
+  /**
+   * Make several accounts with generated passwords in ONE write: a bucket
+   * allows about one write per second to a document, so a write per row
+   * fails partway through a workshop's list. A bad or taken username fails
+   * only its own row. Returns [{uid, ok, account?, password? | error, message}].
+   */
+  async function createMany(rows) {
+    const prepared = [];
+    for (const row of rows) {
+      try {
+        const uid = requireUsername(row?.uid);
+        const plain = generatePassword();
+        prepared.push({ uid, displayName: cleanDisplayName(row?.displayName, uid), plain, passwordHash: await hashPassword(plain) });
+      } catch (e) {
+        if (!(e instanceof AccountError)) throw e;
+        prepared.push({ uid: normalizeUsername(row?.uid), error: e });
+      }
+    }
+    const now = Date.now();
+    const made = await doc.mutate(({ accounts }) => {
+      const created = new Map(); // prepared row -> stored account
+      for (const p of prepared) {
+        if (p.error || accounts[p.uid]) continue;
+        accounts[p.uid] = { uid: p.uid, displayName: p.displayName, passwordHash: p.passwordHash, issuedPassword: sealPassword(passwordKey, p.plain), passwordSetBy: 'admin', createdAt: now, updatedAt: now, lastLoginAt: null, disabled: false, defaultTokenGeneration: 0 };
+        created.set(p, accounts[p.uid]);
+      }
+      return { save: created.size > 0, result: created };
+    });
+    return prepared.map((p) => {
+      if (p.error) return { uid: p.uid, ok: false, error: p.error.code, message: p.error.message };
+      if (!made.has(p)) return { uid: p.uid, ok: false, error: 'account-exists', message: `An account named ${p.uid} already exists.` };
+      return { uid: p.uid, ok: true, account: publicAccount(made.get(p)), password: p.plain };
+    });
   }
 
   async function update(uid, change) {
@@ -244,7 +306,7 @@ export function createAccounts({ store, secret, relay = {} }) {
     if (!account) throw new AccountError(404, 'not-found', 'No such account.');
     if (!(await checkPassword(current ?? '', account.passwordHash))) throw new AccountError(403, 'invalid-credentials', 'The current password is not right.');
     const passwordHash = await hashPassword(requirePassword(next));
-    await update(uid, (a) => { a.passwordHash = passwordHash; });
+    await update(uid, (a) => { a.passwordHash = passwordHash; delete a.issuedPassword; a.passwordSetBy = 'account'; });
     // Other browsers signed in with the old password are signed out.
     await revoke((rec) => rec.uid === uid && rec.kind === 'session' && rec.id !== keepSessionId);
   }
@@ -254,7 +316,7 @@ export function createAccounts({ store, secret, relay = {} }) {
     const generated = password == null || password === '';
     const plain = generated ? generatePassword() : requirePassword(password);
     const passwordHash = await hashPassword(plain);
-    await update(uid, (a) => { a.passwordHash = passwordHash; });
+    await update(uid, (a) => { a.passwordHash = passwordHash; a.issuedPassword = sealPassword(passwordKey, plain); a.passwordSetBy = 'admin'; });
     await revoke((rec) => rec.uid === uid && rec.kind === 'session');
     return generated ? { password: plain } : {};
   }
@@ -267,6 +329,32 @@ export function createAccounts({ store, secret, relay = {} }) {
       relay.dropUser?.(uid);
     }
     return publicAccount(updated);
+  }
+
+  /**
+   * Admin: the password an admin issued, for a host to look up again.
+   * `{password}`, or `{password: null, reason}`: 'changed-by-account' (the
+   * developer set their own), 'not-kept' (issued before copies were kept), or
+   * 'unreadable' (kept under a different secret). Reset to issue a new one.
+   */
+  function issuedPasswordOf(a) {
+    if (a.passwordSetBy === 'account') return { password: null, reason: 'changed-by-account' };
+    if (!a.issuedPassword) return { password: null, reason: 'not-kept' };
+    const password = openPassword(passwordKey, a.issuedPassword);
+    return password == null ? { password: null, reason: 'unreadable' } : { password };
+  }
+
+  async function issuedPassword(uid) {
+    const account = await get(uid);
+    if (!account) throw new AccountError(404, 'not-found', `No account named ${uid}.`);
+    return issuedPasswordOf(account);
+  }
+
+  async function issuedPasswords() {
+    const { accounts } = await doc.read();
+    return Object.values(accounts)
+      .sort((a, b) => a.uid.localeCompare(b.uid, 'en', { numeric: true }))
+      .map(a => ({ uid: a.uid, displayName: a.displayName, ...issuedPasswordOf(a) }));
   }
 
   async function setDisplayName(uid, displayName) {
@@ -282,7 +370,7 @@ export function createAccounts({ store, secret, relay = {} }) {
   }
 
   return {
-    get, list, create, login, logout, overview, changePassword, resetPassword,
-    setDisabled, setDisplayName, remove, rotateDefaultToken, revoke,
+    get, list, create, createMany, login, logout, overview, changePassword, resetPassword,
+    setDisabled, setDisplayName, issuedPassword, issuedPasswords, remove, rotateDefaultToken, revoke,
   };
 }

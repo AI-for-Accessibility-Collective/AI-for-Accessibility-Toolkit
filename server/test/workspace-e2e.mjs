@@ -1,0 +1,201 @@
+// Real browser + real toolkit service, the Adapters page: write an adapter
+// with live lint, save it (revision 1, running in the browser runtime,
+// private), share it, have a second developer install it at a pinned
+// revision, edit it, and update the second developer to the new revision;
+// runtime reports and the runtime badge show up, and the Apps page counts
+// what each app shares and installs. No extension: the runtime's reports and
+// its bridge message are sent the way the extension sends them.
+//
+//   npm run test:workspace:e2e
+
+import assert from 'node:assert/strict';
+import http from 'node:http';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { chromium } from 'playwright';
+import { createApp } from '../src/app.js';
+import { fileStore } from '../src/store.js';
+import { createToolkitHost } from '../src/toolkit-host.js';
+import { createRegistryClient } from '../../toolkit/adapter-mcp/index.js';
+
+const ADMIN = 'test-admin';
+const dir = await mkdtemp(path.join(tmpdir(), 'workspace-e2e-'));
+const store = fileStore(dir);
+const host = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
+const app = createApp({ store, adminPassword: ADMIN, toolkitHost: host });
+const server = http.createServer(app);
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const base = `http://127.0.0.1:${server.address().port}`;
+
+async function account(uid) {
+  const made = await (await fetch(`${base}/admin/accounts`, { method: 'POST', headers: { authorization: `Bearer ${ADMIN}`, 'content-type': 'application/json' }, body: JSON.stringify({ uid }) })).json();
+  const login = await (await fetch(`${base}/v1/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: uid, password: made.password }) })).json();
+  return { uid, password: made.password, token: login.defaultToken };
+}
+async function signIn(page, who) {
+  await page.goto(`${base}/developer#/adapters`);
+  await page.fill('#signin-username', who.uid);
+  await page.fill('#signin-password', who.password);
+  await page.click('#signin');
+  await page.waitForFunction(() => document.getElementById('connection-state').textContent.includes('Signed in'));
+}
+const statusStartsWith = (page, text) => page.waitForFunction(t => document.getElementById('status').textContent.startsWith(t), text);
+
+let browser;
+try {
+  const ada = await account('ada');
+  const bo = await account('bo');
+  browser = await chromium.launch();
+  const errors = [];
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  page.on('pageerror', e => errors.push(e.message));
+
+  await page.goto(`${base}/developer#/adapters`);
+  assert.match(await page.locator('#environment').innerText(), /ADAPTERS/);
+  assert.match(await page.locator('#ws-groups').innerText(), /Sign in in the sidebar/);
+  assert.equal(await page.locator('#ws-new').isDisabled(), true);
+  await signIn(page, ada);
+  await page.waitForFunction(() => /You have no adapters yet/.test(document.getElementById('ws-groups').textContent));
+  assert.equal(await page.locator('#ws-runtime-state').innerText(), 'Not found in this browser');
+  assert.equal(await page.locator('#ws-runtime-setup').getAttribute('open'), '', 'setup steps are open while no runtime is found');
+
+  // ── write one: the id follows the name, lint speaks up, problems block saving ──
+  await page.click('#ws-new');
+  assert.equal(await page.locator('#ws-name').evaluate(el => el === document.activeElement), true, 'the editor opens with focus on the name');
+  await page.fill('#ws-name', 'Bigger Buttons!');
+  assert.equal(await page.inputValue('#ws-id'), 'bigger-buttons');
+  assert.match(await page.inputValue('#ws-code'), /export const MyAdapter/, 'a new adapter starts from the template');
+  const code = await page.inputValue('#ws-code');
+  await page.fill('#ws-code', code.replace("el.style.minHeight = '44px';", "el.style.minHeight = '44px'; fetch('/track');"));
+  await page.locator('#ws-lint li.error').first().waitFor();
+  assert.match(await page.locator('#ws-lint').innerText(), /Error, line \d+: sends or fetches data over the network/);
+  await page.click('#ws-save');
+  await statusStartsWith(page, 'Fix this before saving — Line');
+  await page.fill('#ws-code', code);
+  await page.waitForFunction(() => !document.querySelector('#ws-lint li'));
+  await page.click('#ws-save');
+  await statusStartsWith(page, 'Fix this before saving — Runs on: add at least one address pattern');
+  assert.equal(await page.locator('#ws-urls').evaluate(el => el === document.activeElement), true, 'focus goes to the field to fix');
+  await page.fill('#ws-urls', 'https://example.com/shop/*\nhttp://localhost/*');
+  await page.fill('#ws-description', 'Makes buttons at least 44px tall.');
+  await page.locator('#ws-editor').getByLabel('Motor').check();
+  await page.screenshot({ path: path.join(tmpdir(), 'toolkit-adapters-editor.png'), fullPage: true });
+  await page.click('#ws-save');
+  await statusStartsWith(page, 'Saved Bigger Buttons!, revision 1. Your browser runtime runs it');
+  assert.equal(await page.locator('#ws-editor').isHidden(), true);
+
+  const card = page.locator('.adapter-card[data-adapter="ada/console/bigger-buttons"]');
+  assert.equal(await card.getByRole('heading', { name: 'Bigger Buttons!', exact: true }).count(), 1);
+  assert.deepEqual(await card.locator('.adapter-title .badge').allInnerTexts(), ['Private', 'In your browser']);
+  assert.match(await card.innerText(), /console\/bigger-buttons · revision 1/);
+  assert.deepEqual(await card.locator('.pill.url').allInnerTexts(), ['https://example.com/shop/*', 'http://localhost/*']);
+  const adaRegistry = createRegistryClient({ url: base, token: ada.token });
+  const runtimeView = await adaRegistry.installed('browser-runtime');
+  assert.deepEqual(runtimeView.adapters.map(a => [a.adapter.id, a.follows]), [['bigger-buttons', true]], 'saving installs it into the browser runtime, following edits');
+
+  // ── the runtime's reports and its bridge message show up ──
+  await adaRegistry.report('browser-runtime', 'chrome-test', [
+    { adapter: { appId: 'console', id: 'bigger-buttons' }, revision: 1, origin: 'http://localhost:8000', status: 'applied' },
+    { adapter: { appId: 'console', id: 'bigger-buttons' }, revision: 1, origin: 'https://example.com', status: 'failed', message: 'TypeError: el is null' },
+  ], 'Chrome 147 on macOS');
+  await card.locator('.runtime-results li').nth(1).waitFor();
+  const lines = await card.locator('.runtime-results li').allInnerTexts();
+  assert.ok(lines.some(l => /Running on http:\/\/localhost:8000 · revision 1 · Chrome 147 on macOS · just now/.test(l)), lines.join('\n'));
+  assert.ok(lines.some(l => /Failed on https:\/\/example\.com .*TypeError: el is null/.test(l)), lines.join('\n'));
+  assert.match(await page.locator('#ws-runtime-instances').innerText(), /Chrome 147 on macOS · last report just now/);
+  await page.evaluate(() => window.postMessage({ source: 'ai4a11y-runtime', type: 'present', connected: true, uid: 'ada', userScripts: false }, location.origin));
+  await page.waitForFunction(() => document.getElementById('ws-runtime-state').textContent === 'Allow User Scripts is off');
+  await page.evaluate(() => window.postMessage({ source: 'ai4a11y-runtime', type: 'present', connected: true, uid: 'ada', userScripts: true }, location.origin));
+  await page.waitForFunction(() => document.getElementById('ws-runtime-state').textContent === 'Connected in this browser');
+  assert.equal(await page.locator('#ws-runtime-setup').getAttribute('open'), null);
+
+  // ── share it; the second developer finds it and runs it, pinned ──
+  await card.getByRole('button', { name: 'Share Bigger Buttons!' }).click();
+  await statusStartsWith(page, 'Bigger Buttons! is shared');
+  assert.deepEqual(await card.locator('.adapter-title .badge').allInnerTexts(), ['Shared', 'In your browser']);
+
+  const boPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  boPage.on('pageerror', e => errors.push(e.message));
+  await signIn(boPage, bo);
+  await boPage.click('[data-ws-tab="shared"]');
+  const boCard = boPage.locator('.adapter-card[data-adapter="ada/console/bigger-buttons"]');
+  await boCard.waitFor();
+  assert.match(await boCard.innerText(), /Developer console · by ada · revision 1/);
+  await boCard.getByRole('button', { name: 'Run Bigger Buttons! in my browser' }).click();
+  await statusStartsWith(boPage, 'Bigger Buttons! runs in your browser runtime');
+  assert.deepEqual(await boCard.locator('.adapter-title .badge').allInnerTexts(), ['In your browser · revision 1']);
+  assert.equal(await boCard.getByRole('button', { name: /^View code of/ }).count(), 1);
+  await boCard.getByRole('button', { name: 'View code of Bigger Buttons!' }).click();
+  assert.match(await boCard.locator('.adapter-code pre').innerText(), /export const MyAdapter/);
+
+  // ── the owner edits it: revision 2; the second developer is offered the update ──
+  await card.getByRole('button', { name: 'Edit Bigger Buttons!' }).click();
+  await page.locator('#ws-editor').waitFor();
+  assert.equal(await page.locator('#ws-editor-heading').innerText(), 'Edit Bigger Buttons!');
+  assert.equal(await page.locator('#ws-id').evaluate(el => el.readOnly), true, 'the id cannot change');
+  assert.equal(await page.locator('#ws-share').isChecked(), true);
+  await page.fill('#ws-code', (await page.inputValue('#ws-code')).replaceAll('44px', '48px'));
+  await page.click('#ws-save');
+  await statusStartsWith(page, 'Saved Bigger Buttons!, revision 2.');
+  await card.getByRole('button', { name: 'Edit Bigger Buttons!' }).click();
+  await page.click('#ws-save');
+  await statusStartsWith(page, 'Nothing changed in Bigger Buttons! since revision 2.');
+
+  await boPage.click('[data-ws-tab="mine"]');
+  await boPage.click('[data-ws-tab="shared"]');
+  const update = boCard.getByRole('button', { name: 'Update Bigger Buttons! to revision 2' });
+  await update.waitFor();
+  await update.click();
+  await statusStartsWith(boPage, 'Bigger Buttons! updated to revision 2');
+  assert.deepEqual(await boCard.locator('.adapter-title .badge').allInnerTexts(), ['In your browser · revision 2']);
+  const boView = await createRegistryClient({ url: base, token: bo.token }).installed('browser-runtime');
+  assert.deepEqual(boView.adapters.map(a => [a.revision, a.follows]), [[2, false]], 'still pinned, now to revision 2');
+
+  // ── the Apps page counts what each app shares and installs ──
+  await adaRegistry.publish({
+    appName: 'Redbird demo',
+    descriptor: { ...(await adaRegistry.get({ appId: 'console', id: 'bigger-buttons' })).descriptor, appId: 'redbird', id: 'swatches', name: 'Swatch names', descriptorDigest: undefined, executionArtifactDigest: undefined },
+    code: 'export default { enable() {}, disable() {} };',
+  });
+  const { createAdapterProvider, connectToToolkit, fromToggleAdapter, defineDescriptor } = await import('../../toolkit/adapter-mcp/index.js');
+  const toggle = { enabled: false, enable() { this.enabled = true; }, disable() { this.enabled = false; } };
+  const link = connectToToolkit({
+    url: base, token: ada.token, providerId: 'tab-1', label: 'Store tab',
+    provider: createAdapterProvider({
+      application: { appId: 'redbird', name: 'Redbird demo', version: '1.0.0', supportedPlatforms: [{ environment: 'node' }], platform: { environment: 'node' }, surfaces: ['web'] },
+      adapters: [fromToggleAdapter({ adapter: toggle, descriptor: defineDescriptor({ appId: 'redbird', id: 'swatches', name: 'Swatch names', version: '1.0.0', targets: [{ platforms: ['*'], urls: ['http://localhost/*'] }] }) })],
+    }),
+  });
+  await link.ready;
+  await page.click('.nav-link[data-page="apps"]');
+  const redbird = page.locator('.app-group', { has: page.getByRole('heading', { name: 'Redbird demo', exact: true }) });
+  await redbird.waitFor();
+  await page.waitForFunction(() => /Registry: 1 published \(0 shared\)/.test(document.querySelector('.app-registry')?.textContent || ''));
+  assert.match(await page.locator('#snippet-mcp').innerText(), /\/v1\/mcp --header/);
+  assert.match(await page.locator('#snippet-web').innerText(), /registry\.publish/);
+  await link.close();
+
+  // ── delete, and the mobile layout ──
+  await page.click('.nav-link[data-page="adapters"]');
+  await card.getByRole('button', { name: 'Delete Bigger Buttons!' }).click();
+  await statusStartsWith(page, 'Deleted Bigger Buttons! and all its revisions.');
+  assert.equal(await card.count(), 0);
+  await boPage.reload();
+  await boPage.waitForFunction(() => document.getElementById('connection-state').textContent.includes('Signed in'));
+  await boPage.click('[data-ws-tab="shared"]');
+  await boPage.waitForFunction(() => /Nobody has shared|No shared adapters/.test(document.getElementById('ws-groups').textContent));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.click('#ws-new');
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'the Adapters page fits a phone');
+  await page.screenshot({ path: path.join(tmpdir(), 'toolkit-adapters-mobile.png'), fullPage: true });
+  assert.deepEqual(errors, [], 'browser must not raise JS errors');
+  console.log('Adapters workspace browser workflow passed: template and id, lint, blocking errors with focus, save and run, runtime reports and badge, share, a second developer installing pinned, edit to revision 2, unchanged save, update offered and applied, Apps page registry counts, delete, phone layout.');
+} finally {
+  await browser?.close();
+  app.registry.closeAll();
+  app.relay.closeAll();
+  server.closeAllConnections?.();
+  await new Promise(resolve => server.close(resolve));
+  await rm(dir, { recursive: true, force: true });
+}

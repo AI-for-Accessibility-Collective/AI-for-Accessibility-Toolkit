@@ -151,13 +151,16 @@ your apps. The console's pages:
 
 - **Profiles:** edit test profiles, save presets to your account, or load one
   of nine W3C WAI-inspired profiles. Loading one updates the toolkit at once.
-- **Apps:** apps built with the [Adapter MCP SDK](toolkit/adapter-mcp/README.md)
-  appear here, grouped by app, as soon as they connect with your token. The
-  Redbird demo store opens from here already connected. Try an app's adapters,
-  or hide an app you are not working on. Coding agents can call the same
-  adapters over MCP.
-- **Marketplace:** the adapters apps have listed on this instance. See
-  [docs/ADAPTER-MARKETPLACE.md](docs/ADAPTER-MARKETPLACE.md).
+- **Adapters:** write an adapter for any website, run it in your browser with
+  the [adapter runtime extension](extension/README.md), and share it; run
+  adapters others shared. Apps built with the
+  [Adapter MCP SDK](toolkit/adapter-mcp/README.md) share theirs through the
+  same registry, and coding agents can use it over MCP.
+- **Apps:** apps built with the SDK, grouped by app: what each shares and
+  installs, and, while one is open, live control of its adapters. The Redbird
+  demo store opens from here already connected.
+- **Listings:** the adapter descriptions apps have listed on this instance.
+  See [docs/ADAPTER-MARKETPLACE.md](docs/ADAPTER-MARKETPLACE.md).
 - **Account & tokens:** your default token, extra app tokens, and your password.
 
 Adapter MCP is a pre-alpha draft and the adapters are not validated with the

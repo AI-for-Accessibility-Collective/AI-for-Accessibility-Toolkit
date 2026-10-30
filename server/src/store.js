@@ -215,12 +215,30 @@ export function fileStore(dir) {
 const METADATA_TOKEN_URL =
   'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
 
+// GCS allows about one write per second to the same object and answers a
+// faster one with 429 (and a busy backend with 503). Neither applied the
+// write, so it is retried with exponential backoff, as Google advises.
+const WRITE_RETRY_STATUSES = new Set([429, 503]);
+const WRITE_TRIES = 6;
+
 /** A store backed by GCS objects in `bucket`, one per document key, via the
  *  JSON REST v1 API. Auth is the standard Cloud Run/GCE pattern: fetch a
  *  short-lived access token from the metadata server and cache it until
- *  shortly before it expires. */
-export function gcsStore(bucket) {
+ *  shortly before it expires. `retryBaseMs` is the first backoff wait. */
+export function gcsStore(bucket, { retryBaseMs = 500 } = {}) {
   let cachedToken = null; // { token, expiresAt }
+
+  async function upload(url, value) {
+    for (let attempt = 1; ; attempt++) {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${await accessToken()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(value),
+      });
+      if (!WRITE_RETRY_STATUSES.has(resp.status) || attempt >= WRITE_TRIES) return resp;
+      await new Promise((resolve) => setTimeout(resolve, retryBaseMs * 2 ** (attempt - 1) * (1 + Math.random() / 4)));
+    }
+  }
 
   async function accessToken() {
     const now = Date.now();
@@ -267,13 +285,8 @@ export function gcsStore(bucket) {
     },
     async writeJSON(key, value) {
       assertSafeKey(key);
-      const token = await accessToken();
       const url = `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(bucket)}/o?uploadType=media&name=${encodeURIComponent(key)}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      });
+      const resp = await upload(url, value);
       if (!resp.ok) throw new Error(`gcsStore: write ${key} failed (${resp.status}): ${await resp.text()}`);
     },
     // The version is the object generation, which GCS changes on every write.
@@ -306,13 +319,8 @@ export function gcsStore(bucket) {
     // generation moved since readDoc; '0' means "only if it does not exist".
     async writeJSONIf(key, value, version) {
       assertSafeKey(key);
-      const token = await accessToken();
       const url = `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(bucket)}/o?uploadType=media&name=${encodeURIComponent(key)}&ifGenerationMatch=${encodeURIComponent(String(version))}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      });
+      const resp = await upload(url, value);
       if (resp.status === 412) throw new StoreConflict(key);
       if (!resp.ok) throw new Error(`gcsStore: conditional write ${key} failed (${resp.status}): ${await resp.text()}`);
     },

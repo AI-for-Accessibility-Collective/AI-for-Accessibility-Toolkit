@@ -12,6 +12,7 @@ import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 import { issueToken, verifyToken } from '../src/auth.js';
+import { createAccounts } from '../src/accounts.js';
 
 const ADMIN = 'test-admin-password';
 const dir = await mkdtemp(path.join(tmpdir(), 'accounts-test-'));
@@ -39,6 +40,7 @@ const login = (username, password) => call('POST', '/v1/auth/login', { body: { u
 
 try {
   let ada; // {password, session, defaultToken}
+  let team1Password;
 
   await test('admin makes an account with a generated password (shown once)', async () => {
     const r = await call('POST', '/admin/accounts', { admin: true, body: { uid: 'Ada', displayName: 'Ada L.' } });
@@ -127,6 +129,18 @@ try {
     assert.equal((await call('GET', '/v1/whoami', { token: ada.defaultToken })).status, 200, 'apps keep working');
   });
 
+  await test('a session renames its own account; app tokens and empty names cannot', async () => {
+    const r = await call('PUT', '/v1/account', { token: ada.session, body: { displayName: '  Team Lovelace  ' } });
+    assert.equal(r.status, 200);
+    assert.equal(r.body.account.displayName, 'Team Lovelace');
+    assert.equal(r.body.account.uid, 'ada');
+    assert.equal((await call('GET', '/v1/account', { token: ada.session })).body.account.displayName, 'Team Lovelace');
+    assert.equal((await call('PUT', '/v1/account', { token: ada.session, body: { displayName: '   ' } })).status, 400);
+    assert.equal((await call('PUT', '/v1/account', { token: ada.defaultToken, body: { displayName: 'Hijack' } })).status, 403);
+    assert.equal((await call('PUT', '/v1/account', { body: { displayName: 'Anon' } })).status, 401);
+    assert.equal((await login('ada', ada.password)).status, 200, 'the username still signs in');
+  });
+
   await test('logout ends the session', async () => {
     const s = (await login('ada', ada.password)).body.token;
     assert.equal((await call('POST', '/v1/auth/logout', { token: s, body: {} })).status, 200);
@@ -151,10 +165,69 @@ try {
 
   await test('admin rename and bulk create with per-row results', async () => {
     assert.equal((await call('PUT', '/admin/accounts/ada', { admin: true, body: { displayName: 'Ada Lovelace' } })).body.account.displayName, 'Ada Lovelace');
-    const r = await call('POST', '/admin/accounts/bulk', { admin: true, body: { accounts: [{ uid: 'team-1', displayName: 'Team 1' }, { uid: 'team-2' }, { uid: 'ada' }, { uid: 'bad uid' }] } });
-    assert.deepEqual(r.body.results.map(x => x.ok), [true, true, false, false]);
+    const r = await call('POST', '/admin/accounts/bulk', { admin: true, body: { accounts: [{ uid: 'team-1', displayName: 'Team 1' }, { uid: 'team-2' }, { uid: 'ada' }, { uid: 'bad uid' }, { uid: 'TEAM-1' }] } });
+    assert.deepEqual(r.body.results.map(x => x.ok), [true, true, false, false, false], 'taken, invalid, and repeated-in-the-list usernames fail their own row');
+    assert.deepEqual(r.body.results.map(x => x.error), [undefined, undefined, 'account-exists', 'invalid-username', 'account-exists']);
+    assert.equal(r.body.results[0].displayName, 'Team 1');
+    assert.equal(r.body.results[1].displayName, 'team-2');
     assert.ok(r.body.results[0].password);
     assert.equal((await login('team-1', r.body.results[0].password)).status, 200);
+    team1Password = r.body.results[0].password;
+  });
+
+  await test('admin shows issued passwords, kept encrypted, until the account changes its own', async () => {
+    const one = await fetch(`${base}/admin/accounts/team-1/password`, { headers: { authorization: `Bearer ${ADMIN}` } });
+    assert.equal(one.status, 200);
+    assert.equal(one.headers.get('cache-control'), 'no-store');
+    assert.equal((await one.json()).password, team1Password);
+    const raw = JSON.stringify(await store.readJSON('admin/accounts.json'));
+    assert.ok(!raw.includes(team1Password), 'never stored in the clear');
+
+    const all = (await call('GET', '/admin/accounts?passwords=1', { admin: true })).body.passwords;
+    assert.equal(all.find(p => p.uid === 'team-1').password, team1Password);
+    assert.ok(all.find(p => p.uid === 'team-2').password);
+    assert.equal(all.find(p => p.uid === 'ada').password, ada.password, 'an admin reset after the account changed its own is shown again');
+    assert.ok(!JSON.stringify((await call('GET', '/admin/accounts', { admin: true })).body).includes(team1Password), 'the plain list never carries passwords');
+
+    // Only the admin: not a session, not an app token, not anonymous.
+    const session = (await login('team-1', team1Password)).body;
+    assert.equal((await call('GET', '/admin/accounts/team-1/password', { token: session.token })).status, 401);
+    assert.equal((await call('GET', '/admin/accounts/team-1/password', { token: session.defaultToken })).status, 401);
+    assert.equal((await call('GET', '/admin/accounts?passwords=1')).status, 401);
+    assert.equal((await call('GET', '/v1/account', { token: session.token })).body.account.issuedPassword, undefined);
+
+    // A typed admin reset is kept too; the team's own change drops it.
+    await call('POST', '/admin/accounts/team-1/password', { admin: true, body: { password: 'workshop-pass-1' } });
+    assert.equal((await call('GET', '/admin/accounts/team-1/password', { admin: true })).body.password, 'workshop-pass-1');
+    const again = (await login('team-1', 'workshop-pass-1')).body.token;
+    assert.equal((await call('POST', '/v1/account/password', { token: again, body: { current: 'workshop-pass-1', next: 'my-own-secret-9' } })).status, 200);
+    const after = (await call('GET', '/admin/accounts/team-1/password', { admin: true })).body;
+    assert.deepEqual(after, { uid: 'team-1', password: null, reason: 'changed-by-account' });
+    assert.equal((await call('GET', '/admin/accounts', { admin: true })).body.accounts.find(a => a.uid === 'team-1').passwordSetBy, 'account');
+    assert.equal((await store.readJSON('admin/accounts.json')).accounts['team-1'].issuedPassword, undefined, 'the copy is deleted');
+    team1Password = 'my-own-secret-9';
+
+    // Kept under another secret: unreadable, not wrong.
+    const other = createAccounts({ store, secret: 'a-different-secret' });
+    assert.deepEqual(await other.issuedPassword('team-2'), { password: null, reason: 'unreadable' });
+    assert.equal((await call('GET', '/admin/accounts/nobody/password', { admin: true })).status, 404);
+  });
+
+  await test('admin downloads the accounts as CSV, passwords included, formulas defused', async () => {
+    await call('PUT', '/admin/accounts/team-2', { admin: true, body: { displayName: '=HYPERLINK("http://x", "Team, two")' } });
+    const res = await fetch(`${base}/admin/accounts?format=csv`, { headers: { authorization: `Bearer ${ADMIN}` } });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get('content-type'), /^text\/csv/);
+    assert.match(res.headers.get('content-disposition'), /^attachment; filename="accounts-\d{4}-\d{2}-\d{2}\.csv"$/);
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+    const lines = (await res.text()).trimEnd().split('\r\n');
+    assert.equal(lines[0], 'username,name,password,password_note,status,last_sign_in,created,app_tokens,has_data');
+    const team2 = (await call('GET', '/admin/accounts/team-2/password', { admin: true })).body.password;
+    assert.ok(lines.some(l => l.startsWith(`team-2,"'=HYPERLINK(""http://x"", ""Team, two"")",${team2},,on,`)), 'a formula name is quoted and made plain text');
+    assert.ok(lines.some(l => l.startsWith('team-1,Team 1,,changed by the account; reset to issue a new one,on,20')), 'a password the account set is not exported');
+    assert.equal(lines.length, 1 + (await call('GET', '/admin/accounts', { admin: true })).body.accounts.length);
+    assert.equal((await call('GET', '/admin/accounts?format=csv')).status, 401);
+    assert.equal((await call('GET', '/admin/accounts?format=csv', { token: ada.defaultToken })).status, 401);
   });
 
   await test('admin delete removes the account, its data and its tokens', async () => {

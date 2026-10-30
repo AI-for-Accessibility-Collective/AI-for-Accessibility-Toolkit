@@ -104,6 +104,7 @@ function boot() {
     force.unref();
     server.close();
     listener.relay.closeAll();
+    listener.registry.closeAll();
     server.closeIdleConnections?.();
     try { await listener.activity.flush(); } catch (e) { log.error('server.stop.flush-failed', { error: e }); }
     log.info('server.stopped', { signal });

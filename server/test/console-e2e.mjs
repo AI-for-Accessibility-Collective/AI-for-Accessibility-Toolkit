@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
@@ -29,7 +29,7 @@ try {
   const errors = [];
 
   // ── admin console ──────────────────────────────────────────────────────
-  const adminContext = await browser.newContext({ httpCredentials: { username: 'admin', password: ADMIN }, viewport: { width: 1280, height: 900 } });
+  const adminContext = await browser.newContext({ acceptDownloads: true, httpCredentials: { username: 'admin', password: ADMIN }, viewport: { width: 1280, height: 900 } });
   const admin = await adminContext.newPage();
   admin.setDefaultTimeout(10000);
   admin.on('pageerror', e => errors.push(`admin: ${e.message}`));
@@ -50,6 +50,26 @@ try {
   assert.match(await admin.locator('#status').innerText(), /Skipped 1: team-1/, 'an existing username is reported, not overwritten');
   assert.equal(await admin.locator('#accounts-table tbody tr').count(), 10);
   await admin.screenshot({ path: path.join(tmpdir(), 'toolkit-admin-accounts.png'), fullPage: true });
+
+  // The issued passwords can be shown again, one at a time or all together.
+  await admin.getByRole('button', { name: 'Show password for team-1', exact: true }).click();
+  const team1Row = admin.locator('#accounts-table tbody tr').filter({ hasText: 'team-1' }).first();
+  await team1Row.locator('.password-reveal code').waitFor();
+  assert.equal((await team1Row.locator('.password-reveal code').innerText()).trim(), password);
+  const hide = admin.getByRole('button', { name: 'Hide password for team-1', exact: true });
+  assert.equal(await hide.getAttribute('aria-expanded'), 'true');
+  await hide.click();
+  assert.equal(await team1Row.locator('.password-reveal code').count(), 0, 'Hide password hides it');
+  await admin.getByRole('button', { name: 'Show all passwords' }).click();
+  await admin.waitForFunction(() => document.getElementById('credentials-heading').textContent === 'Sign-in details');
+  assert.equal(await admin.locator('#credentials-body tbody tr').count(), 10);
+  assert.equal((await admin.locator('#credentials-body tbody tr').filter({ hasText: 'Team 1' }).first().locator('code').innerText()).trim(), password);
+  assert.match(await admin.locator('#status').innerText(), /Showing 10 passwords/);
+  const [download] = await Promise.all([admin.waitForEvent('download'), admin.getByRole('link', { name: 'Download CSV' }).click()]);
+  assert.match(download.suggestedFilename(), /^accounts-\d{4}-\d{2}-\d{2}\.csv$/);
+  const csv = await readFile(await download.path(), 'utf8');
+  assert.equal(csv.trimEnd().split('\r\n').length, 11, 'a header and ten accounts');
+  assert.ok(csv.includes(`team-1,Team 1,${password},`), 'the download carries the passwords (with the browser\'s admin sign-in)');
 
   await admin.getByRole('tab', { name: 'Tokens' }).click();
   await admin.locator('#tokensTable').waitFor();
@@ -85,6 +105,14 @@ try {
   await dev.getByRole('button', { name: 'Make app token' }).click();
   await dev.locator('.new-secret').waitFor();
   assert.match(await dev.locator('.new-secret').innerText(), /My XR prototype/);
+
+  // The team renames itself; the sidebar and the admin list follow, the username does not.
+  await dev.fill('#account-display-name', 'Team Kestrel');
+  await dev.getByRole('button', { name: 'Save name' }).click();
+  await dev.waitForFunction(() => document.getElementById('account-name').textContent === 'Team Kestrel');
+  assert.equal(await dev.locator('#account-uid').innerText(), '(team-1)');
+  assert.equal(await dev.getByRole('heading', { name: 'Team Kestrel' }).count(), 1);
+  assert.equal(await dev.locator('#account-display-name').inputValue(), 'Team Kestrel');
 
   // ── an app connects with the default token ─────────────────────────────
   await dev.click('.nav-link[data-page="apps"]');

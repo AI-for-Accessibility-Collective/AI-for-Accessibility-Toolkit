@@ -103,6 +103,14 @@ try {
   await page.click('[data-load="wai-3"]');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile 3 loaded'));
   assert.ok((await librarian.getAbilityModel()).needs.some(n => n.dimension === 'describeImages'));
+  // The loaded preset is highlighted as selected and active; nothing else is.
+  const selectedCard = page.locator('.profile-card[aria-current="true"]');
+  assert.equal(await selectedCard.count(), 1);
+  assert.equal(await selectedCard.locator('[data-load="wai-3"]').count(), 1);
+  assert.deepEqual(await selectedCard.locator('.marker').allInnerTexts(), ['Selected', 'Active in toolkit']);
+  // The edits made above stay as the temporary profile, no longer selected or active.
+  assert.equal(await page.locator('.temp-card').count(), 1, 'loading a preset keeps the temporary profile');
+  assert.equal(await page.locator('.temp-card .marker').count(), 0);
   await page.click('[data-load="wai-6"]');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile 6 loaded'));
   assert.equal((await librarian.getProfile()).fields.visionKind, undefined);
@@ -110,6 +118,16 @@ try {
   const areas = page.getByRole('combobox', { name: 'supportAreas', exact: true });
   await areas.fill('motor');
   await areas.press('Enter');
+  // The first edit moves the work into the temporary profile; Profile 6 itself is unchanged.
+  const tempCard = page.locator('.temp-card');
+  assert.equal(await tempCard.count(), 1);
+  assert.match(await tempCard.innerText(), /Temporary profile \(based on Profile 6\)/);
+  assert.equal(await tempCard.getAttribute('aria-current'), 'true');
+  assert.deepEqual(await tempCard.locator('.marker').allInnerTexts(), ['Selected']);
+  assert.deepEqual(await page.locator('.profile-card:has([data-load="wai-6"]) .marker').allInnerTexts(), ['Active in toolkit']);
+  assert.equal(await page.inputValue('#profile-name'), 'Profile 6 (modified)');
+  assert.equal(await page.locator('#draft-state').innerText(), 'Temporary · not applied');
+  assert.deepEqual((await librarian.getProfile()).supportAreas, ['hearing'], 'an edit is not applied by itself');
   await page.getByRole('button', { name: 'Remove hearing from supportAreas', exact: true }).click();
   await areas.fill('custom-area');
   await areas.press('Enter');
@@ -134,6 +152,16 @@ try {
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
   const typedProfile = await librarian.getProfile();
+  assert.deepEqual(await tempCard.locator('.marker').allInnerTexts(), ['Selected', 'Active in toolkit']);
+  assert.equal(await page.locator('#draft-state').innerText(), 'Temporary · applied');
+  const selectionNow = async () => (await (await fetch(base + '/v1/profile/selection', { headers: { authorization: `Bearer ${token}` } })).json()).selected;
+  assert.deepEqual(await selectionNow(), { id: 'wai-6', name: 'Profile 6', edited: true }, 'the toolkit knows it holds Profile 6 with changes');
+  // Reading the toolkit back restores the temporary profile from that selection.
+  await page.click('#refresh');
+  await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Read the current profile'));
+  assert.equal(await tempCard.count(), 1);
+  assert.deepEqual(await tempCard.locator('.marker').allInnerTexts(), ['Selected', 'Active in toolkit']);
+  assert.equal(await page.inputValue('#profile-name'), 'Profile 6 (modified)');
   assert.deepEqual(typedProfile.supportAreas, ['motor', 'custom-area']);
   assert.equal(typedProfile.metaPreferences.consentBoundary, 'all-tiers');
   assert.equal(typedProfile.freeText, 'Plain text needs no JSON quotes.');
@@ -151,6 +179,8 @@ try {
   await page.click('#save');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Saved Browser custom preset'));
   assert.equal((await librarian.getProfile()).fields.testFlag, undefined, 'saving does not apply a draft');
+  assert.equal(await page.locator('.temp-card').count(), 0, 'saving turns the temporary profile into the preset');
+  assert.deepEqual(await page.locator('.profile-card[aria-current="true"] .marker').allInnerTexts(), ['Selected']);
   const custom = page.locator('[data-load^="custom-"]');
   await custom.click();
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Browser custom preset loaded'));
@@ -180,6 +210,17 @@ try {
   await page.click('#save');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Saved Browser'));
   assert.equal(await page.locator('[data-load^="custom-"]').count(), 1, 'save updates an existing custom preset');
+  assert.equal(await page.inputValue('#profile-name'), 'Browser custom preset', 'a custom preset keeps its name, since saving overwrites it');
+  // Discarding a temporary profile returns the editor to its preset.
+  const freeText = page.getByRole('textbox', { name: 'freeText', exact: true });
+  const savedText = await freeText.inputValue();
+  await freeText.fill('A change to throw away.');
+  assert.equal(await page.locator('.temp-card').count(), 1);
+  await page.click('[data-discard]');
+  await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Discarded the temporary profile'));
+  assert.equal(await page.locator('.temp-card').count(), 0);
+  assert.equal(await freeText.inputValue(), savedText);
+  assert.equal(await page.locator('.profile-card[aria-current="true"] [data-load^="custom-"]').count(), 1);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: path.join(tmpdir(), 'toolkit-developer-desktop.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

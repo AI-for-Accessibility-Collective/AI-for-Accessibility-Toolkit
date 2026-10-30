@@ -3,6 +3,7 @@
 //   POST   /v1/auth/login            {username, password} -> session + default token
 //   POST   /v1/auth/logout           end this session
 //   GET    /v1/account               account, default token, app tokens
+//   PUT    /v1/account               {displayName} rename the account
 //   POST   /v1/account/default-token regenerate the default token
 //   POST   /v1/account/tokens        {label} -> a new app token (shown once)
 //   DELETE /v1/account/tokens/{id}   revoke one of the account's app tokens
@@ -78,6 +79,13 @@ export function createAccountRoutes({ store, accounts, relay, withUserLock, auth
     if (!segs.length && method === 'GET') {
       const overview = await accounts.overview(rec.uid);
       return sendJSON(res, 200, { ok: true, ...overview, session: { expiresAt: rec.expiresAt }, liveApps: relay.liveCount(rec.uid) });
+    }
+    if (!segs.length && method === 'PUT') {
+      const body = await readJSON(req);
+      const name = typeof body?.displayName === 'string' ? body.displayName.trim().slice(0, 120) : '';
+      if (!name) throw new HttpError(400, 'invalid-display-name', 'Send a displayName.');
+      const account = await accounts.setDisplayName(rec.uid, name, 'account');
+      return sendJSON(res, 200, { ok: true, account });
     }
     if (segs.length === 1 && segs[0] === 'default-token' && method === 'POST') {
       const defaultToken = await accounts.rotateDefaultToken(rec.uid);

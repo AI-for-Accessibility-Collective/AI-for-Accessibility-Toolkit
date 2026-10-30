@@ -18,8 +18,9 @@
     <nav class="sidebar" aria-label="Developer workspace">
       <div class="nav-links" role="navigation" aria-label="Pages">
         <a class="nav-link active" href="#/profiles" data-page="profiles" aria-current="page"><span aria-hidden="true">◧</span> Profiles</a>
+        <a class="nav-link" href="#/adapters" data-page="adapters"><span aria-hidden="true">⚙</span> Adapters</a>
         <a class="nav-link" href="#/apps" data-page="apps"><span aria-hidden="true">▣</span> Apps <span id="nav-live" class="nav-count" hidden></span></a>
-        <a class="nav-link" href="#/adapters" data-page="adapters"><span aria-hidden="true">⧉</span> Marketplace</a>
+        <a class="nav-link" href="#/listings" data-page="listings"><span aria-hidden="true">⧉</span> Listings</a>
         <a class="nav-link" href="#/account" data-page="account"><span aria-hidden="true">◎</span> Account &amp; tokens</a>
       </div>
       <section class="connection panel" aria-labelledby="connection-heading">
@@ -48,16 +49,16 @@
       <p id="status" role="status" aria-live="polite">Sign in to read and update your toolkit profile.</p>
     </nav>
     <main id="main">
-      <section id="page-profiles" class="page" aria-labelledby="profiles-heading">
+      <section id="page-profiles" class="page">
         <div class="page-heading"><div><p class="eyebrow">DEVELOP &amp; TEST</p><h1 id="profiles-heading">Profiles</h1><p class="muted">Explore different needs. Shape how your toolkit responds.</p></div><button id="new-profile" class="secondary" type="button">+ New profile</button></div>
         <div class="workspace">
-          <aside class="library panel" aria-labelledby="library-heading">
+          <section class="library panel" aria-labelledby="library-heading">
             <div class="section-heading"><h2 id="library-heading">Profile library</h2><span id="profile-count" class="count">9</span></div>
             <label for="profile-search" class="visually-hidden">Search profiles</label><input id="profile-search" type="search" placeholder="Search profiles…">
-            <div class="tabs" aria-label="Filter profiles"><button type="button" data-filter="all" aria-pressed="true">All profiles</button><button type="button" data-filter="custom" aria-pressed="false">Saved</button></div>
+            <div class="tabs" role="group" aria-label="Filter profiles"><button type="button" data-filter="all" aria-pressed="true">All profiles</button><button type="button" data-filter="custom" aria-pressed="false">Saved</button></div>
             <div id="profile-list"></div>
             <p class="library-note">Nine starting points adapted from <a href="https://www.w3.org/WAI/people-use-web/user-stories/" target="_blank" rel="noreferrer">W3C WAI user stories</a>. Settings are illustrative mappings for development; individual needs vary.</p>
-          </aside>
+          </section>
           <section class="editor panel" aria-labelledby="editor-heading">
             <div class="section-heading"><div><p class="eyebrow">PROFILE EDITOR</p><h2 id="editor-heading">Current profile</h2></div><span id="draft-state" class="badge">Draft</span></div>
             <p class="hint">Loading a library profile updates the connected toolkit immediately. Editor changes are drafts until you apply them.</p>
@@ -70,8 +71,8 @@
           </section>
         </div>
       </section>
-      <section id="page-apps" class="page" hidden aria-labelledby="apps-heading">
-        <div class="page-heading"><div><p class="eyebrow">CONNECT &amp; TRY</p><h1 id="apps-heading">Apps</h1><p class="muted">Apps built with the Adapter MCP SDK appear here as soon as they connect with your token, grouped by app. Try their adapters from here, or hide an app you are not working on.</p></div><button id="connect-app-toggle" class="secondary" type="button" aria-controls="connect-app" aria-expanded="false">+ Connect an app</button></div>
+      <section id="page-apps" class="page" hidden>
+        <div class="page-heading"><div><p class="eyebrow">CONNECT &amp; TRY</p><h1 id="apps-heading">Apps</h1><p class="muted">Apps built with the Adapter MCP SDK, grouped by app: what each shares through the registry and installs from it, and, while an app is open, live control of its adapters. Hide an app you are not working on.</p></div><button id="connect-app-toggle" class="secondary" type="button" aria-controls="connect-app" aria-expanded="false">+ Connect an app</button></div>
         <section id="connect-app" class="panel connect-app" hidden aria-labelledby="connect-heading">
           <div class="section-heading"><div><p class="eyebrow">CONNECT</p><h2 id="connect-heading">Connect an app</h2></div></div>
           <div class="connect-app-body">
@@ -82,13 +83,13 @@
             </div>
             <div class="connect-step">
               <h3>Your own web app</h3>
-              <p class="hint">Import the SDK from this toolkit, describe your adapters, and connect with your default token.</p>
+              <p class="hint">Import the SDK from this toolkit: share your adapters through the registry, use the ones you installed from others, and optionally connect for live control.</p>
               <pre class="snippet" id="snippet-web"></pre>
               <div class="card-actions"><button type="button" class="secondary" data-copy="snippet-web">Copy code</button></div>
             </div>
             <div class="connect-step">
               <h3>A coding agent (MCP)</h3>
-              <p class="hint">Once an app is connected, an MCP client can call its adapters through this toolkit. For Claude Code:</p>
+              <p class="hint">This toolkit is an MCP server: an agent can find, publish, share and install adapters. A connected app is one too, for live control. For Claude Code:</p>
               <pre class="snippet" id="snippet-mcp"></pre>
               <div class="card-actions"><button type="button" class="secondary" data-copy="snippet-mcp">Copy command</button></div>
             </div>
@@ -103,12 +104,52 @@
           <div id="app-groups" aria-live="polite"></div>
         </section>
       </section>
-      <section id="page-account" class="page" hidden aria-labelledby="account-heading">
+      <section id="page-account" class="page" hidden>
         <div class="page-heading"><div><p class="eyebrow">ACCOUNT</p><h1 id="account-heading">Account &amp; tokens</h1><p class="muted">Your apps and adapters talk to the toolkit with a token. Use your default token unless you want a separate one you can revoke on its own.</p></div></div>
         <div id="account-body"></div>
       </section>
-      <section id="page-adapters" class="page" hidden aria-labelledby="adapters-heading">
-        <div class="page-heading"><div><p class="eyebrow">DISCOVER &amp; PUBLISH</p><h1 id="adapters-heading">Marketplace</h1><p class="muted">Adapter listings every app has published on this toolkit, grouped by app — a marketplace of what each host offers. Hidden apps stay hidden here too. Register your own to list it.</p></div><button id="new-adapter" class="secondary" type="button">+ Register adapter</button></div>
+      <section id="page-adapters" class="page" hidden>
+        <div class="page-heading"><div><p class="eyebrow">BUILD &amp; SHARE</p><h1 id="adapters-heading">Adapters</h1><p class="muted">Write an adapter for a website and run it in your browser with the adapter runtime extension. Share it, and every app on this toolkit can find and install it.</p></div><button id="ws-new" class="secondary" type="button">+ New adapter</button></div>
+        <section id="ws-runtime" class="panel runtime-panel" aria-labelledby="ws-runtime-heading">
+          <div class="section-heading"><div><p class="eyebrow">BROWSER RUNTIME</p><h2 id="ws-runtime-heading">Run adapters in your browser</h2></div><span id="ws-runtime-state" class="badge">Not found in this browser</span></div>
+          <p id="ws-runtime-detail" class="hint">The adapter runtime extension runs the adapters you install into <strong>browser-runtime</strong> on the pages they target, and reports back here.</p>
+          <ul id="ws-runtime-instances" class="connection-list"></ul>
+          <details id="ws-runtime-setup">
+            <summary>Set up the extension</summary>
+            <ol class="setup-steps">
+              <li>In Chrome, open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong>, choose <strong>Load unpacked</strong> and pick the <code>extension</code> folder of the toolkit repository.</li>
+              <li>On the extension’s <strong>Details</strong>, turn on <strong>Allow User Scripts</strong>.</li>
+              <li>Come back to this page, open the extension and choose <strong>Connect with this console</strong>.</li>
+            </ol>
+          </details>
+        </section>
+        <section id="ws-editor" class="panel adapter-editor" hidden aria-labelledby="ws-editor-heading">
+          <div class="section-heading"><div><p class="eyebrow" id="ws-editor-eyebrow">NEW ADAPTER</p><h2 id="ws-editor-heading">Write an adapter</h2></div><span id="ws-editor-revision" class="badge" hidden></span></div>
+          <form id="ws-form" novalidate>
+            <div class="register-grid">
+              <div class="input-group"><label for="ws-name">Name</label><input id="ws-name" required maxlength="120" placeholder="Bigger buttons"></div>
+              <div class="input-group"><label for="ws-id">Adapter id</label><input id="ws-id" required maxlength="64" pattern="[a-z0-9][a-z0-9._-]*" spellcheck="false" placeholder="bigger-buttons" aria-describedby="ws-id-help"><span id="ws-id-help" class="hint">Lowercase letters, digits, dots and dashes. It cannot change after the first save.</span></div>
+              <div class="input-group register-wide"><label for="ws-description">What it changes, and for whom</label><textarea id="ws-description" rows="2" maxlength="2000" placeholder="Makes small buttons at least 44 pixels tall, for people who find small targets hard to hit."></textarea></div>
+              <div class="input-group register-wide"><label for="ws-urls">Runs on <small>(one address pattern per line)</small></label><textarea id="ws-urls" rows="2" spellcheck="false" placeholder="https://example.com/*" aria-describedby="ws-urls-help"></textarea><span id="ws-urls-help" class="hint"><code>https://example.com/*</code> is every page of that site; <code>https://*.example.com/*</code> adds its subdomains; <code>http://localhost/*</code> covers any local port.</span></div>
+              <fieldset class="register-areas"><legend>Support areas</legend><label><input type="checkbox" name="ws-area" value="vision"> Vision</label><label><input type="checkbox" name="ws-area" value="motor"> Motor</label><label><input type="checkbox" name="ws-area" value="hearing"> Hearing</label><label><input type="checkbox" name="ws-area" value="cognitive"> Cognitive</label><label><input type="checkbox" name="ws-area" value="sensory"> Sensory</label><label><input type="checkbox" name="ws-area" value="reading"> Reading</label></fieldset>
+              <div class="input-group register-wide"><label for="ws-code">Code <small>(one JavaScript file that exports the adapter: enable() and disable())</small></label><textarea id="ws-code" class="code-input" rows="18" spellcheck="false" aria-describedby="ws-lint"></textarea><ul id="ws-lint" class="lint" aria-live="polite"></ul></div>
+            </div>
+            <div class="ws-options">
+              <label class="toggle-control"><input type="checkbox" id="ws-run" checked> Run it in my browser</label>
+              <label class="toggle-control"><input type="checkbox" id="ws-share"> Share with everyone on this toolkit</label>
+            </div>
+            <div class="editor-actions"><div><button id="ws-save" class="primary" type="submit">Save</button><button id="ws-cancel" class="secondary" type="button">Cancel</button></div><span class="hint">Each save is a new revision. Your browser runtime picks it up within seconds, without reloading the page. Shared adapters are installed by others at the revision they chose.</span></div>
+          </form>
+        </section>
+        <section class="panel adapters-browser" aria-labelledby="ws-list-heading">
+          <div class="section-heading"><h2 id="ws-list-heading">Adapters</h2><span id="ws-count" class="count">0</span></div>
+          <div class="tabs" role="group" aria-label="Which adapters"><button type="button" data-ws-tab="mine" aria-pressed="true">Yours</button><button type="button" data-ws-tab="shared" aria-pressed="false">Shared with you</button></div>
+          <label for="ws-search" class="visually-hidden">Search adapters</label><input id="ws-search" type="search" placeholder="Search adapters…">
+          <div id="ws-groups" aria-live="polite"></div>
+        </section>
+      </section>
+      <section id="page-listings" class="page" hidden>
+        <div class="page-heading"><div><p class="eyebrow">DESCRIBE &amp; LIST</p><h1 id="listings-heading">Listings</h1><p class="muted">Descriptions apps have listed on this toolkit, grouped by app: what each host offers, including adapters whose code stays in the app. To share an adapter other apps can run, use Adapters.</p></div><button id="new-adapter" class="secondary" type="button">+ Register listing</button></div>
         <section id="register-panel" class="panel adapter-register" hidden aria-labelledby="register-heading">
           <div class="section-heading"><div><p class="eyebrow">NEW LISTING</p><h2 id="register-heading">Register an adapter</h2></div></div>
           <form id="register-form">
@@ -131,7 +172,7 @@
           </form>
         </section>
         <section class="panel adapters-browser" aria-labelledby="marketplace-heading">
-          <div class="section-heading"><h2 id="marketplace-heading">Marketplace</h2><span id="adapter-count" class="count">0</span></div>
+          <div class="section-heading"><h2 id="marketplace-heading">Listings</h2><span id="adapter-count" class="count">0</span></div>
           <label for="adapter-search" class="visually-hidden">Search adapters</label><input id="adapter-search" type="search" placeholder="Search adapters…">
           <div class="adapter-filters">
             <div class="input-group"><label for="adapter-app">App</label><select id="adapter-app"><option value="">All apps</option></select></div>

@@ -2,10 +2,14 @@
 
 **Status:** draft contract with a first implementation, updated 2026-10-29.
 **Profile version:** `0.1.0`. Pre-alpha and not stable: the wire shapes can
-still change, and one integration (the Redbird demo store) has used them so far.
-[§13](#13-implementation-status-010) lists what is built, where, and which open
-questions the implementation settled for now. The existing HTTP routes and
-adapter APIs keep working unchanged.
+still change, and two integrations so far have used them (the Redbird demo
+store and the browser adapter runtime). In practice this means an app built on
+it today may need changes later, and the adapters it shares have not been
+tested with the people they are meant for.
+[§13](#13-implementation-status-010) lists what is built and where;
+[§14](#14-sharing-adapters-the-registry-packages-and-the-browser-runtime)
+describes the adapter registry, the package format and the browser runtime.
+The existing HTTP routes and adapter APIs keep working unchanged.
 
 See [architecture research and recommended revisions](adapter-mcp-research.md)
 for the review of relevant systems. This revision incorporates application/URL
@@ -19,80 +23,102 @@ interoperability baseline is MCP `2025-11-25`.
 
 ## 1. Purpose and boundaries
 
-A client should be able to discover an adapter, learn exactly what input it
-accepts, query its current state when supported, check whether it can run on a
-particular target, apply it, inspect the outcome, and request undo through the
-same contract across applications.
-An adapter implementation can remain JavaScript, Swift, Kotlin, or another
-host-native implementation. A common interface does not make code portable.
+**Adapter MCP is how applications built with the toolkit, and the toolkit
+itself, discover and share adapters.** An application that wrote an
+accessibility adapter publishes it to its toolkit; another application finds
+it and installs it, so a fix written once for one app can run in another. The
+toolkit service is the MCP server that makes this possible: the **adapter
+registry** at `/v1/mcp`, with tools to publish, search, share, install, and
+report how running an adapter went (§14). An adapter that can travel carries a
+**package**, code in a format a runtime knows (`web-module@1`, one JavaScript
+file for web pages); one that cannot (XR, native code) is shared as a
+description, so others can still find it and learn what it does.
 
-**Ownership boundary:** the toolkit defines the adapter contract and its MCP
-binding. It does not create, operate, or manage the application's execution
-runtime. Applications integrate the contract with their existing code and
-lifecycle facilities. A shared runtime framework is not a prerequisite.
+To run shared web adapters anywhere on the web, the toolkit ships a reference
+runtime: the **browser adapter runtime** extension (`extension/`). A developer
+writes an adapter in the developer console, and the extension runs it on the
+sites it targets, picks up each saved revision in open pages, and reports back
+to the console. Other applications run what they install with their own code;
+the SDK's `loadInstalledAdapters` helps a web app do that.
+
+The same descriptions also let a client control an application's adapters
+**live** while the application is open: discover them, learn exactly what input
+they accept, query their state, check whether they can run on a particular
+target, apply them, inspect the outcome, and request undo, through the same
+contract across applications (§5–§8). This is optional. An application that
+only shares adapters never needs to connect for live control.
+
+An adapter implementation can remain JavaScript, Swift, Kotlin, or another
+host-native implementation. A common interface does not make code portable;
+a package format does, for the platforms that have one.
+
+**Ownership boundary:** the toolkit defines the adapter contract, its MCP
+binding, the registry, and the package format, and ships one reference runtime
+(the browser extension) for web packages. It does not run an application's
+own adapters: each integrating application keeps its execution environment,
+lifecycle and permissions, and decides which shared adapters it installs and
+how it runs them.
 
 The contract separates these responsibilities:
 
 | Component | Responsibility |
 |---|---|
-| Toolkit | Define shared adapter descriptions, schemas, outcome semantics, compatibility checks, and optional binding helpers. |
-| Marketplace | Publish and discover adapter descriptions and optional packages. |
-| Integrating application | Declare its identity and execution platform, choose which adapters to expose through an MCP endpoint or bridge, and own installation, execution, target access, authorization, scheduling, cleanup, and supported undo. |
+| Toolkit | Define shared adapter descriptions, schemas, package formats, outcome semantics and compatibility checks; host the adapter registry; ship the browser runtime and optional binding helpers. |
+| Registry | Store each account's adapters and their revisions, keep them private until shared, record which app installed what, and collect runtime reports. Stores and serves code; never runs it. |
+| Integrating application | Declare its identity and platform, publish the adapters it wants to share, install the ones it wants to use, and own installation, execution, target access, authorization, scheduling, cleanup and supported undo. Optionally expose adapters for live control. |
 | Adapter | A module or feature within the application that implements an adaptation and reports concrete effects and limitations. It inherits the application's platform and may add narrower constraints. |
+| Browser runtime | A reference application for web packages: runs what an account installed into `browser-runtime` on the pages each adapter targets. |
 | Client | A developer UI, Controller, skill executor, or AI agent that discovers capabilities and requests work. |
 
 The relationship is application → adapters. An adapter is not an independent
 application, MCP server, or execution service. An application's MCP interface
-exposes selected adapters; **adapter provider** names that interface's role, not a
-separate architectural component or runtime supplied by the toolkit.
+exposes selected adapters for live control; **adapter provider** names that
+interface's role, not a separate architectural component.
 
 Exposure and reach are separate decisions:
 
 | Field | Values | Meaning |
 |---|---|---|
-| `exposure` | `internal` (default), `mcp` | Whether the integrating application permits external discovery and invocation of this adapter. |
+| `exposure` | `internal` (default), `mcp` | Whether the integrating application permits external discovery and live invocation of this adapter. |
 | `reach` | `self`, `external` | Whether the adapter affects only the integrating application or can also affect other applications/web pages. |
 
 An internal adapter needs no MCP wrapper. A self-only adapter can optionally be
 exposed for coordinated personalization; an external adapter need not be exposed.
-Only adapters explicitly exported by the integrating application are discoverable
-or callable through its MCP interface. A descriptor claiming `exposure: "mcp"`
-does not itself register or authorize an export. `reach: "external"` describes
-capability, not permission to control every application.
+Only adapters explicitly exported by the integrating application are callable
+through its MCP interface. A descriptor claiming `exposure: "mcp"` does not
+itself register or authorize an export. `reach: "external"` describes
+capability, not permission to control every application. Publishing an
+adapter to the registry is separate again: it shares the adapter, and any
+application that installs it runs its own copy.
 
-The existing toolkit service remains the Librarian and marketplace. Registering
-an adapter there does not create an execution endpoint. In the first version,
-each participating application exposes adapter operations through an MCP
-server or a bridge to its existing execution API. An optional in-process
-binding can use the same schemas without MCP. Neither path implies that the
-toolkit starts the application, loads its plugins, or manages adapter instances.
-Clients configure trusted provider connections explicitly; a listing cannot cause
-an automatic connection to its publisher's URL.
-A marketplace listing is not execution routing to its publisher's arbitrary
-URL. No toolkit execution proxy is required by this design.
+Clients configure trusted provider connections explicitly; a registry entry or
+listing never causes an automatic connection to its publisher. The registry
+relays nothing: installing an adapter copies its package to the installing
+application, which runs it.
 
 In MCP terminology, the **host** is the coordinating client application.
 Here, **integrating application** means the application containing the adapter,
 and **provider** means its exposed adapter interface. The **target** is the native
 application or web resource being affected; it may belong to another application
-and needs no toolkit registration or MCP server. For example, a browser extension
-can provide an adapter that changes a third-party website. The integrating
+and needs no toolkit registration or MCP server. For example, the browser
+runtime runs an adapter that changes a third-party website. The integrating
 application performs changes through the APIs and permissions available to it;
 it need not own the target application's runtime.
 
 ```mermaid
 flowchart LR
-  P["Profile and skills"] --> C["Client / Controller"]
-  M["Marketplace: descriptions"] -.-> C
-  C -->|"Standard MCP tools"| I["Integrating application: MCP interface"]
-  I --> A["Exported adapters"]
-  A --> N["Native applications"]
-  A --> W["Web URLs"]
-  L["Application's local code"] --> B["Internal adapters"]
+  A1["App A: its adapters"] -->|"adapter_publish"| R["Toolkit: adapter registry (/v1/mcp)"]
+  R -->|"adapter_search, adapter_install"| A2["App B"]
+  R -->|"adapter_installed"| X["Browser runtime extension"]
+  X -->|"runs as user scripts"| W["Web pages it targets"]
+  X -->|"adapter_report"| R
+  D["Developer console"] -->|"write, share, install"| R
+  C["Client / agent"] -.->|"live control (optional)"| I["App A: MCP interface"]
 ```
 
-The toolkit standardizes the descriptions, requests, and outcomes. Each
-integrating application decides how to resolve targets and execute its adapters.
+The toolkit standardizes the descriptions, packages, requests and outcomes.
+Each integrating application decides how to resolve targets and execute its
+adapters.
 
 ## 2. Decisions and precedents
 
@@ -942,7 +968,8 @@ repository's package-boundary review/test rules.
 ## 12. Decisions to validate before stabilizing
 
 Runtime ownership is settled: each integrating application owns its execution
-environment. Before calling the profile stable, validate these choices with
+environment, and the toolkit's browser runtime is one such application for web
+packages. Before calling the profile stable, validate these choices with
 two independently managed application integrations:
 
 - Fixed gateway tools versus additionally exposing per-adapter typed tools.
@@ -956,9 +983,14 @@ two independently managed application integrations:
 - The minimum observable undo guarantees across applications with different
   internal storage and restart behavior; no shared journal implementation.
 - How applications report compatibility with downloaded code. Installation
-  and isolation remain application-owned and are outside this protocol's scope.
+  and isolation remain application-owned; the registry's lint is not a sandbox.
+- The `web-module@1` package format: a line-based export rewrite, one file, no
+  imports. Validate it against adapters written by people other than its
+  authors before adding a second format.
+- Sharing scope: today a shared adapter is visible to every account on the
+  toolkit instance. Groups (a workshop table, a team) may be needed.
 
-Related current interfaces: [adapter marketplace](../ADAPTER-MARKETPLACE.md),
+Related current interfaces: [adapter listings](../ADAPTER-MARKETPLACE.md),
 [hosted wire contract](../../server/CONTRACT.md),
 [Controller protocol](../../controller/PROTOCOL.md),
 [surface contract](../../toolkit/core/surface.js), and
@@ -973,8 +1005,13 @@ What exists now, so the sections above can be read against working code.
 | Wire contract | `toolkit/protocol/adapter/` | Descriptor and application checks, the URL/target matching grammar, the JSON Schema subset validator (it rejects unsupported keywords rather than ignoring them), RFC 8785 canonical JSON and descriptor digests, the gateway tools' input and output schemas, and shared fixtures (`fixtures/`). No dependencies; runs in a browser or Node. |
 | Provider and helpers | `toolkit/adapter-mcp/` | `createAdapterProvider` (an MCP server for one application's exported adapters, as a JSON-RPC handler), `fromToggleAdapter` / `fromAction` (wrap existing adapters), `connectToToolkit` (connect a provider to a toolkit service), `createMcpClient` / `adapterClient` (a small client), and `catalogDescriptors` (descriptors for the built-in catalog). |
 | Toolkit service | `server/src/providers.js`, `server/src/relay.js` | Relays MCP requests to connected apps, so an app in a browser tab is reachable at `/v1/mcp/apps/{appId}` or `/v1/mcp/providers/{providerId}` without opening a port. Lists the account's apps for the developer console. See [the hosted contract](../../server/CONTRACT.md#adapter-mcp-apps). |
-| Marketplace | `server/src/adapters.js` | A listing may carry a `descriptor`; the service checks it and computes its digest. Listings without one are shown as legacy. |
-| Integration | the Redbird demo store (`workshop/toolkit.js` in its repository) | Exports the workshop adapters (and, from a starter folder, the participant's own `adapter.js`) as the app `redbird`, keeps the rest of its library internal, and limits each tab to its own page. |
+| Packages and registry wire | `toolkit/protocol/adapter/package.js`, `registry.js` | The `web-module@1` format (export rewrite, adapter pick, lint, package checks, artifact digest), URL patterns as Chrome match patterns and exact regular expressions, and the registry tools' input schemas. |
+| Registry | `server/src/registry.js` | The toolkit's MCP server at `/v1/mcp` (§14): per-account adapters and revisions, the shared index, installs, runtime reports, resources and change notifications. |
+| Registry client | `toolkit/adapter-mcp/registry.js` | `createRegistryClient` (publish, search, share, install, installed, report, status, watch) and `loadInstalledAdapters`. |
+| Browser runtime | `extension/` | The reference runtime for web packages (§14.4). |
+| Developer console | `server/developer/adapters.js` | The Adapters page: write an adapter with live lint, save revisions, run it in the browser runtime, share it, install others' and see the runtime's reports. |
+| Listings | `server/src/adapters.js` | The older marketplace of descriptions. A listing may carry a `descriptor`; the service checks it and computes its digest. Listings without one are shown as legacy. |
+| Integration | the Redbird demo store (`workshop/toolkit.js` in its repository) | Exports the workshop adapters (and, from a starter folder, the participant's own `adapter.js`) as the app `redbird` for live control, keeps the rest of its library internal, and limits each tab to its own page. |
 
 Decisions the implementation took for 0.1.0, to revisit with a second,
 independently built integration (§12):
@@ -1006,3 +1043,92 @@ independently built integration (§12):
   restart and does not span several service instances. Apps reconnect on
   their own after a restart.
 
+## 14. Sharing adapters: the registry, packages and the browser runtime
+
+### 14.1 The registry
+
+The toolkit service is an MCP server at `/v1/mcp` (Streamable HTTP: `POST`
+for JSON-RPC, `GET` with `Accept: text/event-stream` for notifications). Any
+token of an account reaches it, and everything it answers is scoped to that
+account plus what other accounts shared.
+
+| Tool | Does |
+|---|---|
+| `adapter_publish` | Publish a descriptor, with an optional package, as a new revision. The registry checks both, computes `executionArtifactDigest` (SHA-256 of the code) and `descriptorDigest`, and does not make a new revision when nothing changed. Private unless `shared: true`. A descriptor without `adapterProtocol` is a short one: the registry fills the rest with `defineDescriptor`'s defaults. |
+| `adapter_share` | The owner shares an adapter with every account on this toolkit, or stops sharing it. |
+| `adapter_search` | The caller's adapters and the shared ones, filtered by words, app, URL, support area, or portability; each with where it is installed. |
+| `adapter_get` | The descriptor and package at the latest or a kept revision (the newest 20 are kept). |
+| `adapter_delete` | The owner deletes an adapter and its revisions. |
+| `adapter_install` / `adapter_uninstall` | Install an adapter into one of the account's apps, or change an installation: the revision (`"latest"` or a number), switched on or off, off on particular sites (origins), and `enable(options)` parameters checked against the descriptor's `inputSchema`. |
+| `adapter_installed` | What an app installed, resolved to revisions, with packages on request and an etag, so an unchanged answer is cheap. |
+| `adapter_report` / `adapter_status` | A runtime reports what happened per adapter and page origin (`applied`, `failed` with the error, `skipped`, `removed`); the console reads them back. |
+
+An adapter is named `{owner, appId, id}`: the owning account's uid, the
+publishing application, and the adapter id, so many workshop participants can
+each publish `redbird/my-adapter`. Adapters are also MCP resources
+(`adapter://owner/appId/id`, `resources/list` and `resources/read`). The
+notification stream sends `notifications/resources/list_changed`, with the
+reason in `params._meta["ai4a11y/registry"]`, whenever an adapter the account
+can see changes, its installs change, or one of its runtimes reports.
+
+**Revisions and trust.** Installing your own adapter follows the latest
+revision, so a saved edit reaches your runtime in seconds. Installing someone
+else's pins the revision you chose; when the owner publishes a new one, the
+installation reports `updateAvailable` and stays where it is until you update.
+If the owner stops sharing or deletes it, the installation resolves as
+unavailable and runtimes stop running it.
+
+### 14.2 Packages: `web-module@1`
+
+One self-contained JavaScript file that exports an adapter: an object with
+`enable(options)` and `disable()`, where `disable()` puts the page back the way
+it was (the shape the Redbird starter uses). `export const`, `export function`,
+`export class`, `export default` and `export { … }` are supported; `import` is
+not. A package may name its `entry` export when the file exports more than one
+adapter. The descriptor must include the `web` surface and at least one URL
+pattern.
+
+`lintWebModule` refuses code that runs text as code (`eval`, `new Function`,
+string timers), sends or fetches data (`fetch`, `XMLHttpRequest`, `WebSocket`,
+`EventSource`, `sendBeacon`), reads cookies or calls `document.write`, and
+flags storage, navigation and extension APIs as checks. **It is a lint, not a
+sandbox**: it catches mistakes, not someone determined to hide what their code
+does. Treat installing someone else's adapter like installing any third-party
+software, and read the code (the console shows it).
+
+### 14.3 Applications
+
+An application uses the registry with the SDK's `createRegistryClient`:
+`publish` its adapters (for example on start; republishing unchanged content
+is not a new revision), `search` and `install` others', and run what it
+installed. `loadInstalledAdapters(registry, appId)` returns working adapter
+objects for the current page, for web apps that allow evaluating code. Live
+control (§5–§8) is separate and optional.
+
+### 14.4 The browser runtime
+
+`extension/` is an unpacked Chrome extension (Chrome 135 or later) built from
+the shell of the personalized extension. It connects to one toolkit with the
+developer's default token (one click from a signed-in console page, or an
+address and token) and keeps the browser in step with the app
+`browser-runtime`:
+
+- each runnable installed adapter becomes one `chrome.userScripts`
+  registration in the `USER_SCRIPT` world, on Chrome match patterns derived
+  from its URL patterns, with an exact check of the page against the patterns
+  in the script itself (Chrome ignores ports);
+- a new revision runs in pages that are already open, after `disable()` on the
+  revision that was running, so nothing stacks; uninstalling, switching off and
+  disconnecting turn adapters off in open pages too;
+- each script reports to the service worker, which reports to the registry
+  with the page origin only, never the full address or page content;
+- it syncs on start, every 30 seconds, on the registry's notifications while
+  the worker is awake, and right after a save in the console (a small bridge
+  script on the connected toolkit's `/developer` page only);
+- its popup shows the installed adapters that target the current page, what
+  happened when they ran, and a per-site switch.
+
+Chrome asks the developer to turn on **Allow User Scripts** for the extension.
+The runtime runs only adapters the signed-in account installed, sends its token
+only to an `https` toolkit or one on this computer, and the page never sees the
+token.

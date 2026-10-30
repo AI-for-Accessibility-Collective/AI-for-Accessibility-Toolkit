@@ -1,10 +1,12 @@
 // The Apps page: every app that connected with this account's tokens through
-// the Adapter MCP SDK, grouped by app, live or last seen. From here a
-// developer can hide an app, forget one, and try any adapter on a live
-// instance — the page is an MCP client of the toolkit's relay, exactly like a
-// coding agent would be.
+// the Adapter MCP SDK, grouped by app, live or last seen. For each app it
+// shows what the app shared through the registry and what it installed from
+// others (adapter-mcp.md §14), and, while the app is open, live control: the
+// developer can try any of its adapters on a live instance. For that the page
+// is an MCP client of the toolkit's relay, exactly like a coding agent would
+// be. From here a developer can also hide an app or forget one.
 
-import { createMcpClient, adapterClient } from '/sdk/adapter-mcp.js';
+import { createMcpClient, adapterClient, createRegistryClient } from '/sdk/adapter-mcp.js';
 
 const $ = id => document.getElementById(id);
 const REDBIRD_KEY = 'ai4a11y.developer.redbird-url';
@@ -52,6 +54,7 @@ function outcomeSentence(name, r) {
 export function createAppsPage({ getClient, getAppToken, status, run, onLiveCount = () => {} }) {
   let apps = [];
   let hiddenApps = [];
+  let shared = new Map(); // appId -> {published, sharedCount, installed}
   let signature = '';
   let timer = null;
   let active = false;
@@ -79,11 +82,20 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
       return;
     }
     try {
-      const result = await client.apps.list();
+      const [result, registry] = await Promise.all([
+        client.apps.list(),
+        createRegistryClient({ url: client.base, token: client.token }).search({}).catch(() => ({ adapters: [] })),
+      ]);
       apps = result.apps;
       hiddenApps = result.hiddenApps;
+      shared = new Map();
+      const tally = (appId) => (shared.has(appId) ? shared.get(appId) : shared.set(appId, { published: 0, sharedCount: 0, installed: 0 }).get(appId));
+      for (const a of registry.adapters) {
+        if (a.mine) { const t = tally(a.adapter.appId); t.published++; if (a.shared) t.sharedCount++; }
+        for (const app of a.installedIn || []) tally(app).installed++;
+      }
       onLiveCount(apps.filter(a => a.live && !a.hidden).length);
-      const next = JSON.stringify(apps.map(a => [a.appId, a.hidden, a.live, a.connections.map(c => [c.providerId, c.live]), a.adapters.map(d => d.descriptorDigest)]));
+      const next = JSON.stringify([apps.map(a => [a.appId, a.hidden, a.live, a.connections.map(c => [c.providerId, c.live]), a.adapters.map(d => d.descriptorDigest)]), [...shared]]);
       if (next !== signature || !quiet) { signature = next; render(); }
       else updateLiveDetails();
     } catch (error) {
@@ -191,6 +203,16 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
     meta.append(seen);
     group.append(meta);
     if (app.description) group.append(element('p', 'adapter-description app-description', app.description));
+    // What it shares through the registry, and what it took from others.
+    const t = shared.get(app.appId);
+    const line = element('p', 'adapter-group-id app-registry');
+    line.append(t
+      ? `Registry: ${t.published} published${t.published ? ` (${t.sharedCount} shared)` : ''} · ${t.installed} installed from the registry · `
+      : 'Registry: nothing published or installed yet · ');
+    const link = element('a', '', 'Adapters');
+    link.href = '#/adapters';
+    line.append(link);
+    group.append(line);
 
     if (app.connections.length || app.recentCalls?.length) {
       const conns = element('div', 'app-connections');
@@ -419,20 +441,31 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
     const client = getClient();
     const base = client?.base || location.origin;
     const token = getAppToken() || 'aat_…your default token…';
-    $('snippet-web').textContent = `import { createAdapterProvider, connectToToolkit, defineDescriptor, fromToggleAdapter, detectBrowserPlatform }
-  from '${base}/sdk/adapter-mcp.js';
+    $('snippet-web').textContent = `import { createRegistryClient, loadInstalledAdapters, defineDescriptor,
+  createAdapterProvider, connectToToolkit, fromToggleAdapter, detectBrowserPlatform } from '${base}/sdk/adapter-mcp.js';
+import { MyAdapter } from './my-adapter.js'; // enabled, enable(options), disable()
 
-const provider = createAdapterProvider({
-  application: { appId: 'my-app', name: 'My app', version: '0.1.0',
-    supportedPlatforms: [{ environment: 'web-page' }], platform: detectBrowserPlatform(), surfaces: ['web'] },
-  adapters: [fromToggleAdapter({
-    adapter: MyAdapter, // any object with enabled, enable(options), disable()
-    descriptor: defineDescriptor({ appId: 'my-app', id: 'my-adapter', name: 'My adapter',
-      version: '0.1.0', targets: [{ platforms: ['*'], urls: [location.origin + '/*'] }] }),
-  })],
-});
-connectToToolkit({ url: '${base}', token: '${token}', provider, label: location.pathname });`;
-    $('snippet-mcp').textContent = `claude mcp add --transport http redbird ${base}/v1/mcp/apps/redbird --header "Authorization: Bearer ${token}"`;
+const descriptor = defineDescriptor({ appId: 'my-app', id: 'my-adapter', name: 'My adapter',
+  version: '0.1.0', targets: [{ platforms: ['*'], urls: [location.origin + '/*'] }] });
+
+// Share it: published privately; Share it on the Adapters page (or share: true).
+const registry = createRegistryClient({ url: '${base}', token: '${token}' });
+await registry.publish({ appName: 'My app', descriptor, code: await (await fetch('./my-adapter.js')).text() });
+
+// Use what you installed from others for 'my-app' on the Adapters page.
+for (const { adapter, entry } of await loadInstalledAdapters(registry, 'my-app')) adapter?.enable(entry.parameters);
+
+// Optional live control: the console and MCP clients switch your adapters while the page is open.
+connectToToolkit({ url: '${base}', token: '${token}', label: location.pathname,
+  provider: createAdapterProvider({
+    application: { appId: 'my-app', name: 'My app', version: '0.1.0',
+      supportedPlatforms: [{ environment: 'web-page' }], platform: detectBrowserPlatform(), surfaces: ['web'] },
+    adapters: [fromToggleAdapter({ adapter: MyAdapter, descriptor })] }) });`;
+    $('snippet-mcp').textContent = `# The toolkit itself: search, publish, share and install adapters
+claude mcp add --transport http ai4a11y-toolkit ${base}/v1/mcp --header "Authorization: Bearer ${token}"
+
+# A connected app, live: switch its adapters while it is open
+claude mcp add --transport http redbird ${base}/v1/mcp/apps/redbird --header "Authorization: Bearer ${token}"`;
   }
 
   try { $('redbird-url').value = localStorage.getItem(REDBIRD_KEY) || $('redbird-url').value; } catch { /* storage blocked */ }

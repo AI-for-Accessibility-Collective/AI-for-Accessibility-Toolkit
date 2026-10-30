@@ -47,6 +47,13 @@ async function act(task) {
 
 const when = (t) => (t ? new Date(t).toLocaleString() : 'never');
 
+// Why an account's password cannot be shown (GET …/password `reason`).
+const NOT_SHOWN = {
+  'changed-by-account': 'Changed by the account itself, so it is not kept. Reset it to issue a new one.',
+  'not-kept': 'Issued before passwords were kept. Reset it to issue a new one.',
+  'unreadable': 'Kept under an earlier secret. Reset it to issue a new one.',
+};
+
 // ── tabs ───────────────────────────────────────────────────────────────────
 
 const tabs = ['accounts', 'tokens', 'data'];
@@ -82,7 +89,8 @@ function showCredentials(rows, heading = 'New sign-in details') {
   const tbody = element('tbody');
   for (const r of rows) {
     const tr = element('tr');
-    const pw = element('td'); pw.append(element('code', '', r.password || '(the one you chose)'));
+    const pw = element('td');
+    pw.append(r.password ? element('code', '', r.password) : element('span', 'muted', r.note || '(the one you chose)'));
     tr.append(element('td', '', r.uid), element('td', '', r.displayName || ''), pw);
     tbody.append(tr);
   }
@@ -109,6 +117,25 @@ async function loadAccounts() {
     const tr = element('tr');
     const who = element('td');
     who.append(element('strong', '', a.displayName), element('div', 'muted', a.uid));
+    const secret = element('div', 'password-reveal');
+    if (a.passwordSetBy === 'account') secret.append(element('span', 'muted', 'Password set by the account'));
+    else {
+      const label = (shown) => {
+        show.textContent = shown ? 'Hide password' : 'Show password';
+        show.setAttribute('aria-label', `${show.textContent} for ${a.uid}`);
+        show.setAttribute('aria-expanded', String(shown));
+      };
+      const show = button('text-button', '', () => act(async () => {
+        if (secret.querySelector('code')) { secret.querySelector('code').remove(); label(false); return; }
+        const r = await api(`/admin/accounts/${encodeURIComponent(a.uid)}/password`);
+        if (r.password == null) { setStatus(`${a.uid}: ${NOT_SHOWN[r.reason] || 'Not available.'}`, true); return; }
+        secret.prepend(element('code', '', r.password));
+        label(true);
+      }));
+      label(false);
+      secret.append(show);
+    }
+    who.append(secret);
     const state = element('td');
     state.append(element('span', `badge ${a.disabled ? 'warn' : 'connected'}`, a.disabled ? 'Off' : 'On'));
     const actions = element('td');
@@ -173,6 +200,14 @@ $('bulk-form').addEventListener('submit', (event) => {
     await loadAccounts();
   });
 });
+
+$('show-all-passwords').addEventListener('click', () => act(async () => {
+  const { passwords } = await api('/admin/accounts?passwords=1');
+  if (!passwords.length) throw new Error('No accounts yet.');
+  showCredentials(passwords.map(p => ({ ...p, note: p.password == null ? NOT_SHOWN[p.reason] : undefined })), 'Sign-in details');
+  const missing = passwords.filter(p => p.password == null).length;
+  setStatus(`Showing ${passwords.length - missing} password${passwords.length - missing === 1 ? '' : 's'}.${missing ? ` ${missing} cannot be shown; reset ${missing === 1 ? 'it' : 'them'} to issue new ones.` : ''}`);
+}));
 
 $('credentials-copy').addEventListener('click', () => act(async () => {
   const text = lastCredentials.map(r => `${r.uid}\t${r.displayName || ''}\t${r.password || ''}`).join('\n');

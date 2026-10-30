@@ -330,12 +330,62 @@ input::placeholder {
   margin-top: 10px;
 }
 
-.profile-card.active {
+/* The card in the editor: a thick outline and a tint, so it stands out in a
+   long library. An outline (not a wider border) keeps the layout still. */
+.profile-card.is-selected {
   border-color: var(--green);
-  background: #f2f8f3;
+  outline: 2px solid var(--green);
+  background: #eef6f0;
+}
+
+.profile-card.temp-card {
+  border-style: dashed;
+  border-color: #b7791f;
+  background: #fffaf0;
+}
+
+.profile-card.temp-card.is-selected {
+  outline-color: #b7791f;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px;
+}
+
+.card-markers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 6px;
+}
+
+.marker {
+  border-radius: 20px;
+  font-size: .68rem;
+  font-weight: 650;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.marker.selected {
+  background: var(--green);
+  color: #fff;
+}
+
+.temp-card .marker.selected {
+  background: #8a5a12;
+}
+
+.marker.active {
+  background: #dceee1;
+  color: #205539;
 }
 
 .profile-card h3 {
+  margin: 0;
   line-height: 1.5;
   font-weight: 650;
 }

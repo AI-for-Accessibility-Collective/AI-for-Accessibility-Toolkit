@@ -152,12 +152,46 @@ try {
   assert.equal(elsewhere.compatible, false, 'one tab is one page');
   assert.ok(elsewhere.reasons.some(r => r.code === 'target-unavailable'), JSON.stringify(elsewhere.reasons));
 
+  // ── Loading a preset in the console reaches the open store, with no refresh ──
+  await shop.evaluate(() => { window.__sameLoad = true; });
+  const persona = shop.locator('#ws-persona');
+  await persona.filter({ hasText: 'Countdown timers make me rush' }).waitFor();
+  await dev.click('.nav-link[data-page="profiles"]');
+  await dev.locator('button[data-load="wai-2"]').click();
+  await dev.waitForFunction(() => document.getElementById('draft-state').textContent === 'Applied');
+  await persona.filter({ hasText: 'remove distracting motion' }).waitFor();
+  assert.match(await persona.innerText(), /Profile 2/, 'the store shows which preset is selected');
+  assert.match(await shop.locator('#ws-prof option[value="toolkit"]').innerText(), /Profile 2/);
+  assert.equal(await shop.evaluate(() => window.__sameLoad), true, 'the store was not reloaded');
+  // An edit through the API keeps the preset's name and says it was edited.
+  await fetch(`${base}/v1/librarian/setProfileField`, {
+    method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ args: ['freeText', 'Keep things calm and quiet.'] }),
+  });
+  await persona.filter({ hasText: 'calm and quiet' }).waitFor();
+  assert.match(await persona.innerText(), /Profile 2.*edited/s);
+  assert.equal(await shop.evaluate(() => window.__sameLoad), true, 'still the same page');
+
+  // ── Picking a preset in the store changes the toolkit's profile, and the console sees it ──
+  const picker = shop.locator('#ws-prof');
+  await picker.locator('optgroup#ws-presets option', { hasText: 'Profile 3' }).waitFor({ state: 'attached' });
+  assert.ok(await picker.locator('optgroup#ws-presets option').count() >= 9, 'the toolkit\'s presets are offered');
+  await picker.selectOption({ label: await picker.locator('optgroup#ws-presets option', { hasText: 'Profile 3' }).innerText() });
+  await persona.filter({ hasText: 'screen-reader structure' }).waitFor();
+  assert.match(await persona.innerText(), /Profile 3/);
+  assert.equal(await picker.inputValue(), 'toolkit', 'the store goes back to following the toolkit profile');
+  const chosen = await (await fetch(`${base}/v1/profile/selection`, { headers: { authorization: `Bearer ${token}` } })).json();
+  assert.deepEqual(chosen.selected, { id: 'wai-3', name: 'Profile 3', edited: false });
+  assert.equal(await shop.evaluate(() => window.__sameLoad), true, 'picking a preset did not reload the store either');
+  await dev.click('#refresh');
+  await dev.waitForFunction(() => /screen-reader structure/.test(document.getElementById('profile-json').value));
+
   // ── Closing the tab leaves the app offline in the console ──────────────
   await shop.close({ runBeforeUnload: true });
   await dev.waitForFunction(() => [...document.querySelectorAll('.app-group')].some(g => g.textContent.includes('Redbird demo') && g.textContent.includes('Offline')), null, { timeout: 20000 });
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), and going offline when the tab closes.');
+  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh, picking a toolkit preset from the store dropdown, and going offline when the tab closes.');
 } finally {
   await browser?.close();
   app.relay.closeAll();
