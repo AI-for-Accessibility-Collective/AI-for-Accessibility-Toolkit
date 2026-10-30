@@ -186,6 +186,8 @@ try {
   // The top bar's text size control scales the console, and this browser remembers it.
   const rootSize = () => dev.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
   const defaultSize = await rootSize();
+  // The scrollbar's space is always kept, so the page does not shift when it appears.
+  assert.equal(await dev.evaluate(() => getComputedStyle(document.documentElement).scrollbarGutter), 'stable');
   const buttonsAt = () => dev.evaluate(() => ['text-smaller', 'text-larger'].map(id => { const r = document.getElementById(id).getBoundingClientRect(); return [r.x + scrollX, r.y + scrollY, r.width, r.height].join(); }).join(' '));
   const buttonsBefore = await buttonsAt();
   assert.ok(Math.abs(defaultSize - (16 + 8 / 3)) < 0.1, `the default text is 2pt above 16px, got ${defaultSize}`);

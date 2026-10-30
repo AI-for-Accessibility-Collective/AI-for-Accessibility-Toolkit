@@ -10,6 +10,9 @@
   font-size: calc((100% + 2pt) * var(--text-scale, 1));
   /* Spacing grows at half the rate of the text: 150% at 200% text. */
   --space: calc(1 + (var(--text-scale, 1) - 1) / 2);
+  /* Keep the scrollbar's space even when a page is short, so the page does not
+     shift sideways when the scrollbar comes and goes. */
+  scrollbar-gutter: stable;
   font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   color: var(--ink);
   background: var(--bg);
@@ -124,7 +127,7 @@ h3 {
 
 .topbar {
   min-height: 84px;
-  padding: 0 max(24px,calc((100vw - 1280px)/2));
+  padding: 0 max(24px,calc((100% - 1280px)/2));
   display: flex;
   align-items: center;
   justify-content: space-between;
