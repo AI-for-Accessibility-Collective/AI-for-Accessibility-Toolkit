@@ -98,13 +98,16 @@ try {
   await test('the Librarian routes follow the same rules: logObservation lands by visibility, listMemories and recall merge what the caller may read', async () => {
     const logged = await librarian(redbirdToken, 'logObservation', { type: 'setting-change', text: 'Hid countdown timers in the store.', origin: 'https://redbird.example' });
     assert.equal(logged.result.visibility, 'app');
+    // With the account's token, an observation names its app, as `app` or the protocol's `appId`.
+    assert.equal((await librarian(account, 'logObservation', { text: 'Made the store\'s text bigger.', appId: 'redbird' })).result.visibility, 'app');
+    assert.equal((await librarian(account, 'logObservation', { text: 'Made the text bigger somewhere.' })).result.visibility, undefined);
     await learnAll();
     const mine = (await librarian(redbirdToken, 'listMemories', { status: 'active' })).result.memories.map(m => m.text);
     assert.ok(mine.includes('Remembers: Hid countdown timers in the store.'));
     const theirs = (await librarian(otherToken, 'listMemories', { status: 'active' })).result.memories.map(m => m.text);
     assert.ok(!theirs.some(t => t.includes('countdown') || t.includes('Calm urgency')));
     const recalled = (await librarian(redbirdToken, 'recall', 'https://redbird.example/', '')).result;
-    assert.match(recalled.block, /### Only for the app redbird\n(- .*\n)*- Remembers: Hid countdown timers in the store\./);
+    assert.match(recalled.block, /### Only for the app Redbird demo\n(- .*\n)*- Remembers: Hid countdown timers in the store\./);
     assert.ok(!(await librarian(otherToken, 'recall', 'https://redbird.example/', '')).result.block.includes('countdown'));
   });
 
@@ -224,6 +227,21 @@ try {
     });
     assert.equal(ok.status, 200, await ok.text());
     assert.equal((await me.access.get()).apps.find(a => a.app === 'other').declared, 'app', 'connecting declares the app\'s visibility');
+  });
+
+  await test('an app that connects without a visibility is named, and narrowing it in the console keeps what it names its own', async () => {
+    const r = await fetch(`${base}/v1/providers`, {
+      method: 'POST', headers: { authorization: `Bearer ${account}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ application: { appId: 'plain-shop', name: 'Plain shop', version: '1', supportedPlatforms: [{ environment: 'web-page' }], surfaces: ['web'] }, adapters: [] }),
+    });
+    assert.equal(r.status, 200, await r.text());
+    const listed = (await me.access.get()).apps.find(a => a.app === 'plain-shop');
+    assert.deepEqual([listed.name, listed.declared, listed.visibility], ['Plain shop', 'user', 'user']);
+    await me.access.restrict({ app: 'plain-shop' }, 'app');
+    assert.equal((await librarian(account, 'logObservation', { text: 'Switched off big targets in the shop.', app: 'plain-shop' })).result.visibility, 'app');
+    await learnAll();
+    const kept = (await me.profile.learned()).memories.find(m => m.text.includes('big targets in the shop'));
+    assert.deepEqual([kept.visibility, kept.name], ['app', 'Plain shop']);
   });
 } finally {
   app.registry?.closeAll?.();

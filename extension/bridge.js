@@ -6,6 +6,12 @@
 // are allowed, so the console can show this browser's runtime state. Nothing
 // else crosses: never the token, never page content.
 
+// It may run twice in one page (registered for new pages, and injected into
+// the console that was open when the extension connected): the second run
+// only announces again.
+(() => {
+if (window.__ai4a11yBridge) { window.__ai4a11yBridge.announce(); return; }
+
 const announce = async () => {
   let status = null;
   try {
@@ -35,3 +41,6 @@ window.addEventListener('message', (event) => {
 });
 
 announce();
+
+window.__ai4a11yBridge = { announce };
+})();

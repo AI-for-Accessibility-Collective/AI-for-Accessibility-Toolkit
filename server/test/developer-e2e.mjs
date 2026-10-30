@@ -48,7 +48,8 @@ try {
   await page.fill('#instance-url', `http://127.0.0.1:${remote.address().port}`);
   await page.click('#connect');
   await page.waitForFunction(() => document.getElementById('connection-state').textContent.includes('Connected'));
-  assert.equal(await page.inputValue('#instance-token'), '');
+  // The field clears once the console has loaded the account's pages.
+  await page.waitForFunction(() => document.getElementById('instance-token').value === '');
   // Rendering and applying any built-in must not invent optional properties
   // or turn numbers, switches, arrays, or plain text into JSON strings.
   for (const preset of BUILTIN_PROFILES) {

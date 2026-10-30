@@ -125,7 +125,9 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   const access = createAccess({ store, registry: () => registry });
   const providerRoutes = createProviderRoutes({
     store, relay, withUserLock, authenticate, activity,
-    onApplication: (rec, application) => access.tools.app_declare.run(rec.uid, { appId: application.appId, name: application.name, visibility: application.visibility }, rec),
+    onApplication: (rec, application) => (application.visibility
+      ? access.tools.app_declare.run(rec.uid, { appId: application.appId, name: application.name, visibility: application.visibility }, rec)
+      : access.nameApp(rec.uid, application.appId, application.name)),
   });
   const profileEvents = createProfileEvents({ store, authenticate, toolkitHost, withUserLock });
   const learning = createLearning({ toolkitHost, withUserLock, profileEvents, access, log, ...(learningDelayMs !== undefined ? { extractDelayMs: learningDelayMs } : {}) });
@@ -492,7 +494,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     // account; memory reads add the partitions this caller may read.
     let partition = null;
     if (routeName === 'logObservation') {
-      try { ({ partition } = await access.resolveWrite(rec.uid, rec, { app: args[0]?.app, adapter: args[0]?.adapter })); }
+      // `appId` is the protocol's name for an app everywhere else, so it names the app here too.
+      try { ({ partition } = await access.resolveWrite(rec.uid, rec, { app: args[0]?.app ?? args[0]?.appId, adapter: args[0]?.adapter })); }
       catch (e) { return sendJSON(res, 200, { ok: false, error: e.message }); }
     }
     const scoped = SCOPED_READS.has(routeName) ? await access.readable(rec.uid, rec) : [];
@@ -581,7 +584,7 @@ const SCOPED_READS = new Set(['listMemories', 'recall']);
 
 /** Add the memories of the caller's readable partitions to a listMemories or recall result. */
 async function mergeScoped(routeName, own, scoped, args, instanceFor) {
-  const tag = (p) => ({ visibility: p.level, ...(p.app ? { app: p.app } : {}), ...(p.adapter ? { adapter: p.adapter } : {}) });
+  const tag = (p) => ({ visibility: p.level, ...(p.app ? { app: p.app } : {}), ...(p.adapter ? { adapter: p.adapter } : {}), ...(p.name ? { name: p.name } : {}) });
   if (routeName === 'listMemories') {
     const memories = [...(own?.memories || [])];
     for (const p of scoped) {
@@ -598,7 +601,7 @@ async function mergeScoped(routeName, own, scoped, args, instanceFor) {
     const found = ((await librarian.recall(...args))?.facts || []).filter(f => f.kind !== 'note');
     if (!found.length) continue;
     facts.push(...found.map(f => ({ ...f, ...tag(p) })));
-    lines.push(`### Only for ${p.adapter ? `the adapter ${p.adapter}` : `the app ${p.app}`}`, ...found.map(f => `- ${f.text}`));
+    lines.push(`### Only for ${p.adapter ? `the adapter ${p.name || p.adapter}` : `the app ${p.name || p.app}`}`, ...found.map(f => `- ${f.text}`));
   }
   return { ...own, facts, block: lines.join('\n') };
 }

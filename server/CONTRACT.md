@@ -258,12 +258,17 @@ Tools `app_declare`, `access_get`, `access_restrict`, `adapter_data_get`,
 - Levels: `user` (every app of the account; the default), `app` (only that
   app), `adapter` (only that adapter, its own app and the apps that installed
   it). An app declares one with `app_declare`, or `application.visibility`
-  when it registers for live control; an adapter with `visibility` in its
+  when it registers for live control (registering also records the app's
+  name, for the console); an adapter with `visibility` in its
   descriptor. `access_restrict` (the console's setting) narrows either and
   never widens it: the narrowest level wins. An app token may declare only its
   own app and may not restrict.
 - Callers: a console session, the default token and an app token without an
-  `appId` are the account's own tools and read everything. An app token with
+  `appId` are the account's own tools and read everything; what they write
+  is the account's unless it names an `app` (or `adapter`) to apply that
+  one's visibility, so an app that writes with the default token names
+  itself in every observation, or the console's narrowing cannot reach what
+  it writes. An app token with
   an `appId` writes as that app (naming another is `forbidden`), reads
   user-level data, its own app's, and the adapter-level data of adapters of
   its app or installed into it.

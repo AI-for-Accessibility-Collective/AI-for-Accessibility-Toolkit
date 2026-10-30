@@ -99,9 +99,11 @@ export function createAccess({ store, registry }) {
     if (level === 'app' && !readerApp) level = 'user';
     if (level === 'user') return { level, partition: null };
     const partition = level === 'app' ? `app~${readerApp}` : `adapter~${ad.key.owner}~${ad.key.appId}~${ad.key.id}`;
-    const entry = { level, app: readerApp, ...(ad ? { adapter: ad.full } : {}) };
+    // The name is for people reading the console: the adapter's, or the app's.
+    const name = ad ? ad.rec.name : (s.apps[readerApp]?.name || readerApp);
+    const entry = { level, app: readerApp, ...(ad ? { adapter: ad.full } : {}), ...(name ? { name } : {}) };
     const known = s.partitions[partition];
-    if (!known || known.level !== entry.level || known.app !== entry.app) {
+    if (!known || known.level !== entry.level || known.app !== entry.app || known.name !== entry.name) {
       await accessDoc(uid).mutate((doc) => { doc.partitions[partition] = entry; return { save: true }; });
     }
     return { level, partition };
@@ -121,6 +123,14 @@ export function createAccess({ store, registry }) {
       }
     }
     return out;
+  }
+
+  /** Remember an app's name for the console, without declaring anything for it. */
+  async function nameApp(uid, appId, name) {
+    if (!appId || !name) return;
+    const s = await accessDoc(uid).read();
+    if (s.apps[appId]?.name === name) return;
+    await accessDoc(uid).mutate((doc) => { doc.apps[appId] = { ...(doc.apps[appId] || {}), name }; return { save: true }; });
   }
 
   /** Every partition of the account (for learning and reset). */
@@ -228,5 +238,5 @@ export function createAccess({ store, registry }) {
     schema: ACCESS_TOOL_SCHEMAS[name], description: ACCESS_TOOL_DESCRIPTIONS[name], readOnly: ACCESS_READ_ONLY.includes(name), run: fn,
   }]));
 
-  return { resolveWrite, readable, partitions, accountLevel, tools, keyString };
+  return { resolveWrite, readable, partitions, nameApp, accountLevel, tools, keyString };
 }

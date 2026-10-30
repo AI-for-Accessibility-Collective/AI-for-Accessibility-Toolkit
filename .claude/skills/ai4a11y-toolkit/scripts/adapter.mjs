@@ -10,6 +10,7 @@
 //   node adapter.mjs share bigger-buttons
 //   node adapter.mjs extension
 //   node adapter.mjs check
+//   node adapter.mjs profile
 //   node adapter.mjs learned
 //   node adapter.mjs answer prop_123 accept
 //
@@ -23,12 +24,14 @@
 //           extensions page and copies the extension folder's path (--no-open
 //           only prints them).
 // check     whether a browser runtime is connected to this toolkit.
+// profile   the person's profile as apps read it (supportAreas, fields.needs, …).
 // learned   what the toolkit learned about the person: suggested profile
 //           changes waiting for an answer, and memories.
 // answer    passes on the person's answer to a suggestion: accept, not-now
 //           or never. Only ever their answer.
 //
-// It reads TOOLKIT_URL and TOOLKIT_TOKEN from a .env file in the current
+// It reads TOOLKIT_URL and TOOLKIT_TOKEN (or the older TOOLKIT_SERVER_URL and
+// TOOLKIT_SERVER_TOKEN) from a .env file in the current
 // folder or a folder above it (the developer console's New adapter guide
 // gives the two lines). Variables already set in the environment win.
 
@@ -72,13 +75,15 @@ function parse(argv) {
   return { command, target, flags };
 }
 
-// KEY=value lines, # comments, optional quotes. Only the two toolkit keys.
+// KEY=value lines, # comments, optional quotes. Only the toolkit keys:
+// TOOLKIT_URL and TOOLKIT_TOKEN, or the older TOOLKIT_SERVER_URL and
+// TOOLKIT_SERVER_TOKEN.
 function loadDotEnv() {
   for (let dir = process.cwd(); ; dir = path.dirname(dir)) {
     const file = path.join(dir, '.env');
     if (existsSync(file)) {
       for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-        const m = line.match(/^\s*(?:export\s+)?(TOOLKIT_URL|TOOLKIT_TOKEN)\s*=\s*(.*?)\s*$/);
+        const m = line.match(/^\s*(?:export\s+)?(TOOLKIT_URL|TOOLKIT_TOKEN|TOOLKIT_SERVER_URL|TOOLKIT_SERVER_TOKEN)\s*=\s*(.*?)\s*$/);
         if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2');
       }
       return;
@@ -88,8 +93,8 @@ function loadDotEnv() {
 }
 loadDotEnv();
 
-const base = (process.env.TOOLKIT_URL || '').replace(/\/+$/, '');
-const token = process.env.TOOLKIT_TOKEN || '';
+const base = (process.env.TOOLKIT_URL || process.env.TOOLKIT_SERVER_URL || '').replace(/\/+$/, '');
+const token = process.env.TOOLKIT_TOKEN || process.env.TOOLKIT_SERVER_TOKEN || '';
 
 let nextId = 1;
 async function tool(name, args) {
@@ -239,7 +244,16 @@ async function learned() {
     console.log(`- ${p.id}: ${p.label}${what ? ` (${what})` : ''}${p.rationale ? `. ${p.rationale}` : ''}`);
   }
   console.log(s.memories.length ? '\nWhat it remembers:' : '\nNothing learned yet.');
-  for (const m of s.memories) console.log(`- ${m.text}${m.kind === 'note' ? ' (their note)' : m.scope && m.scope !== 'general' ? ` (${m.scope})` : ''}`);
+  for (const m of s.memories) {
+    const only = m.visibility && m.visibility !== 'user' ? ` [only ${m.name || m.adapter || m.app}]` : '';
+    console.log(`- ${m.text}${m.kind === 'note' ? ' (their note)' : m.scope && m.scope !== 'general' ? ` (${m.scope})` : ''}${only}`);
+  }
+}
+
+// The person's profile, as apps read it: what to turn adaptations on from.
+async function profile() {
+  const { profile: p } = await tool('profile_get', {});
+  console.log(JSON.stringify({ supportAreas: p.supportAreas, fields: p.fields || {}, metaPreferences: p.metaPreferences }, null, 2));
 }
 
 const ANSWERS = { accept: 'accept', 'not-now': 'declineOnce', never: 'suppress' };
@@ -252,9 +266,9 @@ async function answer(id, flags) {
 }
 
 const { command, target, flags } = parse(process.argv.slice(2));
-const COMMANDS = { publish, status, share, extension, check, learned, answer };
+const COMMANDS = { publish, status, share, extension, check, profile, learned, answer };
 if (!COMMANDS[command]) {
-  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check | learned | answer <id> accept|not-now|never');
+  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check | profile | learned | answer <id> accept|not-now|never');
 }
 if (command === 'extension') { extension(target, flags); process.exit(0); }
 if (!base || !token) fail('No toolkit address or token. Ask the person which toolkit to use: their hosted one (in its developer console, Adapters, New adapter, copy the two lines into .env at the top of this repository), or one started on this computer.');

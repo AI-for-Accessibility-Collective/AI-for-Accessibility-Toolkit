@@ -203,13 +203,19 @@ try {
   const learnedState = async () => (await learning.learned()).pendingObservations > waitingBefore;
   for (let i = 0; i < 50 && !(await learnedState()); i++) await new Promise(r => setTimeout(r, 100));
   assert.ok(await learnedState(), 'the toolkit kept an observation of the switch');
+  // Kept to Redbird alone in the console, the next switch stays Redbird's: the store names its app.
+  await createRegistryClient({ url: base, token }).access.restrict({ app: 'redbird' }, 'app');
+  const partitions = async () => JSON.parse(await readFile(path.join(dir, 'users', 'team-3', 'access.json'), 'utf8').catch(() => '{}')).partitions || {};
+  await shop.locator('#ws-on-list input[data-ad="swatch-names"]').uncheck();
+  for (let i = 0; i < 50 && !(await partitions())['app~redbird']; i++) await new Promise(r => setTimeout(r, 100));
+  assert.deepEqual((await partitions())['app~redbird'], { level: 'app', app: 'redbird', name: 'Redbird demo' });
 
   // ── Closing the tab leaves the app offline in the console ──────────────
   await shop.close({ runBeforeUnload: true });
   await dev.waitForFunction(() => [...document.querySelectorAll('.app-group')].some(g => g.textContent.includes('Redbird demo') && g.textContent.includes('Offline')), null, { timeout: 20000 });
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, a switch while shopping as yourself reaching the toolkit to learn from, and going offline when the tab closes.');
+  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, a switch while shopping as yourself reaching the toolkit to learn from (kept to Redbird alone once the console narrows it), and going offline when the tab closes.');
 } finally {
   await browser?.close();
   app.relay.closeAll();

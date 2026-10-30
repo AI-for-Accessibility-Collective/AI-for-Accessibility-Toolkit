@@ -274,9 +274,21 @@ async function registerBridge() {
   if (existing.length) await chrome.scripting.unregisterContentScripts({ ids: ['console-bridge'] });
   if (!connection) return;
   const u = new URL(connection.url);
+  const matches = [`${u.protocol}//${u.hostname}/developer*`];
   await chrome.scripting.registerContentScripts([{
-    id: 'console-bridge', js: ['bridge.js'], matches: [`${u.protocol}//${u.hostname}/developer*`], runAt: 'document_start', persistAcrossSessions: true,
+    id: 'console-bridge', js: ['bridge.js'], matches, runAt: 'document_start', persistAcrossSessions: true,
   }]);
+  // A registered script reaches pages loaded from now on. The console the
+  // person just connected from is already open: give it the bridge too, so it
+  // shows this runtime without a reload.
+  const port = u.port || (u.protocol === 'https:' ? '443' : '80');
+  for (const tab of await chrome.tabs.query({ url: matches })) {
+    try {
+      const at = new URL(tab.url);
+      if ((at.port || (at.protocol === 'https:' ? '443' : '80')) !== port) continue;
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['bridge.js'] });
+    } catch { /* a tab that is closing or not ready yet */ }
+  }
 }
 
 // ── messages from the popup and the bridge ───────────────────────────────────

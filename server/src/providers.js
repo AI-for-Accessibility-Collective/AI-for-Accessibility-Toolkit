@@ -102,8 +102,8 @@ export function createProviderRoutes({ store, relay, withUserLock, authenticate,
       throw new HttpError(400, 'invalid-registration', `The app's registration does not follow Adapter MCP ${PROFILE_VERSION}: ${errors.slice(0, 3).map(e => `${e.path} ${e.message}`).join('; ')}`, { errors: errors.slice(0, 50) });
     }
 
-    // An app that says who can read what it gives the toolkit declares it here (access.js).
-    if (application.visibility && onApplication) await onApplication(rec, application);
+    // The app's name, and who can read what it gives the toolkit if it says (access.js).
+    if (onApplication) await onApplication(rec, application);
     const providerId = body.providerId || `p-${crypto.randomBytes(6).toString('hex')}`;
     const label = typeof body.label === 'string' ? body.label.slice(0, 300) : '';
     try {

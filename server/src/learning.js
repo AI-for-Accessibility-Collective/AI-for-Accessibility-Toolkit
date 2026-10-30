@@ -43,7 +43,8 @@ export async function pausedFor(mainLibrarian, mainDatastore, obs) {
 
 /** What an observation looks like to the Librarian: the who-gave-it fields go into its data. */
 export function librarianObservation(obs) {
-  const { app, adapter, ...rest } = obs;
+  const { app: named, appId, adapter, ...rest } = obs;
+  const app = named ?? appId;
   if (!app && !adapter) return rest;
   return { ...rest, data: { ...(rest.data || {}), ...(app ? { app } : {}), ...(adapter ? { adapter: typeof adapter === 'string' ? adapter : `${adapter.owner}/${adapter.appId}/${adapter.id}` } : {}) } };
 }
@@ -115,7 +116,7 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
   const memoryView = (m, where) => ({
     id: m.id, text: m.text, scope: m.scope, kind: m.kind, strength: m.strength,
     occurrenceCount: m.occurrenceCount, updatedAt: m.updatedAt,
-    visibility: where ? where.level : 'user', ...(where?.app ? { app: where.app } : {}), ...(where?.adapter ? { adapter: where.adapter } : {}),
+    visibility: where ? where.level : 'user', ...(where?.app ? { app: where.app } : {}), ...(where?.adapter ? { adapter: where.adapter } : {}), ...(where?.name ? { name: where.name } : {}),
   });
   const pendingIn = (episodic) => (episodic?.entries || []).filter(e => e.id > (episodic.cursor || 0)).length;
 

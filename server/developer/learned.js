@@ -89,7 +89,12 @@ export function createLearnedPanel({ getClient, status, run, onProfileChanged })
       const where = element('span', 'badge', m.kind === 'note' ? 'your note' : SCOPE_TEXT(m.scope || 'general'));
       li.append(text, where);
       // Learned from what one app or adapter gave: only it (and you) can read it.
-      if (m.visibility === 'app' || m.visibility === 'adapter') li.append(element('span', 'badge', m.visibility === 'app' ? `only ${m.app}` : `only ${m.adapter}`));
+      if (m.visibility === 'app' || m.visibility === 'adapter') {
+        const who = m.name || (m.visibility === 'app' ? m.app : m.adapter);
+        const badge = element('span', 'badge', `only ${who}`);
+        badge.title = m.visibility === 'app' ? `Only the app ${who} and you can read this.` : `Only the adapter ${who}, the apps that run it, and you can read this.`;
+        li.append(badge);
+      }
       li.append(button('text-button', 'Forget', () => forget(m), `Forget: ${m.text}`));
       memories.append(li);
     }

@@ -170,7 +170,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
   function visibilityOf(a) {
     return visibilityControl({
       id: `visibility-${keyOf(a.adapter).replaceAll(/[^a-z0-9]/gi, '-')}`, name: a.name,
-      declared: a.visibility || 'user', restricted: restrictions.get(keyOf(a.adapter)) || null, levels: ['app', 'adapter'],
+      declared: a.visibility || 'user', restricted: restrictions.get(keyOf(a.adapter)) || null, levels: ['app', 'adapter'], adapter: true,
       onChange: (level) => run(async () => {
         await registry.access.restrict({ adapter: a.adapter }, level);
         await refresh();
