@@ -89,19 +89,23 @@ export const DismissOverlays = {
     try {
       candidates = root.querySelectorAll('div, section, aside, dialog, [role="dialog"], [aria-modal="true"]');
     } catch { return 0; }
-    for (const el of candidates) if (this.consider(el)) n++;
+    for (const el of candidates) if (this.hide(el)) n++;
     return n;
   },
 
-  // Hide one element if it looks like a blocking overlay. Returns true if hidden.
+  // Check a node the page just added. It may not be the overlay itself, but may contain it.
   consider(el) {
+    if (this.hide(el)) return true;
+    return !!(el && el.querySelector) && this.sweep(el) > 0;
+  },
+
+  // Hide this one element if it looks like a blocking overlay. Returns true if hidden. It doesn't
+  // look inside: sweep() already reaches every element, and looking inside from here too doubles
+  // the work at each level of the page, which freezes the tab on a deep one.
+  hide(el) {
     if (!el || el.nodeType !== 1 || this.hidden.has(el)) return false;
     if (el.classList && el.classList.contains(this.hiddenClass)) return false;
-    if (!this.isOverlay(el)) {
-      // The added node itself may not be the overlay, but may contain it.
-      if (el.querySelector) { const inner = this.sweep(el); if (inner) return true; }
-      return false;
-    }
+    if (!this.isOverlay(el)) return false;
     el.classList.add(this.hiddenClass);
     this.hidden.add(el);
     return true;
