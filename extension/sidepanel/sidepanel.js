@@ -1,7 +1,10 @@
 // The assistant sidebar: chats with the account's opencode agent on the
 // toolkit (through /v1/agent, see agent-host/README.md), shows its replies
-// without code and one line per step, and does what its browser tools ask on
-// the tab this sidebar is open beside:
+// without code and one line per step (repeats folded into one), and does what
+// its browser tools ask on the page the chat works on. That is the tab beside
+// the sidebar when the chat's first message is sent; it stays the chat's page
+// when the person moves to other tabs, until they choose "Work on this page
+// instead":
 //
 //   page            share the page: the address, the page source (an
 //                   outline, runtime/page.js) or also a screenshot. The
@@ -31,7 +34,7 @@ let connection = null;
 let chats = [];
 let chat = null;            // the open chat, in full
 const requests = new Map(); // id -> request, for the open chat
-let previewing = null;      // {name, tabId}
+let previewing = null;      // {name, tabId, origin}
 let streamAbort = null;
 
 function say(text, error = false) {
@@ -62,28 +65,116 @@ async function api(path, { method = 'GET', body } = {}) {
   return data;
 }
 
-// ── the tab beside this sidebar ──────────────────────────────────────────────
+// ── the page each chat works on ──────────────────────────────────────────────
 
-// The active tab of this sidebar's window, or one named with ?tab=<id> (how a
-// test opens the sidebar as a page of its own).
+const PAGES_KEY = 'assistantPages'; // chat id -> tab id, for this browser session
+// The window this sidebar belongs to, or that of a tab named with ?tab=<id>
+// (how a test opens the sidebar as a page of its own).
 const namedTab = Number(new URLSearchParams(location.search).get('tab'));
-async function currentTab() {
-  if (namedTab) return chrome.tabs.get(namedTab);
-  const win = await chrome.windows.getCurrent();
-  const [tab] = await chrome.tabs.query({ active: true, windowId: win.id });
-  return tab;
+async function sidebarWindowId() {
+  if (namedTab) return chrome.tabs.get(namedTab).then(t => t.windowId, () => null);
+  return (await chrome.windows.getCurrent()).id;
+}
+/** The tab the person is looking at beside the sidebar. */
+async function activeTab() {
+  const windowId = await sidebarWindowId();
+  if (windowId == null) return null;
+  const [tab] = await chrome.tabs.query({ active: true, windowId });
+  return tab || null;
 }
 const isWebPage = (tab) => /^https?:/.test(tab?.url || '');
 const originOf = (url) => { try { return new URL(url).origin; } catch { return null; } };
+const hostOf = (url) => { try { return new URL(url).host; } catch { return url || ''; } };
+
+async function pages() {
+  try { return (await chrome.storage.session.get(PAGES_KEY))[PAGES_KEY] || {}; } catch { return {}; }
+}
+async function setPage(chatId, tabId) {
+  const all = await pages();
+  all[chatId] = tabId;
+  await chrome.storage.session.set({ [PAGES_KEY]: all });
+}
+/** The chat's page: its tab, or null when it has none yet or the tab was closed. */
+async function workingTab() {
+  if (!chat) return null;
+  const id = (await pages())[chat.id];
+  return id == null ? null : chrome.tabs.get(id).catch(() => null);
+}
+/**
+ * The chat's page, choosing the tab beside the sidebar when it has none yet
+ * (or, when the person sends a message, when its tab was closed). Never
+ * changes a page that is still open: only the person does that.
+ */
+async function ensureWorkingTab({ replaceClosed = false } = {}) {
+  const tab = await workingTab();
+  if (tab || !chat) return tab;
+  if ((await pages())[chat.id] != null && !replaceClosed) return null;
+  const active = await activeTab();
+  if (!isWebPage(active)) return null;
+  await setPage(chat.id, active.id);
+  renderWorking();
+  return active;
+}
+
+let workingSeq = 0;
+async function renderWorking() {
+  const seq = ++workingSeq;
+  const [hasPage, tab, active] = chat ? await Promise.all([pages().then(p => p[chat.id] != null), workingTab(), activeTab()]) : [false, null, null];
+  if (seq !== workingSeq) return;
+  $('working').hidden = !hasPage;
+  if (!hasPage) return;
+  const label = $('working-label');
+  if (tab) {
+    label.replaceChildren('Working on ', el('strong', '', tab.title || hostOf(tab.url)), el('span', 'where', ` · ${hostOf(tab.url)}`));
+  } else label.replaceChildren('The page this chat worked on is closed.');
+  const elsewhere = !!tab && tab.id !== active?.id;
+  $('go-to-page').hidden = !elsewhere;
+  const other = isWebPage(active) && active.id !== tab?.id;
+  $('switch-page').hidden = !other;
+  if (other) $('switch-page').textContent = `Work on this page instead (${hostOf(active.url)})`;
+}
+let workingTimer = null;
+const renderWorkingSoon = () => { clearTimeout(workingTimer); workingTimer = setTimeout(renderWorking, 100); };
+
+async function goToPage() {
+  const tab = await workingTab();
+  if (!tab) return renderWorking();
+  await chrome.tabs.update(tab.id, { active: true });
+  await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+}
+
+async function switchPage() {
+  const active = await activeTab();
+  if (!chat || !isWebPage(active)) return;
+  await setPage(chat.id, active.id);
+  await renderWorking();
+  renderRequests();
+  say(`The assistant now works on ${hostOf(active.url)}.`);
+}
+
+/** A screenshot of the tab. One not on screen is shown for a moment, only when the person just said yes. */
+async function screenshotOf(tab, interactive) {
+  const fresh = await chrome.tabs.get(tab.id);
+  const capture = () => chrome.tabs.captureVisibleTab(fresh.windowId, { format: 'jpeg', quality: 70 });
+  if (fresh.active) return capture();
+  if (!interactive) return undefined;
+  const [shown] = await chrome.tabs.query({ active: true, windowId: fresh.windowId });
+  await chrome.tabs.update(fresh.id, { active: true });
+  await new Promise(r => setTimeout(r, 400));
+  try { return await capture(); } finally { if (shown) await chrome.tabs.update(shown.id, { active: true }).catch(() => {}); }
+}
 
 /** What the person agreed to share of this tab, at this level. */
-async function collect(tab, level) {
+async function collect(tab, level, { interactive = false } = {}) {
   const shared = { level, url: tab.url, title: tab.title };
   if (level === 'source' || level === 'screenshot') {
     const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: pageOutline, args: [40000] });
     Object.assign(shared, res?.result || {});
   }
-  if (level === 'screenshot') shared.screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 70 });
+  if (level === 'screenshot') {
+    const shot = await screenshotOf(tab, interactive).catch(() => undefined);
+    if (shot) shared.screenshot = shot;
+  }
   return shared;
 }
 
@@ -95,11 +186,19 @@ async function answer(request, value) {
   try { await api(`/requests/${request.id}`, { method: 'POST', body: value }); } catch (e) { say(`Could not send that to the assistant: ${e.message}`, true); }
 }
 
-async function sharePage(request, level, remember) {
-  const tab = await currentTab();
-  if (!isWebPage(tab)) return answer(request, { level: 'none', unavailable: 'the tab beside the sidebar is not a web page' });
+const CLOSED = 'the page this chat works on was closed; the person can choose another in the sidebar';
+
+async function sharePage(request, level, remember, interactive = true) {
+  const tab = await ensureWorkingTab();
+  if (!tab) return answer(request, { level: 'none', unavailable: CLOSED });
+  if (!isWebPage(tab)) return answer(request, { level: 'none', unavailable: 'the page this chat works on is not a web page' });
+  // The card named one site; if the tab has since moved to another, ask about that one.
+  if (interactive && request.shownOrigin && request.shownOrigin !== originOf(tab.url)) {
+    renderRequests();
+    return say('That page moved to another site. Check what you are sharing.', true);
+  }
   try {
-    const shared = level === 'none' ? { level: 'none' } : await collect(tab, level);
+    const shared = level === 'none' ? { level: 'none' } : await collect(tab, level, { interactive });
     await answer(request, { ...shared, origin: originOf(tab.url), remember });
   } catch (e) {
     await answer(request, { level: 'none', unavailable: `the page could not be read (${e.message})` });
@@ -107,8 +206,9 @@ async function sharePage(request, level, remember) {
 }
 
 async function runPreview(request) {
-  const tab = await currentTab();
-  if (!isWebPage(tab)) return answer(request, { status: 'failed', message: 'The tab beside the sidebar is not a web page.' });
+  const tab = await ensureWorkingTab();
+  if (!tab) return answer(request, { unavailable: CLOSED });
+  if (!isWebPage(tab)) return answer(request, { unavailable: 'the page this chat works on is not a web page' });
   if (typeof chrome.userScripts?.execute !== 'function') {
     say('Previews need user scripts: turn on Allow User Scripts on this extension’s details page.', true);
     return answer(request, { status: 'failed', message: 'User scripts are off in this browser: ask the person to turn on "Allow User Scripts" on the extension’s details page.' });
@@ -116,24 +216,26 @@ async function runPreview(request) {
   let result;
   try {
     const [res] = await chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', injectImmediately: true,
-      js: [{ code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters }) }] });
+      js: [{ code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks }) }] });
     result = res?.result || { status: 'failed', message: res?.error || 'the page gave no result' };
   } catch (e) {
     result = { status: 'failed', message: e.message };
   }
-  if (result.status === 'applied') showPreview({ name: request.name, tabId: tab.id });
+  if (result.status === 'applied') showPreview({ name: request.name, tabId: tab.id, origin: hostOf(tab.url) });
   // The page afterwards, at what the person shares on this site in this chat.
   const level = chat?.consent?.[originOf(tab.url)];
   let after;
   if (result.status === 'applied' && (level === 'source' || level === 'screenshot')) {
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 300));
     after = await collect(tab, level).catch(() => undefined);
   }
-  await answer(request, { ...result, ...(after ? { after } : {}) });
+  // Which site it ran on, when the person shares at least the address there.
+  const site = level && level !== 'none' ? originOf(tab.url) : undefined;
+  await answer(request, { ...result, ...(after ? { after } : {}), ...(site ? { site } : {}) });
 }
 
 async function removePreview() {
-  const tabId = previewing?.tabId ?? (await currentTab())?.id;
+  const tabId = previewing?.tabId ?? (await workingTab())?.id;
   let removed = false;
   if (tabId != null && typeof chrome.userScripts?.execute === 'function') {
     try {
@@ -148,7 +250,7 @@ async function removePreview() {
 function showPreview(p) {
   previewing = p;
   $('preview-bar').hidden = !p;
-  $('preview-label').textContent = p ? `Previewing “${p.name}” on this page.` : '';
+  $('preview-label').textContent = p ? `Previewing “${p.name}” on ${p.origin}.` : '';
 }
 
 async function handleRequest(request) {
@@ -156,11 +258,12 @@ async function handleRequest(request) {
   if (request.kind === 'remove-preview') return answer(request, { removed: await removePreview() });
   if (request.kind === 'preview' && $('auto-preview').checked) return runPreview(request);
   if (request.kind === 'page') {
-    const tab = await currentTab();
-    const origin = originOf(tab?.url);
+    const tab = await ensureWorkingTab();
+    if (!tab) return answer(request, { level: 'none', unavailable: CLOSED });
+    const origin = originOf(tab.url);
     const agreed = origin && chat.consent?.[origin];
     // Once per site per chat; a screenshot may be asked for again.
-    if (agreed && !(request.screenshot && LEVELS.indexOf(agreed) < LEVELS.indexOf('screenshot'))) return sharePage(request, agreed, false);
+    if (agreed && !(request.screenshot && LEVELS.indexOf(agreed) < LEVELS.indexOf('screenshot'))) return sharePage(request, agreed, false, false);
     request.again = !!agreed;
   }
   requests.set(request.id, request);
@@ -174,7 +277,7 @@ function renderRequests() {
     card.setAttribute('aria-label', 'The assistant asks');
     if (request.kind === 'page') {
       const tabOrigin = el('strong');
-      currentTab().then(t => { tabOrigin.textContent = originOf(t?.url) || 'this tab'; });
+      workingTab().then(t => { request.shownOrigin = originOf(t?.url); tabOrigin.textContent = request.shownOrigin || 'the page'; });
       const again = request.again;
       card.append(el('h2', '', again ? 'May the assistant take a screenshot of this page?' : 'May the assistant see this page?'));
       if (request.reason) card.append(el('p', 'why', request.reason));
@@ -185,7 +288,7 @@ function renderRequests() {
       if (again) {
         choices.append(
           button('Share a screenshot', 'primary', () => sharePage(request, 'screenshot', false)),
-          button('Not now', 'secondary', async () => { const t = await currentTab(); sharePage(request, chat.consent?.[originOf(t?.url)] || 'none', false); }));
+          button('Not now', 'secondary', async () => { const t = await workingTab(); sharePage(request, chat.consent?.[originOf(t?.url)] || 'none', false); }));
       } else {
         choices.append(
           button('The address only', 'secondary', () => sharePage(request, 'url', true)),
@@ -195,8 +298,11 @@ function renderRequests() {
       }
       card.append(choices, el('p', 'note', 'The assistant needs the page source and a screenshot to build the best adapter. What you share stays on the toolkit’s server for this research and is not used to identify you.'));
     } else if (request.kind === 'preview') {
-      card.append(el('h2', '', `Preview “${request.name}” on this page?`),
-        el('p', 'note', 'It runs on this tab only, until you remove it or reload the page. Nothing is installed.'));
+      const where = el('strong');
+      workingTab().then(t => { where.textContent = t ? hostOf(t.url) : 'the page'; });
+      const note = el('p', 'note');
+      note.append('It runs on ', where, ' in that tab only, until you remove it or reload the page. Nothing is installed.');
+      card.append(el('h2', '', `Preview “${request.name}”?`), note);
       const row = el('div', 'row');
       row.append(button('Preview', 'primary', () => { requests.delete(request.id); renderRequests(); runPreview(request); }),
         button('Not now', 'secondary', () => answer(request, { status: 'declined' })));
@@ -219,9 +325,12 @@ function renderChats() {
   if (chat) select.value = chat.id;
 }
 
-function entryNode(entry) {
+function entryNode(entry, count = 1) {
   if (entry.kind === 'step') {
-    const li = el('li', `step ${entry.state || 'done'}`, entry.text);
+    const li = el('li', `step ${entry.state || 'done'}`);
+    const words = el('span', '', entry.text);
+    if (count > 1) words.append(el('span', 'times', ` (${count} times)`));
+    li.append(words);
     li.dataset.id = entry.id;
     return li;
   }
@@ -231,11 +340,35 @@ function entryNode(entry) {
   return li;
 }
 
+/** Entries as shown: a step that repeats the one before it (same words, same state) folds into it. */
+function foldedEntries(entries) {
+  const out = [];
+  for (const entry of entries) {
+    const last = out.at(-1);
+    if (entry.kind === 'step' && last?.entry.kind === 'step' && last.entry.text === entry.text && (last.entry.state || 'done') === (entry.state || 'done')) last.count++;
+    else out.push({ entry, count: 1 });
+  }
+  return out;
+}
+
+// Only the lines that changed are replaced, so a screen reader hears each new line once.
 function renderTranscript() {
   const list = $('transcript');
   if (!chat?.entries.length) {
     list.replaceChildren(el('li', 'empty', 'Say what gets in your way on the page beside this sidebar, for example “the buttons are too small to tap” or “I can’t read the gray text”. The assistant asks a few questions, then builds an adapter and previews it here.'));
-  } else list.replaceChildren(...chat.entries.map(entryNode));
+    return;
+  }
+  list.querySelector('.empty')?.remove();
+  const shown = [...list.children];
+  const folded = foldedEntries(chat.entries);
+  folded.forEach(({ entry, count }, i) => {
+    const sig = JSON.stringify([entry.id, entry.kind, entry.text, entry.state, count]);
+    if (shown[i]?.dataset.sig === sig) return;
+    const node = entryNode(entry, count);
+    node.dataset.sig = sig;
+    if (shown[i]) shown[i].replaceWith(node); else list.append(node);
+  });
+  for (const extra of shown.slice(folded.length)) extra.remove();
   list.scrollTop = list.scrollHeight;
 }
 
@@ -243,11 +376,7 @@ function addEntry(entry) {
   const i = chat.entries.findIndex(e => e.id === entry.id);
   if (i >= 0) chat.entries[i] = { ...chat.entries[i], ...entry };
   else chat.entries.push(entry);
-  const list = $('transcript');
-  const existing = [...list.children].find(n => n.dataset.id === entry.id);
-  if (existing) existing.replaceWith(entryNode(chat.entries[i >= 0 ? i : chat.entries.length - 1]));
-  else { list.querySelector('.empty')?.remove(); list.append(entryNode(entry)); }
-  list.scrollTop = list.scrollHeight;
+  renderTranscript();
 }
 
 function renderReady() {
@@ -275,7 +404,8 @@ function renderBusy() {
 async function openChat(id) {
   chat = (await api(`/chats/${id}`)).chat;
   requests.clear();
-  renderChats(); renderTranscript(); renderReady(); renderRequests(); renderBusy();
+  $('transcript').replaceChildren();
+  renderChats(); renderTranscript(); renderReady(); renderRequests(); renderBusy(); renderWorking();
   try { await chrome.storage.local.set({ assistantChat: id }); } catch { /* fine */ }
 }
 
@@ -389,6 +519,7 @@ $('composer').addEventListener('submit', async (e) => {
   if (!text || !chat) return;
   $('send').disabled = true;
   try {
+    await ensureWorkingTab({ replaceClosed: true });
     await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text } });
     $('message').value = '';
     say('');
@@ -410,8 +541,16 @@ $('new-chat').addEventListener('click', async () => {
 $('chat-select').addEventListener('change', (e) => openChat(e.target.value).catch(err => say(err.message, true)));
 $('remove-preview').addEventListener('click', async () => { await removePreview(); say('The preview is off the page.'); });
 $('auto-preview').addEventListener('change', (e) => chrome.storage.local.set({ [AUTO_KEY]: e.target.checked }));
+$('go-to-page').addEventListener('click', () => goToPage().catch(e => say(e.message, true)));
+$('switch-page').addEventListener('click', () => switchPage().catch(e => say(e.message, true)));
 // A navigation clears the page, and with it the preview.
-chrome.tabs.onUpdated.addListener((tabId, info) => { if (previewing?.tabId === tabId && info.status === 'loading') showPreview(null); });
+chrome.tabs.onUpdated.addListener((tabId, info) => {
+  if (previewing?.tabId === tabId && info.status === 'loading') showPreview(null);
+  if (info.url || info.title || info.status === 'complete') renderWorkingSoon();
+});
+chrome.tabs.onActivated.addListener(renderWorkingSoon);
+chrome.tabs.onRemoved.addListener((tabId) => { if (previewing?.tabId === tabId) showPreview(null); renderWorkingSoon(); });
+chrome.windows.onFocusChanged.addListener(renderWorkingSoon);
 
 async function start() {
   connection = await readConnection();

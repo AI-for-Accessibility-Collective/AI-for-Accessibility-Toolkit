@@ -2,10 +2,14 @@
 // this page?, preview this adapter?, remove the preview. A tool call waits
 // here until the sidebar answers, the chat stops, or the wait runs out.
 // A sidebar that connects later gets the open ones again.
+//
+// The wait is under opencode's own limit on a tool call (about five
+// minutes), so the agent hears "no answer" from us and the card is withdrawn,
+// rather than opencode giving up on a card still showing.
 
 import { randomBytes } from 'node:crypto';
 
-export function createRequests({ events, timeoutMs = 15 * 60_000 }) {
+export function createRequests({ events, timeoutMs = 4 * 60_000 }) {
   const open = new Map(); // id -> {uid, chatId, request, resolve, timer}
 
   function ask(uid, chatId, request) {

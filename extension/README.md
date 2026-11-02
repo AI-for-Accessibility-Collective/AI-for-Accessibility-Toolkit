@@ -93,11 +93,20 @@ step shows as one line.
   screenshot, or nothing. You choose once per site in each chat; the agent
   may ask again for a screenshot. What you share is kept on the toolkit's
   server for the research and is not used to identify you.
-- **Previews.** A preview runs the adapter on this tab only, without
+- **The page it works on.** Each chat works on the tab beside the sidebar
+  when you send its first message, and keeps working on it when you move to
+  other tabs. The sidebar shows that page, with **Go to that tab**, and
+  **Work on this page instead** to move the chat to the tab you are on.
+  Nothing changes the chat's page unless you choose it.
+- **Previews.** A preview runs the adapter on the chat's page only, without
   installing it, until you remove it or reload the page. You are asked
-  first, unless you tick **Apply previews automatically**. The agent sees
-  whether it applied and, at the level you share, the page afterwards, so it
-  can review the change.
+  first, unless you tick **Apply previews automatically**. The agent's checks
+  run with it and say whether it works; the agent also sees whether it
+  applied and, at the level you share, the page afterwards, so it can review
+  the change. It can only offer an adapter whose checks all passed, and the
+  sidebar warns you about one that was not checked. A screenshot of a page
+  that is not on screen is taken only when you choose to share one: the
+  sidebar shows that tab for a moment, then goes back.
 - **When it is ready**, **Add to my account** publishes it to your account,
   private to you, and installs it here, so it runs on the pages it targets.
   **Export** saves the adapter file.

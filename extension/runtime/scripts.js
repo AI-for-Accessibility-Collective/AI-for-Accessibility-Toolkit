@@ -133,15 +133,25 @@ export function runnable(adapters) {
 // ── previews from the assistant sidebar ──────────────────────────────────────
 // One preview at a time per page, under its own key: never installed, never
 // reported to the toolkit. Its toolkit.data lives in the page only. The
-// script's value is a promise of {status, message}, which
+// script's value is a promise of {status, message, changes, checks}, which
 // chrome.userScripts.execute hands back to the sidebar.
+//
+// The agent's checks say whether the adapter works: each is the body of an
+// async function (the agent host has already compiled it on its own, so it
+// cannot reach outside its function) that returns true when the page is as it
+// should be. Each runs before enable() and again after it, and only whether it
+// passed comes back, with a short error. `changes` counts what enable() changed
+// in the page (mutation records), where the page has a MutationObserver.
 
 export const PREVIEW_KEY = 'preview';
+const CHECK_MS = 5000;
+const SETTLE_MS = 400;
 
-/** @param {{code: string, urlPatterns: string[], parameters?: object}} preview */
-export function buildPreviewScript({ code, urlPatterns, parameters = {} }) {
+/** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[]}} preview */
+export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [] }) {
   const factory = moduleFactorySource(code);
   const scope = (urlPatterns || []).map(urlPatternRegExpSource);
+  const checkList = (checks || []).map(c => `async function () {\n${c.code}\n}`).join(',\n');
   return `(() => {
   const KEY = ${JSON.stringify(PREVIEW_KEY)};
   const SCOPE = ${JSON.stringify(scope)}.map((s) => new RegExp(s));
@@ -169,13 +179,42 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {} }) {
     else { const found = Object.values(exports).filter(isAdapter); adapter = found.length === 1 ? found[0] : null; }
     if (!adapter) throw new Error('the file does not export exactly one adapter (an object with enable and disable)');
   } catch (e) { return Promise.resolve({ status: 'failed', message: 'Loading the adapter: ' + errorText(e) }); }
+  const CHECKS = [${checkList}];
+  const runChecks = async () => {
+    const out = [];
+    for (const check of CHECKS) {
+      let timer;
+      try {
+        const value = await Promise.race([check(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('took over ${CHECK_MS / 1000} seconds')), ${CHECK_MS}); })]);
+        out.push({ ok: !!value });
+      } catch (e) { out.push({ ok: false, error: errorText(e).slice(0, 160) }); }
+      clearTimeout(timer);
+    }
+    return out;
+  };
+  // Counted as they arrive: records handed to the callback are gone from takeRecords().
+  let records = 0;
+  const watch = typeof MutationObserver === 'function' && typeof document === 'object' ? new MutationObserver((list) => { records += list.length; }) : null;
+  const report = async (result) => {
+    if (watch) { await new Promise((r) => setTimeout(r, ${SETTLE_MS})); records += watch.takeRecords().length; watch.disconnect(); result.changes = records; }
+    if (CHECKS.length) {
+      const after = await runChecks();
+      result.checks = after.map((a, i) => ({ before: before[i].ok, after: a.ok, ...(a.error ? { error: a.error } : {}) }));
+    }
+    return result;
+  };
+  let before = [];
   rt.adapters[KEY] = { adapter, revision: 0 };
-  return Promise.resolve().then(() => adapter.enable(${JSON.stringify(parameters)}, TOOLKIT)).then(
+  return runChecks().then((b) => {
+    before = b;
+    if (watch) watch.observe(document.documentElement || document, { subtree: true, childList: true, attributes: true, characterData: true });
+    return adapter.enable(${JSON.stringify(parameters)}, TOOLKIT);
+  }).then(
     (value) => {
-      if (value === false) { delete rt.adapters[KEY]; return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
-      return { status: 'applied' };
+      if (value === false) { delete rt.adapters[KEY]; if (watch) watch.disconnect(); return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
+      return report({ status: 'applied' });
     },
-    (e) => { delete rt.adapters[KEY]; return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
+    (e) => { delete rt.adapters[KEY]; if (watch) watch.disconnect(); return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
 })()`;
 }
 

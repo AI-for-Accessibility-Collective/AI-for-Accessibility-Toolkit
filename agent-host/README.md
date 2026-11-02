@@ -48,10 +48,20 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   and adds the real key ([src/model-proxy.js](src/model-proxy.js)).
 - **The browser tools** ([src/browser-tools.js](src/browser-tools.js)) are an
   MCP server the sandbox's opencode is configured with. A call goes to the
-  account's sidebar and waits for the person (up to 15 minutes):
+  account's sidebar and waits for the person (up to 4 minutes, under
+  opencode's own limit on a tool call, so the agent hears "no answer"):
   `browser_page`, `browser_preview`, `browser_remove_preview`, `adapter_ready`.
   The agent's standing instructions, including how to load, preview and
   review an adapter, are [sandbox/AGENTS.md](sandbox/AGENTS.md).
+- **An adapter is checked before it is offered.** Every preview carries the
+  agent's checks: function bodies that run in the page before and after
+  `enable()` and say only whether the page is as it should be. The host
+  compiles each on its own first (so it cannot reach outside its function)
+  and lints it like an adapter. `adapter_ready` is refused unless the latest
+  preview of the file, as it is now, applied and passed every check; at the
+  end of a run, the person is warned about any adapter it wrote or previewed
+  that was not checked that way. Previews on every site (`*`, `https://*/*`)
+  are refused.
 - **What the person sees has no code**: replies with code left out, and one
   plain line per step ([src/updates.js](src/updates.js)).
 - **Chats keep their history** on the host (`chats/`), each continuing its

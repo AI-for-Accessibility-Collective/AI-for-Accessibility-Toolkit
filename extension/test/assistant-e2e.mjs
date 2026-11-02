@@ -2,7 +2,8 @@
 // real toolkit service forwarding /v1/agent to a real agent host, and a test
 // shop. The person asks, shares the page, previews the adapter on it, keeps
 // their chat, adds the adapter to their account (it then runs in this browser)
-// and exports it. The sidebar never shows code.
+// and exports it. Each chat keeps working on its page while the person moves
+// to other tabs, until they choose another. The sidebar never shows code.
 //
 //   npm run test:assistant:e2e              # a stand-in agent (no LLM)
 //   AGENT_E2E_REAL=1 npm run test:assistant:e2e
@@ -59,7 +60,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
 // A shop with small buttons.
 const site = http.createServer((req, res) => {
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-  res.end(`<!doctype html><html lang="en"><head><title>Shop</title><style>button{height:20px;font-size:11px}</style></head><body><main><h1>Shop</h1><p>Tea, 4 dollars.</p><button id="buy">Buy</button> <button id="later">Save for later</button></main></body></html>`);
+  res.end(`<!doctype html><html lang="en"><head><title>${req.url.startsWith('/other') ? 'Other' : 'Shop'}</title><style>button{height:20px;font-size:11px}</style></head><body><main><h1>Shop</h1><p>Tea, 4 dollars.</p><button id="buy">Buy</button> <button id="later">Save for later</button></main></body></html>`);
 });
 await new Promise(r => site.listen(0, '127.0.0.1', r));
 const shop = `http://localhost:${site.address().port}/`;
@@ -120,7 +121,9 @@ try {
     assert.match(await panel.locator('.card').innerText(), /not used to identify you/);
     await shot(panel, '1-share-page');
     await panel.getByRole('button', { name: 'The address, the source and a screenshot' }).click();
-    await panel.getByRole('heading', { name: 'Preview “Bigger buttons” on this page?' }).waitFor();
+    // The chat now works on the shop.
+    assert.match(await panel.locator('#working-label').innerText(), /Working on Shop/);
+    await panel.getByRole('heading', { name: 'Preview “Bigger buttons”?' }).waitFor();
     await shot(panel, '2-preview');
     await panel.getByRole('button', { name: 'Preview', exact: true }).click();
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the preview on the page');
@@ -129,7 +132,9 @@ try {
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
     const shown = await panel.locator('#transcript').innerText();
     assert.match(shown, /Looking at the page/);
-    assert.match(shown, /“Bigger buttons” is previewing on your page/);
+    assert.match(shown, /“Bigger buttons” is previewing on your page · 1 of 1 checks pass/);
+    assert.match(shown, /Reading the toolkit’s guides and code \(2 times\)/, 'a repeated step is one line');
+    assert.match(shown, /Changed: yes\./, 'the preview counted what enable() changed in the page');
     assert.ok(!/export const|```/.test(shown), 'no code in the sidebar');
     await shot(panel, '3-ready');
 
@@ -144,12 +149,35 @@ try {
     await panel.getByRole('button', { name: 'Remove preview' }).click();
     await until(() => page.evaluate(() => !document.body.dataset.big), 'the preview removed');
 
-    // Automatic previews, and the site's answer remembered in this chat: no cards this time.
+    // The person moves to another tab: the chat still works on the shop.
+    const windowId = await runtime((id) => chrome.tabs.get(id).then(t => t.windowId), tabId);
+    const otherOpened = context.waitForEvent('page');
+    const otherId = await runtime(([url, windowId]) => chrome.tabs.create({ url, windowId, active: true }).then(t => t.id), [shop + 'other', windowId]);
+    const other = await otherOpened;
+    await other.waitForLoadState();
+    await panel.locator('#switch-page', { hasText: 'Work on this page instead' }).waitFor();
+    assert.match(await panel.locator('#working-label').innerText(), /Working on Shop/);
+    await shot(panel, '3b-other-tab');
+
+    // Automatic previews, and the site's answer remembered in this chat: no cards this time,
+    // and the preview goes to the shop, not the tab on screen.
     await panel.check('#auto-preview');
     await ask('build them again');
-    await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the automatic preview');
+    await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the automatic preview on the shop');
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
     assert.equal(await panel.locator('.card').count(), 0);
+    assert.equal(await other.evaluate(() => document.body.dataset.big), undefined, 'nothing ran on the tab on screen');
+    const active = () => runtime((w) => chrome.tabs.query({ active: true, windowId: w }).then(([t]) => t.id), windowId);
+    assert.equal(await active(), otherId, 'the shop was not brought forward: its screenshot was left out');
+
+    // Go to that tab brings the shop forward; Work on this page instead moves the chat.
+    await panel.getByRole('button', { name: 'Go to that tab' }).click();
+    await until(async () => (await active()) === tabId, 'the shop tab in front');
+    await panel.locator('#go-to-page').waitFor({ state: 'hidden' });
+    await runtime((id) => chrome.tabs.update(id, { active: true }), otherId);
+    await panel.getByRole('button', { name: /Work on this page instead/ }).click();
+    await panel.locator('#working-label', { hasText: 'Working on Other' }).waitFor();
+    await runtime((id) => chrome.tabs.update(id, { active: true }), tabId);
 
     // Export, then add to the account: it then runs here from the account.
     const download = panel.waitForEvent('download');
@@ -172,7 +200,7 @@ try {
     await panel.locator('#transcript', { hasText: 'build them again' }).waitFor();
     await panel.reload();
     await panel.locator('#transcript', { hasText: 'build them again' }).waitFor();
-    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview and removal, automatic preview, no code shown, page data on the host, export, add to account (runs from the account), chat history.');
+    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
     // Send, then answer what the agent asks (share everything, preview) until its run ends.

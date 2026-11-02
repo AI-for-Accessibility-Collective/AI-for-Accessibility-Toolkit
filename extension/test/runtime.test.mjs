@@ -26,7 +26,7 @@ function page(href) {
     location: { href, origin: u.origin, protocol: u.protocol, hostname: u.hostname, port: u.port, pathname: u.pathname },
     chrome: { runtime: { sendMessage: (m) => reports.push(m) } },
     log: (x) => log.push(x),
-    Promise, RegExp, Object, JSON, String, Error, setTimeout,
+    Promise, RegExp, Object, JSON, String, Error, setTimeout, clearTimeout,
   });
   return { run: (code) => vm.runInContext(code, context), reports, log, context };
 }
@@ -180,6 +180,24 @@ await test('a preview says why it did not apply', async () => {
   const data = await q.run(buildPreviewScript({ code: `export const D = { async enable(o, t) { await t.data.set('k', 2); log('got ' + await t.data.get('k')); }, disable() {} };`, urlPatterns: ['https://shop.example/*'] }));
   assert.equal(data.status, 'applied');
   assert.equal(q.log.at(-1), 'got 2', 'its data stays in the page');
+});
+
+await test('a preview runs its checks before and after enable(), and says only whether each passed', async () => {
+  const p = page('https://shop.example/');
+  const code = `export const F = { enable() { globalThis.marked = true; }, disable() { globalThis.marked = false; } };`;
+  const checks = [
+    { name: 'marked', code: 'return globalThis.marked === true;' },
+    { name: 'gives page text back', code: "return 'some page text';" },
+    { name: 'throws', code: "throw new Error('no rows ' + 'x'.repeat(300));" },
+  ];
+  const r = await plain(p.run(buildPreviewScript({ code, urlPatterns: ['https://shop.example/*'], checks })));
+  assert.equal(r.status, 'applied');
+  assert.deepEqual(r.checks.map(c => [c.before, c.after]), [[false, true], [true, true], [false, false]]);
+  assert.ok(!JSON.stringify(r).includes('some page text'), 'a check answers pass or fail, never what it returned');
+  assert.ok(r.checks[2].error.startsWith('no rows') && r.checks[2].error.length <= 160);
+  // A failed enable() runs no checks after it.
+  const failed = await plain(p.run(buildPreviewScript({ code: CODE('x', "throw new Error('no');"), urlPatterns: ['https://shop.example/*'], checks })));
+  assert.deepEqual(failed, { status: 'failed', message: 'enable() failed: no' });
 });
 
 await test('the runtime sends a token only to https or this computer', () => {

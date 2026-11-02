@@ -2,22 +2,33 @@
 // (streamable HTTP, JSON replies). Each call goes to the sidebar of the
 // account the sandbox token names, and waits for the person:
 //
-//   browser_page            see the page the sidebar is open on, as much as
-//                           the person agrees to share (URL, source, screenshot)
-//   browser_preview         run an adapter file on that page as a preview
+//   browser_page            see the page the chat works on (the sidebar pins
+//                           one tab per chat), as much as the person agrees
+//                           to share (URL, source, screenshot)
+//   browser_preview         run an adapter file on that page as a preview,
+//                           with the agent's checks before and after
 //   browser_remove_preview  take the preview off again
 //   adapter_ready           offer a finished adapter to the person: they can
-//                           export it or add it to their account
+//                           export it or add it to their account. Only once
+//                           its latest preview applied and every check passed,
+//                           on the file as it is now.
 //
 // The host, not opencode's event stream, writes the sidebar's line for each,
 // so the person sees "Previewing … on your page" while it waits for them.
+// When a run ends with an adapter that was not checked that way, the person
+// is told so (afterRun).
 
-import { readFileSync, statSync, realpathSync } from 'node:fs';
+import { readFileSync, statSync, realpathSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { lintWebModule, urlPatternError, SUPPORT_AREAS, MAX_PACKAGE_CODE } from '../../toolkit/protocol/adapter/index.js';
 
 const MAX_OUTLINE = 40_000;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
+const MAX_CHECKS = 8;
+const MAX_CHECK_CODE = 3000;
+const AsyncFunction = (async () => {}).constructor;
+const hashOf = (code) => createHash('sha256').update(code).digest('hex');
 
 const TOOLS = [
   {
@@ -30,13 +41,18 @@ const TOOLS = [
   },
   {
     name: 'browser_preview',
-    description: 'Preview an adapter on the person\'s page: runs the adapter file (a web module under /work) on the tab the sidebar is open on, without installing it. The person may be asked first. Returns whether enable() applied, failed (with the error) or skipped, and the page afterwards at the level the person shares, so you can review the change. A new preview replaces the last one.',
+    description: 'Preview an adapter on the person\'s page: runs the adapter file (a web module under /work) on the page this chat works on, without installing it, with your checks. The person may be asked first. Returns whether enable() applied, failed (with the error) or skipped; how many changes it made in the page; each check before and after enable(); and the page afterwards at the level the person shares. A new preview replaces the last one.',
     inputSchema: { type: 'object', properties: {
       file: { type: 'string', description: 'The adapter file, e.g. adapters/bigger-buttons.js (relative to /work).' },
       name: { type: 'string', description: 'The adapter\'s name, as the person will see it.' },
-      runs_on: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'URL patterns it runs on, e.g. https://example.com/*' },
+      runs_on: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'URL patterns for the site it is for, e.g. https://example.com/*. Never every site.' },
+      checks: { type: 'array', minItems: 1, maxItems: MAX_CHECKS, description: 'How you know it works. Each check is the body of an async function run in the page, before enable() and again after it, that returns true when the page is as it should be: for example that the elements the adapter changes exist, that they changed, and that using what it adds (type into its box, click its button, then wait a moment) has the effect it should. Put the page back at the end of a check that uses the page. Only pass or fail comes back, never page content.',
+        items: { type: 'object', properties: {
+          name: { type: 'string', description: 'What it checks, in a few plain words.' },
+          code: { type: 'string', description: 'The function body, e.g. return document.querySelectorAll("button").length > 0 && [...document.querySelectorAll("button")].every(b => b.getBoundingClientRect().height >= 44);' },
+        }, required: ['name', 'code'], additionalProperties: false } },
       parameters: { type: 'object', description: 'Parameters passed to enable(), if any.' },
-    }, required: ['file', 'name', 'runs_on'], additionalProperties: false },
+    }, required: ['file', 'name', 'runs_on', 'checks'], additionalProperties: false },
   },
   {
     name: 'browser_remove_preview',
@@ -45,7 +61,7 @@ const TOOLS = [
   },
   {
     name: 'adapter_ready',
-    description: 'Offer a finished, previewed adapter to the person. The sidebar then shows it with "Add to my account" and "Export". Call it once the preview works and you have reviewed it.',
+    description: 'Offer a finished adapter to the person. The sidebar then shows it with "Add to my account" and "Export". Refused unless the latest preview of this file, as it is now, applied and passed every check; review it first.',
     inputSchema: { type: 'object', properties: {
       file: { type: 'string', description: 'The adapter file under /work, e.g. adapters/bigger-buttons.js' },
       id: { type: 'string', description: 'Short id: lowercase letters, digits and dashes, e.g. bigger-buttons' },
@@ -58,6 +74,7 @@ const TOOLS = [
 ];
 
 const text = (t) => ({ content: [{ type: 'text', text: t }] });
+const NO_ANSWER = 'The person has not answered in the sidebar (it may be closed, or they are away). Stop here: tell them in one sentence what is waiting for them, and wait for their reply.';
 const fail = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
 
 export function createBrowserTools({ uidForToken, chats, requests, pageData, workDir, log }) {
@@ -79,8 +96,41 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
   function patternsOf(list) {
     const patterns = (Array.isArray(list) ? list : []).map(String).filter(Boolean);
     if (!patterns.length) throw new Error('Give at least one URL pattern in runs_on.');
-    for (const p of patterns) { const e = urlPatternError(p); if (e) throw new Error(`runs_on "${p}": ${e}`); }
+    for (const p of patterns) {
+      const e = urlPatternError(p);
+      if (e) throw new Error(`runs_on "${p}": ${e}`);
+      // An adapter is for a site: one that runs everywhere is never what was asked.
+      if (p === '*' || /^[^:]+:\/\/\*(\/|:|$)/.test(p)) throw new Error(`runs_on "${p}" covers every site. Name the site the adapter is for, such as https://example.com/*. If a preview was skipped, the page this chat works on is another site: ask the person.`);
+    }
     return patterns;
+  }
+
+  /** The agent's checks: named function bodies that compile on their own and pass the adapter lint. */
+  function checksOf(list) {
+    const checks = (Array.isArray(list) ? list : []).slice(0, MAX_CHECKS).map((c, i) => ({ name: String(c?.name || `Check ${i + 1}`).slice(0, 100), code: String(c?.code || '') }));
+    if (!checks.length) throw new Error('Give at least one check: how you will know the adapter works on this page.');
+    for (const c of checks) {
+      if (!c.code.trim()) throw new Error(`Check "${c.name}" has no code.`);
+      if (c.code.length > MAX_CHECK_CODE) throw new Error(`Check "${c.name}" is over ${MAX_CHECK_CODE} characters.`);
+      // Compiled, never called: a body that does not stand on its own as a
+      // function body cannot be spliced into the preview script.
+      try { new AsyncFunction(c.code); } catch (e) { throw new Error(`Check "${c.name}" does not compile as a function body: ${e.message}`); }
+      const errors = lintWebModule(`export const Check = { async enable() {\n${c.code}\n}, disable() {} };`).filter(f => f.level === 'error');
+      if (errors.length) throw new Error(`Check "${c.name}": ${errors.map(e => e.message).join('; ')}.`);
+    }
+    return checks;
+  }
+
+  /** Whether a preview record shows the adapter working, and if not, why (plain words for the person). */
+  function verdict(rec, code) {
+    if (!rec) return { ok: false, why: 'has not been previewed on your page' };
+    if (rec.hash !== hashOf(code)) return { ok: false, why: 'changed after its last preview' };
+    if (rec.status === 'no-answer' || rec.status === 'declined') return { ok: false, why: 'was not previewed: the preview did not run' };
+    if (rec.status !== 'applied') return { ok: false, why: `did not apply in its last preview (${rec.status})` };
+    const failed = (rec.checks || []).filter(c => !c.after).length;
+    if (!rec.checks?.length) return { ok: false, why: 'was previewed without checks' };
+    if (failed) return { ok: false, why: `failed ${failed} of its ${rec.checks.length} checks` };
+    return { ok: true };
   }
 
   function pageContent(intro, shared) {
@@ -100,11 +150,11 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       const a = await requests.ask(uid, chatId, { kind: 'page', reason: String(args.reason || '').slice(0, 300), screenshot: args.screenshot === true });
       if (a.cancelled || a.timedOut) {
         chats.addEntry(uid, chatId, { id: step.id, text: 'Asked to see your page: no answer', state: 'failed' });
-        return text(a.timedOut ? 'The person did not answer. Ask them in your reply whether they want to share the page.' : 'The chat was stopped.');
+        return text(a.timedOut ? NO_ANSWER : 'The chat was stopped.');
       }
       if (a.unavailable) {
-        chats.addEntry(uid, chatId, { id: step.id, text: 'This tab cannot be shared', state: 'failed' });
-        return text(`The page cannot be shared: ${String(a.unavailable).slice(0, 200)}. Ask the person to open the page they mean beside the sidebar.`);
+        chats.addEntry(uid, chatId, { id: step.id, text: 'The page could not be shared', state: 'failed' });
+        return text(`The page cannot be shared: ${String(a.unavailable).slice(0, 200)}. Ask the person to choose the page they mean in the sidebar.`);
       }
       if (a.remember && a.origin && a.level) chats.setConsent(uid, chatId, a.origin, a.level);
       if (!a.level || a.level === 'none') {
@@ -114,31 +164,52 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       pageData(uid, chatId, 'page', a);
       chats.addEntry(uid, chatId, { id: step.id, text: a.level === 'url' ? 'Got the page’s address' : 'Looking at the page', state: 'done' });
       const what = { url: 'only the address', source: 'the address and the page source', screenshot: 'the address, the page source and a screenshot' }[a.level] || 'part of the page';
-      return { content: pageContent(`The person shared ${what}.`, a) };
+      const skipped = a.level === 'screenshot' && !a.screenshot ? ' The screenshot was left out: the page is not the tab on screen right now.' : '';
+      return { content: pageContent(`The person shared ${what}.${skipped}`, a) };
     },
 
     async browser_preview(uid, chatId, args) {
-      let adapter, patterns;
-      try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on); } catch (e) { return fail(e.message); }
+      let adapter, patterns, checks;
+      try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on); checks = checksOf(args.checks); } catch (e) { return fail(e.message); }
       const name = String(args.name || adapter.file).slice(0, 80);
+      const record = (fields) => chats.recordPreview(uid, chatId, { file: adapter.file, name, hash: hashOf(adapter.code), ...fields });
       const step = chats.addEntry(uid, chatId, { kind: 'step', text: `Previewing “${name}” on your page`, state: 'running' });
-      const a = await requests.ask(uid, chatId, { kind: 'preview', name, file: adapter.file, code: adapter.code, runsOn: patterns,
+      const a = await requests.ask(uid, chatId, { kind: 'preview', name, file: adapter.file, code: adapter.code, runsOn: patterns, checks,
         parameters: args.parameters && typeof args.parameters === 'object' ? args.parameters : {} });
       if (a.cancelled || a.timedOut) {
+        record({ status: 'no-answer' });
         chats.addEntry(uid, chatId, { id: step.id, text: `Preview of “${name}”: no answer`, state: 'failed' });
-        return text(a.timedOut ? 'The person did not answer the preview request.' : 'The chat was stopped.');
+        return text(a.timedOut ? `${NO_ANSWER} The preview did not run, so you do not know whether the adapter works: do not say it does.` : 'The chat was stopped.');
+      }
+      if (a.unavailable) {
+        record({ status: 'no-answer' });
+        chats.addEntry(uid, chatId, { id: step.id, text: `Could not preview “${name}”: no page to preview on`, state: 'failed' });
+        return text(`The preview did not run: ${String(a.unavailable).slice(0, 200)}. Ask the person to choose the page in the sidebar, and do not say the adapter works.`);
       }
       if (a.status === 'declined') {
+        record({ status: 'declined' });
         chats.addEntry(uid, chatId, { id: step.id, text: `You chose not to preview “${name}”`, state: 'done' });
         return text('The person chose not to preview it now. Ask them in your reply what they would like.');
       }
       if (a.after) pageData(uid, chatId, 'after-preview', a.after);
-      const label = { applied: `“${name}” is previewing on your page`, skipped: `“${name}” did not apply on this page`, failed: `“${name}” failed on your page` }[a.status] || `Preview of “${name}” finished`;
-      chats.addEntry(uid, chatId, { id: step.id, text: label, state: a.status === 'failed' ? 'failed' : 'done' });
+      const results = Array.isArray(a.checks) ? checks.map((c, i) => ({ name: c.name, before: !!a.checks[i]?.before, after: !!a.checks[i]?.after, ...(a.checks[i]?.error ? { error: String(a.checks[i].error).slice(0, 160) } : {}) })) : [];
+      const changes = Number.isFinite(a.changes) ? a.changes : null;
+      const rec = record({ status: a.status || 'failed', changes, checks: results });
+      const passed = results.filter(c => c.after).length;
+      const tally = results.length ? ` · ${passed} of ${results.length} checks pass` : '';
+      const label = { applied: `“${name}” is previewing on your page${tally}`, skipped: `“${name}” did not apply on this page`, failed: `“${name}” failed on your page` }[a.status] || `Preview of “${name}” finished`;
+      const good = verdict(rec, adapter.code).ok;
+      chats.addEntry(uid, chatId, { id: step.id, text: label, state: a.status === 'failed' || (a.status === 'applied' && !good) ? 'failed' : 'done' });
       const intro = [
         `Preview result: ${a.status}${a.message ? ` (${String(a.message).slice(0, 1000)})` : ''}.`,
-        a.status === 'skipped' && /pattern|scope|match/i.test(a.message || '') ? 'Its runs_on patterns do not match the page the person is on.' : '',
-        a.after ? 'The page with the preview on, as the person shares it:' : 'The person shares less than the page source, so you cannot see the page afterwards; ask them how it looks.',
+        a.status === 'skipped' && /pattern|scope|match/i.test(a.message || '')
+          ? `Its runs_on patterns do not match the page this chat works on${a.site ? ` (${a.site})` : ''}. Do not widen them to other sites: if that is not the site the adapter is for, ask the person to choose the right page in the sidebar.` : '',
+        a.status === 'applied' && changes !== null ? (changes ? `enable() made ${changes} changes in the page.` : 'enable() changed nothing in the page: what it looks for is probably not there.') : '',
+        results.length ? ['Checks (before enable → after):', ...results.map(c => `- ${c.name}: ${c.before ? 'pass' : 'fail'} → ${c.after ? 'pass' : 'fail'}${c.error ? ` (${c.error})` : ''}`)].join('\n') : '',
+        a.status === 'applied' ? (good
+          ? 'Every check passes. Review the page afterwards too, then tell the person what changed and ask them to try it.'
+          : 'It does not work yet: fix the adapter (or a check that is wrong) and preview again. Do not tell the person it works.') : '',
+        a.after ? 'The page with the preview on, as the person shares it:' : 'The person shares less than the page source, so you cannot see the page afterwards: rely on your checks, and ask them how it looks.',
       ].filter(Boolean).join('\n');
       return { content: pageContent(intro, a.after) };
     },
@@ -153,6 +224,8 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     async adapter_ready(uid, chatId, args) {
       let adapter, patterns;
       try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on); } catch (e) { return fail(e.message); }
+      const v = verdict(chats.previewOf(uid, chatId, adapter.file), adapter.code);
+      if (!v.ok) return fail(`Not ready: the adapter ${v.why}. Preview it with browser_preview and checks that show it works, fix what fails, and offer it once every check passes.`);
       const id = String(args.id || '');
       if (!SLUG.test(id)) return fail('id must be lowercase letters, digits and dashes, starting with a letter or digit.');
       const areas = (args.support_areas || []).filter(a => SUPPORT_AREAS.includes(a));
@@ -163,6 +236,27 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     },
   };
 
+  /**
+   * After a run: the adapters it wrote or previewed that are not shown to
+   * work (verdict), as a warning to the person. Never says it works.
+   */
+  function afterRun(uid, chatId, since) {
+    const dir = path.join(workDir(uid), 'adapters');
+    const touched = new Set(Object.values(chats.previews(uid, chatId)).filter(p => p.at >= since).map(p => p.file));
+    try {
+      for (const f of readdirSync(dir)) if (/\.m?js$/.test(f) && statSync(path.join(dir, f)).mtime.toISOString() >= since) touched.add(`adapters/${f}`);
+    } catch { /* no adapters yet */ }
+    for (const file of touched) {
+      let code;
+      try { code = readFileSync(path.join(workDir(uid), file), 'utf8'); } catch { continue; }
+      const rec = chats.previewOf(uid, chatId, file);
+      const v = verdict(rec, code);
+      if (v.ok) continue;
+      const name = rec?.name || path.basename(file).replace(/\.m?js$/, '');
+      chats.addEntry(uid, chatId, { kind: 'warning', text: `Not checked: “${name}” ${v.why}. Try it on your page yourself before you rely on it.` });
+    }
+  }
+
   async function call(uid, name, args) {
     const chatId = chats.activeChat(uid);
     if (!chatId) return fail('No chat is running for this person.');
@@ -171,7 +265,10 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     try { return await handlers[name](uid, chatId, args || {}); } catch (e) { log?.warn('tool.error', { uid, tool: name, error: e.message }); return fail(e.message); }
   }
 
-  return async function handle(req, res) {
+  handle.afterRun = afterRun;
+  return handle;
+
+  async function handle(req, res) {
     if (req.method !== 'POST') { res.writeHead(405, { allow: 'POST' }); return res.end(); }
     const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     const uid = uidForToken(token);
@@ -191,7 +288,7 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       case 'tools/call': return reply(await call(uid, msg.params?.name, msg.params?.arguments));
       default: return json(res, 200, { jsonrpc: '2.0', id: msg.id, error: { code: -32601, message: `no method ${msg.method}` } });
     }
-  };
+  }
 }
 
 function json(res, status, body) {

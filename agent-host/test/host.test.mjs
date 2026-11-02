@@ -106,7 +106,11 @@ await test('a chat keeps its history: a message and the reply', async () => {
 await test('the agent sees the page, previews, and offers the adapter; the sidebar shows no code', async () => {
   const sb = sidebar('ada', {
     page: () => ({ level: 'screenshot', origin: 'https://example.com', remember: true, url: 'https://example.com/shop', title: 'Shop', outline: 'button "Buy" (20px tall)', screenshot: 'data:image/jpeg;base64,/9j/AAAA' }),
-    preview: (r) => { assert.match(r.code, /BiggerButtons/); assert.deepEqual(r.runsOn, ['https://example.com/*']); return { status: 'applied', after: { url: 'https://example.com/shop', outline: 'button "Buy" (44px tall)' } }; },
+    preview: (r) => {
+      assert.match(r.code, /BiggerButtons/); assert.deepEqual(r.runsOn, ['https://example.com/*']);
+      assert.deepEqual(r.checks, [{ name: 'the page is marked big', code: 'return document.body.dataset.big === "1";' }]);
+      return { status: 'applied', changes: 2, checks: [{ before: false, after: true }], after: { url: 'https://example.com/shop', outline: 'button "Buy" (44px tall)' } };
+    },
   });
   await new Promise(r => setTimeout(r, 200));
   await api(`/agent/chats/${chatId}/messages`, { method: 'POST', body: { text: 'build bigger buttons' } });
@@ -116,8 +120,10 @@ await test('the agent sees the page, previews, and offers the adapter; the sideb
   const texts = chat.entries.map(e => e.text);
   assert.ok(texts.includes('Reading the toolkit’s guides and code'));
   assert.ok(texts.includes('Looking at the page'));
-  assert.ok(texts.includes('“Bigger buttons” is previewing on your page'));
-  assert.match(texts.at(-1), /Outside: refused\. Preview: Preview result: applied\. Ready: yes\./);
+  assert.ok(texts.includes('“Bigger buttons” is previewing on your page · 1 of 1 checks pass'));
+  // Not ready before a preview shows it works; no previews on every site, without checks, or with a check that reaches outside itself.
+  assert.match(texts.at(-1), /Early: refused\. Outside: refused\. Everywhere: refused\. Unchecked: refused\. Escape: refused\. Preview: Preview result: applied\. Changed: yes\. Ready: yes\./);
+  assert.ok(!chat.entries.some(e => e.kind === 'warning'), 'a checked adapter gets no warning');
   assert.deepEqual(chat.consent, { 'https://example.com': 'screenshot' });
   assert.equal(chat.adapters[0].id, 'bigger-buttons');
   assert.deepEqual(chat.adapters[0].supportAreas, ['motor']);
@@ -130,6 +136,26 @@ await test('the agent sees the page, previews, and offers the adapter; the sideb
   assert.ok(!JSON.stringify(lines).includes('example.com/shop'));
   const got = (await (await api(`/agent/chats/${chatId}/adapters/bigger-buttons`)).json()).adapter;
   assert.match(got.code, /export const BiggerButtons/);
+  sb.close();
+});
+
+await test('an adapter that was not checked, or whose checks fail, is not ready, and the person is told', async () => {
+  const sb = sidebar('ada', {
+    page: () => ({ level: 'url', origin: 'https://example.com', remember: true, url: 'https://example.com/shop' }),
+    preview: () => ({ status: 'applied', changes: 0, checks: [{ before: false, after: false, error: 'no buttons' }] }),
+  });
+  await new Promise(r => setTimeout(r, 200));
+  const other = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'build it here' } });
+  let chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
+  assert.match(chat.entries.find(e => e.kind === 'agent').text, /Ready: no\./);
+  assert.equal(chat.adapters.length, 0);
+  assert.ok(chat.entries.some(e => e.state === 'failed' && e.text === '“Bigger buttons” is previewing on your page · 0 of 1 checks pass'));
+  assert.ok(chat.entries.some(e => e.kind === 'warning' && /Not checked: “Bigger buttons” failed 1 of its 1 checks/.test(e.text)));
+  // Written and never previewed.
+  await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'sketch one' } });
+  chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.at(-1).kind === 'warning' && c; });
+  assert.match(chat.entries.at(-1).text, /Not checked: “sketch” has not been previewed on your page/);
   sb.close();
 });
 

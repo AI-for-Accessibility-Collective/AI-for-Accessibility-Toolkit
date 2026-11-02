@@ -39,15 +39,16 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  * @param {'docker'|'local'} [o.runnerKind]
  */
 export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
-  opencodeBin, repoDir, modelsJson, upstream, fetch, perMinute, log = createLogger(), runner: givenRunner }) {
+  opencodeBin, repoDir, modelsJson, upstream, fetch, perMinute, requestTimeoutMs, log = createLogger(), runner: givenRunner }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
   const events = createEvents();
-  const requests = createRequests({ events });
+  const requests = createRequests({ events, timeoutMs: requestTimeoutMs });
   const runner = givenRunner || (runnerKind === 'local'
     ? localRunner({ accounts, hostUrl: sandboxUrl, bin: opencodeBin, repoDir, modelsJson })
     : dockerRunner({ accounts, image, network, dns, hostUrl: sandboxUrl, log }));
-  const chats = createChats({ accounts, runner, events, requests, log });
+  // tools is made below; a run only ends after both exist.
+  const chats = createChats({ accounts, runner, events, requests, log, afterRun: (...a) => tools.afterRun(...a) });
   const pageData = createPageData({ accounts });
   const model = createModelProxy({ apiKey, uidForToken: accounts.uidForToken, upstream, fetch, perMinute, log });
   const tools = createBrowserTools({ uidForToken: accounts.uidForToken, chats, requests, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });

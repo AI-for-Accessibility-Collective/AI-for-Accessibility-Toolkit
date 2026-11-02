@@ -25,6 +25,13 @@
       <select id="chat-select"></select>
       <button id="new-chat" class="secondary" type="button">New chat</button>
     </div>
+    <section id="working" class="working-bar" aria-label="The page this chat works on" hidden>
+      <p id="working-label"></p>
+      <div class="row">
+        <button id="go-to-page" class="secondary" type="button" hidden>Go to that tab</button>
+        <button id="switch-page" class="secondary" type="button" hidden>Work on this page instead</button>
+      </div>
+    </section>
     <p class="framing">A research prototype. The adapters it makes are unvalidated and are not a replacement for assistive technology: check every change yourself.</p>
 
     <ol id="transcript" class="transcript" aria-label="Conversation" aria-live="polite"></ol>

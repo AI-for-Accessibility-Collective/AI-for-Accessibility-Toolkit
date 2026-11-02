@@ -33,6 +33,11 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px;
 .chat-bar label { font-weight: 600; font-size: .8rem; }
 .chat-bar select { flex: 1; min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: white; }
 .framing { font-size: .72rem; color: var(--muted); }
+.working-bar { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; font-size: .82rem; }
+.working-bar p { overflow-wrap: anywhere; }
+.working-bar .where { color: var(--muted); }
+.working-bar .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.working-bar .row:not(:has(button:not([hidden]))) { display: none; }
 button { font: inherit; cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 .primary, .secondary { min-height: 36px; border-radius: 6px; padding: 6px 12px; font-weight: 600; }
@@ -49,6 +54,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .msg.agent { align-self: flex-start; background: white; border: 1px solid var(--line); }
 .msg.error { align-self: stretch; background: #fde8e8; color: var(--red); font-size: .85rem; }
 .msg.notice { align-self: stretch; background: var(--wash); color: var(--green); font-size: .85rem; font-weight: 600; }
+.msg.warning { align-self: stretch; background: #fff4d6; color: #5c4100; font-size: .85rem; font-weight: 600; }
+.step .times { color: var(--muted); font-weight: 400; }
 .step { font-size: .8rem; color: var(--muted); display: flex; align-items: center; gap: 8px; padding-left: 4px; }
 .step::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #9db8ad; flex: none; }
 .step.running::before { background: #d39b00; animation: pulse 1.2s ease-in-out infinite; }

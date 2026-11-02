@@ -1,7 +1,9 @@
 // The sidebar's chats, one file each under the account's chats/ folder: what
 // the person saw (their messages, the agent's replies without code, one line
 // per step), the opencode session that continues it, which sites the person
-// agreed to share in it, and the adapters the agent finished.
+// agreed to share in it, the latest preview of each adapter file (its result
+// and checks, and a hash of the code it ran), and the adapters the agent
+// finished.
 //
 // One chat runs at a time per account: the browser tools act on the tab the
 // person's sidebar is open on, so two runs would share one page.
@@ -17,7 +19,7 @@ export const SHARE_LEVELS = LEVELS;
 
 const httpError = (status, message, code) => Object.assign(new Error(message), { status, code });
 
-export function createChats({ accounts, runner, events, requests, log }) {
+export function createChats({ accounts, runner, events, requests, log, afterRun }) {
   const runs = new Map(); // uid -> {chatId, stop}
 
   const fileOf = (uid, id) => {
@@ -89,6 +91,17 @@ export function createChats({ accounts, runner, events, requests, log }) {
     events.publish(uid, { type: 'consent', chatId, consent: chat.consent });
   }
 
+  /** Keep the latest preview of a file: {file, name, hash, status, changes, checks}. */
+  function recordPreview(uid, chatId, preview) {
+    const chat = read(uid, chatId);
+    const rec = { ...preview, at: new Date().toISOString() };
+    chat.previews = { ...chat.previews, [preview.file]: rec };
+    save(uid, chat);
+    return rec;
+  }
+  const previews = (uid, chatId) => read(uid, chatId).previews || {};
+  const previewOf = (uid, chatId, file) => previews(uid, chatId)[file] || null;
+
   function markReady(uid, chatId, adapter) {
     const chat = read(uid, chatId);
     chat.adapters = [...chat.adapters.filter(a => a.id !== adapter.id), { ...adapter, at: new Date().toISOString() }];
@@ -106,7 +119,7 @@ export function createChats({ accounts, runner, events, requests, log }) {
     const chat = read(uid, chatId);
     if (chat.title === 'New chat') { chat.title = message.replace(/\s+/g, ' ').slice(0, 60); save(uid, chat); }
     addEntry(uid, chatId, { kind: 'you', text: message });
-    const run = { chatId, stop: null, stopped: false };
+    const run = { chatId, stop: null, stopped: false, since: new Date().toISOString() };
     runs.set(uid, run);
     events.publish(uid, { type: 'chat', chat: summary(uid, read(uid, chatId)) });
     // Runs in the background; the sidebar follows on the event stream.
@@ -122,6 +135,7 @@ export function createChats({ accounts, runner, events, requests, log }) {
           if (entry) { addEntry(uid, chatId, entry); if (entry.kind === 'agent') replied = true; }
         }
         const { code } = await proc.done;
+        if (!run.stopped) { try { afterRun?.(uid, chatId, run.since); } catch (e) { log?.warn('chat.after-run', { uid, chatId, error: e.message }); } }
         if (run.stopped) addEntry(uid, chatId, { kind: 'notice', text: 'Stopped.' });
         else if (code !== 0 && !replied) {
           log?.warn('chat.run-failed', { uid, chatId, code, stderr: proc.stderr().slice(-500) });
@@ -148,5 +162,5 @@ export function createChats({ accounts, runner, events, requests, log }) {
     return { stopped: true };
   }
 
-  return { list, create, get, addEntry, setConsent, markReady, activeChat, send, stop };
+  return { list, create, get, addEntry, setConsent, recordPreview, previews, previewOf, markReady, activeChat, send, stop };
 }
