@@ -30,6 +30,7 @@ import { createAccess } from './access.js';
 import { withAiContext } from './ai-context.js';
 import { createProfileEvents, cleanSelection, PROFILE_WRITES } from './profile-events.js';
 import { auditAccounts } from './audit.js';
+import { createAgentProxy, AGENT_PREFIX, agentContentLogged } from './agent-proxy.js';
 
 const ADMIN_TOKENS_PREFIX = '/admin/tokens';
 const ADMIN_USERS_PREFIX = '/admin/users';
@@ -56,7 +57,7 @@ const SDK_PREFIX = '/sdk/';
  *  @param {ReturnType<import('./log.js').createLogger>} [config.log]  structured logger (silent by default)
  *  @returns {((req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) & {relay: ReturnType<typeof createRelay>, accounts: ReturnType<typeof createAccounts>, activity: ReturnType<typeof createActivityLog>}}
  */
-export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {} }) {
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
@@ -103,6 +104,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   }
 
   const metaPayload = buildMeta({ version });
+  const agentProxy = createAgentProxy({ authenticate: (req) => authenticate(req), hostUrl: agentHost.url, secret: agentHost.secret, fetch: agentHost.fetch, log });
   const adaptersRouter = createAdaptersRouter({ store, adminPassword, withUserLock });
   const accounts = auditAccounts(createAccounts({ store, secret: tokenSecret || adminPassword, relay }), log);
   const authenticate = async (req) => {
@@ -163,7 +165,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
   function listener(req, res) {
     const started = process.hrtime.bigint();
-    if (logContent) captureContent(req, res);
+    if (logContent && agentContentLogged(pathOf(req))) captureContent(req, res);
     res.once('close', () => logRequest(req, res, started));
     handle(req, res).catch((e) => {
       const path = pathOf(req);
@@ -378,6 +380,11 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     // for moderation.
     if (pathname === ADAPTERS_PREFIX || pathname.startsWith(ADAPTERS_PREFIX + '/')) {
       return adaptersRouter(req, res, method, pathname, url);
+    }
+
+    // The extension's assistant sidebar, forwarded to the agent host.
+    if (pathname === AGENT_PREFIX || pathname.startsWith(AGENT_PREFIX + '/')) {
+      return agentProxy(req, res, method, pathname, url.search);
     }
 
     if (pathname.startsWith(PROFILE_PREFIX + '/')) {

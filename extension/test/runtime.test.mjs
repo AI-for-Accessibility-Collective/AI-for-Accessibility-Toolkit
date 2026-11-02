@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { buildUserScript, teardownScript, registrationFor, runnable, scriptId } from '../runtime/scripts.js';
+import { buildUserScript, teardownScript, registrationFor, runnable, scriptId, buildPreviewScript, previewTeardownScript } from '../runtime/scripts.js';
 import { isAllowedServerUrl } from '../runtime/config.js';
 
 let pass = 0, fail = 0;
@@ -31,6 +31,8 @@ function page(href) {
   return { run: (code) => vm.runInContext(code, context), reports, log, context };
 }
 const settle = () => new Promise(r => setTimeout(r, 0));
+// A value made in the page's realm, as plain data in this one.
+const plain = async (v) => JSON.parse(JSON.stringify(await v));
 
 const CODE = (tag, extra = '') => `export const A = {
   enabled: false,
@@ -152,6 +154,32 @@ await test('registrations: only runnable adapters, Chrome patterns without ports
   assert.deepEqual(reg.matches, ['http://localhost/*']);
   assert.deepEqual([reg.world, reg.runAt, reg.allFrames], ['USER_SCRIPT', 'document_idle', false]);
   assert.equal(scriptId('a/b/c'), 'rt-a~b~c');
+});
+
+await test('a preview runs once, replaces the last preview, reports nothing, and comes off', async () => {
+  const p = page('https://shop.example/cart');
+  const preview = (tag, extra) => buildPreviewScript({ code: CODE(tag, extra), urlPatterns: ['https://shop.example/*'], parameters: { size: 44 } });
+  assert.deepEqual(await plain(p.run(preview('p1'))), { status: 'applied' });
+  assert.deepEqual(await plain(p.run(preview('p2'))), { status: 'applied' });
+  assert.deepEqual(p.log, ['enable p1 {"size":44}', 'disable p1', 'enable p2 {"size":44}']);
+  assert.deepEqual(p.reports, [], 'a preview is never reported to the toolkit');
+  // An installed adapter in the same page is left alone.
+  p.run(buildUserScript(entry()));
+  assert.equal(p.run(previewTeardownScript()), true);
+  assert.equal(p.run(previewTeardownScript()), false);
+  assert.deepEqual(p.log.slice(-2), ['enable r1 {}', 'disable p2']);
+});
+
+await test('a preview says why it did not apply', async () => {
+  const p = page('https://elsewhere.example/');
+  assert.equal((await p.run(buildPreviewScript({ code: CODE('x'), urlPatterns: ['https://shop.example/*'] }))).status, 'skipped');
+  const q = page('https://shop.example/');
+  const failed = await q.run(buildPreviewScript({ code: CODE('x', "throw new Error('no buttons');"), urlPatterns: ['https://shop.example/*'] }));
+  assert.deepEqual(await plain(failed), { status: 'failed', message: 'enable() failed: no buttons' });
+  assert.equal(q.run(previewTeardownScript()), false, 'a failed preview is not left running');
+  const data = await q.run(buildPreviewScript({ code: `export const D = { async enable(o, t) { await t.data.set('k', 2); log('got ' + await t.data.get('k')); }, disable() {} };`, urlPatterns: ['https://shop.example/*'] }));
+  assert.equal(data.status, 'applied');
+  assert.equal(q.log.at(-1), 'got 2', 'its data stays in the page');
 });
 
 await test('the runtime sends a token only to https or this computer', () => {

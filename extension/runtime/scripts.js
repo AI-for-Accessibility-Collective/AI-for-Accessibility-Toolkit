@@ -129,3 +129,64 @@ export function registrationFor(entry) {
 export function runnable(adapters) {
   return (adapters || []).filter(a => a.available && a.enabled && a.package?.format === 'web-module@1' && (a.urlPatterns || []).length);
 }
+
+// ── previews from the assistant sidebar ──────────────────────────────────────
+// One preview at a time per page, under its own key: never installed, never
+// reported to the toolkit. Its toolkit.data lives in the page only. The
+// script's value is a promise of {status, message}, which
+// chrome.userScripts.execute hands back to the sidebar.
+
+export const PREVIEW_KEY = 'preview';
+
+/** @param {{code: string, urlPatterns: string[], parameters?: object}} preview */
+export function buildPreviewScript({ code, urlPatterns, parameters = {} }) {
+  const factory = moduleFactorySource(code);
+  const scope = (urlPatterns || []).map(urlPatternRegExpSource);
+  return `(() => {
+  const KEY = ${JSON.stringify(PREVIEW_KEY)};
+  const SCOPE = ${JSON.stringify(scope)}.map((s) => new RegExp(s));
+  const rt = globalThis.__ai4a11yRuntime || (globalThis.__ai4a11yRuntime = { adapters: {} });
+  const errorText = (e) => String((e && e.message) || e);
+  const running = rt.adapters[KEY];
+  if (running) { delete rt.adapters[KEY]; try { running.adapter.disable(); } catch (e) { /* the old preview's problem */ } }
+  const store = new Map();
+  const TOOLKIT = Object.freeze({
+    data: Object.freeze({
+      get: async (k) => (k === undefined ? Object.fromEntries(store) : store.get(k)),
+      set: async (k, v) => { store.set(k, v); },
+      delete: async (k) => { if (k === undefined) store.clear(); else store.delete(k); },
+    }),
+    observe: async () => {},
+  });
+  const port = location.port || (location.protocol === 'https:' ? '443' : '80');
+  const here = location.protocol + '//' + location.hostname.toLowerCase() + ':' + port + location.pathname;
+  if (!SCOPE.some((r) => r.test(here))) return Promise.resolve({ status: 'skipped', message: 'its runs_on patterns do not match this page' });
+  let adapter;
+  try {
+    const exports = ${factory}();
+    const isAdapter = (v) => !!v && typeof v === 'object' && typeof v.enable === 'function' && typeof v.disable === 'function';
+    if (isAdapter(exports.default)) adapter = exports.default;
+    else { const found = Object.values(exports).filter(isAdapter); adapter = found.length === 1 ? found[0] : null; }
+    if (!adapter) throw new Error('the file does not export exactly one adapter (an object with enable and disable)');
+  } catch (e) { return Promise.resolve({ status: 'failed', message: 'Loading the adapter: ' + errorText(e) }); }
+  rt.adapters[KEY] = { adapter, revision: 0 };
+  return Promise.resolve().then(() => adapter.enable(${JSON.stringify(parameters)}, TOOLKIT)).then(
+    (value) => {
+      if (value === false) { delete rt.adapters[KEY]; return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
+      return { status: 'applied' };
+    },
+    (e) => { delete rt.adapters[KEY]; return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
+})()`;
+}
+
+/** Take the preview off the page; the value says whether there was one. */
+export function previewTeardownScript() {
+  return `(() => {
+  const rt = globalThis.__ai4a11yRuntime;
+  const running = rt && rt.adapters[${JSON.stringify(PREVIEW_KEY)}];
+  if (!running) return false;
+  delete rt.adapters[${JSON.stringify(PREVIEW_KEY)}];
+  try { running.adapter.disable(); } catch (e) { return 'disable() threw: ' + String((e && e.message) || e); }
+  return true;
+})()`;
+}

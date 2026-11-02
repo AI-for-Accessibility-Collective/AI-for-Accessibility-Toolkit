@@ -52,8 +52,13 @@ in `docs/architecture.md`. This section is the code map.
 - `extension/` — the **browser adapter runtime**, an unpacked Chrome extension
   (a host, not part of the core): runs what an account installed into
   `browser-runtime` as user scripts on the pages each adapter targets, and
-  reports back. `extension/vendor/` is generated (`npm run build:extension`,
+  reports back. Its `sidepanel/` is the assistant sidebar (see `agent-host/`). `extension/vendor/` is generated (`npm run build:extension`,
   copies of toolkit modules); `npm test` fails on drift.
+- `agent-host/` — runs the extension's **assistant sidebar** agent: one
+  opencode sandbox per account (gVisor containers on its own VM), a model
+  proxy that holds the Gemini key, and the browser tools (MCP) the agent uses
+  to see and preview on the person's page. The toolkit service forwards
+  `/v1/agent/*` to it (`server/src/agent-proxy.js`). See `agent-host/README.md`.
 - `cli/` — an experimental Python CLI (`ai4a11y`) that drives a real page over the
   DevTools Protocol and bundles the catalog as `cli/cli-tools.bundle.js`.
   Rebuild the bundle with `npm run build:cli` and commit it; CI fails on drift.

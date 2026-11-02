@@ -85,7 +85,9 @@ function boot() {
     corsOrigins = ['*'];
   }
   const tokenSecret = process.env.TOKEN_SECRET || undefined;
-  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log, logContent });
+  // The extension's assistant sidebar: the agent host on its own VM (agent-host/).
+  const agentHost = { url: process.env.AGENT_HOST_URL || null, secret: process.env.AGENT_HOST_SECRET || null };
+  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log, logContent, agentHost });
   const server = http.createServer(listener);
   server.listen(port, () => {
     log.info('server.started', {
@@ -95,6 +97,7 @@ function boot() {
       cors: corsOrigins.includes('*') ? 'any origin' : corsOrigins.join(',') || 'same origin only',
       tokenSecret: tokenSecret ? 'TOKEN_SECRET' : 'admin password',
       content: logContent ? 'logged (credentials redacted)' : 'off',
+      assistant: agentHost.url && agentHost.secret ? 'agent host configured' : 'off',
     });
     if (!process.env.K_SERVICE) {
       console.log(`[toolkit-service] developer console: http://localhost:${port}/developer`);

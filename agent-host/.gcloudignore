@@ -1,0 +1,24 @@
+# Upload only what the agent host and sandbox images need.
+*
+!agent-host/
+!agent-host/**
+agent-host/node_modules/**
+!toolkit/
+!toolkit/**
+toolkit/node_modules/**
+!tools/
+!tools/**
+tools/node_modules/**
+!docs/
+!docs/**
+!extension/
+!extension/**
+!examples/
+!examples/**
+!controller/
+!controller/**
+!.claude/
+!.claude/skills/
+!.claude/skills/**
+!README.md
+!CLAUDE.md

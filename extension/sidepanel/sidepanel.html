@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assistant</title>
+  <link rel="stylesheet" href="sidepanel.css">
+  <script type="module" src="sidepanel.js"></script>
+</head>
+<body>
+  <header>
+    <img class="mark" src="../icons/icon-48.png" alt="" width="28" height="28">
+    <div><h1>Assistant</h1><p class="sub">Builds adapters for the page you are on · pre-alpha</p></div>
+    <span id="state" class="badge">Starting</span>
+  </header>
+
+  <section id="not-connected" class="connect-notice" hidden>
+    <h2>Connect to your toolkit first</h2>
+    <p>Open this extension from the toolbar and choose <strong>Connect with this console</strong>, or enter your toolkit’s address and default token. Then come back here.</p>
+  </section>
+
+  <main id="main" hidden>
+    <div class="chat-bar">
+      <label for="chat-select">Chat</label>
+      <select id="chat-select"></select>
+      <button id="new-chat" class="secondary" type="button">New chat</button>
+    </div>
+    <p class="framing">A research prototype. The adapters it makes are unvalidated and are not a replacement for assistive technology: check every change yourself.</p>
+
+    <ol id="transcript" class="transcript" aria-label="Conversation" aria-live="polite"></ol>
+    <div id="requests" class="requests"></div>
+    <section id="ready" class="ready" hidden aria-labelledby="ready-heading">
+      <h2 id="ready-heading">Ready to use</h2>
+      <ul id="ready-list"></ul>
+    </section>
+
+    <div id="preview-bar" class="preview-bar" hidden>
+      <span id="preview-label"></span>
+      <button id="remove-preview" class="text-button" type="button">Remove preview</button>
+    </div>
+
+    <form id="composer" class="composer">
+      <label for="message" class="visually-hidden">Message to the assistant</label>
+      <textarea id="message" rows="3" placeholder="What gets in your way on this page?"></textarea>
+      <div class="composer-actions">
+        <label class="check"><input id="auto-preview" type="checkbox"> Apply previews automatically</label>
+        <button id="stop" class="secondary" type="button" hidden>Stop</button>
+        <button id="send" class="primary" type="submit">Send</button>
+      </div>
+    </form>
+  </main>
+
+  <p id="status" role="status" aria-live="polite"></p>
+</body>
+</html>

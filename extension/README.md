@@ -78,6 +78,35 @@ Shaped after the personalized extension's custom-adapter path (its user
 script world and reconcile loop) in the AI-for-Accessibility-Extension
 repository, without its built-in adapters, agents, voice or Librarian.
 
+## The assistant sidebar
+
+**Open the assistant** in the popup opens a sidebar beside the page. Say what
+gets in your way there; an AI agent (opencode with Gemini 3.8 Flash, run for
+your account on the toolkit's server, see
+[agent-host/](../agent-host/README.md)) asks a few questions, builds an
+adapter and previews it on the page. Its replies leave code out, and each
+step shows as one line.
+
+- **Sharing the page.** When the agent wants to see the page, you choose: the
+  address only, the address and the page source (an outline of what is on
+  it: headings, controls, text and their sizes and colors), or also a
+  screenshot, or nothing. You choose once per site in each chat; the agent
+  may ask again for a screenshot. What you share is kept on the toolkit's
+  server for the research and is not used to identify you.
+- **Previews.** A preview runs the adapter on this tab only, without
+  installing it, until you remove it or reload the page. You are asked
+  first, unless you tick **Apply previews automatically**. The agent sees
+  whether it applied and, at the level you share, the page afterwards, so it
+  can review the change.
+- **When it is ready**, **Add to my account** publishes it to your account,
+  private to you, and installs it here, so it runs on the pages it targets.
+  **Export** saves the adapter file.
+- **Chats** keep their history; **New chat** starts another. One chat works
+  at a time.
+
+The assistant needs your toolkit to have an agent host set up; otherwise the
+sidebar says so.
+
 ## What it will and will not do
 
 - It runs only the adapters your signed-in account installed, and sends your
@@ -96,6 +125,10 @@ repository, without its built-in adapters, agents, voice or Librarian.
 - `node extension/test/runtime.test.mjs` (part of `npm test`): the user
   scripts in a sandbox (scope, parameters, updates, teardown, failures, the
   async race), registrations, the address rule, and the vendored copies.
+- `npm run test:assistant:e2e`: the assistant sidebar in real Chromium with
+  a real toolkit service and agent host (a stand-in agent, or real opencode
+  and Gemini with `AGENT_E2E_REAL=1`): sharing the page, previews, automatic
+  previews, no code shown, export, adding to the account, chat history.
 - `npm run test:runtime:e2e`: real Chromium with this extension loaded, a real
   toolkit service and a test site, from turning on **Allow User Scripts** to
   connecting from the console, running, live edits, per-site switches, a

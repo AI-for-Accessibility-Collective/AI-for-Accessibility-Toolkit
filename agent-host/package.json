@@ -1,0 +1,11 @@
+{
+  "name": "ai4a11y-agent-host",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runs each account's opencode sandbox for the browser extension's assistant sidebar. See README.md.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": { "start": "node index.js", "test": "node test/host.test.mjs" },
+  "engines": { "node": ">=22" },
+  "dependencies": {}
+}

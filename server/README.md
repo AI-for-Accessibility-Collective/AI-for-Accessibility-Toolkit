@@ -248,6 +248,8 @@ checkout beside this one, or `REDBIRD_DIR`): `npm run test:redbird:e2e`.
 | `CORS_ORIGINS` | no | unset | Comma-separated exact browser origins allowed on `/v1/*`, or `*` for any; same-origin developer UI needs no setting. The `--workshop` flag sets `*` (refused in production) |
 | `LOG_FORMAT` | no | `json` on Cloud Run, else `text` | `json` writes one Cloud Logging entry per line |
 | `LOG_LEVEL` | no | `info` | `debug` also logs successful static-file requests |
+| `AGENT_HOST_URL` | no | unset | The agent host behind the extension's assistant sidebar (`/v1/agent/*`, [agent-host/](../agent-host/README.md)), on the private network, e.g. `http://10.128.0.5:8791`. Unset: `/v1/agent/*` answers 503 `agent-unavailable` |
+| `AGENT_HOST_SECRET` | with `AGENT_HOST_URL` | unset | Shared with the agent host, which trusts only requests signed with it. What a person shares of a page (`/v1/agent/requests/*`) is never in the request log |
 | `TOKEN_SECRET` | no | the admin password | Key that derives each account's default token and encrypts the passwords an admin issued. When it changes, each account gets a new default token at its next sign-in, and issued passwords can no longer be shown until they are reset |
 
 ## Logs

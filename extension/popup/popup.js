@@ -144,6 +144,10 @@ $('sync').addEventListener('click', async () => {
 $('disconnect').addEventListener('click', async () => {
   try { await ask('disconnect'); say('Disconnected. Adapters stopped running in this browser.'); await render(); } catch (e) { say(e.message, true); }
 });
+// The assistant sidebar opens beside the page this popup is about.
+$('open-assistant').addEventListener('click', async () => {
+  try { await chrome.sidePanel.open({ windowId: tab?.windowId ?? (await chrome.windows.getCurrent()).id }); window.close(); } catch (e) { say(e.message, true); }
+});
 $('open-details').addEventListener('click', () => {
   chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
 });
