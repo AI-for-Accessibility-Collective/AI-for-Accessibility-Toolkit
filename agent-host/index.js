@@ -8,6 +8,7 @@
 //   AGENT_SANDBOX_NETWORK the sandboxes' docker network (default ai4a11y-sbx)
 //   AGENT_SANDBOX_LISTEN  the sandbox port (default 127.0.0.1:8790; on the VM the network's gateway, 172.30.0.1:8790)
 //   AGENT_API_LISTEN      the API port (default 127.0.0.1:8791; on the VM 0.0.0.0:8791, firewalled to the toolkit service)
+//   AGENT_SANDBOX_DNS     resolvers for the sandboxes (default 8.8.8.8,1.1.1.1)
 //   AGENT_OPENCODE_BIN    opencode for the local runner (default opencode)
 
 import path from 'node:path';
@@ -29,6 +30,7 @@ const host = createHost({
   runnerKind: env.AGENT_RUNNER || 'docker',
   image: env.AGENT_SANDBOX_IMAGE,
   network: env.AGENT_SANDBOX_NETWORK || 'ai4a11y-sbx',
+  dns: env.AGENT_SANDBOX_DNS ? env.AGENT_SANDBOX_DNS.split(',').map(s => s.trim()).filter(Boolean) : undefined,
   opencodeBin: env.AGENT_OPENCODE_BIN || 'opencode',
   repoDir,
   modelsJson: env.AGENT_MODELS_JSON || path.join(os.homedir(), '.cache/opencode/models.json'),

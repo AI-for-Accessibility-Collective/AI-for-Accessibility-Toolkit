@@ -6,6 +6,9 @@
 # Metadata (gcloud compute instances add-metadata):
 #   agent-host-image     us-central1-docker.pkg.dev/<project>/toolkit/agent-host:<tag>
 #   agent-sandbox-image  us-central1-docker.pkg.dev/<project>/toolkit/agent-sandbox:<tag>
+#   sandbox-internet     "on" lets sandboxes reach the internet (still never the
+#                        metadata server, private addresses or each other);
+#                        anything else, or unset, keeps them off it
 # Secrets (Secret Manager, read by the VM's service account):
 #   agent-host-secret    shared with the toolkit service
 #   agent-gemini-key     the model key; it stays in the host, never a sandbox
@@ -14,6 +17,7 @@ set -euo pipefail
 meta() { curl -fsS -H 'Metadata-Flavor: Google' "http://metadata.google.internal/computeMetadata/v1/$1"; }
 HOST_IMAGE=$(meta instance/attributes/agent-host-image)
 SANDBOX_IMAGE=$(meta instance/attributes/agent-sandbox-image)
+SANDBOX_INTERNET=$(meta instance/attributes/sandbox-internet 2>/dev/null || echo off)
 PROJECT=$(meta project/project-id)
 DATA=/srv/agent-host
 SBX_NET=ai4a11y-sbx
@@ -32,15 +36,20 @@ if ! command -v runsc >/dev/null; then
 fi
 gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-# ── the sandboxes' network: no traffic between sandboxes, none forwarded out
-#    (no internet, no metadata server), and only the host's sandbox port in.
+# ── the sandboxes' network: no traffic between sandboxes, never the metadata
+#    server or private addresses, the internet only with sandbox-internet=on,
+#    and only the host's sandbox port on the host itself.
 docker network inspect "$SBX_NET" >/dev/null 2>&1 || docker network create --driver bridge \
   --subnet 172.30.0.0/16 --gateway "$SBX_GATEWAY" \
   -o com.docker.network.bridge.name="$SBX_BRIDGE" -o com.docker.network.bridge.enable_icc=false "$SBX_NET"
 cat > /usr/local/sbin/ai4a11y-sandbox-firewall <<EOF
 #!/bin/sh
-# Forwarded from a sandbox: dropped (internet, metadata server, other networks).
-iptables -C DOCKER-USER -i $SBX_BRIDGE -j DROP 2>/dev/null || iptables -I DOCKER-USER 1 -i $SBX_BRIDGE -j DROP
+# Forwarded from a sandbox, in a chain of its own (rebuilt each time):
+# never the metadata server or private addresses; the internet only when allowed.
+iptables -N AI4A11Y-SBX 2>/dev/null || iptables -F AI4A11Y-SBX
+for net in 169.254.0.0/16 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10; do iptables -A AI4A11Y-SBX -d \$net -j DROP; done
+if [ "$SANDBOX_INTERNET" = on ]; then iptables -A AI4A11Y-SBX -j ACCEPT; else iptables -A AI4A11Y-SBX -j DROP; fi
+iptables -C DOCKER-USER -i $SBX_BRIDGE -j AI4A11Y-SBX 2>/dev/null || iptables -I DOCKER-USER 1 -i $SBX_BRIDGE -j AI4A11Y-SBX
 # To the host itself: only the sandbox port.
 iptables -C INPUT -i $SBX_BRIDGE -j DROP 2>/dev/null || {
   iptables -I INPUT 1 -i $SBX_BRIDGE -j DROP

@@ -8,6 +8,7 @@
 import { spawn, execFile } from 'node:child_process';
 import { writeFileSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { promisify } from 'node:util';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import readline from 'node:readline';
 
@@ -56,7 +57,10 @@ function running(child) {
  * capabilities, read-only root, its own limits, on a network that reaches
  * only the host's sandbox port.
  */
-export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'runsc', cpus = '2', memory = '3g', pids = '512', log }) {
+// Docker's own DNS (127.0.0.11, which it puts in every container on a custom
+// network) does not work under gVisor, so each sandbox gets a resolv.conf
+// naming public resolvers; with the internet off, the firewall drops those too.
+export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'runsc', cpus = '2', memory = '3g', pids = '512', dns = ['8.8.8.8', '1.1.1.1'], log }) {
   const name = (uid) => `ai4a11y-sbx-${uid.toLowerCase().replace(/[^a-z0-9_.-]/g, '-')}`;
   const ready = new Map();
 
@@ -67,16 +71,20 @@ export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'run
       writeFileSync(path.join(dir, 'config', 'opencode.json'), JSON.stringify(opencodeConfig({
         token, hostUrl, instructions: '/opt/agent/AGENTS.md', skills: '/toolkit/.claude/skills',
       }), null, 2));
-      const state = await exec('docker', ['inspect', '-f', '{{.State.Running}} {{.Config.Image}}', name(uid)]).then(r => r.stdout.trim(), () => '');
-      if (state === `true ${image}`) return;
-      if (state) await exec('docker', ['rm', '-f', name(uid)]);
-      await exec('docker', ['run', '-d', '--name', name(uid), `--runtime=${runtime}`, '--network', network,
+      writeFileSync(path.join(dir, 'resolv.conf'), dns.map(d => `nameserver ${d}\n`).join(''));
+      const settings = [`--runtime=${runtime}`, '--network', network, '-v', `${path.join(dir, 'resolv.conf')}:/etc/resolv.conf:ro`,
         '--user', '1000:1000', '--read-only', '--tmpfs', '/tmp:rw,size=512m', '--cap-drop', 'ALL',
         '--security-opt', 'no-new-privileges', `--cpus=${cpus}`, `--memory=${memory}`, `--pids-limit=${pids}`,
         '--restart', 'unless-stopped', '--label', 'ai4a11y.sandbox=1', '--label', `ai4a11y.uid=${uid}`,
         '-v', `${path.join(dir, 'home')}:/home/agent`, '-v', `${path.join(dir, 'work')}:/work`,
         '-v', `${path.join(dir, 'config')}:/etc/agent:ro`,
-        '-e', 'HOME=/home/agent', '-e', 'OPENCODE_CONFIG=/etc/agent/opencode.json', '-w', '/work', image]);
+        '-e', 'HOME=/home/agent', '-e', 'OPENCODE_CONFIG=/etc/agent/opencode.json', '-w', '/work', image];
+      // A running sandbox is kept unless its image or settings changed.
+      const digest = createHash('sha256').update(JSON.stringify(settings)).digest('hex').slice(0, 16);
+      const state = await exec('docker', ['inspect', '-f', '{{.State.Running}} {{index .Config.Labels "ai4a11y.settings"}}', name(uid)]).then(r => r.stdout.trim(), () => '');
+      if (state === `true ${digest}`) return;
+      if (state) await exec('docker', ['rm', '-f', name(uid)]);
+      await exec('docker', ['run', '-d', '--name', name(uid), '--label', `ai4a11y.settings=${digest}`, ...settings]);
       log?.info('sandbox.started', { uid });
     })();
     ready.set(uid, job);

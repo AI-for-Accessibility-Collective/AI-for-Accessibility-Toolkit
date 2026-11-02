@@ -8,6 +8,9 @@
 //   AGENT_E2E_REAL=1 npm run test:assistant:e2e
 //                                           # real opencode + Gemini 3.8 Flash
 //                                           # (GEMINI_API_KEY from .env)
+//   AGENT_E2E_REAL=1 AGENT_E2E_HOST_URL=http://localhost:8791 AGENT_E2E_HOST_SECRET=… \
+//     npm run test:assistant:e2e            # a deployed agent host (e.g. the VM,
+//                                           # through an IAP tunnel): its sandboxes
 
 import assert from 'node:assert/strict';
 import http from 'node:http';
@@ -28,6 +31,8 @@ const EXT_DIR = path.resolve(HERE, '..');
 const ADMIN = 'test-admin';
 const SECRET = 'assistant-e2e-secret-0123456789abcdef';
 const REAL = process.env.AGENT_E2E_REAL === '1';
+const UID = process.env.AGENT_E2E_UID || 'ada';
+const REMOTE = process.env.AGENT_E2E_HOST_URL ? { url: process.env.AGENT_E2E_HOST_URL, secret: process.env.AGENT_E2E_HOST_SECRET } : null;
 // SHOTS=<folder> saves screenshots of the sidebar along the way.
 const shot = (page, name) => process.env.SHOTS ? page.screenshot({ path: path.join(process.env.SHOTS, `${name}.png`) }) : null;
 const quiet = { info() {}, warn() {}, error: (e, f) => console.log('host error', e, f) };
@@ -35,18 +40,18 @@ const quiet = { info() {}, warn() {}, error: (e, f) => console.log('host error',
 // The agent host, with the stand-in agent or real opencode.
 const agentData = await mkdtemp(path.join(tmpdir(), 'assistant-e2e-agent-'));
 const sandboxListen = await freePort(), apiListen = await freePort();
-const agent = createHost({
+const agent = REMOTE ? null : createHost({
   dataDir: agentData, secret: SECRET, sandboxUrl: `http://127.0.0.1:${sandboxListen}`, runnerKind: 'local', repoDir: ROOT,
   opencodeBin: REAL ? 'opencode' : path.join(ROOT, 'agent-host/test/fake-opencode.mjs'),
   apiKey: REAL ? (process.env.GEMINI_API_KEY || readEnv('GEMINI_API_KEY')) : 'unused', log: REAL ? undefined : quiet,
   modelsJson: path.join(process.env.HOME, '.cache/opencode/models.json'),
 });
-const agentServers = [await listen(agent.sandboxHandler, `127.0.0.1:${sandboxListen}`), await listen(agent.apiHandler, `127.0.0.1:${apiListen}`)];
+const agentServers = REMOTE ? [] : [await listen(agent.sandboxHandler, `127.0.0.1:${sandboxListen}`), await listen(agent.apiHandler, `127.0.0.1:${apiListen}`)];
 
 // The toolkit service, forwarding /v1/agent to it.
 const store = fileStore(await mkdtemp(path.join(tmpdir(), 'assistant-e2e-')));
 const toolkitHost = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
-const app = createApp({ store, adminPassword: ADMIN, toolkitHost, agentHost: { url: `http://127.0.0.1:${apiListen}`, secret: SECRET } });
+const app = createApp({ store, adminPassword: ADMIN, toolkitHost, agentHost: REMOTE || { url: `http://127.0.0.1:${apiListen}`, secret: SECRET } });
 const server = http.createServer(app);
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -71,8 +76,8 @@ const until = async (check, what, ms = 20000) => {
 
 let context, failureReport = async () => {};
 try {
-  const made = await (await fetch(`${base}/admin/accounts`, { method: 'POST', headers: { authorization: `Bearer ${ADMIN}`, 'content-type': 'application/json' }, body: JSON.stringify({ uid: 'ada' }) })).json();
-  const login = await (await fetch(`${base}/v1/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: 'ada', password: made.password }) })).json();
+  const made = await (await fetch(`${base}/admin/accounts`, { method: 'POST', headers: { authorization: `Bearer ${ADMIN}`, 'content-type': 'application/json' }, body: JSON.stringify({ uid: UID }) })).json();
+  const login = await (await fetch(`${base}/v1/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: UID, password: made.password }) })).json();
   const token = login.defaultToken;
 
   context = await chromium.launchPersistentContext(await mkdtemp(path.join(tmpdir(), 'assistant-e2e-profile-')), {
@@ -129,7 +134,7 @@ try {
     await shot(panel, '3-ready');
 
     // The page data stays on the agent host's disk, screenshot included.
-    const chatDir = path.join(agentData, 'accounts/ada/page-data');
+    const chatDir = path.join(agentData, `accounts/${UID}/page-data`);
     const [chatId] = await readdir(chatDir);
     const files = await readdir(path.join(chatDir, chatId));
     assert.ok(files.some(f => f.endsWith('-page.jpg')), 'the screenshot was kept');
@@ -170,26 +175,36 @@ try {
     console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview and removal, automatic preview, no code shown, page data on the host, export, add to account (runs from the account), chat history.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
+    // Send, then answer what the agent asks (share everything, preview) until its run ends.
+    const turn = async (text) => {
+      await ask(text);
+      await until(async () => (await panel.locator('#state').innerText()) === 'Working', 'the agent to start', 30000);
+      await until(async () => {
+        const card = panel.locator('.card button.primary').first();
+        if (await card.count()) await card.click().catch(() => {});
+        return (await panel.locator('#state').innerText()) === 'Ready';
+      }, 'the agent to finish', 600000).catch(async (e) => { console.log(await panel.locator('#transcript').innerText()); throw e; });
+    };
     await panel.check('#auto-preview');
-    await ask('The Buy and Save for later buttons on this shop are too small for me to tap. Please make an adapter that makes them at least 44 pixels tall. It helps motor. Go ahead with defaults, no questions.');
-    const asked = await until(async () => (await panel.locator('.card').count()) || (await panel.locator('#state').innerText()) === 'Ready', 'the agent to ask for the page or finish', 240000);
-    if ((await panel.locator('.card').count())) await panel.getByRole('button', { name: 'The address, the source and a screenshot' }).click();
-    await until(async () => (await panel.locator('#state').innerText()) === 'Ready' && (await panel.locator('.card').count()) === 0, 'the agent to finish', 600000)
-      .catch(async (e) => { console.log(await panel.locator('#transcript').innerText()); throw e; });
-    // Let a follow-up run if the agent stopped to ask.
-    let shown = await panel.locator('#transcript').innerText();
-    if (!(await panel.locator('#ready-list li').count())) {
-      await ask('Yes, that is right. Build it, preview it here, review it, and offer it to me when it works.');
-      await until(async () => { if (await panel.locator('.card').count()) await panel.locator('.card button.primary').first().click(); return (await panel.locator('#state').innerText()) === 'Ready' && (await panel.locator('#ready-list li').count()); }, 'the adapter ready', 600000)
-        .catch(async (e) => { console.log(await panel.locator('#transcript').innerText()); throw e; });
-      shown = await panel.locator('#transcript').innerText();
+    await turn('The Buy and Save for later buttons on this shop are too small for me to tap. Please make an adapter that makes them at least 44 pixels tall. It helps motor. Go ahead with defaults, no questions.');
+    for (let i = 0; i < 2 && !(await panel.locator('#ready-list li').count()); i++) {
+      await turn('That looks right on my page. Please offer it to me so I can add it to my account.');
     }
+    const shown = await panel.locator('#transcript').innerText();
     console.log('--- what the sidebar showed ---\n' + shown + '\n---');
     const after = await heightOfBuy();
     console.log(`Buy button height: ${before}px before, ${after}px with the preview.`);
     assert.ok(after >= 44, 'the previewed adapter made the button at least 44px tall');
+    assert.ok(await panel.locator('#ready-list li').count(), 'the agent offered the adapter');
+    await shot(panel, 'real-ready');
+    await panel.getByRole('button', { name: 'Add to my account' }).first().click();
+    await panel.locator('#status', { hasText: 'is in your account' }).waitFor({ timeout: 30000 });
+    const mine = await createRegistryClient({ url: base, token }).installed('browser-runtime');
+    assert.ok(mine.adapters.some(a => a.adapter.appId === 'assistant'), 'added to the account and installed in this browser');
+    await until(async () => (await heightOfBuy()) >= 44, 'the installed adapter on the page');
+    console.log(`Installed from the account: ${mine.adapters.filter(a => a.adapter.appId === 'assistant').map(a => a.adapter.id).join(', ')}; the Buy button is ${await heightOfBuy()}px.`);
     assert.ok(!/```/.test(shown), 'no code blocks in the sidebar');
-    console.log('Assistant browser workflow passed with real opencode and Gemini 3.8 Flash.');
+    console.log('Assistant browser workflow passed with real opencode and Gemini 3.8 Flash: asked, shared the page, built, previewed, reviewed, offered, added to the account.');
   }
 } catch (e) {
   await failureReport().catch(() => {});

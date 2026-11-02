@@ -5,11 +5,13 @@
 const FENCE = /```[\s\S]*?(?:```|$)/g;
 const LONG_INLINE = /`[^`\n]{60,}`/g;
 
-/** A reply as the sidebar shows it: code blocks and long inline code left out. */
+/** A reply as the sidebar shows it, as plain text: code blocks and long inline code left out, and no Markdown emphasis or heading marks. */
 export function withoutCode(text) {
   return String(text || '')
     .replace(FENCE, '')
     .replace(LONG_INLINE, '')
+    .replace(/(\*\*|__)(?=\S)([\s\S]*?\S)\1/g, '$2')
+    .replace(/^#{1,6}\s+/gm, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();

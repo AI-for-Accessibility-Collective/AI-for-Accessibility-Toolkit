@@ -38,8 +38,10 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   Its only writable folders are its home (opencode's sessions) and `/work`
   (its adapters). `/toolkit` is the toolkit's code, docs and the
   `ai4a11y-toolkit` skill, read-only in the image.
-- **Its network reaches nothing but the host's sandbox port**: no internet,
-  no metadata server, no other sandbox ([vm/setup.sh](vm/setup.sh)).
+- **Its network** reaches the host's sandbox port and nothing else on the
+  host, never the metadata server, private addresses or another sandbox, and
+  the internet only when the VM's `sandbox-internet` metadata is `on`
+  ([vm/setup.sh](vm/setup.sh)).
 - **The model key never enters a sandbox.** opencode sends its own sandbox
   token as the API key; the host's proxy checks it, pins the model to
   `gemini-3.8-flash` (titles too), limits each account to 60 calls a minute,
@@ -108,7 +110,7 @@ gcloud compute routers create agent-nat-router --project $P --region $R --networ
 gcloud compute routers nats create agent-nat --project $P --region $R --router agent-nat-router --auto-allocate-nat-external-ips --nat-all-subnet-ip-ranges
 # Firewall: the API port from the toolkit service's VPC egress only; SSH through IAP
 gcloud compute firewall-rules create agent-host-api --project $P --network default --target-tags agent-host --allow tcp:8791 --source-ranges 10.128.0.0/20
-gcloud compute firewall-rules create agent-host-iap-ssh --project $P --network default --target-tags agent-host --allow tcp:22 --source-ranges 35.235.240.0/20
+gcloud compute firewall-rules create agent-host-iap --project $P --network default --target-tags agent-host --allow tcp:22,tcp:8791 --source-ranges 35.235.240.0/20
 # The VM
 gcloud compute instances create agent-host --project $P --zone $Z --machine-type c4-standard-32 \
   --image-family ubuntu-2404-lts-amd64 --image-project ubuntu-os-cloud --boot-disk-type hyperdisk-balanced --boot-disk-size 500GB \

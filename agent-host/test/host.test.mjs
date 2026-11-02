@@ -21,6 +21,7 @@ await test('replies lose their code blocks and long inline code', () => {
   assert.equal(withoutCode('Here:\n```js\nconst a = 1;\n```\nDone.'), 'Here:\n\nDone.');
   assert.equal(withoutCode('Use `x`. ' + '`' + 'a'.repeat(80) + '`'), 'Use `x`.');
   assert.equal(withoutCode('Cut ```js\nno end'), 'Cut');
+  assert.equal(withoutCode('## Done\nUse **Add to my account** or __Export__.'), 'Done\nUse Add to my account or Export.');
 });
 await test('tool steps become plain lines without their input or output', () => {
   const e = translate({ type: 'tool_use', sessionID: 's1', part: { id: 'p', tool: 'bash', state: { status: 'completed', input: { command: 'rm -rf /' }, output: 'x' } } });

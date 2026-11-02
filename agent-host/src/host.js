@@ -38,7 +38,7 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  * @param {string} o.sandboxUrl    how a sandbox reaches the sandbox port
  * @param {'docker'|'local'} [o.runnerKind]
  */
-export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx',
+export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
   opencodeBin, repoDir, modelsJson, upstream, fetch, perMinute, log = createLogger(), runner: givenRunner }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
@@ -46,7 +46,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   const requests = createRequests({ events });
   const runner = givenRunner || (runnerKind === 'local'
     ? localRunner({ accounts, hostUrl: sandboxUrl, bin: opencodeBin, repoDir, modelsJson })
-    : dockerRunner({ accounts, image, network, hostUrl: sandboxUrl, log }));
+    : dockerRunner({ accounts, image, network, dns, hostUrl: sandboxUrl, log }));
   const chats = createChats({ accounts, runner, events, requests, log });
   const pageData = createPageData({ accounts });
   const model = createModelProxy({ apiKey, uidForToken: accounts.uidForToken, upstream, fetch, perMinute, log });
