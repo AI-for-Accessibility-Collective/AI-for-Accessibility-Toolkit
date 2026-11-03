@@ -142,7 +142,8 @@ export async function openVerifier({ headless = true } = {}) {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(`page error: ${e.message}`));
-    page.on('console', (msg) => { if (msg.type() === 'error') errors.push(`console error: ${msg.text()}`); });
+    // A resource the site fails to load (a 403, a blocked tracker) is the site's, not the adapter's.
+    page.on('console', (msg) => { if (msg.type() === 'error' && !/^Failed to load resource/.test(msg.text())) errors.push(`console error: ${msg.text()}`); });
     try {
       if (live) {
         await page.goto(spec.page, { waitUntil: 'load', timeout: 45_000 });
