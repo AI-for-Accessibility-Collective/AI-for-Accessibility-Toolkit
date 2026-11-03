@@ -280,11 +280,12 @@ export const ExploreAChart = {
     this.focusPanel();
   },
 
-  // Moves focus into the panel only from its trigger or from inside the panel:
-  // a slow answer must not pull focus away from wherever the person went since.
+  // Moves focus into the panel only from its trigger, from inside the panel,
+  // or from nowhere (the page body): a slow answer must not pull focus away
+  // from wherever the person went since.
   focusPanel() {
     const active = document.activeElement;
-    if ((active && active === this._trigger) || this.panel.contains(active)) this.panel.focus();
+    if (!active || active === document.body || active === this._trigger || this.panel.contains(active)) this.panel.focus();
   },
 
   // Model output goes in via textContent ONLY — never innerHTML.
