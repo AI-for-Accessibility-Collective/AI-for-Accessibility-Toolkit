@@ -14,6 +14,12 @@
 //     checkout. Gemini through opencode's google provider, with the key in
 //     GEMINI_API_KEY. Writes each agent's report and events to DIR.
 //
+//   ... --agent --sandboxed --review <base> [--model <provider/model>]
+//     Instead, an independent review: an agent per adapter changed since
+//     <base> (REVIEW.md here) reads the change and reports what is wrong
+//     with it, confirming with the verifier where it can; it changes
+//     nothing. Each report starts "Verdict: ok | issues".
+//
 //     Only in the container this folder's Dockerfile builds, on the agent
 //     host VM under gVisor with a copy of the repository (--sandboxed says
 //     you are there): the agent has a shell and opencode's code mode
@@ -21,7 +27,7 @@
 //     verifier's tools). Never on your own machine, where both would run as
 //     you. No web tools: the job needs none, as for the sidebar's agent.
 
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, createWriteStream } from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
@@ -40,6 +46,8 @@ const flag = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ?
 const mode = argv.includes('--agent') ? 'agent' : argv.includes('--replay') ? 'replay' : null;
 if (mode === 'agent' && !argv.includes('--sandboxed')) { console.error('Run the agents in the verify container on the agent host VM (see Dockerfile), with --sandboxed.'); process.exit(2); }
 const parallel = Number(flag('--parallel', 4));
+const reviewBase = flag('--review', null);
+const model = flag('--model', MODEL);
 const logs = path.resolve(flag('--logs', path.join(ROOT, '.verify-logs')));
 const skills = flag('--skills', '').split(',').filter(Boolean);
 const names = argv.filter(a => !a.startsWith('--'));
@@ -92,18 +100,20 @@ async function replay() {
 async function agents() {
   if (!process.env.GEMINI_API_KEY) { console.error('Set GEMINI_API_KEY.'); process.exit(2); }
   const all = readdirSync(path.join(ROOT, 'tools/adapters')).filter(f => f.endsWith('.js')).map(f => f.slice(0, -3)).filter(n => !NOT_ADAPTERS.has(n));
-  const queue = names.length ? names : all;
+  const changed = reviewBase ? new Set(execFileSync('git', ['diff', '--name-only', reviewBase, 'HEAD', '--', 'tools/adapters'], { cwd: ROOT, encoding: 'utf8' })
+    .split('\n').map(f => path.basename(f, '.js')).filter(Boolean)) : null;
+  const queue = names.length ? names : changed ? all.filter(n => changed.has(n)) : all;
   mkdirSync(logs, { recursive: true });
   const config = path.join(logs, 'opencode.json');
   const token = randomBytes(24).toString('hex');
   const mcpServer = await serveHttp({ token });
   writeFileSync(config, JSON.stringify({
     $schema: 'https://opencode.ai/config.json',
-    model: MODEL,
+    model,
     provider: { google: { options: { apiKey: '{env:GEMINI_API_KEY}' } } },
     mcp: { verifier: { type: 'remote', url: mcpServer.url, headers: { authorization: `Bearer ${token}` }, oauth: false, codemode: false } },
     permissions: ['webfetch', 'websearch', 'task', 'question'].map(action => ({ action, resource: '*', effect: 'deny' })),
-    instructions: [path.join(HERE, 'AGENTS.md')],
+    instructions: [path.join(HERE, reviewBase ? 'REVIEW.md' : 'AGENTS.md')],
     skills: [path.join(ROOT, '.claude/skills'), ...skills],
   }, null, 2));
 
@@ -120,8 +130,10 @@ async function agents() {
   const work = async (name, attempt = 1) => {
     const started = Date.now();
     const events = createWriteStream(path.join(logs, `${name}.jsonl`));
-    const task = `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;
-    const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `verify ${name}`, task], {
+    const task = reviewBase
+      ? `Review the changes to the built-in adapter tools/adapters/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page tools/test/verify/pages/review-${name}.html.`
+      : `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;
+    const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `${reviewBase ? 'review' : 'verify'} ${name}`, task], {
       cwd: ROOT, env: { ...process.env, OPENCODE_CONFIG: config, HOME: homeOf(name) }, stdio: ['ignore', 'pipe', 'pipe'],
     });
     const timer = setTimeout(() => child.kill('SIGTERM'), 40 * 60_000);
@@ -141,7 +153,7 @@ async function agents() {
     if (!text && attempt === 1 && /before reporting readiness/.test(stderr)) return work(name, 2);
     const report = text || `(no report; opencode exited ${code})\n${stderr}`;
     writeFileSync(path.join(logs, `${name}.md`), report + '\n');
-    results[name] = (/^Outcome:\s*([a-z-]+)/m.exec(report) || [, 'no-report'])[1];
+    results[name] = (/^(?:Outcome|Verdict):\s*([a-z-]+)/m.exec(report) || [, 'no-report'])[1];
     console.log(`${name}: ${results[name]} (${Math.round((Date.now() - started) / 60000)} min)`);
   };
   const pending = [...queue];
