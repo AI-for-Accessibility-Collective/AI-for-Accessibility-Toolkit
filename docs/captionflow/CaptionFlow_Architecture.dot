@@ -1,0 +1,28 @@
+digraph CaptionFlow {
+  graph [rankdir=TB, pad=0.34, nodesep=0.33, ranksep=0.55, splines=ortho, bgcolor="white", fontname="DejaVu Sans", label="CAPTIONFLOW  |  proposed implementation architecture", labelloc=t, fontsize=22, fontcolor="#19314b"];
+  node [shape=box, style="rounded,filled", fillcolor="#eef3f8", color="#b6c7d5", penwidth=1.4, fontname="DejaVu Sans", fontsize=12, fontcolor="#19314b", margin="0.15,0.10"];
+  edge [color="#657e91", arrowsize=0.65, penwidth=1.4];
+  input [label="SHORT INFORMATIONAL VIDEO\n(news • health • government)", fillcolor="#e7eef9"];
+  detect [label="Video input + media check\nexisting caption track?", fillcolor="#e7eef9"];
+  existing [label="Read existing VTT / timed cues\n(no ASR necessary)", fillcolor="#ecf5ff"];
+  asr [label="ASR provider\nEnglish / Swahili → timed segments\n(consent before cloud upload)", fillcolor="#ecf5ff"];
+  normalize [label="Common caption segment format\n{id, start, end, text, lang}", fillcolor="#e2f5ef", color="#72a896"];
+  transform [label="Caption processor\noptional translation + plain language\nsegment + preserve original facts", fillcolor="#e2f5ef", color="#72a896"];
+  validation [label="Quality / fallback gate\ncheck timing, numbers, names, meaning\nfall back to original if uncertain", fillcolor="#e2f5ef", color="#72a896"];
+  render [label="Accessible player + timed captions\nsize • contrast • language • modes", fillcolor="#eef1ff", color="#9b9ed6"];
+  pace [label="Viewer-controlled pacing\nslow playback • pause/replay • repeat\nOriginal ↔ plain", fillcolor="#eef1ff", color="#9b9ed6"];
+  user [label="CO-DESIGNER\nwatch • choose • test • correct • undo", fillcolor="#fff3df", color="#dbb366", penwidth=2];
+  toolkit [label="ACCESSIBILITY TOOLKIT\nLibrarian → Profile / AbilityModel\nSkill / Adapter + consent", fillcolor="#fff5e6", color="#e2b574"];
+  pref [label="CaptionFlow preference mapping\nToolkit needs + app-specific settings", fillcolor="#fff5e6", color="#e2b574"];
+  input -> detect;
+  detect -> existing [xlabel="track"];
+  detect -> asr [xlabel="none"];
+  existing -> normalize;
+  asr -> normalize;
+  normalize -> transform -> validation -> render -> pace -> user;
+  toolkit -> pref -> render;
+  user -> toolkit [label="explicit preferences / decisions", constraint=false];
+  {rank=same; existing; asr;}
+  {rank=same; validation; toolkit;}
+  {rank=same; render; pref;}
+}
