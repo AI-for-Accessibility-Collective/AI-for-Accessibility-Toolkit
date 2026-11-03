@@ -37,7 +37,10 @@ function hasAccessibleName(el) {
   if (label && label.trim()) return true;
   // Same rule as the auditors: an aria-labelledby only counts when it
   // resolves to a name
-  return !!getLabelledByText(el);
+  if (getLabelledByText(el)) return true;
+  const title = el.getAttribute('title');
+  if (title && title.trim()) return true;
+  return false;
 }
 
 // Walk a MathML subtree into spoken words: layout tags become the phrases a
@@ -97,12 +100,23 @@ function texFromUrl(src) {
   if (!MATH_HINT_RE.test(url.hostname + url.pathname)) return null;
   const query = url.search.slice(1);
   if (query) {
+    let hasNamedParam = false;
     for (const part of query.split('&')) {
       const eq = part.indexOf('=');
-      if (eq > 0 && TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+      if (eq > 0) {
+        hasNamedParam = true;
+        if (TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+      }
     }
-    // codecogs style: the whole query IS the tex.
-    return safeDecode(query);
+    // If it had key=value query params and none matched a TeX parameter, it's not TeX.
+    if (hasNamedParam && !/codecogs/i.test(url.hostname)) return null;
+
+    // codecogs style: the whole query IS the tex, or query has unmistakable TeX syntax.
+    const decoded = safeDecode(query);
+    if (/codecogs/i.test(url.hostname) || (decoded && /[\\^_{}]/.test(decoded))) {
+      return decoded;
+    }
+    return null;
   }
   // Tex in the path itself: only trust a segment with unmistakable TeX syntax.
   const seg = (url.pathname.split('/').pop() || '').replace(/\.(png|svg|gif|jpe?g)$/i, '');
@@ -163,6 +177,8 @@ export const MathA11y = {
     for (const math of document.querySelectorAll('math')) {
       if (this.records.length >= this.cap) break;
       if (math.getAttribute('aria-hidden') === 'true') continue;
+      const role = math.getAttribute('role');
+      if (role === 'presentation' || role === 'none') continue;
       if (hasAccessibleName(math)) continue;
       const attrs = [];
       this.setTracked(math, 'aria-label', deriveLabel(math), attrs);
@@ -175,8 +191,11 @@ export const MathA11y = {
     for (const img of document.querySelectorAll('img')) {
       if (this.records.length >= this.cap) break;
       if (img.getAttribute('aria-hidden') === 'true') continue;
+      const role = img.getAttribute('role');
+      if (role === 'presentation' || role === 'none') continue;
       const alt = img.getAttribute('alt');
       if (alt && alt.trim()) continue;
+      if (hasAccessibleName(img)) continue;
       const src = img.getAttribute('src') || '';
       // A data: URL is the picture itself, not an address: an inline SVG's
       // markup says "<text", which matched "tex", and a store's "Sponsored"

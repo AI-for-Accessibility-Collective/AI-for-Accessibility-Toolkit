@@ -1,0 +1,19 @@
+{
+  "name": "abbreviation-expand-narrow",
+  "file": "tools/adapters/abbreviation-expand.js",
+  "page": "abbreviation-expand.html",
+  "checks": [
+    {
+      "name": "abbreviation markers reflow properly at 320px viewport without horizontal overflow",
+      "code": "\n        const prose = document.getElementById('prose-acronyms');\n        const main = document.getElementById('main-content');\n        if (!prose || !main) return false;\n\n        const isEnabled = document.getElementById('ai4a11y-abbr-styles') !== null;\n        if (!isEnabled) return true;\n\n        // Ensure page does not have horizontal scrolling\n        const hasHorizontalScroll = document.documentElement.scrollWidth > window.innerWidth;\n        if (hasHorizontalScroll) return false;\n\n        // Verify that abbr elements are inline and respect container boundary\n        const abbrs = prose.querySelectorAll('abbr.ai4a11y-abbr');\n        if (abbrs.length === 0) return false;\n        for (const a of abbrs) {\n          const rect = a.getBoundingClientRect();\n          if (rect.right > window.innerWidth) return false;\n        }\n\n        return true;\n      "
+    },
+    {
+      "name": "preserves visible text and abbreviations after reflow",
+      "code": "\n        const prose = document.getElementById('prose-acronyms');\n        const bareAbbr = document.getElementById('bare-abbr');\n        if (!prose || !bareAbbr) return false;\n\n        const isEnabled = document.getElementById('ai4a11y-abbr-styles') !== null;\n        if (!isEnabled) return true;\n\n        const proseAbbrs = prose.querySelectorAll('abbr.ai4a11y-abbr');\n        return proseAbbrs.length >= 6 && bareAbbr.getAttribute('title') === 'National Aeronautics and Space Administration';\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

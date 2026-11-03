@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zenith Mind Wellness - Sensory Comfort Guide</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 8px;
+      background: #1a202c;
+      color: #ffffff;
+      padding: 8px 12px;
+      z-index: 100;
+      text-decoration: underline;
+      font-weight: 600;
+      min-height: 24px;
+    }
+    .skip-link:focus {
+      top: 8px;
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    header {
+      background-color: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem 1.5rem;
+    }
+    .header-content {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #0353a4;
+      text-decoration: underline;
+      font-weight: 600;
+      min-height: 24px;
+      min-width: 24px;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+    main {
+      max-width: 960px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 640px) {
+      .layout-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    article {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .tag {
+      display: inline-block;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    article h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.35rem;
+      color: #0f172a;
+    }
+    .meta {
+      color: #475569;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    aside {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+      height: fit-content;
+    }
+    aside h2 {
+      font-size: 1.15rem;
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+      color: #0f172a;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+      color: #1e293b;
+    }
+    input[type="email"] {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 1rem;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      min-height: 40px;
+    }
+    input[type="email"]:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    button {
+      background-color: #0353a4;
+      color: #ffffff;
+      border: none;
+      padding: 10px 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      min-height: 40px;
+      min-width: 44px;
+    }
+    button:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    footer {
+      border-top: 1px solid #e2e8f0;
+      background-color: #f8fafc;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      text-align: center;
+      color: #475569;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header>
+    <div class="header-content">
+      <h1>Zenith Mind Wellness</h1>
+      <nav aria-label="Main Navigation">
+        <ul>
+          <li><a href="#articles" id="nav-articles">Articles</a></li>
+          <li><a href="#guides" id="nav-guides">Guides</a></li>
+          <li><a href="#about" id="nav-about">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="layout-grid">
+      <article id="article">
+        <span class="tag" id="article-tag">Sensory Comfort</span>
+        <h2 id="article-title">Creating a Calmer Visual Workspace</h2>
+        <div class="meta" id="article-meta">Published on November 3, 2026 &bull; By Dr. Alex Rivera</div>
+        <p id="article-p1">
+          High screen brightness and harsh contrast can trigger visual fatigue, migraines, and sensory overload.
+          Subtle reductions in overall luminance help relax ocular tension without sacrificing readability.
+        </p>
+        <p id="article-p2">
+          Unlike dark mode inversion, which shifts black and white polarity, brightness attenuation keeps typography,
+          diagrams, and layouts familiar and steady.
+        </p>
+        <figure style="margin: 1.5rem 0;">
+          <svg id="wellness-graphic" width="100%" height="120" viewBox="0 0 400 120" role="img" aria-label="Calm waves illustration representing visual rest">
+            <rect width="400" height="120" fill="#e2e8f0" rx="6" />
+            <path d="M 0 60 Q 100 20 200 60 T 400 60 L 400 120 L 0 120 Z" fill="#0284c7" opacity="0.3" />
+            <path d="M 0 80 Q 100 40 200 80 T 400 80 L 400 120 L 0 120 Z" fill="#0369a1" opacity="0.5" />
+          </svg>
+        </figure>
+      </article>
+
+      <aside aria-label="Newsletter Subscription">
+        <h2>Stay Updated</h2>
+        <p>Get sensory-friendly tips and mindfulness exercises delivered weekly.</p>
+        <form id="subscribe-form" onsubmit="event.preventDefault(); document.getElementById('form-status').textContent = 'Thank you for subscribing!';">
+          <div class="form-group">
+            <label for="subscriber-email">Email Address</label>
+            <input type="email" id="subscriber-email" name="email" required autocomplete="email">
+          </div>
+          <button type="submit" id="subscribe-btn">Subscribe</button>
+          <div id="form-status" role="status" aria-live="polite" style="margin-top: 0.5rem; font-weight: 500; min-height: 1.5rem;"></div>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <p id="footer-text">&copy; 2026 Zenith Mind Wellness. All rights reserved.</p>
+  </footer>
+</body>
+</html>

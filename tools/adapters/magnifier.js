@@ -3,10 +3,11 @@
 // enlarged. Unlike a pixel/screenshot magnifier it re-renders the text itself,
 // so it stays sharp at any size and works without capture permissions.
 //
-// Reversible by construction: one injected lens element and two document
-// listeners (stored as refs), all removed on disable(). The lens is
-// pointer-events:none and aria-hidden — it never intercepts input, and screen
-// readers skip it (it only echoes text already on the page).
+// Reversible by construction: one injected lens element and document
+// listeners (stored as refs, including Escape dismissal and focus handling),
+// all removed on disable(). The lens is pointer-events:none and aria-hidden —
+// it never intercepts input, and screen readers skip it (it only echoes text
+// already on the page).
 import { announce } from '../utils/ai.js';
 
 export const Magnifier = {
@@ -15,9 +16,13 @@ export const Magnifier = {
   lens: null,
   moveHandler: null,     // ref kept so disable() can remove the exact listener
   leaveHandler: null,
+  keyHandler: null,
+  focusHandler: null,
   rafId: null,
   lastEvent: null,
   lastUpdate: 0,
+  dismissedEl: null,
+  currentEl: null,
 
   enable(options = {}) {
     if (this.enabled) return;
@@ -30,7 +35,10 @@ export const Magnifier = {
     lens.style.cssText = `
       display: none;
       position: fixed;
-      max-width: min(60vw, 640px);
+      box-sizing: border-box;
+      max-width: min(calc(100vw - 16px), 640px);
+      max-height: min(45vh, 360px);
+      overflow: hidden;
       padding: 12px 18px;
       font-size: ${fontSize}px;
       line-height: 1.35;
@@ -41,6 +49,7 @@ export const Magnifier = {
       border-radius: 12px;
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
       overflow-wrap: break-word;
+      word-break: break-word;
       pointer-events: none;
       z-index: 2147483646;
     `;
@@ -48,9 +57,27 @@ export const Magnifier = {
     this.lens = lens;
 
     this.moveHandler = (e) => this.onMove(e);
-    this.leaveHandler = () => this.hide();
+    this.leaveHandler = () => {
+      this.dismissedEl = null;
+      this.hide();
+    };
+    // WCAG 1.4.13: Content shown on hover can be dismissed with Escape without
+    // moving hover, staying dismissed while pointer remains on that element.
+    this.keyHandler = (e) => {
+      if (e.key === 'Escape') {
+        this.dismissedEl = this.currentEl || (this.lastEvent && typeof document.elementFromPoint === 'function'
+          ? document.elementFromPoint(this.lastEvent.clientX, this.lastEvent.clientY)
+          : null);
+        this.hide();
+      }
+    };
+    // WCAG 2.4.11: Keyboard focus must not be obscured by the lens.
+    this.focusHandler = () => this.hide();
+
     document.addEventListener('mousemove', this.moveHandler, { passive: true });
     document.addEventListener('mouseleave', this.leaveHandler);
+    document.addEventListener('keydown', this.keyHandler);
+    document.addEventListener('focusin', this.focusHandler);
 
     console.log('[AI4A11y] Magnifier enabled');
     announce('Magnifier on. Move the pointer over text to enlarge it');
@@ -81,8 +108,11 @@ export const Magnifier = {
       if (typeof document.elementFromPoint !== 'function') return;
       const el = document.elementFromPoint(e.clientX, e.clientY);
       if (!el || el === lens || lens.contains(el)) return;
+      if (this.dismissedEl && (el === this.dismissedEl || this.dismissedEl.contains(el))) return;
+      this.dismissedEl = null;
       const text = this.textAt(e.clientX, e.clientY);
       if (!text) { this.hide(); return; }
+      this.currentEl = el;
       lens.textContent = text;
       lens.style.display = 'block';
       this.position(e.clientX, e.clientY);
@@ -103,11 +133,20 @@ export const Magnifier = {
       const r = document.caretRangeFromPoint(x, y);
       if (r) { node = r.startContainer; offset = r.startOffset; }
     }
+    if (node && node.nodeType === 1 && node.childNodes.length > 0) {
+      const child = node.childNodes[offset] || node.childNodes[offset - 1];
+      if (child && child.nodeType === 3) node = child;
+    }
     if (!node || node.nodeType !== 3 || !node.parentElement) return '';
     // The caret lands on the nearest text even from blank space beside it.
+    // Allow a small vertical tolerance between lines so moving across lines in a
+    // paragraph doesn't flicker the lens off in the line gap.
     const range = document.createRange();
     range.selectNodeContents(node);
-    const on = Array.from(range.getClientRects()).some(r => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+    const lineGap = 8;
+    const on = Array.from(range.getClientRects()).some(r =>
+      x >= r.left - 2 && x <= r.right + 2 && y >= r.top - lineGap && y <= r.bottom + lineGap
+    );
     if (!on) return '';
     // innerText, not textContent: it leaves out hidden text (a closed
     // tooltip inside the element) and keeps blocks apart.
@@ -122,7 +161,7 @@ export const Magnifier = {
   },
 
   // Offset the lens from the cursor, flipping to the other side rather than
-  // running off the viewport edge.
+  // running off the viewport edge, and ensuring it never covers the pointer (WCAG 2.4.11).
   position(x, y) {
     const lens = this.lens;
     if (!lens) return;
@@ -130,16 +169,41 @@ export const Magnifier = {
     const vh = window.innerHeight || 768;
     let w = 0, h = 0;
     try { const r = lens.getBoundingClientRect(); w = r.width || 0; h = r.height || 0; } catch { /* detached */ }
-    let left = x + 24;
-    let top = y + 24;
-    if (left + w > vw) left = Math.max(8, x - w - 24);
-    if (top + h > vh) top = Math.max(8, y - h - 24);
+
+    // Vertical placement: place below cursor if it fits, else above.
+    // If neither fits with full clearance, place on whichever side has more room
+    // and guarantee top never overlaps y.
+    const gap = 24;
+    let top;
+    if (y + gap + h <= vh - 8) {
+      top = y + gap;
+    } else if (y - gap - h >= 8) {
+      top = y - gap - h;
+    } else if (y >= vh / 2) {
+      top = Math.max(8, y - h - 8);
+    } else {
+      top = Math.min(vh - h - 8, y + 8);
+    }
+
+    // Horizontal placement: offset right by default, flip left if overflowing right.
+    // If it doesn't fit on either side (e.g. narrow screen), center/clamp within margins.
+    // Because top is strictly above or below y, the lens never covers the pointer.
+    let left;
+    if (x + gap + w <= vw - 8) {
+      left = x + gap;
+    } else if (x - gap - w >= 8) {
+      left = x - gap - w;
+    } else {
+      left = Math.max(8, Math.min(vw - w - 8, x - Math.round(w / 2)));
+    }
+
     lens.style.left = `${left}px`;
     lens.style.top = `${top}px`;
   },
 
   hide() {
     if (this.lens) this.lens.style.display = 'none';
+    this.currentEl = null;
   },
 
   disable() {
@@ -147,12 +211,16 @@ export const Magnifier = {
     this.enabled = false;
     if (this.moveHandler) { document.removeEventListener('mousemove', this.moveHandler); this.moveHandler = null; }
     if (this.leaveHandler) { document.removeEventListener('mouseleave', this.leaveHandler); this.leaveHandler = null; }
+    if (this.keyHandler) { document.removeEventListener('keydown', this.keyHandler); this.keyHandler = null; }
+    if (this.focusHandler) { document.removeEventListener('focusin', this.focusHandler); this.focusHandler = null; }
     if (this.rafId !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this.rafId);
     this.rafId = null;
     this.lastEvent = null;
     this.lastUpdate = 0;
+    this.dismissedEl = null;
+    this.currentEl = null;
+    if (this.lens) { this.lens.remove(); this.lens = null; }
     document.getElementById(this.lensId)?.remove();
-    this.lens = null;
     console.log('[AI4A11y] Magnifier disabled');
     announce('Magnifier off');
   },

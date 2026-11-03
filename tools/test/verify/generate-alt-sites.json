@@ -1,0 +1,17 @@
+{
+  "file": "tools/adapters/generate-alt.js",
+  "ai": {
+    "describeImage": "A descriptive image of the scene"
+  },
+  "harness": {
+    "enable": "\n    window.__genAltPrev = [];\n    const results = await axe.run({\n      runOnly: { type: 'rule', values: Object.keys(m.axeHandlers) }\n    });\n    for (const violation of results.violations) {\n      const handler = m.axeHandlers[violation.id];\n      if (!handler) continue;\n      for (const node of violation.nodes) {\n        try {\n          const el = document.querySelector(node.target[0]);\n          if (!el || el.dataset.ai4a11yProcessed) continue;\n          window.__genAltPrev.push({\n            el,\n            type: el.tagName.toLowerCase(),\n            alt: el.getAttribute('alt'),\n            hadAlt: el.hasAttribute('alt'),\n            role: el.getAttribute('role'),\n            hadRole: el.hasAttribute('role'),\n            titleText: el.querySelector(':scope > title')?.textContent,\n            hadTitle: !!el.querySelector(':scope > title'),\n            processed: el.dataset.ai4a11yProcessed,\n          });\n          await handler(el);\n        } catch (e) {\n          console.error('Handler error:', e);\n        }\n      }\n    }\n  ",
+    "disable": "\n    if (window.__genAltPrev) {\n      for (const item of window.__genAltPrev) {\n        if (item.hadAlt) item.el.setAttribute('alt', item.alt);\n        else item.el.removeAttribute('alt');\n        if (item.hadRole) item.el.setAttribute('role', item.role);\n        else item.el.removeAttribute('role');\n        const titleEl = item.el.querySelector(':scope > title');\n        if (item.hadTitle && titleEl) {\n          titleEl.textContent = item.titleText;\n        } else if (!item.hadTitle && titleEl) {\n          titleEl.remove();\n        }\n        if (item.processed !== undefined) item.el.dataset.ai4a11yProcessed = item.processed;\n        else delete item.el.dataset.ai4a11yProcessed;\n      }\n      delete window.__genAltPrev;\n    }\n  "
+  },
+  "checks": [
+    {
+      "name": "processed images receive non-empty alt",
+      "code": "\n      const imgs = document.querySelectorAll('img[data-ai4a11y-processed=\"done\"]');\n      for (const img of imgs) {\n        const alt = img.getAttribute('alt');\n        if (!alt || !alt.trim()) return false;\n      }\n      return true;\n    "
+    }
+  ],
+  "sites": "all"
+}

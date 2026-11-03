@@ -1,0 +1,24 @@
+{
+  "name": "bionic-reading",
+  "file": "tools/adapters/bionic-reading.js",
+  "export": "BionicReading",
+  "page": "bionic-reading.html",
+  "checks": [
+    {
+      "name": "bolds prose words with fixation prefixes and preserves screen reader text",
+      "code": "\n        const prose = document.getElementById('prose-main');\n        if (!prose) return false;\n        const bionicSpans = prose.querySelectorAll('span.ai4a11y-bionic');\n        if (bionicSpans.length === 0) return true;\n\n        const bolds = prose.querySelectorAll('span.ai4a11y-bionic b');\n        if (bolds.length === 0) return false;\n\n        const reaBold = Array.from(bolds).find(b => b.textContent === 'Rea');\n        if (!reaBold) return false;\n        if (!reaBold.nextSibling || reaBold.nextSibling.nodeType !== 3 || reaBold.nextSibling.nodeValue !== 'ding') return false;\n\n        const firstWrap = bionicSpans[0];\n        const shown = firstWrap.querySelector('[aria-hidden=\"true\"]');\n        const spoken = firstWrap.lastElementChild;\n        if (!shown || !spoken) return false;\n        if (shown === spoken) return false;\n        if (spoken.hasAttribute('aria-hidden')) return false;\n\n        return prose.textContent.includes('Reading comprehension relies heavily on saccadic eye movements');\n      "
+    },
+    {
+      "name": "dynamic content handling and interactive elements remain functional",
+      "code": "\n        const link = document.getElementById('inline-study-link');\n        const btn = document.getElementById('bookmark-btn');\n        if (!link || !btn) return false;\n\n        link.focus();\n        if (document.activeElement !== link) return false;\n        link.blur();\n\n        const prose = document.getElementById('prose-main');\n        if (!prose.querySelector('span.ai4a11y-bionic')) return true;\n\n        const container = document.getElementById('dynamic-container');\n        if (!container) return false;\n        const dynamicP = document.createElement('p');\n        dynamicP.id = 'dynamic-test-para';\n        dynamicP.textContent = 'Rapid perception facilitates fluid text comprehension.';\n        container.appendChild(dynamicP);\n\n        await new Promise(r => setTimeout(r, 550));\n\n        const dynamicBolds = dynamicP.querySelectorAll('span.ai4a11y-bionic b');\n        const hasDynamicBolds = dynamicBolds.length > 0;\n\n        dynamicP.remove();\n        return hasDynamicBolds;\n      "
+    },
+    {
+      "name": "accessibility: visible focus indicators, inline target exempt, and screen reader visibility",
+      "code": "\n        const link = document.getElementById('inline-study-link');\n        if (!link) return false;\n\n        link.focus();\n        const style = window.getComputedStyle(link);\n        const outlineWidth = parseFloat(style.outlineWidth) || 0;\n        link.blur();\n        if (outlineWidth < 2) return false;\n\n        const prose = document.getElementById('prose-main');\n        if (!prose.querySelector('span.ai4a11y-bionic')) return true;\n\n        const spoken = prose.querySelector('span.ai4a11y-bionic > span:not([aria-hidden=\"true\"])');\n        if (!spoken) return false;\n        const spokenStyle = window.getComputedStyle(spoken);\n        const isHidden = (spokenStyle.overflow === 'hidden' || spokenStyle.clipPath !== 'none' || spokenStyle.width === '1px');\n        return isHidden;\n      "
+    },
+    {
+      "name": "leaves alone code, scripts, buttons, nav, aside, citations, and live regions",
+      "code": "\n        const code = document.getElementById('sample-code');\n        const script = document.getElementById('inline-script');\n        const btn = document.getElementById('bookmark-btn');\n        const nav = document.getElementById('nav-articles');\n        const aside = document.getElementById('aside-text');\n        const live = document.getElementById('status-live');\n        const cite = document.getElementById('cite-ref');\n        if (!code || !script || !btn || !nav || !aside || !live || !cite) return false;\n\n        if (code.querySelector('.ai4a11y-bionic')) return false;\n        if (script.querySelector('.ai4a11y-bionic')) return false;\n        if (btn.querySelector('.ai4a11y-bionic')) return false;\n        if (nav.querySelector('.ai4a11y-bionic')) return false;\n        if (aside.querySelector('.ai4a11y-bionic')) return false;\n        if (live.querySelector('.ai4a11y-bionic')) return false;\n        if (cite.querySelector('.ai4a11y-bionic')) return false;\n\n        return true;\n      "
+    }
+  ]
+}

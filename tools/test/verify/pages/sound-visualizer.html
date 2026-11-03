@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundPulse Media - Accessible Audio &amp; Video Hub</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 10px;
+      background: #0f3a68;
+      color: #ffffff;
+      padding: 8px 16px;
+      z-index: 100;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    .skip-link:focus {
+      top: 10px;
+    }
+    header {
+      background-color: #0f3a68;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      display: inline-flex;
+      align-items: center;
+      min-width: 44px;
+      min-height: 24px;
+      line-height: 24px;
+    }
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible {
+      outline: 3px solid #0f3a68;
+      outline-offset: 2px;
+    }
+    header nav a:focus-visible,
+    .skip-link:focus-visible {
+      outline: 3px solid #ffffff;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.3rem;
+      color: #2d3748;
+      margin-top: 0;
+    }
+    .media-card {
+      background: #f7fafc;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .media-card h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #2d3748;
+    }
+    video {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #000000;
+      border-radius: 4px;
+    }
+    audio {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      margin: 0.5rem 0;
+    }
+    p {
+      margin: 0.75rem 0;
+    }
+    .action-btn {
+      background-color: #0f3a68;
+      color: #ffffff;
+      border: 1px solid #0f3a68;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      min-width: 48px;
+      min-height: 36px;
+      font-family: inherit;
+    }
+    .btn-secondary {
+      background-color: #ffffff;
+      color: #0f3a68;
+      border: 2px solid #0f3a68;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .form-group {
+      margin-top: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #2d3748;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #4a5568;
+      border-radius: 4px;
+      color: #1a202c;
+      background: #ffffff;
+      min-height: 36px;
+    }
+    aside {
+      background: #edf2f7;
+      border-top: 2px solid #cbd5e0;
+      padding: 1rem 1.5rem;
+      margin-top: 2rem;
+    }
+    aside ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+    aside a {
+      color: #0f3a68;
+      text-decoration: underline;
+    }
+    footer {
+      background-color: #0f3a68;
+      color: #ffffff;
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    footer p {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <header>
+    <h1>SoundPulse Media</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#streams" id="nav-streams">Live Streams</a></li>
+        <li><a href="#podcasts" id="nav-podcasts">Podcasts</a></li>
+        <li><a href="#feedback" id="nav-feedback">Feedback</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <article>
+      <h2>Streaming Media &amp; Audio Broadcasts</h2>
+      <p id="lead-paragraph">SoundPulse provides daily streams and broadcasts. Non-speech sound alerts and audio notifications are visually flagged to keep all streams accessible.</p>
+
+      <section id="streams" aria-labelledby="heading-streams">
+        <h3 id="heading-streams">Live Video Stream</h3>
+        <div class="media-card" id="card-video-stream">
+          <h4>Studio Broadcast Live</h4>
+          <p>Unmuted live news stream emitting audio cues and broadcast content.</p>
+          <video id="video-stream" width="480" height="270" controls preload="none" src="data:video/mp4;base64,AAAA">
+            <track id="track-video-stream" kind="captions" label="English Captions" srclang="en" src="data:text/vtt,WEBVTT" default>
+          </video>
+          <div class="button-group">
+            <button type="button" id="btn-trigger-video" class="action-btn">Simulate Video Play</button>
+          </div>
+        </div>
+
+        <div class="media-card" id="card-video-muted">
+          <h4>Ambient Campus Cam (Muted)</h4>
+          <p>Camera feed without sound. Muted media should not trigger visual sound indicators.</p>
+          <video id="video-muted" width="480" height="270" controls muted preload="none" src="data:video/mp4;base64,AAAA">
+            <track id="track-video-muted" kind="captions" label="English Captions" srclang="en" src="data:text/vtt,WEBVTT" default>
+          </video>
+          <div class="button-group">
+            <button type="button" id="btn-trigger-muted" class="action-btn btn-secondary">Simulate Muted Play</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="podcasts" aria-labelledby="heading-podcasts">
+        <h3 id="heading-podcasts">Audio Podcast Stream</h3>
+        <div class="media-card" id="card-audio-stream">
+          <h4>Weekly Tech Briefing</h4>
+          <p>Audio recording discussing web standards and accessibility.</p>
+          <audio id="audio-stream" controls preload="none" src="data:audio/mp3;base64,AAAA"></audio>
+          <div class="button-group">
+            <button type="button" id="btn-trigger-audio" class="action-btn">Simulate Audio Play</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="feedback" aria-labelledby="heading-feedback">
+        <h3 id="heading-feedback">Audience Feedback</h3>
+        <p id="feedback-intro">Send us your feedback regarding audio clarity and visual cue preferences.</p>
+        <form id="feedback-form" action="#" method="get" onsubmit="return false;">
+          <div class="form-group">
+            <label for="feedback-input">Your Feedback</label>
+            <input type="text" id="feedback-input" name="feedback" placeholder="Enter notes or feedback">
+          </div>
+          <div class="form-group">
+            <button type="submit" id="btn-submit-feedback" class="action-btn">Send Message</button>
+          </div>
+        </form>
+      </section>
+    </article>
+  </main>
+
+  <aside aria-labelledby="heading-aside">
+    <h2 id="heading-aside">Additional Information</h2>
+    <ul>
+      <li><a href="#audio-standards" id="link-standards">WCAG 2.2 Audio &amp; Sensory Standards</a></li>
+      <li><a href="#assistive-tech" id="link-assistive">Assistive Technology Integration Guides</a></li>
+    </ul>
+  </aside>
+
+  <footer>
+    <p id="footer-text">&copy; 2026 SoundPulse Media Hub. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Wire up test buttons so interactive checks can use click()
+    const vStream = document.getElementById('video-stream');
+    const vMuted = document.getElementById('video-muted');
+    const aStream = document.getElementById('audio-stream');
+
+    document.getElementById('btn-trigger-video')?.addEventListener('click', () => {
+      vStream.dispatchEvent(new Event('play', { bubbles: true }));
+    });
+    document.getElementById('btn-trigger-muted')?.addEventListener('click', () => {
+      vMuted.dispatchEvent(new Event('play', { bubbles: true }));
+    });
+    document.getElementById('btn-trigger-audio')?.addEventListener('click', () => {
+      aStream.dispatchEvent(new Event('play', { bubbles: true }));
+    });
+  </script>
+</body>
+</html>

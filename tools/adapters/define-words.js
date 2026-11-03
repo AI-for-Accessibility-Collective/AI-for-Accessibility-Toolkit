@@ -1,8 +1,11 @@
-// Define Words — makes long words in the page's main text interactive: hover
-// or keyboard focus fetches a plain-language definition with AI and shows it
-// in a tooltip. From the co-design study: Chloe wants plainer language — but
-// unlike simplify-text this keeps the original wording and explains on demand,
-// so the reader learns the hard word instead of losing it.
+// Define Words — makes long words in the page's main text interactive: hover,
+// click or keyboard focus fetches a plain-language definition with AI and shows it
+// in a tooltip. Meets WCAG 1.4.13 (dismissible with Escape, hoverable so the pointer
+// can move over the tooltip, and persistent while hovered/focused) and WCAG 2.1.1
+// (keyboard activation via Space or Enter on interactive words). From the co-design
+// study: Chloe wants plainer language — but unlike simplify-text this keeps the
+// original wording and explains on demand, so the reader learns the hard word
+// instead of losing it.
 //
 // Reversible by construction: each processed text node is REPLACED by a
 // wrapper <span> built with DOM APIs and textContent (never innerHTML from
@@ -51,6 +54,7 @@ export const DefineWords = {
   definitions: null,  // Map lowercased word -> Promise of a definition or null (null cached too, so a dead provider isn't re-asked)
   showHandler: null,
   hideHandler: null,
+  clickHandler: null,
   keyHandler: null,
   current: null,      // the word span the reader is on right now
   hoverTimer: null,
@@ -97,11 +101,34 @@ export const DefineWords = {
     // single pair of references is all disable() needs to remove.
     this.showHandler = (e) => this.handleShow(e);
     this.hideHandler = (e) => this.handleHide(e);
-    this.keyHandler = (e) => { if (e.key === 'Escape') this.hideTooltip(); };
+    this.clickHandler = (e) => this.handleClick(e);
+    this.keyHandler = (e) => {
+      if (e.key === 'Escape') {
+        clearTimeout(this.hoverTimer);
+        this.hoverTimer = null;
+        this.hideTooltip();
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        const target = e.target;
+        const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
+        if (span && span.hasAttribute('tabindex')) {
+          if (e.key === ' ' || e.key === 'Spacebar') e.preventDefault();
+          const tip = document.getElementById(TOOLTIP_ID);
+          if (tip && tip.style.display === 'block' && this.current === span) {
+            this.hideTooltip();
+          } else {
+            this.current = span;
+            this.showDefinition(span, true).catch(() => {});
+          }
+        }
+      }
+    };
     document.addEventListener('mouseover', this.showHandler);
     document.addEventListener('focusin', this.showHandler);
     document.addEventListener('mouseout', this.hideHandler);
     document.addEventListener('focusout', this.hideHandler);
+    document.addEventListener('click', this.clickHandler);
     document.addEventListener('keydown', this.keyHandler);
     this.watch(root, minLength);
 
@@ -241,7 +268,14 @@ export const DefineWords = {
             font: 14px/1.4 system-ui, sans-serif;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-            pointer-events: none;
+          }
+          #${TOOLTIP_ID}::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: 0;
+            right: 0;
+            height: 8px;
           }`;
         (document.head || document.documentElement).appendChild(style);
       }
@@ -282,14 +316,39 @@ export const DefineWords = {
     try {
       const target = event.target;
       const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
-      if (!span) return;
+      const tip = document.getElementById(TOOLTIP_ID);
+      const onTip = target && tip && (target === tip || tip.contains(target));
+      if (!span && !onTip) return;
+
+      const rel = event.relatedTarget;
       // Moving between the parts of one word is not leaving it.
-      if (event.type === 'mouseout' && event.relatedTarget && span.contains(event.relatedTarget)) return;
+      if (span && rel && span.contains(rel)) return;
+      // Moving from the word to the tooltip (or staying in tooltip) is not leaving it.
+      if (span && tip && rel && (rel === tip || tip.contains(rel))) return;
+      if (onTip && rel && (rel === tip || tip.contains(rel))) return;
+      // Moving from tooltip back to the active word is not leaving it.
+      if (onTip && this.current && rel && (rel === this.current || this.current.contains(rel))) return;
+
       if (this.current === span) this.current = null;
       clearTimeout(this.hoverTimer);
       this.hoverTimer = null;
       this.hideTooltip();
     } catch { /* nothing to hide */ }
+  },
+
+  handleClick(event) {
+    try {
+      const target = event.target;
+      const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
+      if (!span) return;
+      const tip = document.getElementById(TOOLTIP_ID);
+      if (tip && tip.style.display === 'block' && this.current === span) {
+        this.hideTooltip();
+      } else {
+        this.current = span;
+        this.showDefinition(span, false).catch(() => {});
+      }
+    } catch { /* click error */ }
   },
 
   // One lookup per word, shared by every hover and focus that asks while it
@@ -385,6 +444,10 @@ export const DefineWords = {
       document.removeEventListener('mouseout', this.hideHandler);
       document.removeEventListener('focusout', this.hideHandler);
       this.hideHandler = null;
+    }
+    if (this.clickHandler) {
+      document.removeEventListener('click', this.clickHandler);
+      this.clickHandler = null;
     }
     if (this.keyHandler) { document.removeEventListener('keydown', this.keyHandler); this.keyHandler = null; }
     if (this.observer) { this.observer.disconnect(); this.observer = null; }

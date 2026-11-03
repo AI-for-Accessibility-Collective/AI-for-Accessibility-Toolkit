@@ -1,0 +1,46 @@
+{
+  "name": "generate-labels-narrow",
+  "file": "tools/adapters/generate-labels.js",
+  "page": "generate-labels.html",
+  "checks": [
+    {
+      "name": "all targeted elements exist on the test page",
+      "code": "\n        return !!document.getElementById('link-cart') &&\n               !!document.getElementById('btn-close') &&\n               !!document.getElementById('btn-bookmark') &&\n               !!document.getElementById('btn-svg-close') &&\n               !!document.getElementById('input-code') &&\n               !!document.getElementById('input-quantity') &&\n               !!document.getElementById('select-country') &&\n               !!document.getElementById('iframe-map') &&\n               !!document.getElementById('iframe-inventory') &&\n               !!document.getElementById('iframe-blank');\n      "
+    },
+    {
+      "name": "empty link receives AI inferred label and satisfies keyboard focus and size at 320px",
+      "code": "\n        const link = document.getElementById('link-cart');\n        if (!link) return false;\n        const isEnabled = link.getAttribute('aria-label') !== null;\n        if (!isEnabled) return link.getAttribute('aria-label') === null;\n        if (link.getAttribute('aria-label') !== 'Shopping Cart') return false;\n        link.focus();\n        if (document.activeElement !== link) return false;\n        const rect = link.getBoundingClientRect();\n        return rect.width >= 24 && rect.height >= 24;\n      "
+    },
+    {
+      "name": "pattern button receives Close label and custom button receives AI label",
+      "code": "\n        const btnClose = document.getElementById('btn-close');\n        const btnBookmark = document.getElementById('btn-bookmark');\n        if (!btnClose || !btnBookmark) return false;\n        const isEnabled = btnClose.getAttribute('aria-label') !== null;\n        if (!isEnabled) return btnClose.getAttribute('aria-label') === null && btnBookmark.getAttribute('aria-label') === null;\n        return btnClose.getAttribute('aria-label') === 'Close' &&\n               btnBookmark.getAttribute('aria-label') === 'Shopping Cart';\n      "
+    },
+    {
+      "name": "SVG role=button receives Close label without error",
+      "code": "\n        const svgBtn = document.getElementById('btn-svg-close');\n        if (!svgBtn) return false;\n        const isEnabled = svgBtn.getAttribute('aria-label') !== null;\n        if (!isEnabled) return svgBtn.getAttribute('aria-label') === null;\n        return svgBtn.getAttribute('aria-label') === 'Close';\n      "
+    },
+    {
+      "name": "form inputs and select receive inferred labels from name and nearby text",
+      "code": "\n        const code = document.getElementById('input-code');\n        const qty = document.getElementById('input-quantity');\n        const country = document.getElementById('select-country');\n        if (!code || !qty || !country) return false;\n        const isEnabled = code.getAttribute('aria-label') !== null;\n        if (!isEnabled) {\n          return code.getAttribute('aria-label') === null &&\n                 qty.getAttribute('aria-label') === null &&\n                 country.getAttribute('aria-label') === null;\n        }\n        return code.getAttribute('aria-label') === 'promo code' &&\n               qty.getAttribute('aria-label') === 'Order Quantity' &&\n               country.getAttribute('aria-label') === 'shipping country';\n      "
+    },
+    {
+      "name": "iframes receive pattern-matched, hostname-derived, and fallback titles",
+      "code": "\n        const map = document.getElementById('iframe-map');\n        const inv = document.getElementById('iframe-inventory');\n        const blank = document.getElementById('iframe-blank');\n        if (!map || !inv || !blank) return false;\n        const isEnabled = map.hasAttribute('title');\n        if (!isEnabled) return !map.hasAttribute('title') && !inv.hasAttribute('title') && !blank.hasAttribute('title');\n        return map.getAttribute('title') === 'Google Maps' &&\n               inv.getAttribute('title') === 'Embedded content from inventory-tracker.example.com' &&\n               blank.getAttribute('title') === 'Embedded content';\n      "
+    },
+    {
+      "name": "already labeled links, buttons, inputs, selects, and iframes are left alone",
+      "code": "\n        const cat = document.getElementById('link-catalog');\n        const help = document.getElementById('btn-help');\n        const email = document.getElementById('input-email');\n        const shipping = document.getElementById('select-shipping');\n        const titled = document.getElementById('iframe-titled');\n        return !cat.hasAttribute('aria-label') &&\n               !help.hasAttribute('aria-label') &&\n               !email.hasAttribute('aria-label') &&\n               !shipping.hasAttribute('aria-label') &&\n               titled.getAttribute('title') === 'Community Activity Feed';\n      "
+    }
+  ],
+  "ai": {
+    "inferLabel": "Shopping Cart"
+  },
+  "harness": {
+    "enable": "\n      window.__generateLabelsPrev = [];\n      const rules = Object.keys(m.axeHandlers);\n      const results = await axe.run({\n        runOnly: { type: 'rule', values: rules }\n      });\n      for (const violation of results.violations) {\n        const handler = m.axeHandlers[violation.id];\n        if (!handler) continue;\n        for (const node of violation.nodes) {\n          let el;\n          try {\n            el = document.querySelector(node.target[0]);\n          } catch (e) {\n            continue;\n          }\n          if (!el) continue;\n          window.__generateLabelsPrev.push({\n            el,\n            hadAriaLabel: el.hasAttribute('aria-label'),\n            ariaLabel: el.getAttribute('aria-label'),\n            hadTitle: el.hasAttribute('title'),\n            title: el.getAttribute('title'),\n            processed: el.dataset.ai4a11yProcessed,\n          });\n          try {\n            await handler(el);\n          } catch (err) {\n            console.error('Handler error:', err);\n          }\n        }\n      }\n      const svgBtn = document.getElementById('btn-svg-close');\n      if (svgBtn && !svgBtn.getAttribute('aria-label')) {\n        window.__generateLabelsPrev.push({\n          el: svgBtn,\n          hadAriaLabel: svgBtn.hasAttribute('aria-label'),\n          ariaLabel: svgBtn.getAttribute('aria-label'),\n          hadTitle: svgBtn.hasAttribute('title'),\n          title: svgBtn.getAttribute('title'),\n          processed: svgBtn.dataset.ai4a11yProcessed,\n        });\n        await m.generateButtonLabel(svgBtn);\n      }\n    ",
+    "disable": "\n      if (window.__generateLabelsPrev) {\n        for (const item of window.__generateLabelsPrev) {\n          if (item.hadAriaLabel) item.el.setAttribute('aria-label', item.ariaLabel);\n          else item.el.removeAttribute('aria-label');\n          if (item.hadTitle) item.el.setAttribute('title', item.title);\n          else item.el.removeAttribute('title');\n          if (item.processed !== undefined) item.el.dataset.ai4a11yProcessed = item.processed;\n          else delete item.el.dataset.ai4a11yProcessed;\n        }\n        delete window.__generateLabelsPrev;\n      }\n      document.querySelectorAll('[data-ai4a11y-processed]').forEach(el => {\n        delete el.dataset.ai4a11yProcessed;\n      });\n    "
+  },
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

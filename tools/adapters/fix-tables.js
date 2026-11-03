@@ -16,46 +16,57 @@ const MAX_AI_COLUMNS = 12;
  * Fix a table that has no <th> cells.
  *
  * Strategy:
- * 1. If the first row *looks* like a header row (short, distinct text),
+ * 1. If the first row *looks* like a header row (short, distinct text, no data values),
  *    convert its cells to <th scope="col"> — deterministic, no AI.
  * 2. Otherwise, sample each column and ask the AI for a header name,
  *    then insert a generated <thead> (marked as AI-generated).
  */
 export async function fixTableHeaders(table) {
   if (table.dataset.ai4a11yProcessed) return false;
-  if (table.querySelector('th')) return false;
-
-  const rows = Array.from(table.querySelectorAll('tr'));
+  const rows = Array.from(table.rows);
   if (rows.length < 2) return false;
+  if (rows.some(r => Array.from(r.cells).some(c => c.tagName === 'TH'))) return false;
 
   markProcessed(table, 'pending');
 
-  const firstRowCells = Array.from(rows[0].querySelectorAll('td'));
+  const firstRowCells = Array.from(rows[0].cells).filter(c => c.tagName === 'TD');
   if (firstRowCells.length === 0) {
     markProcessed(table, 'skipped');
     return false;
   }
 
-  // Numbers, currency, percentages, and dates are data, not header labels.
-  const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*%?$/.test(t) ||
-    /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t);
+  // Irregular tables with multi-row or multi-column spans in the first row
+  // cannot be treated as a simple flat column-header row.
+  if (firstRowCells.some(c => c.colSpan > 1 || c.rowSpan > 1)) {
+    markProcessed(table, 'skipped');
+    return false;
+  }
+
+  // Numbers, currency, percentages, quantities with units, and dates are data, not header labels.
+  const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*(?:%|°[CF]?|[a-zA-Z/]+(?:\s+[a-zA-Z/]+)*)?$/i.test(t) ||
+    /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t) ||
+    /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}$/i.test(t) ||
+    /^\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4}$/i.test(t);
 
   // Heuristic: the first row is a header if every cell is short text that
-  // doesn't repeat in the column below it — AND the row isn't mostly data
+  // doesn't repeat in the column below it — AND the row contains no data
   // values. Without the data check, a genuinely headerless table with short,
   // distinct first-row values (day names, ids, numbers) gets its real data
   // promoted to headers, inventing false semantics.
   const dataLikeCount = firstRowCells.filter(c => isDataLike(c.textContent?.trim() || '')).length;
-  const looksLikeHeader = dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
+  const looksLikeHeader = dataLikeCount === 0 && firstRowCells.every((cell, i) => {
     const text = cell.textContent?.trim() || '';
     if (!text || text.length > 40) return false;
-    const below = rows.slice(1, 4).map(r => r.querySelectorAll('td')[i]?.textContent?.trim());
+    const below = rows.slice(1, 4).map(r => r.cells[i]?.textContent?.trim());
     return !below.includes(text);
   });
 
   if (looksLikeHeader) {
     firstRowCells.forEach(cell => {
       const th = document.createElement('th');
+      for (const attr of cell.attributes) {
+        th.setAttribute(attr.name, attr.value);
+      }
       th.setAttribute('scope', 'col');
       // Move the live child nodes so any event listeners the page bound to
       // header-cell content (sort icons, tooltips) survive the promotion —
@@ -75,12 +86,22 @@ export async function fixTableHeaders(table) {
     return false;
   }
 
+  // AI path requires a regular grid: first row has no spans and subsequent
+  // rows have the same number of cells without spans, so column sampling
+  // and generated header count match the actual table columns.
+  const columnCount = firstRowCells.length;
+  const hasSpans = rows.some(r => Array.from(r.cells).some(c => c.colSpan > 1 || c.rowSpan > 1));
+  const isUniform = rows.every(r => r.cells.length === columnCount);
+  if (hasSpans || !isUniform || table.tHead) {
+    markProcessed(table, 'skipped');
+    return false;
+  }
+
   try {
-    const columnCount = firstRowCells.length;
     const headers = [];
     for (let col = 0; col < columnCount; col++) {
       const samples = rows.slice(0, 5)
-        .map(r => r.querySelectorAll('td')[col]?.textContent?.trim())
+        .map(r => r.cells[col]?.textContent?.trim())
         .filter(Boolean);
       const answer = (col < MAX_AI_COLUMNS && samples.length >= 2) ? await inferColumnHeader(samples) : null;
       // A generated <th> is announced for every cell in its column, so a
@@ -106,7 +127,15 @@ export async function fixTableHeaders(table) {
       headerRow.appendChild(th);
     }
     thead.appendChild(headerRow);
-    table.prepend(thead);
+
+    // Place thead in valid HTML sequence: after caption and colgroup,
+    // before tbody or the first tr.
+    const firstRowOrBody = table.querySelector('tbody, tr');
+    if (firstRowOrBody) {
+      firstRowOrBody.before(thead);
+    } else {
+      table.appendChild(thead);
+    }
 
     markProcessed(table, 'done');
     incrementStat('wcag');
@@ -122,7 +151,7 @@ export async function fixTableHeaders(table) {
 /** Find and fix all headerless data tables on the page. */
 export async function fixAllTables() {
   const candidates = Array.from(document.querySelectorAll('table'))
-    .filter(t => !t.dataset.ai4a11yProcessed && !t.querySelector('th') && t.querySelectorAll('tr').length >= 2)
+    .filter(t => !t.dataset.ai4a11yProcessed && !Array.from(t.rows).some(r => Array.from(r.cells).some(c => c.tagName === 'TH')) && t.rows.length >= 2)
     .filter(t => !t.getAttribute('role') || t.getAttribute('role') === 'table'); // skip layout tables marked role=presentation
   // Bound AI cost per scan; announce the truncation rather than silently
   // dropping the rest (they get another chance on the next scan pass).

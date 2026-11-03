@@ -1,0 +1,13 @@
+{
+  "name": "voice-commands-reduced-motion",
+  "file": "tools/adapters/voice-commands.js",
+  "export": "VoiceCommands",
+  "page": "voice-commands.html",
+  "checks": [
+    {
+      "name": "pulse animation is disabled under reduced motion preference",
+      "code": "\n        const feedback = document.getElementById('ai4a11y-voice-feedback');\n        const vc = window.__ai4a11yVoiceCommands;\n        if (!vc || !vc.enabled) return feedback === null;\n        if (!feedback) return false;\n\n        const dot = feedback.querySelector('.ai4a11y-voice-dot');\n        if (!dot) return false;\n\n        const style = window.getComputedStyle(dot);\n        return style.animationName === 'none';\n      "
+    }
+  ],
+  "reducedMotion": "reduce"
+}

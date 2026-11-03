@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Science Lecture Archive — Video Portal</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #1e293b;
+      background-color: #f8fafc;
+    }
+    header {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 1.25rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.75rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #f1f5f9;
+      text-decoration: underline;
+      display: inline-block;
+      min-height: 28px;
+      line-height: 28px;
+      padding: 0 0.25rem;
+    }
+    nav a:hover {
+      color: #ffffff;
+    }
+    nav a:focus,
+    nav a:focus-visible,
+    button:focus,
+    button:focus-visible,
+    input:focus,
+    input:focus-visible {
+      outline: 3px solid #38bdf8;
+      outline-offset: 3px;
+    }
+    main {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    section {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+    }
+    h3 {
+      font-size: 1.1rem;
+      color: #1e293b;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      margin: 0 0 1rem 0;
+    }
+    .video-container {
+      margin: 1rem 0;
+      background: #000000;
+      border-radius: 4px;
+      overflow: hidden;
+      max-width: 480px;
+    }
+    video {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 480px;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0.5rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      background-color: #0369a1;
+      border: 1px solid #0284c7;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-action:hover {
+      background-color: #0284c7;
+    }
+    .search-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .player-custom {
+      margin-top: 1rem;
+    }
+    .ytp-subtitles-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      background-color: #e2e8f0;
+      border: 2px solid #64748b;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .ytp-subtitles-button:focus,
+    .ytp-subtitles-button:focus-visible {
+      outline: 3px solid #0284c7;
+      outline-offset: 2px;
+    }
+    .search-box input {
+      min-height: 44px;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      font-size: 1rem;
+      color: #0f172a;
+      flex: 1;
+    }
+    footer {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      padding: 2rem;
+      margin-top: 3rem;
+      text-align: center;
+    }
+    footer a {
+      color: #7dd3fc;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Open Science Video Archive</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#lectures" id="nav-lectures">Featured Lectures</a></li>
+        <li><a href="#seminars" id="nav-seminars">International Seminars</a></li>
+        <li><a href="#resources" id="nav-resources">Reading Resources</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="lectures" aria-labelledby="heading-lectures">
+      <h2 id="heading-lectures">Featured Lecture: Quantum Mechanics</h2>
+      <p id="lead-quantum">Introductory lecture recorded at the 2026 Physics Symposium.</p>
+      <div class="video-container" id="container-multilingual">
+        <video id="video-multilingual" width="480" height="270" controls preload="metadata" aria-label="Quantum mechanics symposium lecture">
+          <track id="track-fr" kind="subtitles" srclang="fr" label="Français" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ABonjour">
+          <track id="track-en" kind="captions" srclang="en" label="English" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AWelcome%20to%20quantum%20mechanics">
+          <track id="track-desc" kind="descriptions" srclang="en" label="English Descriptions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ALecturer%20steps%20to%20chalkboard">
+        </video>
+      </div>
+      <button type="button" class="btn-action" id="btn-download-quantum">Download Lecture Slides</button>
+    </section>
+
+    <section id="seminars" aria-labelledby="heading-seminars">
+      <h2 id="heading-seminars">International Seminar: Astrophysics</h2>
+      <p id="lead-astro">Recorded panel discussion without an English audio track.</p>
+      <div class="video-container" id="container-fallback">
+        <video id="video-fallback" width="480" height="270" controls preload="metadata" aria-label="Astrophysics panel discussion">
+          <track id="track-de" kind="subtitles" srclang="de" label="Deutsch" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AGuten%20Tag">
+          <track id="track-es" kind="subtitles" srclang="es" label="Español" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AHola">
+        </video>
+      </div>
+      <div class="video-container" id="container-no-tracks">
+        <video id="video-no-tracks" width="480" height="270" controls preload="none" aria-label="Uncaptioned archival lab footage"></video>
+      </div>
+      <div class="video-container" id="container-already-on">
+        <video id="video-already-on" width="480" height="270" controls preload="metadata" aria-label="Observatory timelapse with captions enabled">
+          <track id="track-already-en" kind="captions" srclang="en" label="English Captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ATimelapse%20night%20sky" default>
+        </video>
+      </div>
+      <div class="player-custom" id="container-player-btn">
+        <button type="button" class="ytp-subtitles-button" aria-pressed="false" aria-label="Subtitles/closed captions" onclick="this.setAttribute('aria-pressed', this.getAttribute('aria-pressed') === 'true' ? 'false' : 'true')">CC</button>
+      </div>
+    </section>
+
+    <article id="resources" aria-labelledby="heading-resources">
+      <h2 id="heading-resources">Supplementary Course Resources</h2>
+      <p id="prose-notes">Registered students may access course transcripts, bibliography lists, and supplementary problem sets below.</p>
+      <form id="search-form" role="search" aria-label="Search course archive">
+        <label for="search-input" id="search-label">Search archive lectures</label>
+        <div class="search-box">
+          <input type="search" id="search-input" name="q" placeholder="e.g. quantum entanglement">
+          <button type="submit" class="btn-action" id="btn-search">Search</button>
+        </div>
+      </form>
+    </article>
+  </main>
+
+  <footer>
+    <p id="footer-text">&copy; 2026 Open Science Foundation. All lecture materials licensed under CC-BY 4.0.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/flash-guard.js",
+  "export": "FlashGuard",
+  "sites": "all"
+}

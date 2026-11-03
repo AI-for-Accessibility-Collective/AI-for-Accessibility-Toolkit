@@ -1,0 +1,25 @@
+{
+  "name": "focus-locator-narrow",
+  "file": "tools/adapters/focus-locator.js",
+  "export": "FocusLocator",
+  "page": "focus-locator.html",
+  "checks": [
+    {
+      "name": "focus indicator reinforces suppressed outlines at 320px viewport",
+      "code": "\n        const btnSave = document.getElementById('btn-save');\n        const btnSuppressed = document.getElementById('btn-suppressed');\n        const inputName = document.getElementById('user-name');\n        if (!btnSave || !btnSuppressed || !inputName) return false;\n\n        const isEnabled = !!document.getElementById('ai4a11y-focus-locator-styles');\n        if (!isEnabled) {\n          btnSuppressed.focus();\n          const s = window.getComputedStyle(btnSuppressed);\n          const width = parseFloat(s.outlineWidth) || 0;\n          btnSuppressed.blur();\n          return width === 0 || s.outlineStyle === 'none';\n        }\n\n        btnSuppressed.focus();\n        const supStyle = window.getComputedStyle(btnSuppressed);\n        const supWidth = parseFloat(supStyle.outlineWidth) || 0;\n        const supHasOutline = supWidth >= 3 && supStyle.outlineStyle !== 'none';\n        btnSuppressed.blur();\n\n        btnSave.focus();\n        const saveStyle = window.getComputedStyle(btnSave);\n        const saveWidth = parseFloat(saveStyle.outlineWidth) || 0;\n        const saveHasOutline = saveWidth >= 3 && saveStyle.outlineStyle !== 'none';\n        btnSave.blur();\n\n        return supHasOutline && saveHasOutline;\n      "
+    },
+    {
+      "name": "floating ring tracks focus and matches bounding rect at narrow viewport",
+      "code": "\n        const ring = document.getElementById('ai4a11y-focus-ring');\n        const btnSave = document.getElementById('btn-save');\n        const inputName = document.getElementById('user-name');\n        if (!btnSave || !inputName) return false;\n\n        const isEnabled = !!document.getElementById('ai4a11y-focus-locator-styles');\n        if (!isEnabled) {\n          return ring === null;\n        }\n\n        if (!ring) return false;\n\n        window.scrollTo(0, 0);\n        btnSave.focus();\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 40)));\n\n        let rRect = ring.getBoundingClientRect();\n        let bRect = btnSave.getBoundingClientRect();\n        const matchesSave = Math.abs(rRect.top - bRect.top) <= 2 &&\n                            Math.abs(rRect.left - bRect.left) <= 2 &&\n                            Math.abs(rRect.width - bRect.width) <= 2 &&\n                            Math.abs(rRect.height - bRect.height) <= 2;\n\n        inputName.focus();\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 40)));\n        rRect = ring.getBoundingClientRect();\n        let iRect = inputName.getBoundingClientRect();\n        const matchesInput = Math.abs(rRect.top - iRect.top) <= 2 &&\n                             Math.abs(rRect.left - iRect.left) <= 2;\n\n        inputName.blur();\n        window.scrollTo(0, 0);\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 40)));\n\n        return matchesSave && matchesInput && window.getComputedStyle(ring).display === 'none';\n      "
+    },
+    {
+      "name": "accessibility: indicator contrast and target size at 320px viewport",
+      "code": "\n        const btnSave = document.getElementById('btn-save');\n        const btnDark = document.getElementById('btn-dark');\n        if (!btnSave || !btnDark) return false;\n\n        const isEnabled = !!document.getElementById('ai4a11y-focus-locator-styles');\n        if (!isEnabled) return true;\n\n        function getLuminance(rgbStr) {\n          const m = rgbStr.match(/\\d+/g);\n          if (!m) return null;\n          const [r, g, b] = m.slice(0, 3).map(v => {\n            const c = Number(v) / 255;\n            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);\n          });\n          return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n        }\n        function contrast(c1, c2) {\n          const l1 = getLuminance(c1);\n          const l2 = getLuminance(c2);\n          if (l1 === null || l2 === null) return null;\n          return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n        }\n\n        btnSave.focus();\n        const saveOutline = window.getComputedStyle(btnSave).outlineColor;\n        const ratioWhite = contrast(saveOutline, 'rgb(255, 255, 255)');\n        btnSave.blur();\n\n        btnDark.focus();\n        const darkOutline = window.getComputedStyle(btnDark).outlineColor;\n        const ratioDark = contrast(darkOutline, 'rgb(45, 55, 72)');\n        btnDark.blur();\n\n        return ratioWhite !== null && ratioWhite >= 3.0 &&\n               ratioDark !== null && ratioDark >= 3.0;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  },
+  "reducedMotion": "reduce"
+}

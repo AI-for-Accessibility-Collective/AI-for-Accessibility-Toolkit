@@ -1,0 +1,28 @@
+{
+  "name": "stop-auto-advance",
+  "file": "tools/adapters/stop-auto-advance.js",
+  "export": "StopAutoAdvance",
+  "page": "stop-auto-advance.html",
+  "checks": [
+    {
+      "name": "meta-refresh removed when enabled",
+      "code": "\n        const meta = document.querySelector('meta[http-equiv=\"refresh\"]');\n        const style = document.getElementById('ai4a11y-stop-autoadvance-styles');\n        if (!style) {\n          return meta !== null && meta.getAttribute('content') === '300';\n        }\n        return meta === null;\n      "
+    },
+    {
+      "name": "CSS animations on carousels and tickers paused via stylesheet",
+      "code": "\n        const ticker = document.getElementById('breaking-ticker');\n        const track = document.getElementById('carousel-track');\n        if (!ticker || !track) return false;\n        const style = document.getElementById('ai4a11y-stop-autoadvance-styles');\n        const csTicker = window.getComputedStyle(ticker);\n        const csTrack = window.getComputedStyle(track);\n        if (!style) {\n          return csTicker.animationPlayState === 'running' && csTrack.animationPlayState === 'running';\n        }\n        const text = style.textContent || '';\n        return csTicker.animationPlayState === 'paused' &&\n               csTrack.animationPlayState === 'paused' &&\n               text.includes('animation-play-state: paused') &&\n               text.includes('scroll-behavior: auto');\n      "
+    },
+    {
+      "name": "autoplaying media paused and equipped with accessible controls",
+      "code": "\n        const video = document.getElementById('live-video');\n        if (!video) return false;\n        const style = document.getElementById('ai4a11y-stop-autoadvance-styles');\n        if (!style) {\n          return video.controls === false;\n        }\n        if (!video.paused || video.controls !== true) return false;\n\n        video.focus();\n        if (document.activeElement !== video) return false;\n        const rect = video.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n        video.blur();\n        return true;\n      "
+    },
+    {
+      "name": "scripted rotator holds slides still and late additions are caught",
+      "code": "\n        const slideA = document.getElementById('slide-a');\n        const slideB = document.getElementById('slide-b');\n        if (!slideA || !slideB) return false;\n\n        const style = document.getElementById('ai4a11y-stop-autoadvance-styles');\n        if (!style) {\n          return slideA.classList.contains('is-active') && !slideB.classList.contains('is-active');\n        }\n\n        // Simulate an unprompted script timer switching active slide\n        slideA.classList.remove('is-active');\n        slideB.classList.add('is-active');\n        await new Promise(r => setTimeout(r, 60));\n\n        // The adapter should have stilled the scripted rotation\n        const stilled = slideA.classList.contains('is-active') && !slideB.classList.contains('is-active');\n\n        // Test late addition of an autoplay video\n        const lateVideo = document.createElement('video');\n        lateVideo.autoplay = true;\n        lateVideo.muted = true;\n        lateVideo.setAttribute('aria-label', 'Late video');\n        document.body.appendChild(lateVideo);\n        await new Promise(r => setTimeout(r, 60));\n\n        const lateCaught = lateVideo.paused && lateVideo.controls === true;\n        lateVideo.remove();\n\n        // Restore page state exactly before finishing check\n        slideA.classList.add('is-active');\n        slideB.classList.remove('is-active');\n        await new Promise(r => setTimeout(r, 60));\n\n        return stilled && lateCaught;\n      "
+    },
+    {
+      "name": "ordinary content, links, and forms remain intact and accessible",
+      "code": "\n        const btn = document.getElementById('subscribe-btn');\n        const email = document.getElementById('subscriber-email');\n        const status = document.getElementById('subscription-status');\n        const prevBtn = document.getElementById('prev-slide-btn');\n        const nextBtn = document.getElementById('next-slide-btn');\n        const skipLink = document.querySelector('.skip-link');\n        const h1 = document.querySelector('h1');\n        const p1 = document.getElementById('editorial-p1');\n\n        if (!btn || !email || !status || !prevBtn || !nextBtn || !skipLink || !h1 || !p1) return false;\n\n        // Semantic and content integrity\n        if (!h1.textContent.includes('Metro Pulse')) return false;\n        if (!p1.textContent.includes('historic downtown corridor')) return false;\n\n        // Target size (WCAG 2.5.8 >= 24x24 px)\n        for (const el of [btn, prevBtn, nextBtn, email, skipLink]) {\n          const r = el.getBoundingClientRect();\n          if (r.width < 24 || r.height < 24) return false;\n        }\n\n        // Focus visibility on controls\n        btn.focus();\n        if (document.activeElement !== btn) return false;\n        const btnStyle = window.getComputedStyle(btn);\n        if (parseFloat(btnStyle.minHeight) < 40) return false;\n\n        // Interactive form functionality\n        email.focus();\n        if (document.activeElement !== email) return false;\n        email.value = 'citizen@example.org';\n        btn.click();\n        await new Promise(r => setTimeout(r, 40));\n\n        const ok = status.textContent.includes('Thank you');\n        email.value = '';\n        status.textContent = '';\n        btn.blur();\n        return ok;\n      "
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "live-region-announcer",
+  "file": "tools/adapters/live-region-announcer.js",
+  "page": "live-region-announcer.html",
+  "checks": [
+    {
+      "name": "initial state and ordinary page content are preserved",
+      "code": "\n        const title = document.getElementById('product-title');\n        const price = document.querySelector('.price');\n        const desc = document.getElementById('product-desc');\n        const addBtn = document.getElementById('add-to-cart-btn');\n        if (!title || !price || !desc || !addBtn) return false;\n        if (!title.textContent.includes('The Design of Everyday Things')) return false;\n        if (!price.textContent.includes('$27.50')) return false;\n        return true;\n      "
+    },
+    {
+      "name": "adapter enables cleanly and announces initialization without adding DOM pollution",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yLiveRegionAnnouncer !== 'undefined' && window.__ai4a11yLiveRegionAnnouncer.enabled;\n        if (!isEnabled) return true;\n        const announced = globalThis.__verifyAnnounced || [];\n        if (!announced.includes('Announcing page updates')) return false;\n        const customLive = document.querySelectorAll('[id^=\"ai4a11y-\"]');\n        return customLive.length === 0;\n      "
+    },
+    {
+      "name": "keyboard accessibility and control dimensions meet standards",
+      "code": "\n        const controls = [\n          document.getElementById('add-to-cart-btn'),\n          document.getElementById('search-btn'),\n          document.getElementById('site-search'),\n          document.getElementById('qty-minus'),\n          document.getElementById('qty-plus')\n        ].filter(Boolean);\n\n        for (const ctrl of controls) {\n          const rect = ctrl.getBoundingClientRect();\n          if (rect.width < 24 || rect.height < 24) return false;\n\n          ctrl.focus();\n          if (document.activeElement !== ctrl) return false;\n\n          const style = window.getComputedStyle(ctrl);\n          const outlineWidth = parseFloat(style.outlineWidth) || 0;\n          if (outlineWidth < 2) return false;\n\n          const cx = rect.left + rect.width / 2;\n          const cy = rect.top + rect.height / 2;\n          const topEl = document.elementFromPoint(cx, cy);\n          if (topEl !== ctrl && !ctrl.contains(topEl)) return false;\n          ctrl.blur();\n        }\n        return true;\n      "
+    },
+    {
+      "name": "dynamic updates: user action triggers toast summary without panel controls",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yLiveRegionAnnouncer !== 'undefined' && window.__ai4a11yLiveRegionAnnouncer.enabled;\n        if (!isEnabled) return true;\n\n        const addBtn = document.getElementById('add-to-cart-btn');\n        const toastContainer = document.getElementById('toast-container');\n        if (!addBtn || !toastContainer) return false;\n\n        const beforeCount = (globalThis.__verifyAnnounced || []).length;\n        addBtn.click();\n\n        await new Promise(r => setTimeout(r, 450));\n\n        const after = globalThis.__verifyAnnounced || [];\n        const latest = after[after.length - 1] || '';\n\n        if (typeof window.resetPageState === 'function') window.resetPageState();\n        else toastContainer.innerHTML = '';\n\n        if (!latest.includes('Added to cart')) return false;\n        if (latest.includes('Dismiss') || latest.includes('View Cart')) return false;\n        return true;\n      "
+    },
+    {
+      "name": "tickers and silent updates: repeated countdown ticks are silenced",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yLiveRegionAnnouncer !== 'undefined' && window.__ai4a11yLiveRegionAnnouncer.enabled;\n        if (!isEnabled) return true;\n\n        const digits = document.getElementById('timer-digits');\n        if (!digits) return false;\n\n        const beforeCount = (globalThis.__verifyAnnounced || []).length;\n\n        for (let i = 5; i >= 0; i--) {\n          digits.textContent = '00:0' + i;\n          await new Promise(r => setTimeout(r, 200));\n        }\n\n        await new Promise(r => setTimeout(r, 1500));\n\n        const afterCount = (globalThis.__verifyAnnounced || []).length;\n\n        if (typeof window.resetPageState === 'function') window.resetPageState();\n\n        return afterCount === beforeCount;\n      "
+    },
+    {
+      "name": "silent regions: elements with aria-live=\"off\" are not announced",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yLiveRegionAnnouncer !== 'undefined' && window.__ai4a11yLiveRegionAnnouncer.enabled;\n        if (!isEnabled) return true;\n\n        const beforeCount = (globalThis.__verifyAnnounced || []).length;\n\n        const silentDiv = document.createElement('div');\n        silentDiv.setAttribute('aria-live', 'off');\n        silentDiv.textContent = 'Silent diagnostic logging entry';\n        document.getElementById('main-content').appendChild(silentDiv);\n\n        await new Promise(r => setTimeout(r, 450));\n\n        const afterCount = (globalThis.__verifyAnnounced || []).length;\n        silentDiv.remove();\n\n        return afterCount === beforeCount;\n      "
+    },
+    {
+      "name": "existing live regions: updates inside existing live regions are left to the page",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yLiveRegionAnnouncer !== 'undefined' && window.__ai4a11yLiveRegionAnnouncer.enabled;\n        if (!isEnabled) return true;\n\n        const existingLive = document.getElementById('existing-live-region');\n        if (!existingLive) return false;\n\n        const beforeCount = (globalThis.__verifyAnnounced || []).length;\n\n        const item = document.createElement('p');\n        item.textContent = 'Existing live update handled by browser';\n        existingLive.appendChild(item);\n\n        await new Promise(r => setTimeout(r, 450));\n\n        const afterCount = (globalThis.__verifyAnnounced || []).length;\n        existingLive.innerHTML = '';\n\n        return afterCount === beforeCount;\n      "
+    }
+  ]
+}

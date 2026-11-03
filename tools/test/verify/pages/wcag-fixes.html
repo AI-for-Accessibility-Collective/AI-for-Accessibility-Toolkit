@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Customer Portal - WCAG Fixes Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #111111;
+      background-color: #ffffff;
+      padding: 24px;
+    }
+    header, nav, main, footer {
+      margin-bottom: 24px;
+    }
+    button, a {
+      font-size: 16px;
+    }
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid #005a9c;
+      outline-offset: 2px;
+    }
+    .btn {
+      display: inline-block;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px 16px;
+      background-color: #005a9c;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .btn-secondary {
+      background-color: #222222;
+    }
+    .link {
+      color: #005a9c;
+      text-decoration: underline;
+    }
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 800px;
+    }
+  </style>
+</head>
+<body>
+  <header role="banner">
+    <h1>Customer Portal</h1>
+    <p id="lang-issue" lang="en_US">Welcome to our secure services dashboard.</p>
+  </header>
+
+  <nav aria-label="Main Navigation">
+    <div style="display: flex; gap: 16px; align-items: center;">
+      <a id="standard-link" class="link" href="#orders" style="display:inline-block; min-width:44px; min-height:44px; line-height:44px;">Orders</a>
+      <a id="faq-link" class="link" href="#faq" style="display:inline-block; min-width:44px; min-height:44px; line-height:44px;">FAQ</a>
+    </div>
+  </nav>
+
+  <main id="main">
+    <h2>Account Overview</h2>
+
+    <div class="grid">
+      <!-- Skipped heading level from h2 to h5 -->
+      <h5 id="heading-skip">Recent Activity</h5>
+
+      <!-- Duplicate IDs on two separate buttons -->
+      <div>
+        <button id="action-btn" class="btn" type="button">View Account</button>
+        <button id="action-btn" class="btn btn-secondary" type="button">Export CSV</button>
+      </div>
+
+      <!-- Positive tabindex -->
+      <div>
+        <button id="tab-issue" class="btn btn-secondary" type="button" tabindex="3">Quick Settings</button>
+      </div>
+
+      <!-- Deprecated role -->
+      <div id="dep-role" role="directory">
+        <div role="listitem">System upgrade scheduled for Sunday.</div>
+      </div>
+
+      <!-- Invalid ARIA attribute -->
+      <div>
+        <button id="aria-attr-issue" class="btn btn-secondary" type="button" aria-bogus="invalid" aria-label="Account Settings">Settings</button>
+      </div>
+
+      <!-- Invalid ARIA role -->
+      <div id="aria-role-issue" role="invalid-role">
+        Standard informational notice
+      </div>
+
+      <!-- Nested interactive element -->
+      <div>
+        <button id="nested-parent" type="button" style="min-width:44px; min-height:44px; background:#f0f0f0; color:#111; border:1px solid #767676; padding:8px 16px; border-radius:4px;">
+          <a id="nested-link" class="link" href="#details">Detailed Report</a>
+        </button>
+      </div>
+
+      <!-- Small touch target -->
+      <div>
+        <label for="small-target-help">Need quick help?</label>
+        <a id="small-target" href="#help" style="display:inline-block; width:16px; height:16px; font-size:12px; line-height:16px; text-align:center; color:#005a9c; border:1px solid #005a9c; border-radius:50%;" aria-label="Help">?</a>
+      </div>
+
+      <!-- Obsolete element -->
+      <div>
+        <blink id="blink-issue" style="color:#900000; font-weight:bold;">Important account notice</blink>
+      </div>
+
+      <!-- Standard content to leave untouched -->
+      <p id="standard-para">Contact our support center 24/7 with any inquiries.</p>
+      <p><span id="valid-lang-span" lang="fr">Assistance en français disponible.</span></p>
+      <div>
+        <button id="standard-btn" class="btn" type="button">Contact Support</button>
+      </div>
+    </div>
+  </main>
+
+  <footer role="contentinfo">
+    <p>&copy; 2026 Customer Portal. All rights reserved.</p>
+  </footer>
+</body>
+</html>

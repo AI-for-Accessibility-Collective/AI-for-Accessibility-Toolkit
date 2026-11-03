@@ -1,0 +1,28 @@
+{
+  "name": "describe-on-demand-narrow",
+  "file": "tools/adapters/describe-on-demand.js",
+  "export": "DescribeOnDemand",
+  "page": "describe-on-demand.html",
+  "checks": [
+    {
+      "name": "page elements exist at 320px",
+      "code": "\n        const img = document.getElementById('specimen-img');\n        const searchBtn = document.getElementById('search-btn');\n        return Boolean(img && searchBtn);\n      "
+    },
+    {
+      "name": "panel fits within 320px viewport without causing horizontal overflow",
+      "code": "\n        const isEnabled = document.getElementById('ai4a11y-describe-styles') !== null;\n        if (!isEnabled) return true;\n\n        const img = document.getElementById('specimen-img');\n        img.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, altKey: true }));\n        await new Promise(r => setTimeout(r, 100));\n\n        const panel = document.getElementById('ai4a11y-describe-panel');\n        if (!panel || panel.style.display !== 'block') return false;\n\n        const pRect = panel.getBoundingClientRect();\n        // Panel must fit within 320px width\n        if (pRect.width > 320 || pRect.right > 320 || pRect.left < 0) return false;\n\n        // No horizontal scroll on document\n        if (document.documentElement.scrollWidth > document.documentElement.clientWidth) return false;\n\n        // Escape dismisses\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n        return panel.style.display === 'none';\n      "
+    },
+    {
+      "name": "close button maintains >= 24x24 target size at 320px viewport",
+      "code": "\n        const isEnabled = document.getElementById('ai4a11y-describe-styles') !== null;\n        if (!isEnabled) return true;\n\n        const img = document.getElementById('specimen-img');\n        img.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, altKey: true }));\n        await new Promise(r => setTimeout(r, 100));\n\n        const panel = document.getElementById('ai4a11y-describe-panel');\n        const closeBtn = panel?.querySelector('.ai4a11y-describe-close');\n        if (!closeBtn) return false;\n\n        const btnRect = closeBtn.getBoundingClientRect();\n        const ok = btnRect.width >= 24 && btnRect.height >= 24;\n\n        closeBtn.click();\n        return ok;\n      "
+    }
+  ],
+  "ai": {
+    "describeImage": "A pressed botanical specimen with green leaves.",
+    "summarizeText": "Survey found 42 alpine plant varieties despite spring frost."
+  },
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aurora Books - Dynamic Cart & Live Updates</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 10px;
+      background: #0b57d0;
+      color: #ffffff;
+      padding: 8px 16px;
+      z-index: 100;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    .skip-link:focus {
+      top: 10px;
+    }
+    header {
+      background-color: #f7fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #0b57d0;
+      font-weight: 500;
+      text-decoration: underline;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    section {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+    }
+    p {
+      margin: 0.5rem 0 1rem 0;
+    }
+    .price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0b57d0;
+    }
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.25rem 0;
+    }
+    .qty-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    button, input[type="search"] {
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 16px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      line-height: 1.2;
+    }
+    .btn-primary {
+      background-color: #0b57d0;
+      color: #ffffff;
+      border: 1px solid #0b57d0;
+    }
+    .btn-secondary {
+      background-color: #ffffff;
+      color: #0f172a;
+      border: 1px solid #475569;
+    }
+    .qty-btn {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 6px 14px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      background-color: #ffffff;
+      color: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .qty-val {
+      display: inline-block;
+      min-width: 2rem;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .cart-toast {
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: #eff6ff;
+      border: 1px solid #93c5fd;
+      border-radius: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .cart-toast p {
+      margin: 0;
+      font-weight: 500;
+      color: #1e3a8a;
+    }
+    .cart-toast a {
+      color: #0b57d0;
+      font-weight: 600;
+      text-decoration: underline;
+      min-height: 24px;
+    }
+    .search-input {
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      min-width: 220px;
+    }
+    .search-status-box {
+      margin-top: 0.75rem;
+      font-size: 0.95rem;
+      color: #1e293b;
+      font-weight: 500;
+      min-height: 1.5rem;
+    }
+    .error-notice {
+      margin-top: 0.75rem;
+      color: #991b1b;
+      font-weight: 600;
+      min-height: 1.5rem;
+    }
+    .sale-countdown {
+      padding: 0.75rem 1rem;
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+    footer {
+      border-top: 1px solid #e2e8f0;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header>
+    <h1>Aurora Books</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#featured">Featured</a></li>
+        <li><a href="#search-section">Search</a></li>
+        <li><a href="#account">Account</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="featured" aria-labelledby="product-title">
+      <h2 id="product-title">The Design of Everyday Things</h2>
+      <p class="price">$27.50</p>
+      <p id="product-desc">A fundamental exploration of user-centered usability, affordances, and accessible interactions by Don Norman.</p>
+
+      <div class="control-row">
+        <label for="qty-value">Quantity:</label>
+        <div class="qty-group">
+          <button type="button" id="qty-minus" class="qty-btn" aria-label="Decrease quantity">-</button>
+          <output id="qty-value" class="qty-val" for="qty-plus qty-minus">1</output>
+          <button type="button" id="qty-plus" class="qty-btn" aria-label="Increase quantity">+</button>
+        </div>
+        <button type="button" id="add-to-cart-btn" class="btn btn-primary">Add to Cart</button>
+      </div>
+
+      <div id="toast-container"></div>
+    </section>
+
+    <section id="search-section" aria-labelledby="search-heading">
+      <h2 id="search-heading">Find a Book</h2>
+      <div class="control-row">
+        <label for="site-search">Search title or author:</label>
+        <input type="search" id="site-search" class="search-input" placeholder="e.g. Accessibility">
+        <button type="button" id="search-btn" class="btn btn-secondary">Search</button>
+      </div>
+      <div id="search-status" class="search-status-box"></div>
+    </section>
+
+    <section id="account" aria-labelledby="account-heading">
+      <h2 id="account-heading">Account & Orders</h2>
+      <p>Manage pending orders and checkout status.</p>
+      <div id="checkout-error" class="error-notice"></div>
+      <div id="sale-timer" class="sale-countdown">
+        <span>Deal of the day timer:</span> <span id="timer-digits">10:00</span>
+      </div>
+      <div id="existing-live-region" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Aurora Books. Accessible literature and design guides.</p>
+  </footer>
+
+  <script>
+    (function() {
+      const addBtn = document.getElementById('add-to-cart-btn');
+      const toastContainer = document.getElementById('toast-container');
+      const qtyMinus = document.getElementById('qty-minus');
+      const qtyPlus = document.getElementById('qty-plus');
+      const qtyVal = document.getElementById('qty-value');
+      const searchBtn = document.getElementById('search-btn');
+      const searchInput = document.getElementById('site-search');
+      const searchStatus = document.getElementById('search-status');
+
+      addBtn.addEventListener('click', function() {
+        toastContainer.innerHTML = '';
+        const toast = document.createElement('div');
+        toast.className = 'cart-toast';
+        toast.id = 'active-toast';
+        toast.innerHTML = '<p>Added to cart: The Design of Everyday Things.</p><a href="#cart">View Cart</a><button type="button" id="close-toast-btn" class="btn btn-secondary">Dismiss</button>';
+        toastContainer.appendChild(toast);
+        document.getElementById('close-toast-btn').addEventListener('click', function() {
+          toastContainer.innerHTML = '';
+        });
+      });
+
+      qtyPlus.addEventListener('click', function() {
+        const val = parseInt(qtyVal.textContent, 10) || 1;
+        qtyVal.textContent = String(val + 1);
+      });
+
+      qtyMinus.addEventListener('click', function() {
+        const val = parseInt(qtyVal.textContent, 10) || 1;
+        if (val > 1) qtyVal.textContent = String(val - 1);
+      });
+
+      searchBtn.addEventListener('click', function() {
+        const query = searchInput.value.trim() || 'books';
+        searchStatus.textContent = 'Found 4 matching titles for ' + query;
+      });
+
+      window.resetPageState = function() {
+        toastContainer.innerHTML = '';
+        if (qtyVal.textContent !== '1') qtyVal.textContent = '1';
+        searchInput.value = '';
+        searchStatus.textContent = '';
+        document.getElementById('checkout-error').textContent = '';
+        document.getElementById('timer-digits').textContent = '10:00';
+        document.getElementById('existing-live-region').textContent = '';
+      };
+    })();
+  </script>
+</body>
+</html>

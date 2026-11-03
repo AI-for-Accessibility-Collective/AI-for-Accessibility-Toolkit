@@ -1,0 +1,23 @@
+{
+  "name": "color-blind-narrow",
+  "file": "tools/adapters/color-blind.js",
+  "page": "color-blind.html",
+  "checks": [
+    {
+      "name": "SVG filter and styles apply cleanly at 320px viewport without layout breakage",
+      "code": "\n        const adapter = window.__ai4a11yColorBlindMode;\n        if (!adapter || !adapter.enabled) return true;\n\n        const svg = document.getElementById(adapter.filterId);\n        const style = document.getElementById(adapter.styleId);\n        if (!svg || !style) return false;\n\n        const htmlFilter = window.getComputedStyle(document.documentElement).filter;\n        if (!htmlFilter.includes('ai4a11y-protanopia-filter')) return false;\n\n        const docWidth = document.documentElement.scrollWidth;\n        const viewWidth = window.innerWidth;\n        if (docWidth > viewWidth) return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "touch targets remain >= 24px and reachable at 320px viewport",
+      "code": "\n        const buyBtn = document.getElementById('buy-button');\n        const swatchRed = document.getElementById('swatch-red');\n        const navLink = document.getElementById('nav-outerwear');\n        if (!buyBtn || !swatchRed || !navLink) return false;\n\n        const buyRect = buyBtn.getBoundingClientRect();\n        const swatchRect = swatchRed.getBoundingClientRect();\n        const navRect = navLink.getBoundingClientRect();\n        return buyRect.width >= 24 && buyRect.height >= 24 &&\n               swatchRect.width >= 24 && swatchRect.height >= 24 &&\n               navRect.width >= 24 && navRect.height >= 24;\n      "
+    },
+    {
+      "name": "mode switching operates cleanly in narrow viewport",
+      "code": "\n        const adapter = window.__ai4a11yColorBlindMode;\n        if (!adapter || !adapter.enabled) return true;\n\n        adapter.setMode('tritanopia');\n        const filterVal = window.getComputedStyle(document.documentElement).filter;\n        const isTrit = filterVal.includes('ai4a11y-tritanopia-filter');\n        adapter.setMode('protanopia');\n        return isTrit;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

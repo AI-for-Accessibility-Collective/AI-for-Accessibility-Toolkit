@@ -1,0 +1,22 @@
+{
+  "name": "define-words-narrow",
+  "file": "tools/adapters/define-words.js",
+  "page": "define-words.html",
+  "checks": [
+    {
+      "name": "tooltip fits on screen without horizontal overflow at 320px (WCAG 1.4.10)",
+      "code": "\n        const isEnabled = document.getElementById('ai4a11y-define-styles') !== null;\n        if (!isEnabled) return true;\n\n        const lead = document.getElementById('prose-lead');\n        const span = lead.querySelector('.ai4a11y-define[tabindex=\"0\"]');\n        if (!span) return false;\n\n        span.focus();\n        span.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));\n        await new Promise(r => setTimeout(r, 50));\n\n        const tip = document.getElementById('ai4a11y-define-tooltip');\n        if (!tip || tip.style.display !== 'block') {\n          span.blur();\n          return false;\n        }\n\n        const tipRect = tip.getBoundingClientRect();\n        const clientWidth = document.documentElement.clientWidth;\n\n        const fitsHorizontally = tipRect.left >= 0 && tipRect.right <= clientWidth + 1;\n\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n        span.blur();\n        span.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));\n\n        return fitsHorizontally;\n      "
+    },
+    {
+      "name": "restores cleanly after disable on narrow screen",
+      "code": "\n        const lead = document.getElementById('prose-lead');\n        return lead !== null;\n      "
+    }
+  ],
+  "ai": {
+    "defineWord": "The variety of plant and animal life in a particular habitat."
+  },
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

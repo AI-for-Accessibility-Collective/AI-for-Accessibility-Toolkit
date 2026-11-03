@@ -5,7 +5,8 @@
 // and having to re-skim from the top to find it again.
 //
 // Reversible by construction: enable() adds one debounced scroll listener
-// and (at most) one small fixed button; disable() removes both. The saved
+// and (at most) one small fixed button; disable() removes both. Any temporary
+// focus tabindex added on jump-back is also cleaned up on disable. The saved
 // position itself is deliberately KEPT on disable — forgetting the spot is
 // exactly the failure this adapter exists to prevent, and it must survive
 // until the next visit.
@@ -23,6 +24,7 @@ export const ReadingSpot = {
   restorePending: false, // a jump-back button is showing and not yet used
   scrollHandler: null,   // stored ref so disable() can removeEventListener
   saveTimer: null,       // debounce timeout, cleared on disable
+  focusedEl: null,       // element given tabindex="-1" by focusAtSpot, cleaned on blur or disable
 
   // localStorage can throw on ANY access in private mode or a sandboxed
   // frame, so every touch goes through these two guarded helpers. Access is
@@ -63,24 +65,29 @@ export const ReadingSpot = {
       btn.textContent = 'Jump back to where you were';
       btn.style.cssText =
         'position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;' +
-        'padding: 10px 16px; font-size: 16px; border-radius: 8px;' +
+        'box-sizing: border-box; max-width: calc(100vw - 32px);' +
+        'padding: 10px 16px; font-size: 16px; line-height: 1.4; font-family: inherit; border-radius: 8px;' +
         'border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;';
       btn.addEventListener('click', () => {
         const fromKeyboard = document.activeElement === btn;
         window.scrollTo(0, savedY);
         this.restorePending = false;
         btn.remove();
+        document.getElementById(STYLE_ID)?.remove();
         // The button that had focus is gone: put the keyboard where the
         // reader landed, not back at the top of the page.
         if (fromKeyboard) this.focusAtSpot();
         announce('Back where you were');
       });
       // The page's focus outline may be switched off; this ring cannot be.
-      if (!document.getElementById(STYLE_ID) && document.head) {
-        const style = document.createElement('style');
-        style.id = STYLE_ID;
-        style.textContent = `#${this.buttonId}:focus-visible{outline:3px solid #1a5fb4 !important;outline-offset:2px;box-shadow:0 0 0 3px #fff,0 0 0 6px #1a5fb4}`;
-        document.head.appendChild(style);
+      if (!document.getElementById(STYLE_ID)) {
+        const head = document.head || document.documentElement;
+        if (head) {
+          const style = document.createElement('style');
+          style.id = STYLE_ID;
+          style.textContent = `#${this.buttonId}:focus,#${this.buttonId}:focus-visible{outline:3px solid #1a5fb4 !important;outline-offset:2px;box-shadow:0 0 0 3px #fff,0 0 0 6px #1a5fb4 !important}#${this.buttonId}:hover{background:#f0f4f9 !important}`;
+          head.appendChild(style);
+        }
       }
       // First in the page, so it is the first thing Tab reaches, like a skip
       // link; at the end of the page a keyboard user would have to go through
@@ -104,7 +111,10 @@ export const ReadingSpot = {
         // only record a position beyond it (they have genuinely read further).
         if (this.restorePending && this.savedY != null && y <= this.savedY) return;
         // Scrolled there on their own: the jump-back button has done its job.
-        if (this.restorePending) document.getElementById(this.buttonId)?.remove();
+        if (this.restorePending) {
+          document.getElementById(this.buttonId)?.remove();
+          document.getElementById(STYLE_ID)?.remove();
+        }
         this.restorePending = false;
         this.saveSpot(y);
       }, SAVE_DELAY_MS);
@@ -122,11 +132,17 @@ export const ReadingSpot = {
   focusAtSpot() {
     try {
       let el = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-      while (el && el !== document.body && !el.matches('p, li, h1, h2, h3, h4, h5, h6, section, article, td, div')) el = el.parentElement;
+      while (el && el !== document.body && !el.matches('a, button, input, select, textarea, p, li, h1, h2, h3, h4, h5, h6, section, article, td, div')) el = el.parentElement;
       if (!el || el === document.body) return;
       if (!el.hasAttribute('tabindex')) {
         el.setAttribute('tabindex', '-1');
-        el.addEventListener('blur', () => el.removeAttribute('tabindex'), { once: true });
+        this.focusedEl = el;
+        el.addEventListener('blur', () => {
+          if (this.focusedEl === el) {
+            el.removeAttribute('tabindex');
+            this.focusedEl = null;
+          }
+        }, { once: true });
       }
       el.focus({ preventScroll: true });
     } catch { /* focus stays where the browser puts it */ }
@@ -142,6 +158,12 @@ export const ReadingSpot = {
     if (this.saveTimer) { clearTimeout(this.saveTimer); this.saveTimer = null; }
     this.restorePending = false;
     this.savedY = null;
+    if (this.focusedEl) {
+      if (this.focusedEl.getAttribute('tabindex') === '-1') {
+        this.focusedEl.removeAttribute('tabindex');
+      }
+      this.focusedEl = null;
+    }
     document.getElementById(this.buttonId)?.remove();
     document.getElementById(STYLE_ID)?.remove();
     // The saved spot itself stays in storage for the next visit.

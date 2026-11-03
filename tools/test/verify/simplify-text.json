@@ -1,0 +1,39 @@
+{
+  "name": "simplify-text",
+  "file": "tools/adapters/simplify-text.js",
+  "page": "simplify-text.html",
+  "checks": [
+    {
+      "name": "targeted elements exist on the test page",
+      "code": "\n        return !!document.getElementById('complex-paragraph') &&\n               !!document.getElementById('long-content') &&\n               !!document.getElementById('short-paragraph') &&\n               !!document.getElementById('fee-table');\n      "
+    },
+    {
+      "name": "complex text is simplified with toggle button and original text preserved",
+      "code": "\n        const p = document.getElementById('complex-paragraph');\n        if (!p) return false;\n        const isEnabled = p.classList.contains('ai4a11y-simplified');\n        if (!isEnabled) {\n          return !p.querySelector('.ai4a11y-toggle-original') &&\n                 !p.querySelector('.ai4a11y-text-content');\n        }\n        const text = p.querySelector('.ai4a11y-text-content');\n        const orig = p.querySelector('.ai4a11y-original-content');\n        const btn = p.querySelector('.ai4a11y-toggle-original');\n        return !!text && !!orig && !!btn &&\n               text.textContent === 'The recipient has the right to quickly cancel access privileges if it becomes necessary.' &&\n               btn.textContent === 'Show original' &&\n               orig.style.display === 'none';\n      "
+    },
+    {
+      "name": "toggle button is keyboard accessible and meets 24x24 px target size",
+      "code": "\n        const btn = document.querySelector('.ai4a11y-toggle-original');\n        const isEnabled = !!btn;\n        if (!isEnabled) return true;\n        btn.focus();\n        const focused = document.activeElement === btn;\n        const rect = btn.getBoundingClientRect();\n        btn.blur();\n        return focused && rect.width >= 24 && rect.height >= 24 && btn.tagName === 'BUTTON';\n      "
+    },
+    {
+      "name": "toggle button switches between original and simplified text",
+      "code": "\n        const p = document.getElementById('complex-paragraph');\n        if (!p) return false;\n        const btn = p.querySelector('.ai4a11y-toggle-original');\n        const isEnabled = !!btn;\n        if (!isEnabled) return true;\n        const text = p.querySelector('.ai4a11y-text-content');\n        const orig = p.querySelector('.ai4a11y-original-content');\n\n        // Click to show original\n        btn.click();\n        const showingOriginal = orig.style.display !== 'none' && text.style.display === 'none' && btn.textContent === 'Show simplified';\n        if (!showingOriginal) return false;\n\n        // Click to show simplified again (puts the page back)\n        btn.click();\n        btn.blur();\n        const showingSimplified = orig.style.display === 'none' && text.style.display === '' && btn.textContent === 'Show original';\n        return showingSimplified;\n      "
+    },
+    {
+      "name": "long content receives summary box with region landmark and accessible name",
+      "code": "\n        const article = document.getElementById('long-content');\n        if (!article) return false;\n        const isEnabled = article.dataset.ai4a11ySummarize === 'done';\n        if (!isEnabled) return !article.querySelector('.ai4a11y-summary-box');\n        const box = article.querySelector('.ai4a11y-summary-box');\n        if (!box) return false;\n        const hasRegion = box.getAttribute('role') === 'region' && box.getAttribute('aria-label') === 'Summary';\n        const content = box.querySelector('.ai4a11y-summary-content');\n        return hasRegion && !!content && content.textContent.includes('subscriber rights to contest billing discrepancies');\n      "
+    },
+    {
+      "name": "short text and tables are left alone",
+      "code": "\n        const shortP = document.getElementById('short-paragraph');\n        const table = document.getElementById('fee-table');\n        if (!shortP || !table) return false;\n        return shortP.textContent.includes('This is a simple notice.') &&\n               !shortP.classList.contains('ai4a11y-simplified') &&\n               !table.querySelector('.ai4a11y-summary-box') &&\n               !table.classList.contains('ai4a11y-simplified');\n      "
+    }
+  ],
+  "ai": {
+    "simplifyText": "The recipient has the right to quickly cancel access privileges if it becomes necessary.",
+    "summarizeText": "This policy explains subscriber rights to contest billing discrepancies within forty-five days."
+  },
+  "harness": {
+    "enable": "\n      const p = document.getElementById('complex-paragraph');\n      if (p) await m.simplifyText(p);\n      const article = document.getElementById('long-content');\n      if (article) await m.summarizeContent(article);\n    ",
+    "disable": "\n      if (typeof m.restoreOriginal === 'function') {\n        m.restoreOriginal();\n      }\n    "
+  }
+}

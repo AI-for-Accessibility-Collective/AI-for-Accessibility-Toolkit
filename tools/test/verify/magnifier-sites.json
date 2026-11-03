@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/magnifier.js",
+  "export": "Magnifier",
+  "sites": "all"
+}

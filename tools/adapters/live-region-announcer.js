@@ -39,9 +39,11 @@ const ACTION_MS = 3000;
 const PAGE_SPOKE_MS = 2000;
 // Changes inside these are already spoken by the screen reader itself, or
 // belong to another adapter's or the host's own UI (the toolkit's ai4a11y-*
-// elements, the workshop's ws-* panel, notes and live region).
+// elements, the workshop's ws-* panel, notes and live region). Regions
+// explicitly silenced with aria-live="off" are also skipped.
 const LIVE = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"]';
 const OTHER_UI = '[id^="ai4a11y-"], [class*="ai4a11y-"], [id^="ws-"], [class^="ws-"], [class*=" ws-"]';
+const SILENT = '[aria-live="off"]';
 // An element the page itself names as a message: shown on a timer too.
 const MESSAGE_HINT = /\b(error|alert|warning|notice|toast|snackbar|notification|message|status)/i;
 const INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
@@ -99,8 +101,8 @@ export const LiveRegionAnnouncer = {
     for (const m of mutations) {
       const parent = m.target && m.target.nodeType === 1 ? m.target : null;
       // The changed element itself: skip live regions (the screen reader
-      // already reads what lands there) and other adapters' UI.
-      if (!parent || parent.closest(OTHER_UI)) continue;
+      // already reads what lands there), silenced regions, and other adapters' UI.
+      if (!parent || parent.closest(OTHER_UI) || parent.closest(SILENT)) continue;
       if (parent.closest(LIVE)) { this.pageSpokeAt = Date.now(); continue; }
       const added = [...m.addedNodes];
       // Text put straight into an existing element: a message or a count.
@@ -112,8 +114,13 @@ export const LiveRegionAnnouncer = {
       if (elements.length >= LIST_REDRAW) continue;
       for (const node of elements) {
         if (this.ignored(node)) continue;
-        // A new role="alert" is read by the screen reader itself.
-        if (node.getAttribute('role') === 'alert') { this.pageSpokeAt = Date.now(); continue; }
+        // A new role="alert" or aria-live="assertive" is read by the screen reader itself.
+        const role = typeof node.getAttribute === 'function' ? node.getAttribute('role')?.toLowerCase().trim() : null;
+        const live = typeof node.getAttribute === 'function' ? node.getAttribute('aria-live')?.toLowerCase().trim() : null;
+        if (role === 'alert' || live === 'assertive' || (node.querySelector && node.querySelector('[role="alert"], [aria-live="assertive"]'))) {
+          this.pageSpokeAt = Date.now();
+          continue;
+        }
         if (this.isUrgent(node)) { const text = this.summarize(node); if (text) this.speak(text); }
         else if (answering || this.isMessage(node)) { this.pending = node; this.schedule(); }
       }
@@ -121,10 +128,10 @@ export const LiveRegionAnnouncer = {
   },
 
   // Other adapters' panels and notes, and anything added inside a live region
-  // the screen reader already reads by itself.
+  // the screen reader already reads by itself, or explicitly silenced regions.
   ignored(el) {
     if (!el.closest) return false;
-    if (el.closest(OTHER_UI)) return true;
+    if (el.closest(OTHER_UI) || el.closest(SILENT)) return true;
     return !!(el.parentElement && el.parentElement.closest(LIVE));
   },
 
@@ -197,8 +204,9 @@ export const LiveRegionAnnouncer = {
   // The page already marked this node as an announcement — speak it now.
   isUrgent(el) {
     if (!el.getAttribute) return false;
-    const role = el.getAttribute('role');
-    return role === 'alert' || role === 'status' || el.hasAttribute('aria-live');
+    const role = el.getAttribute('role')?.toLowerCase().trim();
+    const live = el.getAttribute('aria-live')?.toLowerCase().trim();
+    return role === 'alert' || role === 'status' || (Boolean(live) && live !== 'off');
   },
 
   speak(text) {
@@ -225,11 +233,15 @@ export const LiveRegionAnnouncer = {
     if (!this.enabled) return;
     this.enabled = false;
     if (this.debounceTimer) { clearTimeout(this.debounceTimer); this.debounceTimer = null; }
-    for (const t of this.textTimers.values()) clearTimeout(t);
-    this.textTimers = null;
+    if (this.textTimers) {
+      for (const t of this.textTimers.values()) clearTimeout(t);
+      this.textTimers = null;
+    }
     this.textChangedAt = null;
     this.tickers = null;
     this.pending = null;
+    this.lastAction = 0;
+    this.pageSpokeAt = 0;
     if (this.observer) { this.observer.disconnect(); this.observer = null; }
     for (const type of ['click', 'change', 'input', 'submit']) document.removeEventListener(type, this._onAction, true);
     document.removeEventListener('keydown', this._onKey, true);

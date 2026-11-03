@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account and Order Management - AI4A11y Test</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1f2937;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 8px;
+      background: #111827;
+      color: #ffffff;
+      padding: 8px 12px;
+      z-index: 100;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .skip-link:focus {
+      top: 8px;
+    }
+    header {
+      background-color: #111827;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+    }
+    nav a:hover, nav a:focus {
+      color: #ffffff;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #111827;
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+    p {
+      margin: 0.5rem 0 1rem 0;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    button, .btn-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+      line-height: 1.25;
+    }
+    button:focus-visible, .btn-link:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+    }
+    .btn-danger {
+      background-color: #dc2626;
+      color: #ffffff;
+      border-color: #b91c1c;
+    }
+    .btn-danger:hover {
+      background-color: #b91c1c;
+    }
+    .btn-primary {
+      background-color: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
+    .btn-primary:hover {
+      background-color: #1d4ed8;
+    }
+    .btn-secondary {
+      background-color: #f3f4f6;
+      color: #1f2937;
+      border-color: #d1d5db;
+    }
+    .btn-secondary:hover {
+      background-color: #e5e7eb;
+    }
+    .btn-icon {
+      background-color: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      padding: 8px;
+    }
+    .btn-icon:hover {
+      background-color: #fee2e2;
+    }
+    .card-link {
+      display: block;
+      background-color: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 1rem;
+      color: inherit;
+      text-decoration: none;
+      margin-top: 1rem;
+    }
+    .card-link:hover {
+      border-color: #2563eb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .card-link h3 {
+      margin: 0 0 0.5rem 0;
+      color: #2563eb;
+      font-size: 1.1rem;
+    }
+    .card-link p {
+      margin: 0;
+      color: #4b5563;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    input[type="email"] {
+      width: 100%;
+      max-width: 300px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    footer {
+      background-color: #111827;
+      color: #9ca3af;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header>
+    <h1>Account and Order Management</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#account-section">Settings</a></li>
+        <li><a href="#orders-section">Orders</a></li>
+        <li><a href="#newsletter-section">Subscriptions</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="account-section" aria-labelledby="heading-account">
+      <h2 id="heading-account">Security and Profile Settings</h2>
+      <p>Manage your account credentials, notifications, and permanent account status.</p>
+      <div class="button-group">
+        <button type="button" id="btn-cancel" class="btn-secondary">Cancel changes</button>
+        <button type="button" id="btn-delete-account" class="btn-danger">Delete account</button>
+      </div>
+    </section>
+
+    <section id="orders-section" aria-labelledby="heading-orders">
+      <h2 id="heading-orders">Review and Place Order</h2>
+      <p>Confirm your cart contents before finalizing payment.</p>
+      <div class="button-group">
+        <button type="button" id="btn-remove-item" class="btn-danger">Remove item</button>
+        <button type="button" id="btn-delete-icon" class="btn-icon" title="Delete item">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+        </button>
+        <button type="button" id="btn-place-order" class="btn-primary">Place your order</button>
+      </div>
+    </section>
+
+    <section id="newsletter-section" aria-labelledby="heading-newsletter">
+      <h2 id="heading-newsletter">Subscriptions and Guides</h2>
+      <form id="subscribe-form" onsubmit="event.preventDefault();">
+        <div>
+          <label for="sub-email">Email Address</label>
+          <input type="email" id="sub-email" name="email" value="test@example.com" autocomplete="email">
+        </div>
+        <div class="button-group">
+          <button type="submit" id="btn-submit-sub" class="btn-primary">Submit preferences</button>
+          <a href="#unsubscribe" id="link-unsubscribe" role="button" class="btn-link btn-secondary">Unsubscribe</a>
+        </div>
+      </form>
+
+      <!-- A long card link mentioning action words in prose - should NOT be intercepted -->
+      <a href="#guide" id="card-guide" class="card-link">
+        <h3>System Maintenance &amp; Troubleshooting Guide</h3>
+        <p>Explore instructions on how to safely delete application cache files, remove stale sessions, and optimize performance.</p>
+      </a>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Accessibility Toolkit Project. All rights reserved.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "keyboard-nav-reduced-motion",
+  "file": "tools/adapters/keyboard-nav.js",
+  "export": "KeyboardNavigator",
+  "page": "keyboard-nav.html",
+  "checks": [
+    {
+      "name": "skip link transition is disabled under reduced motion",
+      "code": "\n        const isEnabled = !!document.getElementById('ai4a11y-keyboard-nav-styles');\n        if (!isEnabled) return true;\n        const mainLink = document.querySelector('.ai4a11y-skip-link');\n        if (!mainLink) return false;\n        const s = window.getComputedStyle(mainLink);\n        const duration = parseFloat(s.transitionDuration) || 0;\n        return s.transitionProperty === 'none' || duration === 0;\n      "
+    },
+    {
+      "name": "shortcuts work cleanly under reduced motion",
+      "code": "\n        const isEnabled = !!document.getElementById('ai4a11y-keyboard-nav-styles');\n        if (!isEnabled) return true;\n        const mainEl = document.querySelector('main');\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: '1', code: 'Digit1', altKey: true, bubbles: true }));\n        if (document.activeElement !== mainEl) return false;\n        document.activeElement.blur();\n        return true;\n      "
+    }
+  ],
+  "reducedMotion": "reduce"
+}

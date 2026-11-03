@@ -1,0 +1,23 @@
+{
+  "name": "unpin-sticky",
+  "file": "tools/adapters/unpin-sticky.js",
+  "page": "unpin-sticky.html",
+  "checks": [
+    {
+      "name": "pinned header, sticky nav, floating widget, and banner become static",
+      "code": "\n        const header = document.getElementById('site-header');\n        const toc = document.getElementById('sticky-toc');\n        const widget = document.getElementById('floating-widget');\n        const cookie = document.getElementById('cookie-banner');\n        if (!header || !toc || !widget || !cookie) return false;\n\n        const isEnabled = typeof window.__ai4a11yUnpinSticky !== 'undefined' && window.__ai4a11yUnpinSticky.enabled;\n        if (!isEnabled) {\n          return getComputedStyle(header).position === 'fixed' &&\n                 getComputedStyle(toc).position === 'sticky' &&\n                 getComputedStyle(widget).position === 'fixed' &&\n                 getComputedStyle(cookie).position === 'fixed';\n        }\n\n        return getComputedStyle(header).position === 'static' &&\n               getComputedStyle(toc).position === 'static' &&\n               getComputedStyle(widget).position === 'static' &&\n               getComputedStyle(cookie).position === 'static' &&\n               header.classList.contains('ai4a11y-unpinned') &&\n               toc.classList.contains('ai4a11y-unpinned') &&\n               widget.classList.contains('ai4a11y-unpinned') &&\n               cookie.classList.contains('ai4a11y-unpinned');\n      "
+    },
+    {
+      "name": "ordinary content, tooltips, and dialogs are preserved and left untouched",
+      "code": "\n        const main = document.getElementById('main-content');\n        const footer = document.getElementById('site-footer');\n        const tooltip = document.getElementById('sample-tooltip');\n        const dialog = document.getElementById('modal-dialog');\n        if (!main || !footer || !tooltip || !dialog) return false;\n\n        const isEnabled = typeof window.__ai4a11yUnpinSticky !== 'undefined' && window.__ai4a11yUnpinSticky.enabled;\n        if (!isEnabled) {\n          return !main.classList.contains('ai4a11y-unpinned') &&\n                 !footer.classList.contains('ai4a11y-unpinned') &&\n                 !tooltip.classList.contains('ai4a11y-unpinned') &&\n                 !dialog.classList.contains('ai4a11y-unpinned');\n        }\n\n        return !main.classList.contains('ai4a11y-unpinned') &&\n               !footer.classList.contains('ai4a11y-unpinned') &&\n               !tooltip.classList.contains('ai4a11y-unpinned') &&\n               !dialog.classList.contains('ai4a11y-unpinned') &&\n               getComputedStyle(tooltip).position === 'fixed' &&\n               getComputedStyle(dialog).position === 'fixed';\n      "
+    },
+    {
+      "name": "interactive controls remain keyboard reachable and functional",
+      "code": "\n        const btn = document.getElementById('btn-read-more');\n        const details = document.getElementById('more-details');\n        const cookieBtn = document.getElementById('btn-accept-cookies');\n        if (!btn || !details || !cookieBtn) return false;\n\n        // WCAG 2.5.8 target size\n        const r1 = btn.getBoundingClientRect();\n        const r2 = cookieBtn.getBoundingClientRect();\n        if (r1.width < 24 || r1.height < 24 || r2.width < 24 || r2.height < 24) return false;\n\n        // Keyboard focusability and focus indicator\n        btn.focus();\n        if (document.activeElement !== btn) return false;\n        const cs = getComputedStyle(btn);\n        if (parseFloat(cs.outlineWidth) < 2) return false;\n\n        // Functionality\n        const initialHidden = details.hidden;\n        btn.click();\n        const toggled = details.hidden !== initialHidden;\n        btn.click(); // restore\n        btn.blur();\n\n        return toggled;\n      "
+    },
+    {
+      "name": "pinned elements injected after load are caught by MutationObserver",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yUnpinSticky !== 'undefined' && window.__ai4a11yUnpinSticky.enabled;\n        if (!isEnabled) return true;\n\n        let late = document.getElementById('late-chat-widget');\n        if (!late && typeof window.injectLateBar === 'function') {\n          late = window.injectLateBar();\n        }\n        if (!late) return false;\n\n        await new Promise(r => setTimeout(r, 60));\n\n        const unpinned = late.classList.contains('ai4a11y-unpinned') &&\n                         getComputedStyle(late).position === 'static';\n        late.remove();\n        return unpinned;\n      "
+    }
+  ]
+}

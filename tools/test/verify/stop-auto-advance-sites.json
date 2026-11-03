@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/stop-auto-advance.js",
+  "export": "StopAutoAdvance",
+  "sites": "all"
+}

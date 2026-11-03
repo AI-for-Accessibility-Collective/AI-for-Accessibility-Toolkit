@@ -13,8 +13,7 @@
 //     captions back off, a later mutation never re-enables them.
 //
 // Reversible: native track modes we changed are restored on disable. Player
-// buttons are left as the user last had them (re-clicking could toggle the
-// wrong way if they changed it meanwhile).
+// buttons we toggled on are restored on disable unless the user changed them.
 
 import { registerSweep } from '../utils/observe.js';
 import { announce } from '../utils/ai.js';
@@ -50,6 +49,7 @@ const DATA = 'ai4a11yCaptions'; // dataset marker on a handled <video>
 export const ShowCaptions = {
   enabled: false,
   _restore: [],        // [{ track, prevMode }] for native tracks we switched on
+  _playerRestore: [],  // [{ player, button, cleanup }] for player buttons we clicked on
   _clicked: null,      // Set of "player|url" we've already turned on (once per URL)
   _unregister: null,
 
@@ -62,10 +62,17 @@ export const ShowCaptions = {
       const list = v.textTracks ? [...v.textTracks] : [];
       const tracks = list.filter((t) => t && (t.kind === 'captions' || t.kind === 'subtitles'));
       if (!tracks.length) continue;
-      const want = tracks.find((t) => (t.language || '').toLowerCase().startsWith(lang)) || tracks[0];
+      const matchLang = tracks.filter((t) => (t.language || '').toLowerCase().startsWith(lang));
+      const want = matchLang.find((t) => t.kind === 'captions') || matchLang[0] || tracks.find((t) => t.kind === 'captions') || tracks[0];
       this._restore.push({ track: want, prevMode: want.mode });
-      if (want.mode !== 'showing') turnedOn++;
-      try { want.mode = 'showing'; } catch { /* some players make mode read-only */ }
+      let changed = false;
+      if (want.mode !== 'showing') {
+        try {
+          want.mode = 'showing';
+          if (want.mode === 'showing') changed = true;
+        } catch { /* some players make mode read-only */ }
+      }
+      if (changed) turnedOn++;
       v.dataset[DATA] = 'on';
       logFix('showCaptions', v, '(off)', 'showing');
     }
@@ -76,6 +83,7 @@ export const ShowCaptions = {
   // the user turning them back off isn't overridden by the next mutation.
   _enablePlayerCaptions() {
     const url = typeof location !== 'undefined' ? location.href : '';
+    let turnedOn = 0;
     for (const p of PLAYERS) {
       let btn;
       try { btn = p.button(); } catch { btn = null; }
@@ -83,25 +91,51 @@ export const ShowCaptions = {
       const key = p.name + '|' + url;
       if (this._clicked.has(key)) continue;   // already acted for this video/URL
       this._clicked.add(key);
-      if (!p.isOn(btn)) { try { btn.click(); } catch {} logFix('showCaptions', btn, '(off)', 'on'); }
+      let on = false;
+      try { on = p.isOn(btn); } catch { on = false; }
+      if (!on) {
+        try {
+          btn.click();
+          turnedOn++;
+          const entry = { player: p, button: btn, cleanup: null };
+          const onUserClick = () => {
+            const idx = this._playerRestore.indexOf(entry);
+            if (idx !== -1) this._playerRestore.splice(idx, 1);
+            btn.removeEventListener('click', onUserClick);
+          };
+          btn.addEventListener('click', onUserClick);
+          entry.cleanup = () => btn.removeEventListener('click', onUserClick);
+          this._playerRestore.push(entry);
+          logFix('showCaptions', btn, '(off)', 'on');
+        } catch {}
+      }
     }
+    return turnedOn;
   },
 
   _sweep() {
     if (!this.enabled) return 0;
     const n = this._enableNativeTracks();
-    this._enablePlayerCaptions();
-    return n;
+    const p = this._enablePlayerCaptions();
+    return n + p;
   },
 
   // Say what happened, so switching it on is never silent: a video with no
   // caption track (the store's product video) can't be helped by this one.
   _report(n) {
     const videos = document.querySelectorAll('video');
-    if (!videos.length) return;
+    const playerOn = PLAYERS.some((p) => {
+      try {
+        const btn = p.button();
+        return btn && p.isOn(btn);
+      } catch {
+        return false;
+      }
+    });
+    if (!videos.length && !playerOn && n === 0) return;
     const withTracks = [...videos].filter((v) => v.dataset[DATA]).length;
     if (n) announce(`Captions turned on for ${n === 1 ? 'the video' : n + ' videos'}`);
-    else if (withTracks) announce('Captions are on');
+    else if (withTracks || playerOn) announce('Captions are on');
     else announce(videos.length === 1 ? 'This video has no captions to turn on' : 'These videos have no captions to turn on');
   },
 
@@ -109,6 +143,7 @@ export const ShowCaptions = {
     if (this.enabled) { this._sweep(); return; } // idempotent
     this.enabled = true;
     this._restore = [];
+    this._playerRestore = [];
     this._clicked = new Set();
     this._report(this._sweep());
     this._unregister = registerSweep('show-captions', () => this._sweep(), { debounceMs: 400 });
@@ -121,7 +156,17 @@ export const ShowCaptions = {
     if (this._unregister) { this._unregister(); this._unregister = null; }
     for (const { track, prevMode } of this._restore) { try { track.mode = prevMode; } catch {} }
     this._restore = [];
-    for (const v of document.querySelectorAll('video[data-ai4a11y-captions]')) delete v.dataset[DATA];
+    for (const { player, button, cleanup } of this._playerRestore) {
+      if (cleanup) cleanup();
+      try {
+        if (player.isOn(button)) button.click();
+      } catch {}
+    }
+    this._playerRestore = [];
+    for (const v of document.querySelectorAll('video[data-ai4a11y-captions]')) {
+      delete v.dataset[DATA];
+      v.removeAttribute('data-ai4a11y-captions');
+    }
     this._clicked = null;
     console.log('[AI4A11y] Show Captions disabled');
   },

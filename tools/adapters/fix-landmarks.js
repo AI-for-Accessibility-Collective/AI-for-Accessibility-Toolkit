@@ -4,6 +4,9 @@ import { markProcessed, looksLikeNavClass } from '../utils/dom.js';
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 
+// Revert actions recorded when roles are added, for clean disable() restoration
+const cleanups = [];
+
 // Landmark regions a genuine "main" content block should NOT itself contain.
 // If a candidate wraps any of these, it's a layout/app shell, not main
 // content — labeling it "main" would swallow the header/nav/footer and make
@@ -36,16 +39,18 @@ export function ensureMainLandmark() {
     if ((el.textContent?.trim().length || 0) <= 100) return false;
     // Reject wrappers that contain the page's own header/footer/main.
     if (el.querySelector(SHELL_SELECTOR)) return false;
+    // Main landmark must be top-level (not contained inside another landmark).
+    if (el.closest(LANDMARK_SELECTOR)) return false;
     return true;
   };
 
   // Start at body's children; if the only viable block is a landmark-wrapping
   // shell, descend into it once and retry (covers <div id="root"> SPAs).
-  let level = Array.from(document.body.children);
+  let level = document.body ? Array.from(document.body.children) : [];
   let candidates = level.filter(isCandidate);
   if (candidates.length === 0) {
     const shell = level.find(el =>
-      (el.textContent?.trim().length || 0) > 100 && el.querySelector(LANDMARK_SELECTOR));
+      !el.closest(LANDMARK_SELECTOR) && (el.textContent?.trim().length || 0) > 100 && el.querySelector(LANDMARK_SELECTOR));
     if (shell) candidates = Array.from(shell.children).filter(isCandidate);
   }
   if (candidates.length === 0) return false;
@@ -60,6 +65,10 @@ export function ensureMainLandmark() {
 
   main.setAttribute('role', 'main');
   markProcessed(main, 'done');
+  cleanups.push(() => {
+    main.removeAttribute('role');
+    main.removeAttribute('data-ai4a11y-processed');
+  });
   incrementStat('wcag');
   logFix('landmark', main, '(no main landmark)', 'role="main"');
   console.log('[AI4A11y] Added role="main" landmark');
@@ -89,10 +98,14 @@ export function ensureBanner() {
   if (document.querySelector('header, [role="banner"]')) return false;
   const el = Array.from(document.querySelectorAll('div, section, td, aside'))
     .filter((e) => !e.getAttribute('role') && hint(HEADER_HINT, e) && !hint(NOT_HEADER, e))
+    .filter((e) => !e.closest(LANDMARK_SELECTOR))
     .filter((e) => !e.querySelector('main, [role="main"]'))
     .filter((e) => (e.textContent?.trim().length || 0) < 2000)[0];
   if (!el) return false;
   el.setAttribute('role', 'banner');
+  cleanups.push(() => {
+    el.removeAttribute('role');
+  });
   incrementStat('wcag');
   logFix('landmark', el, '(unmarked header)', 'role="banner"');
   return true;
@@ -105,12 +118,16 @@ export function ensureContentinfo() {
   if (document.querySelector('footer, [role="contentinfo"]')) return false;
   const cands = Array.from(document.querySelectorAll('div, section, td, aside'))
     .filter((e) => !e.getAttribute('role'))
+    .filter((e) => !e.closest(LANDMARK_SELECTOR))
     .filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || '').slice(-400)))
     .filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]'))
     .filter((e) => (e.textContent?.trim().length || 0) < 1500);
   const el = cands[cands.length - 1];
   if (!el) return false;
   el.setAttribute('role', 'contentinfo');
+  cleanups.push(() => {
+    el.removeAttribute('role');
+  });
   incrementStat('wcag');
   logFix('landmark', el, '(unmarked footer)', 'role="contentinfo"');
   return true;
@@ -127,6 +144,9 @@ export function ensureStructuralLandmarks() {
     const textLength = el.textContent?.trim().length || 1;
     if (links >= 3 && (links * 15) / textLength > 0.5) {
       el.setAttribute('role', 'navigation');
+      cleanups.push(() => {
+        el.removeAttribute('role');
+      });
       incrementStat('wcag');
       logFix('landmark', el, '(unmarked nav)', 'role="navigation"');
       fixed++;
@@ -142,8 +162,8 @@ export function ensureStructuralLandmarks() {
 /** Run all landmark fixes. */
 export function fixLandmarks() {
   let count = 0;
-  if (ensureMainLandmark()) count++;
   count += ensureStructuralLandmarks();
+  if (ensureMainLandmark()) count++;
   return count;
 }
 
@@ -153,15 +173,24 @@ export const axeHandlers = {
 };
 
 // Toggle-style adapter so the catalog can enable landmark repair by id
-// (settings.js maps `fixLandmarks: true` → 'fix-landmarks'). Landmark roles are
-// additive and safe to leave in place, so disable() is a no-op beyond flipping
-// the flag — a full revert would need per-element tracking and is not worth the
-// risk of stripping a role the page actually had.
+// (settings.js maps `fixLandmarks: true` → 'fix-landmarks'). Tracks elements
+// that received inferred landmark roles and restores them on disable(),
+// putting the page back exactly as it was without affecting existing roles.
 export const FixLandmarks = {
   id: 'fix-landmarks',
   enabled: false,
   enable() { if (this.enabled) return; this.enabled = true; try { fixLandmarks(); } catch { /* detached */ } },
-  disable() { this.enabled = false; },
+  disable() {
+    if (!this.enabled) return;
+    this.enabled = false;
+    while (cleanups.length > 0) {
+      try {
+        cleanups.pop()();
+      } catch {
+        /* detached */
+      }
+    }
+  },
   toggle() { this.enabled ? this.disable() : this.enable(); },
 };
 

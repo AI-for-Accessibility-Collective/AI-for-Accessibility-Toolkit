@@ -1,0 +1,20 @@
+{
+  "name": "focus-mode-narrow",
+  "file": "tools/adapters/focus-mode.js",
+  "export": "FocusMode",
+  "page": "focus-mode.html",
+  "checks": [
+    {
+      "name": "progress bar and styles work at 320px viewport without horizontal overflow",
+      "code": "\n        const style = document.getElementById('ai4a11y-focus-mode-styles');\n        const prog = document.getElementById('ai4a11y-progress');\n        if (!style && !prog) return true;\n        if (!style || !prog) return false;\n\n        const cs = window.getComputedStyle(prog);\n        if (cs.position !== 'fixed' || cs.pointerEvents !== 'none') return false;\n\n        window.scrollTo(0, 300);\n        window.dispatchEvent(new Event('scroll'));\n        await new Promise(r => requestAnimationFrame(r));\n        await new Promise(r => setTimeout(r, 50));\n\n        const widthVal = parseFloat(prog.style.width);\n        window.scrollTo(0, 0);\n        window.dispatchEvent(new Event('scroll'));\n\n        return widthVal > 0;\n      "
+    },
+    {
+      "name": "hover and keyboard focus highlighting works at narrow viewport",
+      "code": "\n        const p1 = document.getElementById('para-1');\n        if (!p1) return false;\n        if (!document.getElementById('ai4a11y-focus-mode-styles')) return true;\n\n        p1.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        const highlighted = p1.classList.contains('ai4a11y-focus-mode-highlight');\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n        const dismissed = !p1.classList.contains('ai4a11y-focus-mode-highlight');\n\n        return highlighted && dismissed;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/focus-mode.js",
+  "export": "FocusMode",
+  "sites": "all"
+}

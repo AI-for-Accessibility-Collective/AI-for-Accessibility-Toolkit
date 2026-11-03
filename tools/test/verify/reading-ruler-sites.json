@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/reading-ruler.js",
+  "export": "ReadingRuler",
+  "sites": "all"
+}

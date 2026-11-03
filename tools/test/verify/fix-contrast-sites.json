@@ -1,0 +1,8 @@
+{
+  "file": "tools/adapters/fix-contrast.js",
+  "harness": {
+    "enable": "\n    const results = await axe.run({\n      runOnly: { type: 'rule', values: Object.keys(m.axeHandlers) }\n    });\n    for (const violation of results.violations) {\n      const handler = m.axeHandlers[violation.id];\n      if (!handler) continue;\n      for (const node of violation.nodes) {\n        try {\n          const el = document.querySelector(node.target[0]);\n          if (!el) continue;\n          const check = node.any?.find(c => c.id === violation.id) || node.all?.find(c => c.id === violation.id);\n          const fg = check?.data?.fgColor;\n          const bg = check?.data?.bgColor;\n          await handler(el, fg, bg);\n        } catch (e) {\n          console.error('Handler error:', e);\n        }\n      }\n    }\n  ",
+    "disable": "\n    if (typeof m.restoreOriginal === 'function') {\n      m.restoreOriginal();\n    }\n  "
+  },
+  "sites": "all"
+}

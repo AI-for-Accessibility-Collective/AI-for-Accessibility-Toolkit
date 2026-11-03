@@ -1,0 +1,7 @@
+{
+  "file": "tools/adapters/translate-page.js",
+  "options": {
+    "targetLang": "Spanish"
+  },
+  "sites": "all"
+}

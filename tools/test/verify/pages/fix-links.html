@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tech Trends - Ambiguous Links Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+      background: #fff;
+    }
+    header, main, footer {
+      max-width: 800px;
+      margin: 0 auto 24px auto;
+    }
+    header {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 12px;
+    }
+    .article-card {
+      margin-bottom: 20px;
+      padding: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+    a {
+      color: #0056b3;
+      text-decoration: underline;
+      display: inline-inline;
+    }
+    a:focus-visible {
+      outline: 2px solid #0056b3;
+      outline-offset: 2px;
+    }
+    button {
+      padding: 8px 16px;
+      min-width: 24px;
+      min-height: 24px;
+    }
+    input {
+      padding: 6px 10px;
+      min-height: 24px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tech Trends Weekly</h1>
+    <nav aria-label="Main Navigation">
+      <a href="/news" id="nav-news">News</a> |
+      <a href="/archive" id="nav-archive">Archive</a>
+    </nav>
+  </header>
+
+  <main>
+    <article class="article-card">
+      <h2>Annual Performance</h2>
+      <p id="p-report">The 2026 Annual Performance Report has been published with full financial disclosures. <a id="link-report" href="https://example.com/reports/2026-annual.pdf">click here</a></p>
+    </article>
+
+    <article class="article-card">
+      <h2>Developer Guidelines</h2>
+      <p id="p-docs">Our developer documentation covers setup, quickstart tutorials, and sample apps. <a id="link-docs" href="https://example.com/docs">read more</a></p>
+    </article>
+
+    <article class="article-card">
+      <h2>Product Pricing</h2>
+      <p id="p-pricing">Transparent pricing tiers for individuals and organizations of every scale. <a id="link-aria" href="https://example.com/pricing" aria-label="here">See full details</a></p>
+    </article>
+
+    <article class="article-card">
+      <h2>Mobile Experience</h2>
+      <p id="p-img"><a id="link-img" href="https://example.com/download/app"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3C/svg%3E" alt="click here"></a> to download mobile app</p>
+    </article>
+
+    <article class="article-card">
+      <h2>Company Story</h2>
+      <p>Read about our origins and mission at <a id="link-descriptive" href="https://example.com/about">our company history</a>.</p>
+    </article>
+
+    <section aria-labelledby="newsletter-heading">
+      <h2 id="newsletter-heading">Newsletter</h2>
+      <form action="/subscribe" method="post" onsubmit="return false;">
+        <label for="sub-email">Email:</label>
+        <input id="sub-email" type="email" name="email">
+        <button id="sub-button" type="button">Subscribe</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Tech Trends Publishing. All rights reserved.</p>
+  </footer>
+</body>
+</html>

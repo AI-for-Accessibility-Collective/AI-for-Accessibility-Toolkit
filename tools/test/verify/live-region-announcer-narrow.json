@@ -1,0 +1,23 @@
+{
+  "name": "live-region-announcer-narrow",
+  "file": "tools/adapters/live-region-announcer.js",
+  "page": "live-region-announcer.html",
+  "checks": [
+    {
+      "name": "initial state and ordinary page content are preserved at narrow viewport",
+      "code": "\n        const title = document.getElementById('product-title');\n        const price = document.querySelector('.price');\n        const desc = document.getElementById('product-desc');\n        const addBtn = document.getElementById('add-to-cart-btn');\n        if (!title || !price || !desc || !addBtn) return false;\n        if (!title.textContent.includes('The Design of Everyday Things')) return false;\n        if (!price.textContent.includes('$27.50')) return false;\n\n        const docWidth = document.documentElement.scrollWidth;\n        const winWidth = window.innerWidth;\n        if (docWidth > winWidth) return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "keyboard accessibility and control dimensions meet standards at narrow viewport",
+      "code": "\n        const controls = [\n          document.getElementById('add-to-cart-btn'),\n          document.getElementById('search-btn'),\n          document.getElementById('site-search'),\n          document.getElementById('qty-minus'),\n          document.getElementById('qty-plus')\n        ].filter(Boolean);\n\n        for (const ctrl of controls) {\n          const rect = ctrl.getBoundingClientRect();\n          if (rect.width < 24 || rect.height < 24) return false;\n\n          ctrl.focus();\n          if (document.activeElement !== ctrl) return false;\n\n          const style = window.getComputedStyle(ctrl);\n          const outlineWidth = parseFloat(style.outlineWidth) || 0;\n          if (outlineWidth < 2) return false;\n          ctrl.blur();\n        }\n        return true;\n      "
+    },
+    {
+      "name": "dynamic updates: user action triggers toast summary at narrow viewport",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yLiveRegionAnnouncer !== 'undefined' && window.__ai4a11yLiveRegionAnnouncer.enabled;\n        if (!isEnabled) return true;\n\n        const addBtn = document.getElementById('add-to-cart-btn');\n        const toastContainer = document.getElementById('toast-container');\n        if (!addBtn || !toastContainer) return false;\n\n        addBtn.click();\n        await new Promise(r => setTimeout(r, 450));\n\n        const after = globalThis.__verifyAnnounced || [];\n        const latest = after[after.length - 1] || '';\n\n        if (typeof window.resetPageState === 'function') window.resetPageState();\n        else toastContainer.innerHTML = '';\n\n        if (!latest.includes('Added to cart')) return false;\n        if (latest.includes('Dismiss') || latest.includes('View Cart')) return false;\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

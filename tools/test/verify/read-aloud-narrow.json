@@ -1,0 +1,35 @@
+{
+  "name": "read-aloud-narrow",
+  "file": "tools/adapters/read-aloud.js",
+  "page": "read-aloud.html",
+  "checks": [
+    {
+      "name": "targeted article elements and landmarks exist on the page",
+      "code": "\n        const article = document.getElementById('article');\n        const p1 = document.getElementById('lead-paragraph');\n        const p2 = document.getElementById('second-paragraph');\n        const nav = document.querySelector('nav');\n        const aside = document.getElementById('sidebar');\n        const footer = document.querySelector('footer');\n        return !!article && !!p1 && !!p2 && !!nav && !!aside && !!footer;\n      "
+    },
+    {
+      "name": "extractReadableText gathers main article text, inserts block pauses, and chunks correctly",
+      "code": "\n        const ra = window.__ai4a11yReadAloud;\n        if (!ra) return false;\n        const main = document.querySelector('main');\n        const text = ra.extractReadableText(main);\n        if (!text.includes('The Search for Water on Mars. Recent rover discoveries')) return false;\n        if (!text.includes('Key Discoveries. Sedimentary delta deposits in Jezero crater.')) return false;\n        const chunks = ra.chunk(text);\n        if (!chunks.length) return false;\n        if (!chunks.every(c => c.length <= 220)) return false;\n        return true;\n      "
+    },
+    {
+      "name": "skips page furniture, hidden elements, form menus, and live regions",
+      "code": "\n        const ra = window.__ai4a11yReadAloud;\n        if (!ra) return false;\n        const bodyText = ra.extractReadableText(document.body);\n        if (bodyText.includes('Astronomy Digest') || bodyText.includes('Main Navigation')) return false;\n        if (bodyText.includes('Related Publications') || bodyText.includes('sister publication')) return false;\n        if (bodyText.includes('All rights reserved')) return false;\n        if (bodyText.includes('decorative text') || bodyText.includes('hidden attribute') || bodyText.includes('display none')) return false;\n        if (bodyText.includes('Real-time telemetry status')) return false;\n        if (bodyText.includes('Excellent') || bodyText.includes('Enter comments here')) return false;\n        return true;\n      "
+    },
+    {
+      "name": "speech controls API functions correctly and reversibly without altering DOM",
+      "code": "\n        const ra = window.__ai4a11yReadAloud;\n        if (!ra) return false;\n        ra.setRate(1.5);\n        if (ra.settings.rate !== 1.5) return false;\n        ra.applyPreset('slow');\n        if (ra.settings.rate !== 0.7) return false;\n        ra.applyPreset('normal');\n        if (ra.settings.rate !== 1.0) return false;\n\n        const lead = document.getElementById('lead-paragraph');\n        const range = document.createRange();\n        range.selectNodeContents(lead);\n        const sel = window.getSelection();\n        sel.removeAllRanges();\n        sel.addRange(range);\n        ra.speakSelection();\n        sel.removeAllRanges();\n\n        ra.pause();\n        ra.resume();\n        ra.stop();\n        if (ra.speaking || ra.paused || ra.gestureHandler !== null) return false;\n        return true;\n      "
+    },
+    {
+      "name": "reflows at 320px width without horizontal overflow or loss of keyboard focus",
+      "code": "\n        const navLink = document.querySelector('nav a');\n        if (!navLink) return false;\n        navLink.focus();\n        if (document.activeElement !== navLink) return false;\n        navLink.blur();\n        return document.documentElement.scrollWidth <= 320;\n      "
+    }
+  ],
+  "harness": {
+    "enable": "m.ReadAloud.speakPage(options);",
+    "disable": "m.ReadAloud.stop();"
+  },
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

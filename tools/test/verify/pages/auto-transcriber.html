@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessible Video Learning Portal</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1a365d;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+    nav a:focus {
+      outline: 3px solid #ffbf47;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .video-card {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .video-card h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: #2d3748;
+    }
+    .player-wrapper {
+      position: relative;
+      display: inline-block;
+      background: #000000;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    video {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #111111;
+    }
+    .thumbnail-wrapper {
+      width: 80px;
+      height: 60px;
+    }
+    .thumbnail-wrapper video {
+      width: 80px;
+      height: 60px;
+    }
+    iframe {
+      display: block;
+      border: 0;
+      max-width: 100%;
+    }
+    article {
+      margin-top: 2rem;
+    }
+    article h2 {
+      font-size: 1.3rem;
+      color: #2d3748;
+    }
+    p {
+      margin: 0.75rem 0;
+    }
+    footer {
+      background-color: #edf2f7;
+      color: #4a5568;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: 3rem;
+    }
+    button.plain-btn {
+      background-color: #2b6cb0;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button.plain-btn:focus-visible {
+      outline: 3px solid #2b6cb0;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Video Learning Portal</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#lessons" id="nav-lessons">Lessons</a></li>
+        <li><a href="#resources" id="nav-resources">Resources</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="lessons" aria-labelledby="heading-lessons">
+      <h2 id="heading-lessons">Featured Video Lessons</h2>
+
+      <div class="video-grid">
+        <!-- Video 1: Native captions track present -->
+        <div class="video-card" id="card-with-captions">
+          <h3>Lesson 1: Introduction with Subtitles</h3>
+          <p>This video includes an English caption track.</p>
+          <div class="player-wrapper" id="wrapper-1">
+            <video id="video-with-tracks" width="480" height="270" controls preload="metadata">
+              <track kind="captions" label="English" srclang="en" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AWelcome%20to%20the%20lesson" default>
+            </video>
+          </div>
+        </div>
+
+        <!-- Video 2: No captions track (AI transcription test) -->
+        <div class="video-card" id="card-without-captions">
+          <h3>Lesson 2: Quick Demo without Subtitles</h3>
+          <p>This video has no native caption tracks and requires AI transcription.</p>
+          <div class="player-wrapper" id="wrapper-2">
+            <video id="video-no-tracks" width="480" height="270" controls preload="metadata" src="data:video/mp4;base64,AAAA"></video>
+          </div>
+        </div>
+
+        <!-- Video 3: Tiny video (too small for CC button, < 100x75) -->
+        <div class="video-card" id="card-tiny">
+          <h3>Lesson Preview Thumbnail</h3>
+          <p>Tiny preview video that is below the 100x75 size threshold.</p>
+          <div class="player-wrapper thumbnail-wrapper" id="wrapper-tiny">
+            <video id="video-tiny" width="80" height="60" preload="none"></video>
+          </div>
+        </div>
+
+        <!-- Video 4: YouTube Iframe embed -->
+        <div class="video-card" id="card-youtube">
+          <h3>Lesson 3: YouTube Guest Lecture</h3>
+          <p>Embedded video hosted on YouTube.</p>
+          <div class="player-wrapper" id="wrapper-yt">
+            <iframe id="iframe-youtube" width="480" height="270" src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1" title="YouTube lecture player"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <article id="resources">
+      <h2>Supplementary Reading</h2>
+      <p id="article-p">All video lectures follow WCAG 2.2 Level AA accessibility recommendations. Transcripts and captions ensure equivalent access for learners who are deaf or hard of hearing.</p>
+      <button type="button" class="plain-btn" id="download-notes-btn">Download Notes</button>
+    </article>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Video Learning Portal. All rights reserved.</p>
+  </footer>
+</body>
+</html>

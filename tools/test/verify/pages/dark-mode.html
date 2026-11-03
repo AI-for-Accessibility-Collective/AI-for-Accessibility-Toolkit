@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aura Sound Lab - Wireless Studio Headphones</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 8px;
+      background: #000000;
+      color: #ffffff;
+      padding: 8px 12px;
+      z-index: 100;
+      text-decoration: underline;
+      font-weight: 600;
+      min-height: 24px;
+    }
+    .skip-link:focus {
+      top: 8px;
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    header {
+      background-color: #f7fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #1a202c;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #0b57d0;
+      text-decoration: underline;
+      font-weight: 500;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 960px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 640px) {
+      .product-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .media-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .media-card {
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      padding: 1rem;
+      background-color: #edf2f7;
+    }
+    .product-image {
+      width: 100%;
+      height: 180px;
+      border-radius: 6px;
+      display: block;
+      object-fit: cover;
+    }
+    .product-video {
+      width: 100%;
+      height: 140px;
+      border-radius: 6px;
+      background: #2d3748;
+      display: block;
+    }
+    .waveform-canvas {
+      width: 100%;
+      height: 80px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      display: block;
+    }
+    .demo-iframe {
+      width: 100%;
+      height: 100px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      background: #ffffff;
+    }
+    .hero-banner {
+      height: 80px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e0;
+    }
+    .swatches-section {
+      margin: 1rem 0;
+    }
+    .swatch-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #718096;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .color-swatch:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 3px;
+    }
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 140px;
+      min-height: 44px;
+      padding: 0.5rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      background-color: #0b57d0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .action-button:focus-visible {
+      outline: 3px solid #000000;
+      outline-offset: 2px;
+    }
+    .coupon-form {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    .coupon-input {
+      min-height: 40px;
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #718096;
+      border-radius: 4px;
+      color: #1a202c;
+      background: #ffffff;
+    }
+    .coupon-input:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    .icon-cart {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      fill: currentColor;
+    }
+    aside {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin-top: 2rem;
+    }
+    aside h2 {
+      margin-top: 0;
+      font-size: 1.15rem;
+      color: #1a202c;
+    }
+    footer {
+      background-color: #f7fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: 2rem;
+      color: #4a5568;
+      font-size: 0.95rem;
+    }
+    footer a {
+      color: #0b57d0;
+      min-height: 24px;
+      display: inline-inline;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header>
+    <h1>Aura Sound Lab</h1>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="#headphones" id="nav-headphones">Headphones</a></li>
+        <li><a href="#speakers" id="nav-speakers">Speakers</a></li>
+        <li><a href="#support" id="nav-support">Support</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <div class="product-grid">
+      <!-- Media column showing images, video, canvas, picture, iframe, bg-image, nested media -->
+      <section class="media-column" aria-label="Product Media">
+        <!-- Direct image -->
+        <img id="product-img" class="product-image"
+             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='180' viewBox='0 0 300 180'%3E%3Crect width='300' height='180' fill='%233182ce'/%3E%3Ccircle cx='150' cy='90' r='50' fill='%23ffffff'/%3E%3Ctext x='150' y='95' font-size='16' text-anchor='middle' fill='%233182ce'%3EHeadphones%3C/text%3E%3C/svg%3E"
+             alt="Aura Studio Pro wireless headphones in matte black">
+
+        <!-- Picture element with nested img -->
+        <picture id="product-picture">
+          <source srcset="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='180' viewBox='0 0 300 180'%3E%3Crect width='300' height='180' fill='%232b6cb0'/%3E%3C/svg%3E" type="image/svg+xml">
+          <img id="picture-img" class="product-image"
+               src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='180' viewBox='0 0 300 180'%3E%3Crect width='300' height='180' fill='%232b6cb0'/%3E%3C/svg%3E"
+               alt="Alternative side angle of Aura Studio Pro">
+        </picture>
+
+        <!-- Video element -->
+        <video id="product-video" class="product-video" aria-label="Acoustic tuning demo video" controls>
+          <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AAcoustic%20tuning%20demonstration" srclang="en" label="English" default>
+        </video>
+
+        <!-- Canvas element -->
+        <canvas id="waveform-canvas" class="waveform-canvas" width="300" height="80" aria-label="Frequency response waveform graph"></canvas>
+
+        <!-- Iframe element -->
+        <iframe id="product-iframe" class="demo-iframe" title="Interactive 3D preview" src="about:blank"></iframe>
+
+        <!-- Element with background-image -->
+        <div id="hero-banner" class="hero-banner" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'40\'%3E%3Crect width=\'100\' height=\'40\' fill=\'%234a5568\'/%3E%3C/svg%3E');" role="img" aria-label="Brushed aluminum texture banner"></div>
+
+        <!-- Nested media inside a container with inline background-color (BACK element) -->
+        <div id="nested-container" class="media-card" style="background-color: #e2e8f0;">
+          <p id="nested-caption" style="margin: 0 0 0.5rem 0; font-size: 0.9rem;">Included accessories case:</p>
+          <img id="nested-img" class="product-image" style="height: 100px;"
+               src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100' viewBox='0 0 200 100'%3E%3Crect width='200' height='100' fill='%234a5568'/%3E%3C/svg%3E"
+               alt="Hard shell carrying case">
+        </div>
+      </section>
+
+      <!-- Details column -->
+      <section aria-label="Product Details">
+        <h2 id="product-title">Aura Studio Pro Wireless</h2>
+        <p id="product-price" style="font-size: 1.3rem; font-weight: 700; color: #1a202c; margin: 0.5rem 0;">$349.00</p>
+        <p id="product-desc">
+          Engineered for pristine sound clarity, active acoustic noise cancellation, and all-day comfort.
+          Experience low-distortion 40mm beryllium drivers paired with hybrid adaptive ANC.
+        </p>
+
+        <!-- Swatches with inline background-color -->
+        <div class="swatches-section">
+          <label id="swatch-label" style="font-weight: 600; display: block;">Select Color Finish:</label>
+          <div class="swatch-group" role="group" aria-labelledby="swatch-label">
+            <button type="button" id="swatch-red" class="color-swatch" style="background-color: #c53030;" aria-label="Crimson Red"></button>
+            <button type="button" id="swatch-white" class="color-swatch" style="background-color: #ffffff;" aria-label="Polar White"></button>
+            <button type="button" id="swatch-black" class="color-swatch" style="background-color: #1a202c;" aria-label="Midnight Black"></button>
+          </div>
+        </div>
+
+        <!-- Action button with inline SVG icon that should NOT be inverted back -->
+        <div style="margin-top: 1.5rem;">
+          <button type="button" id="buy-button" class="action-button">
+            <svg id="cart-icon" class="icon-cart" viewBox="0 0 24 24" aria-hidden="true" style="margin-right: 8px;">
+              <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+            Add to Cart
+          </button>
+        </div>
+
+        <!-- Form control -->
+        <form class="coupon-form" onsubmit="return false;">
+          <label for="coupon-code" style="font-size: 0.95rem; font-weight: 500;">Promo code:</label>
+          <input type="text" id="coupon-code" class="coupon-input" placeholder="e.g. STUDIO20">
+          <button type="button" id="apply-coupon" class="action-button" style="min-width: 90px; min-height: 40px; padding: 0.4rem 1rem;">Apply</button>
+        </form>
+      </section>
+    </div>
+
+    <!-- Aside landmark -->
+    <aside aria-label="Technical Specifications">
+      <h2>Specifications &amp; Battery</h2>
+      <ul style="margin: 0.5rem 0; padding-left: 1.25rem;">
+        <li>Battery life: Up to 40 hours with ANC activated</li>
+        <li>Connectivity: Bluetooth 5.3, AAC, LDAC, aptX Adaptive</li>
+        <li>Charging: USB-C Fast Charge (10 minutes provides 4 hours playback)</li>
+      </ul>
+    </aside>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Aura Sound Lab. Designed for high fidelity listening. <a href="#privacy" id="privacy-link">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "confirm-actions-narrow",
+  "file": "tools/adapters/confirm-actions.js",
+  "page": "confirm-actions.html",
+  "options": {
+    "allowUntrusted": true
+  },
+  "checks": [
+    {
+      "name": "narrow viewport elements exist and reflow cleanly",
+      "code": "\n        const delBtn = document.getElementById('btn-delete-account');\n        const removeBtn = document.getElementById('btn-remove-item');\n        const orderBtn = document.getElementById('btn-place-order');\n        if (!delBtn || !removeBtn || !orderBtn) return false;\n\n        const docWidth = document.documentElement.scrollWidth;\n        return docWidth <= 320;\n      "
+    },
+    {
+      "name": "prompt stays within 320px viewport boundaries and never obscures button",
+      "code": "\n        const adapter = window.__ai4a11yConfirmActions;\n        if (!adapter || !adapter.enabled) return true;\n\n        const delBtn = document.getElementById('btn-delete-account');\n        if (!delBtn) return false;\n\n        try {\n          adapter.onClick({\n            target: delBtn,\n            isTrusted: true,\n            timeStamp: performance.now(),\n            detail: 1,\n            preventDefault() {},\n            stopImmediatePropagation() {}\n          });\n\n          const prompt = document.getElementById('ai4a11y-confirm-prompt');\n          if (!prompt) return false;\n\n          const pRect = prompt.getBoundingClientRect();\n          const bRect = delBtn.getBoundingClientRect();\n\n          if (pRect.left < 0 || pRect.right > 320) return false;\n\n          const overlaps = !(\n            pRect.right <= bRect.left ||\n            pRect.left >= bRect.right ||\n            pRect.bottom <= bRect.top ||\n            pRect.top >= bRect.bottom\n          );\n          if (overlaps) return false;\n\n          return true;\n        } finally {\n          adapter.clearArmed();\n        }\n      "
+    },
+    {
+      "name": "button placed near top of viewport positions prompt below to avoid obscuring",
+      "code": "\n        const adapter = window.__ai4a11yConfirmActions;\n        if (!adapter || !adapter.enabled) return true;\n\n        const topBtn = document.createElement('button');\n        topBtn.id = 'temp-top-btn';\n        topBtn.textContent = 'Delete entry';\n        topBtn.style.cssText = 'position:fixed;top:8px;left:8px;min-width:44px;min-height:44px;z-index:10;';\n        document.body.appendChild(topBtn);\n\n        try {\n          adapter.onClick({\n            target: topBtn,\n            isTrusted: true,\n            timeStamp: performance.now(),\n            detail: 1,\n            preventDefault() {},\n            stopImmediatePropagation() {}\n          });\n\n          const prompt = document.getElementById('ai4a11y-confirm-prompt');\n          if (!prompt) return false;\n\n          const pRect = prompt.getBoundingClientRect();\n          const bRect = topBtn.getBoundingClientRect();\n\n          if (pRect.top < bRect.bottom) return false;\n\n          const overlaps = !(\n            pRect.right <= bRect.left ||\n            pRect.left >= bRect.right ||\n            pRect.bottom <= bRect.top ||\n            pRect.top >= bRect.bottom\n          );\n          if (overlaps) return false;\n\n          return true;\n        } finally {\n          adapter.clearArmed();\n          topBtn.remove();\n        }\n      "
+    },
+    {
+      "name": "narrow viewport confirmation and Escape dismissal function properly",
+      "code": "\n        const adapter = window.__ai4a11yConfirmActions;\n        if (!adapter || !adapter.enabled) return true;\n\n        const orderBtn = document.getElementById('btn-place-order');\n        if (!orderBtn) return false;\n\n        try {\n          adapter.onClick({\n            target: orderBtn,\n            isTrusted: true,\n            timeStamp: performance.now(),\n            detail: 0,\n            preventDefault() {},\n            stopImmediatePropagation() {}\n          });\n\n          const prompt = document.getElementById('ai4a11y-confirm-prompt');\n          if (!prompt || !prompt.textContent.includes('Press again to confirm')) return false;\n\n          const escEv = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });\n          document.dispatchEvent(escEv);\n\n          return document.getElementById('ai4a11y-confirm-prompt') === null &&\n                 !orderBtn.hasAttribute('data-ai4a11y-armed');\n        } finally {\n          adapter.clearArmed();\n        }\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

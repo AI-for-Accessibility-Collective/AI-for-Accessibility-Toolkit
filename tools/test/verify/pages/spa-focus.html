@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal Dashboard - Overview</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #f7fafc;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 1rem 1.5rem;
+    }
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      min-width: 24px;
+      padding: 4px 8px;
+      color: #0b57d0;
+      font-weight: 500;
+      text-decoration: underline;
+      border-radius: 4px;
+    }
+    nav a:focus-visible, button:focus-visible {
+      outline: 3px solid #0b57d0;
+      outline-offset: 2px;
+    }
+    nav a[aria-current="page"] {
+      font-weight: 700;
+      color: #0f172a;
+      text-decoration: none;
+      background-color: #e2e8f0;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    main:focus-visible {
+      outline: 3px solid #0b57d0;
+      outline-offset: 3px;
+    }
+    h1 {
+      font-size: 1.75rem;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+    p {
+      margin: 0.5rem 0 1rem 0;
+    }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      font-family: inherit;
+      font-size: 1rem;
+      min-height: 24px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      background-color: #ffffff;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    footer {
+      max-width: 800px;
+      margin: 3rem auto 2rem;
+      padding: 1rem 1.5rem 0;
+      border-top: 1px solid #e2e8f0;
+      font-size: 0.875rem;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Portal Dashboard</div>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="/overview" id="nav-overview" class="nav-link" aria-current="page">Overview</a></li>
+        <li><a href="/analytics" id="nav-analytics" class="nav-link">Analytics</a></li>
+        <li><a href="/settings" id="nav-settings" class="nav-link">Settings</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <h1 id="page-heading">Dashboard Overview</h1>
+    <p id="page-description">Welcome to the portal overview. Key metrics and summaries are listed below.</p>
+    <div class="card" id="card-content">
+      <p>System status: All services operational.</p>
+      <button type="button" id="btn-action">Check Updates</button>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Portal Systems. All rights reserved.</p>
+  </footer>
+
+  <script>
+    (function () {
+      const initialPath = window.location.pathname + window.location.search;
+      const initialHtml = document.getElementById('main').innerHTML;
+      const initialTitle = document.title;
+
+      const routes = {
+        '/overview': {
+          title: 'Portal Dashboard - Overview',
+          heading: 'Dashboard Overview',
+          desc: 'Welcome to the portal overview. Key metrics and summaries are listed below.',
+          card: '<p>System status: All services operational.</p><button type="button" id="btn-action">Check Updates</button>'
+        },
+        '/analytics': {
+          title: 'Portal Dashboard - Analytics',
+          heading: 'Traffic & Analytics',
+          desc: 'Real-time performance and visitor traffic for current operations.',
+          card: '<p>Weekly volume: 42,100 events.</p><button type="button" id="btn-action">Download Report</button>'
+        },
+        '/settings': {
+          title: 'Portal Dashboard - Settings',
+          heading: 'User Settings',
+          desc: 'Manage your notifications and security settings.',
+          card: '<p>Two-factor authentication is active.</p><button type="button" id="btn-action">Configure</button>'
+        }
+      };
+
+      function updateView(path) {
+        const route = routes[path] || routes['/overview'];
+        document.title = route.title;
+        const main = document.getElementById('main');
+        if (main) {
+          main.innerHTML = '<h1 id="page-heading">' + route.heading + '</h1>' +
+            '<p id="page-description">' + route.desc + '</p>' +
+            '<div class="card" id="card-content">' + route.card + '</div>';
+        }
+        document.querySelectorAll('.nav-link').forEach(link => {
+          if (link.getAttribute('href') === path) {
+            link.setAttribute('aria-current', 'page');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        const link = e.target.closest('a.nav-link');
+        if (link) {
+          e.preventDefault();
+          const href = link.getAttribute('href');
+          history.pushState({}, '', href);
+          updateView(href);
+        }
+      });
+
+      window.addEventListener('popstate', () => {
+        const path = window.location.pathname;
+        if (routes[path]) {
+          updateView(path);
+        }
+      });
+
+      window.resetPageState = () => {
+        history.replaceState({}, '', initialPath);
+        document.title = initialTitle;
+        const main = document.getElementById('main');
+        if (main) main.innerHTML = initialHtml;
+        document.querySelectorAll('.nav-link').forEach(link => {
+          if (link.id === 'nav-overview') {
+            link.setAttribute('aria-current', 'page');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        });
+      };
+    })();
+  </script>
+</body>
+</html>

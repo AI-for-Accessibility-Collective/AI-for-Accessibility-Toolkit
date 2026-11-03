@@ -2,6 +2,13 @@
 import { announce } from '../utils/ai.js';
 import { registerSweep } from '../utils/observe.js';
 
+const DEFAULT_SETTINGS = {
+  stopAnimations: true,
+  pauseVideos: true,
+  stopGifs: true,
+  disableParallax: true
+};
+
 export const MotionReducer = {
   styleId: 'ai4a11y-motion-reducer-styles',
   enabled: false,
@@ -17,16 +24,11 @@ export const MotionReducer = {
   // async freezeSingleImage continuations can detect they've been overtaken
   // and abort before mutating the DOM or repopulating frozenImages.
   freezeGen: 0,
-  currentSettings: {
-    stopAnimations: true,
-    pauseVideos: true,
-    stopGifs: true,
-    disableParallax: true
-  },
+  currentSettings: { ...DEFAULT_SETTINGS },
 
-  enable(options = {}) {
+  async enable(options = {}) {
     if (this.enabled) return;
-    this.currentSettings = { ...this.currentSettings, ...options };
+    this.currentSettings = { ...DEFAULT_SETTINGS, ...options };
     this.enabled = true;
 
     const s = this.currentSettings;
@@ -74,43 +76,45 @@ export const MotionReducer = {
       };
       document.addEventListener('play', this.playHandler, true);
     }
-    if (s.stopGifs) this.freezeImages();
+    if (s.stopGifs) await this.freezeImages();
 
     // Web Animations API pass — CSS `animation-duration` overrides above don't
     // touch animations created via element.animate()/WAAPI.
     this.pauseWaapiAnimations();
 
     // requestIdleCallback chunking for the CSS animationPlayState pass
-    const pauseAnimations = (deadline) => {
-      const elements = document.querySelectorAll('*');
-      let i = 0;
-      const processChunk = () => {
-        while (i < elements.length && (typeof deadline === 'undefined' || deadline.timeRemaining() > 0)) {
-          const el = elements[i];
-          // Skip extension UI elements
-          if ((el.id && el.id.startsWith('ai4a11y-')) || (el.className && typeof el.className === 'string' && el.className.startsWith('ai4a11y-'))) {
-            i++;
-            continue;
-          }
-          try {
-            const computedStyle = getComputedStyle(el);
-            if (computedStyle.animationName !== 'none') {
-              el.style.animationPlayState = 'paused';
-              this.pausedPlayState.add(el);
-            }
-          } catch (e) { /* element may have been removed */ }
+    const elements = document.querySelectorAll('*');
+    let i = 0;
+    const processChunk = (deadline) => {
+      if (!this.enabled) return;
+      while (i < elements.length && (!deadline || deadline.timeRemaining() > 0)) {
+        const el = elements[i];
+        // Skip extension UI elements
+        if ((el.id && el.id.startsWith('ai4a11y-')) || (el.className && typeof el.className === 'string' && el.className.startsWith('ai4a11y-'))) {
           i++;
+          continue;
         }
-        if (i < elements.length) {
-          requestIdleCallback ? requestIdleCallback(processChunk) : setTimeout(processChunk, 0);
+        try {
+          const computedStyle = getComputedStyle(el);
+          if (computedStyle.animationName !== 'none') {
+            el.style.animationPlayState = 'paused';
+            this.pausedPlayState.add(el);
+          }
+        } catch (e) { /* element may have been removed */ }
+        i++;
+      }
+      if (i < elements.length && this.enabled) {
+        if (typeof requestIdleCallback !== 'undefined') {
+          requestIdleCallback(processChunk);
+        } else {
+          setTimeout(processChunk, 0);
         }
-      };
-      processChunk();
+      }
     };
     if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(pauseAnimations);
+      requestIdleCallback(processChunk);
     } else {
-      pauseAnimations();
+      processChunk();
     }
 
     // Register sweep so newly added videos/GIFs/animations also get handled.
@@ -167,7 +171,7 @@ export const MotionReducer = {
     for (const iframe of this.pausedIframes) {
       const src = iframe.src || '';
       try {
-        if (src.includes('youtube.com')) {
+        if (src.includes('youtube.com') || src.includes('youtube-nocookie.com')) {
           iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
         } else if (src.includes('vimeo.com')) {
           iframe.contentWindow?.postMessage('{"method":"play"}', '*');
@@ -182,8 +186,10 @@ export const MotionReducer = {
       video.controls = false;
       delete video.dataset.ai4a11yMrControls;
     });
-    document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach(video => {
-      video.play().catch(() => {});
+    document.querySelectorAll('video[data-ai4a11y-was-paused]').forEach(video => {
+      if (video.dataset.ai4a11yWasPaused === 'false') {
+        video.play().catch(() => {});
+      }
       delete video.dataset.ai4a11yWasPaused;
     });
 
@@ -207,6 +213,7 @@ export const MotionReducer = {
   // still photo for a canvas only risks breaking the page's layout. So the start of the
   // file is read first, and only animated ones are frozen.
   freezeImages() {
+    const promises = [];
     document.querySelectorAll('img').forEach(img => {
       const url = img.currentSrc || img.src || '';
       // Still images are remembered by address, not marked on the page: a
@@ -215,22 +222,25 @@ export const MotionReducer = {
       if (this.stillImages.get(img) === url || img.dataset.ai4a11yMrFrozen) return;
       const mightAnimate = /\.(gif|webp|apng)(\?|$)/i.test(url)
         || url.startsWith('data:image/gif')
-        || url.startsWith('data:image/webp');
+        || url.startsWith('data:image/webp')
+        || url.startsWith('data:image/apng');
       if (!mightAnimate) {
         this.stillImages.set(img, url);
         return;
       }
       img.dataset.ai4a11yMrFrozen = 'checking';
       const gen = this.freezeGen;
-      isAnimated(url).then(animated => {
+      const p = isAnimated(url).then(animated => {
         if (this.freezeGen !== gen) { delete img.dataset.ai4a11yMrFrozen; return; }
         if (animated === false) { delete img.dataset.ai4a11yMrFrozen; this.stillImages.set(img, url); return; }
         // true, or null when the file can't be read (another site's image without CORS
         // headers): freeze it, as before.
         delete img.dataset.ai4a11yMrFrozen;
-        this.freezeSingleImage(img).catch(() => {});
+        return this.freezeSingleImage(img).catch(() => {});
       });
+      promises.push(p);
     });
+    return Promise.all(promises);
   },
 
   async freezeSingleImage(img) {
@@ -244,7 +254,11 @@ export const MotionReducer = {
 
     const w = img.naturalWidth || img.width || 100;
     const h = img.naturalHeight || img.height || 100;
-    const altText = img.getAttribute('alt') || '';
+    const hasAlt = img.hasAttribute('alt');
+    const altText = img.getAttribute('alt');
+    const ariaLabel = img.getAttribute('aria-label');
+    const ariaLabelledBy = img.getAttribute('aria-labelledby');
+    const title = img.getAttribute('title');
     const origId = img.id;
     const origClass = img.className;
 
@@ -255,7 +269,7 @@ export const MotionReducer = {
     //   - role="presentation" or role="none" -> author marked as presentational
     const srcAriaHidden = img.getAttribute('aria-hidden');
     const srcRole = img.getAttribute('role') || '';
-    const decorative = altText === '' ||
+    const decorative = (hasAlt && altText === '') ||
                        srcAriaHidden === 'true' ||
                        srcRole === 'presentation' ||
                        srcRole === 'none';
@@ -270,9 +284,12 @@ export const MotionReducer = {
       // Hide from the AX tree, matching the source image's decorative status.
       canvas.setAttribute('aria-hidden', 'true');
     } else {
-      // Named image: expose as img with the same accessible name.
+      // Expose as img with the same accessible name.
       canvas.setAttribute('role', 'img');
-      canvas.setAttribute('aria-label', altText);
+      const label = (hasAlt && altText) || ariaLabel || title;
+      if (label) canvas.setAttribute('aria-label', label);
+      if (ariaLabelledBy) canvas.setAttribute('aria-labelledby', ariaLabelledBy);
+      if (title && !canvas.hasAttribute('title')) canvas.setAttribute('title', title);
       if (srcAriaHidden !== null) canvas.setAttribute('aria-hidden', srcAriaHidden);
     }
 
@@ -288,6 +305,8 @@ export const MotionReducer = {
     } else {
       canvas.style.maxWidth = '100%';
     }
+    canvas.style.maxWidth = box.maxWidth !== 'none' ? box.maxWidth : '100%';
+    canvas.style.verticalAlign = box.verticalAlign;
     canvas.style.objectFit = box.objectFit;
     canvas.style.objectPosition = box.objectPosition;
     canvas.style.borderRadius = box.borderRadius;
@@ -359,11 +378,11 @@ export const MotionReducer = {
       // and pausing again would stop a video the person started themselves.
       if (this.seenVideos.has(video)) return;
       this.seenVideos.add(video);
-      if (!video.paused) this.pauseVideo(video);
+      if (!video.paused || video.autoplay) this.pauseVideo(video);
     });
     document.querySelectorAll('iframe').forEach(iframe => {
       const src = iframe.src || '';
-      if (src.includes('youtube.com') && src.includes('enablejsapi=1')) {
+      if ((src.includes('youtube.com') || src.includes('youtube-nocookie.com')) && src.includes('enablejsapi=1')) {
         iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
         this.pausedIframes.add(iframe);
       } else if (src.includes('vimeo.com')) {
@@ -415,9 +434,12 @@ async function readHead(url) {
   if (url.startsWith('data:')) {
     const b64 = url.slice(url.indexOf(',') + 1, url.indexOf(',') + 1 + Math.ceil(HEAD_BYTES / 3) * 4);
     const bin = atob(b64.slice(0, b64.length - (b64.length % 4)));
-    return Uint8Array.from(bin, c => c.charCodeAt(0));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
   }
-  const res = await fetch(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` }, credentials: 'omit' });
+  const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(2000) : undefined;
+  const res = await fetch(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` }, credentials: 'omit', signal });
   if (!res.ok || !res.body) throw new Error('unreadable');
   const reader = res.body.getReader();
   const chunks = [];

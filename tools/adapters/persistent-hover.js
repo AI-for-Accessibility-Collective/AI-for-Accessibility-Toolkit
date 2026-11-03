@@ -4,19 +4,25 @@
 // low-vision users — who move slowly or track a magnified viewport — never
 // get to read them. This adapter mirrors `title` text into one accessible
 // tooltip that STAYS: it is hoverable (pointer-events: auto, per 1.4.13),
-// survives plain mouseout, and hides only on Escape or when the pointer
-// reaches a different titled element.
+// survives plain mouseout, works on keyboard focus (WCAG 2.1.1), and hides
+// on Escape or when moving to a different titled element.
 //
 // Pop-ups the page opens with CSS :hover (e.g. `.tip:hover .bubble { display:
 // block }`) have no title to mirror and close the moment the pointer leaves.
 // Each such rule is copied with :hover swapped for an attribute, and the last
-// element the pointer opened keeps that attribute, so its pop-up stays open
-// until Escape or until the pointer opens another one.
+// element the pointer or focus opened keeps that attribute, so its pop-up
+// stays open until Escape or until another one is opened. Moving focus away to
+// an untitled element dismisses the tooltip so newly focused controls are never
+// obscured (WCAG 2.4.11).
+//
+// Tooltip placement is constrained to the viewport so it never overflows off
+// screen even at 320px narrow viewports (WCAG 1.4.10), flips above the trigger
+// when needed to prevent obscuring content, and tracks scroll position.
 //
 // Reversible by construction: one injected stylesheet, one tooltip element,
-// two document listeners stored as refs, and the attribute on at most one
-// element — disable() removes exactly those and never touches the page's own
-// titles or styles.
+// listeners stored as refs, and the attribute on at most one element —
+// disable() removes exactly those and never touches the page's own titles or
+// styles.
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
 
@@ -74,8 +80,12 @@ export const PersistentHover = {
   current: null,         // the titled element the tooltip is showing for
   triggers: '',          // selector list of elements whose :hover reveals a pop-up
   opened: null,          // the one element holding OPEN_ATTR
+  dismissed: null,       // element dismissed with Escape, until pointer/focus leaves
   onMouseOver: null,     // stored listener refs (for exact removal)
   onKeyDown: null,
+  onFocusIn: null,
+  onFocusOut: null,
+  onScroll: null,
 
   enable(options = {}) {
     if (this.enabled) return;
@@ -91,7 +101,9 @@ export const PersistentHover = {
       #${this.tipId} {
         position: fixed;
         z-index: 2147483647;
-        max-width: 320px;
+        max-width: min(320px, calc(100vw - 16px));
+        box-sizing: border-box;
+        overflow-wrap: break-word;
         padding: 8px 12px;
         border-radius: 6px;
         background: ${background};
@@ -105,6 +117,7 @@ export const PersistentHover = {
     const tip = document.createElement('div');
     tip.id = this.tipId;
     tip.setAttribute('role', 'tooltip');
+    tip.setAttribute('aria-live', 'polite');
     tip.hidden = true;
     // Inline too, so the tooltip is hoverable even if the page's own CSS
     // out-specifies our stylesheet.
@@ -120,8 +133,15 @@ export const PersistentHover = {
       const target = e.target;
       if (!target || target.nodeType !== 1) return;
       if (this.tip && (target === this.tip || this.tip.contains(target))) return;
-      this.keepOpen(target);
+
+      if (this.dismissed && (!this.dismissed.contains || !this.dismissed.contains(target))) {
+        this.dismissed = null;
+      }
       const el = target.closest ? target.closest('[title]') : null;
+      const host = (this.triggers && target.closest) ? target.closest(this.triggers) : null;
+      if (this.dismissed && (el === this.dismissed || host === this.dismissed)) return;
+
+      this.keepOpen(target);
       if (!el) return;
       const text = (el.getAttribute('title') || '').trim();
       if (!text || el === this.current) return;
@@ -129,32 +149,129 @@ export const PersistentHover = {
     };
     document.addEventListener('mouseover', this.onMouseOver, true);
 
+    this.onFocusIn = (e) => {
+      if (!this.enabled) return;
+      const target = e.target;
+      if (!target || target.nodeType !== 1) return;
+      if (this.tip && (target === this.tip || this.tip.contains(target))) return;
+
+      if (this.dismissed && (!this.dismissed.contains || !this.dismissed.contains(target))) {
+        this.dismissed = null;
+      }
+      const el = target.closest ? target.closest('[title]') : null;
+      const host = (this.triggers && target.closest) ? target.closest(this.triggers) : null;
+      if (this.dismissed && (el === this.dismissed || host === this.dismissed)) return;
+
+      this.keepOpen(target);
+      if (el) {
+        const text = (el.getAttribute('title') || '').trim();
+        if (text && el !== this.current) {
+          this.show(el, text);
+          return;
+        }
+      }
+      // If focus moved away from the current titled element and it is not
+      // hovered by the mouse, hide tooltip so it does not obscure newly
+      // focused elements (WCAG 2.4.11).
+      if (this.current && this.current !== el) {
+        try {
+          if (!this.current.matches(':hover')) this.hide();
+        } catch { this.hide(); }
+      }
+      // If focus moved outside the opened CSS popup trigger, and it is not
+      // hovered by the mouse, close it.
+      if (this.opened && (!target.closest || !target.closest(this.triggers))) {
+        try {
+          if (!this.opened.matches(':hover')) this.close();
+        } catch { this.close(); }
+      }
+    };
+    document.addEventListener('focusin', this.onFocusIn, true);
+
+    this.onFocusOut = () => {
+      if (!this.enabled) return;
+      setTimeout(() => {
+        if (!this.enabled) return;
+        const active = typeof document !== 'undefined' ? document.activeElement : null;
+        if (!active || active === document.body || active === document.documentElement) {
+          if (this.current) {
+            try { if (!this.current.matches(':hover')) this.hide(); } catch { this.hide(); }
+          }
+          if (this.opened) {
+            try { if (!this.opened.matches(':hover')) this.close(); } catch { this.close(); }
+          }
+        }
+      }, 10);
+    };
+    document.addEventListener('focusout', this.onFocusOut, true);
+
     this.onKeyDown = (e) => {
       if (!this.enabled) return;
-      if (e.key === 'Escape') { this.hide(); this.close(); }
+      if (e.key === 'Escape') {
+        this.dismissed = this.current || this.opened;
+        this.hide();
+        this.close();
+      }
     };
     document.addEventListener('keydown', this.onKeyDown, true);
+
+    this.onScroll = () => {
+      if (!this.enabled || !this.current || !this.tip || this.tip.hidden) return;
+      this.position(this.current);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', this.onScroll, { passive: true, capture: true });
+      window.addEventListener('resize', this.onScroll, { passive: true });
+    }
 
     console.log('[AI4A11y] Persistent Hover enabled');
     announce('Hover tooltips now stay on screen. Press Escape to dismiss one');
   },
 
   // Fill the tooltip with the element's title text (textContent, never
-  // innerHTML) and place it just below the element.
+  // innerHTML) and position it safely within the viewport.
   show(el, text) {
     if (!this.tip) return;
     this.current = el;
     this.tip.textContent = text;
+    this.position(el);
+  },
+
+  position(el) {
+    if (!this.tip || !el) return;
     let rect = null;
-    try { rect = el.getBoundingClientRect(); } catch { /* detached */ }
-    // position: fixed → viewport coordinates apply directly. No scroll offsets,
-    // and no dependence on the initial containing block, which a positioned or
-    // transformed ancestor would otherwise shift the tooltip against.
-    const x = rect ? rect.left : 0;
-    const y = (rect ? rect.bottom : 0) + 6;
-    this.tip.style.left = `${Math.max(0, x)}px`;
-    this.tip.style.top = `${Math.max(0, y)}px`;
+    try { rect = el.getBoundingClientRect(); } catch { return; }
+    if (!rect) return;
+
+    const winW = (typeof window !== 'undefined' && window.innerWidth) || 1280;
+    const winH = (typeof window !== 'undefined' && window.innerHeight) || 800;
+
+    // If trigger element scrolled off-screen, hide tooltip
+    if (rect.bottom < 0 || rect.top > winH || rect.right < 0 || rect.left > winW) {
+      this.tip.hidden = true;
+      return;
+    }
+
     this.tip.hidden = false;
+    let tipRect = null;
+    try { tipRect = this.tip.getBoundingClientRect(); } catch { /* detached */ }
+    const tipW = (tipRect && tipRect.width) || this.tip.offsetWidth || 160;
+    const tipH = (tipRect && tipRect.height) || this.tip.offsetHeight || 36;
+
+    // Prefer placing below the trigger with a 6px gap.
+    // If it would overflow viewport bottom and there is room above, place above (WCAG 2.4.11).
+    let y = rect.bottom + 6;
+    if (y + tipH > winH - 6 && rect.top >= tipH + 6) {
+      y = rect.top - tipH - 6;
+    }
+    const maxTop = Math.max(6, winH - tipH - 6);
+    const top = Math.max(6, Math.min(y, maxTop));
+
+    const maxLeft = Math.max(6, winW - tipW - 6);
+    const left = Math.max(6, Math.min(rect.left, maxLeft));
+
+    this.tip.style.left = `${Math.round(left)}px`;
+    this.tip.style.top = `${Math.round(top)}px`;
   },
 
   hide() {
@@ -221,9 +338,17 @@ export const PersistentHover = {
     this.enabled = false;
     if (this.onMouseOver) { document.removeEventListener('mouseover', this.onMouseOver, true); this.onMouseOver = null; }
     if (this.onKeyDown) { document.removeEventListener('keydown', this.onKeyDown, true); this.onKeyDown = null; }
+    if (this.onFocusIn) { document.removeEventListener('focusin', this.onFocusIn, true); this.onFocusIn = null; }
+    if (this.onFocusOut) { document.removeEventListener('focusout', this.onFocusOut, true); this.onFocusOut = null; }
+    if (this.onScroll && typeof window !== 'undefined') {
+      window.removeEventListener('scroll', this.onScroll, { passive: true, capture: true });
+      window.removeEventListener('resize', this.onScroll, { passive: true });
+      this.onScroll = null;
+    }
     if (this.style) { this.style.remove(); this.style = null; }
     if (this.tip) { this.tip.remove(); this.tip = null; }
     this.current = null;
+    this.dismissed = null;
     this.close();
     this.triggers = '';
     console.log('[AI4A11y] Persistent Hover disabled');

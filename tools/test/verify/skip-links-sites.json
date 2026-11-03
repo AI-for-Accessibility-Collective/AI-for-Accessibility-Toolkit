@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/skip-links.js",
+  "export": "SkipLinks",
+  "sites": "all"
+}

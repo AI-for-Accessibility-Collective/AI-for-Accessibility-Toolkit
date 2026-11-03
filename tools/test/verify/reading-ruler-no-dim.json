@@ -1,0 +1,19 @@
+{
+  "name": "reading-ruler-no-dim",
+  "file": "tools/adapters/reading-ruler.js",
+  "export": "ReadingRuler",
+  "page": "reading-ruler.html",
+  "options": {
+    "dim": false
+  },
+  "checks": [
+    {
+      "name": "dim false injects only the highlight band with no surrounding dimming shades",
+      "code": "\n        const band = document.getElementById('ai4a11y-reading-ruler');\n        if (!band) return true;\n\n        const allHidden = Array.from(document.querySelectorAll('div[aria-hidden=\"true\"]'));\n        const shades = allHidden.filter(el => el !== band && el.id !== 'ai4a11y-reading-ruler' && window.getComputedStyle(el).position === 'fixed');\n        if (shades.length !== 0) return false;\n\n        return band.getAttribute('aria-hidden') === 'true';\n      "
+    },
+    {
+      "name": "ruler repositions accurately on mousemove when dimming is disabled",
+      "code": "\n        const band = document.getElementById('ai4a11y-reading-ruler');\n        if (!band) return true;\n\n        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 200, clientY: 300 }));\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 40)));\n\n        const top = parseFloat(band.style.top);\n        return Math.abs(top - (300 - 20)) <= 2;\n      "
+    }
+  ]
+}

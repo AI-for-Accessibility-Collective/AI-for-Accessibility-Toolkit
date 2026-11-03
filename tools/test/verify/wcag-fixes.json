@@ -1,0 +1,58 @@
+{
+  "name": "wcag-fixes",
+  "file": "tools/adapters/wcag-fixes.js",
+  "page": "wcag-fixes.html",
+  "options": {
+    "wcagRiskyFixes": true
+  },
+  "checks": [
+    {
+      "name": "invalid lang en_US is normalised to en-US",
+      "code": "\n        const el = document.getElementById('lang-issue');\n        if (!el) return false;\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        return isAfter ? el.getAttribute('lang') === 'en-US' : el.getAttribute('lang') === 'en_US';\n      "
+    },
+    {
+      "name": "duplicate id is resolved on active elements",
+      "code": "\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        const btns = document.querySelectorAll('#action-btn');\n        if (!isAfter) return btns.length === 2;\n        return btns.length === 1 && btns[0].textContent.trim() === 'View Account';\n      "
+    },
+    {
+      "name": "positive tabindex is reset to 0 and element is keyboard focusable",
+      "code": "\n        const btn = document.getElementById('tab-issue');\n        if (!btn) return false;\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        if (!isAfter) return btn.getAttribute('tabindex') === '3';\n        btn.focus();\n        const focused = document.activeElement === btn;\n        btn.blur();\n        return btn.getAttribute('tabindex') === '0' && focused;\n      "
+    },
+    {
+      "name": "deprecated role directory is replaced with list",
+      "code": "\n        const el = document.getElementById('dep-role');\n        if (!el) return false;\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        return isAfter ? el.getAttribute('role') === 'list' : el.getAttribute('role') === 'directory';\n      "
+    },
+    {
+      "name": "invalid ARIA attribute is removed and valid attribute is preserved",
+      "code": "\n        const btn = document.getElementById('aria-attr-issue');\n        if (!btn) return false;\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        if (!isAfter) return btn.hasAttribute('aria-bogus') && btn.getAttribute('aria-label') === 'Account Settings';\n        return !btn.hasAttribute('aria-bogus') && btn.getAttribute('aria-label') === 'Account Settings';\n      "
+    },
+    {
+      "name": "invalid ARIA role is removed",
+      "code": "\n        const el = document.getElementById('aria-role-issue');\n        if (!el) return false;\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        return isAfter ? !el.hasAttribute('role') : el.getAttribute('role') === 'invalid-role';\n      "
+    },
+    {
+      "name": "nested interactive link is made non-interactive and preserves visible label",
+      "code": "\n        const link = document.getElementById('nested-link');\n        if (!link) return false;\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        if (!isAfter) return link.hasAttribute('href') && link.textContent.trim() === 'Detailed Report';\n        return !link.hasAttribute('href') && link.getAttribute('role') === 'presentation' && link.textContent.trim() === 'Detailed Report';\n      "
+    },
+    {
+      "name": "skipped heading level h5 is retagged to h3",
+      "code": "\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        const h3 = document.querySelector('h3');\n        const h5 = document.querySelector('h5');\n        if (!isAfter) return h5 !== null && h3 === null;\n        return h3 !== null && h3.textContent.trim() === 'Recent Activity' && h5 === null;\n      "
+    },
+    {
+      "name": "obsolete blink element is replaced with span",
+      "code": "\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        const blink = document.querySelector('blink');\n        if (!isAfter) return blink !== null;\n        return blink === null && document.body.textContent.includes('Important account notice');\n      "
+    },
+    {
+      "name": "viewport zoom lock is removed",
+      "code": "\n        const vp = document.querySelector('meta[name=\"viewport\"]');\n        if (!vp) return false;\n        const content = vp.getAttribute('content') || '';\n        const isAfter = typeof window.__wcagPrev !== 'undefined';\n        if (!isAfter) return content.includes('user-scalable=no');\n        return content.includes('user-scalable=yes') && content.includes('maximum-scale=5');\n      "
+    },
+    {
+      "name": "standard content and valid language are untouched",
+      "code": "\n        const btn = document.getElementById('standard-btn');\n        const fr = document.getElementById('valid-lang-span');\n        if (!btn || !fr) return false;\n        return fr.getAttribute('lang') === 'fr' && btn.getAttribute('type') === 'button';\n      "
+    }
+  ],
+  "harness": {
+    "enable": "\n      window.__wcagPrev = {\n        htmlLang: document.documentElement.getAttribute('lang'),\n        headHTML: document.head.innerHTML,\n        bodyHTML: document.body.innerHTML\n      };\n      const rules = Object.keys(m.axeHandlers);\n      const results = await axe.run({\n        rules: {\n          'duplicate-id': { enabled: true },\n          'duplicate-id-aria': { enabled: true },\n          'duplicate-id-active': { enabled: true }\n        },\n        runOnly: { type: 'rule', values: rules }\n      });\n      for (const violation of results.violations) {\n        const handler = m.axeHandlers[violation.id];\n        if (!handler) continue;\n        for (const node of violation.nodes) {\n          try {\n            const selector = Array.isArray(node.target) ? node.target.join(' ') : node.target;\n            const el = document.querySelector(selector) || document.querySelector(node.target[0]);\n            if (el) await handler(el, options);\n          } catch (e) {\n            console.error('Handler error for rule ' + violation.id + ':', e);\n          }\n        }\n      }\n    ",
+    "disable": "\n      if (window.__wcagPrev) {\n        if (window.__wcagPrev.htmlLang !== null) {\n          document.documentElement.setAttribute('lang', window.__wcagPrev.htmlLang);\n        } else {\n          document.documentElement.removeAttribute('lang');\n        }\n        document.head.innerHTML = window.__wcagPrev.headHTML;\n        document.body.innerHTML = window.__wcagPrev.bodyHTML;\n        delete window.__wcagPrev;\n      }\n      document.querySelectorAll('[data-ai4a11y-processed]').forEach(el => {\n        delete el.dataset.ai4a11yProcessed;\n      });\n    "
+  }
+}

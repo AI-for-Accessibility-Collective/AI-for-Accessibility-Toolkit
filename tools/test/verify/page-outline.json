@@ -1,0 +1,7 @@
+{
+  "name": "page-outline",
+  "file": "tools/adapters/page-outline.js",
+  "export": "PageOutline",
+  "page": "page-outline.html",
+  "checks": []
+}

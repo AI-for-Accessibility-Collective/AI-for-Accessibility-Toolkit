@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiet Tech Daily — Media &amp; Audio News</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #0f3a68;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      display: inline-block;
+      min-width: 44px;
+      min-height: 24px;
+      line-height: 24px;
+    }
+    nav a:focus,
+    nav a:focus-visible,
+    button:focus,
+    button:focus-visible,
+    input:focus,
+    input:focus-visible {
+      outline: 3px solid #0f3a68;
+      outline-offset: 2px;
+    }
+    header nav a:focus,
+    header nav a:focus-visible {
+      outline: 3px solid #ffffff;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.3rem;
+      color: #2d3748;
+      margin-top: 0;
+    }
+    .media-card {
+      background: #f7fafc;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .media-card h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #2d3748;
+    }
+    video {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #000000;
+      border-radius: 4px;
+    }
+    audio {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      margin: 0.5rem 0;
+    }
+    p {
+      margin: 0.75rem 0;
+    }
+    .action-btn {
+      background-color: #0f3a68;
+      color: #ffffff;
+      border: 1px solid #0f3a68;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      min-width: 48px;
+      min-height: 36px;
+    }
+    .form-group {
+      margin-top: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #2d3748;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #4a5568;
+      border-radius: 4px;
+      color: #1a202c;
+      background: #ffffff;
+      min-height: 36px;
+    }
+    aside {
+      background: #edf2f7;
+      border-top: 2px solid #cbd5e0;
+      padding: 1rem 1.5rem;
+      margin-top: 2rem;
+    }
+    aside ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+    aside a {
+      color: #0f3a68;
+      text-decoration: underline;
+    }
+    footer {
+      background-color: #0f3a68;
+      color: #ffffff;
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    footer p {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Quiet Tech Daily</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#article" id="nav-article">Article</a></li>
+        <li><a href="#media-section" id="nav-media">Media</a></li>
+        <li><a href="#feedback" id="nav-feedback">Feedback</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <article id="article">
+      <h2>Sensory-Friendly Multimedia on the Modern Web</h2>
+      <p id="lead-paragraph">Unexpected sound from autoplaying video and background audio can cause acute disorientation and anxiety, particularly for neurodivergent and sensory-sensitive people. Providing reliable controls to keep browsing calm and quiet makes web experiences fundamentally usable.</p>
+
+      <section id="media-section" aria-labelledby="heading-media">
+        <h3 id="heading-media">Featured Media Streams</h3>
+
+        <div class="media-card" id="card-video-unmuted">
+          <h4>Video Stream: Live Studio Demonstration</h4>
+          <p>Unmuted stream that starts with sound enabled by default.</p>
+          <video id="video-unmuted" width="480" height="270" controls preload="none" src="data:video/mp4;base64,AAAA">
+            <track id="track-video-unmuted" kind="captions" label="English" srclang="en" src="data:text/vtt,WEBVTT" default>
+          </video>
+        </div>
+
+        <div class="media-card" id="card-audio-unmuted">
+          <h4>Audio Podcast: Design for Cognitive Inclusion</h4>
+          <p>Podcast recording playing ambient sound.</p>
+          <audio id="audio-unmuted" controls preload="none" src="data:audio/mp3;base64,AAAA"></audio>
+        </div>
+
+        <div class="media-card" id="card-video-premuted">
+          <h4>Video Stream: Ambient Cityscape (User-Muted)</h4>
+          <p>This clip was already muted by the user and must remain muted after restoration.</p>
+          <video id="video-premuted" width="480" height="270" controls muted preload="none" src="data:video/mp4;base64,AAAA">
+            <track id="track-video-premuted" kind="captions" label="English" srclang="en" src="data:text/vtt,WEBVTT" default>
+          </video>
+        </div>
+      </section>
+
+      <section id="feedback" aria-labelledby="heading-feedback">
+        <h3 id="heading-feedback">Reader Comments and Feedback</h3>
+        <p id="feedback-intro">Share your thoughts on sensory accessibility tools and default settings.</p>
+        <form id="feedback-form" action="#" method="get" onsubmit="return false;">
+          <div class="form-group">
+            <label for="feedback-input">Your Feedback</label>
+            <input type="text" id="feedback-input" name="feedback" placeholder="Enter feedback here">
+          </div>
+          <div class="form-group">
+            <button type="submit" id="submit-feedback" class="action-btn">Submit Feedback</button>
+          </div>
+        </form>
+      </section>
+    </article>
+  </main>
+
+  <aside aria-labelledby="heading-aside">
+    <h2 id="heading-aside">Related Resources</h2>
+    <ul>
+      <li><a href="#wcag-audio" id="link-audio-guidelines">WCAG Guideline 1.4.2: Audio Control</a></li>
+      <li><a href="#cognitive-access" id="link-cognitive">Cognitive and Sensory Accessibility Strategies</a></li>
+    </ul>
+  </aside>
+
+  <footer>
+    <p id="footer-text">&copy; 2026 Quiet Tech Daily. All rights reserved.</p>
+  </footer>
+</body>
+</html>

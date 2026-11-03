@@ -8,7 +8,9 @@
 // mixed-script text node is replaced by a wrapper span built with DOM APIs
 // (never innerHTML) and the exact original node is restored on disable. If the
 // page's <html> lacks a lang attribute, a best guess is added (and removed on
-// disable — a pre-existing lang is never touched).
+// disable — a pre-existing lang is never touched). Pre-existing lang attributes
+// on ancestor elements are respected so explicitly tagged runs are never
+// overwritten or redundantly wrapped.
 import { announce } from '../utils/ai.js';
 import { transformTextNodes, mainRoot } from './_primitives.js';
 import { registerSweep } from '../utils/observe.js';
@@ -55,7 +57,20 @@ function scriptOf(cp) {
 // (default "en" for Latin). Kanji alongside kana reads as Japanese, not
 // Chinese. Mirrors the transform's skip list so code/scripts don't skew the
 // count toward Latin.
-const SAMPLE_SKIP = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA', 'NOSCRIPT', 'SELECT', 'OPTION']);
+const SAMPLE_SKIP = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA', 'INPUT', 'NOSCRIPT', 'SELECT', 'OPTION']);
+
+function effectiveLang(node, fallback) {
+  let el = node ? node.parentElement : null;
+  while (el) {
+    const raw = el.getAttribute && el.getAttribute('lang');
+    if (raw) {
+      const tag = raw.trim().toLowerCase().split('-')[0];
+      if (tag && tag !== 'und') return tag;
+    }
+    el = el.parentElement;
+  }
+  return (fallback || 'en').toLowerCase().split('-')[0];
+}
 
 function detectMainLang(root) {
   const counts = new Map();
@@ -98,7 +113,11 @@ export const LanguageTag = {
     this.handles = [];
 
     const root = mainRoot();
-    if (!root) { announce('Language tags: no readable text found'); return; }
+    if (!root) {
+      this.enabled = false;
+      announce('Language tags: no readable text found');
+      return;
+    }
 
     this.mainLang = (typeof options.mainLang === 'string' && options.mainLang)
       ? options.mainLang : detectMainLang(root);
@@ -132,7 +151,7 @@ export const LanguageTag = {
   // disable()'s restore and logging each newly-tagged run. Returns the count
   // of text nodes tagged in THIS pass (0 on a re-sweep with nothing new).
   sweepRoot(root, reason = 'enable') {
-    const handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
+    const handle = transformTextNodes(root, (text, node) => this.buildWrapper(text, node), {
       skipClass: this.markerClass,
       cap: MAX_TEXT_NODES,
     });
@@ -148,11 +167,12 @@ export const LanguageTag = {
   // script become <span lang="xx"> children, everything else stays plain text
   // nodes. Returns null (skip) when the node has no foreign-script run, so
   // same-script text is left untouched.
-  buildWrapper(text) {
+  buildWrapper(text, node) {
     const hasKana = KANA_RE.test(text);
+    const context = effectiveLang(node, this.mainLang);
     const runs = [];
     for (const ch of text) {
-      const lang = this.langOfChar(ch.codePointAt(0), hasKana);
+      const lang = this.langOfChar(ch.codePointAt(0), hasKana, context);
       const last = runs[runs.length - 1];
       if (last && last.lang === lang) last.text += ch;
       else runs.push({ lang, text: ch });
@@ -175,22 +195,27 @@ export const LanguageTag = {
   },
 
   // Language a character should be announced in, or null when it needs no tag
-  // (neutral chars, Latin, or the page's own language).
-  langOfChar(cp, hasKana) {
+  // (neutral chars, Latin, or the surrounding context language).
+  langOfChar(cp, hasKana, contextLang = this.mainLang) {
     const script = scriptOf(cp);
     if (!script || script === 'Latin') return null;
     let lang = SCRIPT_LANG[script];
-    // Han characters near kana (or on a Japanese page) are kanji, not Chinese.
-    if (script === 'Han' && (hasKana || this.mainLang === 'ja')) lang = 'ja';
-    return lang === this.mainLang ? null : lang;
+    const base = (contextLang || this.mainLang || 'en').toLowerCase().split('-')[0];
+    // Han characters near kana (or in a Japanese context) are kanji, not Chinese.
+    if (script === 'Han' && (hasKana || base === 'ja')) lang = 'ja';
+    return lang === base ? null : lang;
   },
 
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
-    if (this.unregisterSweep) { this.unregisterSweep(); this.unregisterSweep = null; }
-    for (const handle of this.handles) handle.restore();
-    this.handles = [];
+    if (this.unregisterSweep) {
+      try { this.unregisterSweep(); } catch { /* ignore */ }
+      this.unregisterSweep = null;
+    }
+    while (this.handles.length) {
+      try { this.handles.pop().restore(); } catch { /* ignore */ }
+    }
     if (this.htmlLangAdded) {
       try { document.documentElement.removeAttribute('lang'); } catch { /* doc gone */ }
       this.htmlLangAdded = false;

@@ -3,7 +3,8 @@
 // position:static. Pinned bars eat the viewport when a low-vision user zooms
 // (WCAG 1.4.10 reflow leaves little room for the actual content) and force an
 // eye-gaze user to scroll around them; unpinning returns the full viewport to
-// the page.
+// the page. Dialogs, screen-covering sheets, tooltips and popovers are left
+// untouched so their positioning and containment do not break.
 //
 // Reversible by construction: pinned position can't be selected in a
 // stylesheet, so enable() scans computed styles and tags matches with a class
@@ -69,20 +70,25 @@ export const UnpinSticky = {
     if (!el || el.nodeType !== 1 || this.unpinned.has(el)) return false;
     // Other adapters' overlays (focus ring, magnifier lens, tooltip) are
     // fixed too, and stopped working once unpinned.
-    if (el.id && el.id.startsWith('ai4a11y-')) return false;
+    try {
+      if (el.closest('[id^="ai4a11y-"], [class*="ai4a11y-"]')) return false;
+    } catch {
+      if (el.id && el.id.startsWith('ai4a11y-')) return false;
+    }
     if (el.classList && el.classList.contains(this.unpinnedClass)) return false;
     let pos = '';
     try { pos = (getComputedStyle(el).position || '').toLowerCase(); } catch { return false; /* detached */ }
     if (pos !== 'fixed' && pos !== 'sticky') return false;
     // A dialog or a panel that covers the screen (an "Added to cart" sheet and
-    // its backdrop) is not a bar: unpinned, it dropped to the bottom of the page.
-    if (pos === 'fixed') {
-      try {
-        if (el.matches('dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"]')) return false;
+    // its backdrop), and transient popups (tooltips, popovers) are not bars:
+    // unpinned, they break or drop into the page.
+    try {
+      if (el.closest('dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"], [role="tooltip"], [popover]')) return false;
+      if (pos === 'fixed') {
         const vh = window.innerHeight || 0;
         if (vh && el.getBoundingClientRect().height >= vh * 0.5) return false;
-      } catch { /* detached */ }
-    }
+      }
+    } catch { /* detached */ }
     el.classList.add(this.unpinnedClass);
     this.unpinned.add(el);
     return true;
@@ -94,7 +100,10 @@ export const UnpinSticky = {
     if (this.observer) { this.observer.disconnect(); this.observer = null; }
     document.getElementById(this.styleId)?.remove();
     if (this.unpinned) {
-      for (const el of this.unpinned) el.classList?.remove(this.unpinnedClass);
+      for (const el of this.unpinned) {
+        el.classList?.remove(this.unpinnedClass);
+        if (el.classList && !el.classList.length) el.removeAttribute('class');
+      }
       this.unpinned.clear();
       this.unpinned = null;
     }

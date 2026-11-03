@@ -44,14 +44,20 @@ function keep(text, simplified) {
 }
 
 // The "Show original" button's focus ring is a box-shadow: pages that switch
-// the focus outline off with !important cannot hide it.
+// the focus outline off with !important cannot hide it. Target size meets
+// WCAG 2.5.8 (at least 24x24 px). Styles also cover the summary box.
 const STYLE_ID = 'ai4a11y-simplify-styles';
 function addStyles() {
   if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return;
   const style = document.createElement('style');
   style.id = STYLE_ID;
-  style.textContent = '.ai4a11y-toggle-original{margin-left:.5em;font-size:.85em;cursor:pointer}' +
-    '.ai4a11y-toggle-original:focus-visible{outline:2px solid #1a5fb4;outline-offset:2px;box-shadow:0 0 0 2px #fff,0 0 0 4px #1a5fb4}';
+  style.textContent = '.ai4a11y-toggle-original{margin-left:.5em;font-size:.85em;cursor:pointer;min-height:24px;min-width:24px;padding:2px 8px;box-sizing:border-box;vertical-align:middle;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit}' +
+    '.ai4a11y-toggle-original:focus-visible{outline:2px solid #1a5fb4;outline-offset:2px;box-shadow:0 0 0 2px #fff,0 0 0 4px #1a5fb4}' +
+    '.ai4a11y-summary-box{margin:1em 0;padding:.75em 1em;border:1px solid currentColor;border-left:4px solid currentColor;border-radius:4px;box-sizing:border-box}' +
+    '.ai4a11y-summary-header{display:flex;align-items:center;gap:.5em;font-weight:600;margin-bottom:.5em;font-size:.95em}' +
+    '.ai4a11y-summary-icon{display:inline-flex;align-items:center}' +
+    '.ai4a11y-summary-icon svg{display:block}' +
+    '.ai4a11y-summary-content{font-size:.95em;line-height:1.5}';
   (document.head || document.documentElement).appendChild(style);
 }
 
@@ -91,6 +97,7 @@ export function proseText(element) {
 
 // Simplify complex text for easier reading
 export async function simplifyText(element) {
+  if (!element || !element.dataset) return null;
   if (element.dataset.ai4a11ySimplified) return null;
   element.dataset.ai4a11ySimplified = 'pending';
 
@@ -185,6 +192,7 @@ export async function simplifyText(element) {
 
 // Add summary to long content
 export async function summarizeContent(element) {
+  if (!element || !element.dataset) return null;
   if (element.dataset.ai4a11ySummarize) return null;
   element.dataset.ai4a11ySummarize = 'pending';
 
@@ -215,6 +223,7 @@ export async function summarizeContent(element) {
     }
 
     if (summary && !rejected) {
+      addStyles();
 
       // Create summary box (build DOM to prevent XSS)
       const summaryBox = document.createElement('div');
@@ -226,7 +235,8 @@ export async function summarizeContent(element) {
       header.className = 'ai4a11y-summary-header';
       const icon = document.createElement('span');
       icon.className = 'ai4a11y-summary-icon';
-      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
       const headerText = document.createElement('span');
       headerText.textContent = 'Summary';
       header.appendChild(icon);
@@ -255,19 +265,40 @@ export async function summarizeContent(element) {
   }
 }
 
-// Restore original text
+// Restore original text and remove summaries. Callable per element or with
+// no arguments to restore all simplified and summarized content on the page.
 export function restoreOriginal(element) {
-  const originalWrapper = element.querySelector('.ai4a11y-original-content');
+  if (typeof document === 'undefined') return;
+
+  if (!element) {
+    document.querySelectorAll('.ai4a11y-summary-box').forEach((box) => box.remove());
+    document.querySelectorAll('.ai4a11y-simplified, [data-ai4a11y-simplified], [data-ai4a11y-summarize]').forEach(restoreOriginal);
+    document.getElementById(STYLE_ID)?.remove();
+    return;
+  }
+
+  if (element.classList?.contains('ai4a11y-summary-box')) {
+    element.remove();
+    return;
+  }
+
+  const summaryBox = element.querySelector(':scope > .ai4a11y-summary-box');
+  if (summaryBox) {
+    summaryBox.remove();
+  }
+  delete element.dataset.ai4a11ySummarize;
+
+  const originalWrapper = element.querySelector(':scope > .ai4a11y-original-content');
   if (originalWrapper) {
     // The button about to go has focus: keep the keyboard in this paragraph.
-    const toggle = element.querySelector('.ai4a11y-toggle-original');
+    const toggle = element.querySelector(':scope > .ai4a11y-toggle-original');
     if (toggle && toggle === document.activeElement && !element.hasAttribute('tabindex')) {
       element.setAttribute('tabindex', '-1');
       element.addEventListener('blur', () => element.removeAttribute('tabindex'), { once: true });
       queueMicrotask(() => { try { element.focus({ preventScroll: true }); } catch { /* not focusable */ } });
     }
-    element.querySelector('.ai4a11y-text-content')?.remove();
-    element.querySelector('.ai4a11y-toggle-original')?.remove();
+    element.querySelector(':scope > .ai4a11y-text-content')?.remove();
+    element.querySelector(':scope > .ai4a11y-toggle-original')?.remove();
     while (originalWrapper.firstChild) {
       element.appendChild(originalWrapper.firstChild);
     }
@@ -278,5 +309,7 @@ export function restoreOriginal(element) {
   delete element.dataset.ai4a11yShowOriginal;
   element.classList.remove('ai4a11y-simplified');
   if (!element.getAttribute('class')) element.removeAttribute('class');
-  if (typeof document !== 'undefined' && !document.querySelector('.ai4a11y-simplified')) document.getElementById(STYLE_ID)?.remove();
+  if (!document.querySelector('.ai4a11y-simplified, .ai4a11y-summary-box')) {
+    document.getElementById(STYLE_ID)?.remove();
+  }
 }

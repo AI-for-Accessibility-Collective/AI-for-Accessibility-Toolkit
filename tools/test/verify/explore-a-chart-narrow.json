@@ -1,0 +1,51 @@
+{
+  "name": "explore-a-chart-narrow",
+  "file": "tools/adapters/explore-a-chart.js",
+  "export": "ExploreAChart",
+  "page": "explore-a-chart.html",
+  "checks": [
+    {
+      "name": "chart detection and button attachment at narrow viewport",
+      "code": "\n      const canvas = document.getElementById('revenue-canvas');\n      const svg = document.getElementById('market-svg');\n      const img = document.getElementById('expenses-img');\n      if (!canvas || !svg || !img) return false;\n\n      const isEnabled = !!document.getElementById('ai4a11y-chart-styles');\n      const btns = Array.from(document.querySelectorAll('.ai4a11y-chart-btn'));\n      if (!isEnabled) return btns.length === 0;\n\n      return btns.length === 3;\n    "
+    },
+    {
+      "name": "panel fits within 320px viewport without overflow",
+      "code": "\n      const isEnabled = !!document.getElementById('ai4a11y-chart-styles');\n      if (!isEnabled) return true;\n\n      const btn = document.querySelector('.ai4a11y-chart-btn');\n      if (!btn) return false;\n\n      btn.click();\n      await new Promise(r => setTimeout(r, 60));\n\n      const panel = document.getElementById('ai4a11y-chart-panel');\n      if (!panel || panel.style.display !== 'block') return false;\n\n      const rect = panel.getBoundingClientRect();\n      const fitsViewport = rect.right <= window.innerWidth && rect.left >= 0;\n\n      // Close panel\n      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n      return fitsViewport && document.documentElement.scrollWidth <= window.innerWidth;\n    "
+    },
+    {
+      "name": "accessibility controls meet target size at 320px",
+      "code": "\n      const isEnabled = !!document.getElementById('ai4a11y-chart-styles');\n      if (!isEnabled) return true;\n\n      const btn = document.querySelector('.ai4a11y-chart-btn');\n      if (!btn) return false;\n\n      const btnRect = btn.getBoundingClientRect();\n      if (btnRect.width < 24 || btnRect.height < 24) return false;\n\n      btn.click();\n      await new Promise(r => setTimeout(r, 60));\n      const panel = document.getElementById('ai4a11y-chart-panel');\n      const closeBtn = panel?.querySelector('.ai4a11y-chart-close');\n      if (!closeBtn) return false;\n\n      const closeRect = closeBtn.getBoundingClientRect();\n      const meetsSize = closeRect.width >= 24 && closeRect.height >= 24;\n\n      closeBtn.click();\n      return meetsSize;\n    "
+    }
+  ],
+  "ai": {
+    "extractChartData": {
+      "caption": "Quarterly Revenue 2026",
+      "headers": [
+        "Quarter",
+        "Revenue ($M)"
+      ],
+      "rows": [
+        [
+          "Q1",
+          "10.5"
+        ],
+        [
+          "Q2",
+          "12.8"
+        ],
+        [
+          "Q3",
+          "14.2"
+        ],
+        [
+          "Q4",
+          "16.0"
+        ]
+      ]
+    }
+  },
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

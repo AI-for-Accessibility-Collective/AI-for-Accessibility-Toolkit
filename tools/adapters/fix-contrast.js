@@ -10,18 +10,25 @@ const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
 function isLargeText(element) {
   const style = getComputedStyle(element);
   const fontSize = parseFloat(style.fontSize) || 16; // px
-  const fontWeight = parseInt(style.fontWeight, 10) || 400;
-  const bold = fontWeight >= 700;
+  const weight = style.fontWeight;
+  const bold = weight === 'bold' || weight === 'bolder' || (parseInt(weight, 10) || 400) >= 700;
   // 18pt = 24px; 14pt = 18.67px
   return fontSize >= 24 || (bold && fontSize >= 18.67);
 }
 
 // Can't know the effective pixel color under a background-image, so a
 // computed fix could still fail (or look wrong) against the real pixels —
-// skip rather than guess.
+// skip rather than guess. Check the element and any transparent ancestor.
 function hasBackgroundImage(element) {
-  const bgImg = getComputedStyle(element).backgroundImage;
-  return !!bgImg && bgImg !== 'none';
+  let el = element;
+  while (el && el !== document.documentElement) {
+    const style = getComputedStyle(el);
+    const bgImg = style.backgroundImage;
+    if (bgImg && bgImg !== 'none') return true;
+    if (isOpaque(style.backgroundColor)) break;
+    el = el.parentElement;
+  }
+  return false;
 }
 
 // True only for a color with nothing showing through it: rgb(), hex, or an
@@ -60,6 +67,10 @@ export async function fixLowContrast(element, color, background) {
     background = getEffectiveBackground(element);
   }
 
+  if (!color) {
+    color = getComputedStyle(element).color;
+  }
+
   const large = isLargeText(element);
 
   // Gate: the element may already pass AA (axe's snapshot can be stale by
@@ -91,6 +102,9 @@ export async function fixLowContrast(element, color, background) {
   if (color) {
     element.dataset.ai4a11yOriginalColor = color;
   }
+  if (element.style.color) {
+    element.dataset.ai4a11yOriginalInlineColor = element.style.color;
+  }
 
   // Apply fix
   element.style.color = fixedColor;
@@ -108,10 +122,53 @@ export function fixIndistinguishableLink(link) {
   if (wasProcessed(link)) return;
   markProcessed(link, 'done');
 
+  if (link.style.textDecoration) {
+    link.dataset.ai4a11yOriginalTextDecoration = link.style.textDecoration;
+  }
   link.style.textDecoration = 'underline';
+  link.classList.add('ai4a11y-link-underlined');
   incrementStat('wcag');
   logFix('link-underline', link, '(none)', 'underline');
   console.log('[AI4A11y] Added underline to link');
+}
+
+// Restore original styling
+export function restoreOriginal(element) {
+  if (!element) {
+    const selector = '.ai4a11y-contrast-fixed, .ai4a11y-link-underlined, [data-ai4a11y-original-color], [data-ai4a11y-original-inline-color], [data-ai4a11y-original-text-decoration], [data-ai4a11y-processed]';
+    document.querySelectorAll(selector).forEach(restoreOriginal);
+    return;
+  }
+
+  if (element.classList.contains('ai4a11y-contrast-fixed') || element.dataset.ai4a11yOriginalColor !== undefined) {
+    if (element.dataset.ai4a11yOriginalInlineColor !== undefined) {
+      element.style.color = element.dataset.ai4a11yOriginalInlineColor;
+    } else {
+      element.style.removeProperty('color');
+    }
+    element.classList.remove('ai4a11y-contrast-fixed');
+    delete element.dataset.ai4a11yOriginalColor;
+    delete element.dataset.ai4a11yOriginalInlineColor;
+  }
+
+  if (element.classList.contains('ai4a11y-link-underlined') || element.dataset.ai4a11yOriginalTextDecoration !== undefined) {
+    if (element.dataset.ai4a11yOriginalTextDecoration !== undefined) {
+      element.style.textDecoration = element.dataset.ai4a11yOriginalTextDecoration;
+    } else {
+      element.style.removeProperty('text-decoration');
+    }
+    element.classList.remove('ai4a11y-link-underlined');
+    delete element.dataset.ai4a11yOriginalTextDecoration;
+  }
+
+  delete element.dataset.ai4a11yProcessed;
+
+  if (element.hasAttribute('style') && !element.getAttribute('style').trim()) {
+    element.removeAttribute('style');
+  }
+  if (element.hasAttribute('class') && !element.getAttribute('class').trim()) {
+    element.removeAttribute('class');
+  }
 }
 
 // Axe rule ID to handler mapping

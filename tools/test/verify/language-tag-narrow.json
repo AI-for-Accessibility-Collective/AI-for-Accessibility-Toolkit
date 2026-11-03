@@ -1,0 +1,28 @@
+{
+  "name": "language-tag-narrow",
+  "file": "tools/adapters/language-tag.js",
+  "export": "LanguageTag",
+  "page": "language-tag.html",
+  "checks": [
+    {
+      "name": "wraps untagged foreign-script runs in appropriate lang spans",
+      "code": "\n        const cjk = document.getElementById('cjk-prose');\n        const ru = document.getElementById('russian-prose');\n        const ar = document.getElementById('arabic-prose');\n        const ja = document.getElementById('japanese-prose');\n        const el = document.getElementById('greek-prose');\n        const th = document.getElementById('thai-prose');\n        const he = document.getElementById('hebrew-prose');\n        const hi = document.getElementById('hindi-prose');\n        const ko = document.getElementById('korean-prose');\n        if (!cjk || !ru || !ar || !ja || !el || !th || !he || !hi || !ko) return false;\n\n        const isEnabled = document.querySelector('.ai4a11y-lang') !== null;\n        if (!isEnabled) {\n          return !cjk.querySelector('span[lang]') && !ru.querySelector('span[lang]');\n        }\n\n        const cjkSpan = cjk.querySelector('span[lang=\"zh\"]');\n        const ruSpan = ru.querySelector('span[lang=\"ru\"]');\n        const arSpan = ar.querySelector('span[lang=\"ar\"]');\n        const jaSpan = ja.querySelector('span[lang=\"ja\"]');\n        const elSpan = el.querySelector('span[lang=\"el\"]');\n        const thSpan = th.querySelector('span[lang=\"th\"]');\n        const heSpan = he.querySelector('span[lang=\"he\"]');\n        const hiSpan = hi.querySelector('span[lang=\"hi\"]');\n        const koSpan = ko.querySelector('span[lang=\"ko\"]');\n\n        return !!(cjkSpan && cjkSpan.textContent === '世界' &&\n                  ruSpan && ruSpan.textContent === 'Привет' &&\n                  arSpan && arSpan.textContent === 'مرحبا' &&\n                  jaSpan && jaSpan.textContent === '春の海' &&\n                  elSpan && elSpan.textContent.includes('γνῶθι') &&\n                  thSpan && thSpan.textContent === 'สวัสดี' &&\n                  heSpan && heSpan.textContent === 'שלום' &&\n                  hiSpan && hiSpan.textContent === 'नमस्ते' &&\n                  koSpan && koSpan.textContent === '안녕하세요');\n      "
+    },
+    {
+      "name": "preserves pre-tagged content without overwriting or redundant wrapping",
+      "code": "\n        const ru = document.getElementById('pre-tagged-span-ru');\n        const ja = document.getElementById('pre-tagged-span-ja');\n        if (!ru || !ja) return false;\n\n        const isEnabled = document.querySelector('.ai4a11y-lang') !== null;\n        if (!isEnabled) {\n          return ru.getAttribute('lang') === 'ru' && ja.getAttribute('lang') === 'ja';\n        }\n\n        if (ru.querySelector('.ai4a11y-lang') !== null) return false;\n        if (ja.querySelector('.ai4a11y-lang') !== null) return false;\n        if (ja.querySelector('span[lang=\"zh\"]') !== null) return false;\n        if (ja.getAttribute('lang') !== 'ja') return false;\n        if (ru.getAttribute('lang') !== 'ru') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "preserves unselected elements: code, inputs, editable regions, and plain English",
+      "code": "\n        const plain = document.getElementById('plain-english');\n        const code = document.getElementById('sample-code');\n        const input = document.getElementById('search-term');\n        const editable = document.getElementById('content-editable-region');\n        if (!plain || !code || !input || !editable) return false;\n\n        if (plain.querySelector('.ai4a11y-lang')) return false;\n        if (code.querySelector('.ai4a11y-lang')) return false;\n        if (editable.querySelector('.ai4a11y-lang')) return false;\n        if (input.value !== 'Search 世界 articles') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "reflow at 320px wide maintains usable controls without overflow clipping",
+      "code": "\n        const btn = document.getElementById('search-button');\n        const input = document.getElementById('search-term');\n        if (!btn || !input) return false;\n\n        const btnRect = btn.getBoundingClientRect();\n        if (btnRect.width < 24 || btnRect.height < 24) return false;\n\n        const docWidth = document.documentElement.clientWidth;\n        return docWidth <= 320;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 640
+  }
+}

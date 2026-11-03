@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Observatory Dispatch — Navigating Deep-Space Stellar Surveys</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      color: #1a1a1a;
+      background: #fbfbfd;
+      line-height: 1.65;
+    }
+    header {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 1.25rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.6rem;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+      font-weight: 500;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #ffffff;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 780px;
+      margin: 2rem auto;
+      padding: 0 1.25rem;
+    }
+    article {
+      background: #ffffff;
+      padding: 2rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    h2 {
+      margin-top: 0;
+      color: #0f172a;
+      font-size: 1.5rem;
+      line-height: 1.3;
+    }
+    .byline {
+      font-size: 0.9rem;
+      color: #475569;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.75rem;
+    }
+    /* Long paragraphs simulating reading barrier for ADHD/dyslexia users */
+    p.reading-passage {
+      margin: 0 0 1.25rem 0;
+      font-size: 1.05rem;
+      color: #1e293b;
+      letter-spacing: 0.01em;
+    }
+    blockquote {
+      margin: 1.5rem 0;
+      padding: 1rem 1.25rem;
+      background: #f8fafc;
+      border-left: 4px solid #3b82f6;
+      font-style: italic;
+      color: #334155;
+    }
+    .actions-bar {
+      display: flex;
+      gap: 1rem;
+      margin: 1.75rem 0;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button.btn-action {
+      background: #0f172a;
+      color: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 6px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 36px;
+    }
+    button.btn-action:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+    }
+    .subscribe-form {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .subscribe-form label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #0f172a;
+    }
+    .subscribe-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .subscribe-row input[type="email"] {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.95rem;
+      border: 1px solid #64748b;
+      border-radius: 6px;
+      color: #0f172a;
+      min-width: 240px;
+      min-height: 36px;
+    }
+    .subscribe-row input[type="email"]:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+    }
+    aside {
+      max-width: 780px;
+      margin: 1.5rem auto;
+      padding: 0 1.25rem;
+    }
+    .sidebar-card {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+    }
+    .sidebar-card h3 {
+      margin-top: 0;
+      color: #0f172a;
+      font-size: 1.15rem;
+    }
+    .sidebar-card p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #334155;
+    }
+    footer {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 2rem 1.25rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #475569;
+      margin-top: 3rem;
+    }
+    footer p {
+      margin: 0.25rem 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Observatory Dispatch</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#article">Current Issue</a></li>
+        <li><a href="#archives">Survey Archives</a></li>
+        <li><a href="#about">About the Observatory</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="article">
+    <article>
+      <h2>Mapping Distant Spiral Arms Across Dense Stellar Fields</h2>
+      <p class="byline" id="article-byline">Published November 2026 &bull; By Dr. Kenneth Morales &bull; 8 min read</p>
+
+      <p class="reading-passage" id="passage-1">
+        Modern astrometry relies upon wide-field optical interferometry to disentangle overlapping star clusters
+        located near the galactic midplane. When cataloging thousands of candidate stars in crowded sectors, the
+        sheer density of catalog lines frequently overwhelms human visual tracking. Data analysts scanning tabular
+        ephemerides and high-resolution photographic plates report significant cognitive fatigue when navigating dense
+        rows without tactile or visual alignment markers.
+      </p>
+
+      <p class="reading-passage" id="passage-2">
+        To address this tracking challenge, automated optical alignment fixtures originally used in meridian transit
+        telescopes provide a useful model. By projecting a narrow horizontal optical baseline across the observational
+        field, astronomers could reliably reference drift velocities against fixed reticle intervals without losing
+        their coordinate registration mid-sweep.
+      </p>
+
+      <blockquote>
+        &ldquo;Sustained focus across high-density star fields demands consistent visual anchors that separate
+        active target lines from peripheral observational noise.&rdquo;
+      </blockquote>
+
+      <p class="reading-passage" id="passage-3">
+        In computational interfaces, digital reading rulers reproduce this exact stabilization effect. By
+        superimposing a translucent horizontal guide that moves in harmony with the observer's focal point while
+        softly attenuating surrounding lines, the visual cortex can maintain continuous line tracking across extended
+        paragraphs without skipping words or jumping between adjacent sentences.
+      </p>
+
+      <div class="actions-bar">
+        <button type="button" class="btn-action" id="btn-save">Save Article</button>
+        <button type="button" class="btn-action" id="btn-share">Share Summary</button>
+      </div>
+
+      <section class="subscribe-form" aria-labelledby="subscribe-heading">
+        <h3 id="subscribe-heading" style="margin-top:0;font-size:1.15rem;color:#0f172a;">Receive Weekly Sky Catalog Updates</h3>
+        <form id="newsletter-form" onsubmit="return false;">
+          <label for="newsletter-email">Email address for astronomical alerts</label>
+          <div class="subscribe-row">
+            <input type="email" id="newsletter-email" name="email" placeholder="astronomer@observatory.org" required>
+            <button type="submit" class="btn-action" id="btn-subscribe">Subscribe</button>
+          </div>
+        </form>
+      </section>
+    </article>
+  </main>
+
+  <aside aria-label="Observatory notes">
+    <div class="sidebar-card">
+      <h3 id="archives">Observational Methodology Archive</h3>
+      <p id="aside-text">
+        Calibration files, photometric catalogs, and raw CCD reduction pipelines are mirrored daily across
+        distributed European and North American academic clusters.
+      </p>
+    </div>
+  </aside>
+
+  <footer>
+    <p>&copy; 2026 Deep Space Observatory Consortium. All rights reserved.</p>
+    <p id="about">An open-access scientific publication supported by global astronomical research institutes.</p>
+  </footer>
+</body>
+</html>

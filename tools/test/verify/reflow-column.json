@@ -1,0 +1,28 @@
+{
+  "name": "reflow-column",
+  "file": "tools/adapters/reflow-column.js",
+  "export": "ReflowColumn",
+  "page": "reflow-column.html",
+  "checks": [
+    {
+      "name": "floats and CSS columns collapse into single vertical column",
+      "code": "\n        const article = document.querySelector('.main-article');\n        const aside = document.querySelector('.side-panel');\n        const multiCol = document.getElementById('multi-column-section');\n        if (!article || !aside || !multiCol) return false;\n\n        const isEnabled = document.documentElement.classList.contains('ai4a11y-reflow');\n        if (!isEnabled) {\n          const artStyle = window.getComputedStyle(article);\n          const asideStyle = window.getComputedStyle(aside);\n          const colStyle = window.getComputedStyle(multiCol);\n          return artStyle.float === 'left' && asideStyle.float === 'right' && colStyle.columnCount === '3';\n        }\n\n        const artStyle = window.getComputedStyle(article);\n        const asideStyle = window.getComputedStyle(aside);\n        const colStyle = window.getComputedStyle(multiCol);\n\n        if (artStyle.float !== 'none' || asideStyle.float !== 'none') return false;\n        if (colStyle.columnCount !== 'auto') return false;\n\n        const artRect = article.getBoundingClientRect();\n        const asideRect = aside.getBoundingClientRect();\n        return asideRect.top >= artRect.bottom - 5;\n      "
+    },
+    {
+      "name": "wide overflowing grid linearizes to single column",
+      "code": "\n        const grid = document.getElementById('wide-grid');\n        if (!grid) return false;\n\n        const isEnabled = document.documentElement.classList.contains('ai4a11y-reflow');\n        const cards = grid.querySelectorAll('.grid-card');\n        if (cards.length < 2) return false;\n\n        if (!isEnabled) {\n          return !grid.classList.contains('ai4a11y-reflow-grid');\n        }\n\n        if (!grid.classList.contains('ai4a11y-reflow-grid')) return false;\n        const c0 = cards[0].getBoundingClientRect();\n        const c1 = cards[1].getBoundingClientRect();\n        return c1.top >= c0.bottom - 5 && Math.abs(c0.left - c1.left) < 5;\n      "
+    },
+    {
+      "name": "squeezed flex row wraps and wide media is constrained to column",
+      "code": "\n        const squeezed = document.getElementById('squeezed-container');\n        const text = document.getElementById('squeezed-text');\n        const img = document.getElementById('wide-image');\n        if (!squeezed || !text || !img) return false;\n\n        const isEnabled = document.documentElement.classList.contains('ai4a11y-reflow');\n        if (!isEnabled) {\n          const sStyle = window.getComputedStyle(squeezed);\n          return sStyle.flexWrap === 'nowrap' && !squeezed.classList.contains('ai4a11y-reflow-wrap');\n        }\n\n        if (!squeezed.classList.contains('ai4a11y-reflow-wrap')) return false;\n        const sStyle = window.getComputedStyle(squeezed);\n        if (sStyle.flexWrap !== 'wrap') return false;\n\n        const imgRect = img.getBoundingClientRect();\n        const bodyRect = document.body.getBoundingClientRect();\n        return imgRect.width <= bodyRect.width + 1;\n      "
+    },
+    {
+      "name": "interactive controls remain accessible, focusable and operable",
+      "code": "\n        const btnSave = document.getElementById('btn-save');\n        const btnShare = document.getElementById('btn-share');\n        if (!btnSave || !btnShare) return false;\n\n        for (const btn of [btnSave, btnShare]) {\n          const r = btn.getBoundingClientRect();\n          if (r.width < 24 || r.height < 24) return false;\n        }\n\n        btnSave.focus();\n        if (document.activeElement !== btnSave) return false;\n        const style = window.getComputedStyle(btnSave);\n        const hasOutline = parseFloat(style.outlineWidth) >= 2 || style.outlineStyle !== 'none';\n        btnSave.click();\n        btnSave.blur();\n\n        return hasOutline;\n      "
+    },
+    {
+      "name": "compact toolbar that fits is left alone without wrapping",
+      "code": "\n        const toolbar = document.getElementById('toolbar');\n        if (!toolbar) return false;\n\n        const isEnabled = document.documentElement.classList.contains('ai4a11y-reflow');\n        if (isEnabled) {\n          return !toolbar.classList.contains('ai4a11y-reflow-wrap');\n        }\n        return true;\n      "
+    }
+  ]
+}

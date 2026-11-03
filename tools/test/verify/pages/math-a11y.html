@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Principles of Classical Physics &amp; Mathematics</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+      padding-bottom: 3rem;
+    }
+    header {
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 1.25rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+      font-size: 1rem;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #38bdf8;
+      outline-offset: 2px;
+    }
+    .layout {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    main {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 2rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #111827;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.5rem;
+      margin-top: 1.5rem;
+    }
+    p {
+      margin: 1rem 0;
+    }
+    .math-block {
+      background-color: #f3f4f6;
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    math {
+      font-size: 1.15rem;
+    }
+    img.math-eq, img.equation, img.math-formula, img.math {
+      max-height: 48px;
+      vertical-align: middle;
+    }
+    footer {
+      max-width: 860px;
+      margin: 2rem auto 0 auto;
+      padding: 1rem 1.5rem;
+      font-size: 0.875rem;
+      color: #4b5563;
+      border-top: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Department of Mathematical Physics</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#mathml-section">MathML Equations</a></li>
+        <li><a href="#images-section">Equation Images</a></li>
+        <li><a href="#reference-section">References</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <main>
+      <article>
+        <h2>Lecture 3: Fundamental Equations of Motion</h2>
+        <p id="intro-p">
+          In this module, we examine foundational equations represented in standard MathML notation
+          alongside legacy rendered graphics.
+        </p>
+
+        <section id="mathml-section" aria-labelledby="mathml-heading">
+          <h3 id="mathml-heading">MathML Representations</h3>
+
+          <p>
+            The kinetic energy factor is given by
+            <math id="math-frac"><mfrac><mn>1</mn><mn>2</mn></mfrac></math>.
+          </p>
+
+          <p>
+            The quadratic term is
+            <math id="math-power"><msup><mi>x</mi><mn>2</mn></msup></math>.
+          </p>
+
+          <p>
+            Initial velocity is denoted as
+            <math id="math-sub"><msub><mi>v</mi><mn>0</mn></msub></math>.
+          </p>
+
+          <p>
+            Indexed coordinate power:
+            <math id="math-subsup"><msubsup><mi>x</mi><mn>1</mn><mn>2</mn></msubsup></math>.
+          </p>
+
+          <p>
+            Radial root distance:
+            <math id="math-sqrt"><msqrt><mi>x</mi></msqrt></math>.
+          </p>
+
+          <p>
+            Higher order root:
+            <math id="math-root"><mroot><mi>x</mi><mn>3</mn></mroot></math>.
+          </p>
+
+          <p>
+            Derivative operator (focusable):
+            <math id="math-focusable" tabindex="0"><mfrac><mi>d</mi><mrow><mi>d</mi><mi>x</mi></mrow></mfrac></math>.
+          </p>
+
+          <p>
+            Author-provided alt text:
+            <math id="math-alttext" alttext="E equals m c squared"><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></math>.
+          </p>
+
+          <p>
+            Embedded TeX annotation:
+            <math id="math-tex"><semantics><mrow><mi>a</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a + b</annotation></semantics></math>.
+          </p>
+
+          <p>
+            Pre-labeled with aria-label:
+            <math id="math-already-labeled" aria-label="kinetic energy"><mi>K</mi></math>.
+          </p>
+
+          <p>
+            Pre-labeled with aria-labelledby:
+            <math id="math-already-labelledby" aria-labelledby="label-force"><mi>F</mi></math>
+            <span id="label-force">Force equation symbol</span>.
+          </p>
+
+          <p>
+            Decorative or hidden math:
+            <math id="math-hidden" aria-hidden="true"><mi>H</mi></math>.
+          </p>
+        </section>
+
+        <section id="images-section" aria-labelledby="images-heading">
+          <h3 id="images-heading">Rendered Image Equations</h3>
+
+          <p>
+            Codecogs TeX rendering:
+            <img id="img-codecogs" class="math-eq" src="math-eq.svg?x%5E2%2By%5E2" alt="">
+          </p>
+
+          <p>
+            Mathtex query rendering:
+            <img id="img-mathtex" class="equation" src="math-eq.svg?tex=%5Cint_0%5E1%20x%20dx" alt="">
+          </p>
+
+          <p>
+            Missing alt formula:
+            <img id="img-missing-alt" class="math-formula" src="math-eq.svg">
+          </p>
+
+          <p>
+            Generic equation image:
+            <img id="img-generic" class="math" src="math-eq.svg" alt="">
+          </p>
+
+          <p>
+            Math image already labeled:
+            <img id="img-already-labeled" class="math" src="math-eq.svg" aria-label="Conservation of momentum" alt="">
+          </p>
+
+          <p>
+            Non-math regular illustration:
+            <img id="img-photo" src="math-eq.svg" alt="A physics laboratory bench with equipment">
+          </p>
+
+          <p>
+            Non-math decorative graphic:
+            <img id="img-decorative" src="math-eq.svg" alt="" role="presentation">
+          </p>
+        </section>
+
+        <section id="reference-section" aria-labelledby="reference-heading">
+          <h3 id="reference-heading">References &amp; Notes</h3>
+          <p id="ref-note">All formulas conform to standard university physics curriculum guidelines.</p>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <p id="footer-copy">&copy; 2026 Department of Mathematical Physics. All rights reserved.</p>
+    </footer>
+  </div>
+</body>
+</html>

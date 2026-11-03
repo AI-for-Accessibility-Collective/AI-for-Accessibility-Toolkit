@@ -91,8 +91,9 @@ export const ReaderMode = {
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'ai4a11y-reader-close';
+    closeBtn.type = 'button';
     closeBtn.setAttribute('aria-label', 'Exit reader mode');
-    closeBtn.textContent = '✕ Exit Reader Mode';
+    closeBtn.innerHTML = '<span aria-hidden="true">✕ </span>Exit reader mode';
     container.appendChild(closeBtn);
 
     const title = document.createElement('h1');
@@ -168,6 +169,17 @@ export const ReaderMode = {
     tempDiv.querySelectorAll('script, iframe, object, embed, form, input, svg, style, link, meta, base, noscript, template, math').forEach(el => el.remove());
     // Nothing in the reader plays by itself.
     tempDiv.querySelectorAll('video, audio').forEach(el => { el.removeAttribute('autoplay'); el.setAttribute('controls', ''); });
+    // Strip redundant main landmarks from article content so the overlay is the sole main landmark.
+    tempDiv.querySelectorAll('main').forEach(el => {
+      const div = document.createElement('div');
+      while (el.firstChild) div.appendChild(el.firstChild);
+      for (const attr of el.attributes) div.setAttribute(attr.name, attr.value);
+      el.replaceWith(div);
+    });
+    tempDiv.querySelectorAll('[role="main"]').forEach(el => el.removeAttribute('role'));
+    tempDiv.querySelectorAll('img').forEach(img => {
+      if (!img.hasAttribute('alt')) img.setAttribute('alt', '');
+    });
     const dangerousUrlAttrs = ['href', 'src', 'srcset', 'action', 'formaction', 'srcdoc', 'poster', 'xlink:href'];
     const dangerousPrefixes = ['javascript:', 'vbscript:', 'data:text/html', 'data:application', 'data:image/svg+xml'];
     tempDiv.querySelectorAll('*').forEach(el => {
@@ -259,19 +271,23 @@ export const ReaderMode = {
         display: block;
         margin: 0 0 12px auto;
         padding: 10px 20px;
+        min-height: 44px;
+        min-width: 44px;
         background: #333;
         color: #fff;
         border: none;
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
+        line-height: 24px;
         z-index: 1;
       `;
     }
 
-    // Article content comes with its own sizes: keep photos, tables and code
-    // inside the column, so nothing is blown up or scrolls sideways on a
-    // phone. The focus ring is a box-shadow, which pages that turn the focus
+    // Article content comes with its own sizes and inherited page styles:
+    // keep photos, tables and code inside the column, and reset backgrounds
+    // and text colors so page stylesheets cannot cause contrast failures.
+    // The focus ring is a box-shadow, which pages that turn the focus
     // outline off cannot hide.
     let style = document.getElementById(STYLE_ID);
     if (!style) {
@@ -289,8 +305,35 @@ export const ReaderMode = {
       #ai4a11y-reader-mode td > p, #ai4a11y-reader-mode th > p { margin: 0; }
       #ai4a11y-reader-mode pre { max-width: 100%; overflow-x: auto; white-space: pre-wrap; }
       #ai4a11y-reader-mode .ai4a11y-reader-content { overflow-wrap: anywhere; }
-      #ai4a11y-reader-mode a { color: #0b57d0; }
+      #ai4a11y-reader-mode .ai4a11y-reader-content :not(a, button) {
+        color: inherit !important;
+        background-color: transparent !important;
+      }
+      #ai4a11y-reader-mode header, #ai4a11y-reader-mode footer,
+      #ai4a11y-reader-mode section, #ai4a11y-reader-mode article,
+      #ai4a11y-reader-mode main, #ai4a11y-reader-mode aside,
+      #ai4a11y-reader-mode div, #ai4a11y-reader-mode p,
+      #ai4a11y-reader-mode h1, #ai4a11y-reader-mode h2,
+      #ai4a11y-reader-mode h3, #ai4a11y-reader-mode h4,
+      #ai4a11y-reader-mode h5, #ai4a11y-reader-mode h6,
+      #ai4a11y-reader-mode figcaption {
+        background-color: transparent !important;
+        background-image: none !important;
+      }
+      #ai4a11y-reader-mode a { color: #0b57d0 !important; text-decoration: underline !important; }
       #ai4a11y-reader-mode :focus-visible { outline: 3px solid #0b57d0 !important; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
+      #ai4a11y-reader-mode .ai4a11y-reader-close:focus-visible,
+      #ai4a11y-reader-mode .ai4a11y-reader-close:focus {
+        outline: 3px solid #0b57d0 !important;
+        outline-offset: 2px !important;
+        box-shadow: 0 0 0 5px #fff !important;
+      }
+      #ai4a11y-reader-mode a:focus-visible,
+      #ai4a11y-reader-mode a:focus {
+        outline: 3px solid #0b57d0 !important;
+        outline-offset: 2px !important;
+        box-shadow: 0 0 0 5px #fff !important;
+      }
       #ai4a11y-reader-mode .ai4a11y-reader-title:focus { outline: none !important; box-shadow: none; }
     `;
   },
@@ -318,6 +361,7 @@ export const ReaderMode = {
       document.removeEventListener('keydown', this.escapeHandler);
       this.escapeHandler = null;
     }
+    this.originalContent = null;
     this.enabled = false;
     console.log('[AI4A11y] Reader Mode disabled');
     announce('Reader mode disabled');

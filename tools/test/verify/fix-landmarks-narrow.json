@@ -1,0 +1,24 @@
+{
+  "name": "fix-landmarks-narrow",
+  "file": "tools/adapters/fix-landmarks.js",
+  "export": "FixLandmarks",
+  "page": "fix-landmarks.html",
+  "checks": [
+    {
+      "name": "missing landmarks are inferred and assigned appropriate ARIA roles",
+      "code": "\n      const masthead = document.getElementById('masthead');\n      const nav = document.getElementById('primary-nav');\n      const main = document.getElementById('main-content');\n      const colophon = document.getElementById('colophon');\n      if (!masthead || !nav || !main || !colophon) return false;\n\n      const isEnabled = typeof window.__ai4a11yFixLandmarks !== 'undefined' && window.__ai4a11yFixLandmarks.enabled;\n      if (!isEnabled) {\n        return masthead.getAttribute('role') === null &&\n               nav.getAttribute('role') === null &&\n               main.getAttribute('role') === null &&\n               colophon.getAttribute('role') === null;\n      }\n\n      return masthead.getAttribute('role') === 'banner' &&\n             nav.getAttribute('role') === 'navigation' &&\n             main.getAttribute('role') === 'main' &&\n             colophon.getAttribute('role') === 'contentinfo';\n    "
+    },
+    {
+      "name": "content that should not receive landmark roles is left alone",
+      "code": "\n      const cookie = document.getElementById('cookie-notice');\n      const sidebar = document.getElementById('sidebar-widget');\n      const prose = document.getElementById('prose-links');\n      if (!cookie || !sidebar || !prose) return false;\n\n      if (cookie.getAttribute('role') === 'banner' || cookie.getAttribute('role') === 'main') return false;\n      if (sidebar.getAttribute('role') !== 'complementary') return false;\n      if (prose.getAttribute('role') === 'navigation' || prose.getAttribute('role') === 'main') return false;\n\n      return true;\n    "
+    },
+    {
+      "name": "landmarks structure and reflow at 320px viewport satisfy accessibility standards",
+      "code": "\n      const isEnabled = typeof window.__ai4a11yFixLandmarks !== 'undefined' && window.__ai4a11yFixLandmarks.enabled;\n      if (!isEnabled) return true;\n\n      // No horizontal overflow at 320px\n      const bodyWidth = document.body.clientWidth;\n      const scrollWidth = document.documentElement.scrollWidth;\n      if (scrollWidth > window.innerWidth) return false;\n\n      const mains = document.querySelectorAll('[role=\"main\"], main');\n      const banners = document.querySelectorAll('[role=\"banner\"], header');\n      const footers = document.querySelectorAll('[role=\"contentinfo\"], footer');\n\n      if (mains.length !== 1 || banners.length !== 1 || footers.length !== 1) return false;\n\n      const firstLink = document.querySelector('#primary-nav a');\n      if (!firstLink) return false;\n\n      const rect = firstLink.getBoundingClientRect();\n      if (rect.width < 24 || rect.height < 24) return false;\n\n      firstLink.focus();\n      const hasFocus = document.activeElement === firstLink;\n      firstLink.blur();\n\n      return hasFocus;\n    "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 640
+  }
+}

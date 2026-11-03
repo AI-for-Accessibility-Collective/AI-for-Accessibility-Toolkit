@@ -1,0 +1,28 @@
+{
+  "name": "sound-visualizer-narrow",
+  "file": "tools/adapters/sound-visualizer.js",
+  "export": "SoundVisualizer",
+  "page": "sound-visualizer.html",
+  "checks": [
+    {
+      "name": "indicator element exists and is hidden initially",
+      "code": "\n        const ind = document.getElementById('ai4a11y-sound-indicator');\n        const adapter = window.__ai4a11ySoundVisualizer;\n        if (!adapter || !adapter.enabled) return ind === null;\n        return ind !== null && ind.style.display === 'none';\n      "
+    },
+    {
+      "name": "indicator displays on unmuted play and stays within 320px viewport bounds",
+      "code": "\n        const adapter = window.__ai4a11ySoundVisualizer;\n        if (!adapter || !adapter.enabled) return true;\n\n        const ind = document.getElementById('ai4a11y-sound-indicator');\n        const vStream = document.getElementById('video-stream');\n        if (!ind || !vStream) return false;\n\n        vStream.dispatchEvent(new Event('play', { bubbles: true }));\n        if (ind.style.display === 'none') return false;\n\n        const rect = ind.getBoundingClientRect();\n        if (rect.left < 0 || rect.right > window.innerWidth) return false;\n        if (rect.top < 0 || rect.bottom > window.innerHeight) return false;\n\n        adapter._hide();\n        return true;\n      "
+    },
+    {
+      "name": "interactive page controls remain accessible and sized >= 24px in 320px viewport",
+      "code": "\n        const controls = [\n          document.getElementById('nav-streams'),\n          document.getElementById('btn-trigger-video'),\n          document.getElementById('btn-trigger-muted'),\n          document.getElementById('btn-trigger-audio'),\n          document.getElementById('btn-submit-feedback'),\n          document.getElementById('feedback-input')\n        ].filter(Boolean);\n\n        for (const ctrl of controls) {\n          const rect = ctrl.getBoundingClientRect();\n          if (rect.width < 24 || rect.height < 24) return false;\n        }\n        return true;\n      "
+    },
+    {
+      "name": "ordinary page content is preserved in narrow viewport",
+      "code": "\n        const h1 = document.querySelector('header h1');\n        const lead = document.getElementById('lead-paragraph');\n        const footerP = document.getElementById('footer-text');\n        if (!h1 || !lead || !footerP) return false;\n        return h1.textContent.includes('SoundPulse Media') &&\n               lead.textContent.includes('SoundPulse provides daily streams') &&\n               footerP.textContent.includes('SoundPulse Media Hub');\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "file": "tools/adapters/generate-captions.js",
+  "ai": {
+    "transcribeVideo": {
+      "text": "AI generated captions for live site video."
+    },
+    "transcribeAudio": {
+      "text": "AI generated transcript for live site audio."
+    }
+  },
+  "harness": {
+    "enable": "\n      const results = await axe.run({\n        rules: { 'audio-caption': { enabled: true }, 'video-caption': { enabled: true } },\n        runOnly: { type: 'rule', values: Object.keys(m.axeHandlers) }\n      });\n      for (const item of [...(results.violations || []), ...(results.incomplete || [])]) {\n        const handler = m.axeHandlers[item.id];\n        if (!handler) continue;\n        for (const node of item.nodes || []) {\n          try {\n            const selector = Array.isArray(node.target) ? node.target.join(' ') : node.target;\n            const el = document.querySelector(selector);\n            if (el) await handler(el);\n          } catch (e) {\n            console.error('Handler error:', e);\n          }\n        }\n      }\n    ",
+    "disable": "\n      if (typeof m.restoreOriginal === 'function') {\n        m.restoreOriginal();\n      }\n    "
+  },
+  "sites": "all"
+}

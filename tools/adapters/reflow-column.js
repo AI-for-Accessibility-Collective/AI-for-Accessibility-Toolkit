@@ -7,7 +7,7 @@
 //
 // Reversible by construction: one class on <html> + one injected <style>
 // whose rules are all scoped under that class, plus marker classes on the
-// grid/flex boxes that didn't fit (tracked in a Set). disable() removes all
+// grid/flex boxes that didn't fit (tracked in a Map). disable() removes all
 // of them and restores the page exactly.
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
@@ -20,14 +20,18 @@ export const ReflowColumn = {
   wrapClass: 'ai4a11y-reflow-wrap',
   enabled: false,
   style: null,
-  marked: null,          // Set of boxes we gave a marker class (for exact restore)
+  marked: null,          // Map of boxes we gave a marker class -> original class attribute (for exact restore)
+  origHtmlClass: null,
   unregisterSweep: null,
   resizeHandler: null,
 
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
-    this.marked = new Set();
+    this.marked = new Map();
+    this.origHtmlClass = (typeof document !== 'undefined' && document.documentElement?.hasAttribute('class'))
+      ? document.documentElement.getAttribute('class')
+      : null;
     const width = options.width || 720; // px, comfortable reading measure
 
     const scope = `html.${this.rootClass}`;
@@ -142,7 +146,12 @@ ${scope} table {
         }
       }
       if (!found.size) break;
-      for (const [el, cls] of found) { el.classList.add(cls); this.marked.add(el); }
+      for (const [el, cls] of found) {
+        if (!this.marked.has(el)) {
+          this.marked.set(el, el.hasAttribute('class') ? el.getAttribute('class') : null);
+        }
+        el.classList.add(cls);
+      }
     }
   },
 
@@ -169,12 +178,27 @@ ${scope} table {
       this.resizeHandler = null;
     }
     if (this.marked) {
-      for (const el of this.marked) {
-        try { el.classList.remove(this.gridClass, this.wrapClass); } catch { /* detached */ }
+      for (const [el, origClass] of this.marked) {
+        try {
+          if (origClass === null) {
+            el.classList.remove(this.gridClass, this.wrapClass);
+            if (!el.getAttribute('class')) el.removeAttribute('class');
+          } else {
+            el.setAttribute('class', origClass);
+          }
+        } catch { /* detached */ }
       }
       this.marked = null;
     }
-    try { document.documentElement.classList.remove(this.rootClass); } catch { /* detached */ }
+    try {
+      if (this.origHtmlClass === null) {
+        document.documentElement.classList.remove(this.rootClass);
+        if (!document.documentElement.getAttribute('class')) document.documentElement.removeAttribute('class');
+      } else {
+        document.documentElement.setAttribute('class', this.origHtmlClass);
+      }
+    } catch { /* detached */ }
+    this.origHtmlClass = null;
     try { this.style?.remove(); } catch { /* detached */ }
     try { document.getElementById(this.styleId)?.remove(); } catch { /* detached */ }
     this.style = null;

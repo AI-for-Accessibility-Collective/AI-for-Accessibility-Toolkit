@@ -1,0 +1,36 @@
+{
+  "name": "show-captions-narrow",
+  "file": "tools/adapters/show-captions.js",
+  "export": "ShowCaptions",
+  "page": "show-captions.html",
+  "checks": [
+    {
+      "name": "multilingual video switches english caption track to showing and leaves other tracks disabled",
+      "code": "\n      const v = document.getElementById('video-multilingual');\n      if (!v) return false;\n      const tracks = [...v.textTracks];\n      const fr = tracks.find((t) => t.language === 'fr');\n      const en = tracks.find((t) => t.language === 'en' && t.kind === 'captions');\n      const desc = tracks.find((t) => t.kind === 'descriptions');\n      if (!fr || !en || !desc) return false;\n      const adapter = window.__ai4a11yShowCaptions;\n      if (!adapter || !adapter.enabled) {\n        return en.mode === 'disabled' && fr.mode === 'disabled' && desc.mode === 'disabled';\n      }\n      return en.mode === 'showing' && fr.mode === 'disabled' && desc.mode === 'disabled' && v.dataset.ai4a11yCaptions === 'on';\n    "
+    },
+    {
+      "name": "fallback video selects first track when preferred language is unavailable",
+      "code": "\n      const v = document.getElementById('video-fallback');\n      if (!v) return false;\n      const tracks = [...v.textTracks];\n      const de = tracks.find((t) => t.language === 'de');\n      const es = tracks.find((t) => t.language === 'es');\n      if (!de || !es) return false;\n      const adapter = window.__ai4a11yShowCaptions;\n      if (!adapter || !adapter.enabled) {\n        return de.mode === 'disabled' && es.mode === 'disabled';\n      }\n      return de.mode === 'showing' && es.mode === 'disabled' && v.dataset.ai4a11yCaptions === 'on';\n    "
+    },
+    {
+      "name": "player CC button toggles on and uncaptioned video is untouched",
+      "code": "\n      const btn = document.querySelector('.ytp-subtitles-button');\n      const vNoTracks = document.getElementById('video-no-tracks');\n      const vAlready = document.getElementById('video-already-on');\n      if (!btn || !vNoTracks || !vAlready) return false;\n\n      const adapter = window.__ai4a11yShowCaptions;\n      if (!adapter || !adapter.enabled) {\n        return btn.getAttribute('aria-pressed') === 'false' &&\n               !vNoTracks.dataset.ai4a11yCaptions &&\n               vNoTracks.textTracks.length === 0;\n      }\n\n      const btnOn = btn.getAttribute('aria-pressed') === 'true';\n      const untouched = !vNoTracks.dataset.ai4a11yCaptions && vNoTracks.textTracks.length === 0;\n      const alreadyMarked = vAlready.dataset.ai4a11yCaptions === 'on' && vAlready.textTracks[0]?.mode === 'showing';\n\n      return btnOn && untouched && alreadyMarked;\n    "
+    },
+    {
+      "name": "does not fight user toggle and handles dynamically added video",
+      "code": "\n      const adapter = window.__ai4a11yShowCaptions;\n      if (!adapter || !adapter.enabled) return true;\n\n      const v = document.getElementById('video-multilingual');\n      if (!v) return false;\n      const en = [...v.textTracks].find((t) => t.language === 'en' && t.kind === 'captions');\n      if (!en) return false;\n\n      en.mode = 'disabled';\n      adapter.enable();\n      if (en.mode !== 'disabled') return false;\n      en.mode = 'showing';\n\n      const newVideo = document.createElement('video');\n      newVideo.id = 'video-dynamic-test-narrow';\n      const newTrack = document.createElement('track');\n      newTrack.kind = 'captions';\n      newTrack.srclang = 'en';\n      newTrack.label = 'English';\n      newTrack.src = 'data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ADynamicNarrow';\n      newVideo.appendChild(newTrack);\n      document.getElementById('seminars').appendChild(newVideo);\n\n      await new Promise((r) => setTimeout(r, 50));\n      adapter.enable();\n      const dynTracks = [...newVideo.textTracks];\n      const dynEn = dynTracks.find((t) => t.language === 'en');\n      const dynamicHandled = dynEn && dynEn.mode === 'showing';\n\n      newVideo.remove();\n      return Boolean(dynamicHandled);\n    "
+    },
+    {
+      "name": "accessibility: controls reachable, sized at least 24x24, visible focus, unobstructed at 320px",
+      "code": "\n      const btnAction = document.getElementById('btn-download-quantum');\n      const searchInput = document.getElementById('search-input');\n      const searchBtn = document.getElementById('btn-search');\n      const ccBtn = document.querySelector('.ytp-subtitles-button');\n      if (!btnAction || !searchInput || !searchBtn || !ccBtn) return false;\n\n      for (const el of [btnAction, searchBtn, ccBtn]) {\n        el.scrollIntoView();\n        const rect = el.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n\n        el.focus();\n        if (document.activeElement !== el) return false;\n\n        const style = window.getComputedStyle(el);\n        const outlineWidth = parseFloat(style.outlineWidth) || 0;\n        if (outlineWidth < 2) return false;\n\n        const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);\n        if (hit !== el && !el.contains(hit)) return false;\n\n        el.blur();\n      }\n\n      window.scrollTo(0, 0);\n      return true;\n    "
+    },
+    {
+      "name": "leaves ordinary page content intact at 320px",
+      "code": "\n      const h1 = document.querySelector('header h1');\n      const nav = document.querySelector('nav');\n      const navLinks = document.querySelectorAll('nav a');\n      const lead = document.getElementById('lead-quantum');\n      const prose = document.getElementById('prose-notes');\n      const footer = document.getElementById('footer-text');\n\n      if (!h1 || !nav || navLinks.length !== 3 || !lead || !prose || !footer) return false;\n      if (!h1.textContent.includes('Open Science Video Archive')) return false;\n      if (!lead.textContent.includes('Introductory lecture recorded')) return false;\n      if (!prose.textContent.includes('Registered students may access')) return false;\n      if (!footer.textContent.includes('Open Science Foundation')) return false;\n\n      return true;\n    "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

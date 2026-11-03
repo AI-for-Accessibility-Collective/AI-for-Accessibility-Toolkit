@@ -1,0 +1,11 @@
+{
+  "file": "tools/adapters/visual-assist.js",
+  "export": "VisualAssist",
+  "options": {
+    "fontScale": 130,
+    "lineHeight": 1.8,
+    "enhanceFocus": true,
+    "readingGuide": true
+  },
+  "sites": "all"
+}

@@ -149,20 +149,18 @@ export async function generateIframeTitle(iframe) {
   }
 
   // Extract hostname as fallback
+  let title;
   try {
     const url = new URL(src);
-    const title = `Embedded content from ${url.hostname}`;
-    iframe.setAttribute('title', title);
-    markProcessed(iframe, 'done');
-    incrementStat('labels');
-    logFix('iframe title', iframe, '(empty)', title);
-    return title;
+    title = url.hostname ? `Embedded content from ${url.hostname}` : 'Embedded content';
   } catch {
-    const title = 'Embedded content';
-    iframe.setAttribute('title', title);
-    markProcessed(iframe, 'done');
-    return title;
+    title = 'Embedded content';
   }
+  iframe.setAttribute('title', title);
+  markProcessed(iframe, 'done');
+  incrementStat('labels');
+  logFix('iframe title', iframe, '(empty)', title);
+  return title;
 }
 
 // Generate label for form input.
@@ -220,8 +218,11 @@ export async function generateFormLabel(input) {
 
 // Infer button label from class names and icons
 function inferButtonLabel(button) {
-  const className = button.className?.toLowerCase() || '';
-  const svgPaths = button.querySelector('svg path')?.getAttribute('d') || '';
+  const className = (typeof button.className === 'string'
+    ? button.className
+    : button.getAttribute?.('class') || ''
+  ).toLowerCase();
+  const svgPaths = button.querySelector?.('svg path')?.getAttribute('d') || '';
 
   const patterns = {
     close: ['close', 'dismiss', 'x-btn', 'btn-close'],
@@ -262,25 +263,33 @@ function getContextForElement(el) {
   return clone.textContent?.trim().substring(0, 200) || '';
 }
 
+function getValidSiblingText(el) {
+  if (!el) return null;
+  const tag = el.tagName?.toLowerCase();
+  if (['script', 'style', 'template', 'noscript', 'input', 'select', 'textarea', 'button'].includes(tag)) {
+    return null;
+  }
+  const text = el.textContent?.trim().replace(/:$/, '');
+  if (text && text.length < 60 && !/\n/.test(text)) {
+    return text;
+  }
+  return null;
+}
+
 // Get text from nearby siblings
 function getNearbyText(input) {
-  const prev = input.previousElementSibling;
-  const next = input.nextElementSibling;
+  const prevText = getValidSiblingText(input.previousElementSibling);
+  if (prevText) return prevText;
+
+  const nextText = getValidSiblingText(input.nextElementSibling);
+  if (nextText) return nextText;
+
   const parent = input.parentElement;
-
-  if (prev?.textContent?.trim()) {
-    return prev.textContent.trim().replace(/:$/, '');
-  }
-
-  if (next?.textContent?.trim()) {
-    return next.textContent.trim().replace(/:$/, '');
-  }
-
   if (parent) {
     const clone = parent.cloneNode(true);
-    clone.querySelectorAll('input, select, textarea, button').forEach(e => e.remove());
-    const text = clone.textContent?.trim();
-    if (text && text.length < 50) return text.replace(/:$/, '');
+    clone.querySelectorAll('script, style, template, noscript, input, select, textarea, button').forEach(e => e.remove());
+    const text = clone.textContent?.trim().replace(/:$/, '');
+    if (text && text.length < 60 && !/\n/.test(text)) return text;
   }
 
   return null;

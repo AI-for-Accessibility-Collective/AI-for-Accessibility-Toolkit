@@ -1,0 +1,24 @@
+{
+  "name": "reading-ruler-narrow",
+  "file": "tools/adapters/reading-ruler.js",
+  "export": "ReadingRuler",
+  "page": "reading-ruler.html",
+  "checks": [
+    {
+      "name": "band and dimming shades span full viewport width at 320px narrow viewport",
+      "code": "\n        const band = document.getElementById('ai4a11y-reading-ruler');\n        if (!band) return true;\n\n        const cs = window.getComputedStyle(band);\n        if (cs.position !== 'fixed' || cs.pointerEvents !== 'none') return false;\n        const rect = band.getBoundingClientRect();\n        if (Math.abs(rect.width - 320) > 2) return false;\n        return true;\n      "
+    },
+    {
+      "name": "ruler repositions accurately on narrow screen without causing horizontal overflow",
+      "code": "\n        const band = document.getElementById('ai4a11y-reading-ruler');\n        if (!band) return true;\n\n        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 160, clientY: 200 }));\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 40)));\n\n        const top = parseFloat(band.style.top);\n        if (Math.abs(top - 180) > 2) return false;\n\n        const docWidth = document.documentElement.scrollWidth;\n        const winWidth = window.innerWidth;\n        return docWidth <= winWidth;\n      "
+    },
+    {
+      "name": "underlying content and controls remain accessible and functional on narrow viewport",
+      "code": "\n        const btnSave = document.getElementById('btn-save');\n        const input = document.getElementById('newsletter-email');\n        if (!btnSave || !input) return false;\n\n        const r = btnSave.getBoundingClientRect();\n        if (r.width < 24 || r.height < 24) return false;\n\n        btnSave.focus();\n        if (document.activeElement !== btnSave) return false;\n        btnSave.blur();\n\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

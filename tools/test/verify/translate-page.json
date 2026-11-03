@@ -1,0 +1,37 @@
+{
+  "name": "translate-page",
+  "file": "tools/adapters/translate-page.js",
+  "page": "translate-page.html",
+  "options": {
+    "targetLang": "Spanish"
+  },
+  "checks": [
+    {
+      "name": "targeted elements exist and are accessible before translation",
+      "code": "\n        const h1 = document.getElementById('main-title');\n        const link = document.getElementById('author-link');\n        const btn = document.getElementById('btn-reserve');\n        const brand = document.getElementById('brand-span');\n        const code = document.getElementById('pre-code');\n        const live = document.getElementById('live-announcer');\n        return !!h1 && !!link && !!btn && !!brand && !!code && !!live;\n      "
+    },
+    {
+      "name": "text pieces are translated in place",
+      "code": "\n        const isTranslated = document.documentElement.getAttribute('lang') === 'es';\n        if (!isTranslated) {\n          return document.getElementById('main-title').textContent.includes('Welcome to the Community');\n        }\n        const h1 = document.getElementById('main-title');\n        const hero = document.getElementById('hero-tagline');\n        const bookTitle = document.getElementById('book-title');\n        const btn = document.getElementById('btn-reserve');\n        return h1.textContent === 'Bienvenidos a la Sala de Lectura Comunitaria' &&\n               hero.textContent.includes('Descubra miles de libros') &&\n               bookTitle.textContent === 'El arte del diseño accesible' &&\n               btn.textContent === 'Reservar libro';\n      "
+    },
+    {
+      "name": "inline links and formatting keep elements and whitespace intact",
+      "code": "\n        const isTranslated = document.documentElement.getAttribute('lang') === 'es';\n        const link = document.getElementById('author-link');\n        const desc = document.getElementById('book-desc');\n        if (!link || !desc) return false;\n        if (!isTranslated) {\n          return link.getAttribute('href') === '#author-bio' && link.textContent === 'author biography';\n        }\n        const text = desc.textContent;\n        const keepsSpaces = text.includes('nuestra biografía del autor para más detalles');\n        const linkSurvives = link.tagName === 'A' &&\n                             link.getAttribute('href') === '#author-bio' &&\n                             link.textContent === 'biografía del autor';\n        return keepsSpaces && linkSurvives;\n      "
+    },
+    {
+      "name": "code, sample, kbd, translate=no, contenteditable, and live regions left untouched",
+      "code": "\n        const pre = document.getElementById('pre-code');\n        const kbd = document.getElementById('search-kbd');\n        const samp = document.getElementById('sample-out');\n        const brand = document.getElementById('brand-span');\n        const corp = document.getElementById('corp-span');\n        const notes = document.getElementById('editable-notes');\n        const live = document.getElementById('live-announcer');\n        const alertBox = document.getElementById('alert-box');\n        return pre.textContent.includes('npm install @community/catalog-cli') &&\n               kbd.textContent === 'Ctrl' &&\n               samp.textContent === 'Loaded 42 titles successfully' &&\n               brand.textContent === 'OpenCode Global' &&\n               corp.textContent === 'CommunityBooks Ltd' &&\n               notes.textContent.includes('Type your personal reading notes here.') &&\n               live.textContent.includes('Current study desks available: 14 open desks.') &&\n               alertBox.textContent.includes('Notice: The reading room closes at 9:00 PM tonight.');\n      "
+    },
+    {
+      "name": "interactive controls remain keyboard accessible with visible focus and 24x24 target size",
+      "code": "\n        const btn = document.getElementById('btn-reserve');\n        const link = document.getElementById('author-link');\n        const nav = document.getElementById('nav-catalog');\n        if (!btn || !link || !nav) return false;\n        btn.focus();\n        const btnFocused = document.activeElement === btn;\n        const btnRect = btn.getBoundingClientRect();\n        nav.focus();\n        const navFocused = document.activeElement === nav;\n        const navRect = nav.getBoundingClientRect();\n        btn.blur();\n        nav.blur();\n        return btnFocused && navFocused &&\n               btnRect.width >= 24 && btnRect.height >= 24 &&\n               navRect.width >= 24 && navRect.height >= 24;\n      "
+    },
+    {
+      "name": "voice language attribute and status announcements set",
+      "code": "\n        const isTranslated = document.documentElement.getAttribute('lang') === 'es';\n        if (!isTranslated) return true;\n        const announced = globalThis.__verifyAnnounced || [];\n        const hasStart = announced.some(a => a.includes('Translating to Spanish'));\n        const hasDone = announced.some(a => a.includes('Translated') && a.includes('passages to Spanish'));\n        return hasStart && hasDone && document.documentElement.getAttribute('lang') === 'es';\n      "
+    }
+  ],
+  "ai": {
+    "translateText": "[1] Catálogo de libros\n[2] Próximos eventos\n[3] Contáctenos\n[4] Bienvenidos a la Sala de Lectura Comunitaria\n[5] Descubra miles de libros, espacios de estudio tranquilos y programas comunitarios accesibles.\n[6] Libros destacados\n[7] El arte del diseño accesible\n[8] Aprenda a crear experiencias inclusivas para todos. Visite nuestra\n[9] biografía del autor\n[10] para más detalles. Cada ejemplar de tapa dura cuesta $29.99 con envío gratuito.\n[11] Reservar libro\n[12] Referencia técnica (contenido no traducido)\n[13] Los desarrolladores pueden instalar nuestra CLI de catálogo mediante el siguiente comando:\n[14] Para buscar en el índice rápidamente, presione\n[15] en su teclado.\n[16] Ejemplo de salida de terminal:\n[17] Operado bajo la\n[18] red y registrado en\n[19] Comentarios de los lectores y estado en vivo\n[20] © 2026 Sala de Lectura Comunitaria. Todos los derechos reservados."
+  }
+}

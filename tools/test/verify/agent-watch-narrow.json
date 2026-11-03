@@ -1,0 +1,63 @@
+{
+  "name": "agent-watch-narrow",
+  "file": "tools/adapters/agent-watch.js",
+  "page": "agent-watch.html",
+  "options": {
+    "model": {
+      "motion": "reduced"
+    },
+    "state": {
+      "contract": {
+        "item": "Trail shoes under $60",
+        "budget": 60,
+        "mustHaves": [
+          "Earth Brown"
+        ]
+      },
+      "phase": "product",
+      "findings": [
+        {
+          "widget": "budget",
+          "level": "stop",
+          "say": "Price is $89.00, which is over your $60 budget.",
+          "from": "$89.00",
+          "control": {
+            "label": "Keep looking",
+            "decline": "Allow $89"
+          },
+          "phase": "product"
+        }
+      ],
+      "gate": {
+        "allowed": false,
+        "say": "Approve $89 purchase?",
+        "waitingOn": [
+          "budget"
+        ]
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "fits within 320px viewport without horizontal overflow",
+      "code": "\n        const box = document.getElementById('ai4a11y-agent-watch');\n        if (!box) return true;\n\n        const rect = box.getBoundingClientRect();\n        return rect.left >= 0 && rect.right <= 320 && rect.width <= 320;\n      "
+    },
+    {
+      "name": "held gate alertdialog semantics, focus, and decision choices operate properly",
+      "code": "\n        const box = document.getElementById('ai4a11y-agent-watch');\n        if (!box) return true;\n\n        const gate = box.querySelector('.aw-gate');\n        if (!gate) return false;\n        if (gate.getAttribute('role') !== 'alertdialog') return false;\n\n        const describedby = gate.getAttribute('aria-describedby');\n        const msg = document.getElementById(describedby);\n        if (!msg || !msg.textContent.includes('Approve $89 purchase?')) return false;\n\n        const buttons = gate.querySelectorAll('button');\n        if (!buttons.length) return false;\n        for (const btn of buttons) {\n          btn.focus();\n          if (document.activeElement !== btn) return false;\n          const rect = btn.getBoundingClientRect();\n          if (rect.width < 24 || rect.height < 24) return false;\n        }\n\n        const details = box.querySelector('details.aw-task-details');\n        if (!details) return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "reduced motion disables transition",
+      "code": "\n        const box = document.getElementById('ai4a11y-agent-watch');\n        if (!box) return true;\n\n        const style = window.getComputedStyle(box);\n        return style.transitionDuration === '0s' || style.transitionProperty === 'none';\n      "
+    },
+    {
+      "name": "ordinary page content remains intact at 320px",
+      "code": "\n        const h1 = document.getElementById('item-title');\n        const buyBtn = document.getElementById('buy-box-btn');\n        if (!h1 || !buyBtn) return false;\n        return h1.textContent.includes('Alpine Ridge Trail Shoes') && buyBtn.textContent.includes('Add to Cart');\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  },
+  "reducedMotion": "reduce"
+}

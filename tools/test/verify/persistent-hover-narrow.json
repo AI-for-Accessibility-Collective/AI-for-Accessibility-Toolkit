@@ -1,0 +1,24 @@
+{
+  "name": "persistent-hover-narrow",
+  "file": "tools/adapters/persistent-hover.js",
+  "export": "PersistentHover",
+  "page": "persistent-hover.html",
+  "checks": [
+    {
+      "name": "reflow at 320px: tooltip fits horizontally without overflowing viewport or requiring horizontal scroll",
+      "code": "\n        const navDocs = document.getElementById('nav-docs');\n        const tip = document.getElementById('ai4a11y-hover-tip');\n        const isEnabled = !!document.getElementById('ai4a11y-persistent-hover-styles');\n        if (!navDocs) return false;\n        if (!isEnabled) return tip === null;\n\n        navDocs.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        if (tip.hidden) return false;\n\n        const rect = tip.getBoundingClientRect();\n        const fitsHorizontally = rect.left >= 0 && rect.right <= window.innerWidth;\n        const fitsVertically = rect.top >= 0 && rect.bottom <= window.innerHeight;\n\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n        return fitsHorizontally && fitsVertically;\n      "
+    },
+    {
+      "name": "vertical boundary at 320px: bottom-edge trigger flips tooltip above and avoids obscuring control",
+      "code": "\n        const isEnabled = !!document.getElementById('ai4a11y-persistent-hover-styles');\n        if (!isEnabled) return true;\n\n        const tip = document.getElementById('ai4a11y-hover-tip');\n        const testBtn = document.createElement('button');\n        testBtn.id = 'test-bottom-btn';\n        testBtn.title = 'Detailed status report for low-viewport items';\n        testBtn.style.position = 'fixed';\n        testBtn.style.left = '20px';\n        testBtn.style.top = '540px';\n        testBtn.style.width = '120px';\n        testBtn.style.height = '36px';\n        testBtn.textContent = 'Bottom Action';\n        document.body.appendChild(testBtn);\n\n        testBtn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        const tRect = tip.getBoundingClientRect();\n        const bRect = testBtn.getBoundingClientRect();\n\n        const placedAbove = tRect.bottom <= bRect.top;\n        const fitsOnScreen = tRect.top >= 0 && tRect.bottom <= window.innerHeight;\n        const fitsWidth = tRect.left >= 0 && tRect.right <= window.innerWidth;\n\n        testBtn.remove();\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n\n        return placedAbove && fitsOnScreen && fitsWidth;\n      "
+    },
+    {
+      "name": "persistence and keyboard accessibility operate properly at 320px narrow viewport",
+      "code": "\n        const btnSync = document.getElementById('btn-sync');\n        const btnFilter = document.getElementById('btn-filter');\n        const bayATrigger = document.getElementById('bay-a-trigger');\n        const bayAContainer = document.getElementById('bay-a-container');\n        const bayADetails = document.getElementById('bay-a-details');\n        const tip = document.getElementById('ai4a11y-hover-tip');\n        const isEnabled = !!document.getElementById('ai4a11y-persistent-hover-styles');\n\n        if (!btnSync || !btnFilter || !bayATrigger || !bayAContainer || !bayADetails) return false;\n        if (!isEnabled) return true;\n\n        btnSync.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        if (tip.hidden) return false;\n\n        btnFilter.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        if (tip.hidden) return false;\n\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n        if (!tip.hidden) return false;\n\n        bayATrigger.focus();\n        bayATrigger.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));\n        if (!bayAContainer.hasAttribute('data-ai4a11y-hover-open')) return false;\n\n        btnFilter.focus();\n        btnFilter.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));\n        if (bayAContainer.hasAttribute('data-ai4a11y-hover-open')) return false;\n\n        btnFilter.blur();\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

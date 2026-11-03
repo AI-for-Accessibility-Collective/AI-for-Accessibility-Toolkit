@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chronicle Accessibility Journal - Digital Accessibility Frontiers</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a202c;
+      background-color: #ffffff;
+      overflow: hidden;
+      overflow-y: hidden;
+    }
+    a {
+      color: #0b57d0;
+      text-decoration: underline;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    .site-header {
+      background-color: #f7fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem 1.5rem;
+    }
+    .site-header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      font-weight: 500;
+    }
+    /* Sticky promotional bar */
+    .promo-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.875rem;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .promo-bar a {
+      color: #93c5fd;
+      font-weight: 600;
+    }
+    main {
+      max-width: 840px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    article h2 {
+      font-size: 1.75rem;
+      margin-top: 0;
+      color: #0f172a;
+    }
+    .inline-card {
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .inline-card h3 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #1e293b;
+    }
+    .article-section {
+      margin: 1.5rem 0;
+      padding: 1rem 0;
+    }
+    .action-btn {
+      background-color: #0b57d0;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.6rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-btn:hover {
+      background-color: #0842a0;
+    }
+    .secondary-btn {
+      background-color: #ffffff;
+      color: #0f172a;
+      border: 1px solid #64748b;
+      border-radius: 4px;
+      padding: 0.6rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .secondary-btn:hover {
+      background-color: #f8fafc;
+    }
+    /* Fixed cookie consent banner */
+    #cookie-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 1.25rem 2rem;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    #cookie-banner p {
+      margin: 0;
+      max-width: 600px;
+    }
+    .cookie-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+    /* Fixed newsletter modal and backdrop */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(15, 23, 42, 0.65);
+      z-index: 9990;
+    }
+    #newsletter-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9995;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+    }
+    #newsletter-modal h3 {
+      margin-top: 0;
+      font-size: 1.35rem;
+      color: #0f172a;
+    }
+    .form-group {
+      margin: 1rem 0;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #334155;
+    }
+    .form-group input[type="email"] {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      font-size: 1rem;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      min-height: 44px;
+    }
+    footer.site-footer {
+      background-color: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 2rem 1.5rem;
+      margin-top: 3rem;
+      text-align: center;
+      color: #475569;
+    }
+  </style>
+</head>
+<body style="overflow-y: hidden;">
+  <header class="site-header">
+    <h1>Chronicle Accessibility Journal</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#article">Current Article</a></li>
+        <li><a href="#research">Research Papers</a></li>
+        <li><a href="#resources">Toolkits</a></li>
+        <li><a href="#contact">Editorial Board</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div id="promo-bar" class="promo-bar" role="region" aria-label="Special promotion">
+    <span>Read the complete 2026 Inclusive Design Annual for free.</span>
+    <a href="#claim">Access Issue</a>
+  </div>
+
+  <main id="main-content">
+    <article id="article">
+      <h2>Advancements in Inclusive Web Architecture</h2>
+      <p>
+        Building digital experiences that remain usable under varying user needs requires conscious decisions around focus management, contrast levels, and unobtrusive presentation. Modern readers frequently report high cognitive load when confronted with multi-layered promotional overlays, persistent cookie consent prompts, and unexpected viewport modifications.
+      </p>
+
+      <aside id="cookie-recipe-card" class="inline-card" aria-label="Technical note on cookie storage">
+        <h3>Technical Note: Browser Cookies vs Persistent Storage</h3>
+        <p>
+          Unlike aggressive consent dialogs, modern state storage patterns allow privacy-preserving user preferences without intrusive popups. This inline card should remain visible when overlays are dismissed because it is regular article content.
+        </p>
+      </aside>
+
+      <p>
+        Adaptive user interfaces dynamically adjust styling and DOM composition while preserving the semantic integrity of the underlying document. When overlays are dismissed, scroll locking must be reversed so the reader can access subsequent sections smoothly.
+      </p>
+
+      <section id="newsletter-info" class="article-section">
+        <h3>Newsletter Archive &amp; Subscriptions</h3>
+        <p>
+          Subscribers to our monthly digest receive curated accessibility analyses directly in their inbox. This section illustrates in-page content referencing newsletter options that must remain untouched by overlay filters.
+        </p>
+        <button id="btn-share" class="action-btn" type="button">Share this Article</button>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 Chronicle Accessibility Journal. Published under Open Access.</p>
+  </footer>
+
+  <!-- Blocking Overlays -->
+  <aside id="cookie-banner" role="dialog" aria-label="Cookie preferences">
+    <p>We use essential cookies to maintain page security and measure accessibility metrics across readers.</p>
+    <div class="cookie-buttons">
+      <button id="btn-cookie-accept" class="action-btn" type="button">Accept All</button>
+      <button id="btn-cookie-decline" class="secondary-btn" type="button">Reject Non-Essential</button>
+    </div>
+  </aside>
+
+  <div id="newsletter-backdrop" class="modal-backdrop"></div>
+  <div id="newsletter-modal" role="dialog" aria-modal="true" aria-label="Newsletter sign up">
+    <h3>Subscribe to Chronicle Weekly</h3>
+    <p>Stay ahead with in-depth accessibility research and practical implementation guides.</p>
+    <form id="newsletter-form" onsubmit="event.preventDefault();">
+      <div class="form-group">
+        <label for="newsletter-email">Email Address</label>
+        <input type="email" id="newsletter-email" name="email" required autocomplete="email">
+      </div>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button id="btn-modal-close" class="secondary-btn" type="button">Close</button>
+        <button id="btn-modal-submit" class="action-btn" type="submit">Sign Up</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Helper to simulate dynamic late popup injection
+    window.injectLatePopup = function() {
+      const banner = document.createElement('div');
+      banner.id = 'gdpr-late-notice';
+      banner.className = 'consent-banner';
+      banner.setAttribute('role', 'dialog');
+      banner.setAttribute('aria-label', 'Late consent notice');
+      banner.style.position = 'fixed';
+      banner.style.bottom = '10px';
+      banner.style.right = '10px';
+      banner.style.backgroundColor = '#1e293b';
+      banner.style.color = '#ffffff';
+      banner.style.padding = '1rem';
+      banner.textContent = 'Updated privacy notice.';
+      document.body.appendChild(banner);
+      return banner;
+    };
+  </script>
+</body>
+</html>

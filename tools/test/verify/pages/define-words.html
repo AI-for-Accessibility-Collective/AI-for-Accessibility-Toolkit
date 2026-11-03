@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scientific Perspectives on Ecosystem Resilience</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    header {
+      background-color: #111827;
+      color: #ffffff;
+      padding: 1.25rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.6rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #38bdf8;
+      outline-offset: 2px;
+    }
+    .layout {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    main {
+      padding: 1.5rem 0;
+    }
+    article {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: #111827;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.5rem;
+    }
+    p {
+      margin: 1rem 0;
+    }
+    .code-container {
+      background-color: #1f2937;
+      color: #f3f4f6;
+      padding: 1rem;
+      border-radius: 6px;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.95rem;
+    }
+    .interactive-card {
+      background-color: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.5rem;
+      border: 1px solid #6b7280;
+      border-radius: 4px;
+      font: inherit;
+      color: #111827;
+      background-color: #ffffff;
+    }
+    button, input[type="submit"] {
+      background-color: #1e40af;
+      color: #ffffff;
+      border: none;
+      padding: 0.6rem 1.25rem;
+      font: inherit;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:focus-visible, input[type="submit"]:focus-visible, input[type="text"]:focus-visible {
+      outline: 3px solid #0284c7;
+      outline-offset: 2px;
+    }
+    aside {
+      background-color: #f9fafb;
+      border-left: 4px solid #3b82f6;
+      padding: 0.75rem 1rem;
+      margin: 1.5rem 0;
+    }
+    footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #4b5563;
+      background-color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Environmental Research Institute</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#article-resilience">Resilience Overview</a></li>
+        <li><a href="#interactive-lab">Research Laboratory</a></li>
+        <li><a href="#discussion">Feedback Form</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <main id="main-content">
+      <article id="article-resilience">
+        <h2>Ecosystem Resilience and Biodiversity</h2>
+        <p id="prose-lead">
+          Understanding the <strong>extraordinary</strong> complexity of ecological systems is essential for conservation.
+          Preserving global <span id="target-word">biodiversity</span> ensures environmental equilibrium across varied habitats.
+          When natural systems face unprecedented pressure, their structural infrastructure sustains equilibrium through adaptation.
+        </p>
+
+        <p id="prose-repeat">
+          Here the term biodiversity appears a second time to test tab stop deduplication.
+          The same word biodiversity should not create redundant tab stops for keyboard navigators.
+        </p>
+
+        <div class="code-container" id="code-sample">
+          <pre><code>// Computational model analyzing photosynthesis rates
+function calculatePhotosynthesisRate(biomassIndex, temperatureThreshold) {
+  const equilibriumConstant = 0.785;
+  return biomassIndex * equilibriumConstant;
+}</code></pre>
+        </div>
+
+        <p id="prose-links">
+          Learn more about biological conservation by visiting the
+          <a href="https://example.org/conservation" id="prose-anchor">international conservation directory</a>
+          or reading the documentation.
+        </p>
+
+        <aside aria-label="Case Study Notes" id="case-notes">
+          <p>
+            Field observations reveal comprehensive transformations occurring throughout coastal wetlands.
+          </p>
+        </aside>
+
+        <section class="interactive-card" id="interactive-lab">
+          <h3>Simulation Parameters</h3>
+          <p id="aria-widget-area">
+            Specialized controls:
+            <span role="button" tabindex="0" id="custom-role-btn">Toggle extraordinary simulation</span>
+            and a live monitor:
+            <span role="status" id="live-status">System equilibrium nominal.</span>
+          </p>
+          <p aria-hidden="true" id="hidden-prose">
+            This hidden text contains archaeological documentation that screen readers must ignore.
+          </p>
+        </section>
+
+        <section id="discussion">
+          <h3>Researcher Inquiry</h3>
+          <form id="feedback-form" action="#" method="get">
+            <div class="form-group">
+              <label for="researcher-name">Researcher Name</label>
+              <input type="text" id="researcher-name" name="name" value="Dr. Alexander Henderson">
+            </div>
+            <div class="form-group">
+              <label for="researcher-notes">Methodological Notes</label>
+              <textarea id="researcher-notes" name="notes" rows="3">Initial observations regarding physiological adaptations.</textarea>
+            </div>
+            <div class="form-group">
+              <button type="submit" id="submit-btn">Submit Comprehensive Report</button>
+            </div>
+          </form>
+        </section>
+
+        <div id="dynamic-container">
+          <!-- Dynamically inserted paragraphs will be placed here -->
+        </div>
+      </article>
+    </main>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Environmental Research Institute. All rights reserved.</p>
+  </footer>
+</body>
+</html>

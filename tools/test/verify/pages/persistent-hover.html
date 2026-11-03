@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Inventory Management - Persistent Hover Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #f7fafc;
+    }
+    header {
+      background-color: #2d3748;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      min-height: 24px;
+      min-width: 24px;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+    }
+    nav a:focus, button:focus, input:focus {
+      outline: 3px solid #3182ce;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      background: #ffffff;
+      padding: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+    }
+    button {
+      font-size: 0.95rem;
+      padding: 8px 16px;
+      min-height: 36px;
+      min-width: 36px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e0;
+      background: #ffffff;
+      color: #2d3748;
+      cursor: pointer;
+    }
+    button.primary {
+      background: #2b6cb0;
+      color: #ffffff;
+      border-color: #2b6cb0;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1.25rem;
+      position: relative;
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #2d3748;
+    }
+    .card p {
+      margin: 0 0 0.75rem 0;
+      color: #4a5568;
+    }
+    /* CSS :hover popup barrier */
+    .hover-reveal-container {
+      position: relative;
+      margin-top: 0.75rem;
+    }
+    .hover-reveal-trigger {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #edf2f7;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      font-weight: 500;
+      color: #2d3748;
+      min-height: 24px;
+    }
+    .hover-reveal-content {
+      display: none;
+      margin-top: 6px;
+      padding: 8px 12px;
+      background: #1a202c;
+      color: #ffffff;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    .hover-reveal-container:hover .hover-reveal-content {
+      display: block;
+    }
+    footer {
+      max-width: 800px;
+      margin: 2rem auto 1rem auto;
+      padding: 1rem;
+      border-top: 1px solid #cbd5e0;
+      color: #4a5568;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Warehouse Inventory Portal</h1>
+    <nav aria-label="Main Navigation">
+      <a href="#stock" id="nav-stock">Stock Levels</a>
+      <a href="#orders" id="nav-orders">Orders</a>
+      <a href="#docs" id="nav-docs" title="Read system guide and operational manuals">Documentation</a>
+    </nav>
+  </header>
+
+  <main>
+    <section aria-labelledby="toolbar-heading">
+      <h2 id="toolbar-heading" style="font-size: 1.1rem; margin-top: 0;">Quick Actions</h2>
+      <div class="toolbar">
+        <button type="button" class="primary" id="btn-add-item">Add New Item</button>
+        <button type="button" id="btn-sync" title="Synchronize local stock records with central warehouse database">Sync DB</button>
+        <button type="button" id="btn-export" title="Download spreadsheet of current SKU counts">Export CSV</button>
+        <button type="button" id="btn-filter">Filter List</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="status-heading">
+      <h2 id="status-heading">Warehouse Operations Status</h2>
+      <div class="cards-grid">
+        <article class="card">
+          <h2>Shipping Bay A</h2>
+          <p>Capacity: 84% utilized across 12 active freight docks.</p>
+          <div class="hover-reveal-container" id="bay-a-container">
+            <span class="hover-reveal-trigger" id="bay-a-trigger" tabindex="0">Hover for Bay A Details</span>
+            <div class="hover-reveal-content" id="bay-a-details">
+              Pending departures: 4 trucks scheduled before 18:00 UTC.
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Receiving Bay B</h2>
+          <p>Capacity: 45% utilized with 3 inbound shipments pending inspection.</p>
+          <div class="hover-reveal-container" id="bay-b-container">
+            <span class="hover-reveal-trigger" id="bay-b-trigger" tabindex="0">Hover for Bay B Details</span>
+            <div class="hover-reveal-content" id="bay-b-details">
+              Next scheduled delivery: Carrier 802 arriving in 25 minutes.
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Logistics Corp. All rights reserved.</p>
+  </footer>
+</body>
+</html>

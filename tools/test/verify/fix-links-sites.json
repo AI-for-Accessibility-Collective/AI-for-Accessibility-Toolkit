@@ -1,0 +1,17 @@
+{
+  "file": "tools/adapters/fix-links.js",
+  "ai": {
+    "improveLinkText": "More details about this topic"
+  },
+  "harness": {
+    "enable": "\n      window.__fixLinksPrev = [];\n      const AMBIGUOUS = ['click here', 'here', 'read more', 'more', 'learn more', 'continue', 'link', 'this', 'this link'];\n      const isVisible = (el) => {\n        if (!el.isConnected) return false;\n        const style = window.getComputedStyle(el);\n        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;\n        const rect = el.getBoundingClientRect();\n        return rect.width > 0 && rect.height > 0;\n      };\n      const links = Array.from(document.querySelectorAll('a[href]')).filter(a => {\n        if (a.dataset.ai4a11yProcessed) return false;\n        if (!isVisible(a)) return false;\n        const name = (a.getAttribute('aria-label') || a.querySelector('img')?.getAttribute('alt') || a.textContent || '').trim().toLowerCase();\n        return AMBIGUOUS.includes(name);\n      });\n      for (const link of links) {\n        window.__fixLinksPrev.push({\n          link,\n          ariaLabel: link.getAttribute('aria-label'),\n          hadAriaLabel: link.hasAttribute('aria-label'),\n          className: link.getAttribute('class'),\n          hadClass: link.hasAttribute('class'),\n          processed: link.dataset.ai4a11yProcessed,\n        });\n      }\n      await m.improveAmbiguousLinks(links);\n    ",
+    "disable": "\n      if (window.__fixLinksPrev) {\n        for (const item of window.__fixLinksPrev) {\n          if (item.hadAriaLabel) item.link.setAttribute('aria-label', item.ariaLabel);\n          else item.link.removeAttribute('aria-label');\n          if (item.hadClass) item.link.setAttribute('class', item.className);\n          else item.link.removeAttribute('class');\n          if (item.processed !== undefined) item.link.dataset.ai4a11yProcessed = item.processed;\n          else delete item.link.dataset.ai4a11yProcessed;\n        }\n        delete window.__fixLinksPrev;\n      }\n    "
+  },
+  "checks": [
+    {
+      "name": "adapted links have non-empty aria-label and remain keyboard focusable",
+      "code": "\n        const adapted = document.querySelectorAll('a.ai4a11y-adapted');\n        for (const a of adapted) {\n          const label = a.getAttribute('aria-label');\n          if (!label || !label.trim()) return false;\n          if (a.tabIndex < 0) return false;\n        }\n        return true;\n      "
+    }
+  ],
+  "sites": "all"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "mute-sounds-narrow",
+  "file": "tools/adapters/mute-sounds.js",
+  "export": "MuteSounds",
+  "page": "mute-sounds.html",
+  "checks": [
+    {
+      "name": "elements exist and unmuted media is muted upon enable while pre-muted media remains muted",
+      "code": "\n      const vUnmuted = document.getElementById('video-unmuted');\n      const aUnmuted = document.getElementById('audio-unmuted');\n      const vPremuted = document.getElementById('video-premuted');\n      if (!vUnmuted || !aUnmuted || !vPremuted) return false;\n\n      const adapter = window.__ai4a11yMuteSounds;\n      if (!adapter || !adapter.enabled) {\n        return vUnmuted.muted === false && aUnmuted.muted === false && vPremuted.muted === true;\n      }\n\n      if (vUnmuted.muted !== true || aUnmuted.muted !== true) return false;\n      if (vPremuted.muted !== true) return false;\n      if (adapter.muted && adapter.muted.has(vPremuted)) return false;\n      if (!adapter.muted || !adapter.muted.has(vUnmuted) || !adapter.muted.has(aUnmuted)) return false;\n\n      return true;\n    "
+    },
+    {
+      "name": "dynamic media injection is muted and play event on unmuted media is re-muted",
+      "code": "\n      const adapter = window.__ai4a11yMuteSounds;\n      if (!adapter || !adapter.enabled) return true;\n\n      const lateVideo = document.createElement('video');\n      lateVideo.id = 'video-late-injected';\n      lateVideo.muted = false;\n      document.getElementById('media-section').appendChild(lateVideo);\n\n      await new Promise(r => setTimeout(r, 20));\n\n      const lateMuted = lateVideo.muted === true;\n      lateVideo.remove();\n      if (!lateMuted) return false;\n\n      const vUnmuted = document.getElementById('video-unmuted');\n      if (!vUnmuted) return false;\n      vUnmuted.muted = false;\n      vUnmuted.dispatchEvent(new Event('play'));\n      if (vUnmuted.muted !== true) return false;\n\n      return true;\n    "
+    },
+    {
+      "name": "script unmuting via volumechange is re-muted while intentional user unmuting is preserved",
+      "code": "\n      const adapter = window.__ai4a11yMuteSounds;\n      if (!adapter || !adapter.enabled) return true;\n\n      const vUnmuted = document.getElementById('video-unmuted');\n      if (!vUnmuted) return false;\n\n      adapter.lastInput = null;\n      vUnmuted.muted = false;\n      vUnmuted.dispatchEvent(new Event('volumechange'));\n      if (vUnmuted.muted !== true) return false;\n\n      adapter.lastInput = { target: vUnmuted, at: Date.now() };\n      vUnmuted.muted = false;\n      vUnmuted.dispatchEvent(new Event('volumechange'));\n      if (vUnmuted.muted !== false) return false;\n\n      adapter.userUnmuted?.delete(vUnmuted);\n      adapter.muteEl(vUnmuted);\n      adapter.lastInput = null;\n\n      return vUnmuted.muted === true;\n    "
+    },
+    {
+      "name": "accessibility: controls reachable, sized at least 24x24, visible focus indicator, and unobstructed",
+      "code": "\n      const submitBtn = document.getElementById('submit-feedback');\n      const textInput = document.getElementById('feedback-input');\n      const navLink = document.getElementById('nav-article');\n      if (!submitBtn || !textInput || !navLink) return false;\n\n      submitBtn.scrollIntoView();\n      const btnRect = submitBtn.getBoundingClientRect();\n      if (btnRect.width < 24 || btnRect.height < 24) return false;\n\n      submitBtn.focus();\n      if (document.activeElement !== submitBtn) return false;\n      const btnStyle = window.getComputedStyle(submitBtn);\n      const outlineWidth = parseFloat(btnStyle.outlineWidth) || 0;\n      if (outlineWidth < 2) return false;\n\n      const hit = document.elementFromPoint(btnRect.left + 5, btnRect.top + 5);\n      if (hit !== submitBtn && !submitBtn.contains(hit)) return false;\n\n      submitBtn.blur();\n      window.scrollTo(0, 0);\n      return true;\n    "
+    },
+    {
+      "name": "leaves ordinary page content intact and unaltered",
+      "code": "\n      const h1 = document.querySelector('header h1');\n      const lead = document.getElementById('lead-paragraph');\n      const asideH2 = document.getElementById('heading-aside');\n      const footerP = document.getElementById('footer-text');\n\n      if (!h1 || !lead || !asideH2 || !footerP) return false;\n\n      if (!h1.textContent.includes('Quiet Tech Daily')) return false;\n      if (!lead.textContent.includes('Unexpected sound from autoplaying video')) return false;\n      if (!asideH2.textContent.includes('Related Resources')) return false;\n      if (!footerP.textContent.includes('2026 Quiet Tech Daily')) return false;\n\n      return true;\n    "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

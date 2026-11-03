@@ -1,0 +1,12 @@
+{
+  "file": "tools/adapters/simplify-text.js",
+  "ai": {
+    "simplifyText": "The recipient has the right to quickly cancel access privileges if it becomes necessary.",
+    "summarizeText": "This summary provides an overview of the key points in this section."
+  },
+  "harness": {
+    "enable": "\n      const COMPLEX_TEXT_MIN_CHARS = 200;\n      const COMPLEX_SENTENCE_MIN_WORDS = 15;\n      const complexElements = Array.from(document.querySelectorAll('main p, [role=\"main\"] p, article p, #content p, .content p, p'))\n        .filter(el => {\n          if (el.dataset.ai4a11yProcessed || el.dataset.ai4a11ySimplified) return false;\n          if (el.querySelector('p, div, article, section, table')) return false;\n          if ((el.textContent?.length || 0) <= COMPLEX_TEXT_MIN_CHARS) return false;\n          const text = m.proseText(el);\n          return text.length > COMPLEX_TEXT_MIN_CHARS &&\n            text.split(/[.!?]/).some(s => s.trim().split(/\\s+/).length > COMPLEX_SENTENCE_MIN_WORDS);\n        }).slice(0, 3);\n      for (const el of complexElements) {\n        await m.simplifyText(el);\n      }\n\n      const longElements = Array.from(document.querySelectorAll('main article, [role=\"main\"] article, article, main section, section'))\n        .filter(el => {\n          if (el.dataset.ai4a11ySummarize) return false;\n          if (el.closest('[data-ai4a11y-summarize]')) return false;\n          if (el.querySelector('article, section')) return false;\n          const text = m.proseText(el);\n          return text.length >= 500;\n        }).slice(0, 1);\n      for (const el of longElements) {\n        await m.summarizeContent(el);\n      }\n    ",
+    "disable": "\n      if (typeof m.restoreOriginal === 'function') {\n        m.restoreOriginal();\n      }\n    "
+  },
+  "sites": "all"
+}

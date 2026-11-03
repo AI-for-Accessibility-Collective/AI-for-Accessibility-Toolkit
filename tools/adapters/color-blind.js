@@ -1,4 +1,5 @@
-// Color Blind Mode - applies color correction filters
+// Color Blind Mode - applies color correction filters. Accepts a mode name
+// or an options object ({ mode, colorBlindMode, colorFilter }).
 import { announce } from '../utils/ai.js';
 
 // The filters used to show how a color-blind person sees the page (a
@@ -65,9 +66,22 @@ export const ColorBlindMode = {
     tritanopia: 'url(#ai4a11y-tritanopia-filter)'
   },
 
-  enable(mode = 'protanopia') {
+  enable(options = 'protanopia') {
+    const mode = typeof options === 'string'
+      ? options
+      : (options?.mode || options?.colorBlindMode || options?.colorFilter || options?.type || 'protanopia');
+
+    if (mode === 'none') {
+      this.disable();
+      return;
+    }
+
     if (!this.filters[mode]) {
       console.warn('[AI4A11y] Invalid color blind mode:', mode);
+      return;
+    }
+
+    if (this.enabled && this.currentMode === mode && document.getElementById(this.styleId)) {
       return;
     }
 
@@ -84,13 +98,16 @@ export const ColorBlindMode = {
       }
       ${PAGE_FILTER}
     `;
-    document.head.appendChild(style);
+    (document.head || document.documentElement).appendChild(style);
 
     console.log('[AI4A11y] Color Blind Mode enabled:', mode);
     announce(`Color blind correction applied: ${mode}`);
   },
 
   disable() {
+    if (!this.enabled && this.currentMode === 'none' && !document.getElementById(this.styleId) && !document.getElementById(this.filterId)) {
+      return;
+    }
     this.enabled = false;
     this.currentMode = 'none';
     document.getElementById(this.styleId)?.remove();
@@ -104,7 +121,8 @@ export const ColorBlindMode = {
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = this.filterId;
-    svg.setAttribute('style', 'position:absolute;width:0;height:0');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none');
     svg.innerHTML = `
       <defs>
         ${Object.keys(SEES).map(mode => `
@@ -115,7 +133,7 @@ export const ColorBlindMode = {
         </filter>`).join('')}
       </defs>
     `;
-    document.body.appendChild(svg);
+    (document.body || document.documentElement).appendChild(svg);
   },
 
   setMode(mode) {

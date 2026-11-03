@@ -3,12 +3,45 @@ import { announce } from '../utils/ai.js';
 
 const HIGHLIGHT = 'ai4a11y-focus-mode-highlight';
 
-// True when the element's text is dark enough to stay readable on a light highlight.
-function hasDarkText(el) {
-  const m = (getComputedStyle(el).color || '').match(/[\d.]+/g);
-  if (!m) return false;
-  const [r, g, b] = m.map(Number);
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+const DEFAULT_SETTINGS = {
+  hideDistractions: false,
+  dimBackground: false,
+  dimOpacity: 0.5,
+  highlightColor: '#fff3cd',
+  showProgress: true
+};
+
+function parseColor(str) {
+  if (!str) return null;
+  if (str.startsWith('#')) {
+    let hex = str.slice(1);
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    if (hex.length === 6) {
+      const num = parseInt(hex, 16);
+      return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+    }
+  }
+  const m = str.match(/[\d.]+/g);
+  return m && m.length >= 3 ? m.slice(0, 3).map(Number) : null;
+}
+
+function relativeLuminance([r, g, b]) {
+  const [rs, gs, bs] = [r, g, b].map(v => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+// True when the element's text has sufficient contrast (at least 4.5:1) against the highlight.
+function hasDarkText(el, highlightColor = '#fff3cd') {
+  const fg = parseColor(getComputedStyle(el).color);
+  const bg = parseColor(highlightColor) || [255, 243, 205];
+  if (!fg) return false;
+  const l1 = relativeLuminance(fg);
+  const l2 = relativeLuminance(bg);
+  const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  return ratio >= 4.5;
 }
 
 export const FocusMode = {
@@ -16,16 +49,15 @@ export const FocusMode = {
   enabled: false,
   progressEl: null,
   progressHandler: null,
+  progressObserver: null,
+  navHandler: null,
   hoverHandler: null,
   leaveHandler: null,
-  hovered: null,         // the element carrying the hover highlight
-  currentSettings: {
-    hideDistractions: false,
-    dimBackground: false,
-    dimOpacity: 0.5,
-    highlightColor: '#fff3cd',
-    showProgress: true
-  },
+  focusHandler: null,
+  blurHandler: null,
+  keyHandler: null,
+  hovered: null,         // the element carrying the highlight
+  currentSettings: { ...DEFAULT_SETTINGS },
 
   distractionSelectors: [
     'ins.adsbygoogle', '[data-ad]', '.ad-container', '.ad-banner',
@@ -43,14 +75,14 @@ export const FocusMode = {
     this.disableProgressIndicator();
     this.disableHoverHighlight();
 
-    this.currentSettings = { ...this.currentSettings, ...options };
+    this.currentSettings = { ...DEFAULT_SETTINGS, ...options };
     this.enabled = true;
 
     const s = this.currentSettings;
+    const all = this.distractionSelectors.join(', ');
     let css = '';
 
     if (s.hideDistractions) {
-      const all = this.distractionSelectors.join(', ');
       // An ad inside an ad is dimmed once, not twice. Pointing at it or moving
       // keyboard focus into it brings it back to full strength. :is() so a
       // browser without :has() still dims the rest instead of dropping the rule.
@@ -69,7 +101,7 @@ export const FocusMode = {
     if (s.dimBackground) {
       css += `
         body > *:not(main):not(article):not([role="main"]):not(#ai4a11y-focus-mode-styles):not(#ai4a11y-progress) {
-          opacity: ${s.dimOpacity + 0.3} !important;
+          opacity: ${Math.min(1, Number(s.dimOpacity) + 0.3)} !important;
         }
         main, article, [role="main"], .article, .post, .content, .entry-content {
           opacity: 1 !important;
@@ -83,6 +115,11 @@ export const FocusMode = {
       .${HIGHLIGHT} {
         background-color: ${s.highlightColor} !important;
         transition: background-color 0.2s ease !important;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        :is(${all}), .${HIGHLIGHT}, #ai4a11y-progress {
+          transition: none !important;
+        }
       }
     `;
     this.enableHoverHighlight();
@@ -105,6 +142,7 @@ export const FocusMode = {
     document.getElementById(this.styleId)?.remove();
     this.disableProgressIndicator();
     this.disableHoverHighlight();
+    document.querySelectorAll('.' + HIGHLIGHT).forEach((el) => el.classList.remove(HIGHLIGHT));
     console.log('[AI4A11y] Focus Mode disabled');
     announce('Focus mode disabled');
   },
@@ -115,6 +153,7 @@ export const FocusMode = {
 
     this.progressEl = document.createElement('div');
     this.progressEl.id = 'ai4a11y-progress';
+    this.progressEl.setAttribute('aria-hidden', 'true');
     this.progressEl.style.cssText = `
       position: fixed;
       top: 0;
@@ -124,6 +163,7 @@ export const FocusMode = {
       z-index: 100000;
       transition: width 0.1s ease;
       width: 0%;
+      pointer-events: none;
     `;
     document.body.appendChild(this.progressEl);
 
@@ -133,9 +173,9 @@ export const FocusMode = {
       this.progressRafPending = true;
       requestAnimationFrame(() => {
         this.progressRafPending = false;
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        const scrollTop = window.scrollY || window.pageYOffset || 0;
+        const docHeight = (document.documentElement ? document.documentElement.scrollHeight : 0) - window.innerHeight;
+        const progress = docHeight > 0 ? Math.min(100, Math.max(0, (scrollTop / docHeight) * 100)) : 0;
         if (this.progressEl) {
           this.progressEl.style.width = `${progress}%`;
         }
@@ -143,9 +183,40 @@ export const FocusMode = {
     };
     document.addEventListener('scroll', this.progressHandler, { passive: true });
     this.progressHandler();
+
+    // Re-attach progress bar on SPA navigation (popstate/hashchange and DOM replacements)
+    this.navHandler = () => {
+      if (!this.enabled || !this.currentSettings.showProgress) return;
+      if (this.progressEl && !this.progressEl.isConnected && document.body) {
+        document.body.appendChild(this.progressEl);
+      }
+      this.progressHandler?.();
+    };
+    window.addEventListener('popstate', this.navHandler);
+    window.addEventListener('hashchange', this.navHandler);
+
+    if (typeof MutationObserver !== 'undefined' && document.body) {
+      this.progressObserver = new MutationObserver(() => {
+        if (!this.enabled || !this.currentSettings.showProgress) return;
+        if (this.progressEl && !this.progressEl.isConnected && document.body) {
+          document.body.appendChild(this.progressEl);
+          this.progressHandler?.();
+        }
+      });
+      this.progressObserver.observe(document.body, { childList: true });
+    }
   },
 
   disableProgressIndicator() {
+    if (this.progressObserver) {
+      this.progressObserver.disconnect();
+      this.progressObserver = null;
+    }
+    if (this.navHandler) {
+      window.removeEventListener('popstate', this.navHandler);
+      window.removeEventListener('hashchange', this.navHandler);
+      this.navHandler = null;
+    }
     if (this.progressEl) {
       this.progressEl.remove();
       this.progressEl = null;
@@ -156,26 +227,56 @@ export const FocusMode = {
     }
   },
 
-  // Highlight the paragraph, list item or table cell under the pointer. Light
-  // text (white words on a banner photo, a dark footer's links) would all
-  // but vanish on the light highlight, so only dark text gets it.
+  // Highlight the paragraph, list item or table cell under the pointer or focus.
+  // Light text (white words on a banner photo, a dark footer's links) would all
+  // but vanish on the light highlight, so only text with contrast >= 4.5:1 gets it.
   enableHoverHighlight() {
     this.hoverHandler = (e) => {
       const el = e.target && e.target.closest ? e.target.closest('p, li, td') : null;
       if (el === this.hovered) return;
       this.hovered?.classList.remove(HIGHLIGHT);
-      this.hovered = el && hasDarkText(el) ? el : null;
+      this.hovered = el && hasDarkText(el, this.currentSettings.highlightColor) ? el : null;
       this.hovered?.classList.add(HIGHLIGHT);
     };
-    this.leaveHandler = () => { this.hovered?.classList.remove(HIGHLIGHT); this.hovered = null; };
+    this.leaveHandler = () => {
+      this.hovered?.classList.remove(HIGHLIGHT);
+      this.hovered = null;
+    };
+    this.focusHandler = (e) => {
+      const el = e.target && e.target.closest ? e.target.closest('p, li, td') : null;
+      if (el === this.hovered) return;
+      this.hovered?.classList.remove(HIGHLIGHT);
+      this.hovered = el && hasDarkText(el, this.currentSettings.highlightColor) ? el : null;
+      this.hovered?.classList.add(HIGHLIGHT);
+    };
+    this.blurHandler = (e) => {
+      if (this.hovered && (!e.relatedTarget || !this.hovered.contains(e.relatedTarget))) {
+        this.hovered.classList.remove(HIGHLIGHT);
+        this.hovered = null;
+      }
+    };
+    // WCAG 1.4.13: Content shown on hover or focus can be dismissed with Escape
+    this.keyHandler = (e) => {
+      if (e.key === 'Escape') {
+        this.hovered?.classList.remove(HIGHLIGHT);
+        this.hovered = null;
+      }
+    };
+
     document.addEventListener('mouseover', this.hoverHandler, true);
     document.documentElement.addEventListener('mouseleave', this.leaveHandler);
+    document.addEventListener('focusin', this.focusHandler, true);
+    document.addEventListener('focusout', this.blurHandler, true);
+    document.addEventListener('keydown', this.keyHandler, true);
   },
 
   disableHoverHighlight() {
     if (this.hoverHandler) document.removeEventListener('mouseover', this.hoverHandler, true);
     if (this.leaveHandler) document.documentElement.removeEventListener('mouseleave', this.leaveHandler);
-    this.hoverHandler = this.leaveHandler = null;
+    if (this.focusHandler) document.removeEventListener('focusin', this.focusHandler, true);
+    if (this.blurHandler) document.removeEventListener('focusout', this.blurHandler, true);
+    if (this.keyHandler) document.removeEventListener('keydown', this.keyHandler, true);
+    this.hoverHandler = this.leaveHandler = this.focusHandler = this.blurHandler = this.keyHandler = null;
     this.hovered?.classList.remove(HIGHLIGHT);
     this.hovered = null;
   },

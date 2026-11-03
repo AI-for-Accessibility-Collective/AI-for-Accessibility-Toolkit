@@ -1,0 +1,32 @@
+{
+  "name": "motion-reducer",
+  "file": "tools/adapters/motion-reducer.js",
+  "export": "MotionReducer",
+  "page": "motion-reducer.html",
+  "checks": [
+    {
+      "name": "CSS animations, transitions, and scroll behavior stopped",
+      "code": "\n        const badge = document.getElementById('spinning-badge');\n        const trans = document.getElementById('transition-box');\n        if (!badge || !trans) return false;\n        const style = document.getElementById('ai4a11y-motion-reducer-styles');\n        if (!style) {\n          const cs = getComputedStyle(badge);\n          return cs.animationName === 'spin';\n        }\n        const csBadge = getComputedStyle(badge);\n        const csTrans = getComputedStyle(trans);\n        const htmlCs = getComputedStyle(document.documentElement);\n        const animFast = csBadge.animationDuration === '0.000001s' || csBadge.animationDuration === '0.001ms' || parseFloat(csBadge.animationDuration) <= 0.001;\n        const animPaused = csBadge.animationPlayState === 'paused';\n        const transFast = csTrans.transitionDuration === '0.000001s' || csTrans.transitionDuration === '0.001ms' || parseFloat(csTrans.transitionDuration) <= 0.001;\n        const scrollAuto = htmlCs.scrollBehavior === 'auto';\n        return (animFast || animPaused) && transFast && scrollAuto;\n      "
+    },
+    {
+      "name": "WAAPI animations are paused",
+      "code": "\n        const waapiBox = document.getElementById('waapi-box');\n        if (!waapiBox) return false;\n        const anims = waapiBox.getAnimations();\n        if (!anims.length) return false;\n        const style = document.getElementById('ai4a11y-motion-reducer-styles');\n        if (!style) {\n          return anims[0].playState === 'running';\n        }\n        return anims[0].playState === 'paused';\n      "
+    },
+    {
+      "name": "Parallax background-attachment neutralized to scroll",
+      "code": "\n        const parallax = document.getElementById('parallax-section');\n        if (!parallax) return false;\n        const style = document.getElementById('ai4a11y-motion-reducer-styles');\n        const cs = getComputedStyle(parallax);\n        if (!style) {\n          return cs.backgroundAttachment === 'fixed';\n        }\n        return cs.backgroundAttachment === 'scroll';\n      "
+    },
+    {
+      "name": "Autoplaying video paused and given controls; video controls accessible",
+      "code": "\n        const autoVid = document.getElementById('autoplay-video');\n        const pausedVid = document.getElementById('paused-video');\n        if (!autoVid || !pausedVid) return false;\n        const style = document.getElementById('ai4a11y-motion-reducer-styles');\n        if (!style) {\n          return autoVid.controls === false && pausedVid.controls === true;\n        }\n        if (autoVid.controls !== true || !autoVid.paused) return false;\n        if (pausedVid.controls !== true || !pausedVid.paused) return false;\n\n        autoVid.focus();\n        const focused = document.activeElement === autoVid;\n        autoVid.blur();\n        return focused;\n      "
+    },
+    {
+      "name": "Animated GIFs frozen to canvas preserving semantics while still images left alone",
+      "code": "\n        const anim = document.getElementById('animated-gif');\n        const decor = document.getElementById('decorative-gif');\n        const ariaGif = document.getElementById('aria-labeled-gif');\n        const still = document.getElementById('still-image');\n        if (!anim || !decor || !ariaGif || !still) return false;\n\n        const style = document.getElementById('ai4a11y-motion-reducer-styles');\n        if (!style) {\n          return anim.tagName === 'IMG' && decor.tagName === 'IMG' && ariaGif.tagName === 'IMG' && still.tagName === 'IMG';\n        }\n\n        // after enable: animated GIFs replaced with CANVAS\n        if (anim.tagName !== 'CANVAS' || anim.getAttribute('role') !== 'img' || anim.getAttribute('aria-label') !== 'Pulsing star animation') {\n          return false;\n        }\n        if (decor.tagName !== 'CANVAS' || decor.getAttribute('aria-hidden') !== 'true') {\n          return false;\n        }\n        if (ariaGif.tagName !== 'CANVAS' || ariaGif.getAttribute('role') !== 'img' || ariaGif.getAttribute('aria-label') !== 'Spinning loading indicator') {\n          return false;\n        }\n        // still image must remain an IMG\n        if (still.tagName !== 'IMG') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "Ordinary content and controls preserved and functional",
+      "code": "\n        const btn = document.getElementById('sample-button');\n        const p = document.getElementById('intro-para');\n        const copy = document.getElementById('footer-copy');\n        if (!btn || !p || !copy) return false;\n\n        btn.focus();\n        if (document.activeElement !== btn) return false;\n        let clicked = false;\n        const onClick = () => { clicked = true; };\n        btn.addEventListener('click', onClick, { once: true });\n        btn.click();\n        btn.blur();\n\n        const rect = btn.getBoundingClientRect();\n        const bigEnough = rect.width >= 24 && rect.height >= 24;\n\n        return clicked && bigEnough && p.textContent.includes('Standard content') && copy.textContent.includes('Motion Reducer Lab');\n      "
+    }
+  ]
+}

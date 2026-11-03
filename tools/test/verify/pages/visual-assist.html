@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Health &amp; Wellness Dispatch — Daily Visual Ergonomics</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    header {
+      background-color: #111827;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.75rem;
+      color: #ffffff;
+    }
+    nav ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+      font-weight: 500;
+      min-width: 24px;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #60a5fa;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    article {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: #111827;
+      margin-top: 0;
+    }
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 16px;
+    }
+    blockquote {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      background: #f3f4f6;
+      border-left: 4px solid #3b82f6;
+      font-style: italic;
+    }
+    .banner-container {
+      position: relative;
+      height: 120px;
+      background: #e0e7ff;
+      border-radius: 6px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+    .pinned-badge {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 10px;
+      width: 140px;
+      background: #312e81;
+      color: #ffffff;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .fixed-height-box {
+      width: 240px;
+      height: 48px;
+      overflow-y: visible;
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .radio-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 16px;
+      border: 1px solid #9ca3af;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #111827;
+    }
+    button {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 36px;
+      font-weight: 500;
+    }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid #1d4ed8;
+      outline-offset: 2px;
+    }
+    .icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+    }
+    footer {
+      background: #111827;
+      color: #d1d5db;
+      padding: 1rem 1.5rem;
+      font-size: 14px;
+      text-align: center;
+    }
+    footer a {
+      color: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Health &amp; Wellness Dispatch</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#article">Article</a></li>
+        <li><a href="#feedback">Feedback</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <article id="article">
+      <h2>Ergonomics of Reading on Screen</h2>
+      <p id="lead-paragraph">
+        Customising your display geometry — including text size, line height, and contrast — reduces ocular strain and cognitive fatigue during sustained computer use.
+      </p>
+
+      <div class="banner-container">
+        <div id="pinned-banner" class="pinned-badge">
+          Pinned notification banner with fixed insets.
+        </div>
+      </div>
+
+      <div id="overflow-box" class="fixed-height-box">
+        Eye comfort daily reminder.
+      </div>
+
+      <blockquote>
+        "Adjustable digital typography is foundational to universally accessible reading interfaces."
+      </blockquote>
+
+      <p>
+        <span class="icon material-icons" aria-hidden="true">&#9733;</span>
+        Key factors include comfortable tracking, sufficient line spacing, and prominent keyboard focus indicators.
+      </p>
+    </article>
+
+    <section id="feedback" aria-labelledby="form-heading">
+      <article>
+        <h2 id="form-heading">Reading Preferences</h2>
+        <form onsubmit="return false;">
+          <div class="form-group">
+            <label for="font-pref">Preferred Font Style</label>
+            <select id="font-pref">
+              <option value="sans">System Sans-Serif</option>
+              <option value="dyslexic">Dyslexia-friendly</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="radio-row">
+              <input type="radio" id="mode-standard" name="view-mode" value="standard" checked>
+              <label for="mode-standard">Standard Contrast</label>
+            </div>
+            <div class="radio-row">
+              <input type="radio" id="mode-high" name="view-mode" value="high">
+              <label for="mode-high">High Contrast</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="comments">Your Notes</label>
+            <textarea id="comments" rows="2" placeholder="Describe your reading settings..."></textarea>
+          </div>
+
+          <button type="button" id="save-settings">Save Settings</button>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Health &amp; Wellness Dispatch. All rights reserved. <a href="#top">Back to top</a></p>
+  </footer>
+</body>
+</html>

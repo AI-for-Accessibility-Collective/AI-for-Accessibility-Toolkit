@@ -1,7 +1,8 @@
 // Voice Commands - navigate and control page using voice
 //
-// Say "click" and the name of a button or link ("click add to cart"),
-// "scroll down", "go to top", "next link", "type hello", "stop listening".
+// Say "click" and the name of a button, link or field ("click add to cart"),
+// "scroll down", "go to top", "next link", "previous link", "next button",
+// "previous button", "type hello", "stop listening".
 //
 // Everything it hears and does is announced through announce(); the little
 // "Listening…" box is visual only (aria-hidden). It used to be a polite live
@@ -16,13 +17,24 @@ import { announce } from '../utils/ai.js';
 const FATAL = ['not-allowed', 'service-not-allowed', 'audio-capture'];
 const MAX_FAILURES = 4;      // consecutive errors without hearing anything, then give up
 const NOTICE_MS = 6000;      // how long the "can't use the microphone" note stays up
-const CLICKABLE = 'a[href], button, input[type="submit"], input[type="button"], input[type="checkbox"], input[type="radio"], ' +
-  'summary, label, select, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [onclick], [tabindex]:not([tabindex="-1"])';
+const CLICKABLE = 'a[href], button, input, textarea, select, ' +
+  'summary, label, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [onclick], [tabindex]:not([tabindex="-1"])';
 
 function squash(s) { return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
 // What a person would call the control: its label, else its words.
 function nameOf(el) {
-  return squash(el.getAttribute('aria-label') || el.textContent || el.value || el.getAttribute('title') ||
+  let label = el.getAttribute('aria-label');
+  if (!label && el.getAttribute('aria-labelledby')) {
+    label = el.getAttribute('aria-labelledby').split(/\s+/)
+      .map(id => document.getElementById(id)?.textContent || '')
+      .filter(Boolean).join(' ');
+  }
+  if (!label && el.labels?.length) {
+    label = Array.from(el.labels).map(l => l.textContent).join(' ');
+  }
+  const text = (el.getAttribute('title') && /^[\s\W_]+$/.test(el.textContent)) ? '' : el.textContent;
+  const val = (el.type !== 'checkbox' && el.type !== 'radio' && el.type !== 'file') ? el.value : '';
+  return squash(label || text || val || el.getAttribute('placeholder') || el.getAttribute('title') ||
     el.querySelector?.('img[alt]')?.getAttribute('alt') || '');
 }
 function visible(el) {
@@ -57,8 +69,11 @@ export const VoiceCommands = {
     'refresh': () => location.reload(),
     'click': () => {
       const focused = document.activeElement;
-      if (focused && focused !== document.body) {
+      if (focused && focused !== document.body && focused !== document.documentElement) {
         focused.click();
+        announce(`Clicked ${nameOf(focused).slice(0, 60) || 'focused item'}`);
+      } else {
+        announce('Nothing focused to click');
       }
     },
     'next link': () => {
@@ -76,11 +91,18 @@ export const VoiceCommands = {
       else if (links.length > 0) links[links.length - 1].focus();
     },
     'next button': () => {
-      const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]')).filter(visible);
+      const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]')).filter(visible);
       const current = document.activeElement;
       const idx = buttons.indexOf(current);
       if (idx < buttons.length - 1) buttons[idx + 1].focus();
       else if (buttons.length > 0) buttons[0].focus();
+    },
+    'previous button': () => {
+      const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]')).filter(visible);
+      const current = document.activeElement;
+      const idx = buttons.indexOf(current);
+      if (idx > 0) buttons[idx - 1].focus();
+      else if (buttons.length > 0) buttons[buttons.length - 1].focus();
     },
     'read page': () => window.__ai4a11yReadAloud?.speakPage(),
     'stop reading': () => window.__ai4a11yReadAloud?.stop()
@@ -215,6 +237,7 @@ export const VoiceCommands = {
       align-items: center;
       gap: 10px;
       pointer-events: none;
+      overflow-wrap: anywhere;
     `;
 
     const indicator = document.createElement('span');
@@ -224,6 +247,7 @@ export const VoiceCommands = {
 
     const textSpan = document.createElement('span');
     textSpan.className = 'ai4a11y-voice-text';
+    textSpan.style.cssText = 'min-width:0;overflow-wrap:anywhere;';
     textSpan.textContent = 'Listening...';
     this.feedbackElement.appendChild(textSpan);
 
@@ -272,7 +296,7 @@ export const VoiceCommands = {
     const typeMatch = transcript.match(/^type (.+)/);
     if (typeMatch) {
       const field = document.activeElement;
-      if (field && field.matches('input, textarea')) {
+      if (field && (field.matches('textarea') || (field.matches('input') && !/^(button|submit|reset|checkbox|radio|file|image|range|color)$/i.test(field.type)))) {
         field.value += typeMatch[1];
         field.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
@@ -297,19 +321,24 @@ export const VoiceCommands = {
   findElementByText(text) {
     const want = squash(text);
     if (!want) return null;
+    const stripped = want.replace(/^(the|a|an)\s+/, '').replace(/\s+(button|link|input|field)$/, '').trim();
     const seen = new Set(document.querySelectorAll(CLICKABLE));
     for (const el of document.querySelectorAll('div, span, li, img')) {
       if (!seen.has(el) && getComputedStyle(el).cursor === 'pointer' && !el.parentElement?.closest(CLICKABLE)) seen.add(el);
     }
-    const tiers = [[], [], []];
+    const tiers = [[], [], [], []];
     for (const el of seen) {
       if (el.closest('#ws-root, #ai4a11y-voice-feedback')) continue;
       const name = nameOf(el);
       if (!name) continue;
-      const tier = name === want ? 0 : name.startsWith(want) ? 1 : name.includes(want) ? 2 : -1;
+      let tier = -1;
+      if (name === want) tier = 0;
+      else if (stripped && name === stripped) tier = 1;
+      else if (name.startsWith(want) || (stripped && name.startsWith(stripped))) tier = 2;
+      else if (name.includes(want) || (stripped && stripped.length >= 3 && name.includes(stripped))) tier = 3;
       if (tier >= 0 && visible(el)) tiers[tier].push(el);
     }
-    return tiers[0][0] || tiers[1][0] || tiers[2][0] || null;
+    return tiers[0][0] || tiers[1][0] || tiers[2][0] || tiers[3][0] || null;
   },
 
   addCommand(phrase, action) {

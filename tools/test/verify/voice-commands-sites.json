@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/voice-commands.js",
+  "export": "VoiceCommands",
+  "sites": "all"
+}

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Understanding Ocean Currents — Marine Science Daily</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="readability.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #0c4a6e;
+      color: #ffffff;
+      padding: 1rem 2rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0;
+    }
+    nav a {
+      color: #bae6fd;
+      text-decoration: underline;
+    }
+    nav a:focus {
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
+    .layout {
+      display: flex;
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      gap: 2rem;
+    }
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      aside {
+        width: 100%;
+      }
+    }
+    main {
+      flex: 1;
+      min-width: 0;
+    }
+    article header h2 {
+      font-size: 2rem;
+      margin: 0 0 0.5rem;
+      color: #0f172a;
+    }
+    .author-byline {
+      font-style: italic;
+      color: #475569;
+      margin-bottom: 1.5rem;
+    }
+    article p {
+      margin-bottom: 1.25rem;
+      color: #334155;
+      font-size: 1.1rem;
+    }
+    article img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+    }
+    aside {
+      width: 300px;
+      flex-shrink: 0;
+    }
+    .ad-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-radius: 4px;
+    }
+    .ad-badge {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      background: #e2e8f0;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+    }
+    footer {
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 2rem 1rem;
+      text-align: center;
+      margin-top: 3rem;
+    }
+    footer a {
+      color: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Marine Science Daily</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#ocean" id="nav-ocean">Oceans</a></li>
+        <li><a href="#climate" id="nav-climate">Climate</a></li>
+        <li><a href="#about" id="nav-about">About Us</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <main id="main-content">
+      <article>
+        <header>
+          <h2 id="article-title">Understanding Ocean Currents and Global Climate Dynamics</h2>
+          <p class="author-byline">By Dr. Elena Rostova</p>
+        </header>
+
+        <p id="lead-para">
+          Ocean currents act as massive conveyor belts of heat and nutrients across the globe, driving planetary weather systems and regulating terrestrial ecosystems. From the Atlantic Meridional Overturning Circulation to the Antarctic Circumpolar Current, these immense fluid motions transfer thermal energy from tropical zones toward polar regions, moderating extreme temperature variations.
+        </p>
+
+        <figure>
+          <img id="article-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' fill='%230284c7'%3E%3Crect width='100%25' height='100%25' fill='%23e0f2fe'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%230369a1' font-family='sans-serif' font-size='24'%3EOcean Circulation Map%3C/text%3E%3C/svg%3E" alt="Diagram of global thermo-haline circulation flow lines" width="600" height="300">
+          <figcaption id="img-caption">Global thermohaline circulation drives deep ocean heat transfer.</figcaption>
+        </figure>
+
+        <p id="second-para">
+          Deep-water formation occurs predominantly in high-latitude North Atlantic waters, where cooling and evaporation increase water density, causing surface waters to sink into the abyssal plains. This dense water mass flows southward across thousands of kilometers, slowly upwelling in distant ocean basins over timescales spanning centuries.
+        </p>
+
+        <p id="third-para">
+          Recent satellite observations and oceanographic buoys suggest subtle shifts in flow rates influenced by melting glacial sheets. Freshwater influx alters salinity gradients, potentially reducing the density threshold required for deep overturning. Researchers continue to monitor these fluctuations through autonomous Argo float arrays deployed worldwide.
+        </p>
+
+        <p id="fourth-para">
+          Understanding these intricate feedback mechanisms is crucial for predictive climate modeling and coastal vulnerability assessments over the coming decades.
+        </p>
+      </article>
+    </main>
+
+    <aside aria-label="Sidebar">
+      <div class="ad-card" id="sponsor-banner">
+        <span class="ad-badge sponsor-label">Sponsored Content</span>
+        <h3>Submersible Deep-Sea Drones</h3>
+        <p>Explore autonomous underwater survey vehicles built for commercial research.</p>
+        <a href="#sponsor-link" id="ad-link">Learn More</a>
+      </div>
+
+      <div class="advertisement" id="promo-box">
+        <p>Subscribe to our quarterly marine research newsletter.</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Marine Science Daily. All rights reserved. <a href="#privacy" id="privacy-link">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>

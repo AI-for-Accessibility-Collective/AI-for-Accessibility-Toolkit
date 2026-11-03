@@ -1,0 +1,19 @@
+{
+  "name": "big-targets-narrow",
+  "file": "tools/adapters/big-targets.js",
+  "page": "big-targets.html",
+  "checks": [
+    {
+      "name": "small controls enlarged at 320px viewport without horizontal page scroll",
+      "code": "\n        if (!document.body.classList.contains('ai4a11y-big-targets')) return true;\n        const dec = document.getElementById('btn-dec');\n        const inc = document.getElementById('btn-inc');\n        const chk = document.getElementById('expedited-shipping');\n        if (!dec || !inc || !chk) return false;\n\n        const decRect = dec.getBoundingClientRect();\n        const incRect = inc.getBoundingClientRect();\n        const chkRect = chk.getBoundingClientRect();\n\n        const enlarged = decRect.width >= 44 && decRect.height >= 44 &&\n                         incRect.width >= 44 && incRect.height >= 44 &&\n                         chkRect.width >= 24 && chkRect.height >= 24;\n\n        // No horizontal scrollbar on root\n        const root = document.documentElement;\n        const noHorizontalScroll = root.scrollWidth <= root.clientWidth + 1;\n\n        return enlarged && noHorizontalScroll;\n      "
+    },
+    {
+      "name": "interactive functionality still works at 320px viewport",
+      "code": "\n        const inc = document.getElementById('btn-inc');\n        const qty = document.getElementById('qty-field');\n        if (!inc || !qty) return false;\n\n        const startVal = parseInt(qty.value || '1', 10);\n        inc.click();\n        const clicked = parseInt(qty.value, 10) === startVal + 1;\n        // restore\n        const dec = document.getElementById('btn-dec');\n        if (dec) dec.click();\n\n        return clicked;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

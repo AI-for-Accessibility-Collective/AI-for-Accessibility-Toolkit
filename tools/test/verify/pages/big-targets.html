@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mechanical Keyboards Store - Custom Switches and Accessories</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #24292e;
+      color: #ffffff;
+      padding: 0.75rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.4rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      font-size: 0.95rem;
+    }
+    main {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    .product-card {
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 1.5rem;
+      background: #fafbfc;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.3rem;
+      color: #0f172a;
+    }
+    .price {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #1e293b;
+      margin: 0.5rem 0;
+    }
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    /* Small buttons (barrier) */
+    .qty-btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 1px solid #8c959f;
+      background: #f6f8fa;
+      color: #24292e;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .qty-input {
+      width: 36px;
+      height: 22px;
+      text-align: center;
+      border: 1px solid #8c959f;
+      border-radius: 3px;
+      font-size: 14px;
+      padding: 0;
+    }
+    .icon-heart {
+      width: 22px;
+      height: 22px;
+      border: 1px solid #cf222e;
+      background: #ffebe9;
+      color: #cf222e;
+      cursor: pointer;
+      border-radius: 50%;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    /* Standard large button that should not be touched */
+    .btn-primary {
+      height: 48px;
+      padding: 0 1.5rem;
+      background: #0969da;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    /* Small checkbox barrier with pointer-events: none on label */
+    .checkbox-row {
+      margin: 1rem 0;
+    }
+    .tiny-checkbox {
+      width: 13px;
+      height: 13px;
+      margin: 0 6px 0 0;
+      vertical-align: middle;
+    }
+    .unclickable-label {
+      pointer-events: none;
+      font-size: 0.95rem;
+      color: #24292e;
+      cursor: default;
+    }
+    /* Tight toolbar where growing would overflow container */
+    .tight-container {
+      width: 90px;
+      overflow: hidden;
+      display: flex;
+      gap: 2px;
+      border: 1px solid #d0d7de;
+      padding: 2px;
+      margin: 1rem 0;
+    }
+    .tight-btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      font-size: 11px;
+      border: 1px solid #8c959f;
+      background: #ffffff;
+      color: #24292e;
+      cursor: pointer;
+    }
+    /* Inline links */
+    .info-section {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e1e4e8;
+    }
+    .info-section a {
+      color: #0969da;
+      text-decoration: underline;
+    }
+    .custom-badge {
+      display: inline-block;
+      width: 28px;
+      height: 20px;
+      background: #e1e4e8;
+      color: #24292e;
+      text-align: center;
+      font-size: 11px;
+      line-height: 20px;
+      cursor: pointer;
+      border-radius: 3px;
+      border: 1px solid #d0d7de;
+    }
+    .disabled-btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 1px solid #d0d7de;
+      background: #f6f8fa;
+      color: #8c959f;
+      cursor: not-allowed;
+    }
+    footer {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #f6f8fa;
+      border-top: 1px solid #d0d7de;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #57606a;
+    }
+    footer a {
+      color: #0969da;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>KeyTech Supplies</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#products" id="nav-products">Products</a></li>
+        <li><a href="#custom" id="nav-custom">Custom Builds</a></li>
+        <li><a href="#support" id="nav-support">Support</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article class="product-card">
+      <h2>Quiet Mechanical Switch Set (70 Pack)</h2>
+      <p class="price">$42.00</p>
+      <p id="product-desc">Linear sound-dampened switches with 45g actuation force. Ideal for office work and gaming.</p>
+
+      <div class="control-row">
+        <label for="qty-field" id="qty-label">Quantity:</label>
+        <button type="button" class="qty-btn" id="btn-dec" aria-label="Decrease quantity" onclick="const q=document.getElementById('qty-field'); q.value=Math.max(1,parseInt(q.value||'1')-1);">−</button>
+        <input type="number" id="qty-field" class="qty-input" value="1" min="1" max="10" aria-label="Selected quantity">
+        <button type="button" class="qty-btn" id="btn-inc" aria-label="Increase quantity" onclick="const q=document.getElementById('qty-field'); q.value=Math.min(10,parseInt(q.value||'1')+1);">+</button>
+        <button type="button" class="icon-heart" id="btn-fav" aria-label="Add to wishlist" title="Add to wishlist">♥</button>
+      </div>
+
+      <div class="checkbox-row">
+        <label class="unclickable-label" id="shipping-label">
+          <input type="checkbox" id="expedited-shipping" class="tiny-checkbox">
+          Add expedited express delivery ($5.00)
+        </label>
+      </div>
+
+      <div class="control-row">
+        <button type="button" class="btn-primary" id="btn-add-cart">Add to Cart</button>
+        <button type="button" disabled class="disabled-btn" id="btn-disabled" aria-label="Sold out option">∅</button>
+        <div role="button" tabindex="0" class="custom-badge" id="btn-spec" aria-label="View specifications" onclick="this.setAttribute('data-opened','true')">Specs</div>
+      </div>
+
+      <div class="tight-toolbar-section">
+        <p id="tight-label" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Quick Presets:</p>
+        <div class="tight-container" id="tight-container">
+          <button type="button" class="tight-btn" id="tight-1" aria-label="Preset 1">P1</button>
+          <button type="button" class="tight-btn" id="tight-2" aria-label="Preset 2">P2</button>
+          <button type="button" class="tight-btn" id="tight-3" aria-label="Preset 3">P3</button>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <p>Review our <a href="#shipping" id="link-shipping">shipping information</a> and <a href="#returns" id="link-returns">return policy</a> before ordering.</p>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 KeyTech Supplies. <a href="#privacy" id="link-privacy">Privacy</a> &bull; <a href="#terms" id="link-terms">Terms of Service</a></p>
+  </footer>
+</body>
+</html>

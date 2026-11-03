@@ -1,0 +1,28 @@
+{
+  "name": "reflow-column-narrow",
+  "file": "tools/adapters/reflow-column.js",
+  "export": "ReflowColumn",
+  "page": "reflow-column.html",
+  "checks": [
+    {
+      "name": "reflow avoids horizontal page scrolling at 320px viewport (WCAG 1.4.10)",
+      "code": "\n        const isEnabled = document.documentElement.classList.contains('ai4a11y-reflow');\n        if (!isEnabled) {\n          return document.documentElement.scrollWidth > 320;\n        }\n\n        const docScrollW = document.documentElement.scrollWidth;\n        const bodyScrollW = document.body.scrollWidth;\n        return docScrollW <= 320 && bodyScrollW <= 320;\n      "
+    },
+    {
+      "name": "floats and multi-column linearize cleanly in narrow view",
+      "code": "\n        const article = document.querySelector('.main-article');\n        const aside = document.querySelector('.side-panel');\n        const multiCol = document.getElementById('multi-column-section');\n        if (!article || !aside || !multiCol) return false;\n\n        const isEnabled = document.documentElement.classList.contains('ai4a11y-reflow');\n        if (!isEnabled) return true;\n\n        const artStyle = window.getComputedStyle(article);\n        const asideStyle = window.getComputedStyle(aside);\n        const colStyle = window.getComputedStyle(multiCol);\n\n        if (artStyle.float !== 'none' || asideStyle.float !== 'none') return false;\n        if (colStyle.columnCount !== 'auto') return false;\n\n        const artRect = article.getBoundingClientRect();\n        const asideRect = aside.getBoundingClientRect();\n        return asideRect.top >= artRect.bottom - 5;\n      "
+    },
+    {
+      "name": "grid and wide media fit within 320px width without clipping text",
+      "code": "\n        const grid = document.getElementById('wide-grid');\n        const img = document.getElementById('wide-image');\n        if (!grid || !img) return false;\n\n        const isEnabled = document.documentElement.classList.contains('ai4a11y-reflow');\n        if (!isEnabled) return true;\n\n        const gridRect = grid.getBoundingClientRect();\n        const imgRect = img.getBoundingClientRect();\n\n        return gridRect.width <= 320 && imgRect.width <= 320;\n      "
+    },
+    {
+      "name": "interactive controls remain accessible and focusable at 320px",
+      "code": "\n        const btnSave = document.getElementById('btn-save');\n        const btnShare = document.getElementById('btn-share');\n        if (!btnSave || !btnShare) return false;\n\n        for (const btn of [btnSave, btnShare]) {\n          const r = btn.getBoundingClientRect();\n          if (r.width < 24 || r.height < 24) return false;\n        }\n\n        btnSave.focus();\n        const focused = document.activeElement === btnSave;\n        btnSave.blur();\n        return focused;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

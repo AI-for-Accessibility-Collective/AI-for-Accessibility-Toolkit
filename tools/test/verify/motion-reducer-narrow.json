@@ -1,0 +1,24 @@
+{
+  "name": "motion-reducer-narrow",
+  "file": "tools/adapters/motion-reducer.js",
+  "export": "MotionReducer",
+  "page": "motion-reducer.html",
+  "checks": [
+    {
+      "name": "CSS animations, transitions, and scroll behavior stopped at 320px",
+      "code": "\n        const badge = document.getElementById('spinning-badge');\n        const trans = document.getElementById('transition-box');\n        if (!badge || !trans) return false;\n        const style = document.getElementById('ai4a11y-motion-reducer-styles');\n        if (!style) {\n          const cs = getComputedStyle(badge);\n          return cs.animationName === 'spin';\n        }\n        const csBadge = getComputedStyle(badge);\n        const csTrans = getComputedStyle(trans);\n        const htmlCs = getComputedStyle(document.documentElement);\n        const animFast = csBadge.animationDuration === '0.000001s' || csBadge.animationDuration === '0.001ms' || parseFloat(csBadge.animationDuration) <= 0.001;\n        const animPaused = csBadge.animationPlayState === 'paused';\n        const transFast = csTrans.transitionDuration === '0.000001s' || csTrans.transitionDuration === '0.001ms' || parseFloat(csTrans.transitionDuration) <= 0.001;\n        const scrollAuto = htmlCs.scrollBehavior === 'auto';\n        return (animFast || animPaused) && transFast && scrollAuto;\n      "
+    },
+    {
+      "name": "canvas replacements do not cause horizontal overflow at 320px",
+      "code": "\n        const anim = document.getElementById('animated-gif');\n        const decor = document.getElementById('decorative-gif');\n        const ariaGif = document.getElementById('aria-labeled-gif');\n        if (!anim || !decor || !ariaGif) return false;\n\n        const docWidth = document.documentElement.scrollWidth;\n        const winWidth = window.innerWidth;\n        return docWidth <= winWidth;\n      "
+    },
+    {
+      "name": "video and media controls stay within 320px boundary and functional",
+      "code": "\n        const autoVid = document.getElementById('autoplay-video');\n        if (!autoVid) return false;\n        const style = document.getElementById('ai4a11y-motion-reducer-styles');\n        if (!style) return true;\n        const rect = autoVid.getBoundingClientRect();\n        return rect.width <= 320 && autoVid.controls === true && autoVid.paused === true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

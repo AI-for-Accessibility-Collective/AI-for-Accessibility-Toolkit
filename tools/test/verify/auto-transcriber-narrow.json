@@ -1,0 +1,25 @@
+{
+  "name": "auto-transcriber-narrow",
+  "file": "tools/adapters/auto-transcriber.js",
+  "export": "AutoTranscriber",
+  "page": "auto-transcriber.html",
+  "checks": [
+    {
+      "name": "CC buttons fit within narrow viewport without overflowing screen or breaking layout",
+      "code": "\n        const v1 = document.getElementById('video-with-tracks');\n        const w1 = document.getElementById('wrapper-1');\n        if (!v1 || !w1) return false;\n\n        if (!document.getElementById('ai4a11y-caption-helper-styles')) return true;\n\n        const btn = w1.querySelector('.ai4a11y-audio-btn');\n        if (!btn) return false;\n\n        const rect = btn.getBoundingClientRect();\n        return rect.right <= 320 && rect.left >= 0 && rect.width >= 24 && rect.height >= 24;\n      "
+    },
+    {
+      "name": "interactive toggle works in narrow viewport",
+      "code": "\n        const w2 = document.getElementById('wrapper-2');\n        if (!w2) return false;\n\n        if (!document.getElementById('ai4a11y-caption-helper-styles')) return true;\n\n        const btn2 = w2.querySelector('.ai4a11y-audio-btn');\n        const box2 = w2.querySelector('.ai4a11y-caption-box');\n        if (!btn2 || !box2) return false;\n\n        btn2.click();\n        await new Promise(r => setTimeout(r, 60));\n\n        const ok = btn2.getAttribute('aria-pressed') === 'true' && box2.style.display === 'block';\n\n        btn2.click();\n        return ok && btn2.getAttribute('aria-pressed') === 'false';\n      "
+    }
+  ],
+  "ai": {
+    "transcribeVideo": {
+      "text": "Hello and welcome to this AI transcribed video tutorial."
+    }
+  },
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

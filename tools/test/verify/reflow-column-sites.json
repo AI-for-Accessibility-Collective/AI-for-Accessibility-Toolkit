@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/reflow-column.js",
+  "export": "ReflowColumn",
+  "sites": "all"
+}

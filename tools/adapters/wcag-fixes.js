@@ -73,7 +73,11 @@ export function fixMissingLang(_element) {
 // Fix duplicate IDs
 export function fixDuplicateId(element) {
   const originalId = element.id;
-  const newId = `${originalId}_${randomSuffix()}`;
+  if (!originalId) return;
+
+  const doc = element.ownerDocument || document;
+  const duplicates = Array.from(doc.querySelectorAll('[id]')).filter(el => el.id === originalId);
+  if (duplicates.length <= 1) return;
 
   // Rename the SECOND+ duplicate element only. Do NOT re-point any
   // for/aria-labelledby/aria-describedby/etc. references: getElementById (and
@@ -82,12 +86,30 @@ export function fixDuplicateId(element) {
   // every matching reference over to the newly-renamed element would move
   // references that were already pointing at the right place onto the wrong
   // one — breaking wiring that worked before this "fix" ran.
-  element.id = newId;
-  markProcessed(element, 'done');
+  if (duplicates[0] === element) {
+    // When called on the first occurrence (as axe reports), rename all subsequent duplicates
+    for (let i = 1; i < duplicates.length; i++) {
+      renameDuplicate(duplicates[i], originalId);
+    }
+  } else {
+    // A second+ duplicate was passed directly
+    renameDuplicate(element, originalId);
+  }
+}
+
+function renameDuplicate(el, originalId) {
+  const newId = `${originalId}_${randomSuffix()}`;
+  el.id = newId;
+  markProcessed(el, 'done');
   incrementStat('wcag');
-  logFix('duplicate-id', element, originalId, newId);
+  logFix('duplicate-id', el, originalId, newId);
   console.log('[AI4A11y] Renamed duplicate ID:', originalId, '->', newId);
 }
+
+const ABSTRACT_ROLES = new Set([
+  'command', 'composite', 'input', 'landmark', 'range', 'roletype',
+  'section', 'sectionhead', 'select', 'structure', 'widget', 'window'
+]);
 
 // Fix skipped heading levels
 export function fixHeadingOrder(element) {
@@ -95,7 +117,15 @@ export function fixHeadingOrder(element) {
   if (!match) return;
 
   const currentLevel = parseInt(match[1]);
-  const allHeadings = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+  const doc = element.ownerDocument || document;
+  const allHeadings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => {
+    try {
+      const s = getComputedStyle(h);
+      return s.display !== 'none' && s.visibility !== 'hidden';
+    } catch {
+      return true;
+    }
+  });
   const idx = allHeadings.indexOf(element);
 
   if (idx === -1 || idx === 0) return;
@@ -105,7 +135,7 @@ export function fixHeadingOrder(element) {
 
   if (currentLevel > prevLevel + 1) {
     const newLevel = prevLevel + 1;
-    const newHeading = document.createElement(`h${newLevel}`);
+    const newHeading = doc.createElement(`h${newLevel}`);
 
     // Move children to preserve event listeners
     while (element.firstChild) {
@@ -156,6 +186,7 @@ export function fixInvalidAriaAttr(element) {
     if (attr.name.startsWith('aria-') && !VALID_ARIA_ATTRS.has(attr.name)) {
       element.removeAttribute(attr.name);
       fixed = true;
+      logFix('aria-valid-attr', element, attr.name, '(removed)');
       console.log('[AI4A11y] Removed invalid ARIA attr:', attr.name);
     }
   }
@@ -168,11 +199,33 @@ export function fixInvalidAriaAttr(element) {
 // Fix invalid ARIA role
 export function fixInvalidAriaRole(element) {
   const role = element.getAttribute('role');
-  if (role && !VALID_ARIA_ROLES.has(role)) {
+  if (!role) return;
+
+  const tokens = role.trim().split(/\s+/);
+  const validTokens = tokens.filter(t => VALID_ARIA_ROLES.has(t) && !ABSTRACT_ROLES.has(t));
+  if (validTokens.length === tokens.length) return;
+
+  if (validTokens.length > 0) {
+    element.setAttribute('role', validTokens.join(' '));
+    incrementStat('wcag');
+    logFix('aria-role', element, role, validTokens.join(' '));
+    console.log('[AI4A11y] Cleaned invalid role tokens:', role, '->', validTokens.join(' '));
+  } else {
     element.removeAttribute('role');
     incrementStat('wcag');
     logFix('aria-role', element, role, '(removed)');
     console.log('[AI4A11y] Removed invalid role:', role);
+  }
+}
+
+// Fix disallowed ARIA role
+export function fixDisallowedRole(element) {
+  const role = element.getAttribute('role');
+  if (role) {
+    element.removeAttribute('role');
+    incrementStat('wcag');
+    logFix('aria-allowed-role', element, role, '(removed)');
+    console.log('[AI4A11y] Removed disallowed role:', role);
   }
 }
 
@@ -200,24 +253,37 @@ export function fixMissingAriaAttrs(_element) {
 
 // Fix nested interactive elements
 export function fixNestedInteractive(element) {
-  const parent = element.closest('a, button');
-  if (!parent || element === parent) return;
+  // If element is nested inside an interactive parent
+  const parent = element.parentElement?.closest('a, button, [role="button"]');
+  if (parent) {
+    repairNested(element);
+    return;
+  }
 
-  if (element.tagName === 'BUTTON') {
-    const span = document.createElement('span');
-    while (element.firstChild) {
-      span.appendChild(element.firstChild);
+  // If element is the outer container with nested interactive elements
+  const nested = element.querySelectorAll('button, a[href]');
+  for (const child of nested) {
+    repairNested(child);
+  }
+}
+
+function repairNested(child) {
+  const doc = child.ownerDocument || document;
+  if (child.tagName === 'BUTTON') {
+    const span = doc.createElement('span');
+    while (child.firstChild) {
+      span.appendChild(child.firstChild);
     }
-    span.className = element.className;
-    element.replaceWith(span);
+    span.className = child.className;
+    child.replaceWith(span);
     incrementStat('wcag');
     logFix('nested-interactive', span, 'button', 'span');
     console.log('[AI4A11y] Replaced nested button with span');
-  } else if (element.tagName === 'A') {
-    element.removeAttribute('href');
-    element.setAttribute('role', 'presentation');
+  } else if (child.tagName === 'A') {
+    child.removeAttribute('href');
+    child.setAttribute('role', 'presentation');
     incrementStat('wcag');
-    logFix('nested-interactive', element, 'a[href]', 'a[role=presentation]');
+    logFix('nested-interactive', child, 'a[href]', 'a[role=presentation]');
     console.log('[AI4A11y] Made nested link non-interactive');
   }
 }
@@ -366,7 +432,7 @@ const rawHandlers = {
   'tabindex': fixPositiveTabindex,
   'aria-valid-attr': fixInvalidAriaAttr,
   'aria-roles': fixInvalidAriaRole,
-  'aria-allowed-role': fixInvalidAriaRole,
+  'aria-allowed-role': fixDisallowedRole,
   'aria-deprecated-role': fixDeprecatedRole,
   'aria-required-attr': fixMissingAriaAttrs,
   'nested-interactive': fixNestedInteractive,

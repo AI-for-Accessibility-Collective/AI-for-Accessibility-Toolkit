@@ -1,0 +1,32 @@
+{
+  "name": "math-a11y",
+  "file": "tools/adapters/math-a11y.js",
+  "export": "MathA11y",
+  "page": "math-a11y.html",
+  "checks": [
+    {
+      "name": "test elements exist in page",
+      "code": "\n        return !!document.getElementById('math-frac') &&\n               !!document.getElementById('math-power') &&\n               !!document.getElementById('math-sub') &&\n               !!document.getElementById('math-subsup') &&\n               !!document.getElementById('math-sqrt') &&\n               !!document.getElementById('math-root') &&\n               !!document.getElementById('math-alttext') &&\n               !!document.getElementById('math-tex') &&\n               !!document.getElementById('math-already-labeled') &&\n               !!document.getElementById('img-codecogs') &&\n               !!document.getElementById('img-mathtex') &&\n               !!document.getElementById('img-missing-alt') &&\n               !!document.getElementById('img-generic') &&\n               !!document.getElementById('img-photo');\n      "
+    },
+    {
+      "name": "unnamed mathml elements receive descriptive spoken aria-labels and role=\"math\"",
+      "code": "\n        const frac = document.getElementById('math-frac');\n        const power = document.getElementById('math-power');\n        const sub = document.getElementById('math-sub');\n        const subsup = document.getElementById('math-subsup');\n        const sqrt = document.getElementById('math-sqrt');\n        const root = document.getElementById('math-root');\n        const alttext = document.getElementById('math-alttext');\n        const tex = document.getElementById('math-tex');\n\n        const adapter = window.__ai4a11yMathA11y;\n        if (!adapter || !adapter.enabled) return true;\n\n        if (frac.getAttribute('role') !== 'math') return false;\n        if (!frac.getAttribute('aria-label')?.includes('1 over 2')) return false;\n\n        if (power.getAttribute('role') !== 'math') return false;\n        if (!power.getAttribute('aria-label')?.includes('x to the power of 2')) return false;\n\n        if (sub.getAttribute('role') !== 'math') return false;\n        if (!sub.getAttribute('aria-label')?.includes('v sub 0')) return false;\n\n        if (subsup.getAttribute('role') !== 'math') return false;\n        if (!subsup.getAttribute('aria-label')?.includes('x sub 1 to the power of 2')) return false;\n\n        if (sqrt.getAttribute('role') !== 'math') return false;\n        if (!sqrt.getAttribute('aria-label')?.includes('square root of x')) return false;\n\n        if (root.getAttribute('role') !== 'math') return false;\n        if (!root.getAttribute('aria-label')?.includes('3 root of x')) return false;\n\n        if (alttext.getAttribute('aria-label') !== 'E equals m c squared') return false;\n        if (tex.getAttribute('aria-label') !== 'Math: a + b') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "unlabeled equation images receive alt text with decoded TeX or generic description",
+      "code": "\n        const codecogs = document.getElementById('img-codecogs');\n        const mathtex = document.getElementById('img-mathtex');\n        const missing = document.getElementById('img-missing-alt');\n        const generic = document.getElementById('img-generic');\n\n        const adapter = window.__ai4a11yMathA11y;\n        if (!adapter || !adapter.enabled) return true;\n\n        if (codecogs.getAttribute('alt') !== 'Equation: x^2+y^2') return false;\n        if (mathtex.getAttribute('alt') !== 'Equation: \\\\int_0^1 x dx') return false;\n        if (missing.getAttribute('alt') !== 'Mathematical equation (no description available)') return false;\n        if (generic.getAttribute('alt') !== 'Mathematical equation (no description available)') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "focusable math gets visible focus indicator with outline style injected",
+      "code": "\n        const focusable = document.getElementById('math-focusable');\n        const adapter = window.__ai4a11yMathA11y;\n        if (!adapter || !adapter.enabled) return true;\n\n        const style = document.getElementById('ai4a11y-math-style');\n        if (!style) return false;\n\n        focusable.focus();\n        if (document.activeElement !== focusable) return false;\n        const cs = window.getComputedStyle(focusable);\n        if (parseFloat(cs.outlineWidth) < 2) return false;\n        focusable.blur();\n\n        return true;\n      "
+    },
+    {
+      "name": "already-labeled elements, hidden math, and non-math elements are left untouched",
+      "code": "\n        const labeledMath = document.getElementById('math-already-labeled');\n        const labelledbyMath = document.getElementById('math-already-labelledby');\n        const hiddenMath = document.getElementById('math-hidden');\n        const labeledImg = document.getElementById('img-already-labeled');\n        const photo = document.getElementById('img-photo');\n        const decorative = document.getElementById('img-decorative');\n\n        const adapter = window.__ai4a11yMathA11y;\n        if (!adapter || !adapter.enabled) return true;\n\n        if (labeledMath.getAttribute('aria-label') !== 'kinetic energy') return false;\n        if (labelledbyMath.getAttribute('aria-label')) return false;\n        if (hiddenMath.getAttribute('aria-label')) return false;\n\n        if (labeledImg.getAttribute('alt') !== '') return false;\n        if (photo.getAttribute('alt') !== 'A physics laboratory bench with equipment') return false;\n        if (decorative.getAttribute('alt') !== '') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "dynamic math added after enable is handled via sweep",
+      "code": "\n        const adapter = window.__ai4a11yMathA11y;\n        if (!adapter || !adapter.enabled) return true;\n\n        const dyn = document.createElement('math');\n        dyn.id = 'math-dyn-test';\n        dyn.innerHTML = '<mfrac><mn>3</mn><mn>4</mn></mfrac>';\n        document.getElementById('mathml-section').appendChild(dyn);\n\n        await new Promise(r => setTimeout(r, 700));\n\n        const ok = dyn.getAttribute('role') === 'math' &&\n                   dyn.getAttribute('aria-label')?.includes('3 over 4');\n        dyn.remove();\n        return ok;\n      "
+    }
+  ]
+}

@@ -25,10 +25,16 @@ function mount(bodyHTML) {
 }
 
 async function run() {
-  // A typical page: a fixed site header, a sticky nav, and static content.
+  // A typical page: a fixed site header, a sticky nav, and static content,
+  // plus dialogs, tooltips and other adapters' overlays that must stay pinned.
   const doc = mount(`
     <header id="site-header" style="position: fixed; top: 0;">Site header</header>
     <nav id="site-nav" style="position: sticky; top: 0;">Section nav</nav>
+    <div id="tip" role="tooltip" style="position: fixed; top: 50px;">Tooltip note</div>
+    <dialog id="diag" style="position: fixed; top: 100px;">
+      <header id="diag-header" style="position: sticky; top: 0;">Modal header</header>
+    </dialog>
+    <div id="ai4a11y-lens" style="position: fixed; top: 200px;">Toolkit lens</div>
     <main><article><p>The article content the reader came for.</p></article></main>`);
 
   UnpinSticky.enable();
@@ -36,6 +42,9 @@ async function run() {
   check('unpin: unpins a fixed header', unpinnedSel('#site-header') === true);
   check('unpin: unpins a sticky nav', unpinnedSel('#site-nav') === true);
   check('unpin: leaves static content untouched', unpinnedSel('main') !== true && unpinnedSel('article') !== true);
+  check('unpin: leaves tooltips untouched', unpinnedSel('#tip') !== true);
+  check('unpin: leaves dialog and its contents untouched', unpinnedSel('#diag') !== true && unpinnedSel('#diag-header') !== true);
+  check('unpin: leaves other adapters overlays untouched', unpinnedSel('#ai4a11y-lens') !== true);
   const styles = doc.querySelectorAll('#ai4a11y-unpin-sticky-styles');
   check('unpin: injects exactly one stylesheet whose rule sets position:static',
     styles.length === 1 && /position:\s*static\s*!important/.test(styles[0].textContent));

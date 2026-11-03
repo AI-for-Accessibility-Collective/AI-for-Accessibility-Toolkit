@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/describe-on-demand.js",
+  "export": "DescribeOnDemand",
+  "sites": "all"
+}

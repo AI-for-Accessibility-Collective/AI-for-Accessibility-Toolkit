@@ -1,0 +1,18 @@
+{
+  "name": "fix-links",
+  "file": "tools/adapters/fix-links.js",
+  "page": "fix-links.html",
+  "checks": [
+    {
+      "name": "ambiguous links receive descriptive aria-label",
+      "code": "const l1 = document.getElementById('link-report'); return l1 && l1.getAttribute('aria-label') === 'Download 2026 Annual Performance Report';"
+    }
+  ],
+  "ai": {
+    "improveLinkText": "Download 2026 Annual Performance Report"
+  },
+  "harness": {
+    "enable": "\n      window.__fixLinksPrev = [];\n      const AMBIGUOUS = ['click here', 'here', 'read more', 'more', 'learn more', 'continue', 'link', 'this', 'this link'];\n      const links = Array.from(document.querySelectorAll('a[href]')).filter(a => {\n        const name = (a.getAttribute('aria-label') || a.querySelector('img')?.getAttribute('alt') || a.textContent || '').trim().toLowerCase();\n        return AMBIGUOUS.includes(name);\n      });\n      for (const link of links) {\n        window.__fixLinksPrev.push({\n          link,\n          ariaLabel: link.getAttribute('aria-label'),\n          hadAriaLabel: link.hasAttribute('aria-label'),\n          className: link.getAttribute('class'),\n          hadClass: link.hasAttribute('class'),\n          processed: link.dataset.ai4a11yProcessed,\n        });\n      }\n      await m.improveAmbiguousLinks(links);\n    ",
+    "disable": "\n      if (window.__fixLinksPrev) {\n        for (const item of window.__fixLinksPrev) {\n          if (item.hadAriaLabel) item.link.setAttribute('aria-label', item.ariaLabel);\n          else item.link.removeAttribute('aria-label');\n          if (item.hadClass) item.link.setAttribute('class', item.className);\n          else item.link.removeAttribute('class');\n          if (item.processed !== undefined) item.link.dataset.ai4a11yProcessed = item.processed;\n          else delete item.link.dataset.ai4a11yProcessed;\n        }\n        delete window.__fixLinksPrev;\n      }\n    "
+  }
+}

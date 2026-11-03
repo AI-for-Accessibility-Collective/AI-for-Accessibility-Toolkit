@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Motion Reducer Test Lab</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #0f172a;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 10px;
+      background: #000000;
+      color: #ffffff;
+      padding: 8px 14px;
+      z-index: 100;
+      text-decoration: underline;
+      font-weight: 600;
+      min-height: 24px;
+    }
+    .skip-link:focus {
+      top: 10px;
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    header {
+      background-color: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #005fcc;
+      text-decoration: underline;
+      font-weight: 500;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 960px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background-color: #ffffff;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: #0f172a;
+    }
+    p {
+      margin: 0 0 1rem 0;
+      color: #334155;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spinning-badge {
+      display: inline-block;
+      width: 48px;
+      height: 48px;
+      background-color: #005fcc;
+      color: #ffffff;
+      text-align: center;
+      line-height: 48px;
+      border-radius: 50%;
+      animation: spin 2s linear infinite;
+    }
+    .transition-box {
+      width: 120px;
+      padding: 8px;
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      transition: transform 0.5s ease;
+    }
+    .waapi-box {
+      width: 60px;
+      height: 60px;
+      background-color: #0284c7;
+      border-radius: 4px;
+    }
+    .parallax-hero {
+      padding: 2rem;
+      background-color: #f1f5f9;
+      background-attachment: fixed;
+      border-radius: 6px;
+    }
+    .media-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .media-card {
+      flex: 1 1 240px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.75rem;
+      background-color: #f8fafc;
+    }
+    .media-card h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: #0f172a;
+    }
+    video, iframe {
+      max-width: 100%;
+      display: block;
+      border-radius: 4px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+      display: inline-block;
+    }
+    button {
+      background-color: #005fcc;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      min-height: 36px;
+      min-width: 44px;
+      cursor: pointer;
+    }
+    button:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    footer {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 1rem;
+      border-top: 1px solid #e2e8f0;
+      font-size: 0.875rem;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header>
+    <h1>Motion Reducer Test Lab</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#anim-section">Animations</a></li>
+        <li><a href="#video-section">Videos</a></li>
+        <li><a href="#image-section">Images</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="anim-section" aria-labelledby="anim-heading">
+      <h2 id="anim-heading">CSS Animations &amp; Transitions</h2>
+      <p>Continuous CSS keyframe animations and smooth transitions.</p>
+      <div id="spinning-badge" class="spinning-badge" aria-label="Loading badge">★</div>
+      <div id="transition-box" class="transition-box">Transition Box</div>
+    </section>
+
+    <section id="waapi-section" aria-labelledby="waapi-heading">
+      <h2 id="waapi-heading">Web Animations API (WAAPI)</h2>
+      <p>Element animated via JavaScript element.animate().</p>
+      <div id="waapi-box" class="waapi-box"></div>
+    </section>
+
+    <section id="parallax-section" class="parallax-hero parallax-bg" style="background-attachment: fixed;" aria-labelledby="parallax-heading">
+      <h2 id="parallax-heading">Parallax Background Area</h2>
+      <p id="parallax-desc">This section uses fixed background attachment simulating parallax motion.</p>
+    </section>
+
+    <section id="video-section" aria-labelledby="video-heading">
+      <h2 id="video-heading">Auto-playing &amp; Embedded Media</h2>
+      <p>HTML5 video elements and video iframes.</p>
+      <div class="media-row">
+        <div class="media-card">
+          <h3>Autoplaying Video (No Controls)</h3>
+          <video id="autoplay-video" width="280" height="160" autoplay muted playsinline loop aria-label="Autoplaying ambient background loop">
+            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0AAmbient%20loop" srclang="en" label="English" default>
+          </video>
+        </div>
+        <div class="media-card">
+          <h3>Paused Video (With Controls)</h3>
+          <video id="paused-video" width="280" height="160" controls muted aria-label="Paused tutorial video">
+            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0ATutorial" srclang="en" label="English" default>
+          </video>
+        </div>
+        <div class="media-card">
+          <h3>YouTube Embed</h3>
+          <iframe id="yt-iframe" width="280" height="160" src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1" title="YouTube video player" allow="encrypted-media"></iframe>
+        </div>
+        <div class="media-card">
+          <h3>Vimeo Embed</h3>
+          <iframe id="vimeo-iframe" width="280" height="160" src="https://player.vimeo.com/video/76979871" title="Vimeo video player" allow="encrypted-media"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="image-section" aria-labelledby="image-heading">
+      <h2 id="image-heading">Animated Images &amp; Stills</h2>
+      <p>GIF animations that should freeze, and static images that should be left untouched.</p>
+      <div class="media-row">
+        <div class="media-card">
+          <h3>Animated GIF (Informative)</h3>
+          <img id="animated-gif" width="120" height="80" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQBAAAAACwAAAAAAQABAAACAkQBADs=" alt="Pulsing star animation">
+        </div>
+        <div class="media-card">
+          <h3>Animated GIF (Decorative)</h3>
+          <img id="decorative-gif" width="60" height="40" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQBAAAAACwAAAAAAQABAAACAkQBADs=" alt="">
+        </div>
+        <div class="media-card">
+          <h3>Animated GIF (aria-label)</h3>
+          <img id="aria-labeled-gif" width="80" height="60" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQBAAAAACwAAAAAAQABAAACAkQBADs=" aria-label="Spinning loading indicator">
+        </div>
+        <div class="media-card">
+          <h3>Static SVG Image</h3>
+          <img id="still-image" width="120" height="80" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80' viewBox='0 0 120 80'%3E%3Crect width='120' height='80' fill='%230284c7'/%3E%3Ctext x='60' y='45' font-size='12' text-anchor='middle' fill='%23ffffff'%3EStatic%3C/text%3E%3C/svg%3E" alt="Static laboratory microscope illustration">
+        </div>
+      </div>
+    </section>
+
+    <section id="ordinary-section" aria-labelledby="ordinary-heading">
+      <h2 id="ordinary-heading">Ordinary Interactive Content</h2>
+      <p id="intro-para">Standard content and controls that the adapter must leave completely functional and untouched.</p>
+      <button id="sample-button" type="button">Interact With Lab</button>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footer-copy">&copy; 2026 Motion Reducer Lab. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const waapiBox = document.getElementById('waapi-box');
+    if (waapiBox && waapiBox.animate) {
+      waapiBox.animate(
+        [{ transform: 'translateX(0px)' }, { transform: 'translateX(100px)' }],
+        { duration: 1000, iterations: Infinity, direction: 'alternate' }
+      );
+    }
+  </script>
+</body>
+</html>

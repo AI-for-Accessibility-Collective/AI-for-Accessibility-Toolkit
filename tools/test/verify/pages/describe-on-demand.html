@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alpine Botanical Research Archive</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+      padding-bottom: 80px;
+    }
+    header {
+      background-color: #111827;
+      color: #ffffff;
+      padding: 1.25rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #38bdf8;
+      outline-offset: 2px;
+    }
+    .layout {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    main {
+      padding: 1.5rem 0;
+    }
+    article {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #111827;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.5rem;
+    }
+    p {
+      margin: 1rem 0;
+    }
+    .media-card {
+      background-color: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    img.specimen {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    canvas.chart {
+      display: block;
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 360px;
+      padding: 0.5rem;
+      border: 1px solid #6b7280;
+      border-radius: 4px;
+      font: inherit;
+    }
+    input[type="text"]:focus-visible,
+    button:focus-visible,
+    canvas:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+    }
+    button.action-btn {
+      min-height: 36px;
+      min-width: 80px;
+      padding: 0.5rem 1rem;
+      background-color: #1d4ed8;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.action-btn:hover {
+      background-color: #1e40af;
+    }
+    footer {
+      border-top: 1px solid #e5e7eb;
+      margin-top: 2rem;
+      padding: 1.5rem 0;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Alpine Botanical Research Archive</h1>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="#specimens" id="link-specimens">Specimens</a></li>
+        <li><a href="#observations" id="link-observations">Observations</a></li>
+        <li><a href="#archive-search" id="link-search">Search</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <main>
+      <article id="specimens">
+        <h2>Field Specimen Documentation</h2>
+        <p id="article-summary">
+          The annual botanical survey observed forty-two distinct varieties of alpine flora flourishing across the northern ridges despite unseasonal frost conditions throughout early spring.
+        </p>
+
+        <div class="media-card">
+          <h3>Uncatalogued Specimen Image</h3>
+          <!-- 100x100 solid green PNG data URI -->
+          <img
+            id="specimen-img"
+            class="specimen"
+            width="100"
+            height="100"
+            alt="Field specimen"
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAU0lEQVR42u3RAQ0AAAgDoNu/tD20gwUq4CWpn5w1gEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBA4K4BIH8vAb7M3S8AAAAASUVORK5CYII=">
+        </div>
+
+        <div class="media-card">
+          <h3>Elevation Distribution Canvas</h3>
+          <canvas id="elevation-canvas" class="chart" width="240" height="120" role="img" aria-label="Elevation distribution chart" tabindex="0"></canvas>
+        </div>
+      </article>
+
+      <section id="archive-search" aria-labelledby="search-heading">
+        <h2 id="search-heading">Search Herbarium Records</h2>
+        <form onsubmit="return false;">
+          <div class="form-group">
+            <label for="species-input">Species name or accession identifier</label>
+            <input type="text" id="species-input" name="species" placeholder="e.g. Saxifraga oppositifolia">
+          </div>
+          <button type="button" class="action-btn" id="search-btn">Query Archive</button>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p id="footer-text">© 2026 Alpine Botanical Research Group. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('elevation-canvas');
+    if (canvas && canvas.getContext) {
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#15803d';
+      ctx.fillRect(10, 20, 60, 80);
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(90, 40, 60, 60);
+      ctx.fillStyle = '#7e22ce';
+      ctx.fillRect(170, 10, 60, 90);
+    }
+  </script>
+</body>
+</html>

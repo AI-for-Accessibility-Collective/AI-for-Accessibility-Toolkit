@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/fix-landmarks.js",
+  "export": "FixLandmarks",
+  "sites": "all"
+}

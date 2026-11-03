@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Alpine Ridge Trail Shoes - Summit Outfitters</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background-color: #f9fafb;
+    }
+    .skip-link {
+      position: absolute;
+      top: -50px;
+      left: 10px;
+      background: #111827;
+      color: #ffffff;
+      padding: 10px 16px;
+      font-weight: 600;
+      z-index: 1000;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .skip-link:focus {
+      top: 10px;
+      outline: 3px solid #1a73e8;
+      outline-offset: 2px;
+    }
+    header {
+      background-color: #111827;
+      color: #ffffff;
+      padding: 1rem 2rem;
+    }
+    header .brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    nav {
+      margin-top: 0.5rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    nav a {
+      color: #f3f4f6;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #60a5fa;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 2rem;
+      padding: 2rem 0;
+    }
+    @media (max-width: 640px) {
+      .product-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .product-visual {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+    }
+    .product-visual svg {
+      max-width: 180px;
+      height: auto;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 1rem;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+    }
+    .product-info h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.75rem;
+      color: #111827;
+    }
+    .price-tag {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0.5rem 0;
+    }
+    .price-note {
+      font-size: 0.875rem;
+      color: #4b5563;
+      margin: 0 0 1rem;
+    }
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
+    .field-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #1f2937;
+    }
+    .choice-chips {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .chip {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #111827;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.95rem;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .chip:focus-visible {
+      outline: 3px solid #1a73e8;
+      outline-offset: 2px;
+    }
+    .chip.selected {
+      border-color: #111827;
+      background: #111827;
+      color: #ffffff;
+    }
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #047857;
+      color: #ffffff;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .action-button:hover {
+      background: #065f46;
+    }
+    .action-button:focus-visible {
+      outline: 3px solid #1a73e8;
+      outline-offset: 2px;
+    }
+    .product-specs {
+      border-top: 1px solid #e5e7eb;
+      padding: 1.5rem 0;
+      margin-top: 1rem;
+    }
+    .product-specs h2 {
+      font-size: 1.25rem;
+      margin: 0 0 1rem;
+    }
+    .product-specs dl {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0.5rem 1rem;
+      margin: 0;
+    }
+    .product-specs dt {
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .product-specs dd {
+      margin: 0;
+      color: #111827;
+    }
+    footer {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      text-align: center;
+      color: #4b5563;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header>
+    <p class="brand">Summit Outfitters</p>
+    <nav aria-label="Store navigation">
+      <ul>
+        <li><a href="#footwear">Trail Footwear</a></li>
+        <li><a href="#apparel">Outdoor Apparel</a></li>
+        <li><a href="#gear">Hiking Gear</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <div class="product-layout">
+      <div class="product-visual">
+        <svg viewBox="0 0 100 60" width="160" height="96" aria-hidden="true" focusable="false">
+          <path d="M10,45 Q20,25 45,30 Q65,20 85,35 Q90,48 70,50 L20,50 Z" fill="#b45309" stroke="#78350f" stroke-width="2"/>
+        </svg>
+        <span class="badge" id="product-status">In Stock</span>
+      </div>
+
+      <div class="product-info">
+        <h1 id="item-title">Alpine Ridge Trail Shoes</h1>
+        <p class="price-tag" id="item-price">$89.00</p>
+        <p class="price-note">Free standard shipping on orders over $50</p>
+
+        <div class="field-group">
+          <span class="field-label" id="color-label">Color: Sunset Orange</span>
+          <div class="choice-chips" role="group" aria-labelledby="color-label">
+            <button type="button" class="chip selected" aria-pressed="true">Sunset Orange</button>
+            <button type="button" class="chip" aria-pressed="false">Forest Green</button>
+            <button type="button" class="chip" aria-pressed="false">Earth Brown</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label" id="size-label">Select Size</span>
+          <div class="choice-chips" role="group" aria-labelledby="size-label">
+            <button type="button" class="chip" aria-pressed="false">8</button>
+            <button type="button" class="chip selected" aria-pressed="true">9</button>
+            <button type="button" class="chip" aria-pressed="false">10</button>
+            <button type="button" class="chip" aria-pressed="false">11</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <button type="button" id="buy-box-btn" class="action-button">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="product-specs" aria-labelledby="specs-heading">
+      <h2 id="specs-heading">Product Specifications</h2>
+      <dl>
+        <dt>Material</dt>
+        <dd id="spec-material">Water-resistant ripstop mesh</dd>
+        <dt>Sole</dt>
+        <dd id="spec-sole">Vibram Megagrip traction lug</dd>
+        <dt>Weight</dt>
+        <dd id="spec-weight">11.4 oz per shoe</dd>
+        <dt>Closure</dt>
+        <dd id="spec-closure">Quick-lace pull cord</dd>
+      </dl>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Summit Outfitters, Inc. All rights reserved.</p>
+  </footer>
+</body>
+</html>

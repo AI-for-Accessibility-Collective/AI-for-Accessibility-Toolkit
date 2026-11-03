@@ -1,0 +1,20 @@
+{
+  "name": "skip-links-narrow",
+  "file": "tools/adapters/skip-links.js",
+  "export": "SkipLinks",
+  "page": "skip-links.html",
+  "checks": [
+    {
+      "name": "skip links injected and visible on focus within narrow viewport",
+      "code": "\n        const container = document.getElementById('ai4a11y-skip-links');\n        const isEnabled = !!document.getElementById('ai4a11y-skip-links-styles');\n        if (!isEnabled) {\n          return container === null;\n        }\n        if (!container) return false;\n\n        const links = container.querySelectorAll('a');\n        if (links.length !== 2) return false;\n\n        const mainLink = links[0];\n        mainLink.focus();\n        await new Promise(r => setTimeout(r, 60));\n        const rect = mainLink.getBoundingClientRect();\n\n        // Must fit horizontally within the 320px viewport without overflowing\n        if (rect.left < 0 || rect.right > window.innerWidth) return false;\n        if (rect.width < 24 || rect.height < 24) return false;\n\n        document.activeElement.blur();\n        return true;\n      "
+    },
+    {
+      "name": "activating skip links in narrow viewport moves focus to target",
+      "code": "\n        const container = document.getElementById('ai4a11y-skip-links');\n        const isEnabled = !!document.getElementById('ai4a11y-skip-links-styles');\n        if (!isEnabled) return true;\n        if (!container) return false;\n\n        const links = container.querySelectorAll('a');\n        const main = document.querySelector('main');\n        const nav = document.querySelector('nav');\n\n        links[0].click();\n        await new Promise(r => setTimeout(r, 60));\n        if (document.activeElement !== main) return false;\n\n        links[1].click();\n        await new Promise(r => setTimeout(r, 60));\n        if (document.activeElement !== nav) return false;\n\n        document.activeElement.blur();\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

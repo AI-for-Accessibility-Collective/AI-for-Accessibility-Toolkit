@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/sound-visualizer.js",
+  "export": "SoundVisualizer",
+  "sites": "all"
+}

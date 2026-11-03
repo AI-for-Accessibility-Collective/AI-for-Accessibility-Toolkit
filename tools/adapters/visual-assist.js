@@ -348,7 +348,8 @@ export const VisualAssist = {
   // Find boxes that can't grow with their text (see FIXED_BOX_ATTR) and pin
   // their text size and line and letter spacing to the page's own, which the
   // text inside inherits; the font traversal and the spacing rules skip what's
-  // inside.
+  // inside. Pinned without !important so custom stylesheets can still adjust
+  // spacing (WCAG 1.4.12).
   markFixedBoxes(roots = null) {
     if (typeof document === 'undefined' || !document.body) return;
     if (!this.fixedBoxes) { this.fixedBoxes = new Map(); this.fixedChecked = new WeakSet(); }
@@ -402,7 +403,7 @@ export const VisualAssist = {
       }
       this.fixedBoxes.set(el, saved);
       el.setAttribute(FIXED_BOX_ATTR, '');
-      for (const prop of Object.keys(own[k])) el.style.setProperty(prop, own[k][prop], 'important');
+      for (const prop of Object.keys(own[k])) el.style.setProperty(prop, own[k][prop]);
     });
   },
 
@@ -501,14 +502,20 @@ export const VisualAssist = {
     if (s.contrastMode === 'light') {
       css += `
         html { background: #fff !important; }
-        body, main, article, section, p,
-        h1, h2, h3, h4, h5, h6,
-        li, td, th {
+        body, main, article, section, aside, nav, header, footer, form,
+        details, summary, dialog, figure, figcaption, blockquote,
+        div:not([aria-hidden="true"]):not([class*="icon"]),
+        p, h1, h2, h3, h4, h5, h6,
+        li, td, th, dt, dd {
           background-color: #fff !important;
         }
-        body, p, li, td, th,
+        button, input, select, textarea {
+          background-color: #fff !important;
+          color: #000 !important;
+        }
+        body, p, li, td, th, dt, dd, blockquote, figcaption,
         h1, h2, h3, h4, h5, h6,
-        a, button, input, label,
+        a, button, input, select, textarea, label,
         span:not([aria-hidden="true"]),
         div:not([aria-hidden="true"]) {
           color: #000 !important;
@@ -519,14 +526,21 @@ export const VisualAssist = {
     } else if (s.contrastMode === 'yellow-black') {
       css += `
         html { background: #000 !important; }
-        body, main, article, section, p,
-        h1, h2, h3, h4, h5, h6,
-        li, td, th {
+        body, main, article, section, aside, nav, header, footer, form,
+        details, summary, dialog, figure, figcaption, blockquote,
+        div:not([aria-hidden="true"]):not([class*="icon"]),
+        p, h1, h2, h3, h4, h5, h6,
+        li, td, th, dt, dd {
           background-color: #000 !important;
         }
-        body, p, li, td, th,
+        button, input, select, textarea {
+          background-color: #000 !important;
+          border: 1px solid #ff0 !important;
+          color: #ff0 !important;
+        }
+        body, p, li, td, th, dt, dd, blockquote, figcaption,
         h1, h2, h3, h4, h5, h6,
-        button, input, label,
+        button, input, select, textarea, label,
         span:not([aria-hidden="true"]),
         div:not([aria-hidden="true"]) {
           color: #ff0 !important;
@@ -548,7 +562,7 @@ export const VisualAssist = {
     // (many sites style divs as headings), stretching a two-line title over
     // twice the height, and pushed small badges (a cart count) onto their icons.
     const TEXT = 'body, ' + ['p', 'li', 'td', 'th', 'dd', 'dt', 'label', 'blockquote', 'figcaption']
-      .map(t => `${t}:not([${FIXED_BOX_ATTR}] *)`).join(', ');
+      .map(t => `${t}:not([${FIXED_BOX_ATTR}], [${FIXED_BOX_ATTR}] *)`).join(', ');
     if (s.lineHeight && s.lineHeight !== 1.5) {
       css += `${TEXT} { line-height: ${s.lineHeight} !important; }\n`;
     }
@@ -558,7 +572,7 @@ export const VisualAssist = {
     }
 
     if (s.largeCursor) {
-      css += `* { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="%230066ff" opacity="0.5"/><circle cx="16" cy="16" r="4" fill="%23000"/></svg>'), auto !important; }\n`;
+      css += `* { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="%230066ff" opacity="0.5"/><circle cx="16" cy="16" r="4" fill="%23000"/></svg>') 16 16, auto !important; }\n`;
     }
 
     if (s.enhanceFocus) {
@@ -587,7 +601,7 @@ export const VisualAssist = {
       css += `
         body, p, li, td, th,
         h1, h2, h3, h4, h5, h6,
-        a, button, input, textarea, label,
+        a, button, input, textarea, select, label,
         span:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]),
         div:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]) {
           font-family: 'OpenDyslexic', sans-serif !important;
@@ -597,6 +611,7 @@ export const VisualAssist = {
 
     if (s.readingGuide) {
       css += `.ai4a11y-reading-guide { position: fixed; left: 0; right: 0; height: 40px; background: rgba(255, 255, 0, 0.2); pointer-events: none; z-index: 999999; transition: top 0.05s ease-out; }\n`;
+      css += `@media (prefers-reduced-motion: reduce) { .ai4a11y-reading-guide { transition: none !important; } }\n`;
     }
 
     return css;
@@ -618,7 +633,10 @@ export const VisualAssist = {
 
     this.readingGuideEl = document.createElement('div');
     this.readingGuideEl.className = 'ai4a11y-reading-guide';
-    document.body.appendChild(this.readingGuideEl);
+    this.readingGuideEl.setAttribute('aria-hidden', 'true');
+    const initialTop = typeof window !== 'undefined' ? `${Math.round(window.innerHeight / 2 - 20)}px` : '0px';
+    this.readingGuideEl.style.top = initialTop;
+    (document.body || document.documentElement).appendChild(this.readingGuideEl);
 
     // Mouse tracking: plain clientY — no zoom-compensation needed because
     // fontScale uses DOM traversal instead of the old CSS `zoom` rule.

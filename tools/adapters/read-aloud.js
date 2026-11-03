@@ -31,7 +31,11 @@ export const ReadAloud = {
   },
 
   getVoices() {
-    return (typeof speechSynthesis !== 'undefined') ? speechSynthesis.getVoices() : [];
+    try {
+      return (typeof speechSynthesis !== 'undefined') ? speechSynthesis.getVoices() : [];
+    } catch {
+      return [];
+    }
   },
 
   setVoice(voiceName) {
@@ -40,12 +44,15 @@ export const ReadAloud = {
   },
 
   setRate(rate) {
-    this.settings.rate = Math.max(0.5, Math.min(2.0, rate));
+    const num = Number(rate);
+    if (!Number.isNaN(num) && Number.isFinite(num)) {
+      this.settings.rate = Math.max(0.5, Math.min(2.0, num));
+    }
   },
 
   speakSelection() {
-    const selection = window.getSelection();
-    const text = selection.toString().trim();
+    const selection = (typeof window !== 'undefined' && window.getSelection) ? window.getSelection() : null;
+    const text = selection ? selection.toString().trim() : '';
     if (text) {
       this.speak(text);
     } else {
@@ -54,10 +61,13 @@ export const ReadAloud = {
   },
 
   speakPage(options = {}) {
-    if (options.rate) this.settings.rate = options.rate;
+    if (options.rate !== undefined) this.setRate(options.rate);
+    if (options.voice !== undefined) this.setVoice(options.voice);
     // #main: the usual id of a main region built from a plain div.
-    const main = document.querySelector('main, article, [role="main"], #main, .content, #content');
-    const target = main || document.body;
+    const main = (typeof document !== 'undefined') ? document.querySelector('main, article, [role="main"], #main, .content, #content') : null;
+    const target = (typeof options.target === 'string' && typeof document !== 'undefined')
+      ? document.querySelector(options.target)
+      : (options.target || main || (typeof document !== 'undefined' ? document.body : null));
     const text = this.extractReadableText(target);
     if (text) {
       this.speak(text);
@@ -71,10 +81,23 @@ export const ReadAloud = {
   // is left out; visually hidden text meant for listeners is kept.
   extractReadableText(element) {
     if (!element) return '';
+    const visible = (el) => {
+      try {
+        return typeof el.checkVisibility !== 'function' || el.checkVisibility({ visibilityProperty: true });
+      } catch {
+        return true;
+      }
+    };
+    if (element.nodeType === 1 && ((element.matches && element.matches(SKIP_SEL)) || !visible(element))) return '';
     const parts = [];
     let lastBlock = null;
-    const visible = (el) => typeof el.checkVisibility !== 'function' || el.checkVisibility({ visibilityProperty: true });
-    const blockOf = (el) => { for (let e = el; e && e !== element; e = e.parentElement) if (BLOCK_TAGS.has(e.tagName)) return e; return element; };
+    let lastChar = '';
+    const blockOf = (el) => {
+      for (let e = el; e && e !== element; e = e.parentElement) {
+        if (BLOCK_TAGS.has(e.tagName?.toUpperCase())) return e;
+      }
+      return element;
+    };
     const walk = (el) => {
       for (let n = el.firstChild; n; n = n.nextSibling) {
         if (n.nodeType === 3) {
@@ -83,11 +106,14 @@ export const ReadAloud = {
           const block = blockOf(el);
           if (block !== lastBlock && parts.length) {
             // A heading or label with no full stop runs into the next line when spoken.
-            const prev = parts.join('').trimEnd();
-            parts.push(/[.!?:;,]$/.test(prev) ? ' ' : '. ');
+            const addPeriod = !/[.!?:;,]$/.test(lastChar);
+            parts.push(addPeriod ? '. ' : ' ');
+            if (addPeriod) lastChar = '.';
           }
           lastBlock = block;
           parts.push(t);
+          const trimmed = t.trim();
+          if (trimmed) lastChar = trimmed[trimmed.length - 1];
         } else if (n.nodeType === 1 && !(n.matches && n.matches(SKIP_SEL)) && visible(n)) {
           walk(n);
         }
@@ -99,6 +125,7 @@ export const ReadAloud = {
 
   // Sentence-sized pieces, none longer than CHUNK_CHARS where a space allows.
   chunk(text) {
+    if (!text || typeof text !== 'string') return [];
     const sentences = text.match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [text];
     const out = [];
     let cur = '';
@@ -121,7 +148,7 @@ export const ReadAloud = {
   // on the page. When reading was switched on as the page loaded (a saved
   // setting, a profile), wait for that first click or key, then start.
   waitForGesture(text, run) {
-    if (this.gestureHandler) return;
+    if (this.gestureHandler || typeof document === 'undefined') return;
     this.speaking = false;
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     announce('Read aloud is ready: click anywhere on the page or press a key to start');
@@ -136,8 +163,10 @@ export const ReadAloud = {
 
   clearGesture() {
     if (!this.gestureHandler) return;
-    document.removeEventListener('pointerdown', this.gestureHandler, true);
-    document.removeEventListener('keydown', this.gestureHandler, true);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('pointerdown', this.gestureHandler, true);
+      document.removeEventListener('keydown', this.gestureHandler, true);
+    }
     this.gestureHandler = null;
   },
 
@@ -198,6 +227,11 @@ export const ReadAloud = {
     }
     const run = this.run;
     const chunks = this.chunk(text);
+    if (!chunks.length) {
+      announce('Read aloud: no text to read on this page');
+      this.speaking = false;
+      return;
+    }
     let started = false, offset = 0;
     chunks.forEach((part, i) => {
       const u = new SpeechSynthesisUtterance(part);
@@ -217,7 +251,9 @@ export const ReadAloud = {
       // Say it started only once speech really starts: a blocked start used
       // to announce "Reading started" with nothing playing.
       u.onstart = () => {
-        if (run !== this.run || started) return;
+        if (run !== this.run) return;
+        this.utterance = u;
+        if (started) return;
         started = true;
         console.log('[AI4A11y] Read Aloud started');
         announce('Reading started');
@@ -225,6 +261,7 @@ export const ReadAloud = {
       u.onend = () => {
         if (run !== this.run || i !== chunks.length - 1) return;
         this.speaking = false;
+        this.utterance = null;
         announce('Finished reading');
       };
       u.onerror = (event) => {
@@ -233,7 +270,9 @@ export const ReadAloud = {
         if (event.error === 'interrupted' || event.error === 'canceled') return;
         if (event.error === 'not-allowed' && !started) { this.waitForGesture(text, run); return; }
         console.warn('[AI4A11y] Speech error:', event.error);
+        if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
         this.speaking = false;
+        this.utterance = null;
       };
       this.utterance = u;
       speechSynthesis.speak(u);
@@ -241,16 +280,26 @@ export const ReadAloud = {
   },
 
   pause() {
-    if (this.speaking && !this.paused && typeof speechSynthesis !== 'undefined') {
-      speechSynthesis.pause();
+    if (this.speaking && !this.paused) {
+      if (typeof EasySpeech !== 'undefined' && EasySpeech.pause) {
+        try { EasySpeech.pause(); } catch (e) { /* ignore */ }
+      }
+      if (typeof speechSynthesis !== 'undefined') {
+        speechSynthesis.pause();
+      }
       this.paused = true;
       announce('Reading paused');
     }
   },
 
   resume() {
-    if (this.paused && typeof speechSynthesis !== 'undefined') {
-      speechSynthesis.resume();
+    if (this.paused) {
+      if (typeof EasySpeech !== 'undefined' && EasySpeech.resume) {
+        try { EasySpeech.resume(); } catch (e) { /* ignore */ }
+      }
+      if (typeof speechSynthesis !== 'undefined') {
+        speechSynthesis.resume();
+      }
       this.paused = false;
       announce('Reading resumed');
     }
@@ -266,6 +315,9 @@ export const ReadAloud = {
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
     this.speaking = false;
     this.paused = false;
+    this.currentWord = 0;
+    this.words = [];
+    this.utterance = null;
   },
 
   toggle() {

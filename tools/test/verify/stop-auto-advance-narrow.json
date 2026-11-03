@@ -1,0 +1,24 @@
+{
+  "name": "stop-auto-advance-narrow",
+  "file": "tools/adapters/stop-auto-advance.js",
+  "export": "StopAutoAdvance",
+  "page": "stop-auto-advance.html",
+  "checks": [
+    {
+      "name": "meta-refresh removed and carousels paused at 320px viewport",
+      "code": "\n        const meta = document.querySelector('meta[http-equiv=\"refresh\"]');\n        const style = document.getElementById('ai4a11y-stop-autoadvance-styles');\n        const ticker = document.getElementById('breaking-ticker');\n        const track = document.getElementById('carousel-track');\n        if (!ticker || !track) return false;\n\n        const csTicker = window.getComputedStyle(ticker);\n        const csTrack = window.getComputedStyle(track);\n\n        if (!style) {\n          return meta !== null &&\n                 csTicker.animationPlayState === 'running' &&\n                 csTrack.animationPlayState === 'running';\n        }\n\n        return meta === null &&\n               csTicker.animationPlayState === 'paused' &&\n               csTrack.animationPlayState === 'paused';\n      "
+    },
+    {
+      "name": "video paused with controls and fits 320px viewport without clipping",
+      "code": "\n        const video = document.getElementById('live-video');\n        if (!video) return false;\n        const style = document.getElementById('ai4a11y-stop-autoadvance-styles');\n        if (!style) {\n          return video.controls === false;\n        }\n\n        if (!video.paused || video.controls !== true) return false;\n        const vRect = video.getBoundingClientRect();\n        return vRect.width <= 320 && vRect.width >= 24;\n      "
+    },
+    {
+      "name": "responsive layout reflows cleanly without horizontal overflow at 320px",
+      "code": "\n        const style = document.getElementById('ai4a11y-stop-autoadvance-styles');\n        const btn = document.getElementById('subscribe-btn');\n        const email = document.getElementById('subscriber-email');\n        if (!btn || !email) return false;\n\n        const fits = document.documentElement.scrollWidth <= 320;\n        const btnRect = btn.getBoundingClientRect();\n        const emailRect = email.getBoundingClientRect();\n\n        return fits && btnRect.width >= 24 && btnRect.height >= 24 && emailRect.width >= 24;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

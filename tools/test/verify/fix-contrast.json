@@ -1,0 +1,39 @@
+{
+  "name": "fix-contrast",
+  "file": "tools/adapters/fix-contrast.js",
+  "page": "fix-contrast.html",
+  "checks": [
+    {
+      "name": "low contrast normal text meets 4.5:1 AA contrast",
+      "code": "\n      function getL(c) {\n        const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => {\n          v = Number(v) / 255;\n          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);\n        });\n        return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n      }\n      function getContrast(c1, c2) {\n        const l1 = getL(c1), l2 = getL(c2);\n        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n      }\n      const el = document.getElementById('low-contrast-para');\n      const style = getComputedStyle(el);\n      return getContrast(style.color, 'rgb(255, 255, 255)') >= 4.5;\n    "
+    },
+    {
+      "name": "failing large text meets 3:1 AA contrast",
+      "code": "\n      function getL(c) {\n        const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => {\n          v = Number(v) / 255;\n          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);\n        });\n        return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n      }\n      function getContrast(c1, c2) {\n        const l1 = getL(c1), l2 = getL(c2);\n        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n      }\n      const el = document.getElementById('failing-heading');\n      const style = getComputedStyle(el);\n      return getContrast(style.color, 'rgb(255, 255, 255)') >= 3.0;\n    "
+    },
+    {
+      "name": "dark container text meets 4.5:1 AA contrast",
+      "code": "\n      function getL(c) {\n        const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => {\n          v = Number(v) / 255;\n          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);\n        });\n        return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n      }\n      function getContrast(c1, c2) {\n        const l1 = getL(c1), l2 = getL(c2);\n        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n      }\n      const el = document.getElementById('dark-para');\n      const style = getComputedStyle(el);\n      return getContrast(style.color, 'rgb(30, 30, 30)') >= 4.5;\n    "
+    },
+    {
+      "name": "indistinguishable link gains underline and is keyboard accessible",
+      "code": "\n      const link = document.getElementById('indistinguishable-link');\n      const style = getComputedStyle(link);\n      const hasUnderline = style.textDecorationLine.includes('underline');\n      if (!hasUnderline) return false;\n      link.focus();\n      const focused = document.activeElement === link;\n      const rect = link.getBoundingClientRect();\n      const hasSize = rect.width > 0 && rect.height > 0;\n      const hasName = link.textContent.trim() === 'comprehensive style guide';\n      link.blur();\n      return focused && hasSize && hasName;\n    "
+    },
+    {
+      "name": "good contrast text is untouched",
+      "code": "\n      const el = document.getElementById('good-para');\n      return getComputedStyle(el).color === 'rgb(26, 26, 26)';\n    "
+    },
+    {
+      "name": "accessible large text is untouched",
+      "code": "\n      const el = document.getElementById('passing-heading');\n      return getComputedStyle(el).color === 'rgb(136, 136, 136)';\n    "
+    },
+    {
+      "name": "text over background-image is untouched",
+      "code": "\n      const el = document.getElementById('bg-image-para');\n      return getComputedStyle(el).color === 'rgb(136, 136, 136)';\n    "
+    }
+  ],
+  "harness": {
+    "enable": "\n    const results = await axe.run({\n      runOnly: { type: 'rule', values: Object.keys(m.axeHandlers) }\n    });\n    for (const violation of results.violations) {\n      const handler = m.axeHandlers[violation.id];\n      if (!handler) continue;\n      for (const node of violation.nodes) {\n        try {\n          const el = document.querySelector(node.target[0]);\n          if (!el) continue;\n          const check = node.any?.find(c => c.id === violation.id) || node.all?.find(c => c.id === violation.id);\n          const fg = check?.data?.fgColor;\n          const bg = check?.data?.bgColor;\n          await handler(el, fg, bg);\n        } catch (e) {\n          console.error('Handler error:', e);\n        }\n      }\n    }\n  ",
+    "disable": "\n    if (typeof m.restoreOriginal === 'function') {\n      m.restoreOriginal();\n    }\n  "
+  }
+}

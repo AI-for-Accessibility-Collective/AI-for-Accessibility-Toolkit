@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Media Archive - Lecture &amp; Audio Recordings</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1a365d;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #ffbf47;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.3rem;
+      color: #2d3748;
+      margin-top: 0;
+    }
+    .media-card {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .media-card h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #2d3748;
+    }
+    video {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #000000;
+      border-radius: 4px;
+    }
+    audio {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      margin: 0.5rem 0;
+    }
+    .action-btn {
+      background-color: #2b6cb0;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .action-btn:focus-visible {
+      outline: 3px solid #ffbf47;
+      outline-offset: 2px;
+    }
+    footer {
+      background-color: #edf2f7;
+      color: #4a5568;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <header role="banner">
+    <h1>Campus Media Archive</h1>
+    <nav aria-label="Archive navigation">
+      <ul>
+        <li><a href="#lectures" id="nav-lectures">Lectures</a></li>
+        <li><a href="#podcasts" id="nav-podcasts">Podcasts</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section id="lectures" aria-labelledby="heading-lectures">
+      <h2 id="heading-lectures">Featured Video Lectures</h2>
+
+      <div class="media-card" id="card-uncaptioned-video">
+        <h3>Lecture 1: Principles of Universal Design</h3>
+        <p>Introductory lecture recording requiring AI caption generation.</p>
+        <video id="video-uncaptioned" width="480" height="270" controls preload="none" src="data:video/mp4;base64,AAAA"></video>
+      </div>
+
+      <div class="media-card" id="card-captioned-video">
+        <h3>Lecture 2: Web Standards Overview</h3>
+        <p>This lecture already contains native captions and should remain untouched.</p>
+        <video id="video-captioned" width="480" height="270" controls preload="none" src="data:video/mp4;base64,AAAA">
+          <track id="existing-track" kind="captions" label="English" srclang="en" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AExisting%20caption" default>
+        </video>
+      </div>
+    </section>
+
+    <section id="podcasts" aria-labelledby="heading-podcasts">
+      <h2 id="heading-podcasts">Audio Podcasts</h2>
+
+      <div class="media-card" id="card-uncaptioned-audio">
+        <h3>Episode 1: Accessible Web Multimedia</h3>
+        <p>Audio recording requiring an expandable transcript.</p>
+        <audio id="audio-uncaptioned" controls preload="none" src="data:audio/mp3;base64,AAAA"></audio>
+      </div>
+    </section>
+
+    <section id="resources" aria-labelledby="heading-resources">
+      <h2 id="heading-resources">Course Notes and Materials</h2>
+      <p id="prose-notes">Supplementary readings and downloadable resources for all lectures.</p>
+      <button id="btn-download" type="button" class="action-btn">Download Syllabus</button>
+    </section>
+  </main>
+
+  <footer role="contentinfo">
+    <p id="footer-text">&copy; 2026 Campus Media Archive. All rights reserved.</p>
+  </footer>
+</body>
+</html>

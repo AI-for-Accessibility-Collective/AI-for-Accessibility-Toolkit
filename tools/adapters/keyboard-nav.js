@@ -8,20 +8,26 @@
 // alone: the tab-order toggle was Alt+F, which opens Chrome's and Edge's menu
 // on Windows, and Alt+D / Alt+T belong to describe-on-demand / explore-a-chart.
 // Keys are read from e.code: on a Mac, Option+H types "˙", so e.key never
-// equals "h" and the shortcuts silently did nothing.
+// equals "h" and the shortcuts silently did nothing. Scrolling and skip-link
+// transitions respect prefers-reduced-motion.
 import { announce } from '../utils/ai.js';
 import { registerSweep } from '../utils/observe.js';
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
 
 // Manual focusable-element query (visible, not disabled). Deliberately not the
 // `tabbable` npm package — this stays dependency-free so it bundles cleanly
 // for both the extension and the CLI. Order is DOM order, not tab order, which
 // is an approximation the badge overlay accepts as a tradeoff for zero deps.
+// Includes position:fixed elements whose offsetParent is null in standard DOM.
 function getFocusable(root) {
   return Array.from(root.querySelectorAll(
     'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
   )).filter(el => {
     const style = getComputedStyle(el);
-    return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+    return style.display !== 'none' && style.visibility !== 'hidden' && (el.offsetParent !== null || style.position === 'fixed' || (typeof el.getClientRects === 'function' && el.getClientRects().length > 0));
   });
 }
 
@@ -152,9 +158,14 @@ export const KeyboardNavigator = {
         border-radius: 4px;
         transition: top 0.2s;
       }
+      @media (prefers-reduced-motion: reduce) {
+        .ai4a11y-skip-link {
+          transition: none !important;
+        }
+      }
       .ai4a11y-skip-link:focus {
         top: 10px;
-        outline: 3px solid #fff;
+        outline: 3px solid #0066ff;
         outline-offset: 2px;
       }
       .ai4a11y-tab-badge {
@@ -190,10 +201,13 @@ export const KeyboardNavigator = {
     });
     if (hasExistingSkip) return;
 
+    const main = document.querySelector('main, [role="main"], #main, #content, article');
+    const nav = this.findNav();
+    if (!main && !nav) return;
+
     const container = document.createElement('div');
     container.id = 'ai4a11y-skip-links';
 
-    const main = document.querySelector('main, [role="main"], #main, #content, article');
     if (main) {
       if (!main.id) {
         main.id = 'ai4a11y-main-content';
@@ -207,13 +221,12 @@ export const KeyboardNavigator = {
         e.preventDefault();
         this.setTabindex(main, '-1');
         main.focus();
-        main.scrollIntoView({ behavior: 'smooth' });
+        main.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
       });
       container.appendChild(skipToMain);
     }
 
-    const nav = this.findNav();
-    if (nav) {
+    if (nav && nav !== main) {
       if (!nav.id) {
         nav.id = 'ai4a11y-nav';
         this.injectedIdEls.push({ el: nav, syntheticId: 'ai4a11y-nav' });
@@ -222,11 +235,11 @@ export const KeyboardNavigator = {
       skipToNav.href = '#' + nav.id;
       skipToNav.className = 'ai4a11y-skip-link';
       skipToNav.textContent = 'Skip to navigation';
-      skipToNav.style.left = '200px';
       skipToNav.addEventListener('click', (e) => {
         e.preventDefault();
         this.setTabindex(nav, '-1');
         nav.focus();
+        nav.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
       });
       container.appendChild(skipToNav);
     }
@@ -237,9 +250,10 @@ export const KeyboardNavigator = {
 
   // The navigation landmark with the most links: on a page whose only <nav>
   // is a three-link breadcrumb trail next to a real menu, "navigation"
-  // should still mean the menu when there is one.
+  // should still mean the menu when there is one. Ignores hidden navs and workshop roots.
   findNav() {
-    const navs = [...document.querySelectorAll('nav, [role="navigation"]')];
+    const navs = [...document.querySelectorAll('nav, [role="navigation"]')]
+      .filter(n => !n.closest('#ws-root, [hidden]') && (typeof getComputedStyle === 'undefined' || getComputedStyle(n).display !== 'none'));
     navs.sort((a, b) => b.querySelectorAll('a[href]').length - a.querySelectorAll('a[href]').length);
     return navs[0] || null;
   },
@@ -342,7 +356,7 @@ export const KeyboardNavigator = {
       const tag = target?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (target?.isContentEditable) return;
-      if (/^(textbox|searchbox|combobox)$/.test(target?.getAttribute?.('role') || '')) return;
+      if (target?.closest?.('[role="textbox"], [role="searchbox"], [role="combobox"]')) return;
 
       // The physical key: Option+H on a Mac reports e.key "˙".
       const code = e.code || '';
@@ -350,14 +364,22 @@ export const KeyboardNavigator = {
 
       if (key === '1') {
         e.preventDefault();
-        const main = document.querySelector('main, [role="main"], #main, #content');
-        if (main) { this.setTabindex(main, '-1'); main.focus(); }
+        const main = document.querySelector('main, [role="main"], #main, #content, article');
+        if (main) {
+          this.setTabindex(main, '-1');
+          main.focus();
+          main.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        }
         else announce('This page has no main content area marked');
       }
       if (key === '2') {
         e.preventDefault();
         const nav = this.findNav();
-        if (nav) { this.setTabindex(nav, '-1'); nav.focus(); }
+        if (nav) {
+          this.setTabindex(nav, '-1');
+          nav.focus();
+          nav.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        }
         else announce('This page has no navigation marked');
       }
       if (key === 'h') {
@@ -369,7 +391,9 @@ export const KeyboardNavigator = {
           // Skip hidden ones (no boxes) — unless nothing has boxes (no layout, e.g. jsdom).
           .filter(h => !h.closest('#ws-root, [hidden]') && (h.getClientRects().length || !document.body.getClientRects().length));
         if (!headings.length) { announce('This page has no headings marked'); return; }
-        const currentIdx = this.lastHeading ? headings.indexOf(this.lastHeading) : -1;
+        const currentIdx = this.lastHeading
+          ? headings.indexOf(this.lastHeading)
+          : (document.activeElement && headings.includes(document.activeElement) ? headings.indexOf(document.activeElement) : -1);
         const idx = e.shiftKey
           ? (currentIdx <= 0 ? headings.length - 1 : currentIdx - 1)
           : (currentIdx + 1) % headings.length;
@@ -377,7 +401,7 @@ export const KeyboardNavigator = {
         this.lastHeading = h;
         this.setTabindex(h, '-1');
         h.focus();
-        h.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        h.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
       }
       if (key === 'o') {
         e.preventDefault();

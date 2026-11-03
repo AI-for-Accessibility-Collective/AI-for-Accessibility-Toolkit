@@ -1,0 +1,20 @@
+{
+  "name": "voice-commands-narrow",
+  "file": "tools/adapters/voice-commands.js",
+  "export": "VoiceCommands",
+  "page": "voice-commands.html",
+  "checks": [
+    {
+      "name": "feedback element fits 320px viewport without overflow",
+      "code": "\n        const feedback = document.getElementById('ai4a11y-voice-feedback');\n        const vc = window.__ai4a11yVoiceCommands;\n        if (!vc || !vc.enabled) return feedback === null;\n        if (!feedback) return false;\n\n        const rect = feedback.getBoundingClientRect();\n        if (rect.width > 320 || rect.left < 0 || rect.right > 320) return false;\n\n        vc.showFeedback('Voice commands can\\'t use the microphone. Allow it in the browser to use them', 'error');\n        const longRect = feedback.getBoundingClientRect();\n        if (longRect.width > 320 || longRect.left < 0 || longRect.right > 320) return false;\n\n        vc.showFeedback('Listening...', 'normal');\n        return true;\n      "
+    },
+    {
+      "name": "all interactive elements remain within viewport and operable",
+      "code": "\n        const btnAdd = document.getElementById('btn-add-cart');\n        const searchInput = document.getElementById('search-input');\n        if (!btnAdd || !searchInput) return false;\n\n        btnAdd.focus();\n        if (document.activeElement !== btnAdd) return false;\n\n        searchInput.focus();\n        if (document.activeElement !== searchInput) return false;\n\n        document.activeElement.blur();\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

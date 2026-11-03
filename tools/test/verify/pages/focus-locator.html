@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Account Settings - AI4A11y Focus Locator Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #111111;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1a202c;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: #ffffff;
+    }
+    nav {
+      margin-top: 0.5rem;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      display: inline-block;
+      padding: 4px 8px;
+      min-height: 24px;
+      min-width: 24px;
+    }
+    main {
+      max-width: 720px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #1a202c;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #1a202c;
+    }
+    input[type="text"], input[type="email"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #767676;
+      border-radius: 4px;
+      font-size: 1rem;
+      min-height: 40px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      min-height: 36px;
+      min-width: 48px;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: #005a9c;
+      color: #ffffff;
+      border: 1px solid #005a9c;
+    }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #1a202c;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* Barrier 1: hostile site style that suppresses focus outline with !important */
+    .suppressed-zone button:focus {
+      outline: none !important;
+    }
+
+    /* Barrier 2: container that clips overflow, hiding normal outlines */
+    .clipped-card {
+      overflow: hidden;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    /* Barrier 3: dark section with contrast challenges */
+    .dark-card {
+      background: #2d3748;
+      color: #ffffff;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+    .dark-card button {
+      background: #4a5568;
+      color: #ffffff;
+      border: 1px solid #718096;
+      padding: 6px 12px;
+      border-radius: 4px;
+      min-height: 32px;
+      cursor: pointer;
+    }
+
+    footer {
+      border-top: 1px solid #e2e8f0;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #4a5568;
+    }
+    footer a {
+      color: #005a9c;
+      padding: 4px;
+      min-height: 24px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>User Account Settings</h1>
+    <nav aria-label="Main Navigation">
+      <a href="#profile" id="nav-profile">Profile</a>
+      <a href="#security" id="nav-security">Security</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="profile" aria-labelledby="profile-heading">
+      <h2 id="profile-heading">Profile Information</h2>
+      <p id="profile-intro">Update your account name and email address below.</p>
+
+      <form id="profile-form" action="#" method="post" onsubmit="return false;">
+        <div class="form-group">
+          <label for="user-name">Full Name</label>
+          <input type="text" id="user-name" name="name" value="Alex Smith">
+        </div>
+
+        <div class="form-group">
+          <label for="user-email">Email Address</label>
+          <input type="email" id="user-email" name="email" value="alex@example.com">
+        </div>
+
+        <button type="submit" id="btn-save" class="btn btn-primary">Save Changes</button>
+        <button type="button" id="btn-cancel" class="btn btn-secondary">Cancel</button>
+      </form>
+    </section>
+
+    <!-- Zone where the site's author suppressed focus outlines -->
+    <section id="security" class="suppressed-zone" aria-labelledby="sec-heading">
+      <h2 id="sec-heading">Security Preferences</h2>
+      <p id="sec-desc">Manage two-factor authentication and connected sessions.</p>
+      <button type="button" id="btn-suppressed" class="btn btn-secondary">Regenerate 2FA Keys</button>
+    </section>
+
+    <!-- Zone where overflow:hidden would clip normal CSS outlines -->
+    <section aria-labelledby="clipped-heading">
+      <h2 id="clipped-heading">Storage and Quota</h2>
+      <div class="clipped-card">
+        <p id="clipped-desc">You are using 4.2 GB of 15 GB available storage.</p>
+        <button type="button" id="btn-clipped" class="btn btn-secondary">Upgrade Storage</button>
+      </div>
+    </section>
+
+    <!-- Dark container to test focus visibility on dark backgrounds -->
+    <section class="dark-card" aria-labelledby="dark-heading">
+      <h2 id="dark-heading" style="color: #ffffff;">Developer Options</h2>
+      <p id="dark-desc">API access tokens and webhook settings.</p>
+      <button type="button" id="btn-dark">Manage API Keys</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Focus Locator Verification Page. <a href="#privacy" id="link-privacy">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>

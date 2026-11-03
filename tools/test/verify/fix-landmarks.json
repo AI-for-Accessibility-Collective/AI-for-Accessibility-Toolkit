@@ -1,0 +1,20 @@
+{
+  "name": "fix-landmarks",
+  "file": "tools/adapters/fix-landmarks.js",
+  "export": "FixLandmarks",
+  "page": "fix-landmarks.html",
+  "checks": [
+    {
+      "name": "missing landmarks are inferred and assigned appropriate ARIA roles",
+      "code": "\n      const masthead = document.getElementById('masthead');\n      const nav = document.getElementById('primary-nav');\n      const main = document.getElementById('main-content');\n      const colophon = document.getElementById('colophon');\n      if (!masthead || !nav || !main || !colophon) return false;\n\n      const isEnabled = typeof window.__ai4a11yFixLandmarks !== 'undefined' && window.__ai4a11yFixLandmarks.enabled;\n      if (!isEnabled) {\n        return masthead.getAttribute('role') === null &&\n               nav.getAttribute('role') === null &&\n               main.getAttribute('role') === null &&\n               colophon.getAttribute('role') === null;\n      }\n\n      return masthead.getAttribute('role') === 'banner' &&\n             nav.getAttribute('role') === 'navigation' &&\n             main.getAttribute('role') === 'main' &&\n             colophon.getAttribute('role') === 'contentinfo';\n    "
+    },
+    {
+      "name": "content that should not receive landmark roles is left alone",
+      "code": "\n      const cookie = document.getElementById('cookie-notice');\n      const sidebar = document.getElementById('sidebar-widget');\n      const prose = document.getElementById('prose-links');\n      if (!cookie || !sidebar || !prose) return false;\n\n      // Cookie banner must not be misidentified as site banner\n      if (cookie.getAttribute('role') === 'banner' || cookie.getAttribute('role') === 'main') return false;\n\n      // Existing complementary role must be preserved\n      if (sidebar.getAttribute('role') !== 'complementary') return false;\n\n      // Prose block with links must not be classified as navigation\n      if (prose.getAttribute('role') === 'navigation' || prose.getAttribute('role') === 'main') return false;\n\n      return true;\n    "
+    },
+    {
+      "name": "landmarks structure and interactive elements satisfy accessibility standards",
+      "code": "\n      const isEnabled = typeof window.__ai4a11yFixLandmarks !== 'undefined' && window.__ai4a11yFixLandmarks.enabled;\n      if (!isEnabled) return true;\n\n      // Landmark uniqueness and top-level constraints\n      const mains = document.querySelectorAll('[role=\"main\"], main');\n      const banners = document.querySelectorAll('[role=\"banner\"], header');\n      const footers = document.querySelectorAll('[role=\"contentinfo\"], footer');\n\n      if (mains.length !== 1 || banners.length !== 1 || footers.length !== 1) return false;\n\n      const main = mains[0];\n      const banner = banners[0];\n      const footer = footers[0];\n\n      // Top-level verification: none of these landmarks should be contained in another\n      if (banner.closest('[role=\"main\"], main')) return false;\n      if (footer.closest('[role=\"main\"], main')) return false;\n      if (main.closest('[role=\"banner\"], header')) return false;\n\n      // Interactive nav link checks: keyboard focusable, min target size, visible focus\n      const firstLink = document.querySelector('#primary-nav a');\n      if (!firstLink) return false;\n\n      const rect = firstLink.getBoundingClientRect();\n      if (rect.width < 24 || rect.height < 24) return false;\n      if (firstLink.textContent.trim() !== 'News') return false;\n\n      firstLink.focus();\n      const hasFocus = document.activeElement === firstLink;\n      const outlineWidth = parseFloat(window.getComputedStyle(firstLink).outlineWidth) || 0;\n      firstLink.blur();\n\n      return hasFocus && outlineWidth >= 2;\n    "
+    }
+  ]
+}

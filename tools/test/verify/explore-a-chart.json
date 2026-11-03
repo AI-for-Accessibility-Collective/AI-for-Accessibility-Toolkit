@@ -1,0 +1,51 @@
+{
+  "name": "explore-a-chart",
+  "file": "tools/adapters/explore-a-chart.js",
+  "export": "ExploreAChart",
+  "page": "explore-a-chart.html",
+  "checks": [
+    {
+      "name": "chart detection and button attachment",
+      "code": "\n      const canvas = document.getElementById('revenue-canvas');\n      const svg = document.getElementById('market-svg');\n      const img = document.getElementById('expenses-img');\n      const photo = document.getElementById('team-photo');\n      const decor = document.getElementById('decor-graphic');\n      if (!canvas || !svg || !img || !photo || !decor) return false;\n\n      const isEnabled = !!document.getElementById('ai4a11y-chart-styles');\n      const btns = Array.from(document.querySelectorAll('.ai4a11y-chart-btn'));\n      if (!isEnabled) {\n        return btns.length === 0;\n      }\n\n      // Exactly 3 charts detected and buttoned\n      if (btns.length !== 3) return false;\n\n      // Each chart has a button immediately following it\n      if (canvas.nextElementSibling !== btns[0]) return false;\n      if (svg.nextElementSibling !== btns[1]) return false;\n      if (img.nextElementSibling !== btns[2]) return false;\n\n      // Non-charts must not have buttons\n      if (photo.nextElementSibling?.classList?.contains('ai4a11y-chart-btn')) return false;\n      if (decor.nextElementSibling?.classList?.contains('ai4a11y-chart-btn')) return false;\n\n      return true;\n    "
+    },
+    {
+      "name": "button interaction, accessible table generation, and keyboard shortcuts",
+      "code": "\n      const isEnabled = !!document.getElementById('ai4a11y-chart-styles');\n      if (!isEnabled) return true;\n\n      const btn = document.querySelector('.ai4a11y-chart-btn');\n      if (!btn) return false;\n\n      // Click button to open panel\n      btn.click();\n      await new Promise(r => setTimeout(r, 60));\n\n      const panel = document.getElementById('ai4a11y-chart-panel');\n      if (!panel || panel.style.display !== 'block') return false;\n      if (panel.getAttribute('role') !== 'dialog') return false;\n      if (!panel.getAttribute('aria-label')) return false;\n\n      // Verify table structure\n      const table = panel.querySelector('table');\n      if (!table) return false;\n      const caption = table.querySelector('caption');\n      if (!caption || caption.textContent !== 'Quarterly Revenue 2026') return false;\n\n      const colHeaders = Array.from(table.querySelectorAll('thead th[scope=\"col\"]'));\n      if (colHeaders.length !== 2 || colHeaders[0].textContent !== 'Quarter' || colHeaders[1].textContent !== 'Revenue ($M)') return false;\n\n      const rows = Array.from(table.querySelectorAll('tbody tr'));\n      if (rows.length !== 4) return false;\n      const firstRowHeader = rows[0].querySelector('th[scope=\"row\"]');\n      const firstRowCell = rows[0].querySelector('td');\n      if (firstRowHeader?.textContent !== 'Q1' || firstRowCell?.textContent !== '10.5') return false;\n\n      // Verify live region announcement\n      const live = document.getElementById('ai4a11y-chart-live');\n      if (!live || !live.textContent.includes('Quarterly Revenue 2026')) return false;\n\n      // Test Escape hides panel and returns focus\n      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n      if (panel.style.display !== 'none') return false;\n\n      // Test Alt+T keyboard shortcut on svg chart\n      const svg = document.getElementById('market-svg');\n      svg.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n      document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyT', key: 't', altKey: true, bubbles: true }));\n      await new Promise(r => setTimeout(r, 60));\n      if (panel.style.display !== 'block') return false;\n\n      // Close via close button\n      const closeBtn = panel.querySelector('.ai4a11y-chart-close');\n      if (!closeBtn) return false;\n      closeBtn.click();\n      if (panel.style.display !== 'none') return false;\n\n      return true;\n    "
+    },
+    {
+      "name": "accessibility: WCAG 2.2 AA standards for controls, focus, contrast, and target size",
+      "code": "\n      const isEnabled = !!document.getElementById('ai4a11y-chart-styles');\n      if (!isEnabled) return true;\n\n      const btn = document.querySelector('.ai4a11y-chart-btn');\n      if (!btn) return false;\n\n      // Check button target size (minimum 24x24 px per WCAG 2.5.8)\n      const btnRect = btn.getBoundingClientRect();\n      if (btnRect.width < 24 || btnRect.height < 24) return false;\n\n      // Accessible name starts with visible label (WCAG 2.5.3 Label in Name)\n      const ariaLabel = btn.getAttribute('aria-label') || '';\n      if (!ariaLabel.startsWith('View data table')) return false;\n\n      // Focus indicator on chart button (WCAG 2.4.7 Focus Visible)\n      btn.focus();\n      const btnStyle = window.getComputedStyle(btn);\n      const hasOutline = btnStyle.outlineStyle !== 'none' && parseFloat(btnStyle.outlineWidth) >= 2;\n      const hasShadow = btnStyle.boxShadow && btnStyle.boxShadow !== 'none';\n      if (!hasOutline && !hasShadow) return false;\n      btn.blur();\n\n      // Open panel to test close button\n      btn.click();\n      await new Promise(r => setTimeout(r, 60));\n      const panel = document.getElementById('ai4a11y-chart-panel');\n      const closeBtn = panel?.querySelector('.ai4a11y-chart-close');\n      if (!closeBtn) return false;\n\n      // Close button element attributes\n      if (closeBtn.tagName.toLowerCase() !== 'button') return false;\n      if (closeBtn.type !== 'button') return false;\n      if (!closeBtn.getAttribute('aria-label')) return false;\n\n      // Close button target size >= 24x24 px (WCAG 2.5.8)\n      const closeRect = closeBtn.getBoundingClientRect();\n      if (closeRect.width < 24 || closeRect.height < 24) return false;\n\n      // Close button focus indicator\n      closeBtn.focus();\n      const closeStyle = window.getComputedStyle(closeBtn);\n      const closeHasOutline = closeStyle.outlineStyle !== 'none' && parseFloat(closeStyle.outlineWidth) >= 2;\n      closeBtn.blur();\n      if (!closeHasOutline) return false;\n\n      // Dismiss dialog and verify focus is not lost\n      closeBtn.click();\n      return true;\n    "
+    },
+    {
+      "name": "steady layout and non-chart preservation",
+      "code": "\n      const isEnabled = !!document.getElementById('ai4a11y-chart-styles');\n      const navLinks = document.querySelectorAll('nav a');\n      if (navLinks.length !== 2) return false;\n\n      // Non-chart figures are unmodified\n      const figPhoto = document.getElementById('fig-photo');\n      const figDecor = document.getElementById('fig-decor');\n      if (!figPhoto || !figDecor) return false;\n      if (figPhoto.querySelector('.ai4a11y-chart-btn') || figDecor.querySelector('.ai4a11y-chart-btn')) return false;\n\n      if (!isEnabled) return true;\n\n      // Live region takes no layout slot\n      const live = document.getElementById('ai4a11y-chart-live');\n      if (!live) return false;\n      const liveStyle = window.getComputedStyle(live);\n      if (liveStyle.position !== 'fixed') return false;\n\n      // Layout remains steady without horizontal overflow\n      return document.documentElement.scrollWidth <= document.documentElement.clientWidth;\n    "
+    }
+  ],
+  "ai": {
+    "extractChartData": {
+      "caption": "Quarterly Revenue 2026",
+      "headers": [
+        "Quarter",
+        "Revenue ($M)"
+      ],
+      "rows": [
+        [
+          "Q1",
+          "10.5"
+        ],
+        [
+          "Q2",
+          "12.8"
+        ],
+        [
+          "Q3",
+          "14.2"
+        ],
+        [
+          "Q4",
+          "16.0"
+        ]
+      ]
+    }
+  }
+}

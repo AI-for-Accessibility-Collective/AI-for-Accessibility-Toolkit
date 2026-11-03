@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/show-captions.js",
+  "export": "ShowCaptions",
+  "sites": "all"
+}

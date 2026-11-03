@@ -1,0 +1,84 @@
+{
+  "name": "agent-watch",
+  "file": "tools/adapters/agent-watch.js",
+  "page": "agent-watch.html",
+  "options": {
+    "agent": {
+      "status": "running",
+      "step": 3,
+      "doing": "verifying item specs and price"
+    },
+    "state": {
+      "contract": {
+        "item": "Trail shoes under $60",
+        "budget": 60,
+        "mustHaves": [
+          "Earth Brown"
+        ]
+      },
+      "phase": "product",
+      "findings": [
+        {
+          "widget": "budget",
+          "level": "stop",
+          "say": "Price is $89.00, which is over your $60 budget.",
+          "from": "$89.00",
+          "control": {
+            "label": "Keep looking",
+            "decline": "Allow $89"
+          },
+          "phase": "product"
+        },
+        {
+          "widget": "color",
+          "level": "aside",
+          "say": "Selected color is Sunset Orange instead of Earth Brown.",
+          "from": "Sunset Orange",
+          "control": {
+            "label": "Pick Earth Brown"
+          },
+          "phase": "product"
+        }
+      ],
+      "steps": [
+        {
+          "what": "Searched trail shoes",
+          "state": "done"
+        },
+        {
+          "what": "Opened Alpine Ridge Trail Shoes",
+          "state": "done"
+        },
+        {
+          "what": "Verified budget under $60",
+          "state": "failed",
+          "detail": "$89.00 on page"
+        }
+      ],
+      "rules": [
+        {
+          "text": "Never exceed budget by more than $10",
+          "on": true
+        }
+      ]
+    }
+  },
+  "checks": [
+    {
+      "name": "adapter container and structured elements exist with correct semantics",
+      "code": "\n        const box = document.getElementById('ai4a11y-agent-watch');\n        if (!box) return true;\n\n        if (box.getAttribute('role') !== 'complementary') return false;\n        if (!box.getAttribute('aria-label')) return false;\n\n        const head = box.querySelector('.aw-head');\n        if (!head || head.getAttribute('aria-expanded') !== 'true') return false;\n\n        const item = box.querySelector('.aw-item.aw-one.aw-stop');\n        if (!item || !item.textContent.includes('$89.00')) return false;\n\n        const keepBtn = box.querySelector('[data-aw-key=\"do:budget|product|Price is $89.00, which is over your $60 budget.\"]');\n        const skipBtn = box.querySelector('[data-aw-key=\"ack:budget|product|Price is $89.00, which is over your $60 budget.\"]');\n        if (!keepBtn || !skipBtn) return false;\n\n        const tellInput = box.querySelector('.aw-tell-input');\n        const tellSend = box.querySelector('.aw-tell button[type=\"submit\"]');\n        if (!tellInput || !tellSend) return false;\n\n        const plan = box.querySelector('.aw-plan');\n        const prompt = box.querySelector('.aw-prompt');\n        const rules = box.querySelector('.aw-rules');\n        if (!plan || !prompt || !rules) return false;\n\n        const endBtn = box.querySelector('.aw-end');\n        if (!endBtn) return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "interactive functionality: collapse toggle, tell input, and finding queue progression",
+      "code": "\n        const box = document.getElementById('ai4a11y-agent-watch');\n        if (!box) return true;\n\n        const head1 = box.querySelector('.aw-head');\n        if (!head1) return false;\n\n        head1.click();\n        const headCollapsed = box.querySelector('.aw-head');\n        if (!headCollapsed || headCollapsed.getAttribute('aria-expanded') !== 'false') return false;\n        if (box.querySelector('.aw-item')) return false;\n\n        headCollapsed.click();\n        const headExpanded = box.querySelector('.aw-head');\n        if (!headExpanded || headExpanded.getAttribute('aria-expanded') !== 'true') return false;\n        if (!box.querySelector('.aw-item')) return false;\n\n        const tellInput = box.querySelector('.aw-tell-input');\n        const tellForm = box.querySelector('.aw-tell');\n        tellInput.value = 'check shipping times';\n        tellForm.dispatchEvent(new Event('submit', { cancelable: true }));\n\n        const note = box.querySelector('.aw-tell-said');\n        if (!note || !note.textContent.includes('check shipping times')) return false;\n\n        const keepBtn = box.querySelector('[data-aw-key=\"do:budget|product|Price is $89.00, which is over your $60 budget.\"]');\n        if (!keepBtn) return false;\n        keepBtn.click();\n\n        const nextItem = box.querySelector('.aw-item.aw-aside');\n        if (!nextItem || !nextItem.textContent.includes('Sunset Orange')) return false;\n        const colorBtn = box.querySelector('[data-aw-key=\"do:color|product|Selected color is Sunset Orange instead of Earth Brown.\"]');\n        if (!colorBtn) return false;\n\n        tellInput.value = '';\n        return true;\n      "
+    },
+    {
+      "name": "accessibility: keyboard focus, accessible names, visible focus indicator, and target sizes",
+      "code": "\n        const box = document.getElementById('ai4a11y-agent-watch');\n        if (!box) return true;\n\n        function getLuminance(rgbStr) {\n          const m = rgbStr.match(/\\d+/g);\n          if (!m) return null;\n          const [r, g, b] = m.slice(0, 3).map(v => {\n            const c = Number(v) / 255;\n            return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);\n          });\n          return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n        }\n        function contrast(c1, c2) {\n          const l1 = getLuminance(c1);\n          const l2 = getLuminance(c2);\n          if (l1 === null || l2 === null) return null;\n          return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n        }\n\n        const rulesDetails = box.querySelector('.aw-rules');\n        if (rulesDetails) rulesDetails.open = true;\n\n        const controls = [\n          box.querySelector('.aw-head'),\n          box.querySelector('.aw-tell-input'),\n          box.querySelector('.aw-tell button[type=\"submit\"]'),\n          box.querySelector('.aw-end'),\n          box.querySelector('.aw-plan > summary'),\n          box.querySelector('.aw-rules > summary'),\n          box.querySelector('.aw-rules-toggle')\n        ].filter(Boolean);\n\n        for (const ctrl of controls) {\n          ctrl.focus();\n          if (document.activeElement !== ctrl) return false;\n\n          const style = window.getComputedStyle(ctrl);\n          const outlineWidth = parseFloat(style.outlineWidth) || 0;\n          const outlineColor = style.outlineColor;\n          if (outlineWidth >= 2) {\n            const ratio = contrast(outlineColor, 'rgb(255, 255, 255)');\n            if (ratio !== null && ratio < 3.0) return false;\n          }\n\n          const rect = ctrl.getBoundingClientRect();\n          if (rect.width < 24 || rect.height < 24) return false;\n\n          const name = ctrl.getAttribute('aria-label') || ctrl.textContent || ctrl.placeholder || '';\n          if (!name.trim()) return false;\n        }\n\n        if (rulesDetails) rulesDetails.open = false;\n        document.activeElement?.blur();\n        return true;\n      "
+    },
+    {
+      "name": "ordinary page content is left undisturbed",
+      "code": "\n        const h1 = document.getElementById('item-title');\n        const price = document.getElementById('item-price');\n        const buyBtn = document.getElementById('buy-box-btn');\n        const specs = document.getElementById('specs-heading');\n        if (!h1 || !price || !buyBtn || !specs) return false;\n\n        if (!h1.textContent.includes('Alpine Ridge Trail Shoes')) return false;\n        if (!price.textContent.includes('$89.00')) return false;\n        if (!buyBtn.textContent.includes('Add to Cart')) return false;\n\n        buyBtn.focus();\n        if (document.activeElement !== buyBtn) return false;\n        buyBtn.blur();\n\n        return true;\n      "
+    }
+  ]
+}

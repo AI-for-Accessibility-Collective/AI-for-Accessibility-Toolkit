@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metro Pulse - Daily News &amp; Updates</title>
+  <meta id="meta-refresh" http-equiv="refresh" content="300">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #0f172a;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 10px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 8px 14px;
+      z-index: 100;
+      text-decoration: underline;
+      font-weight: 600;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .skip-link:focus {
+      top: 10px;
+      outline: 3px solid #0284c7;
+      outline-offset: 2px;
+    }
+    header {
+      background-color: #f8fafc;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 1rem 1.25rem;
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #0369a1;
+      text-decoration: underline;
+      font-weight: 600;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+    }
+    nav a:focus-visible, .btn:focus-visible, input:focus-visible, video:focus-visible {
+      outline: 3px solid #0284c7;
+      outline-offset: 2px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0f172a;
+      color: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      min-height: 44px;
+      min-width: 44px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #1e293b;
+    }
+    main {
+      max-width: 960px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background-color: #ffffff;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: #0f172a;
+    }
+    h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #0f172a;
+    }
+    p {
+      margin: 0 0 1rem 0;
+      color: #334155;
+    }
+    /* Barrier 1: Animated breaking news ticker */
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .news-ticker {
+      overflow: hidden;
+      white-space: nowrap;
+      background-color: #f1f5f9;
+      border-left: 4px solid #0284c7;
+      padding: 0.75rem 1rem;
+      animation: ticker-scroll 12s linear infinite;
+    }
+    /* Barrier 2: Animated CSS carousel */
+    @keyframes carousel-pan {
+      0%, 25% { transform: translateX(0); }
+      33%, 58% { transform: translateX(-33.33%); }
+      66%, 91% { transform: translateX(-66.66%); }
+      100% { transform: translateX(0); }
+    }
+    .featured-carousel {
+      position: relative;
+      overflow: hidden;
+    }
+    .carousel-track {
+      display: flex;
+      width: 300%;
+      animation: carousel-pan 15s ease-in-out infinite;
+    }
+    .carousel-slide {
+      flex: 1 0 33.333%;
+      padding: 1rem;
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+    }
+    .carousel-controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    /* Barrier 3: Scripted class rotator */
+    .rotator-slides {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rotator-slide {
+      padding: 0.75rem 1rem;
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+    .rotator-slide.is-active {
+      background-color: #e0f2fe;
+      border-color: #0284c7;
+      font-weight: 600;
+    }
+    /* Barrier 4: Horizontally scrolling gallery */
+    .gallery-slider {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding: 0.5rem 0;
+      max-width: 100%;
+    }
+    .gallery-item {
+      flex: 0 0 200px;
+      padding: 1rem;
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+    /* Barrier 5: Autoplaying video without controls */
+    .media-video {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background-color: #000000;
+      border-radius: 4px;
+    }
+    /* Barrier 6: Marquee */
+    marquee {
+      display: block;
+      padding: 0.5rem 1rem;
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    /* Form */
+    .newsletter-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    label {
+      font-weight: 600;
+      color: #0f172a;
+    }
+    input[type="email"] {
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid #64748b;
+      border-radius: 4px;
+      font-size: 1rem;
+      color: #0f172a;
+      background-color: #ffffff;
+    }
+    footer {
+      background-color: #f8fafc;
+      border-top: 1px solid #cbd5e1;
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header>
+    <div class="header-inner">
+      <h1>Metro Pulse</h1>
+      <nav aria-label="Main Navigation">
+        <ul>
+          <li><a href="#news">News</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+          <li><a href="#topics">Topics</a></li>
+          <li><a href="#editorial">Editorial</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- Breaking News Ticker (CSS animation) -->
+    <section id="news" aria-label="Breaking news updates">
+      <h2>Breaking News</h2>
+      <div id="breaking-ticker" class="news-ticker" role="region" aria-roledescription="carousel" aria-label="Breaking news ticker">
+        <span>Transit Alert: Central line trains running on 10-minute frequency following signaling maintenance.</span>
+      </div>
+    </section>
+
+    <!-- Featured Stories (CSS Carousel) -->
+    <section id="featured-section" class="featured-carousel" role="region" aria-roledescription="carousel" aria-label="Featured Stories">
+      <h2>Featured Stories</h2>
+      <div class="carousel-controls">
+        <button id="prev-slide-btn" type="button" class="btn" aria-label="Previous story">Previous</button>
+        <button id="next-slide-btn" type="button" class="btn" aria-label="Next story">Next</button>
+      </div>
+      <div id="carousel-track" class="carousel-track">
+        <div id="hero-slide-1" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="1 of 3: Civic Park Reopening">
+          <h3>Civic Park Reopening</h3>
+          <p>The city's historic central park unveils newly restored walkways and inclusive play areas.</p>
+        </div>
+        <div id="hero-slide-2" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="2 of 3: Science Fair Winners">
+          <h3>Science Fair Winners</h3>
+          <p>Local high school team earns regional honors with an accessible navigation application.</p>
+        </div>
+        <div id="hero-slide-3" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="3 of 3: Library Book Sale">
+          <h3>Library Book Sale</h3>
+          <p>Annual community fundraiser supporting digital audiobooks and literacy outreach programs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scripted Rotator (Class switching) -->
+    <section id="topics" class="rotator-section" role="region" aria-roledescription="carousel" aria-label="Trending topics">
+      <h2>Trending Topics</h2>
+      <div id="rotator-slides" class="rotator-slides">
+        <div id="slide-a" class="rotator-slide is-active" role="group" aria-roledescription="slide" aria-label="Topic 1">Solar Grid Modernization</div>
+        <div id="slide-b" class="rotator-slide" role="group" aria-roledescription="slide" aria-label="Topic 2">High-Speed Rail Expansion</div>
+      </div>
+    </section>
+
+    <!-- Horizontal Scrolling Gallery -->
+    <section id="gallery" aria-label="Photo highlights">
+      <h2>Photo Highlights</h2>
+      <div id="gallery-slider" class="gallery-slider" role="region" aria-roledescription="carousel" aria-label="Recent photos" tabindex="0">
+        <div class="gallery-item">Harbor at Sunrise</div>
+        <div class="gallery-item">Downtown Skyline</div>
+        <div class="gallery-item">Botanical Gardens</div>
+        <div class="gallery-item">Historic Clocktower</div>
+      </div>
+    </section>
+
+    <!-- Autoplaying Video (without native controls initially) -->
+    <section id="video-section" aria-label="Live broadcast">
+      <h2>Live City Stream</h2>
+      <video id="live-video" class="media-video" width="480" height="270" autoplay muted playsinline loop aria-label="Live city traffic and weather view">
+        <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0ACity%20Camera" srclang="en" label="English" default>
+      </video>
+    </section>
+
+    <!-- Stock Market Marquee -->
+    <section id="market-section" aria-label="Financial market indicators">
+      <h2>Market Indices</h2>
+      <marquee id="market-marquee" aria-label="Financial market indicators">DOW +124.5 &bull; S&amp;P 500 +18.2 &bull; NASDAQ +75.4 &bull; RUSSELL +12.1</marquee>
+    </section>
+
+    <!-- Ordinary Content: Editorial & Interactive Form -->
+    <section id="editorial" aria-label="Community editorial">
+      <h2>Community Editorial: Preserving Local Heritage</h2>
+      <p id="editorial-p1">The historic downtown corridor continues to serve as an anchor for local commerce, arts, and civic life.</p>
+      <p id="editorial-p2">Community planning groups advocate balancing modern accessibility enhancements with historic preservation.</p>
+      <form id="newsletter-form" class="newsletter-form">
+        <div class="form-group">
+          <label for="subscriber-email">Subscribe for daily updates</label>
+          <input id="subscriber-email" type="email" placeholder="name@example.com" required>
+        </div>
+        <button id="subscribe-btn" type="submit" class="btn">Subscribe</button>
+      </form>
+      <div id="subscription-status" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footer-copy">&copy; 2026 Metro Pulse Daily. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Form submission feedback
+    const form = document.getElementById('newsletter-form');
+    const status = document.getElementById('subscription-status');
+    const input = document.getElementById('subscriber-email');
+    if (form && status && input) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        status.textContent = 'Thank you for subscribing to Metro Pulse.';
+      });
+    }
+  </script>
+</body>
+</html>

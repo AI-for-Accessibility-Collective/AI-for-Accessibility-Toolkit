@@ -12,7 +12,8 @@
 // Reversible by construction: the outline is a single injected <nav> we can
 // remove, and every mutation to the page itself (a generated heading id, a
 // tabindex added so focus() can land on the heading) is tracked in a Set so
-// disable() restores the page exactly.
+// disable() restores the page exactly. Links meet WCAG 2.5.8 target size
+// (>= 24px) for touch and eye-gaze activation.
 import { announce } from '../utils/ai.js';
 import { injectStyle } from './_primitives.js';
 
@@ -23,10 +24,10 @@ import { injectStyle } from './_primitives.js';
 const STYLED_HEADINGS = '[role="heading"], .h1, .h2, .h3, .h4, .h5, .h6';
 
 function levelOf(el) {
+  const aria = Number(el.getAttribute('aria-level'));
+  if (aria >= 1 && aria <= 6) return aria;
   const tag = /^H([1-6])$/.exec(el.tagName);
   if (tag) return Number(tag[1]);
-  const aria = Number(el.getAttribute('aria-level'));
-  if (aria >= 1) return aria;
   const cls = el.classList && [...el.classList].map((c) => /^h([1-6])$/.exec(c)).find(Boolean);
   if (cls) return Number(cls[1]);
   return 2; // role="heading" with no aria-level is level 2
@@ -51,7 +52,7 @@ export const PageOutline = {
     this.addedIds = new Set();
     this.addedTabindex = new Set();
     this.selector = options.selector || 'h1, h2, h3';
-    this.maxLevel = options.selector ? 6 : 3;
+    this.maxLevel = options.maxLevel || (options.selector ? 6 : 3);
 
     // Colour the panel's OWN elements defensively. Setting color on the <nav>
     // only reaches inherited text — but the outline's contents are <a>, and the
@@ -68,8 +69,8 @@ export const PageOutline = {
 #${this.containerId} a:link,
 #${this.containerId} a:visited,
 #${this.containerId} a:hover,
-#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; }
-#${this.containerId} button { all: unset; box-sizing: border-box; display: block; cursor: pointer; padding: 8px 14px; font: 600 14px/1.4 system-ui, sans-serif !important; color: #111111 !important; }
+#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; display: block !important; min-height: 24px !important; box-sizing: border-box !important; padding: 4px 0 !important; line-height: 1.4 !important; }
+#${this.containerId} button { all: unset; box-sizing: border-box; display: block; cursor: pointer; padding: 8px 14px; min-height: 24px !important; min-width: 24px !important; font: 600 14px/1.4 system-ui, sans-serif !important; color: #111111 !important; }
 #${this.containerId} :focus { outline: 3px solid #1a5fb4 !important; outline-offset: 2px !important; }
 #${this.containerId} [hidden] { display: none !important; }`);
 
@@ -125,6 +126,8 @@ export const PageOutline = {
     return found.filter((h) => !(this.nav && this.nav.contains(h))
       && levelOf(h) <= this.maxLevel
       && h.textContent.trim()
+      && h.getAttribute('role') !== 'presentation'
+      && h.getAttribute('role') !== 'none'
       && !h.closest('[hidden], [aria-hidden="true"]')
       && (typeof h.checkVisibility !== 'function' || h.checkVisibility()));
   },
@@ -142,6 +145,7 @@ export const PageOutline = {
       box.appendChild(note);
     } else {
       const list = document.createElement('ul');
+      list.setAttribute('role', 'list');
       list.style.cssText = 'list-style: none; margin: 0; padding: 0;';
       let n = 0;
       for (const heading of headings) {

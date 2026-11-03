@@ -10,6 +10,8 @@
 // call, as numbered lines, which also gives the AI the context to leave brand
 // and product names alone. Reversible: disable() puts each piece's original
 // text back, and leaves alone any piece the page itself has changed since.
+// Sets the document language attribute to the target language code for screen
+// readers, and restores the original language on disable.
 import { translateText, announce } from '../utils/ai.js';
 import { rejectRewrite } from '../utils/ai-output.js';
 
@@ -17,7 +19,7 @@ const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'CODE', 'P
 // Never translated: text marked "do not translate", editable text, and live
 // regions (changing a message makes a screen reader read it again).
 const SKIP_SEL = '[translate="no"], .notranslate, [contenteditable]:not([contenteditable="false"]), ' +
-  '[aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  '[aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"], [role="marquee"], [role="timer"]';
 const HTML_NS = 'http://www.w3.org/1999/xhtml';
 const MAX_PIECES = 1500;   // text pieces per page
 const MAX_CALLS = 40;      // AI calls per page, including text the page adds later
@@ -52,7 +54,16 @@ const LANG_CODES = {
   chinese: 'zh', 'simplified chinese': 'zh-Hans', 'traditional chinese': 'zh-Hant', japanese: 'ja', korean: 'ko',
   vietnamese: 'vi', tagalog: 'tl', filipino: 'fil', hindi: 'hi', arabic: 'ar', russian: 'ru', polish: 'pl',
   ukrainian: 'uk', turkish: 'tr', persian: 'fa', hebrew: 'he', greek: 'el', thai: 'th', indonesian: 'id',
+  swedish: 'sv', norwegian: 'no', danish: 'da', finnish: 'fi', czech: 'cs', romanian: 'ro', hungarian: 'hu', bengali: 'bn',
 };
+
+function toLangCode(lang) {
+  if (!lang || typeof lang !== 'string') return null;
+  const key = lang.trim().toLowerCase();
+  if (LANG_CODES[key]) return LANG_CODES[key];
+  if (/^[a-z]{2,3}(-[a-z0-9]+)*$/i.test(key)) return key;
+  return null;
+}
 
 // Answers kept for the session, so turning translation off and on again, or
 // a page re-rendering the same words, costs no AI call.
@@ -90,7 +101,7 @@ export const TranslatePage = {
     // The whole page: a translated page with an English menu and footer is
     // only half translated.
     const root = document.body;
-    if (!root) { announce('Nothing to translate'); return; }
+    if (!root) { this.enabled = false; announce('Nothing to translate'); return; }
 
     announce(`Translating to ${this.targetLang}…`);
     const done = await this.translateUnder(root, session, false);
@@ -104,6 +115,9 @@ export const TranslatePage = {
   // Every text piece under root worth translating: it has letters, and it is
   // not code, a script, a live region, or text marked not to translate.
   collect(root) {
+    if (root.matches?.(SKIP_SEL) || root.closest?.(SKIP_SEL) || document.documentElement?.matches?.(SKIP_SEL)) {
+      return [];
+    }
     const out = [];
     const walk = (el) => {
       for (let n = el.firstChild; n && out.length < MAX_PIECES; n = n.nextSibling) {
@@ -177,10 +191,14 @@ export const TranslatePage = {
       }
     };
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, batches.length) }, worker));
-    if (done && this.langBefore === undefined && LANG_CODES[lang.toLowerCase()]) {
-      // Tell screen readers which voice to use for the page now.
-      this.langBefore = document.documentElement.getAttribute('lang');
-      document.documentElement.setAttribute('lang', LANG_CODES[lang.toLowerCase()]);
+    if (!this.enabled || session !== this.session) return done;
+    if (done && this.langBefore === undefined) {
+      const code = toLangCode(lang);
+      if (code) {
+        // Tell screen readers which voice to use for the page now.
+        this.langBefore = document.documentElement.getAttribute('lang');
+        document.documentElement.setAttribute('lang', code);
+      }
     }
     return done;
   },
@@ -261,6 +279,7 @@ export const TranslatePage = {
     if (!this.enabled) return;
     this.enabled = false;
     this.session++;
+    this.calls = 0;
     if (this.observer) { this.observer.disconnect(); this.observer = null; }
     if (this.rescanTimer) { clearTimeout(this.rescanTimer); this.rescanTimer = null; }
     if (this.translated) {
@@ -271,6 +290,9 @@ export const TranslatePage = {
       this.translated.clear();
       this.translated = null;
     }
+    if (this.values) {
+      this.values = null;
+    }
     if (this.langBefore !== undefined) {
       if (this.langBefore === null) document.documentElement.removeAttribute('lang');
       else document.documentElement.setAttribute('lang', this.langBefore);
@@ -279,9 +301,9 @@ export const TranslatePage = {
     announce('Original text restored');
   },
 
-  toggle() {
+  toggle(options) {
     if (this.enabled) this.disable();
-    else this.enable();
+    else this.enable(options);
   },
 };
 

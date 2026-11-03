@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Scientific Horizons — Quantum Computing Explained</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+    }
+    nav a:focus, nav a:hover {
+      color: #ffffff;
+    }
+    .page-layout {
+      display: flex;
+      max-width: 1000px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      gap: 2rem;
+    }
+    main {
+      flex: 1;
+      min-width: 0;
+    }
+    article h2 {
+      font-size: 1.4rem;
+      color: #0f172a;
+      margin-top: 0;
+    }
+    article p, article li, article td {
+      color: #1e293b;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    aside {
+      width: 280px;
+      flex-shrink: 0;
+    }
+    /* Distractions */
+    .ad-banner {
+      background: #f8fafc;
+      border: 1px dashed #94a3b8;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .ad-container {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .social-share {
+      background: #f1f5f9;
+      padding: 0.75rem;
+      margin: 1.5rem 0;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .cookie-banner {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-radius: 4px;
+    }
+    .cookie-banner p {
+      color: #f8fafc;
+      margin: 0 0 0.5rem 0;
+    }
+    .sponsored-card {
+      border: 1px solid #cbd5e1;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .sponsored {
+      display: inline-block;
+      font-size: 0.75rem;
+      background: #e2e8f0;
+      color: #334155;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      margin-bottom: 0.25rem;
+    }
+    button {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    button:focus-visible {
+      outline: 3px solid #0284c7;
+      outline-offset: 2px;
+    }
+    /* Footer with light text on dark background to test dark text detection */
+    footer {
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 2rem 1.5rem;
+      margin-top: 3rem;
+    }
+    footer p {
+      color: #f8fafc;
+      margin: 0;
+    }
+    /* Sufficient height for scrolling to test progress indicator */
+    .spacer {
+      height: 1200px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Scientific Horizons</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#article" id="nav-article">Current Article</a></li>
+        <li><a href="#resources" id="nav-resources">Resources</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-layout">
+    <main id="main-content">
+      <div class="cookie-banner" id="cookie-banner">
+        <p>We use cookies to improve your experience.</p>
+        <button type="button" id="btn-accept-cookie">Accept Cookies</button>
+      </div>
+
+      <div class="ad-banner" id="banner-ad">
+        <p>Special Offer: Subscribe for 50% off science journals!</p>
+        <button type="button" id="btn-ad-offer">View Offer</button>
+      </div>
+
+      <article id="article">
+        <h2>Understanding Quantum Superposition</h2>
+        <p id="para-1">Quantum superposition is a fundamental principle of quantum mechanics holding that physical systems may exist in multiple states simultaneously.</p>
+        <p id="para-2">Unlike classical computers which rely on binary bits, quantum computers manipulate qubits that can represent zero and one at the same time.</p>
+        
+        <div class="social-share" id="social-share">
+          <span>Share this research:</span>
+          <button type="button" id="btn-share">Share Link</button>
+        </div>
+
+        <ul id="key-points-list">
+          <li id="list-item-1">Superposition allows exponential processing capacity for specific algorithms.</li>
+          <li id="list-item-2">Decoherence poses the primary obstacle to building fault-tolerant machines.</li>
+        </ul>
+
+        <table id="specs-table">
+          <caption>Quantum Bit Architectures</caption>
+          <thead>
+            <tr>
+              <th scope="col">Technology</th>
+              <th scope="col">Operating Temperature</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="table-cell-1">Superconducting Qubits</td>
+              <td id="table-cell-2">15 Millikelvin</td>
+            </tr>
+            <tr>
+              <td id="table-cell-3">Trapped Ions</td>
+              <td id="table-cell-4">Room Temperature or 4K</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="spacer"></div>
+        <p id="para-conclusion">In conclusion, quantum computing is poised to transform molecular modeling, cryptography, and optimization problems.</p>
+      </article>
+    </main>
+
+    <aside aria-label="Related Information" id="sidebar">
+      <div class="ad-container" id="sidebar-ad">
+        <p>Ad: Cloud computing credits available today.</p>
+        <button type="button" id="btn-cloud-ad">Claim Credits</button>
+      </div>
+
+      <div class="sponsored-card" id="sponsored-item">
+        <span class="sponsored">Sponsored</span>
+        <p id="sponsored-text">Quantum Hardware Development Kit 2026</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer id="page-footer">
+    <p id="footer-light-text">Published by Open Science Foundation. Licensed under Creative Commons.</p>
+  </footer>
+</body>
+</html>

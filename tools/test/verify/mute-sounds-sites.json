@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/mute-sounds.js",
+  "export": "MuteSounds",
+  "sites": "all"
+}

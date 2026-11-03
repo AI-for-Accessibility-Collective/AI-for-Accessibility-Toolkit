@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/reader-mode.js",
+  "export": "ReaderMode",
+  "sites": "all"
+}

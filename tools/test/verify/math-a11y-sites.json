@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/math-a11y.js",
+  "export": "MathA11y",
+  "sites": "all"
+}

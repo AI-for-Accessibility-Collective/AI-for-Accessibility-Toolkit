@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Weekly Botanist — Rare Plant Nursery and Care Journal</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #212529;
+      background: #fdfdfd;
+      line-height: 1.6;
+    }
+    header {
+      background: #1e3a1e;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 1.25rem;
+    }
+    nav a {
+      color: #e2f0d9;
+      text-decoration: underline;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #ffffff;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    article {
+      background: #ffffff;
+      padding: 1.5rem;
+      border: 1px solid #dcdcdc;
+      border-radius: 8px;
+    }
+    h2 {
+      margin-top: 0;
+      color: #1e3a1e;
+      font-size: 1.35rem;
+    }
+    .byline {
+      font-size: 0.85rem;
+      color: #555555;
+      margin-bottom: 1rem;
+    }
+    .intro {
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    /* Barrier: fine print and dense details that low-vision readers need magnified */
+    .fine-print {
+      font-size: 0.75rem;
+      line-height: 1.4;
+      color: #444444;
+      background: #f4f7f4;
+      padding: 0.75rem 1rem;
+      border-left: 3px solid #2e602e;
+      margin-bottom: 1.5rem;
+    }
+    .long-passage {
+      font-size: 0.95rem;
+      color: #222222;
+      margin-bottom: 1.5rem;
+    }
+    .interactive-section {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+    }
+    button.subscribe-btn {
+      background: #1e3a1e;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 2px solid #1e3a1e;
+      border-radius: 6px;
+      padding: 8px 16px;
+      min-width: 48px;
+      min-height: 40px;
+      cursor: pointer;
+    }
+    button.subscribe-btn:focus-visible {
+      outline: 3px solid #005a9c;
+      outline-offset: 2px;
+    }
+    aside {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    .callout {
+      background: #eef4ee;
+      border: 1px solid #c8dcc8;
+      border-radius: 6px;
+      padding: 1rem;
+    }
+    .callout h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: #1e3a1e;
+    }
+    footer {
+      background: #f0f0f0;
+      border-top: 1px solid #d0d0d0;
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #444444;
+      margin-top: 3rem;
+    }
+    footer p {
+      margin: 0.25rem 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>The Weekly Botanist</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#article">Journal</a></li>
+        <li><a href="#care">Care Guides</a></li>
+        <li><a href="#subscribe">Newsletter</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="article">
+    <article>
+      <h2>Cultivating Winter Orchids Indoors</h2>
+      <p class="byline" id="byline">Published on November 3, 2026 by Dr. Elena Vance</p>
+      
+      <p class="intro" id="intro-p">
+        Orchids require delicate humidity balance, indirect light, and well-draining substrates during dormancy.
+      </p>
+
+      <div class="fine-print" id="disclaimer">
+        Notice: Specimen humidity levels must strictly remain between 55% and 65% RH. Avoid direct midday southern sun exposure to prevent irreversible leaf necrosis and pseudobulb dehydration.
+      </div>
+
+      <p class="long-passage" id="long-p">
+        When repotting epiphytic orchids after bloom senescence, inspect the root system thoroughly for fungal rot or dehydration. Healthy roots appear plump and silvery-green when dry, turning emerald green upon hydration. Trim brittle brown roots using sterilised shears dipped in 70% isopropyl alcohol, then pack the root ball into fresh New Zealand sphagnum moss or coarse fir bark. Maintain ambient room temperatures around twenty-one degrees Celsius throughout the vegetative growth period to stimulate strong spike formation.
+      </p>
+
+      <div class="interactive-section" id="subscribe">
+        <label for="email-input" style="display:block; font-weight:600; margin-bottom:0.25rem;">Receive weekly growth tips:</label>
+        <input type="text" id="email-input" style="padding:8px; border:1px solid #767676; border-radius:4px; font-size:1rem; min-height:36px; margin-right:8px;" placeholder="gardener@example.com">
+        <button type="button" class="subscribe-btn" id="sub-btn">Subscribe</button>
+      </div>
+    </article>
+  </main>
+
+  <aside aria-label="Related notice">
+    <div class="callout" id="callout-box">
+      <h3>Dormancy Season Reminder</h3>
+      <p id="callout-p">Watering intervals should decrease by half from late November through early February.</p>
+    </div>
+  </aside>
+
+  <footer>
+    <p id="footer-text">&copy; 2026 The Weekly Botanist. All rights reserved. Peer-reviewed botanical archive.</p>
+  </footer>
+</body>
+</html>

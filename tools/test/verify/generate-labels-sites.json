@@ -1,0 +1,11 @@
+{
+  "file": "tools/adapters/generate-labels.js",
+  "ai": {
+    "inferLabel": "Search or Navigate"
+  },
+  "harness": {
+    "enable": "\n      window.__generateLabelsPrev = [];\n      const rules = Object.keys(m.axeHandlers);\n      const results = await axe.run({\n        runOnly: { type: 'rule', values: rules }\n      });\n      for (const violation of results.violations) {\n        const handler = m.axeHandlers[violation.id];\n        if (!handler) continue;\n        for (const node of violation.nodes) {\n          let el;\n          try {\n            el = document.querySelector(node.target[0]);\n          } catch (e) {\n            continue;\n          }\n          if (!el) continue;\n          window.__generateLabelsPrev.push({\n            el,\n            hadAriaLabel: el.hasAttribute('aria-label'),\n            ariaLabel: el.getAttribute('aria-label'),\n            hadTitle: el.hasAttribute('title'),\n            title: el.getAttribute('title'),\n            processed: el.dataset.ai4a11yProcessed,\n          });\n          try {\n            await handler(el);\n          } catch (err) {\n            console.error('Handler error:', err);\n          }\n        }\n      }\n    ",
+    "disable": "\n      if (window.__generateLabelsPrev) {\n        for (const item of window.__generateLabelsPrev) {\n          if (item.hadAriaLabel) item.el.setAttribute('aria-label', item.ariaLabel);\n          else item.el.removeAttribute('aria-label');\n          if (item.hadTitle) item.el.setAttribute('title', item.title);\n          else item.el.removeAttribute('title');\n          if (item.processed !== undefined) item.el.dataset.ai4a11yProcessed = item.processed;\n          else delete item.el.dataset.ai4a11yProcessed;\n        }\n        delete window.__generateLabelsPrev;\n      }\n      document.querySelectorAll('[data-ai4a11y-processed]').forEach(el => {\n        delete el.dataset.ai4a11yProcessed;\n      });\n    "
+  },
+  "sites": "all"
+}

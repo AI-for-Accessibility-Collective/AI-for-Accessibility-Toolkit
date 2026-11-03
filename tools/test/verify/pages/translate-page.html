@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community Bookstore and Reading Room</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --primary: #0056b3;
+      --border: #d0d0d0;
+      --muted: #595959;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+    }
+    header, main, footer {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+    }
+    header {
+      border-bottom: 2px solid var(--border);
+    }
+    nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    nav a {
+      color: var(--primary);
+      text-decoration: underline;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    h1 {
+      font-size: 1.75rem;
+      margin: 0.5rem 0;
+    }
+    h2 {
+      font-size: 1.35rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .product-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    .btn {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      min-height: 36px;
+      min-width: 80px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #004085;
+    }
+    pre, code, kbd, samp {
+      font-family: ui-monospace, monospace;
+      background: #f4f4f4;
+      color: #111111;
+      border-radius: 3px;
+    }
+    pre {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    pre:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    kbd {
+      border: 1px solid #ccc;
+      padding: 2px 4px;
+    }
+    .live-box {
+      border-left: 4px solid var(--primary);
+      padding: 0.5rem 1rem;
+      background: #f9f9f9;
+      margin: 1rem 0;
+    }
+    .editable-box {
+      border: 1px dashed var(--border);
+      padding: 0.75rem;
+      min-height: 48px;
+      margin: 1rem 0;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a id="nav-catalog" href="#catalog">Book Catalog</a></li>
+        <li><a id="nav-events" href="#events">Upcoming Events</a></li>
+        <li><a id="nav-contact" href="#contact">Contact Us</a></li>
+      </ul>
+    </nav>
+    <h1 id="main-title">Welcome to the Community Reading Room</h1>
+    <p id="hero-tagline">Discover thousands of books, quiet study spaces, and accessible community programs.</p>
+  </header>
+
+  <main>
+    <section id="catalog" aria-labelledby="catalog-heading">
+      <h2 id="catalog-heading">Featured Books</h2>
+      <div class="product-card" id="card-featured">
+        <h3 id="book-title">The Art of Accessible Design</h3>
+        <p id="book-desc">
+          Learn how to build inclusive experiences for everyone.
+          Please visit our <a id="author-link" href="#author-bio">author biography</a> for more details.
+          Each hardcover copy is priced at $29.99 with free shipping.
+        </p>
+        <button type="button" class="btn" id="btn-reserve">Reserve Book</button>
+      </div>
+    </section>
+
+    <section id="developer-notes" aria-labelledby="dev-heading">
+      <h2 id="dev-heading">Technical Reference (Untranslated Content)</h2>
+      <p id="code-intro">Developers can install our catalog CLI using the command below:</p>
+      <pre id="pre-code" tabindex="0" role="region" aria-label="Terminal command"><code>npm install @community/catalog-cli</code></pre>
+      <p id="shortcut-intro">To search the index quickly, press <kbd id="search-kbd">Ctrl</kbd> + <kbd>K</kbd> on your keyboard.</p>
+      <p id="output-sample">Terminal output sample: <samp id="sample-out">Loaded 42 titles successfully</samp>.</p>
+      <p id="brand-notice">Operated under the <span id="brand-span" translate="no">OpenCode Global</span> network and registered with <span id="corp-span" class="notranslate">CommunityBooks Ltd</span>.</p>
+    </section>
+
+    <section id="notes-section" aria-labelledby="notes-heading">
+      <h2 id="notes-heading">Reader Feedback and Live Status</h2>
+      <div id="editable-notes" class="editable-box" contenteditable="true" aria-label="Reader personal notes">
+        Type your personal reading notes here.
+      </div>
+      <div id="live-announcer" class="live-box" role="status" aria-live="polite">
+        Current study desks available: 14 open desks.
+      </div>
+      <div id="alert-box" class="live-box" role="alert">
+        Notice: The reading room closes at 9:00 PM tonight.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footer-copy">&copy; 2026 Community Reading Room. All rights reserved.</p>
+  </footer>
+</body>
+</html>

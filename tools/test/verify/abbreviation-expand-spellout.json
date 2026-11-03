@@ -1,0 +1,18 @@
+{
+  "name": "abbreviation-expand-spellout",
+  "file": "tools/adapters/abbreviation-expand.js",
+  "page": "abbreviation-expand.html",
+  "options": {
+    "spellOut": true
+  },
+  "checks": [
+    {
+      "name": "spellOut option visibly writes out the full form on first use",
+      "code": "\n        const prose = document.getElementById('prose-acronyms');\n        const specPricing = document.getElementById('spec-pricing');\n        if (!prose || !specPricing) return false;\n\n        const isEnabled = document.getElementById('ai4a11y-abbr-styles') !== null;\n        if (!isEnabled) return true;\n\n        // Check that full expansion is written out in a span after first use\n        const fullSpans = prose.querySelectorAll('span.ai4a11y-abbr-full');\n        if (fullSpans.length === 0) return false;\n\n        const wcagSpan = [...fullSpans].find(s => s.textContent.includes('Web Content Accessibility Guidelines'));\n        const htmlSpan = [...fullSpans].find(s => s.textContent.includes('HyperText Markup Language'));\n        if (!wcagSpan || !htmlSpan) return false;\n\n        // In pricing, MSRP explanation should only include the part before comma\n        const pricingFullSpans = specPricing.querySelectorAll('span.ai4a11y-abbr-full');\n        const msrpSpan = [...pricingFullSpans].find(s => s.textContent.includes(\"manufacturer's suggested retail price\"));\n        if (!msrpSpan) return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "spellOut disables cleanly and restores original text without spans",
+      "code": "\n        const prose = document.getElementById('prose-acronyms');\n        if (!prose) return false;\n\n        const isEnabled = document.getElementById('ai4a11y-abbr-styles') !== null;\n        if (isEnabled) {\n          return prose.querySelectorAll('span.ai4a11y-abbr-full').length > 0;\n        } else {\n          return prose.querySelectorAll('span.ai4a11y-abbr-full').length === 0 &&\n                 !prose.textContent.includes('(Web Content Accessibility Guidelines)');\n        }\n      "
+    }
+  ]
+}

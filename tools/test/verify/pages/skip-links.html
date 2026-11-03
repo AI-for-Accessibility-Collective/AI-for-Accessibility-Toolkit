@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TechHub Knowledge Base - Skip Links Test</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+      color: #1a202c;
+      background: #f7fafc;
+    }
+    header {
+      background: #2d3748;
+      color: #ffffff;
+      padding: 1rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    .header-links {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .header-links a {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+    .header-links a:focus {
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
+    nav {
+      background: #edf2f7;
+      padding: 0.75rem 2rem;
+      border-bottom: 1px solid #cbd5e0;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #1a365d;
+      font-weight: 500;
+      text-decoration: underline;
+      display: inline-block;
+      min-height: 24px;
+      min-width: 24px;
+    }
+    nav a:focus {
+      outline: 2px solid #1a365d;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    main:focus {
+      outline: 2px solid #1a365d;
+      outline-offset: 2px;
+    }
+    article {
+      padding: 2rem 0;
+    }
+    h2 {
+      color: #1a202c;
+      margin-top: 0;
+    }
+    p {
+      color: #2d3748;
+    }
+    button {
+      background: #2b6cb0;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      min-height: 24px;
+      min-width: 24px;
+    }
+    button:focus {
+      outline: 2px solid #1a365d;
+      outline-offset: 2px;
+    }
+    footer {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem 1.5rem;
+      color: #2d3748;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TechHub Knowledge Base</h1>
+    <div class="header-links">
+      <a href="#about">About</a>
+      <a href="#status">System Status</a>
+      <a href="#help">Help Desk</a>
+    </div>
+  </header>
+  <nav aria-label="Main Navigation">
+    <ul>
+      <li><a href="#getting-started">Getting Started</a></li>
+      <li><a href="#guides">Guides</a></li>
+      <li><a href="#api">API Reference</a></li>
+      <li><a href="#tutorials">Tutorials</a></li>
+      <li><a href="#community">Community</a></li>
+    </ul>
+  </nav>
+  <main>
+    <article>
+      <h2>Keyboard Navigation in Web Applications</h2>
+      <p id="lead-text">
+        Keyboard users and people using assistive technologies benefit significantly from skip links.
+        Without them, navigating to the main content requires repeatedly pressing the Tab key through
+        every header and navigation link.
+      </p>
+      <p>
+        Here is some secondary content to test that ordinary elements remain untouched by the adapter.
+      </p>
+      <button type="button" id="demo-action">Learn More</button>
+    </article>
+  </main>
+  <footer>
+    <p>&copy; 2026 TechHub. All rights reserved.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "name": "generate-captions-narrow",
+  "file": "tools/adapters/generate-captions.js",
+  "page": "generate-captions.html",
+  "checks": [
+    {
+      "name": "uncaptioned video receives captions track and captioned video is left alone",
+      "code": "\n        const vUncap = document.getElementById('video-uncaptioned');\n        const vCap = document.getElementById('video-captioned');\n        if (!vUncap || !vCap) return false;\n\n        const hasTrack = vUncap.querySelector('track');\n        if (!hasTrack) return false;\n\n        const trackOk = hasTrack.kind === 'captions' &&\n                        hasTrack.label === 'Auto-generated' &&\n                        hasTrack.srclang === 'en' &&\n                        hasTrack.default === true &&\n                        hasTrack.dataset.ai4a11yTrack === 'true';\n\n        const capTracks = vCap.querySelectorAll('track');\n        const capUntouched = capTracks.length === 1 &&\n                             capTracks[0].id === 'existing-track' &&\n                             !vCap.hasAttribute('data-ai4a11y-captioned');\n\n        return Boolean(trackOk && capUntouched);\n      "
+    },
+    {
+      "name": "uncaptioned audio receives transcript disclosure block with transcribed text",
+      "code": "\n        const aUncap = document.getElementById('audio-uncaptioned');\n        if (!aUncap) return false;\n\n        const details = aUncap.nextElementSibling;\n        if (!details || details.tagName !== 'DETAILS' || !details.classList.contains('ai4a11y-transcript')) {\n          return false;\n        }\n\n        const summary = details.querySelector('summary');\n        const content = details.querySelector('.ai4a11y-transcript-content');\n        if (!summary || !content) return false;\n\n        const summaryOk = summary.textContent.trim() === 'Transcript';\n        const contentOk = content.textContent.includes('modern captioning techniques');\n        const datasetOk = aUncap.dataset.ai4a11yCaptioned === 'done';\n\n        return Boolean(summaryOk && contentOk && datasetOk);\n      "
+    },
+    {
+      "name": "transcript summary satisfies WCAG at 320px: target size >= 24px, focusable, visible focus, no horizontal overflow",
+      "code": "\n        const aUncap = document.getElementById('audio-uncaptioned');\n        const details = aUncap?.nextElementSibling;\n        const summary = details?.querySelector('summary');\n        if (!summary) return false;\n\n        summary.scrollIntoView();\n        const rect = summary.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n\n        summary.focus();\n        if (document.activeElement !== summary) return false;\n\n        const style = window.getComputedStyle(summary);\n        const outlineWidth = parseFloat(style.outlineWidth) || 0;\n        const outlineStyle = style.outlineStyle;\n        const hasFocusRing = outlineWidth >= 2 && outlineStyle !== 'none';\n        if (!hasFocusRing) return false;\n\n        // WCAG 1.4.10 Reflow: details and content do not cause document horizontal scroll\n        const docScrollWidth = document.documentElement.scrollWidth;\n        const docClientWidth = document.documentElement.clientWidth;\n        if (docScrollWidth > docClientWidth + 1) return false;\n\n        summary.blur();\n        window.scrollTo(0, 0);\n        return true;\n      "
+    },
+    {
+      "name": "leaves ordinary page content alone (landmarks, navigation, buttons, paragraphs)",
+      "code": "\n        const nav = document.querySelector('nav');\n        const navLinks = document.querySelectorAll('nav a');\n        const h1 = document.querySelector('header h1');\n        const btn = document.getElementById('btn-download');\n        const prose = document.getElementById('prose-notes');\n        const footer = document.getElementById('footer-text');\n\n        if (!nav || navLinks.length !== 2 || !h1 || !btn || !prose || !footer) return false;\n        if (btn.classList.contains('ai4a11y-transcript')) return false;\n        if (btn.hasAttribute('data-ai4a11y-captioned')) return false;\n        if (!h1.textContent.includes('Campus Media Archive')) return false;\n        if (!prose.textContent.includes('Supplementary readings')) return false;\n\n        return true;\n      "
+    }
+  ],
+  "ai": {
+    "transcribeVideo": {
+      "text": "Welcome to this introductory video lecture on web accessibility standards."
+    },
+    "transcribeAudio": {
+      "text": "This is the audio podcast episode discussing modern captioning techniques."
+    }
+  },
+  "harness": {
+    "enable": "\n      const results = await axe.run({\n        rules: { 'audio-caption': { enabled: true }, 'video-caption': { enabled: true } },\n        runOnly: { type: 'rule', values: Object.keys(m.axeHandlers) }\n      });\n      for (const item of [...(results.violations || []), ...(results.incomplete || [])]) {\n        const handler = m.axeHandlers[item.id];\n        if (!handler) continue;\n        for (const node of item.nodes || []) {\n          try {\n            const selector = Array.isArray(node.target) ? node.target.join(' ') : node.target;\n            const el = document.querySelector(selector);\n            if (el) await handler(el);\n          } catch (e) {\n            console.error('Handler error:', e);\n          }\n        }\n      }\n    ",
+    "disable": "\n      if (typeof m.restoreOriginal === 'function') {\n        m.restoreOriginal();\n      }\n    "
+  },
+  "viewport": {
+    "width": 320,
+    "height": 640
+  }
+}

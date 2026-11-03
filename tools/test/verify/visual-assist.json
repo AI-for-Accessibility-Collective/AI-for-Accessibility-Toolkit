@@ -1,0 +1,34 @@
+{
+  "name": "visual-assist",
+  "file": "tools/adapters/visual-assist.js",
+  "export": "VisualAssist",
+  "page": "visual-assist.html",
+  "options": {
+    "fontScale": 130,
+    "lineHeight": 1.8,
+    "enhanceFocus": true,
+    "readingGuide": true
+  },
+  "checks": [
+    {
+      "name": "text elements are scaled up and line height applied while fixed inset boxes and icon glyphs keep their sizes",
+      "code": "\n      const lead = document.getElementById('lead-paragraph');\n      const pinned = document.getElementById('pinned-banner');\n      const icon = document.querySelector('.icon');\n      const overflowBox = document.getElementById('overflow-box');\n      if (!lead || !pinned || !icon || !overflowBox) return false;\n\n      const active = !!document.getElementById('ai4a11y-visual-assist');\n      if (!active) return true;\n\n      if (lead.dataset.ai4a11yFontScale !== '1.3') return false;\n      const leadSize = parseFloat(window.getComputedStyle(lead).fontSize);\n      if (leadSize <= 16) return false;\n\n      const leadLh = parseFloat(window.getComputedStyle(lead).lineHeight);\n      if (leadLh < leadSize * 1.5) return false;\n\n      if (!pinned.hasAttribute('data-ai4a11y-fixed-box')) return false;\n      const pinnedSize = parseFloat(window.getComputedStyle(pinned).fontSize);\n      if (Math.round(pinnedSize) !== 14) return false;\n\n      if (icon.hasAttribute('data-ai4a11y-font-scale')) return false;\n\n      if (overflowBox.style.height !== 'auto') return false;\n      return true;\n    "
+    },
+    {
+      "name": "reading guide is present, aria-hidden, pointer-events none, tracks mousemove, and snaps to focused controls",
+      "code": "\n      const btn = document.getElementById('save-settings');\n      if (!btn) return false;\n\n      const active = !!document.getElementById('ai4a11y-visual-assist');\n      if (!active) return true;\n\n      const guide = document.querySelector('.ai4a11y-reading-guide');\n      if (!guide) return false;\n\n      if (guide.getAttribute('aria-hidden') !== 'true') return false;\n      const cs = window.getComputedStyle(guide);\n      if (cs.pointerEvents !== 'none' || cs.position !== 'fixed') return false;\n\n      // Test mouse movement tracking\n      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, clientY: 260, bubbles: true }));\n      await new Promise(r => setTimeout(r, 80));\n      let top = parseFloat(guide.style.top);\n      if (Math.abs(top - (260 - 20)) > 4) return false;\n\n      // Test keyboard focus snapping\n      btn.focus();\n      await new Promise(r => setTimeout(r, 80));\n      const btnRect = btn.getBoundingClientRect();\n      const expectedCenterY = btnRect.top + btnRect.height / 2;\n      top = parseFloat(guide.style.top);\n      if (Math.abs(top - (expectedCenterY - 20)) > 4) return false;\n\n      // Test click-through\n      let clicked = false;\n      const handler = () => { clicked = true; };\n      btn.addEventListener('click', handler, { once: true });\n      btn.click();\n      btn.blur();\n      return clicked;\n    "
+    },
+    {
+      "name": "enhanced focus indicators are visible with >= 3:1 contrast and interactive controls meet WCAG keyboard standards",
+      "code": "\n      const btn = document.getElementById('save-settings');\n      const input = document.getElementById('comments');\n      const navLink = document.querySelector('nav a');\n      if (!btn || !input || !navLink) return false;\n\n      const active = !!document.getElementById('ai4a11y-visual-assist');\n      if (!active) return true;\n\n      function getLuminance(rgbStr) {\n        const m = rgbStr.match(/\\d+/g);\n        if (!m) return null;\n        const [r, g, b] = m.slice(0, 3).map(v => {\n          const c = Number(v) / 255;\n          return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);\n        });\n        return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n      }\n      function contrast(c1, c2) {\n        const l1 = getLuminance(c1);\n        const l2 = getLuminance(c2);\n        if (l1 === null || l2 === null) return null;\n        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n      }\n\n      // Target size check (WCAG 2.5.8)\n      for (const el of [btn, navLink]) {\n        const r = el.getBoundingClientRect();\n        if (r.width < 24 || r.height < 24) return false;\n      }\n\n      // Check focus indicator styling & contrast\n      btn.focus();\n      const bStyle = window.getComputedStyle(btn);\n      const hasOutline = bStyle.outlineStyle !== 'none' && parseFloat(bStyle.outlineWidth) >= 3;\n      const outlineColor = bStyle.outlineColor;\n      const ratio = contrast(outlineColor, 'rgb(255, 255, 255)');\n      btn.blur();\n\n      if (!hasOutline || ratio === null || ratio < 3.0) return false;\n\n      // Accessible name matches visible label (WCAG 2.5.3)\n      if (btn.textContent.trim() !== 'Save Settings') return false;\n\n      return true;\n    "
+    },
+    {
+      "name": "form controls with radio/checkbox are protected from shrinking in flex rows and form remains interactive",
+      "code": "\n      const radio1 = document.getElementById('mode-standard');\n      const radio2 = document.getElementById('mode-high');\n      const select = document.getElementById('font-pref');\n      const comments = document.getElementById('comments');\n      if (!radio1 || !radio2 || !select || !comments) return false;\n\n      const active = !!document.getElementById('ai4a11y-visual-assist');\n      if (!active) return true;\n\n      const r1Style = window.getComputedStyle(radio1);\n      if (r1Style.flexShrink !== '0') return false;\n\n      // Test radio toggling\n      radio2.click();\n      if (!radio2.checked) return false;\n      radio1.click();\n      if (!radio1.checked) return false;\n\n      // Test textarea interaction\n      comments.focus();\n      comments.value = 'Tested typography';\n      comments.blur();\n      if (comments.value !== 'Tested typography') return false;\n      comments.value = '';\n\n      return true;\n    "
+    },
+    {
+      "name": "ordinary content, headings, navigation landmarks, and metadata remain intact",
+      "code": "\n      const h1 = document.querySelector('header h1');\n      const h2 = document.querySelector('article h2');\n      const bq = document.querySelector('blockquote');\n      const footer = document.querySelector('footer');\n      if (!h1 || !h2 || !bq || !footer) return false;\n\n      const active = !!document.getElementById('ai4a11y-visual-assist');\n      if (!active) return true;\n\n      if (h1.className.includes('ai4a11y') || h2.className.includes('ai4a11y')) return false;\n      if (!h1.textContent.includes('Health') || !h2.textContent.includes('Ergonomics')) return false;\n      return true;\n    "
+    }
+  ]
+}

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tech Gadget Specifications & Accessibility Guide</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 1.5rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #60a5fa;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    article {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+    p {
+      margin: 1rem 0;
+    }
+    .spec-box {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 0.5rem 1.5rem;
+    }
+    dt {
+      font-weight: 600;
+      color: #334155;
+    }
+    dd {
+      margin: 0;
+    }
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
+    }
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    pre code {
+      padding: 0;
+      background: none;
+    }
+    .form-group {
+      margin: 1.5rem 0;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    input[type="text"] {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #64748b;
+      border-radius: 4px;
+      font-size: 1rem;
+      color: #0f172a;
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 320px;
+    }
+    input[type="text"]:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+    }
+    .status-area {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+    }
+    footer {
+      background-color: #f1f5f9;
+      color: #475569;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      margin-top: 3rem;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>GadgetLab Hardware & Standards Review</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#standards">Standards</a></li>
+        <li><a href="#specs">Specifications</a></li>
+        <li><a href="#code">Code Sample</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <article>
+      <section id="standards">
+        <h2>Accessibility & Web Standards</h2>
+        <p id="prose-acronyms">
+          Our team adheres to the WCAG guidelines to build accessible HTML and CSS user interfaces.
+          Each client connects through a secure HTTPS API endpoint to retrieve data formatted in JSON.
+        </p>
+        <p id="abbr-existing">
+          The project is monitored by <abbr id="bare-abbr">NASA</abbr> engineers alongside the
+          <abbr id="custom-abbr" title="Custom Federal Agency Title">FBI</abbr> security auditors.
+        </p>
+        <p id="partial-matches">
+          Note that APIs and SCRAPI systems are unaffected, and the ram sheep graze outside.
+        </p>
+        <p id="plain-text">
+          Regular everyday sentences with standard terminology remain completely unaltered.
+        </p>
+      </section>
+
+      <section id="specs">
+        <h2>Hardware Product Specifications</h2>
+        <div class="spec-box">
+          <dl>
+            <dt>Price</dt>
+            <dd id="spec-pricing">MSRP: $79.99 (Qty: 1 unit)</dd>
+            <dt>Charging</dt>
+            <dd id="spec-charging">Equipped with GaN semiconductor technology and USB PD fast charging.</dd>
+            <dt>Wireless</dt>
+            <dd id="spec-wireless">Features BT 5.3 connectivity with ANC capability.</dd>
+          </dl>
+        </div>
+      </section>
+
+      <section id="code">
+        <h2>Developer Integration</h2>
+        <p>Developers can query our API directly using the configuration below:</p>
+        <pre tabindex="0" aria-label="Code example"><code id="code-snippet">const endpoint = "https://api.example.com/v1";
+// WCAG and ARIA conformance check
+const config = { auth: "API_KEY", format: "JSON" };</code></pre>
+
+        <form class="form-group" onsubmit="return false;">
+          <label for="search-box">Search documentation</label>
+          <input type="text" id="search-box" value="WCAG and HTML compliance tips">
+        </form>
+
+        <div id="live-announcement" class="status-area" role="status" aria-live="polite">
+          System status: All API and SQL database connections are normal.
+        </div>
+
+        <div id="dynamic-container">
+          <!-- Dynamically added content will be mounted here -->
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 GadgetLab Inc. Published under open web guidelines.</p>
+  </footer>
+</body>
+</html>

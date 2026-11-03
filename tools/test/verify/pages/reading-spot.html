@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exploring the Deep Ocean — Abyss and Trenches</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1e293b;
+      background: #f8fafc;
+    }
+    header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 1.5rem 2rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    nav {
+      background: #1e293b;
+      padding: 0.75rem 2rem;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+      font-weight: 500;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    nav a:focus-visible {
+      outline: 3px solid #38bdf8;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    article {
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    h2 {
+      color: #0f172a;
+      font-size: 1.5rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+    article > h2:first-of-type {
+      margin-top: 0;
+    }
+    h3 {
+      color: #1e293b;
+      font-size: 1.25rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      margin: 0 0 1.25rem 0;
+      color: #334155;
+    }
+    aside {
+      background: #f1f5f9;
+      border-left: 4px solid #0284c7;
+      padding: 1.25rem;
+      margin: 2rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    footer {
+      background: #0f172a;
+      color: #cbd5e1;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 4rem;
+    }
+    footer p {
+      color: #cbd5e1;
+    }
+    footer a {
+      color: #38bdf8;
+    }
+    .spacer {
+      height: 400px;
+    }
+  </style>
+  <script>
+    try {
+      const key = 'ai4a11y-spot:' + window.location.pathname + window.location.search;
+      localStorage.setItem(key, '850');
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Oceanographic Research Station</h1>
+  </header>
+  <nav aria-label="Table of Contents">
+    <ul>
+      <li><a href="#sunlight">Sunlight Zone</a></li>
+      <li><a href="#twilight">Twilight Zone</a></li>
+      <li><a href="#midnight">Midnight Zone</a></li>
+      <li><a href="#abyss">The Abyss</a></li>
+      <li><a href="#hadal">Hadal Trenches</a></li>
+    </ul>
+  </nav>
+  <main>
+    <article>
+      <h2 id="sunlight">The Sunlight Zone (Epipelagic)</h2>
+      <p>The surface layer of the ocean extends from the surface down to approximately 200 meters (656 feet). This is where enough sunlight penetrates to allow photosynthesis, sustaining vast blooms of phytoplankton that form the base of the marine food web. Coral reefs, sea turtles, schools of pelagic fish, and marine mammals thrive predominantly within this upper layer.</p>
+      <p>Temperature in this zone varies greatly with latitude and seasons, ranging from over 30 degrees Celsius in tropical shallows to below freezing in polar regions. Wind and waves thoroughly mix this surface layer, transferring atmospheric oxygen into the water and distributing dissolved minerals across thousands of square kilometers.</p>
+
+      <h2 id="twilight">The Twilight Zone (Mesopelagic)</h2>
+      <p>Descending below 200 meters down to 1,000 meters (3,280 feet), light fades into an eerie dim blue glow. Plants cannot survive here due to insufficient light for photosynthesis. Many creatures living in the twilight zone have evolved massive, sensitive eyes or upward-pointing tubular eyes that detect the faint silhouettes of prey passing overhead against the dim skylight.</p>
+      <p>Bioluminescence is extraordinarily prevalent in this realm. Animals produce cold biochemical light using luciferin-luciferase reactions to communicate, lure unsuspecting meals, or break up their own outlines in a camouflage strategy called counterillumination.</p>
+      <div class="spacer"></div>
+
+      <h2 id="midnight">The Midnight Zone (Bathypelagic)</h2>
+      <p id="target-midnight">Reaching from 1,000 meters down to 4,000 meters (13,100 feet), total darkness envelops the water column. The only light comes from the living creatures themselves. Hydrostatic pressure becomes immense, reaching hundreds of atmospheres, while temperatures hover just above freezing at roughly 4 degrees Celsius.</p>
+      <p id="midnight-desc">Deep-sea anglerfish, gulper eels, giant squid, and vampire squids navigate this crushing environment. Because food is scarce, many predators possess expandable jaws, highly distensible stomachs, and metabolic rates tuned down to conserve energy over weeks between sporadic feedings.</p>
+      <div class="spacer"></div>
+
+      <h2 id="abyss">The Abyssal Plains (Abyssopelagic)</h2>
+      <p id="target-abyss">From 4,000 meters down to 6,000 meters (19,685 feet), the abyssal plain covers the vast majority of the ocean floor. It is one of the largest habitats on Earth, characterized by continuous darkness, near-freezing temperatures, and silt composed of millennia of accumulated marine snow.</p>
+      <aside aria-label="Field Note">
+        <h3>Hydrothermal Vents</h3>
+        <p>Along tectonic ridges, superheated mineral-rich fluids gush from hydrothermal chimneys. Chemosynthetic bacteria harness hydrogen sulfide instead of sunlight, powering ecosystems of giant tube worms, vent shrimp, and ghostly crabs completely isolated from solar energy.</p>
+      </aside>
+      <div class="spacer"></div>
+
+      <h2 id="hadal">The Hadal Trenches (Hadopelagic)</h2>
+      <p id="target-hadal">The deepest reaches of our oceans lie in V-shaped tectonic subduction trenches between 6,000 and nearly 11,000 meters depth. In the Mariana Trench, pressure exceeds 1,100 bar—the equivalent of an elephant standing on your thumb. Yet snailfish, amphipods, and specialized microbes continue to thrive.</p>
+      <p>Understanding these extreme environments gives scientists clues about the limits of life on Earth and where life might exist on icy ocean moons such as Europa and Enceladus.</p>
+    </article>
+  </main>
+  <footer>
+    <p>&copy; 2026 Deep Ocean Exploration Initiative. All rights reserved. <a href="#sunlight">Back to top</a></p>
+  </footer>
+</body>
+</html>

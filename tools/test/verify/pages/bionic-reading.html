@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cognitive Science Journal - Bionic Reading Test</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #2d3748;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.25rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #edf2f7;
+      text-decoration: underline;
+    }
+    nav a:focus-visible,
+    button:focus-visible,
+    main a:focus-visible {
+      outline: 2px solid #3182ce;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 780px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    article {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: #2d3748;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      margin: 0.85rem 0;
+    }
+    main a {
+      color: #2b6cb0;
+      text-decoration: underline;
+    }
+    pre {
+      background: #edf2f7;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.95em;
+    }
+    .action-bar {
+      margin: 1.5rem 0;
+      display: flex;
+      gap: 0.75rem;
+    }
+    button {
+      background-color: #2b6cb0;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    aside {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    footer {
+      background-color: #edf2f7;
+      color: #4a5568;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .live-status {
+      padding: 0.5rem;
+      background: #ebf8ff;
+      border-left: 4px solid #3182ce;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Journal of Cognitive Studies</h1>
+    <nav aria-label="Journal Sections">
+      <ul>
+        <li><a id="nav-articles" href="#articles">Articles</a></li>
+        <li><a id="nav-research" href="#research">Research</a></li>
+        <li><a id="nav-about" href="#about">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <article id="article-body">
+      <h2>Saccadic Movement and Fixation Points in Reading</h2>
+      <p id="prose-main">
+        Reading comprehension relies heavily on saccadic eye movements. Skilled readers do not
+        scrutinize every syllable; rather, fixation points anchor visual attention, allowing cognitive
+        processes to anticipate predictable grammatical endings.
+      </p>
+      <p id="prose-with-link">
+        Controlled clinical trials show that guided fixation techniques assist readers with
+        attention deficits and developmental dyslexia. For in-depth methodology, consult the
+        <a id="inline-study-link" href="#study-details">peer-reviewed study</a> published last spring<sup><a id="cite-ref" href="#cite-1">[1]</a></sup>.
+      </p>
+
+      <h2>Mathematical Modeling and Code</h2>
+      <p id="code-intro">Algorithm implementations must preserve strict syntax and whitespace:</p>
+      <pre><code id="sample-code">function calculateFixation(wordLength, ratio) {
+  return Math.ceil(wordLength * ratio);
+}</code></pre>
+
+      <div class="action-bar">
+        <button id="bookmark-btn" type="button">Bookmark article</button>
+        <button id="download-btn" type="button">Download PDF</button>
+      </div>
+
+      <div id="status-live" class="live-status" role="status" aria-live="polite">
+        Reading aid status: normal view.
+      </div>
+
+      <div id="dynamic-container"></div>
+    </article>
+
+    <aside aria-label="Related Topics">
+      <h2>Related Topics</h2>
+      <p id="aside-text">Neuroplasticity and visual perception in modern interfaces.</p>
+    </aside>
+  </main>
+
+  <footer>
+    <p id="footer-text">&copy; 2026 Journal of Cognitive Studies. All rights reserved.</p>
+  </footer>
+
+  <script id="inline-script">
+    // Unrelated inline script that must never be reflowed or modified
+    window.__journalTracked = true;
+  </script>
+</body>
+</html>

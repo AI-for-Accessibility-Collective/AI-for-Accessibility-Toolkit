@@ -1,0 +1,43 @@
+{
+  "name": "generate-alt",
+  "file": "tools/adapters/generate-alt.js",
+  "page": "generate-alt.html",
+  "checks": [
+    {
+      "name": "test elements exist in page",
+      "code": "\n        return !!document.getElementById('img-missing-alt') &&\n          !!document.getElementById('img-existing-alt') &&\n          !!document.getElementById('img-decorative') &&\n          !!document.getElementById('svg-missing-alt') &&\n          !!document.getElementById('svg-existing-label') &&\n          !!document.getElementById('svg-decorative') &&\n          !!document.getElementById('canvas-missing-desc') &&\n          !!document.getElementById('canvas-existing-desc') &&\n          !!document.getElementById('video-missing-desc');\n      "
+    },
+    {
+      "name": "unlabeled image receives descriptive alt text",
+      "code": "\n        const img = document.getElementById('img-missing-alt');\n        const alt = img.getAttribute('alt');\n        return !!alt && alt === 'A red fox resting in a grassy meadow under sunlight' && img.dataset.ai4a11yProcessed === 'done';\n      "
+    },
+    {
+      "name": "unlabeled svg receives role=img and descriptive title element",
+      "code": "\n        const svg = document.getElementById('svg-missing-alt');\n        const title = svg.querySelector(':scope > title');\n        return svg.getAttribute('role') === 'img' &&\n          !!title &&\n          title.textContent === 'A red fox resting in a grassy meadow under sunlight' &&\n          svg.dataset.ai4a11yProcessed === 'done';\n      "
+    },
+    {
+      "name": "unlabeled canvas receives role=img and aria-label description",
+      "code": "\n        const canvas = document.getElementById('canvas-missing-desc');\n        const label = canvas.getAttribute('aria-label');\n        return canvas.getAttribute('role') === 'img' &&\n          label === 'A red fox resting in a grassy meadow under sunlight' &&\n          canvas.dataset.ai4a11yProcessed === 'done';\n      "
+    },
+    {
+      "name": "unlabeled video receives aria-label description",
+      "code": "\n        const video = document.getElementById('video-missing-desc');\n        const label = video.getAttribute('aria-label');\n        return label === 'Ocean waves crashing gently against rocky coastal cliffs' &&\n          video.dataset.ai4a11yDescribed === 'done';\n      "
+    },
+    {
+      "name": "existing alt, decorative images, and labeled media are left untouched",
+      "code": "\n        const imgExist = document.getElementById('img-existing-alt');\n        const imgDec = document.getElementById('img-decorative');\n        const svgExist = document.getElementById('svg-existing-label');\n        const svgDec = document.getElementById('svg-decorative');\n        const canvasExist = document.getElementById('canvas-existing-desc');\n\n        const imgExistOk = imgExist.getAttribute('alt') === 'Snowy mountain peaks at sunrise' && !imgExist.dataset.ai4a11yProcessed;\n        const imgDecOk = imgDec.getAttribute('alt') === '' && !imgDec.dataset.ai4a11yProcessed;\n        const svgExistOk = svgExist.getAttribute('aria-label') === 'Regional sanctuary boundaries' && !svgExist.querySelector('title') && !svgExist.dataset.ai4a11yProcessed;\n        const svgDecOk = svgDec.getAttribute('aria-hidden') === 'true' && !svgDec.hasAttribute('role') && !svgDec.dataset.ai4a11yProcessed;\n        const canvasExistOk = canvasExist.getAttribute('aria-label') === 'Quarterly forest canopy coverage' && !canvasExist.dataset.ai4a11yProcessed;\n\n        return imgExistOk && imgDecOk && svgExistOk && svgDecOk && canvasExistOk;\n      "
+    },
+    {
+      "name": "page landmarks and content structure are preserved",
+      "code": "\n        const h1 = document.querySelector('header h1');\n        const navLinks = document.querySelectorAll('nav a');\n        const footer = document.getElementById('footer-copy');\n        return !!h1 && navLinks.length === 2 && !!footer;\n      "
+    }
+  ],
+  "ai": {
+    "describeImage": "A red fox resting in a grassy meadow under sunlight",
+    "describeVideo": "Ocean waves crashing gently against rocky coastal cliffs"
+  },
+  "harness": {
+    "enable": "\n      window.__genAltPrev = [];\n\n      const results = await axe.run({\n        runOnly: { type: 'rule', values: Object.keys(m.axeHandlers) }\n      });\n      for (const violation of results.violations) {\n        const handler = m.axeHandlers[violation.id];\n        if (!handler) continue;\n        for (const node of violation.nodes) {\n          try {\n            const el = document.querySelector(node.target[0]);\n            if (!el || el.dataset.ai4a11yProcessed) continue;\n            window.__genAltPrev.push({\n              el,\n              kind: 'axe',\n              alt: el.getAttribute('alt'),\n              hadAlt: el.hasAttribute('alt'),\n              role: el.getAttribute('role'),\n              hadRole: el.hasAttribute('role'),\n              hadTitle: !!el.querySelector(':scope > title'),\n              titleText: el.querySelector(':scope > title')?.textContent,\n              processed: el.dataset.ai4a11yProcessed,\n            });\n            await handler(el);\n          } catch (e) {\n            console.error('Handler error:', e);\n          }\n        }\n      }\n\n      for (const canvas of document.querySelectorAll('canvas:not([data-ai4a11y-processed])')) {\n        if (!canvas.getAttribute('aria-label') && !canvas.getAttribute('aria-labelledby') && !canvas.getAttribute('title')) {\n          window.__genAltPrev.push({\n            el: canvas,\n            kind: 'canvas',\n            role: canvas.getAttribute('role'),\n            hadRole: canvas.hasAttribute('role'),\n            ariaLabel: canvas.getAttribute('aria-label'),\n            hadAriaLabel: canvas.hasAttribute('aria-label'),\n            processed: canvas.dataset.ai4a11yProcessed,\n          });\n          await m.generateCanvasDescription(canvas);\n        }\n      }\n\n      for (const video of document.querySelectorAll('video:not([data-ai4a11y-described])')) {\n        if (!video.getAttribute('aria-label') && !video.getAttribute('aria-labelledby') && !video.getAttribute('title')) {\n          window.__genAltPrev.push({\n            el: video,\n            kind: 'video',\n            ariaLabel: video.getAttribute('aria-label'),\n            hadAriaLabel: video.hasAttribute('aria-label'),\n            described: video.dataset.ai4a11yDescribed,\n          });\n          await m.generateVideoDescription(video);\n        }\n      }\n    ",
+    "disable": "\n      if (window.__genAltPrev) {\n        for (const item of window.__genAltPrev) {\n          if (item.kind === 'axe') {\n            if (item.hadAlt) item.el.setAttribute('alt', item.alt);\n            else item.el.removeAttribute('alt');\n            if (item.hadRole) item.el.setAttribute('role', item.role);\n            else item.el.removeAttribute('role');\n            const titleEl = item.el.querySelector(':scope > title');\n            if (item.hadTitle && titleEl) {\n              titleEl.textContent = item.titleText;\n            } else if (!item.hadTitle && titleEl) {\n              titleEl.remove();\n            }\n            if (item.processed !== undefined) item.el.dataset.ai4a11yProcessed = item.processed;\n            else delete item.el.dataset.ai4a11yProcessed;\n          } else if (item.kind === 'canvas') {\n            if (item.hadRole) item.el.setAttribute('role', item.role);\n            else item.el.removeAttribute('role');\n            if (item.hadAriaLabel) item.el.setAttribute('aria-label', item.ariaLabel);\n            else item.el.removeAttribute('aria-label');\n            if (item.processed !== undefined) item.el.dataset.ai4a11yProcessed = item.processed;\n            else delete item.el.dataset.ai4a11yProcessed;\n          } else if (item.kind === 'video') {\n            if (item.hadAriaLabel) item.el.setAttribute('aria-label', item.ariaLabel);\n            else item.el.removeAttribute('aria-label');\n            if (item.described !== undefined) item.el.dataset.ai4a11yDescribed = item.described;\n            else delete item.el.dataset.ai4a11yDescribed;\n          }\n        }\n        delete window.__genAltPrev;\n      }\n    "
+  }
+}

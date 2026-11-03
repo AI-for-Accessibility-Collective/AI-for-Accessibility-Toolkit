@@ -1,0 +1,20 @@
+{
+  "name": "bionic-reading-narrow",
+  "file": "tools/adapters/bionic-reading.js",
+  "export": "BionicReading",
+  "page": "bionic-reading.html",
+  "checks": [
+    {
+      "name": "bolds prose words at 320px viewport without clipping or horizontal overflow",
+      "code": "\n        const prose = document.getElementById('prose-main');\n        if (!prose) return false;\n        if (!prose.querySelector('span.ai4a11y-bionic')) return true;\n\n        const bolds = prose.querySelectorAll('span.ai4a11y-bionic b');\n        if (bolds.length === 0) return false;\n\n        const bodyWidth = document.body.clientWidth;\n        const scrollWidth = document.documentElement.scrollWidth;\n        return scrollWidth <= bodyWidth + 5;\n      "
+    },
+    {
+      "name": "interactive elements stay reachable and operable at 320px",
+      "code": "\n        const link = document.getElementById('inline-study-link');\n        const btn = document.getElementById('bookmark-btn');\n        if (!link || !btn) return false;\n        link.focus();\n        if (document.activeElement !== link) return false;\n        link.blur();\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/persistent-hover.js",
+  "export": "PersistentHover",
+  "sites": "all"
+}

@@ -28,15 +28,17 @@ export const FocusLocator = {
     this.enabled = true;
 
     // Amber reads on both light and dark pages; overridable for user-profile
-    // theming.
-    const color = (options && options.color) || '#ffbf00';
+    // theming. Deep amber (#c67d00) achieves >= 3:1 contrast against both
+    // pure white (3.3:1) and pure black (6.3:1) backgrounds.
+    const color = (options && options.color) || '#c67d00';
 
     // Layer 1: a strong outline on whatever holds focus, overriding site CSS
     // that suppresses or dims the default indicator. :not(#id) adds an id's
     // weight: sites switch the outline off with !important too (e.g.
     // `html[data-x] *:focus { outline: none !important }`), which beat a plain *:focus.
+    // Exclude html and body so focusing empty page space does not frame the viewport.
     this.styleHandle = injectStyle(this.styleId, `
-      *:focus:not(#${this.ringId}), *:focus-visible:not(#${this.ringId}) {
+      *:focus:not(html):not(body):not(#${this.ringId}), *:focus-visible:not(html):not(body):not(#${this.ringId}) {
         outline: 4px solid ${color} !important;
         outline-offset: 3px !important;
         box-shadow: 0 0 0 7px color-mix(in srgb, ${color} 40%, transparent) !important;
@@ -57,6 +59,7 @@ export const FocusLocator = {
       'background: none',
       'z-index: 2147483646',
       'box-sizing: border-box',
+      'transition: none',
     ].join('; ');
     (document.body || document.documentElement).appendChild(ring);
     this.ring = ring;
@@ -68,7 +71,11 @@ export const FocusLocator = {
       // on its host, so the ring framed the whole host; follow it to the
       // element that actually has focus.
       while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement;
-      if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return;
+      if (!el || el.nodeType !== 1 || !el.getBoundingClientRect || el === document.body || el === document.documentElement) {
+        this.tracked = null;
+        if (this.ring) this.ring.style.display = 'none';
+        return;
+      }
       this.tracked = el;
       this.position();
     };
@@ -78,6 +85,14 @@ export const FocusLocator = {
     };
     document.addEventListener('focusin', this.focusInHandler, true);
     document.addEventListener('focusout', this.focusOutHandler, true);
+
+    // If an element already holds focus when enable() runs, track it immediately.
+    let active = document.activeElement;
+    while (active && active.shadowRoot && active.shadowRoot.activeElement) active = active.shadowRoot.activeElement;
+    if (active && active !== document.body && active !== document.documentElement && active.nodeType === 1 && typeof active.getBoundingClientRect === 'function') {
+      this.tracked = active;
+      this.position();
+    }
 
     // The ring is position:fixed, so it does not move with the page. Without
     // this, scrolling or resizing without changing focus would leave the ring
@@ -103,7 +118,11 @@ export const FocusLocator = {
   // (rather than drawing a stray ring) once the element leaves the DOM.
   position() {
     if (!this.enabled || !this.ring || !this.tracked) return;
-    if (this.tracked.isConnected === false) { this.ring.style.display = 'none'; return; }
+    if (this.tracked.isConnected === false) { this.ring.style.display = 'none'; this.tracked = null; return; }
+    if (this.tracked === document.body || this.tracked === document.documentElement) {
+      this.ring.style.display = 'none';
+      return;
+    }
     try {
       const rect = this.tracked.getBoundingClientRect();
       const st = this.ring.style;

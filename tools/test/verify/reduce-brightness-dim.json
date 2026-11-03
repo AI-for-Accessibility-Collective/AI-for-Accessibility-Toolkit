@@ -1,0 +1,29 @@
+{
+  "name": "reduce-brightness-dim",
+  "file": "tools/adapters/reduce-brightness.js",
+  "export": "ReduceBrightness",
+  "page": "reduce-brightness.html",
+  "options": {
+    "dim": 0.25,
+    "brightness": 0.7,
+    "saturation": 0.85
+  },
+  "checks": [
+    {
+      "name": "elements exist, root class, stylesheet with custom options, and dim overlay are applied",
+      "code": "\n  const article = document.getElementById('article');\n  const main = document.getElementById('main-content');\n  const heading = document.getElementById('article-title');\n  if (!article || !main || !heading) return false;\n\n  const adapter = window.__ai4a11yReduceBrightness;\n  const styleEl = document.getElementById('ai4a11y-reduce-brightness-styles');\n  const overlay = document.getElementById('ai4a11y-dim-overlay');\n\n  if (!adapter || !adapter.enabled) {\n    if (styleEl || overlay) return false;\n    if (document.documentElement.classList.contains('ai4a11y-dimmed')) return false;\n    return true;\n  }\n\n  if (!styleEl || !overlay) return false;\n  if (!document.documentElement.classList.contains('ai4a11y-dimmed')) return false;\n\n  const cssText = styleEl.textContent || '';\n  if (!cssText.includes('brightness(0.7)') || !cssText.includes('saturate(0.85)')) return false;\n\n  if (overlay.getAttribute('aria-hidden') !== 'true') return false;\n  if (overlay.style.position !== 'fixed') return false;\n  if (overlay.style.pointerEvents !== 'none') return false;\n\n  return true;\n"
+    },
+    {
+      "name": "interactive functionality: keyboard focus, form submission, toggle, and overlay removal",
+      "code": "\n  const emailInput = document.getElementById('subscriber-email');\n  const subscribeBtn = document.getElementById('subscribe-btn');\n  const statusDiv = document.getElementById('form-status');\n  const form = document.getElementById('subscribe-form');\n  if (!emailInput || !subscribeBtn || !statusDiv || !form) return false;\n\n  emailInput.focus();\n  if (document.activeElement !== emailInput) return false;\n  emailInput.value = 'reader@example.com';\n  emailInput.dispatchEvent(new Event('input', { bubbles: true }));\n  if (emailInput.value !== 'reader@example.com') return false;\n\n  subscribeBtn.click();\n  if (!statusDiv.textContent.includes('Thank you')) return false;\n\n  emailInput.value = '';\n  statusDiv.textContent = '';\n  emailInput.blur();\n\n  const adapter = window.__ai4a11yReduceBrightness;\n  if (!adapter || !adapter.enabled) return true;\n\n  adapter.enable({ dim: 0.25, brightness: 0.7, saturation: 0.85 });\n  const styles = document.querySelectorAll('#ai4a11y-reduce-brightness-styles');\n  const overlays = document.querySelectorAll('#ai4a11y-dim-overlay');\n  if (styles.length !== 1 || overlays.length !== 1) return false;\n\n  adapter.toggle();\n  if (adapter.enabled !== false) return false;\n  if (document.getElementById('ai4a11y-reduce-brightness-styles')) return false;\n  if (document.getElementById('ai4a11y-dim-overlay')) return false;\n  if (document.documentElement.classList.contains('ai4a11y-dimmed')) return false;\n\n  adapter.enable({ dim: 0.25, brightness: 0.7, saturation: 0.85 });\n  if (adapter.enabled !== true) return false;\n  if (!document.getElementById('ai4a11y-reduce-brightness-styles')) return false;\n  if (!document.getElementById('ai4a11y-dim-overlay')) return false;\n  if (!document.documentElement.classList.contains('ai4a11y-dimmed')) return false;\n\n  return true;\n"
+    },
+    {
+      "name": "accessibility: keyboard navigation, visible focus indicators, target sizes, overlay pointer pass-through",
+      "code": "\n  const navLink = document.getElementById('nav-articles');\n  const skipLink = document.querySelector('.skip-link');\n  const emailInput = document.getElementById('subscriber-email');\n  const subscribeBtn = document.getElementById('subscribe-btn');\n  if (!navLink || !skipLink || !emailInput || !subscribeBtn) return false;\n\n  const btnRect = subscribeBtn.getBoundingClientRect();\n  const navRect = navLink.getBoundingClientRect();\n  const inputRect = emailInput.getBoundingClientRect();\n  if (btnRect.width < 24 || btnRect.height < 24) return false;\n  if (navRect.width < 24 || navRect.height < 24) return false;\n  if (inputRect.width < 24 || inputRect.height < 24) return false;\n\n  if (subscribeBtn.textContent.trim() !== 'Subscribe') return false;\n\n  subscribeBtn.focus();\n  if (document.activeElement !== subscribeBtn) return false;\n  let cs = window.getComputedStyle(subscribeBtn);\n  if (parseFloat(cs.outlineWidth) < 2) return false;\n\n  const pt = document.elementFromPoint(btnRect.left + btnRect.width / 2, btnRect.top + btnRect.height / 2);\n  if (!subscribeBtn.contains(pt)) return false;\n\n  subscribeBtn.blur();\n  return true;\n"
+    },
+    {
+      "name": "content it should leave alone remains unchanged and intact",
+      "code": "\n  const h1 = document.querySelector('header h1');\n  const title = document.getElementById('article-title');\n  const tag = document.getElementById('article-tag');\n  const p1 = document.getElementById('article-p1');\n  const graphic = document.getElementById('wellness-graphic');\n  const aside = document.querySelector('aside');\n  const footer = document.querySelector('footer');\n\n  if (!h1 || !title || !tag || !p1 || !graphic || !aside || !footer) return false;\n\n  if (!h1.textContent.includes('Zenith Mind Wellness')) return false;\n  if (!title.textContent.includes('Creating a Calmer Visual Workspace')) return false;\n  if (!tag.textContent.includes('Sensory Comfort')) return false;\n  if (!p1.textContent.includes('High screen brightness and harsh contrast')) return false;\n\n  if (!graphic.getAttribute('aria-label')?.includes('Calm waves')) return false;\n\n  return true;\n"
+    }
+  ]
+}

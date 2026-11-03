@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/dark-mode.js",
+  "export": "DarkMode",
+  "sites": "all"
+}

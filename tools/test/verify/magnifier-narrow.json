@@ -1,0 +1,24 @@
+{
+  "name": "magnifier-narrow",
+  "file": "tools/adapters/magnifier.js",
+  "export": "Magnifier",
+  "page": "magnifier.html",
+  "checks": [
+    {
+      "name": "lens fits within 320px viewport without horizontal overflow",
+      "code": "\n        const lens = document.getElementById('ai4a11y-magnifier');\n        if (!lens) return true;\n\n        const p = document.getElementById('intro-p');\n        const rect = p.getBoundingClientRect();\n        document.dispatchEvent(new MouseEvent('mousemove', {\n          bubbles: true,\n          clientX: Math.round(rect.left + 20),\n          clientY: Math.round(rect.top + 10)\n        }));\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 60)));\n\n        const lRect = lens.getBoundingClientRect();\n        const fitsWidth = lRect.width <= 320 && lRect.left >= 0 && lRect.right <= 320;\n        document.dispatchEvent(new MouseEvent('mouseleave'));\n        return fitsWidth;\n      "
+    },
+    {
+      "name": "narrow viewport positioning places lens safely and never covers cursor",
+      "code": "\n        const lens = document.getElementById('ai4a11y-magnifier');\n        if (!lens) return true;\n\n        const intro = document.getElementById('intro-p');\n        const longP = document.getElementById('long-p');\n        if (!intro || !longP) return false;\n\n        // Test 1: pointer in top half\n        const iRect = intro.getBoundingClientRect();\n        const x1 = Math.round(iRect.left + 20);\n        const y1 = Math.round(iRect.top + 8);\n        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x1, clientY: y1 }));\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 60)));\n\n        let lRect = lens.getBoundingClientRect();\n        let covers1 = (x1 >= lRect.left && x1 <= lRect.right && y1 >= lRect.top && y1 <= lRect.bottom);\n\n        // Test 2: pointer in bottom half\n        const lRectP = longP.getBoundingClientRect();\n        const x2 = Math.round(lRectP.left + 25);\n        const y2 = Math.round(lRectP.bottom - 15);\n        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x2, clientY: y2 }));\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 60)));\n\n        lRect = lens.getBoundingClientRect();\n        let covers2 = (x2 >= lRect.left && x2 <= lRect.right && y2 >= lRect.top && y2 <= lRect.bottom);\n\n        document.dispatchEvent(new MouseEvent('mouseleave'));\n        return !covers1 && !covers2;\n      "
+    },
+    {
+      "name": "Escape dismisses lens on narrow viewport without pointer movement",
+      "code": "\n        const lens = document.getElementById('ai4a11y-magnifier');\n        const intro = document.getElementById('intro-p');\n        if (!intro) return false;\n        if (!lens) return true;\n\n        const iRect = intro.getBoundingClientRect();\n        document.dispatchEvent(new MouseEvent('mousemove', {\n          bubbles: true,\n          clientX: Math.round(iRect.left + 20),\n          clientY: Math.round(iRect.top + 8)\n        }));\n        await new Promise(r => requestAnimationFrame(() => setTimeout(r, 60)));\n        if (window.getComputedStyle(lens).display !== 'block') return false;\n\n        document.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Escape' }));\n        const dismissed = window.getComputedStyle(lens).display === 'none';\n        document.dispatchEvent(new MouseEvent('mouseleave'));\n        return dismissed;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

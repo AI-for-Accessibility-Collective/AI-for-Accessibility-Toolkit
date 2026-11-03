@@ -1,0 +1,20 @@
+{
+  "name": "reader-mode-narrow",
+  "file": "tools/adapters/reader-mode.js",
+  "export": "ReaderMode",
+  "page": "reader-mode.html",
+  "checks": [
+    {
+      "name": "reader overlay reflows within 320px viewport without horizontal scrolling",
+      "code": "\n        const overlay = document.getElementById(\"ai4a11y-reader-mode\");\n        if (!overlay) return true;\n\n        if (overlay.scrollWidth > 320) return false;\n        const container = overlay.querySelector(\".ai4a11y-reader-container\");\n        if (!container || container.scrollWidth > 320) return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "close button and title remain accessible and properly sized in narrow view",
+      "code": "\n        const overlay = document.getElementById(\"ai4a11y-reader-mode\");\n        if (!overlay) return true;\n\n        const closeBtn = overlay.querySelector(\".ai4a11y-reader-close\");\n        if (!closeBtn) return false;\n\n        const rect = closeBtn.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n        if (rect.right > 320) return false;\n\n        const title = overlay.querySelector(\".ai4a11y-reader-title\");\n        if (!title) return false;\n        const titleRect = title.getBoundingClientRect();\n        if (titleRect.right > 320) return false;\n\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

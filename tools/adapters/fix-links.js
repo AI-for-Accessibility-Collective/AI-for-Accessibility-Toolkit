@@ -23,14 +23,15 @@ const MAX_LINKS_PER_PAGE = 10;
  * reaches the model as context, so the visible wording is not lost.
  */
 export async function improveAmbiguousLink(link) {
-  if (link.dataset.ai4a11yProcessed) return null;
+  if (!link || !link.dataset || link.dataset.ai4a11yProcessed) return null;
   markProcessed(link, 'pending');
 
-  const text = getAccessibleName(link);
-  const context = link.closest('p, li, td, article, section')?.textContent?.trim().substring(0, 200) || '';
+  const text = getAccessibleName(link) || '';
+  const context = link.closest?.('p, li, td, article, section, dd, dt, figcaption, blockquote')?.textContent?.trim().substring(0, 200) || '';
+  const href = typeof link.href === 'string' ? link.href : (link.href?.baseVal || link.getAttribute?.('href') || '');
 
   try {
-    const answer = await improveLinkText(text, link.href, context);
+    const answer = await improveLinkText(text, href, context);
     // Gate the answer before it becomes the accessible name. A refusal or a
     // hedge in aria-label is announced as the link's name, which is worse
     // than the "click here" it replaced. Rejected answers degrade like null.
@@ -61,7 +62,7 @@ export async function improveAmbiguousLink(link) {
  * auditors.findAmbiguousLinks()). Caps AI usage per page.
  */
 export async function improveAmbiguousLinks(links) {
-  const batch = Array.from(links).slice(0, MAX_LINKS_PER_PAGE);
+  const batch = Array.from(links || []).slice(0, MAX_LINKS_PER_PAGE);
   const results = [];
   for (const link of batch) {
     results.push(await improveAmbiguousLink(link));

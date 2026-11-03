@@ -1,0 +1,28 @@
+{
+  "name": "language-tag",
+  "file": "tools/adapters/language-tag.js",
+  "export": "LanguageTag",
+  "page": "language-tag.html",
+  "checks": [
+    {
+      "name": "wraps untagged foreign-script runs in appropriate lang spans",
+      "code": "\n        const cjk = document.getElementById('cjk-prose');\n        const ru = document.getElementById('russian-prose');\n        const ar = document.getElementById('arabic-prose');\n        const ja = document.getElementById('japanese-prose');\n        const el = document.getElementById('greek-prose');\n        const th = document.getElementById('thai-prose');\n        const he = document.getElementById('hebrew-prose');\n        const hi = document.getElementById('hindi-prose');\n        const ko = document.getElementById('korean-prose');\n        if (!cjk || !ru || !ar || !ja || !el || !th || !he || !hi || !ko) return false;\n\n        const isEnabled = document.querySelector('.ai4a11y-lang') !== null;\n        if (!isEnabled) {\n          return !cjk.querySelector('span[lang]') && !ru.querySelector('span[lang]');\n        }\n\n        const cjkSpan = cjk.querySelector('span[lang=\"zh\"]');\n        const ruSpan = ru.querySelector('span[lang=\"ru\"]');\n        const arSpan = ar.querySelector('span[lang=\"ar\"]');\n        const jaSpan = ja.querySelector('span[lang=\"ja\"]');\n        const elSpan = el.querySelector('span[lang=\"el\"]');\n        const thSpan = th.querySelector('span[lang=\"th\"]');\n        const heSpan = he.querySelector('span[lang=\"he\"]');\n        const hiSpan = hi.querySelector('span[lang=\"hi\"]');\n        const koSpan = ko.querySelector('span[lang=\"ko\"]');\n\n        return !!(cjkSpan && cjkSpan.textContent === '世界' &&\n                  ruSpan && ruSpan.textContent === 'Привет' &&\n                  arSpan && arSpan.textContent === 'مرحبا' &&\n                  jaSpan && jaSpan.textContent === '春の海' &&\n                  elSpan && elSpan.textContent.includes('γνῶθι') &&\n                  thSpan && thSpan.textContent === 'สวัสดี' &&\n                  heSpan && heSpan.textContent === 'שלום' &&\n                  hiSpan && hiSpan.textContent === 'नमस्ते' &&\n                  koSpan && koSpan.textContent === '안녕하세요');\n      "
+    },
+    {
+      "name": "preserves pre-tagged content without overwriting or redundant wrapping",
+      "code": "\n        const ru = document.getElementById('pre-tagged-span-ru');\n        const ja = document.getElementById('pre-tagged-span-ja');\n        if (!ru || !ja) return false;\n\n        const isEnabled = document.querySelector('.ai4a11y-lang') !== null;\n        if (!isEnabled) {\n          return ru.getAttribute('lang') === 'ru' && ja.getAttribute('lang') === 'ja';\n        }\n\n        if (ru.querySelector('.ai4a11y-lang') !== null) return false;\n        if (ja.querySelector('.ai4a11y-lang') !== null) return false;\n        if (ja.querySelector('span[lang=\"zh\"]') !== null) return false;\n        if (ja.getAttribute('lang') !== 'ja') return false;\n        if (ru.getAttribute('lang') !== 'ru') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "preserves unselected elements: code, inputs, editable regions, and plain English",
+      "code": "\n        const plain = document.getElementById('plain-english');\n        const code = document.getElementById('sample-code');\n        const input = document.getElementById('search-term');\n        const editable = document.getElementById('content-editable-region');\n        if (!plain || !code || !input || !editable) return false;\n\n        if (plain.querySelector('.ai4a11y-lang')) return false;\n        if (code.querySelector('.ai4a11y-lang')) return false;\n        if (editable.querySelector('.ai4a11y-lang')) return false;\n        if (input.value !== 'Search 世界 articles') return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "observer sweeps dynamically added content",
+      "code": "\n        const container = document.getElementById('dynamic-container');\n        if (!container) return false;\n\n        const isEnabled = document.querySelector('.ai4a11y-lang') !== null;\n        if (!isEnabled) return true;\n\n        const p = document.createElement('p');\n        p.id = 'dynamic-added-p';\n        p.textContent = 'Dynamic greeting: こんにちは';\n        container.appendChild(p);\n\n        await new Promise(r => setTimeout(r, 700));\n\n        const tagged = p.querySelector('span[lang=\"ja\"]');\n        const passed = !!(tagged && tagged.textContent === 'こんにちは');\n\n        p.remove();\n        return passed;\n      "
+    },
+    {
+      "name": "interactive controls remain accessible and visible text is unchanged",
+      "code": "\n        const btn = document.getElementById('search-button');\n        const link = document.querySelector('nav a');\n        if (!btn || !link) return false;\n\n        btn.focus();\n        if (document.activeElement !== btn) return false;\n\n        link.focus();\n        if (document.activeElement !== link) return false;\n\n        const cjk = document.getElementById('cjk-prose');\n        if (!cjk.textContent.includes('concept of 世界 (world)')) return false;\n\n        const rect = btn.getBoundingClientRect();\n        return rect.width >= 24 && rect.height >= 24;\n      "
+    }
+  ]
+}

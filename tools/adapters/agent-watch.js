@@ -22,7 +22,7 @@
 //   control is bad news delivered on time.
 //
 // Reversible by construction, like every adapter here: one injected container
-// and one injected stylesheet, both removed on disable(). It never touches the
+// and injected stylesheets, all removed on disable(). It never touches the
 // page's own DOM, which also means it cannot break the page it is reporting on.
 //
 // Pairs with the `contract-mismatch` auditor, which produces the findings.
@@ -126,9 +126,17 @@ export const AgentWatch = {
     this.root = null;
     this.styleHandle?.remove();
     this.styleHandle = null;
+    document.getElementById('verification-decision-view-style')?.remove();
     this.state = null;
     this.spoken = null;
     this.settled = null;
+    this.openSurfaces = null;
+    this.lastTold = null;
+    this.model = null;
+    this._focusedGate = null;
+    this._focusedOne = null;
+    this.agent = null;
+    this.collapsed = false;
   },
 
   /** New findings from the run. Re-renders, and speaks anything that must be. */
@@ -838,8 +846,9 @@ function css(m) {
      product page that is the buy box, price and Add to Cart. Sitting on top of
      it made the surface an obstacle for a sighted person and a trap for the
      agent. */
+  box-sizing: border-box;
   position: fixed; bottom: 16px; right: 16px; z-index: 2147483646;
-  width: ${width}px; max-height: 62vh; overflow-y: auto;
+  width: ${width}px; max-width: calc(100vw - 32px); max-height: 62vh; overflow-y: auto;
   background: ${bg}; color: ${fg};
   border: ${high ? '3px solid #000' : '1px solid #d1d5db'};
   border-radius: 10px;
@@ -866,7 +875,7 @@ function css(m) {
 
 #${AgentWatch.containerId} .aw-wheel {
   margin: 0 0 10px; padding: 8px 10px;
-  border: 1px solid ${high}; border-radius: 6px;
+  border: 1px solid ${high ? '#000' : line}; border-radius: 6px;
   background: ${bg};
 }
 #${AgentWatch.containerId} .aw-wheel p { margin: 0 0 8px; }
@@ -908,7 +917,7 @@ function css(m) {
 #${AgentWatch.containerId} .aw-item::before {
   position: absolute; left: ${Math.round(base * 0.78)}px; top: 9px; font-weight: 700;
 }
-#${AgentWatch.containerId} .aw-ok::before     { content: "✓"; color: ${high ? '#000' : '#059669'}; }
+#${AgentWatch.containerId} .aw-ok::before     { content: "✓"; color: ${high ? '#000' : '#047857'}; }
 #${AgentWatch.containerId} .aw-aside::before  { content: "!"; color: ${high ? '#000' : '#b45309'}; }
 #${AgentWatch.containerId} .aw-stop::before   { content: "■"; color: ${high ? '#000' : '#991b1b'}; }
 #${AgentWatch.containerId} .aw-ambient::before{ content: "·"; color: ${muted}; }
@@ -977,5 +986,22 @@ function css(m) {
 }
 ${shapeCss(AgentWatch.containerId, base, muted, line, high, bg)}
 ${surfaceCss(AgentWatch.containerId, base, muted, line, high)}
+#${AgentWatch.containerId} .aw-surf > summary.aw-surf-head { min-height: 24px; padding: 6px 0; }
+#${AgentWatch.containerId} .aw-prompt-edit { min-height: 24px; min-width: 24px; padding: 4px 6px; }
+#${AgentWatch.containerId} .aw-prompt-edit:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; opacity: 1; }
+#${AgentWatch.containerId} .aw-prompt-value:focus-visible { outline: 3px solid #1a73e8; outline-offset: 1px; }
+#${AgentWatch.containerId} .aw-rules-toggle {
+  min-height: 24px; height: 24px;
+  min-width: 40px; width: 40px;
+  display: inline-flex; align-items: center;
+  padding: 2px 3px; box-sizing: border-box;
+}
+#${AgentWatch.containerId} .aw-rules-knob {
+  width: 16px; height: 16px;
+  transform: translateX(18px);
+}
+#${AgentWatch.containerId} .aw-rules-toggle[aria-checked="false"] .aw-rules-knob {
+  transform: translateX(0);
+}
 `;
 }

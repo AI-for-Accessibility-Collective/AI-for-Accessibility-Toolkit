@@ -34,9 +34,11 @@ export const DismissOverlays = {
   inputHandler: null,
   lastInput: 0,          // when the person last clicked or pressed a key
   prevBodyOverflow: null,
+  prevBodyOverflowY: null,
   prevHtmlOverflow: null,
+  prevHtmlOverflowY: null,
 
-  enable() {
+  enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
     this.hidden = new Set();
@@ -47,11 +49,12 @@ export const DismissOverlays = {
     (document.head || document.documentElement).appendChild(style);
 
     // Restore scrolling that a modal may have locked (best-effort: many
-    // libraries set overflow:hidden inline on <body>/<html>).
+    // libraries set overflow:hidden or overflow-y:hidden inline on <body>/<html>).
     this.prevBodyOverflow = document.body ? document.body.style.overflow : null;
+    this.prevBodyOverflowY = document.body ? document.body.style.overflowY : null;
     this.prevHtmlOverflow = document.documentElement ? document.documentElement.style.overflow : null;
-    if (document.body && document.body.style.overflow === 'hidden') document.body.style.overflow = '';
-    if (document.documentElement && document.documentElement.style.overflow === 'hidden') document.documentElement.style.overflow = '';
+    this.prevHtmlOverflowY = document.documentElement ? document.documentElement.style.overflowY : null;
+    this.unlockScroll();
 
     const count = this.sweep(document);
 
@@ -60,7 +63,7 @@ export const DismissOverlays = {
     // a pop-up in their way: leave those. Only the ones that open by
     // themselves are hidden.
     this.lastInput = 0;
-    this.inputHandler = (e) => { if (e.isTrusted) this.lastInput = Date.now(); };
+    this.inputHandler = (e) => { if (e.isTrusted || options?.allowUntrusted) this.lastInput = Date.now(); };
     for (const type of INPUT_EVENTS) document.addEventListener(type, this.inputHandler, true);
 
     // Catch banners injected after load (cookie consent scripts usually run
@@ -71,7 +74,9 @@ export const DismissOverlays = {
         if (Date.now() - this.lastInput < 1000) return;
         for (const m of mutations) {
           for (const node of m.addedNodes) {
-            if (node.nodeType === 1) this.consider(node);
+            if (node.nodeType === 1) {
+              if (this.consider(node)) this.unlockScroll();
+            }
           }
         }
       });
@@ -82,12 +87,23 @@ export const DismissOverlays = {
     announce(count ? `Hid ${count} popup${count === 1 ? '' : 's'}` : 'Watching for popups to hide');
   },
 
+  unlockScroll() {
+    if (document.body) {
+      if (document.body.style.overflow === 'hidden' || document.body.style.overflow === 'clip') document.body.style.overflow = '';
+      if (document.body.style.overflowY === 'hidden' || document.body.style.overflowY === 'clip') document.body.style.overflowY = '';
+    }
+    if (document.documentElement) {
+      if (document.documentElement.style.overflow === 'hidden' || document.documentElement.style.overflow === 'clip') document.documentElement.style.overflow = '';
+      if (document.documentElement.style.overflowY === 'hidden' || document.documentElement.style.overflowY === 'clip') document.documentElement.style.overflowY = '';
+    }
+  },
+
   // Scan a root for overlays and hide them; returns how many were hidden.
   sweep(root) {
     let n = 0;
     let candidates;
     try {
-      candidates = root.querySelectorAll('div, section, aside, dialog, [role="dialog"], [aria-modal="true"]');
+      candidates = root.querySelectorAll('div, section, aside, dialog, header, footer, nav, form, [role="dialog"], [role="alertdialog"], [aria-modal="true"]');
     } catch { return 0; }
     for (const el of candidates) if (this.hide(el)) n++;
     return n;
@@ -118,7 +134,8 @@ export const DismissOverlays = {
 
     const nameHit = OVERLAY_NAME_RE.test(el.id || '') ||
       OVERLAY_NAME_RE.test(classNameOf(el)) ||
-      OVERLAY_NAME_RE.test((el.getAttribute && el.getAttribute('aria-label')) || '');
+      OVERLAY_NAME_RE.test((el.getAttribute && el.getAttribute('aria-label')) || '') ||
+      OVERLAY_NAME_RE.test((el.getAttribute && el.getAttribute('aria-labelledby')) || '');
     if (!nameHit) return false;
 
     // Name alone isn't enough — require a blocking layout so we don't hide an
@@ -126,7 +143,7 @@ export const DismissOverlays = {
     let pos = '';
     try { pos = (getComputedStyle(el).position || '').toLowerCase(); } catch { /* detached */ }
     const blocking = pos === 'fixed' || pos === 'sticky' ||
-      (el.getAttribute && el.getAttribute('role') === 'dialog');
+      (el.getAttribute && /^(dialog|alertdialog)$/i.test(el.getAttribute('role') || ''));
     return blocking;
   },
 
@@ -140,14 +157,30 @@ export const DismissOverlays = {
     }
     document.getElementById(this.styleId)?.remove();
     if (this.hidden) {
-      for (const el of this.hidden) el.classList?.remove(this.hiddenClass);
+      for (const el of this.hidden) {
+        el.classList?.remove(this.hiddenClass);
+        if (el.classList && !el.classList.length) el.removeAttribute('class');
+      }
       this.hidden.clear();
       this.hidden = null;
     }
     // Restore the scroll locks exactly as we found them.
-    if (document.body && this.prevBodyOverflow !== null) document.body.style.overflow = this.prevBodyOverflow;
-    if (document.documentElement && this.prevHtmlOverflow !== null) document.documentElement.style.overflow = this.prevHtmlOverflow;
-    this.prevBodyOverflow = this.prevHtmlOverflow = null;
+    if (document.body) {
+      if (this.prevBodyOverflow) document.body.style.overflow = this.prevBodyOverflow;
+      else if (this.prevBodyOverflow !== null && document.body.style.overflow) document.body.style.overflow = '';
+      if (this.prevBodyOverflowY) document.body.style.overflowY = this.prevBodyOverflowY;
+      else if (this.prevBodyOverflowY !== null && document.body.style.overflowY) document.body.style.overflowY = '';
+      if (!document.body.getAttribute('style')) document.body.removeAttribute('style');
+    }
+    if (document.documentElement) {
+      if (this.prevHtmlOverflow) document.documentElement.style.overflow = this.prevHtmlOverflow;
+      else if (this.prevHtmlOverflow !== null && document.documentElement.style.overflow) document.documentElement.style.overflow = '';
+      if (this.prevHtmlOverflowY) document.documentElement.style.overflowY = this.prevHtmlOverflowY;
+      else if (this.prevHtmlOverflowY !== null && document.documentElement.style.overflowY) document.documentElement.style.overflowY = '';
+      if (!document.documentElement.getAttribute('style')) document.documentElement.removeAttribute('style');
+    }
+    this.prevBodyOverflow = this.prevBodyOverflowY = null;
+    this.prevHtmlOverflow = this.prevHtmlOverflowY = null;
     console.log('[AI4A11y] Dismiss Overlays disabled');
     announce('Popups restored');
   },

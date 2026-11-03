@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The Daily Developer - Accessible Web News</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      color: #222222;
+      background: #ffffff;
+    }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .site-header {
+      border-bottom: 2px solid #e0e0e0;
+      padding: 16px 0;
+    }
+    .site-header h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+    .site-header .tagline {
+      margin: 0;
+      color: #555555;
+      font-size: 16px;
+    }
+    .site-nav {
+      padding: 12px 0;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .site-nav a,
+    .content a,
+    .site-footer a {
+      color: #0b57d0;
+      text-decoration: underline;
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      min-width: 24px;
+    }
+    .site-nav a:focus-visible,
+    .content a:focus-visible,
+    .site-footer a:focus-visible {
+      outline: 2px solid #0b57d0;
+      outline-offset: 2px;
+    }
+    .content {
+      padding: 24px 0;
+    }
+    .content h2 {
+      margin: 0 0 16px 0;
+      font-size: 24px;
+    }
+    .content h3 {
+      margin: 20px 0 8px 0;
+      font-size: 20px;
+    }
+    .cookie-banner {
+      background: #f4f4f4;
+      border: 1px solid #d0d0d0;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .card {
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      padding: 12px;
+      margin: 16px 0;
+    }
+    .sidebar-block {
+      background: #f8f9fa;
+      border-left: 4px solid #0b57d0;
+      padding: 12px 16px;
+      margin: 20px 0;
+    }
+    .site-footer {
+      border-top: 1px solid #e0e0e0;
+      padding: 20px 0;
+      font-size: 14px;
+      color: #555555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="cookie-notice" class="cookie-banner">
+      <p>We use essential cookies to maintain page settings and preferences.</p>
+    </div>
+
+    <div id="masthead" class="site-header">
+      <h1>The Daily Developer</h1>
+      <p class="tagline">Accessible design and modern web standards</p>
+    </div>
+
+    <div id="primary-nav" class="site-nav">
+      <a href="#news">News</a>
+      <a href="#articles">Articles</a>
+      <a href="#guides">Guides</a>
+      <a href="#about">About</a>
+    </div>
+
+    <div id="main-content" class="content">
+      <h2>Improving Accessibility with Semantic Landmarks</h2>
+      <p>
+        ARIA landmarks enable assistive technology users to quickly orient themselves
+        and navigate to major sections of a page. Screen readers provide keyboard shortcuts
+        to jump directly to the banner, navigation, main content, and contentinfo regions.
+        Without explicit HTML5 semantic tags or ARIA landmark roles, users may have to traverse
+        dozens of repetitive elements to locate the primary information.
+      </p>
+
+      <div id="sidebar-widget" class="sidebar-block" role="complementary" aria-label="Key Concept">
+        <p><strong>Landmark Navigation:</strong> Blind screen reader users frequently use landmark navigation as their first step when exploring a web page.</p>
+      </div>
+
+      <h3>Why Top-Level Roles Matter</h3>
+      <p>
+        When building or retrofitting web applications, landmarks should sit at the top level
+        of the document hierarchy rather than nesting inappropriately. A banner represents
+        the primary site header, while contentinfo represents the footer. Keeping landmarks
+        properly defined improves screen-reader predictability.
+      </p>
+
+      <div id="prose-links" class="card">
+        <p>
+          For more details on landmark navigation, refer to the <a href="#w3c">W3C ARIA Authoring Practices Guide</a>
+          and our recent <a href="#summary">summary article</a> for helpful implementation tips and background.
+        </p>
+      </div>
+    </div>
+
+    <div id="colophon" class="site-footer">
+      <p>© 2026 The Daily Developer. All rights reserved.</p>
+      <p><a href="#terms">Terms of Service</a> | <a href="#privacy">Privacy Policy</a></p>
+    </div>
+  </div>
+</body>
+</html>

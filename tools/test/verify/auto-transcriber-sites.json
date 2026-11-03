@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/auto-transcriber.js",
+  "export": "AutoTranscriber",
+  "sites": "all"
+}

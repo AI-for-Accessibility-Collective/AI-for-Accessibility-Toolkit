@@ -26,7 +26,8 @@ export const ReadingRuler = {
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
-    this.height = options.height || 40;
+    const h = Number(options.height);
+    this.height = Number.isFinite(h) && h > 0 ? h : 40;
 
     const band = document.createElement('div');
     band.id = this.bandId;
@@ -110,9 +111,9 @@ export const ReadingRuler = {
     announce('Reading ruler off');
   },
 
-  toggle() {
+  toggle(options) {
     if (this.enabled) this.disable();
-    else this.enable();
+    else this.enable(options);
   },
 };
 

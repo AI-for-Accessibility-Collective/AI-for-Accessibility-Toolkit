@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Developer Documentation - Keyboard Navigator Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #212529;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1a202c;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav[aria-label="Main Navigation"] {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #90cdf4;
+      text-decoration: underline;
+      display: inline-block;
+      padding: 6px 10px;
+      min-height: 24px;
+      min-width: 24px;
+    }
+    /* Planted barrier: suppressed focus outline on interactive element */
+    .suppressed-focus:focus {
+      outline: none !important;
+    }
+    main {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #2d3748;
+      margin-top: 0;
+    }
+    h3 {
+      font-size: 1.1rem;
+      color: #2d3748;
+    }
+    p {
+      color: #2d3748;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #1a202c;
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      max-width: 400px;
+      padding: 8px 12px;
+      border: 1px solid #718096;
+      border-radius: 4px;
+      font-size: 1rem;
+      min-height: 40px;
+      background: #ffffff;
+      color: #1a202c;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid #1a5fb4;
+      background-color: #1a5fb4;
+      color: #ffffff;
+      cursor: pointer;
+      min-height: 40px;
+      min-width: 40px;
+    }
+    .editable-box {
+      border: 1px solid #cbd5e0;
+      padding: 8px 12px;
+      min-height: 60px;
+      border-radius: 4px;
+      background: #ffffff;
+    }
+    footer {
+      border-top: 1px solid #e2e8f0;
+      padding: 1.5rem;
+      text-align: center;
+      color: #2d3748;
+      font-size: 0.875rem;
+    }
+    footer a {
+      color: #1a5fb4;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="page-title">Developer Portal</h1>
+    <nav aria-label="Main Navigation">
+      <a href="#overview">Overview</a>
+      <a href="#guides">Guides</a>
+      <a href="#api">API Reference</a>
+      <a href="#support">Support</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="overview">
+      <h2 id="heading-overview">System Overview</h2>
+      <p id="overview-p">This documentation covers keyboard shortcuts and navigation patterns.</p>
+      <button type="button" class="btn suppressed-focus" id="btn-suppressed">Action with suppressed focus</button>
+      <button type="button" class="btn" id="btn-normal">Standard Button</button>
+    </section>
+
+    <section id="guides">
+      <h2 id="heading-guides">Interactive Guides</h2>
+      <h3 id="heading-subguide">Configuration Subguide</h3>
+      <p>Configure your keyboard preferences and test focus movements.</p>
+
+      <form id="sample-form" onsubmit="return false;">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" value="jane_doe">
+        </div>
+        <div class="form-group">
+          <label for="editor-role">Role</label>
+          <select id="editor-role" name="role">
+            <option value="admin">Administrator</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes" rows="2">Default notes text</textarea>
+        </div>
+        <div class="form-group">
+          <label id="editable-label">Rich Text Workspace</label>
+          <div id="editable-region" class="editable-box" contenteditable="true" aria-labelledby="editable-label">Editable text here</div>
+        </div>
+      </form>
+    </section>
+
+    <section id="api">
+      <h2 id="heading-api">API Reference</h2>
+      <p>Keyboard navigation API and shortcuts.</p>
+    </section>
+
+    <section id="support">
+      <h2 id="heading-support">Support</h2>
+      <p>Get help with navigation tools.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p id="privacy">&copy; 2026 Developer Portal. <a href="#privacy">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>

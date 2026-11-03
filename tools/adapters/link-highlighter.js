@@ -1,8 +1,12 @@
 // Link Highlighter — makes links unmistakable for low-vision and cognitive
-// users (underline, bolder weight, a distinct accessible color, a strong
-// focus ring) and reveals each link's destination host as a title, so users
-// know where a link goes. From the co-design study: "click here" / "read
-// more" links leave users unable to tell where a link actually leads.
+// users (underline, a distinct accessible color, a strong focus ring) and
+// reveals each link's destination host as a title, so users know where a
+// link goes. From the co-design study: "click here" / "read more" links
+// leave users unable to tell where a link actually leads.
+//
+// Leaves font-weight to the page so lines never wrap or shift layout (which
+// broke on text-dense pages like Wikipedia) and bold links keep their 700
+// weight for WCAG large-text contrast.
 //
 // Reversible by construction: the styling is CSS only (a body class + one
 // injected stylesheet), and destination titles are set ONLY on links that had
@@ -39,7 +43,6 @@ export const LinkHighlighter = {
         text-decoration: underline !important;
         text-decoration-thickness: 2px !important;
         text-underline-offset: 2px !important;
-        font-weight: 600 !important;
       }
       .${this.bodyClass} a[href]:not([${this.ownColorAttr}]) {
         color: ${color} !important;
@@ -92,8 +95,8 @@ export const LinkHighlighter = {
 
   // The link color is dark: on a dark header or a colored button it made
   // links unreadable (dark blue on dark red). Those keep the page's own
-  // color, which the page already made readable there; the underline and
-  // weight still mark them as links, and their focus outline uses
+  // color, which the page already made readable there; the underline
+  // still marks them as links, and their focus outline uses
   // currentColor to remain contrasting and visible.
   keepOwnColor(a) {
     if (!a || a.nodeType !== 1 || this.ownColor.has(a)) return;

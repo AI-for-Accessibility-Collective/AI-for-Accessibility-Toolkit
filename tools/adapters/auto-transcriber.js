@@ -24,6 +24,7 @@ export const AutoTranscriber = {
   enabled: false,
   observer: null,
   videoStates: new Map(),
+  iframeStates: new Map(),
   styleId: 'ai4a11y-caption-helper-styles',
   _enableTimer: null,
   _pagehideHandler: null,
@@ -54,12 +55,15 @@ export const AutoTranscriber = {
     this.observer?.disconnect();
     this.observer = null;
     for (const video of [...this.videoStates.keys()]) this.cleanupVideo(video);
+    for (const iframe of [...this.iframeStates.keys()]) this.cleanupIframe(iframe);
     document.querySelectorAll('.ai4a11y-audio-btn, .ai4a11y-caption-box').forEach(el => el.remove());
     document.getElementById(this.styleId)?.remove();
     // Clear the per-video setup flag, else a re-enable() finds every existing
     // video already flagged and silently skips setting up captions on it.
     document.querySelectorAll('video[data-ai4a11y-setup]').forEach(v => { delete v.dataset.ai4a11ySetup; });
+    document.querySelectorAll('iframe[data-ai4a11y-captions-enabled]').forEach(f => { delete f.dataset.ai4a11yCaptionsEnabled; });
     this.videoStates.clear();
+    this.iframeStates.clear();
     console.log('[AI4A11y] Auto Transcriber disabled');
     announce('Caption buttons removed');
   },
@@ -87,6 +91,7 @@ export const AutoTranscriber = {
       }
       .ai4a11y-audio-btn:hover { background: #000; }
       .ai4a11y-audio-btn[aria-pressed="true"] { background: #fff; color: #000; border-color: #000; }
+      .ai4a11y-audio-btn:focus,
       .ai4a11y-audio-btn:focus-visible { outline: 3px solid #fff !important; outline-offset: 2px; box-shadow: 0 0 0 6px #1a73e8 !important; }
       .ai4a11y-caption-box {
         position: absolute;
@@ -96,6 +101,7 @@ export const AutoTranscriber = {
         max-width: 80%;
         max-height: 45%;
         overflow: hidden;
+        overflow-wrap: break-word;
         padding: 5px 12px;
         background: rgba(0, 0, 0, 0.85);
         color: #fff;
@@ -116,17 +122,20 @@ export const AutoTranscriber = {
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             if (node.tagName === 'VIDEO') this.setupVideo(node);
-            if (node.tagName === 'IFRAME' && node.src?.includes('youtube')) {
+            if (node.tagName === 'IFRAME' && (node.src?.includes('youtube') || node.getAttribute?.('src')?.includes('youtube'))) {
               this.enableYouTubeCaptions(node);
             }
             node.querySelectorAll?.('video')?.forEach(v => this.setupVideo(v));
+            node.querySelectorAll?.('iframe[src*="youtube"]')?.forEach(f => this.enableYouTubeCaptions(f));
           }
         }
-        // Clean up removed videos to prevent memory leaks
+        // Clean up removed videos and iframes to prevent memory leaks
         for (const node of mutation.removedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             if (node.tagName === 'VIDEO') this.cleanupVideo(node);
+            if (node.tagName === 'IFRAME') this.cleanupIframe(node);
             node.querySelectorAll?.('video')?.forEach(v => this.cleanupVideo(v));
+            node.querySelectorAll?.('iframe')?.forEach(f => this.cleanupIframe(f));
           }
         }
       }
@@ -148,10 +157,30 @@ export const AutoTranscriber = {
     state.btn?.remove();
     state.captionBox?.remove();
     clearTimeout(state.messageTimer);
-    if (state.wrapper && state.prevPosition !== null) state.wrapper.style.position = state.prevPosition;
+    if (state.wrapper && state.prevPosition !== null) {
+      if (state.prevPosition) {
+        state.wrapper.style.position = state.prevPosition;
+      } else {
+        state.wrapper.style.removeProperty('position');
+        if (!state.wrapper.getAttribute('style')) state.wrapper.removeAttribute('style');
+      }
+    }
     for (const { track, prevMode } of state.trackModes) { try { track.mode = prevMode; } catch { /* read-only */ } }
     this.videoStates.delete(video);
     delete video.dataset.ai4a11ySetup;
+  },
+
+  // Restores a YouTube iframe's src attribute and cleans up its dataset marker.
+  cleanupIframe(iframe) {
+    const state = this.iframeStates.get(iframe);
+    if (state) {
+      if (state.changed) {
+        if (state.prevSrc !== null) iframe.setAttribute('src', state.prevSrc);
+        else iframe.removeAttribute('src');
+      }
+      this.iframeStates.delete(iframe);
+    }
+    delete iframe.dataset.ai4a11yCaptionsEnabled;
   },
 
   enableCaptionsOnAllVideos() {
@@ -180,7 +209,7 @@ export const AutoTranscriber = {
     btn.type = 'button';
     btn.className = 'ai4a11y-audio-btn';
     btn.textContent = 'CC';
-    btn.setAttribute('aria-label', 'Captions');
+    btn.setAttribute('aria-label', 'CC Captions');
     const showing = captionTracks(video).some((t) => t.mode === 'showing');
     btn.setAttribute('aria-pressed', showing ? 'true' : 'false');
     btn.title = showing ? 'Hide captions' : 'Show captions';
@@ -189,6 +218,8 @@ export const AutoTranscriber = {
 
     const captionBox = document.createElement('div');
     captionBox.className = 'ai4a11y-caption-box';
+    captionBox.setAttribute('role', 'status');
+    captionBox.setAttribute('aria-live', 'polite');
     captionBox.style.display = 'none';
     wrapper.appendChild(captionBox);
 
@@ -233,6 +264,7 @@ export const AutoTranscriber = {
     }
     state.captionBox.style.display = 'block';
     state.captionBox.textContent = 'Getting captions…';
+    announce('Getting captions…');
     await this.transcribeVideo(video, state);
   },
 
@@ -268,14 +300,18 @@ export const AutoTranscriber = {
   },
 
   enableYouTubeCaptions(iframe) {
-    if (iframe.dataset.ai4a11yCaptionsEnabled) return;
-    iframe.dataset.ai4a11yCaptionsEnabled = 'true';
+    if (this.iframeStates.has(iframe) || iframe.dataset.ai4a11yCaptionsEnabled) return;
 
-    const src = iframe.src;
+    const prevSrc = iframe.getAttribute('src');
+    const src = iframe.src || prevSrc || '';
+    let changed = false;
     if (!src.includes('cc_load_policy=1')) {
       const sep = src.includes('?') ? '&' : '?';
       iframe.src = src + sep + 'cc_load_policy=1&cc_lang_pref=en';
+      changed = true;
     }
+    iframe.dataset.ai4a11yCaptionsEnabled = 'true';
+    this.iframeStates.set(iframe, { prevSrc, changed });
   },
 
   enableYouTubePageCaptions() {

@@ -15,7 +15,7 @@ import { registerSweep } from '../utils/observe.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 
-const CHART_HINT = /chart|graph|plot|diagram/i;
+const CHART_HINT = /(?:^|[^a-z])(charts?|graphs?|plots?|diagrams?)(?:[^a-z]|$)/i;
 const HTML_NS = 'http://www.w3.org/1999/xhtml';
 const MAX_CHARTS = 20;   // a dashboard with 200 sparklines should not get 200 buttons
 const MAX_ROWS = 200;    // never let a runaway model answer freeze the panel
@@ -28,6 +28,7 @@ export const ExploreAChart = {
   charts: [],
   buttons: [],
   lastHover: null,
+  _trigger: null,
   _reqSeq: 0,
   _keyHandler: null,
   _moveHandler: null,
@@ -40,21 +41,34 @@ export const ExploreAChart = {
     injectStyle(this.styleId, `
       .ai4a11y-chart-btn {
         display: inline-block; margin: 4px 0; padding: 4px 10px;
+        min-height: 24px; min-width: 24px; box-sizing: border-box;
         background: #1a73e8; color: #fff; border: none; border-radius: 6px;
         font: 13px/1.4 system-ui, sans-serif; cursor: pointer;
       }
-      .ai4a11y-chart-btn:focus-visible { outline: 3px solid #8ab4f8; outline-offset: 2px; }
+      .ai4a11y-chart-btn:focus-visible {
+        outline: 2px solid #1a73e8; outline-offset: 2px;
+        box-shadow: 0 0 0 2px #fff, 0 0 0 5px #1a73e8;
+      }
       #ai4a11y-chart-panel {
-        position: fixed; bottom: 16px; right: 16px; max-width: 480px; max-height: 70vh;
-        overflow: auto; z-index: 2147483647;
+        position: fixed; bottom: 16px; right: 16px;
+        max-width: min(480px, calc(100vw - 32px)); max-height: 70vh;
+        box-sizing: border-box; overflow: auto; z-index: 2147483647;
         background: #10141a; color: #f2f5f9; border: 2px solid #1a73e8; border-radius: 10px;
         padding: 12px 14px; font: 15px/1.5 system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.4);
       }
+      #ai4a11y-chart-panel:focus { outline: none; }
       #ai4a11y-chart-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
-      #ai4a11y-chart-panel .ai4a11y-chart-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+      #ai4a11y-chart-panel .ai4a11y-chart-close {
+        position: absolute; top: 6px; right: 8px;
+        width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+        background: none; border: none; border-radius: 4px; color: #f2f5f9; font-size: 18px; cursor: pointer;
+      }
+      #ai4a11y-chart-panel .ai4a11y-chart-close:focus-visible {
+        outline: 2px solid #8ab4f8 !important; outline-offset: 2px !important;
+      }
       #ai4a11y-chart-panel table { border-collapse: collapse; width: 100%; margin-top: 4px; }
       #ai4a11y-chart-panel caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
-      #ai4a11y-chart-panel th, #ai4a11y-chart-panel td { border: 1px solid #3c4043; padding: 4px 8px; text-align: left; }
+      #ai4a11y-chart-panel th, #ai4a11y-chart-panel td { border: 1px solid #5f6368; padding: 4px 8px; text-align: left; }
       #ai4a11y-chart-panel thead th { color: #8ab4f8; }
     `);
 
@@ -63,7 +77,7 @@ export const ExploreAChart = {
     this.live.id = 'ai4a11y-chart-live';
     this.live.setAttribute('aria-live', 'polite');
     this.live.setAttribute('aria-atomic', 'true');
-    this.live.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;';
+    this.live.style.cssText = 'position:fixed;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;';
     (document.body || document.documentElement).appendChild(this.live);
 
     this.charts = [];
@@ -132,7 +146,9 @@ export const ExploreAChart = {
     // a chart: on a store with them it got a "View data table" button under
     // every product card, and the button could only fail.
     document.querySelectorAll('[role="img"]').forEach((el) => { if (el.querySelector('canvas, svg, img')) push(el); });
-    return out;
+    // Filter out candidates contained inside another candidate (e.g. canvas inside [role="img"])
+    // so nested elements don't get duplicate buttons or buttons inside [role="img"].
+    return out.filter((el) => !out.some((other) => other !== el && other.contains(el)));
   },
 
   attachButton(chart) {
@@ -158,6 +174,9 @@ export const ExploreAChart = {
 
   // The tracked chart that el is (or is inside of), walking up the tree.
   chartFor(el) {
+    if (el && el.classList?.contains('ai4a11y-chart-btn') && this.charts.includes(el.previousElementSibling)) {
+      return el.previousElementSibling;
+    }
     while (el && el.nodeType === 1) {
       if (this.charts.includes(el)) return el;
       el = el.parentElement;
@@ -166,6 +185,9 @@ export const ExploreAChart = {
   },
 
   async open(chart) {
+    this._trigger = (document.activeElement && document.activeElement !== document.body)
+      ? document.activeElement
+      : (chart?.nextElementSibling?.classList?.contains('ai4a11y-chart-btn') ? chart.nextElementSibling : chart);
     if (!chart) {
       this.showMessage('No chart selected. Tab to a "View data table" button, or hover a chart and press Alt+T.');
       return;
@@ -219,6 +241,8 @@ export const ExploreAChart = {
     if (attr('aria-label')) bits.push(attr('aria-label'));
     if (attr('alt')) bits.push(attr('alt'));
     if (attr('title')) bits.push(attr('title'));
+    const svgTitle = el.querySelector && el.querySelector('title')?.textContent?.trim();
+    if (svgTitle && !bits.includes(svgTitle)) bits.push(svgTitle);
     const cap = el.closest && el.closest('figure')?.querySelector('figcaption');
     if (cap && cap.textContent.trim()) bits.push(cap.textContent.replace(/\s+/g, ' ').trim());
     return bits.join(' — ').slice(0, 300);
@@ -230,7 +254,9 @@ export const ExploreAChart = {
     this.panel.id = 'ai4a11y-chart-panel';
     this.panel.setAttribute('role', 'dialog');
     this.panel.setAttribute('aria-label', 'Chart data table');
+    this.panel.setAttribute('tabindex', '-1');
     const close = document.createElement('button');
+    close.type = 'button';
     close.className = 'ai4a11y-chart-close';
     close.setAttribute('aria-label', 'Close chart data table');
     close.textContent = '✕';
@@ -251,6 +277,7 @@ export const ExploreAChart = {
     this.panel.querySelector('.ai4a11y-chart-body').replaceChildren(p);
     this.panel.style.display = 'block';
     if (this.live) this.live.textContent = text;
+    this.panel.focus();
   },
 
   // Model output goes in via textContent ONLY — never innerHTML.
@@ -290,10 +317,16 @@ export const ExploreAChart = {
     this.panel.querySelector('.ai4a11y-chart-body').replaceChildren(table);
     this.panel.style.display = 'block';
     if (this.live) this.live.textContent = `${caption}. Table with ${rows.length} rows and ${data.headers.length} columns.`;
+    this.panel.focus();
   },
 
   hide() {
-    if (this.panel) this.panel.style.display = 'none';
+    if (!this.panel || this.panel.style.display === 'none') return;
+    this.panel.style.display = 'none';
+    if (this._trigger && typeof this._trigger.focus === 'function') {
+      try { this._trigger.focus(); } catch { /* ignore */ }
+    }
+    this._trigger = null;
   },
 
   disable() {
@@ -310,6 +343,7 @@ export const ExploreAChart = {
     this.panel?.remove(); this.panel = null;
     this.live?.remove(); this.live = null;
     this.lastHover = null;
+    this._trigger = null;
     announce('Explore a chart off');
   },
 

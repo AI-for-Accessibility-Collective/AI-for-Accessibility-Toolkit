@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TechPulse News — Digital Accessibility and Reflow</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a202c;
+      background-color: #ffffff;
+      padding-top: 70px;
+      padding-bottom: 80px;
+    }
+    a {
+      color: #0b57d0;
+      text-decoration: underline;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+    button {
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 8px 16px;
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: 4px;
+      border: 1px solid #0f172a;
+      background-color: #0f172a;
+      color: #ffffff;
+      cursor: pointer;
+    }
+    /* 1. Pinned site header */
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      z-index: 1000;
+      background-color: #f1f5f9;
+      border-bottom: 2px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+    }
+    .site-header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: #0f172a;
+    }
+    .site-header nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    /* 2. Pinned sticky subnav / table of contents */
+    .sticky-toc {
+      position: sticky;
+      top: 60px;
+      z-index: 900;
+      background-color: #e2e8f0;
+      border-bottom: 1px solid #94a3b8;
+      padding: 0.5rem 1.5rem;
+    }
+    .sticky-toc ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    /* 3. Pinned floating feedback widget */
+    .floating-widget {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      z-index: 1000;
+      background-color: #ffffff;
+      border: 1px solid #94a3b8;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    /* 4. Pinned cookie bar */
+    .cookie-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 12px 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .cookie-bar p {
+      margin: 0;
+    }
+    .cookie-bar button {
+      background-color: #ffffff;
+      color: #0f172a;
+      border-color: #ffffff;
+    }
+    /* 5. Tooltip (transient popper) */
+    .tooltip-box {
+      position: fixed;
+      top: 150px;
+      left: 20px;
+      background-color: #334155;
+      color: #ffffff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      z-index: 2000;
+      pointer-events: none;
+    }
+    /* 6. Modal dialog */
+    dialog.modal-sheet {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      max-width: 90%;
+      padding: 1.5rem;
+      background-color: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 8px;
+      z-index: 3000;
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    main article section {
+      margin-bottom: 2rem;
+    }
+    footer.site-footer {
+      max-width: 800px;
+      margin: 2rem auto 0 auto;
+      padding: 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <!-- 1. Pinned site header (position: fixed) -->
+  <header id="site-header" class="site-header">
+    <h1>TechPulse News</h1>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="#section-reflow">Reflow</a></li>
+        <li><a href="#section-standards">Standards</a></li>
+        <li><a href="#site-footer">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- 2. Sticky subnav / table of contents (position: sticky) -->
+  <nav id="sticky-toc" class="sticky-toc" aria-label="Table of contents">
+    <ul>
+      <li><a href="#section-reflow">1. Understanding Reflow</a></li>
+      <li><a href="#section-standards">2. WCAG 2.2 Guidelines</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main content to leave alone -->
+  <main id="main-content">
+    <article>
+      <h2>Ensuring Content Reflows Without Pinned Chrome Barriers</h2>
+      <p>
+        When users with low vision zoom in to 400%, sticky and fixed headers consume valuable viewport space.
+        WCAG 2.2 Success Criterion 1.4.10 (Reflow) requires that content can be presented without loss of information
+        or functionality, and without requiring scrolling in two dimensions.
+      </p>
+
+      <section id="section-reflow">
+        <h3>1. Understanding Reflow</h3>
+        <p>
+          Fixed position elements remain anchored to the viewport regardless of scrolling. At high zoom levels,
+          a 60-pixel header combined with a floating cookie banner and sticky navigation can obscure more than half
+          of the visible screen area, leaving only a tiny horizontal slit for reading body text.
+        </p>
+        <button type="button" id="btn-read-more" onclick="document.getElementById('more-details').hidden = !document.getElementById('more-details').hidden">
+          Toggle Details
+        </button>
+        <p id="more-details" hidden>
+          Additional analysis shows that unpinning these bars allows them to stay in the natural document flow,
+          scrolling out of view with the rest of the page.
+        </p>
+      </section>
+
+      <section id="section-standards">
+        <h3>2. WCAG 2.2 Guidelines</h3>
+        <p>
+          In addition to reflow, Success Criterion 2.4.11 (Focus Not Obscured) ensures that when an interactive
+          component receives keyboard focus, it is not entirely covered by author-created content such as pinned banners.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <!-- 3. Pinned floating feedback widget (position: fixed) -->
+  <aside id="floating-widget" class="floating-widget" aria-label="Feedback widget">
+    <button type="button" id="btn-feedback">Give Feedback</button>
+  </aside>
+
+  <!-- 4. Pinned cookie banner (position: fixed) -->
+  <aside id="cookie-banner" class="cookie-bar" aria-label="Cookie preferences">
+    <p>We use essential cookies to enhance your reading experience.</p>
+    <button type="button" id="btn-accept-cookies">Accept Cookies</button>
+  </aside>
+
+  <!-- 5. Tooltip (position: fixed, role="tooltip" - should NOT be unpinned) -->
+  <div id="sample-tooltip" class="tooltip-box" role="tooltip">Helpful tooltip note</div>
+
+  <!-- 6. Modal dialog (position: fixed, role="dialog" - should NOT be unpinned) -->
+  <dialog id="modal-dialog" class="modal-sheet" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">Subscription Options</h2>
+    <p>Choose your reading preferences.</p>
+    <button type="button" id="btn-close-dialog" onclick="this.closest('dialog').close()">Close</button>
+  </dialog>
+
+  <!-- Ordinary static footer -->
+  <footer id="site-footer" class="site-footer">
+    <p>&copy; 2026 TechPulse News. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Helper to simulate a late-injected pinned bar (e.g. late chat widget)
+    window.injectLateBar = function() {
+      const late = document.createElement('div');
+      late.id = 'late-chat-widget';
+      late.style.position = 'fixed';
+      late.style.bottom = '10px';
+      late.style.left = '10px';
+      late.style.padding = '8px 16px';
+      late.style.background = '#0f172a';
+      late.style.color = '#ffffff';
+      late.textContent = 'Need help? Chat with us';
+      document.body.appendChild(late);
+      return late;
+    };
+  </script>
+</body>
+</html>

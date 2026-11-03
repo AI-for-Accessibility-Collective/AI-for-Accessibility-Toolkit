@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inventory &amp; Sales Dashboard</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    header {
+      background-color: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #111827;
+    }
+    nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 0;
+    }
+    nav a {
+      color: #1e40af;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+    nav a:focus-visible, button:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #111827;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    .table-container {
+      overflow-x: auto;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      margin-bottom: 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    caption {
+      caption-side: top;
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      color: #111827;
+      background: #f3f4f6;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+      color: #111827;
+    }
+    .header-style {
+      font-weight: 600;
+      color: #111827;
+      background-color: #f3f4f6;
+    }
+    .sort-btn {
+      background: none;
+      border: 1px solid #9ca3af;
+      border-radius: 4px;
+      font: inherit;
+      font-weight: 600;
+      color: #111827;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      min-height: 28px;
+    }
+    .sort-btn:hover {
+      background-color: #e5e7eb;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .badge-instock {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .badge-low {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    .layout-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    footer {
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      padding: 1.5rem;
+      text-align: center;
+      color: #4b5563;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Acme Operations Central</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#inventory">Inventory</a></li>
+        <li><a href="#sales">Daily Sales</a></li>
+        <li><a href="#suppliers">Suppliers</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="inventory">
+      <h2>Warehouse Inventory (First Row Header Table)</h2>
+      <p>Current stock levels in the main fulfillment center.</p>
+      <div class="table-container" tabindex="0" role="region" aria-label="Warehouse Inventory Table">
+        <!-- Table 1: Headerless table where first row is formatted with td cells -->
+        <table id="inventory-table">
+          <tbody>
+            <tr>
+              <td class="header-style col-sku" data-field="sku">Item SKU</td>
+              <td class="header-style col-desc" data-field="desc">Description</td>
+              <td class="header-style col-cat" data-field="cat">Category</td>
+              <td class="header-style col-qty" data-field="qty">In Stock</td>
+              <td class="header-style col-price" data-field="price">
+                <button type="button" class="sort-btn" id="sort-price-btn" aria-label="Sort by Unit Price">
+                  Price <span aria-hidden="true">&#9660;</span>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>SKU-1001</td>
+              <td>Cordless Power Drill 18V</td>
+              <td>Tools</td>
+              <td><span class="badge badge-instock">42 units</span></td>
+              <td>$89.99</td>
+            </tr>
+            <tr>
+              <td>SKU-1002</td>
+              <td>Heavy Duty Claw Hammer</td>
+              <td>Tools</td>
+              <td><span class="badge badge-instock">115 units</span></td>
+              <td>$14.50</td>
+            </tr>
+            <tr>
+              <td>SKU-1003</td>
+              <td>Titanium Drill Bit Set 29pc</td>
+              <td>Accessories</td>
+              <td><span class="badge badge-low">8 units</span></td>
+              <td>$29.95</td>
+            </tr>
+            <tr>
+              <td>SKU-1004</td>
+              <td>Digital Laser Measure 50m</td>
+              <td>Measuring</td>
+              <td><span class="badge badge-instock">24 units</span></td>
+              <td>$49.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sales">
+      <h2>Daily Store Activity (Pure Data Table Needing AI Headers)</h2>
+      <p>Transaction log across regional physical outlets.</p>
+      <div class="table-container" tabindex="0" role="region" aria-label="Regional Outlet Metrics Table">
+        <!-- Table 2: Pure data table without header row, has caption and colgroup -->
+        <table id="sales-table">
+          <caption>Weekly Regional Outlet Metrics</caption>
+          <colgroup>
+            <col style="width: 34%;">
+            <col style="width: 33%;">
+            <col style="width: 33%;">
+          </colgroup>
+          <tbody>
+            <tr>
+              <td>North Region Hub</td>
+              <td>142</td>
+              <td>$12,450.00</td>
+            </tr>
+            <tr>
+              <td>West Coast Depot</td>
+              <td>215</td>
+              <td>$18,920.50</td>
+            </tr>
+            <tr>
+              <td>Midwest Central Outlet</td>
+              <td>98</td>
+              <td>$8,340.00</td>
+            </tr>
+            <tr>
+              <td>East Coast Facility</td>
+              <td>310</td>
+              <td>$27,600.25</td>
+            </tr>
+            <tr>
+              <td>South Metro Center</td>
+              <td>176</td>
+              <td>$15,110.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="suppliers">
+      <h2>Verified Suppliers (Existing Compliant Table)</h2>
+      <p>This table already includes accessible column headers and must be untouched.</p>
+      <div class="table-container" tabindex="0" role="region" aria-label="Verified Suppliers Table">
+        <!-- Table 3: Compliant table with th elements -->
+        <table id="suppliers-table">
+          <thead>
+            <tr>
+              <th scope="col">Supplier ID</th>
+              <th scope="col">Vendor Name</th>
+              <th scope="col">Contract Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>V-001</td>
+              <td>Apex Tooling Corp</td>
+              <td>Active</td>
+            </tr>
+            <tr>
+              <td>V-002</td>
+              <td>Pacific Steel Works</td>
+              <td>Active</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="quick-facts">
+      <h2>Facility Specifications (Key-Value Table)</h2>
+      <p>Key-value properties that should not have their first row promoted to column headers.</p>
+      <div class="table-container" tabindex="0" role="region" aria-label="Facility Specifications Table">
+        <!-- Table 4: Key-value table with 3 rows -->
+        <table id="specs-table">
+          <tbody>
+            <tr>
+              <td>Floor Area</td>
+              <td>45,000 sq ft</td>
+            </tr>
+            <tr>
+              <td>Loading Docks</td>
+              <td>6 bays</td>
+            </tr>
+            <tr>
+              <td>Ceiling Clearance</td>
+              <td>28 ft</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="layout-demo">
+      <h2>Operational Contacts (Layout Table)</h2>
+      <!-- Table 5: Presentation layout table -->
+      <table id="layout-table" role="presentation" style="width:100%; border:none;">
+        <tbody>
+          <tr>
+            <td style="padding: 1rem; border: none;">
+              <div class="layout-card">
+                <h3 style="margin: 0 0 0.5rem; font-size: 1rem;">Support Dispatch</h3>
+                <p style="margin: 0;">Phone: 555-0199</p>
+              </div>
+            </td>
+            <td style="padding: 1rem; border: none;">
+              <div class="layout-card">
+                <h3 style="margin: 0 0 0.5rem; font-size: 1rem;">Safety Coordinator</h3>
+                <p style="margin: 0;">Radio Channel: 4B</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer role="contentinfo">
+    <p>&copy; 2026 Acme Hardware Corporation. Internal Logistics Portal.</p>
+  </footer>
+
+  <script>
+    // Verify interactive sort button listener survives
+    window.__sortClicked = 0;
+    const sortBtn = document.getElementById('sort-price-btn');
+    if (sortBtn) {
+      sortBtn.addEventListener('click', () => {
+        window.__sortClicked++;
+      });
+    }
+  </script>
+</body>
+</html>

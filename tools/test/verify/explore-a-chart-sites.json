@@ -1,0 +1,20 @@
+{
+  "file": "tools/adapters/explore-a-chart.js",
+  "export": "ExploreAChart",
+  "ai": {
+    "extractChartData": {
+      "caption": "Sample Data",
+      "headers": [
+        "A",
+        "B"
+      ],
+      "rows": [
+        [
+          "1",
+          "2"
+        ]
+      ]
+    }
+  },
+  "sites": "all"
+}

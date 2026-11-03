@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>World Literature &amp; Languages Journal - Language Tagging</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a202c;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 1.25rem 2rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #93c5fd;
+      text-decoration: underline;
+      padding: 0.25rem 0;
+    }
+    nav a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    main a:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    article {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #0f172a;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+      margin-top: 1.5rem;
+    }
+    p {
+      margin: 0.85rem 0;
+    }
+    main a {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+    .spec-quote {
+      background-color: #f8fafc;
+      border-left: 4px solid #3b82f6;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+    }
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      border-radius: 4px;
+      padding: 0.2rem 0.4rem;
+    }
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    pre code {
+      padding: 0;
+      background: none;
+    }
+    .form-group {
+      margin: 1.5rem 0;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    label {
+      font-weight: 600;
+      color: #334155;
+    }
+    input[type="text"] {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      min-height: 44px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #1e293b;
+      color: #ffffff;
+      border: 1px solid #1e293b;
+      border-radius: 4px;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    button:hover {
+      background-color: #334155;
+    }
+    .editable-box {
+      border: 1px dashed #94a3b8;
+      padding: 0.75rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+      background: #fafafa;
+    }
+    footer {
+      border-top: 1px solid #e2e8f0;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>World Literature &amp; Languages Journal</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#prose-section">Articles</a></li>
+        <li><a href="#foreign-scripts">Scripts</a></li>
+        <li><a href="#interactive-section">Search</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <h2>Foreign Language Excerpts in Global Literature</h2>
+      <p id="plain-english">
+        This article examines how multinational literary works blend phrases across diverse writing systems.
+        Pure English sentences like this one should remain completely untouched by script-tagging heuristics.
+      </p>
+
+      <section id="foreign-scripts">
+        <h3>Untagged Non-Latin Scripts</h3>
+        <p id="cjk-prose">
+          In ancient philosophy, scholars often pondered the concept of 世界 (world) and its relation to nature.
+        </p>
+        <p id="russian-prose">
+          Tolstoy recorded the warm Russian greeting Привет exchanged between long-separated friends.
+        </p>
+        <p id="arabic-prose">
+          In Middle Eastern hospitality, the host welcomes guests with the traditional greeting مرحبا.
+        </p>
+        <p id="japanese-prose">
+          Basho wrote of gentle seasonal change using both kanji and kana: 春の海.
+        </p>
+        <p id="greek-prose">
+          The Delphic temple bore the timeless wisdom γνῶθι σεαυτόν inscribed at its entrance.
+        </p>
+        <p id="thai-prose">
+          Travelers in Bangkok are warmly greeted with สวัสดี from gracious shopkeepers.
+        </p>
+        <p id="hebrew-prose">
+          The ancient blessing שלום signifies wholeness, peace, and prosperity.
+        </p>
+        <p id="hindi-prose">
+          Across the subcontinent, hands join together with नमस्ते in respectful salutation.
+        </p>
+        <p id="korean-prose">
+          A courteous greeting in modern Seoul begins with 안녕하세요 in daily conversation.
+        </p>
+      </section>
+
+      <section id="preserved-content">
+        <h3>Pre-tagged and Technical Content</h3>
+        <p id="already-tagged-ru">
+          This author already tagged Russian: <span id="pre-tagged-span-ru" lang="ru">Привет мир</span> correctly.
+        </p>
+        <p id="already-tagged-ja">
+          This Japanese city is already tagged: <span id="pre-tagged-span-ja" lang="ja">東京</span> (Tokyo in kanji).
+        </p>
+
+        <div class="spec-quote">
+          <p id="code-snippet-intro">Code samples must never be transformed:</p>
+          <pre><code id="sample-code">const greeting = "世界"; // Unicode string in code</code></pre>
+        </div>
+
+        <div class="editable-box" id="content-editable-region" contenteditable="true">
+          Authors can draft notes here: 世界 and Привет in an editable container.
+        </div>
+      </section>
+
+      <section id="interactive-section">
+        <h3>Reader Inquiries</h3>
+        <form class="form-group" action="#" method="get" onsubmit="return false;">
+          <label for="search-term">Search archive:</label>
+          <input type="text" id="search-term" name="q" value="Search 世界 articles">
+          <button type="submit" id="search-button">Search</button>
+        </form>
+
+        <div id="dynamic-container"></div>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 World Literature &amp; Languages Journal. All rights reserved.</p>
+  </footer>
+</body>
+</html>

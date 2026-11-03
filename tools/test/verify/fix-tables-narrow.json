@@ -1,0 +1,42 @@
+{
+  "name": "fix-tables-narrow",
+  "file": "tools/adapters/fix-tables.js",
+  "page": "fix-tables.html",
+  "checks": [
+    {
+      "name": "tables exist in the page",
+      "code": "return !!document.getElementById('inventory-table') && !!document.getElementById('sales-table') && !!document.getElementById('suppliers-table') && !!document.getElementById('specs-table') && !!document.getElementById('layout-table');"
+    },
+    {
+      "name": "first row cells of inventory-table promoted to th scope=col with attributes preserved",
+      "code": "const t = document.getElementById('inventory-table');\nconst firstRow = t.rows[0];\nconst ths = Array.from(firstRow.cells);\nif (ths.length !== 5) return false;\nconst allTh = ths.every(c => c.tagName === 'TH' && c.getAttribute('scope') === 'col');\nconst classesPreserved = ths.every(c => c.classList.contains('header-style'));\nconst dataFieldsPreserved = ths[0].dataset.field === 'sku' && ths[1].dataset.field === 'desc' && ths[2].dataset.field === 'cat' && ths[3].dataset.field === 'qty' && ths[4].dataset.field === 'price';\nreturn allTh && classesPreserved && dataFieldsPreserved;"
+    },
+    {
+      "name": "sort button in inventory-table header survives promotion, is focusable, has accessible name and fires click listener",
+      "code": "const btn = document.getElementById('sort-price-btn');\nif (!btn) return false;\nif (btn.closest('th') !== document.querySelector('#inventory-table th.col-price')) return false;\nif (btn.getAttribute('aria-label') !== 'Sort by Unit Price') return false;\nbtn.focus();\nif (document.activeElement !== btn) return false;\nconst rect = btn.getBoundingClientRect();\nif (rect.width < 24 || rect.height < 24) return false;\nconst prevClicks = window.__sortClicked || 0;\nbtn.click();\nreturn window.__sortClicked === prevClicks + 1;"
+    },
+    {
+      "name": "sales-table gets AI-generated thead in correct HTML order and original data rows intact",
+      "code": "const t = document.getElementById('sales-table');\nconst thead = t.querySelector('thead');\nif (!thead || thead.dataset.ai4a11yGenerated !== 'true') return false;\nconst ths = Array.from(thead.querySelectorAll('th'));\nif (ths.length !== 3) return false;\nconst allCols = ths.every(c => c.getAttribute('scope') === 'col' && c.textContent.trim() === 'Regional Metric');\nconst children = Array.from(t.children);\nconst captionIdx = children.findIndex(c => c.tagName === 'CAPTION');\nconst colgroupIdx = children.findIndex(c => c.tagName === 'COLGROUP');\nconst theadIdx = children.findIndex(c => c.tagName === 'THEAD');\nconst tbodyIdx = children.findIndex(c => c.tagName === 'TBODY');\nconst validOrder = captionIdx === 0 && colgroupIdx === 1 && theadIdx === 2 && tbodyIdx === 3;\nconst dataRowsCount = t.querySelector('tbody').rows.length;\nreturn allCols && validOrder && dataRowsCount === 5;"
+    },
+    {
+      "name": "already accessible, key-value, and layout tables are left alone",
+      "code": "const sup = document.getElementById('suppliers-table');\nconst specs = document.getElementById('specs-table');\nconst layout = document.getElementById('layout-table');\nif (sup.querySelectorAll('th').length !== 3) return false;\nif (sup.querySelectorAll('thead').length !== 1) return false;\nif (specs.querySelectorAll('th').length !== 0) return false;\nif (layout.querySelectorAll('th').length !== 0) return false;\nreturn true;"
+    },
+    {
+      "name": "page landmark structure and navigation left alone",
+      "code": "const navLinks = document.querySelectorAll('nav a');\nconst h1 = document.querySelector('header h1');\nconst footer = document.querySelector('footer');\nreturn navLinks.length === 3 && !!h1 && !!footer;"
+    }
+  ],
+  "ai": {
+    "inferColumnHeader": "Regional Metric"
+  },
+  "harness": {
+    "enable": "await m.fixAllTables();",
+    "disable": ""
+  },
+  "viewport": {
+    "width": 320,
+    "height": 640
+  }
+}

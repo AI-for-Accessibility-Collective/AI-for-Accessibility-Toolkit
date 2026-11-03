@@ -1,0 +1,24 @@
+{
+  "name": "keyboard-nav-narrow",
+  "file": "tools/adapters/keyboard-nav.js",
+  "export": "KeyboardNavigator",
+  "page": "keyboard-nav.html",
+  "checks": [
+    {
+      "name": "skip links fit within 320px viewport without overflow",
+      "code": "\n        const isEnabled = !!document.getElementById('ai4a11y-keyboard-nav-styles');\n        if (!isEnabled) return true;\n        const links = Array.from(document.querySelectorAll('.ai4a11y-skip-link'));\n        if (links.length < 2) return false;\n        for (const link of links) {\n          link.focus();\n          await new Promise(r => setTimeout(r, 250));\n          const r = link.getBoundingClientRect();\n          if (r.left < 0 || r.right > 320 || r.top < 0) return false;\n          link.blur();\n        }\n        return true;\n      "
+    },
+    {
+      "name": "tab sequence overlay badges remain within 320px viewport",
+      "code": "\n        const isEnabled = !!document.getElementById('ai4a11y-keyboard-nav-styles');\n        if (!isEnabled) return true;\n\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', code: 'KeyO', altKey: true, bubbles: true }));\n        await new Promise(r => setTimeout(r, 60));\n\n        const badges = Array.from(document.querySelectorAll('.ai4a11y-tab-badge'));\n        if (badges.length === 0) return false;\n        for (const b of badges) {\n          if (b.style.display !== 'none') {\n            const r = b.getBoundingClientRect();\n            if (r.left < 0 || r.right > 320) return false;\n          }\n        }\n\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'o', code: 'KeyO', altKey: true, bubbles: true }));\n        await new Promise(r => setTimeout(r, 60));\n        return true;\n      "
+    },
+    {
+      "name": "enhanced focus outline remains functional at narrow viewport",
+      "code": "\n        const isEnabled = !!document.getElementById('ai4a11y-keyboard-nav-styles');\n        const btn = document.getElementById('btn-normal');\n        if (!btn) return false;\n        if (!isEnabled) return true;\n\n        btn.focus();\n        const s = window.getComputedStyle(btn);\n        const w = parseFloat(s.outlineWidth) || 0;\n        const res = w >= 3 && s.outlineStyle !== 'none';\n        btn.blur();\n        return res;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "reading-spot-narrow",
+  "file": "tools/adapters/reading-spot.js",
+  "export": "ReadingSpot",
+  "page": "reading-spot.html",
+  "checks": [
+    {
+      "name": "button fits within 320px viewport without horizontal scrollbar or overflow",
+      "code": "\n        const btn = document.getElementById('ai4a11y-spot-restore');\n        if (!btn) return true; // before enable\n\n        const rect = btn.getBoundingClientRect();\n        const docWidth = document.documentElement.scrollWidth;\n\n        // Button stays strictly within 320px viewport boundaries\n        if (rect.left < 0 || rect.right > 320) return false;\n        if (docWidth > 320) return false;\n\n        // Meets target size requirements (WCAG 2.5.8)\n        if (rect.width < 24 || rect.height < 24) return false;\n        return true;\n      "
+    },
+    {
+      "name": "keyboard focusable with visible focus outline within narrow viewport",
+      "code": "\n        const btn = document.getElementById('ai4a11y-spot-restore');\n        if (!btn) return true;\n\n        btn.focus();\n        if (document.activeElement !== btn) return false;\n\n        const cs = window.getComputedStyle(btn);\n        const outlineWidth = parseFloat(cs.outlineWidth);\n        const hasOutline = cs.outlineStyle !== 'none' && outlineWidth >= 2;\n        const hasShadow = cs.boxShadow && cs.boxShadow !== 'none';\n        if (!hasOutline && !hasShadow) return false;\n\n        // Button is unobstructed\n        const rect = btn.getBoundingClientRect();\n        const el = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);\n        if (el !== btn) return false;\n\n        btn.blur();\n        return true;\n      "
+    },
+    {
+      "name": "ordinary page content remains intact and unshifted in narrow viewport",
+      "code": "\n        const main = document.querySelector('main');\n        const h1 = document.querySelector('h1');\n        const p = document.getElementById('target-midnight');\n        if (!main || !h1 || !p) return false;\n\n        for (const el of [main, h1, p]) {\n          if (el.id.includes('ai4a11y') || el.className.includes('ai4a11y')) return false;\n        }\n        return true;\n      "
+    },
+    {
+      "name": "activating button scrolls to saved position and moves focus to landing element",
+      "code": "\n        const btn = document.getElementById('ai4a11y-spot-restore');\n        if (!btn) return true;\n\n        btn.focus();\n        btn.click();\n\n        if (window.scrollY !== 850) return false;\n        if (document.getElementById('ai4a11y-spot-restore') !== null) return false;\n\n        const active = document.activeElement;\n        if (!active || active === document.body) return false;\n\n        active.blur();\n        window.scrollTo(0, 0);\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

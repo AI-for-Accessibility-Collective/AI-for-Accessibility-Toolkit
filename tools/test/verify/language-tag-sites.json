@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/language-tag.js",
+  "export": "LanguageTag",
+  "sites": "all"
+}

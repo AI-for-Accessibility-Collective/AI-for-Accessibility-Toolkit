@@ -1,0 +1,8 @@
+{
+  "file": "tools/adapters/fix-tables.js",
+  "harness": {
+    "enable": "await m.fixAllTables();",
+    "disable": ""
+  },
+  "sites": "all"
+}

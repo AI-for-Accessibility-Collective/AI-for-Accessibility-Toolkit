@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Daily Reflow - Accessible News and Editorial</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      color: #ffffff;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      display: inline-block;
+      padding: 4px 8px;
+      min-height: 24px;
+      min-width: 24px;
+    }
+    nav a:focus {
+      outline: 3px solid #facc15;
+      outline-offset: 2px;
+    }
+    main {
+      padding: 1.5rem;
+    }
+    /* Layout with floats (barrier 1) */
+    .two-column-layout {
+      margin-bottom: 2rem;
+    }
+    .two-column-layout::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+    .main-article {
+      float: left;
+      width: 65%;
+      padding-right: 1.5rem;
+    }
+    .side-panel {
+      float: right;
+      width: 35%;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 1rem;
+    }
+    /* CSS multi-column text (barrier 2) */
+    .multi-column-text {
+      column-count: 3;
+      column-gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    /* Wide overflow grid (barrier 3) */
+    .overflow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 260px);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .grid-card {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 1rem;
+    }
+    /* Wide nowrap flex row with squeezed text (barrier 4) */
+    .squeezed-flex {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 1rem;
+      width: 280px;
+      margin: 1.5rem 0;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 0.75rem;
+    }
+    .fixed-box {
+      width: 200px;
+      flex-shrink: 0;
+      background: #e2e8f0;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+    .squeezed-desc {
+      font-size: 14px;
+    }
+    /* Wide media image (barrier 5) */
+    .wide-banner {
+      width: 1200px;
+      max-width: none;
+      height: auto;
+      display: block;
+      margin: 1rem 0;
+    }
+    /* Compact toolbar flex row that FITS and should NOT be wrapped (ordinary content) */
+    .compact-toolbar {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .toolbar-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      min-height: 36px;
+      min-width: 44px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #2563eb;
+      color: #ffffff;
+      border: 1px solid #1d4ed8;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .toolbar-btn:focus {
+      outline: 3px solid #1e293b;
+      outline-offset: 2px;
+    }
+    footer {
+      background: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      padding: 1.5rem;
+      margin-top: 2rem;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>The Daily Reflow</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#news">News</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#columns">Opinion</a></li>
+        <li><a href="#media">Media</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="two-column-layout" aria-labelledby="heading-lead">
+      <article class="main-article">
+        <h2 id="heading-lead">Lead Story: The Future of Single-Column Reading</h2>
+        <p>
+          Multi-column layouts create barriers for people who zoom in to 400% or use high-magnification displays.
+          When a page relies on side-by-side floated containers, text columns are compressed into narrow strips
+          forcing readers into difficult two-dimensional scrolling.
+        </p>
+        <div class="multi-column-text" id="multi-column-section">
+          <p>
+            Modern web accessibility guidelines require pages to reflow content without requiring scrolling in
+            two dimensions. Column count properties divide paragraphs into narrow ribbons that are hard to track.
+          </p>
+          <p>
+            When single-column reflow is engaged, these artificial columns collapse into one flowing column of
+            text that honors the natural reading order and natural measure.
+          </p>
+          <p>
+            Readers can comfortably follow the narrative without jumping back and forth across wide viewport
+            chasms or untangling intersecting columns of content.
+          </p>
+        </div>
+      </article>
+
+      <aside class="side-panel" aria-labelledby="heading-sidebar">
+        <h2 id="heading-sidebar">Sidebar Updates</h2>
+        <p>Live editorial commentary and supplemental statistics accompanying today's lead investigation.</p>
+        <div class="compact-toolbar" id="toolbar">
+          <button type="button" class="toolbar-btn" id="btn-save">Save</button>
+          <button type="button" class="toolbar-btn" id="btn-share">Share</button>
+        </div>
+      </aside>
+    </section>
+
+    <section aria-labelledby="heading-grid">
+      <h2 id="heading-grid">Trending Topics in Four Columns</h2>
+      <div class="overflow-grid" id="wide-grid">
+        <div class="grid-card">
+          <h3>Accessibility</h3>
+          <p>Implementing WCAG 1.4.10 reflow techniques across responsive component frameworks.</p>
+        </div>
+        <div class="grid-card">
+          <h3>Typography</h3>
+          <p>Optimal characters per line for low-vision and cognitive reading support.</p>
+        </div>
+        <div class="grid-card">
+          <h3>Assistive Tech</h3>
+          <p>Screen magnifiers, high-contrast themes, and adaptive viewing modes.</p>
+        </div>
+        <div class="grid-card">
+          <h3>Standards</h3>
+          <p>W3C Web Accessibility Initiative recommendations and modern browser implementations.</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="heading-squeezed">
+      <h2 id="heading-squeezed">Featured Item With Constrained Flex</h2>
+      <div class="squeezed-flex" id="squeezed-container">
+        <div class="fixed-box">Product Image</div>
+        <div class="squeezed-desc" id="squeezed-text">
+          Extremely compressed article description text that wraps onto dozens of tiny lines.
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="heading-media">
+      <h2 id="heading-media">Editorial Media</h2>
+      <img
+        class="wide-banner"
+        id="wide-image"
+        src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22300%22%3E%3Crect%20width%3D%221200%22%20height%3D%22300%22%20fill%3D%22%232563eb%22%2F%3E%3Ctext%20x%3D%22600%22%20y%3D%22160%22%20font-size%3D%2232%22%20text-anchor%3D%22middle%22%20fill%3D%22%23ffffff%22%3EWide%20Editorial%20Panorama%3C%2Ftext%3E%3C%2Fsvg%3E"
+        alt="Panoramic blue editorial illustration with bold white typography"
+        width="1200"
+        height="300"
+      >
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 The Daily Reflow. Designed for accessible reading verification.</p>
+  </footer>
+</body>
+</html>

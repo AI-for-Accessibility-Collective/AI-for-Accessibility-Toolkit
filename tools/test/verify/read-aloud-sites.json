@@ -1,0 +1,8 @@
+{
+  "file": "tools/adapters/read-aloud.js",
+  "harness": {
+    "enable": "m.ReadAloud.speakPage(options);",
+    "disable": "m.ReadAloud.stop();"
+  },
+  "sites": "all"
+}

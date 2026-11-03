@@ -1,0 +1,20 @@
+{
+  "name": "page-outline-narrow",
+  "file": "tools/adapters/page-outline.js",
+  "export": "PageOutline",
+  "page": "page-outline.html",
+  "checks": [
+    {
+      "name": "outline container and open list fit in 320px viewport without horizontal overflow",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yPageOutline !== 'undefined' && window.__ai4a11yPageOutline.enabled;\n        if (!isEnabled) return true;\n\n        const nav = document.getElementById('ai4a11y-page-outline');\n        if (!nav) return false;\n\n        const toggle = nav.querySelector('button');\n        const closedRect = nav.getBoundingClientRect();\n        if (closedRect.right > 320 || closedRect.left < 0) return false;\n\n        toggle.click();\n        const openRect = nav.getBoundingClientRect();\n        const listBox = nav.querySelector('#ai4a11y-page-outline-list');\n        const listRect = listBox.getBoundingClientRect();\n        const links = [...listBox.querySelectorAll('a')];\n\n        const fits = openRect.right <= 320 && openRect.left >= 0 && listRect.width <= 320;\n        const allTargetsValid = links.every(a => {\n          const r = a.getBoundingClientRect();\n          return r.width >= 24 && r.height >= 24;\n        });\n\n        toggle.click();\n        return fits && allTargetsValid;\n      "
+    },
+    {
+      "name": "keyboard interaction and focus management remain functional in narrow viewport",
+      "code": "\n        const isEnabled = typeof window.__ai4a11yPageOutline !== 'undefined' && window.__ai4a11yPageOutline.enabled;\n        if (!isEnabled) return true;\n\n        const nav = document.getElementById('ai4a11y-page-outline');\n        const toggle = nav.querySelector('button');\n\n        toggle.click();\n        const firstLink = nav.querySelector('#ai4a11y-page-outline-list a');\n        firstLink.click();\n\n        const h1 = document.querySelector('h1');\n        const isFocused = document.activeElement === h1;\n        const isClosed = toggle.getAttribute('aria-expanded') === 'false';\n\n        return isFocused && isClosed;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

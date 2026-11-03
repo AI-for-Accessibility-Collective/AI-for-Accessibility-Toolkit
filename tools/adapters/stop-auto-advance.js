@@ -8,8 +8,9 @@
 // Reversible by construction: meta refreshes are removed but their exact
 // position is recorded for re-insertion; carousel animations are paused via
 // one injected rule; only media WE paused is resumed, and only marquees WE
-// stopped are restarted. A MutationObserver catches media that starts
-// playing after enable, and is disconnected on disable.
+// stopped are restarted. A MutationObserver and captured play listener catch
+// media and meta refreshes added or set playing after enable, and are
+// disconnected on disable.
 import { announce } from '../utils/ai.js';
 
 // Class-name fragments that indicate auto-rotating content. Paired with the
@@ -60,6 +61,7 @@ export const StopAutoAdvance = {
   stoppedMarquees: null, // Set of <marquee> elements we stopped
   addedControls: null,   // Set of paused videos we showed controls on
   observer: null,
+  playHandler: null,
   slideObserver: null,   // watches slides' classes, see onClassChange
   rotating: null,        // WeakMap slides' parent -> the classes that move between them
   pageHas: null,         // Map slide -> which of those classes the page last gave it
@@ -117,7 +119,20 @@ export const StopAutoAdvance = {
           }
         }
       });
-      this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+      this.observer.observe(document.documentElement, { childList: true, subtree: true });
+    }
+
+    if (typeof document !== 'undefined' && document.addEventListener) {
+      this.playHandler = (e) => {
+        const el = e.target;
+        if (!this.enabled || !el || (el.tagName !== 'VIDEO' && el.tagName !== 'AUDIO')) return;
+        if (this.byUser(el, false) || (typeof navigator !== 'undefined' && navigator.userActivation?.isActive)) {
+          if (this.pausedMedia?.has(el)) this.pausedMedia.delete(el);
+          return;
+        }
+        this.considerMedia(el);
+      };
+      document.addEventListener('play', this.playHandler, true);
     }
 
     this.holdScriptedCarousels();
@@ -142,11 +157,12 @@ export const StopAutoAdvance = {
     return n;
   },
 
-  // Pause one media element if it is currently playing. Returns true if we
-  // paused it (and will therefore resume it on disable).
+  // Pause one media element if it is currently playing or set to autoplay.
+  // Returns true if we paused it (and will therefore resume it on disable).
   considerMedia(el) {
     try {
-      if (!el || el.paused !== false || this.pausedMedia.has(el)) return false;
+      const isAutoplay = Boolean(el && (el.autoplay || (el.hasAttribute && el.hasAttribute('autoplay'))));
+      if (!el || (el.paused !== false && !isAutoplay) || this.pausedMedia.has(el)) return false;
       if (typeof el.pause === 'function') pauseQuietly(el, () => this.enabled);
       this.pausedMedia.add(el);
       // A video that played by itself often has no controls, so once paused
@@ -165,13 +181,34 @@ export const StopAutoAdvance = {
     } catch { return false; }
   },
 
-  // A node added after enable: still it if it is itself media/marquee,
+  // A node added after enable: still it if it is itself media/marquee/meta,
   // otherwise sweep whatever it contains.
   considerLate(el) {
     const tag = (el.tagName || '').toLowerCase();
+    if (tag === 'meta') {
+      try {
+        if ((el.getAttribute('http-equiv') || '').trim().toLowerCase() === 'refresh') {
+          this.removedMetas.push({ node: el, parent: el.parentNode, nextSibling: el.nextSibling });
+          el.remove();
+          return;
+        }
+      } catch { /* skip */ }
+    }
     if (tag === 'video' || tag === 'audio') { this.considerMedia(el); return; }
     if (tag === 'marquee') { this.considerMarquee(el); return; }
-    if (el.querySelectorAll) { this.sweep(el); this.pinScrollers(el); }
+    if (el.querySelectorAll) {
+      try {
+        const metas = el.querySelectorAll('meta[http-equiv]');
+        for (const meta of metas) {
+          if ((meta.getAttribute('http-equiv') || '').trim().toLowerCase() === 'refresh') {
+            this.removedMetas.push({ node: meta, parent: meta.parentNode, nextSibling: meta.nextSibling });
+            meta.remove();
+          }
+        }
+      } catch { /* skip */ }
+      this.sweep(el);
+      this.pinScrollers(el);
+    }
   },
 
   // Carousels a script moves on a timer: the stylesheet above can't reach
@@ -222,6 +259,7 @@ export const StopAutoAdvance = {
 
   // Did the person just click, press a key, touch, scroll or focus inside this carousel?
   byUser(box, hoverToo) {
+    if (!box || !box.contains) return false;
     const near = (rec, ms) => !!rec && Date.now() - rec.at < ms && rec.target && rec.target.nodeType === 1 && box.contains(rec.target);
     return near(this.lastInput, USER_MS) || near(this.lastFocus, USER_MS) || (hoverToo && near(this.lastHover, 50));
   },
@@ -262,6 +300,7 @@ export const StopAutoAdvance = {
     // Learn the moving class: lost by one like sibling and gained by another at once.
     for (const c of changes) {
       const parent = c.el.parentElement;
+      if (!parent) continue;
       for (const t of c.gained) {
         if (/^ai4a11y-/.test(t) || (this.rotating.get(parent) || new Set()).has(t)) continue;
         if (changes.some((d) => d !== c && d.el.parentElement === parent && d.lost.includes(t)) && this.isSlide(c.el)) {
@@ -314,11 +353,16 @@ export const StopAutoAdvance = {
     if (!this.enabled) return;
     this.enabled = false;
     if (this.observer) { this.observer.disconnect(); this.observer = null; }
+    if (this.playHandler) {
+      document.removeEventListener('play', this.playHandler, true);
+      this.playHandler = null;
+    }
     try { document.getElementById(this.styleId)?.remove(); } catch { /* no DOM */ }
 
     // Put each meta refresh back exactly where it was.
     if (this.removedMetas) {
-      for (const { node, parent, nextSibling } of this.removedMetas) {
+      for (let i = this.removedMetas.length - 1; i >= 0; i--) {
+        const { node, parent, nextSibling } = this.removedMetas[i];
         if (!parent) continue;
         try { parent.insertBefore(node, nextSibling); }
         catch { try { parent.appendChild(node); } catch { /* parent gone */ } }

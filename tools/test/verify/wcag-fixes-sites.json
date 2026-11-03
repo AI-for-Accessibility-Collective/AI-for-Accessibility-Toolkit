@@ -1,0 +1,11 @@
+{
+  "file": "tools/adapters/wcag-fixes.js",
+  "options": {
+    "autoWcagFix": true
+  },
+  "harness": {
+    "enable": "\n      window.__wcagPrev = {\n        htmlLang: document.documentElement.getAttribute('lang'),\n        headHTML: document.head.innerHTML,\n        bodyHTML: document.body.innerHTML\n      };\n      const rules = Object.keys(m.axeHandlers);\n      const results = await axe.run({\n        rules: {\n          'duplicate-id': { enabled: true },\n          'duplicate-id-aria': { enabled: true },\n          'duplicate-id-active': { enabled: true }\n        },\n        runOnly: { type: 'rule', values: rules }\n      });\n      for (const violation of results.violations) {\n        const handler = m.axeHandlers[violation.id];\n        if (!handler) continue;\n        for (const node of violation.nodes) {\n          try {\n            const selector = Array.isArray(node.target) ? node.target.join(' ') : node.target;\n            const el = document.querySelector(selector) || document.querySelector(node.target[0]);\n            if (el) await handler(el, options);\n          } catch (e) {\n            console.error('Handler error for rule ' + violation.id + ':', e);\n          }\n        }\n      }\n    ",
+    "disable": "\n      if (window.__wcagPrev) {\n        if (window.__wcagPrev.htmlLang !== null) {\n          document.documentElement.setAttribute('lang', window.__wcagPrev.htmlLang);\n        } else {\n          document.documentElement.removeAttribute('lang');\n        }\n        document.head.innerHTML = window.__wcagPrev.headHTML;\n        document.body.innerHTML = window.__wcagPrev.bodyHTML;\n        delete window.__wcagPrev;\n      }\n      document.querySelectorAll('[data-ai4a11y-processed]').forEach(el => {\n        delete el.dataset.ai4a11yProcessed;\n      });\n    "
+  },
+  "sites": "all"
+}

@@ -1,0 +1,5 @@
+{
+  "file": "tools/adapters/motion-reducer.js",
+  "export": "MotionReducer",
+  "sites": "all"
+}
