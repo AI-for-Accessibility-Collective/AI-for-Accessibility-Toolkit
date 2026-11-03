@@ -39,7 +39,7 @@ export default {
 | `letterSpacing` | Letter spacing in em, 0-0.5. |
 | `targetSize` | Smallest size of a clickable control, in CSS pixels, 24-64. |
 | `motionReducer` | true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting. |
-| `contrastMode` | 'light' or 'yellow-black' when the profile asks for more contrast. |
+| `contrastMode` | 'light' or 'yellow-black' when the profile asks for more contrast; 'none' when the person turned it off. |
 | `darkMode` | true when the profile asks for a dark theme. |
 | `readingLevel` | 'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours. |
 
@@ -96,6 +96,7 @@ React to what changes while the adapter runs.
 
 ```javascript
 s.watch.added(root, (el) => ..., { debounceMs, cap, types, selector })
+s.watch.added(root, (els) => ..., { batch: true, debounceMs })   // all of one flush at once: measure them, then change them
 s.watch.route((url) => ...)           // the address changed without a page load
 s.watch.prefs((p) => ...)             // { motionReducer, moreContrast, darkMode, forcedColors }
 s.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped or typed in el
@@ -107,6 +108,7 @@ s.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped
 | `cap` | `500` | At most this many elements per call-back batch. |
 | `types` | `["childList"]` | What to watch: 'childList', 'attributes', 'characterData'. |
 | `selector` |  | Only elements matching this (and matches inside added subtrees). |
+| `batch` | `false` | Call back once with every element of the flush, instead of once for each: read all their sizes before writing any. |
 | `withinMs` | `1000` | byPerson: how recent the click or key must be. |
 
 From the person's profile, over your value:
@@ -304,6 +306,7 @@ s.text.set(textNode, text)           // in place, for translation
 const r = s.text.replaceBlock(paragraph, newText, { label })   // with a Show original button
 s.text.nodes(root)                    // the text nodes it would change
 s.text.scale(1.5)                     // the page's text at 150%, px-sized too; 1 puts it back
+s.text.fit(() => s.css('spacing', rules))   // change text; grow only the boxes the change now cuts off
 ```
 
 | Config | Default | What it does |
@@ -322,6 +325,7 @@ Always, whatever the config:
 - Code, form fields, live regions, hidden content and the toolkit's UI are never changed.
 - A replaced block can always be seen as it was.
 - scale() is the text size alone, for when s.zoom.method() is not 'zoom'. It measures before it writes and sizes each element from its own original size, so a new factor never compounds. Pixel line heights keep their proportion; the person's line spacing still wins. A fixed-height box that would cut its text off grows. Text added later is sized as it arrives; the page is measured again when the window's width changes.
+- fit() measures the boxes around the page's text, runs your change, and grows only those it made cut text off; a box that cut text off before, by the page's design, stays. Use it for spacing, instead of reading every element's height yourself.
 
 ### AI text: simplify, summarize, define, translate, label (`ai.text`)
 
@@ -377,6 +381,7 @@ Read text aloud, with word-by-word events for highlighting. In the browser runti
 ```javascript
 const r = s.speech.say(elementOrText, { speechRate, voice, lang, onWord: (range) => h.move(range), onChunk })
 r.pause(); r.resume(); r.stop(); await r.done; r.speaking
+s.speech.say(el, { from })            // start at an offset onWord gave (onWord(range, offset)): a new rate goes on from that word
 ```
 
 | Config | Default | What it does |

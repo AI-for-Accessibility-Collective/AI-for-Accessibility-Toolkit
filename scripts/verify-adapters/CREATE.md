@@ -35,7 +35,10 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   round of fixes you redo (never undo by writing styles yourself);
   `s.page.textContrast(el)` for colours; `s.text.scale` for the text size
   without zoom; `s.focus.skipLink`, `s.focus.entry` and
-  `s.focus.keepVisible` for focus.
+  `s.focus.keepVisible` for focus; `s.text.fit` around a change to text
+  spacing; `s.watch.added(..., { batch: true })` to measure what was added
+  all at once. Never click the page's own controls, except where your brief
+  says exactly which.
 - Real pages are big and change all the time (timestamps, tickers, ads,
   infinite lists). Measure once, change only what needs it, and handle
   what is added later by itself: never clear and redo the whole page on
@@ -69,7 +72,8 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   opened from a button: `s.focus.entry({ label, onActivate })` (first in
   the tab order, shown when focused) or one in your adapter's own UI.
 - Say what changed with `s.announce(...)`, in plain words ("Text size 150%
-  on this site.").
+  on this site."), when the person changed it. Say nothing on load: a
+  screen reader user hears every announcement on every page they open.
 - Follow changes made elsewhere with `s.profile.onChange(...)` where your
   adapter applies a setting.
 - What your brief calls "suggested in onboarding for" is only which people

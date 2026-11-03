@@ -152,7 +152,7 @@
     function added(root, fn, opts = {}) {
       if (!s.alive() || typeof win.MutationObserver !== "function") return () => {
       };
-      const { debounceMs = 0, cap = 500, types = ["childList"], selector = null } = opts;
+      const { debounceMs = 0, cap = 500, types = ["childList"], selector = null, batch = false } = opts;
       const target = root || doc.body || doc.documentElement;
       let pending = /* @__PURE__ */ new Set();
       let timer = null;
@@ -160,7 +160,10 @@
         timer = null;
         const list = [...pending].slice(0, cap);
         pending = /* @__PURE__ */ new Set();
-        for (const el of list) if (s.alive() && el.isConnected && !isOurs(el)) fn(el);
+        const live = list.filter((el) => el.isConnected && !isOurs(el));
+        if (!s.alive() || !live.length) return;
+        if (batch) fn(live);
+        else for (const el of live) if (s.alive()) fn(el);
       };
       const take = (el) => {
         if (!el || el.nodeType !== 1 || isOurs(el)) return;
@@ -258,7 +261,7 @@
         }
         if (env.personal.motionReducer) out.motionReducer = true;
         if (env.personal.darkMode) out.darkMode = true;
-        if (env.personal.contrastMode) out.moreContrast = true;
+        if (env.personal.contrastMode && env.personal.contrastMode !== "none") out.moreContrast = true;
         return out;
       };
       const now = read();
@@ -909,7 +912,6 @@
       const xs = [r.left + 2, (r.left + r.right) / 2, r.right - 2].map((x) => Math.min(vw - 1, Math.max(0, x)));
       const bar = (x, y) => {
         for (let n = doc.elementFromPoint(x, y); n && n !== doc.body && n !== doc.documentElement; n = n.parentElement) {
-          if (env.page.isOurs(n)) return null;
           const pos = win.getComputedStyle(n).position;
           if (pos === "fixed" || pos === "sticky") {
             const b = n.getBoundingClientRect();
@@ -933,7 +935,7 @@
       };
       const root = doc.documentElement;
       const check = (el) => {
-        if (!s.alive() || !el || el === doc.body || el === root || env.page.isOurs(el) || !el.getBoundingClientRect) return;
+        if (!s.alive() || !el || el === doc.body || el === root || !el.getBoundingClientRect) return;
         const { top, bottom } = bands(el);
         s.setStyle(root, "scroll-padding-top", top ? `${top + margin}px` : "");
         s.setStyle(root, "scroll-padding-bottom", bottom ? `${bottom + margin}px` : "");
@@ -1132,7 +1134,6 @@
         }
         for (const a of lifted) a.style.setProperty("font-size", `${st.orig.get(a).size}px`, "important");
       }
-      const boxes = /* @__PURE__ */ new Set();
       for (const el of fresh) {
         const cs = win.getComputedStyle(el);
         const size = parseFloat(cs.fontSize);
@@ -1140,10 +1141,8 @@
         const lh = cs.lineHeight;
         const ratio = /px$/.test(lh) ? parseFloat(lh) / size : null;
         st.orig.set(el, { size, ratio });
-        for (let b = el, i = 0; b && i < 3 && b !== doc.body; b = b.parentElement, i++) boxes.add(b);
       }
-      const wasClipped = /* @__PURE__ */ new Map();
-      for (const b of boxes) wasClipped.set(b, b.scrollHeight > b.clientHeight + 1);
+      const wasClipped = clippedNow(list);
       for (const a of lifted) a.style.setProperty("font-size", `${Math.round(st.orig.get(a).size * st.factor * 100) / 100}px`, "important");
       let n = 0;
       for (const el of list) {
@@ -1155,20 +1154,41 @@
         st.sized.add(el);
         n++;
       }
-      for (const [b, before] of wasClipped) {
-        if (before || st.clipped.has(b) || !(b.scrollHeight > b.clientHeight + 1)) continue;
-        const cs = win.getComputedStyle(b);
+      grow(wasClipped, g, st.clipped);
+      return n;
+    }
+    function clippedNow(carriersList) {
+      const boxes = /* @__PURE__ */ new Map();
+      for (const el of carriersList) {
+        for (let b = el, i = 0; b && i < 3 && b !== doc.body; b = b.parentElement, i++) if (!boxes.has(b)) boxes.set(b, false);
+      }
+      for (const b of boxes.keys()) boxes.set(b, b.scrollHeight > b.clientHeight + 1);
+      return boxes;
+    }
+    function grow(before, into, done) {
+      let n = 0;
+      for (const [b, was] of before) {
+        if (was || done.has(b) || !b.isConnected || !(b.scrollHeight > b.clientHeight + 1)) continue;
+        const cs = env.win.getComputedStyle(b);
         if (cs.display === "inline" || /^(auto|scroll)$/.test(cs.overflowY)) continue;
-        st.clipped.add(b);
+        done.add(b);
         if (cs.height !== "auto") {
-          g.setStyle(b, "min-height", cs.height);
-          g.setStyle(b, "height", "auto", "important");
+          into.setStyle(b, "min-height", cs.height);
+          into.setStyle(b, "height", "auto", "important");
         }
-        if (cs.maxHeight !== "none") g.setStyle(b, "max-height", "none", "important");
+        if (cs.maxHeight !== "none") into.setStyle(b, "max-height", "none", "important");
+        n++;
       }
       return n;
     }
-    return { wrap, set, replaceBlock, scale, nodes: (root, opts) => env.page.textNodes(root, opts) };
+    const grown = /* @__PURE__ */ new WeakSet();
+    function fit(change, { root } = {}) {
+      if (!s.alive() || typeof change !== "function") return 0;
+      const before = clippedNow([...carriers(root || doc.body)]);
+      change();
+      return grow(before, s, grown);
+    }
+    return { wrap, set, replaceBlock, scale, fit, nodes: (root, opts) => env.page.textNodes(root, opts) };
   }
 
   // toolkit/blocks/ai/prompts.js
@@ -1383,7 +1403,8 @@
         return handle;
       }
       const { text, map } = source(input);
-      const parts = chunks(text, Math.max(40, Number(c.chunkChars) || 220));
+      const from = Math.max(0, Math.min(text.length, Math.floor(Number(opts.from) || 0)));
+      const parts = chunks(text.slice(from), Math.max(40, Number(c.chunkChars) || 220)).map((p) => ({ ...p, start: p.start + from }));
       if (!parts.length) {
         resolveDone(false);
         return handle;
@@ -1396,9 +1417,9 @@
         const entry = map.find((m) => abs >= m.start && abs < m.end);
         if (!entry) return null;
         const r = doc.createRange();
-        const from = abs - entry.start;
-        r.setStart(entry.node, from);
-        r.setEnd(entry.node, Math.min(entry.node.nodeValue.length, from + Math.max(1, len)));
+        const from2 = abs - entry.start;
+        r.setStart(entry.node, from2);
+        r.setEnd(entry.node, Math.min(entry.node.nodeValue.length, from2 + Math.max(1, len)));
         return r;
       };
       const wordLength = (abs) => {
@@ -1676,7 +1697,7 @@
     letterSpacing: "Letter spacing in em, 0-0.5.",
     targetSize: "Smallest size of a clickable control, in CSS pixels, 24-64.",
     motionReducer: "true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting.",
-    contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast.",
+    contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast; 'none' when the person turned it off.",
     darkMode: "true when the profile asks for a dark theme.",
     readingLevel: "'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours."
   });
@@ -1715,9 +1736,7 @@
   }
   function personalForSite(personal, explicit, host) {
     const site = siteOf(host);
-    const out = { ...personal || {}, ...explicit?.general || {}, ...site && explicit?.sites?.[site] || {} };
-    for (const k of Object.keys(out)) if (out[k] === false || k === "contrastMode" && out[k] === "none") delete out[k];
-    return out;
+    return { ...personal || {}, ...explicit?.general || {}, ...site && explicit?.sites?.[site] || {} };
   }
 
   // toolkit/blocks/profile.js
@@ -2184,6 +2203,7 @@
       if (!root) return out;
       for (const el of root.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading" i]')) {
         if (isOurs(el) || !isVisible(el) || el.closest('[aria-hidden="true"]')) continue;
+        if (/^(presentation|none)$/i.test((el.getAttribute("role") || "").trim())) continue;
         const aria = parseInt(el.getAttribute("aria-level"), 10);
         const level = /^H[1-6]$/.test(el.tagName) && !el.hasAttribute("aria-level") ? +el.tagName[1] : aria >= 1 ? aria : 2;
         if (level > maxLevel) continue;
@@ -2256,7 +2276,15 @@
       const cs = win.getComputedStyle(el);
       const layers = [];
       let overImage = false;
+      const box = layout() ? el.getBoundingClientRect() : null;
+      const cx = box && box.left + box.width / 2, cy = box && box.top + box.height / 2;
+      const under = (n) => {
+        if (!box || n === el || !(box.width || box.height)) return true;
+        const r = n.getBoundingClientRect();
+        return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+      };
       for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+        if (!under(n)) continue;
         const ns = n === el ? cs : win.getComputedStyle(n);
         const c2 = parseColor(ns.backgroundColor);
         if (c2 && c2[3] > 0) layers.push(c2);

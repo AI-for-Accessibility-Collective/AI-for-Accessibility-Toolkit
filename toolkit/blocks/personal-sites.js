@@ -14,7 +14,7 @@ export const PERSONAL_KEYS = Object.freeze({
   letterSpacing: 'Letter spacing in em, 0-0.5.',
   targetSize: 'Smallest size of a clickable control, in CSS pixels, 24-64.',
   motionReducer: 'true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting.',
-  contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast.",
+  contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast; 'none' when the person turned it off.",
   darkMode: 'true when the profile asks for a dark theme.',
   readingLevel: "'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours.",
 });
@@ -92,14 +92,13 @@ export function explicitFromMemories(memories) {
 /**
  * The person's settings on one site: the profile's, then what they set for
  * every site, then what they set for this one. An explicit off (false,
- * 'none') turns off what the profile asked for.
+ * 'none') turns off what the profile asked for, and stays in the result, so
+ * an adapter can tell "the person turned it off here" from "never set".
  * @param {object} personal  personalFromProfile()
  * @param {{general?: object, sites?: Record<string, object>}} explicit  explicitFromMemories()
  * @param {string} host
  */
 export function personalForSite(personal, explicit, host) {
   const site = siteOf(host);
-  const out = { ...(personal || {}), ...(explicit?.general || {}), ...((site && explicit?.sites?.[site]) || {}) };
-  for (const k of Object.keys(out)) if (out[k] === false || (k === 'contrastMode' && out[k] === 'none')) delete out[k];
-  return out;
+  return { ...(personal || {}), ...(explicit?.general || {}), ...((site && explicit?.sites?.[site]) || {}) };
 }

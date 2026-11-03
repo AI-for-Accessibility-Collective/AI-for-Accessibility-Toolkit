@@ -63,6 +63,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     summary: 'React to what changes while the adapter runs.',
     api: [
       's.watch.added(root, (el) => ..., { debounceMs, cap, types, selector })',
+      's.watch.added(root, (els) => ..., { batch: true, debounceMs })   // all of one flush at once: measure them, then change them',
       's.watch.route((url) => ...)           // the address changed without a page load',
       's.watch.prefs((p) => ...)             // { motionReducer, moreContrast, darkMode, forcedColors }',
       's.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped or typed in el',
@@ -72,6 +73,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       cap: { default: 500, description: 'At most this many elements per call-back batch.' },
       types: { default: ['childList'], description: "What to watch: 'childList', 'attributes', 'characterData'." },
       selector: { default: null, description: 'Only elements matching this (and matches inside added subtrees).' },
+      batch: { default: false, description: 'Call back once with every element of the flush, instead of once for each: read all their sizes before writing any.' },
       withinMs: { default: 1000, description: 'byPerson: how recent the click or key must be.' },
     },
     personal: { motionReducer: 'prefs() reports motionReducer, darkMode and moreContrast as true when the profile asks for them, even if the system does not.' },
@@ -217,6 +219,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       "const r = s.text.replaceBlock(paragraph, newText, { label })   // with a Show original button",
       's.text.nodes(root)                    // the text nodes it would change',
       's.text.scale(1.5)                     // the page\'s text at 150%, px-sized too; 1 puts it back',
+      "s.text.fit(() => s.css('spacing', rules))   // change text; grow only the boxes the change now cuts off",
     ],
     config: {
       ...cfg(WRAP_DEFAULTS, { cap: 'wrap(): at most this many matches.', skip: 'wrap(): more selectors to leave alone.' }),
@@ -224,7 +227,8 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       ...cfg(REPLACE_DEFAULTS, { showOriginal: 'replaceBlock(): a button to see the original.', label: 'replaceBlock(): what the new text is.', originalLabel: 'replaceBlock(): the button while the new text shows.', replacedLabel: 'replaceBlock(): the button while the original shows.' }),
     },
     invariants: ['The original text nodes come back on end(), the same objects.', 'Code, form fields, live regions, hidden content and the toolkit\'s UI are never changed.', 'A replaced block can always be seen as it was.',
-      'scale() is the text size alone, for when s.zoom.method() is not \'zoom\'. It measures before it writes and sizes each element from its own original size, so a new factor never compounds. Pixel line heights keep their proportion; the person\'s line spacing still wins. A fixed-height box that would cut its text off grows. Text added later is sized as it arrives; the page is measured again when the window\'s width changes.'],
+      'scale() is the text size alone, for when s.zoom.method() is not \'zoom\'. It measures before it writes and sizes each element from its own original size, so a new factor never compounds. Pixel line heights keep their proportion; the person\'s line spacing still wins. A fixed-height box that would cut its text off grows. Text added later is sized as it arrives; the page is measured again when the window\'s width changes.',
+      'fit() measures the boxes around the page\'s text, runs your change, and grows only those it made cut text off; a box that cut text off before, by the page\'s design, stays. Use it for spacing, instead of reading every element\'s height yourself.'],
   },
   {
     name: 'ai.text',
@@ -266,6 +270,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     api: [
       'const r = s.speech.say(elementOrText, { speechRate, voice, lang, onWord: (range) => h.move(range), onChunk })',
       'r.pause(); r.resume(); r.stop(); await r.done; r.speaking',
+      "s.speech.say(el, { from })            // start at an offset onWord gave (onWord(range, offset)): a new rate goes on from that word",
     ],
     config: cfg(SAY_DEFAULTS, { speechRate: '0.5-2.', pitch: '0-2.', voice: 'A voice name (speechSynthesis.getVoices() in a page; the browser\'s voices in the runtime).', lang: "e.g. 'en-GB'. By default the page's language.", chunkChars: 'Longest piece spoken at once (browsers cut long ones off).', waitForGesture: 'Wait for the person\'s first click or key in the page.' }),
     personal: { speechRate: 'The profile\'s speaking rate wins over yours.' },

@@ -71,7 +71,10 @@ export function speechBlock(s, env) {
     let state = 'waiting';
     if (!s.alive() || !handle.supported) { resolveDone(false); return handle; }
     const { text, map } = source(input);
-    const parts = chunks(text, Math.max(40, Number(c.chunkChars) || 220));
+    // from: where in the text to start (the offset onWord gave), so a change
+    // of rate goes on from the word it was at.
+    const from = Math.max(0, Math.min(text.length, Math.floor(Number(opts.from) || 0)));
+    const parts = chunks(text.slice(from), Math.max(40, Number(c.chunkChars) || 220)).map((p) => ({ ...p, start: p.start + from }));
     if (!parts.length) { resolveDone(false); return handle; }
     const rate = Math.max(0.5, Math.min(2, Number(c.speechRate) || 1));
     const pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));

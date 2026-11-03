@@ -43,7 +43,9 @@ export function watchBlock(s, env) {
 
   function added(root, fn, opts = {}) {
     if (!s.alive() || typeof win.MutationObserver !== 'function') return () => {};
-    const { debounceMs = 0, cap = 500, types = ['childList'], selector = null } = opts;
+    // batch: fn gets every element of one flush at once, so an adapter can
+    // measure them all before it changes any (one layout, not one each).
+    const { debounceMs = 0, cap = 500, types = ['childList'], selector = null, batch = false } = opts;
     const target = root || doc.body || doc.documentElement;
     let pending = new Set();
     let timer = null;
@@ -51,7 +53,9 @@ export function watchBlock(s, env) {
       timer = null;
       const list = [...pending].slice(0, cap);
       pending = new Set();
-      for (const el of list) if (s.alive() && el.isConnected && !isOurs(el)) fn(el);
+      const live = list.filter((el) => el.isConnected && !isOurs(el));
+      if (!s.alive() || !live.length) return;
+      if (batch) fn(live); else for (const el of live) if (s.alive()) fn(el);
     };
     const take = (el) => {
       if (!el || el.nodeType !== 1 || isOurs(el)) return;
@@ -132,7 +136,7 @@ export function watchBlock(s, env) {
       // The person's profile turns these on even when the system does not.
       if (env.personal.motionReducer) out.motionReducer = true;
       if (env.personal.darkMode) out.darkMode = true;
-      if (env.personal.contrastMode) out.moreContrast = true;
+      if (env.personal.contrastMode && env.personal.contrastMode !== 'none') out.moreContrast = true;
       return out;
     };
     const now = read();

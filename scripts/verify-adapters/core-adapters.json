@@ -18,7 +18,7 @@
       "priorWork": [
         "visual-assist.js"
       ],
-      "brief": "Makes text bigger and gives it more room, as the person's settings say. Text size is the browser's zoom or the text size alone, as s.zoom.method() says (the person's textSizeMethod, else the option `method`, default 'zoom'), never both. With the text size alone, scale the page's text (including text sized in px) without breaking layouts: no text cut off, no overlap, no sideways scrolling at 320 pixels. Line and letter spacing follow WCAG 1.4.12 (line height up to 2, letter spacing up to 0.12 em, word spacing 0.16 em, paragraph spacing 2 em when asked) with nothing cut off or overlapping. Applies once, in enable(); does nothing on a page when no setting asks for it (returns false) unless the person adjusts it there. The text size alone is s.text.scale (the block measures and never compounds). Where no setting asks for anything it keeps running and changes nothing (no zoom call at all: the person's own browser zoom stays), so the shortcut can adjust it there. Spacing is one stylesheet.",
+      "brief": "Makes text bigger and gives it more room, as the person's settings say. Text size is the browser's zoom or the text size alone, as s.zoom.method() says (the person's textSizeMethod, else the option `method`, default 'zoom'), never both. With the text size alone, scale the page's text (including text sized in px) without breaking layouts: no text cut off, no overlap, no sideways scrolling at 320 pixels. Line and letter spacing follow WCAG 1.4.12 (line height up to 2, letter spacing up to 0.12 em, word spacing 0.16 em, paragraph spacing 2 em when asked) with nothing cut off or overlapping. Applies once, in enable(); does nothing on a page when no setting asks for it (returns false) unless the person adjusts it there. The text size alone is s.text.scale (the block measures and never compounds). Where no setting asks for anything it keeps running and changes nothing (no zoom call at all: the person's own browser zoom stays), so the shortcut can adjust it there. Spacing is one stylesheet. Spacing goes through s.text.fit(() => s.css(...)), which grows only the boxes the spacing made cut text off; s.text.scale already does the same for size. Never read every element's height yourself, and never change a box the page cuts off by design (a teaser, a truncated card), on load or later.",
       "verify": [
         "the text is at the person's fontScale (computed sizes of body text, headings and px-sized text), by zoom or by text size, never both",
         "with textSizeMethod 'zoom', zoom is set to fontScale/100 and put back on disable(); with 'font', zoom is never touched",
@@ -27,7 +27,9 @@
         "the shortcut's up and down (__verifyPress('Alt+Shift+ArrowUp')) change the size and save it for this site; nothing is saved without a key press",
         "layout shift happens only at enable(), never later",
         "with no fontScale asked, s.zoom is never called and the page is unchanged; the shortcut's up then makes it 110%",
-        "text added after enable() is at the same size, never twice the size"
+        "text added after enable() is at the same size, never twice the size",
+        "a box the page cuts off by design (fixed height, overflow hidden) is left as it is, with and without settings",
+        "with nothing asked, enable() reads no element's layout and changes nothing"
       ]
     },
     {
@@ -96,7 +98,7 @@
       "priorWork": [
         "big-targets.js"
       ],
-      "brief": "Makes small links, buttons and form controls at least targetSize CSS pixels (default option 24, WCAG 2.5.8; 44 is WCAG 2.5.5) to hit, measuring first and changing only what is too small. Prefer growing the hit area without moving anything (padding with negative margin, or a larger hit area on a pseudo-element), so the page reflows at most once at enable(); inline links in running text get spacing that keeps lines readable. Never shrinks anything, never covers a neighbouring target. Measure each interactive element once (links, buttons, form controls and elements with an interactive role, not every element on the page) and grow only those too small; handle ones added later by themselves. A new targetSize redoes the sizes in a new s.group(), never by clearing and redoing on each change of the page. Nothing outside its job (no focus styles).",
+      "brief": "Makes small links, buttons and form controls at least targetSize CSS pixels (default option 24, WCAG 2.5.8; 44 is WCAG 2.5.5) to hit, measuring first and changing only what is too small. Prefer growing the hit area without moving anything (padding with negative margin, or a larger hit area on a pseudo-element), so the page reflows at most once at enable(); inline links in running text get spacing that keeps lines readable. Never shrinks anything, never covers a neighbouring target. Measure each interactive element once (links, buttons, form controls and elements with an interactive role, not every element on the page) and grow only those too small; handle ones added later by themselves. A new targetSize redoes the sizes in a new s.group(), never by clearing and redoing on each change of the page. Nothing outside its job (no focus styles). Elements added later come in batches (s.watch.added with { batch: true }): measure the batch and the targets near it once, then change them; never measure every target on the page for each one added.",
       "verify": [
         "each interactive element measures at least targetSize in both dimensions (getBoundingClientRect, or its hit area)",
         "axe-core target-size problems go down",
@@ -104,7 +106,8 @@
         "no two targets overlap after the change",
         "inline links in a paragraph stay readable (line height not doubled)",
         "the shortcut's up and down step the size and save it",
-        "a change of the page (an element added) does not redo the sizes of the others"
+        "a change of the page (an element added) does not redo the sizes of the others",
+        "adding 200 links later takes one pass, not one per link (enable and the later pass stay well under a second on a long page)"
       ]
     },
     {
@@ -141,7 +144,7 @@
         "live-region-announcer.js",
         "spa-focus.js"
       ],
-      "brief": "Tells screen reader users about changes the page makes without saying so: a status or error message that appears, content that replaces a region, and a single-page app moving to a new view (s.watch.route), when the page does not already announce them (aria-live, role status or alert). One short, plain announcement per change, through s.announce, never for the adapter's own changes or the toolkit's UI, and never a flood (batch, and skip changes the person caused by typing). On real pages most changes are not messages: timestamps and counters that update, tickers, carousels, ads, infinite lists, lazy images. Announce only what reads as a message: a new element whose role, class, id or name says status, alert, error, notice, message, toast or similar, or content that appears or replaces a region within a few seconds of the person's own action (a click, a key, a submit). Never text that changes inside existing content on its own, never content outside the viewport, never iframes. No selectors for any one site or test page.",
+      "brief": "Tells screen reader users about changes the page makes without saying so: a status or error message that appears, content that replaces a region, and a single-page app moving to a new view (s.watch.route), when the page does not already announce them (aria-live, role status or alert). One short, plain announcement per change, through s.announce, never for the adapter's own changes or the toolkit's UI, and never a flood (batch, and skip changes the person caused by typing). On real pages most changes are not messages: timestamps and counters that update, tickers, carousels, ads, infinite lists, lazy images. Announce only what reads as a message: a new element whose role, class, id or name says status, alert, error, notice, message, toast or similar, or content that appears or replaces a region within a few seconds of the person's own action (a click, a key, a submit). Never text that changes inside existing content on its own, never content outside the viewport, never iframes. No selectors for any one site or test page. The toolkit's UI is what s.page.isOurs says; never skip content by a part of a class name or id.",
       "verify": [
         "a message added to the page is announced once (the shared live region's text)",
         "a change inside an existing aria-live region is not announced twice",
@@ -168,14 +171,16 @@
         "flash-guard.js",
         "stop-auto-advance.js"
       ],
-      "brief": "Stops what moves on its own: CSS animations and transitions, smooth scrolling, autoplaying video and GIF-like animated images (paused with a visible way to play), auto-advancing carousels (paused, and their controls kept), and marquee-like scrolling. Through s.media and one stylesheet. Content stays visible in its final state. Nothing it paused starts again on disable() unless it was playing before; anything the person plays or starts themselves stays as they left it. For a carousel, use its own pause or stop control when it has one (WCAG 2.2.2); otherwise hold the slide shown, and if the page puts it back more than a few times, stop holding it rather than fight the page. Measure once: never read the scroll width of every element on the page.",
+      "brief": "Stops what moves on its own: CSS animations and transitions, smooth scrolling, autoplaying video and GIF-like animated images (paused with a visible way to play), auto-advancing carousels (paused, and their controls kept), and marquee-like scrolling. Through s.media and one stylesheet. Content stays visible in its final state. Nothing it paused starts again on disable() unless it was playing before; anything the person plays or starts themselves stays as they left it. For a carousel, use its own pause or stop control when it has one (WCAG 2.2.2); otherwise hold the slide shown, and if the page puts it back more than a few times, stop holding it rather than fight the page. Measure once: never read the scroll width of every element on the page. Click a carousel's own control only when it is inside the carousel (aria-roledescription carousel, or a region or group whose name says carousel or slideshow), its accessible name says pause or stop (not its class), it is a button that is not a submit button and not in a form, and the carousel is playing (its name or aria-pressed says so). Never click anything else on the page. When holding a slide, change only the slides (the track's own children) and only their state; never another element's classes. Say nothing on load.",
       "verify": [
         "computed animation and transition durations are none or 0 after enable()",
         "an autoplaying video is paused, with controls; a muted looping one too",
         "a carousel stops advancing (its slide stays the same for several seconds)",
         "content hidden by an animation start state is visible",
         "disable() restarts only what was playing",
-        "a video the person plays after enable() keeps playing"
+        "a video the person plays after enable() keeps playing",
+        "no button outside a carousel is ever clicked, even one named Stop or Pause next to a slider",
+        "nothing is announced on load"
       ]
     },
     {
@@ -212,7 +217,7 @@
         "generate-alt.js",
         "wcag-fixes.js"
       ],
-      "brief": "Gives buttons, links and form fields that have no accessible name a short one, and informative images that have no alt text a description, with s.ai.text('label', …) from the control's context and s.ai.vision('describe', img, { purpose: 'alt' }). Measures first (s.page's accessible-name helper): never renames anything that has a name, never describes decorative images (tiny, spacer, role presentation) — leaves those alone or marks clearly decorative ones alt=\"\" only when certain. Asks the AI once per element, at most a limited number per page (an option, default 20), never for content the page hides. Answers are checked by the blocks; on null, leaves the element as it was. Name from the page first, without AI: a title, an svg title, the words of an icon's class or image file name, the link's last path part, a nearby label. AI only for what is still nameless, visible ones first, at most the limit per page (default 10); images only when informative (larger than 48 by 48 pixels and not decorative). The person pays for every call on every page they visit.",
+      "brief": "Gives buttons, links and form fields that have no accessible name a short one, and informative images that have no alt text a description, with s.ai.text('label', …) from the control's context and s.ai.vision('describe', img, { purpose: 'alt' }). Measures first (s.page's accessible-name helper): never renames anything that has a name, never describes decorative images (tiny, spacer, role presentation) — leaves those alone or marks clearly decorative ones alt=\"\" only when certain. Asks the AI once per element, at most a limited number per page (an option, default 20), never for content the page hides. Answers are checked by the blocks; on null, leaves the element as it was. Name from the page first, without AI: a title, an svg title, the words of an icon's class or image file name, the link's last path part, a nearby label. AI only for what is still nameless, visible ones first, at most the limit per page (default 10); images only when informative (larger than 48 by 48 pixels and not decorative). The person pays for every call on every page they visit. A file name's words name only a small icon (48 by 48 pixels or smaller); a photo or illustration is never named from its file name (on null from the AI, it is left as it was).",
       "verify": [
         "axe-core button-name, link-name, label and image-alt problems go down, none added",
         "controls that already had a name keep it exactly",
@@ -220,7 +225,8 @@
         "with fixed answers, the names are set as aria-label or alt",
         "decorative images are not sent to the AI",
         "at most the limit of AI calls on a page with many unnamed controls",
-        "on a real page, no AI call for a control the page names in some way the page-first rules find"
+        "on a real page, no AI call for a control the page names in some way the page-first rules find",
+        "a large photo with a descriptive file name is not given its file name as alt text"
       ]
     },
     {

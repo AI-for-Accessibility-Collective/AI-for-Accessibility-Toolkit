@@ -100,6 +100,8 @@ export function pageBlock(env) {
     if (!root) return out;
     for (const el of root.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading" i]')) {
       if (isOurs(el) || !isVisible(el) || el.closest('[aria-hidden="true"]')) continue;
+      // role presentation or none takes a heading's role away.
+      if (/^(presentation|none)$/i.test((el.getAttribute('role') || '').trim())) continue;
       const aria = parseInt(el.getAttribute('aria-level'), 10);
       const level = /^H[1-6]$/.test(el.tagName) && !el.hasAttribute('aria-level') ? +el.tagName[1] : (aria >= 1 ? aria : 2);
       if (level > maxLevel) continue;
@@ -183,7 +185,17 @@ export function pageBlock(env) {
     const cs = win.getComputedStyle(el);
     const layers = [];
     let overImage = false;
+    // An ancestor's background counts only where the text is drawn on it: a
+    // positioned child can sit outside its parent's box.
+    const box = layout() ? el.getBoundingClientRect() : null;
+    const cx = box && box.left + box.width / 2, cy = box && box.top + box.height / 2;
+    const under = (n) => {
+      if (!box || n === el || !(box.width || box.height)) return true;
+      const r = n.getBoundingClientRect();
+      return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+    };
     for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      if (!under(n)) continue;
       const ns = n === el ? cs : win.getComputedStyle(n);
       const c = parseColor(ns.backgroundColor);
       if (c && c[3] > 0) layers.push(c);

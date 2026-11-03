@@ -121,8 +121,9 @@ export function focusBlock(s, env) {
     const r = el.getBoundingClientRect();
     const xs = [r.left + 2, (r.left + r.right) / 2, r.right - 2].map((x) => Math.min(vw - 1, Math.max(0, x)));
     const bar = (x, y) => {
+      // The toolkit's own fixed UI (a control bar, a panel) counts too; an
+      // entry or bar that holds focus is where focus is, not over it.
       for (let n = doc.elementFromPoint(x, y); n && n !== doc.body && n !== doc.documentElement; n = n.parentElement) {
-        if (env.page.isOurs(n)) return null;
         const pos = win.getComputedStyle(n).position;
         if (pos === 'fixed' || pos === 'sticky') {
           const b = n.getBoundingClientRect();
@@ -145,7 +146,7 @@ export function focusBlock(s, env) {
     if (!s.alive()) return () => {};
     const root = doc.documentElement;
     const check = (el) => {
-      if (!s.alive() || !el || el === doc.body || el === root || env.page.isOurs(el) || !el.getBoundingClientRect) return;
+      if (!s.alive() || !el || el === doc.body || el === root || !el.getBoundingClientRect) return;
       const { top, bottom } = bands(el);
       s.setStyle(root, 'scroll-padding-top', top ? `${top + margin}px` : '');
       s.setStyle(root, 'scroll-padding-bottom', bottom ? `${bottom + margin}px` : '');

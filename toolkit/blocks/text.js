@@ -4,6 +4,7 @@
 //   s.text.set(node, text)                      change one text node in place (translate-style)
 //   s.text.replaceBlock(el, text, opts)         show new text in place of a block, with "Show original"
 //   s.text.scale(factor)                        the page's text at factor (1.5 is 150%), px-sized text too
+//   s.text.fit(() => s.css('spacing', rules))   make a change to text, and grow only the boxes it now cuts off
 //
 // text.scale is the text size alone, for when the browser's zoom is not
 // the method (s.zoom.method()). It measures every element that holds text
@@ -14,6 +15,11 @@
 // A box with a fixed height that now cuts its text off grows instead.
 // Text added later is sized as it arrives, and the page's sizes are
 // measured again when the window's width changes (its breakpoints).
+//
+// text.fit is the same care for any change to text (line or letter
+// spacing): it measures the boxes around the page's text, runs the change,
+// and grows only the boxes that the change made cut their text off. Boxes
+// that cut text off before, by the page's design, stay as they are.
 //
 // The original text nodes come back on end(), the same node objects. Text in
 // code, form fields, live regions, hidden content and the toolkit's own UI is
@@ -176,7 +182,6 @@ export function textBlock(s, env) {
       for (const a of lifted) a.style.setProperty('font-size', `${st.orig.get(a).size}px`, 'important');
     }
     // Every read before any write.
-    const boxes = new Set();
     for (const el of fresh) {
       const cs = win.getComputedStyle(el);
       const size = parseFloat(cs.fontSize);
@@ -184,10 +189,9 @@ export function textBlock(s, env) {
       const lh = cs.lineHeight;
       const ratio = /px$/.test(lh) ? parseFloat(lh) / size : null;
       st.orig.set(el, { size, ratio });
-      for (let b = el, i = 0; b && i < 3 && b !== doc.body; b = b.parentElement, i++) boxes.add(b);
     }
-    const wasClipped = new Map();
-    for (const b of boxes) wasClipped.set(b, b.scrollHeight > b.clientHeight + 1);
+    // All of them: a new factor can make a box cut off what the last one did not.
+    const wasClipped = clippedNow(list);
     for (const a of lifted) a.style.setProperty('font-size', `${Math.round(st.orig.get(a).size * st.factor * 100) / 100}px`, 'important');
     let n = 0;
     for (const el of list) {
@@ -199,17 +203,43 @@ export function textBlock(s, env) {
       st.sized.add(el);
       n++;
     }
-    // A box with a fixed height that now cuts text off grows to fit it.
-    for (const [b, before] of wasClipped) {
-      if (before || st.clipped.has(b) || !(b.scrollHeight > b.clientHeight + 1)) continue;
-      const cs = win.getComputedStyle(b);
+    grow(wasClipped, g, st.clipped);
+    return n;
+  }
+
+  // The boxes around these elements' text (three levels up), and whether
+  // each cuts its content off now.
+  function clippedNow(carriersList) {
+    const boxes = new Map();
+    for (const el of carriersList) {
+      for (let b = el, i = 0; b && i < 3 && b !== doc.body; b = b.parentElement, i++) if (!boxes.has(b)) boxes.set(b, false);
+    }
+    for (const b of boxes.keys()) boxes.set(b, b.scrollHeight > b.clientHeight + 1);
+    return boxes;
+  }
+
+  // A box with a fixed height that cuts text off now, and did not before, grows to fit it.
+  function grow(before, into, done) {
+    let n = 0;
+    for (const [b, was] of before) {
+      if (was || done.has(b) || !b.isConnected || !(b.scrollHeight > b.clientHeight + 1)) continue;
+      const cs = env.win.getComputedStyle(b);
       if (cs.display === 'inline' || /^(auto|scroll)$/.test(cs.overflowY)) continue;
-      st.clipped.add(b);
-      if (cs.height !== 'auto') { g.setStyle(b, 'min-height', cs.height); g.setStyle(b, 'height', 'auto', 'important'); }
-      if (cs.maxHeight !== 'none') g.setStyle(b, 'max-height', 'none', 'important');
+      done.add(b);
+      if (cs.height !== 'auto') { into.setStyle(b, 'min-height', cs.height); into.setStyle(b, 'height', 'auto', 'important'); }
+      if (cs.maxHeight !== 'none') into.setStyle(b, 'max-height', 'none', 'important');
+      n++;
     }
     return n;
   }
 
-  return { wrap, set, replaceBlock, scale, nodes: (root, opts) => env.page.textNodes(root, opts) };
+  const grown = new WeakSet();
+  function fit(change, { root } = {}) {
+    if (!s.alive() || typeof change !== 'function') return 0;
+    const before = clippedNow([...carriers(root || doc.body)]);
+    change();
+    return grow(before, s, grown);
+  }
+
+  return { wrap, set, replaceBlock, scale, fit, nodes: (root, opts) => env.page.textNodes(root, opts) };
 }

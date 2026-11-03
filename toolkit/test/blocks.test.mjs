@@ -485,6 +485,18 @@ await test("speech.say: the profile's rate, words as DOM ranges, one voice page-
   s.end(); other.end();
 });
 
+await test('speech.say: from starts at an offset onWord gave, and the words still map to the page', async () => {
+  const { tk, $, win } = page('<p id="p">One two. Three four.</p>');
+  const spoken = fakeSpeech(win);
+  const s = tk.session();
+  const words = [];
+  const r = s.speech.say($('#p'), { from: 9, onWord: (range, at) => { if (range) words.push([range.toString(), at]); } });
+  await r.done;
+  assert.equal(spoken[0].text.trim(), 'Three four.');
+  assert.deepEqual(words[0], ['Thr', 9], 'the offset is the whole text\'s, the range the page\'s');
+  s.end();
+});
+
 await test('speech.say: waits for the person to use the page first', async () => {
   const { tk, win, doc } = page('<p>x</p>');
   const spoken = fakeSpeech(win, { active: false });
@@ -647,9 +659,9 @@ await test('profile.set: only after the person used the toolkit\'s UI; applies p
   await s.profile.set({ fontScale: 900, textSizeMethod: 'font' }, { scope: 'all' });
   assert.deepEqual(saved[1], { op: 'set', changes: { fontScale: 200, textSizeMethod: 'font' }, scope: 'all' });
   assert.deepEqual(await s.profile.set({ nope: 1 }), { applied: false, saved: false, reason: 'nothing-settable' });
-  // An explicit off turns off what the profile asked for.
+  // An explicit off turns off what the profile asked for, and stays visible as off.
   await s.profile.set({ motionReducer: false });
-  assert.equal('motionReducer' in s.profile.get(), false);
+  assert.equal(s.profile.get('motionReducer'), false);
   s.end(); os.end();
 });
 
@@ -726,7 +738,7 @@ await test("personal for a site: the profile's, then every site's, then this sit
   ]);
   assert.deepEqual(explicit, { general: { fontScale: 140 }, sites: { 'example.com': { fontScale: 170, motionReducer: false } } });
   const base = { fontScale: 120, motionReducer: true, readingLevel: 'plain' };
-  assert.deepEqual(personalForSite(base, explicit, 'www.example.com'), { fontScale: 170, readingLevel: 'plain' });
+  assert.deepEqual(personalForSite(base, explicit, 'www.example.com'), { fontScale: 170, motionReducer: false, readingLevel: 'plain' }, 'an explicit off stays, so an adapter can tell it from never set');
   assert.deepEqual(personalForSite(base, explicit, 'other.org'), { fontScale: 140, motionReducer: true, readingLevel: 'plain' });
   const { tk } = page('<p>x</p>', { personal: base, explicit, url: 'https://www.example.com/x' });
   assert.equal(tk.personal.fontScale, 170);
@@ -842,6 +854,22 @@ await test('page.textContrast: the ratio against blended backgrounds, AA for its
   assert.equal(big.large, true); assert.equal(big.min, 3);
   const img = tk.page.textContrast($('#img'));
   assert.equal(img.overImage, true); assert.equal(img.fix, null);
+});
+
+await test('page.headings leaves out a heading whose role is taken away (presentation, none)', async () => {
+  const { tk } = page('<h1>Title</h1><h2 role="presentation">Not a heading</h2><h3 role="none">Nor this</h3><div role="heading" aria-level="2">Section</div>');
+  assert.deepEqual(tk.page.headings().map((h) => [h.level, h.text]), [[1, 'Title'], [2, 'Section']]);
+});
+
+await test('watch.added with batch: one call with every element of the flush', async () => {
+  const { tk, doc, $ } = page('<main id="m"></main>');
+  const s = tk.session();
+  const calls = [];
+  s.watch.added($('#m'), (els) => calls.push(els.map((e) => e.id)), { batch: true, debounceMs: 10 });
+  for (const id of ['a', 'b', 'c']) { const p = doc.createElement('p'); p.id = id; $('#m').append(p); }
+  await tick(40);
+  assert.deepEqual(calls, [['a', 'b', 'c']]);
+  s.end();
 });
 
 await test('text.scale: each element from its own original size, never compounding; 1 and end() put the sizes back', async () => {

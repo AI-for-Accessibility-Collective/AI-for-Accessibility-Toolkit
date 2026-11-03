@@ -113,9 +113,11 @@ condition from what they ask for.
    - **Use the blocks for what they do**: `s.group()` for one mode, or one
      round of fixes you redo, instead of undoing by hand;
      `s.page.textContrast` for colours; `s.focus.skipLink` and
-     `s.focus.keepVisible` for focus. Measure once and change only what
-     needs it; never clear and redo everything on each change of the
-     page.
+     `s.focus.keepVisible` for focus; `s.text.fit` around a change to text
+     spacing; `s.watch.added(..., { batch: true })` for what the page adds.
+     Measure once and change only what needs it; never clear and redo
+     everything on each change of the page. Never click the page's own
+     controls on the person's behalf unless they asked for exactly that.
 4. **Preview it with checks** on their page with `browser_preview`: the file,
    a name, the URL patterns of the site it is for (such as
    `https://example.com/*`), and **checks**. A check is the body of an async

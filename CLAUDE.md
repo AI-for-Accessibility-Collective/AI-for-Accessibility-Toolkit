@@ -44,7 +44,11 @@ in `docs/architecture.md`. This section is the code map.
 - `tools/` — the developer **catalog**: `adapters/` (executable fixes),
   `auditors/` (issue detectors), `validators/` (the verifier engine for agentic
   flows), `profiles/` (ability presets), `insights/` (knowledge modules, e.g.
-  ArtInsight), `utils/`.
+  ArtInsight), `utils/`. `core-adapters/` is the core set (one web module
+  per major barrier, built only on `toolkit/blocks/` by agents with
+  `scripts/verify-adapters/run.mjs --create`; briefs in
+  `scripts/verify-adapters/core-adapters.json`, specs in
+  `tools/test/verify-core/`).
 - `server/` — hosted HTTP service exposing the Librarian methods to any
   language/runtime. Also: developer accounts (`src/accounts.js`; `/admin` is
   the admin console, `/developer` the developer console), the **adapter
