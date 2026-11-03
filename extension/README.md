@@ -108,8 +108,9 @@ step shows as one line.
   have them only if you share the page source. It also sees whether the
   adapter applied and, at the level you share, the page afterwards, so it
   can review the change. It can only offer an adapter whose checks all
-  passed and that added no axe-core problem. The sidebar warns you about
-  one that was not checked. A screenshot of a page
+  passed. If the adapter added axe-core problems, the sidebar tells you
+  which when it is offered. The sidebar warns you about one that was not
+  checked. A screenshot of a page
   that is not on screen is taken only when you choose to share one: the
   sidebar shows that tab for a moment, then goes back.
 - **When it is ready**, **Add to my account** publishes it to your account,

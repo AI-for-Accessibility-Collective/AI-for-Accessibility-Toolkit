@@ -66,7 +66,9 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   the layout shift `enable()` causes. The agent is told which axe-core
   problems the adapter added or fixed, and how far the page moved.
   `adapter_ready` is refused unless the latest preview of the file, as it is
-  now, applied, passed every check and added no axe-core problem. At the end
+  now, applied and passed every check. axe-core advises and does not block:
+  when that preview added axe-core problems, or axe-core did not run, the
+  adapter is still offered and the person is told. At the end
   of a run, the person is warned about any adapter the run wrote or
   previewed that was not checked that way. Previews on every site (`*`,
   `https://*/*`) are refused.

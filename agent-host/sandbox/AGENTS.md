@@ -88,14 +88,15 @@ condition from what they ask for.
    - Skipped because the patterns do not match: the page this chat works on
      is another site. Never widen `runs_on` to every site to make it apply:
      ask the person to choose the right page in the sidebar.
-   - Applied but a check fails, it changed nothing, or axe-core found a
-     problem it added: it does not work yet. Fix it and preview again. Never
-     tell the person it works. Problems that were on the page before are the
-     site's: leave them unless the person asked about them.
+   - Applied but a check fails or it changed nothing: it does not work yet.
+     Fix it and preview again. Never tell the person it works.
+   - axe-core found a problem the adapter added: fix it and preview again,
+     unless the fix would undo what the person asked for. If a problem stays,
+     tell the person which one and why. Problems that were on the page before
+     are the site's: leave them unless the person asked about them.
    - The layout shift is 0.1 or more and the person did not ask for things
      to change size or place: make it steadier and preview again.
-   - Applied, every check passes and axe-core found nothing new: **review
-     it.** Compare the page afterwards with before: did it change what it
+   - Applied and every check passes: **review it.** Compare the page afterwards with before: did it change what it
      should, only that, and nothing it should not? Go through "Accessible to
      WCAG 2.2 AA" and the skill's acceptance criteria for what it adds. With
      a screenshot, check what the person will see (contrast, overlap,
@@ -118,8 +119,8 @@ condition from what they ask for.
    **Add to my account** (private to them, and it runs in their browser) and
    **Export**. Tell them that in one sentence; do not publish it yourself.
    The sidebar only accepts an adapter whose latest preview, of the file as
-   it is now, applied, passed every check and added no problem axe-core
-   finds.
+   it is now, applied and passed every check. If that preview added
+   problems axe-core finds, the sidebar tells the person.
 
 Keep each adapter to one change. If they want two different changes, make
 two adapters.

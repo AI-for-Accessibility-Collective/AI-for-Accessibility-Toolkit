@@ -161,7 +161,7 @@ await test('an adapter that was not checked, or whose checks fail, is not ready,
   sb.close();
 });
 
-await test('an adapter that adds accessibility problems, or was not checked with axe-core, is not ready', async () => {
+await test('an adapter that adds accessibility problems, or was not checked with axe-core, is still offered, and the person is told', async () => {
   const added = { id: 'color-contrast', impact: 'serious', help: 'Elements must meet minimum color contrast ratio thresholds', wcag: ['1.4.3'], count: 2, targets: ['button.buy', 'button.cart'], summary: 'Element has insufficient color contrast of 2.1' };
   let answer = { status: 'applied', changes: 2, checks: [{ before: false, after: true }], axe: { version: '4.12.1', added: [added], fixed: [], remaining: 0 } };
   const sb = sidebar('ada', {
@@ -172,15 +172,16 @@ await test('an adapter that adds accessibility problems, or was not checked with
   const other = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
   await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'build it' } });
   let chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
-  assert.match(chat.entries.find(e => e.kind === 'agent').text, /Axe: problems\. Ready: no\./);
-  assert.ok(chat.entries.some(e => e.state === 'failed' && e.text === '“Bigger buttons” is previewing on your page · 1 of 1 checks pass · 2 new accessibility problems'));
-  assert.ok(chat.entries.some(e => e.kind === 'warning' && /Not checked: “Bigger buttons” adds 2 accessibility problems that axe-core finds/.test(e.text)));
-  // A sidebar that sends no axe result (an older extension) does not make it ready either.
+  assert.match(chat.entries.find(e => e.kind === 'agent').text, /Axe: problems\. Ready: yes\./);
+  assert.ok(chat.entries.some(e => e.state === 'done' && e.text === '“Bigger buttons” is previewing on your page · 1 of 1 checks pass · 2 new accessibility problems'));
+  assert.ok(chat.entries.some(e => e.kind === 'warning' && e.text === '“Bigger buttons” adds 2 accessibility problems that axe-core finds: Elements must meet minimum color contrast ratio thresholds (WCAG 1.4.3). Check it on your page before you rely on it.'));
+  assert.ok(!chat.entries.some(e => e.kind === 'warning' && /Not checked/.test(e.text)));
+  assert.equal(chat.adapters.length, 1);
+  // A sidebar that sends no axe result (an older extension) does not block it either.
   answer = { status: 'applied', changes: 2, checks: [{ before: false, after: true }] };
   await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'build it again' } });
-  chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'warning' && /was not checked for accessibility problems/.test(e.text)) && c; });
-  assert.match(chat.entries.findLast(e => e.kind === 'agent').text, /Axe: none\. Ready: no\./);
-  assert.equal(chat.adapters.length, 0);
+  chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'warning' && /was not checked for accessibility problems with axe-core/.test(e.text)) && c; });
+  await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return /Axe: none\. Ready: yes\./.test(c.entries.findLast(e => e.kind === 'agent')?.text || '') && c; });
   sb.close();
 });
 

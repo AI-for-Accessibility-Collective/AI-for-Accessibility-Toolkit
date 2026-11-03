@@ -12,9 +12,10 @@
 //   browser_remove_preview  take the preview off again
 //   adapter_ready           offer a finished adapter to the person: they can
 //                           export it or add it to their account. Only once
-//                           its latest preview applied, passed every check and
-//                           added no problem axe-core finds, on the file as it
-//                           is now.
+//                           its latest preview applied and passed every
+//                           check, on the file as it is now. axe-core does not
+//                           block it: the person is told about any problem it
+//                           added, or that axe-core did not check it.
 //
 // The host, not opencode's event stream, writes the sidebar's line for each,
 // so the person sees "Previewing … on your page" while it waits for them.
@@ -56,7 +57,7 @@ function axeText(axe) {
   const wcag = (r) => (r.wcag.length ? ` (WCAG ${r.wcag.join(', ')})` : '');
   const lines = [`Accessibility check (axe-core ${axe.version || ''}, WCAG 2.0-2.2 A and AA rules), the page after enable() compared with before:`];
   if (axe.added.length) {
-    lines.push(`- The adapter added ${problems(axe.added)} problems. Fix every one:`);
+    lines.push(`- The adapter added ${problems(axe.added)} problems. Fix them unless that would undo what the person asked for:`);
     for (const r of axe.added) {
       lines.push(`  - ${r.impact ? `[${r.impact}] ` : ''}${r.id}: ${r.help}${wcag(r)}, on ${r.count} element${r.count === 1 ? '' : 's'}${r.targets?.length ? `: ${r.targets.join('; ')}` : ''}`);
       if (r.summary) lines.push(`    ${r.summary.replace(/\s+/g, ' ')}`);
@@ -66,6 +67,19 @@ function axeText(axe) {
   if (axe.remaining) lines.push(`- ${axe.remaining} problems were on the page before and still are: the site's, not the adapter's. Leave them unless the person asked about them.`);
   lines.push('axe-core finds only some WCAG failures. For what the adapter adds or changes, also check what it cannot: keyboard use and visible focus, name, role and state, target size, and contrast you chose (the intopia-web-accessibility skill).');
   return lines.join('\n');
+}
+
+/**
+ * What the person is told about an adapter axe-core did not pass, in plain
+ * words, or null. Advice, not a gate: the adapter can still be offered.
+ */
+function axeConcern(axe) {
+  if (!axe) return 'was not checked for accessibility problems with axe-core';
+  if (axe.error) return 'could not be checked for accessibility problems with axe-core';
+  const added = problems(axe.added);
+  if (!added) return null;
+  const rules = axe.added.slice(0, 3).map(r => `${r.help.replace(/\.$/, '')}${r.wcag.length ? ` (WCAG ${r.wcag.join(', ')})` : ''}`);
+  return `adds ${added} accessibility problem${added === 1 ? '' : 's'} that axe-core finds: ${rules.join('; ')}${axe.added.length > 3 ? '; and more' : ''}`;
 }
 
 /** What the agent reads about how far the page moved. */
@@ -106,7 +120,7 @@ const TOOLS = [
   },
   {
     name: 'adapter_ready',
-    description: 'Offer a finished adapter to the person. The sidebar then shows it with "Add to my account" and "Export". Refused unless the latest preview of this file, as it is now, applied, passed every check and added no accessibility problem axe-core finds; review it first.',
+    description: 'Offer a finished adapter to the person. The sidebar then shows it with "Add to my account" and "Export". Refused unless the latest preview of this file, as it is now, applied and passed every check; review it first. If that preview added accessibility problems axe-core finds, or axe-core did not check it, the sidebar tells the person.',
     inputSchema: { type: 'object', properties: {
       file: { type: 'string', description: 'The adapter file under /work, e.g. adapters/bigger-buttons.js' },
       id: { type: 'string', description: 'Short id: lowercase letters, digits and dashes, e.g. bigger-buttons' },
@@ -175,11 +189,7 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     const failed = (rec.checks || []).filter(c => !c.after).length;
     if (!rec.checks?.length) return { ok: false, why: 'was previewed without checks' };
     if (failed) return { ok: false, why: `failed ${failed} of its ${rec.checks.length} checks` };
-    if (!rec.axe) return { ok: false, why: 'was not checked for accessibility problems (axe-core)' };
-    if (rec.axe.error) return { ok: false, why: `could not be checked for accessibility problems (axe-core: ${rec.axe.error})` };
-    const added = problems(rec.axe.added);
-    if (added) return { ok: false, why: `adds ${added} accessibility problem${added === 1 ? '' : 's'} that axe-core finds` };
-    return { ok: true };
+    return { ok: true, concern: axeConcern(rec.axe) };
   }
 
   function pageContent(intro, shared) {
@@ -251,7 +261,8 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       const tally = (results.length ? ` · ${passed} of ${results.length} checks pass` : '')
         + (axe && !axe.error ? (added ? ` · ${added} new accessibility problem${added === 1 ? '' : 's'}` : ' · no new accessibility problems') : '');
       const label = { applied: `“${name}” is previewing on your page${tally}`, skipped: `“${name}” did not apply on this page`, failed: `“${name}” failed on your page` }[a.status] || `Preview of “${name}” finished`;
-      const good = verdict(rec, adapter.code).ok;
+      const v = verdict(rec, adapter.code);
+      const good = v.ok;
       chats.addEntry(uid, chatId, { id: step.id, text: label, state: a.status === 'failed' || (a.status === 'applied' && !good) ? 'failed' : 'done' });
       const intro = [
         `Preview result: ${a.status}${a.message ? ` (${String(a.message).slice(0, 1000)})` : ''}.`,
@@ -261,9 +272,11 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
         a.status === 'applied' ? shiftText(shift) : '',
         results.length ? ['Checks (before enable → after):', ...results.map(c => `- ${c.name}: ${c.before ? 'pass' : 'fail'} → ${c.after ? 'pass' : 'fail'}${c.error ? ` (${c.error})` : ''}`)].join('\n') : '',
         a.status === 'applied' ? axeText(axe) : '',
-        a.status === 'applied' ? (good
-          ? 'Every check passes and it added no problem axe-core finds. Review the page afterwards too (against WCAG, and that it stays steady and looks like the site), then tell the person what changed and ask them to try it.'
-          : `It is not ready: it ${verdict(rec, adapter.code).why}. Fix the adapter (or a check that is wrong) and preview again. Do not tell the person it works.`) : '',
+        a.status === 'applied' ? (!good
+          ? `It is not ready: it ${v.why}. Fix the adapter (or a check that is wrong) and preview again. Do not tell the person it works.`
+          : !v.concern
+            ? 'Every check passes and it added no problem axe-core finds. Review the page afterwards too (against WCAG, and that it stays steady and looks like the site), then tell the person what changed and ask them to try it.'
+            : `Every check passes, but it ${v.concern}. Fix that and preview again if you can without undoing what the person asked for. If a problem stays, tell the person which one and why. You can still offer it: the sidebar tells the person about it. Review the page afterwards too (against WCAG, and that it stays steady and looks like the site).`) : '',
         a.after ? 'The page with the preview on, as the person shares it:' : 'The person shares less than the page source, so you cannot see the page afterwards: rely on your checks, and ask them how it looks.',
       ].filter(Boolean).join('\n');
       return { content: pageContent(intro, a.after) };
@@ -287,7 +300,9 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       const name = String(args.name || id).slice(0, 80);
       chats.markReady(uid, chatId, { id, file: adapter.file, name, about: String(args.about || '').slice(0, 600), runsOn: patterns, supportAreas: areas });
       chats.addEntry(uid, chatId, { kind: 'notice', text: `“${name}” is ready. You can add it to your account or export it.` });
-      return text('The sidebar now offers it to the person with "Add to my account" and "Export". Tell them in one or two sentences what it does; do not publish it yourself.');
+      if (v.concern) chats.addEntry(uid, chatId, { kind: 'warning', text: `“${name}” ${v.concern}. Check it on your page before you rely on it.` });
+      return text('The sidebar now offers it to the person with "Add to my account" and "Export". Tell them in one or two sentences what it does; do not publish it yourself.'
+        + (v.concern ? ` The sidebar also told them it ${v.concern}: say in a sentence why that is left.` : ''));
     },
   };
 
