@@ -314,7 +314,7 @@ ${PREVIEW_SPEAK}
       const found = new Map();
       for (const v of r.violations) for (const n of v.nodes) {
         const target = (n.target || []).map((t) => (Array.isArray(t) ? t.join(' >> ') : String(t))).join(' >> ');
-        found.set(v.id + ' ' + elementKey(n.element, target), { rule: v, target, summary: n.failureSummary || '' });
+        found.set(v.id + ' ' + elementKey(n.element, target), { rule: v, target, summary: n.failureSummary || '', element: n.element });
       }
       return { found, version: axe.version };
     } catch (e) { return { error: errorText(e).slice(0, 160) }; } finally { clearTimeout(timer); }
@@ -331,12 +331,20 @@ ${PREVIEW_SPEAK}
     }
     return [...rules.values()];
   };
+  // What was in the page before enable(): a problem on an element the page
+  // added since (a live site loading more) is the site's, unless the
+  // element is the toolkit's own.
+  let existed = null;
+  const noteExisting = () => { if (AUDIT && typeof document === 'object' && document && typeof document.querySelectorAll === 'function') existed = new WeakSet(document.querySelectorAll('*')); };
+  const sitesOwn = (e) => !!existed && !!e.element && !existed.has(e.element) && !(e.element.closest && e.element.closest('[data-ai4a11y-ui]'));
   const compare = (before, after) => {
     if (!before || !after) return undefined;
     if (before.error || after.error) return { error: before.error || after.error };
-    const added = [...after.found].filter(([k]) => !before.found.has(k)).map(([, e]) => e);
+    const newly = [...after.found].filter(([k]) => !before.found.has(k)).map(([, e]) => e);
+    const added = newly.filter((e) => !sitesOwn(e));
+    const onPageAdded = newly.length - added.length;
     const fixed = [...before.found].filter(([k]) => !after.found.has(k)).map(([, e]) => e);
-    return { version: after.version, added: byRule(added), fixed: byRule(fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })), remaining: after.found.size - added.length };
+    return { version: after.version, added: byRule(added), fixed: byRule(fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })), remaining: after.found.size - added.length, ...(onPageAdded ? { onPageAdded } : {}) };
   };
   // Counted as they arrive: records handed to the callback are gone from takeRecords().
   let records = 0;
@@ -365,7 +373,7 @@ ${PREVIEW_SPEAK}
   rt.adapters[KEY] = { adapter, revision: 0 };
   let enableStart = 0, enableMs = 0;
   const windDown = () => { delete rt.adapters[KEY]; try { adapter.disable(); } catch (e) { /* already failing */ } };
-  return runAxe().then((a) => { axeBefore = a; return runChecks(); }).then((b) => {
+  return runAxe().then((a) => { axeBefore = a; noteExisting(); return runChecks(); }).then((b) => {
     before = b;
     if (watch) watch.observe(document.documentElement || document, { subtree: true, childList: true, attributes: true, characterData: true });
     if (shifts) { try { shifts.observe({ type: 'layout-shift' }); } catch (e) { shifts = null; } }

@@ -155,6 +155,7 @@ function siteText(site, r) {
     if (r.axe?.error) lines.push(`- axe-core could not run: ${r.axe.error}`);
     for (const a of r.axe?.added || []) lines.push(`- ADDED ${a.id}: ${a.help}${a.wcag.length ? ` (WCAG ${a.wcag.join(', ')})` : ''}, on ${a.count}: ${(a.targets || []).join('; ')}${a.summary ? ` (${a.summary.replace(/\s+/g, ' ').slice(0, 200)})` : ''}`);
     if (r.axe?.fixed?.length) lines.push(`- fixed: ${r.axe.fixed.map(a => `${a.id} on ${a.count}`).join('; ')}`);
+    if (r.axe?.onPageAdded) lines.push(`- ${r.axe.onPageAdded} problem${r.axe.onPageAdded === 1 ? '' : 's'} on content the site added itself after enable() (not counted)`);
     (r.checks || []).forEach((c, i) => { if (!c.after) lines.push(`- check ${i + 1} fails after enable()${c.error ? `: ${c.error}` : ''}`); });
     lines.push(...restoreText(r).map(l => `- ${l}`));
     lines.push(...hostText(r).map(l => `- ${l}`));
