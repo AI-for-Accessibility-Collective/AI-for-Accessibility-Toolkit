@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import {
   createBlocks, Ended, CATALOG, BLOCK_NAMES, personalFromProfile, buildPrompt, cleanOptions, TASKS, NO_ANSWER,
-  explicitFromMemories, personalForSite, setPersonal,
+  explicitFromMemories, personalForSite, setPersonal, setShortcut, checkCombo, comboLabel, shortcutFromProfile,
 } from '../blocks/index.js';
 
 const { JSDOM } = createRequire(import.meta.url)('jsdom');
@@ -323,22 +323,6 @@ await test('panel: a Close button, focus moves in from its trigger, Escape close
   assert.equal(html(), before);
 });
 
-await test('keys.shortcut: Alt+key outside fields only, never with Ctrl or Meta; reserved keys need Alt', async () => {
-  const { tk, $, doc, key } = page('<input id="i"><p>x</p>');
-  const s = tk.session();
-  let n = 0;
-  s.keys.shortcut({ code: 'KeyD', alt: true }, () => n++);
-  key(doc.body, 'd', { code: 'KeyD', altKey: true });
-  key($('#i'), 'd', { code: 'KeyD', altKey: true });
-  key(doc.body, 'd', { code: 'KeyD', altKey: true, ctrlKey: true });
-  key(doc.body, 'd', { code: 'KeyD' });
-  assert.equal(n, 1);
-  assert.throws(() => s.keys.shortcut({ code: 'Tab' }, () => {}), /reserved/);
-  s.end();
-  key(doc.body, 'd', { code: 'KeyD', altKey: true });
-  assert.equal(n, 1);
-});
-
 await test('focus.region: a temporary tabindex that goes when focus leaves', async () => {
   const { tk, $, doc } = page('<section id="r"><p>x</p></section><button id="b">B</button>');
   const s = tk.session();
@@ -629,17 +613,66 @@ await test('profile.set: only after the person used the toolkit\'s UI; applies p
   s.end(); os.end();
 });
 
-await test('profile: without a host, a change applies in the page only; a shortcut counts as the person', async () => {
-  const { tk, win, doc } = page('<p>x</p>');
+await test('profile: without a host, a change applies in the page only', async () => {
+  const { tk, win } = page('<p>x</p>');
   const s = tk.session();
-  s.keys.shortcut({ code: 'KeyT', alt: true }, () => {});
-  // jsdom events are untrusted; a trusted key on the shortcut sets this.
-  doc.dispatchEvent(new win.KeyboardEvent('keydown', { code: 'KeyT', altKey: true, bubbles: true }));
-  assert.equal(win.__ai4a11yBlocksShared.lastShortcut, undefined, 'an untrusted key is not the person');
   win.__ai4a11yBlocksShared.lastShortcut = Date.now();
   assert.deepEqual(await s.profile.set({ speechRate: 1.5 }), { applied: true, saved: false, reason: 'unavailable' });
   assert.equal(tk.personal.speechRate, 1.5);
   s.end();
+});
+
+// ── the toolkit's one shortcut ──────────────────────────────────────────────
+
+await test('shortcut: off until given to an adapter; up and down adjust it; otherwise the first key turns it on and off', async () => {
+  const reported = [];
+  const { win, doc } = page('<p>x</p><input id="f">');
+  const mk = (key) => createBlocks({ win, adapter: key.split('/').pop(), key, adjustable: async (i) => reported.push(i) }).session();
+  const text = mk('me/console/text-size');
+  const calm = mk('me/console/calm-page');
+  const calls = [];
+  text.keys.adjust({ label: 'Text size', settings: ['fontScale'], up: () => calls.push('up'), down: () => calls.push('down') });
+  assert.deepEqual(reported, [{ label: 'Text size', settings: ['fontScale'] }]);
+  const press = (code, target = doc.body, init = {}) => target.dispatchEvent(new win.KeyboardEvent('keydown', { code, altKey: true, shiftKey: true, bubbles: true, ...init }));
+  press('ArrowUp');
+  assert.deepEqual(calls, [], 'off by default');
+  const toggles = [];
+  setShortcut(win, { adapter: 'me/console/text-size', up: 'Alt+Shift+ArrowUp', down: 'Alt+Shift+ArrowDown' }, { name: 'Text size', toggle: async (k) => { toggles.push(k); return 'off'; } });
+  press('ArrowUp'); press('ArrowDown');
+  assert.deepEqual(calls, ['up', 'down']);
+  press('ArrowUp', doc.getElementById('f'));
+  assert.deepEqual(calls, ['up', 'down'], 'never in a text field');
+  press('ArrowUp', doc.body, { ctrlKey: true });
+  assert.deepEqual(calls, ['up', 'down'], 'never with Ctrl');
+  // Given to an adapter with nothing to adjust: the first key turns it off and on.
+  setShortcut(win, { adapter: 'me/console/calm-page', up: 'Alt+Shift+KeyJ', down: 'Alt+Shift+KeyK' }, { name: 'Calm page', toggle: async (k) => { toggles.push(k); return 'off'; } });
+  press('ArrowUp');
+  assert.deepEqual(calls, ['up', 'down'], 'the old keys do nothing now');
+  press('KeyJ'); press('KeyK');
+  await tick(300);
+  assert.deepEqual(toggles, ['me/console/calm-page']);
+  assert.match(doc.querySelector('[aria-live="polite"]')?.textContent || '', /Calm page off on this site\./);
+  // Off again.
+  setShortcut(win, null);
+  press('KeyJ');
+  await tick(5);
+  assert.equal(toggles.length, 1);
+  text.end(); calm.end();
+  assert.equal(win.__ai4a11yBlocksShared.adjusters.size, 0);
+});
+
+await test('shortcut: combinations need Alt, never Ctrl or Meta, never the browser\'s; the profile\'s is checked', async () => {
+  assert.equal(checkCombo('Alt+Shift+ArrowUp'), null);
+  assert.equal(checkCombo('Alt+KeyJ'), null);
+  assert.match(checkCombo('Shift+KeyJ'), /Alt/);
+  assert.match(checkCombo('Ctrl+Alt+KeyJ'), /Ctrl/);
+  assert.match(checkCombo('Alt+Shift+KeyT'), /browser/);
+  assert.match(checkCombo('Alt+Tab'), /moving around/);
+  assert.match(checkCombo('Alt+F4'), /moving around/);
+  assert.equal(comboLabel('Alt+Shift+ArrowUp'), 'Alt+Shift+Up arrow');
+  assert.equal(shortcutFromProfile({ fields: {} }), null);
+  assert.deepEqual(shortcutFromProfile({ fields: { adapterShortcut: { adapter: 'me/console/text-size' } } }), { adapter: 'me/console/text-size', up: 'Alt+Shift+ArrowUp', down: 'Alt+Shift+ArrowDown' });
+  assert.deepEqual(shortcutFromProfile({ fields: { adapterShortcut: { adapter: 'me/console/text-size', up: 'Ctrl+KeyJ', down: 'Shift+Alt+KeyK' } } }), { adapter: 'me/console/text-size', up: 'Alt+Shift+ArrowUp', down: 'Alt+Shift+KeyK' });
 });
 
 await test("personal for a site: the profile's, then every site's, then this site's; explicit off wins", async () => {

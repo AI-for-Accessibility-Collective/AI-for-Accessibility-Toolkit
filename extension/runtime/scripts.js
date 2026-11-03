@@ -68,7 +68,8 @@ const PREAMBLE = String.raw`
   const blocksFor = (key, ask) => {
     const B = globalThis.__ai4a11yBlocks;
     if (!B || typeof B.create !== 'function') return null;
-    return B.create({ adapter: key.split('/').pop(),
+    return B.create({ adapter: key.split('/').pop(), key,
+      adjustable: (info) => ask({ type: 'ai4a11y:adjustable', ...info }),
       ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })),
       profile: (request) => ask({ type: 'ai4a11y:profile', request }),
       zoom: (request) => ask({ type: 'ai4a11y:zoom', request }),
@@ -163,16 +164,30 @@ ${PREAMBLE}
  * the page's site picked in the page. Runs before each adapter, and alone in
  * open pages when they change.
  */
-export function personalScript({ personal = {}, explicit = null } = {}) {
-  return `(() => { const B = globalThis.__ai4a11yBlocks; if (B && typeof B.setPersonal === 'function') B.setPersonal(${JSON.stringify(personal || {})}, ${JSON.stringify(explicit || null)}); })();`;
+export function personalScript({ personal = {}, explicit = null, shortcut = null } = {}) {
+  // The person's shortcut (toolkit/blocks/shortcut.js): with nothing to
+  // adjust, its first key turns the adapter on or off on this site, as the
+  // popup's switch does.
+  return `(() => {
+  const B = globalThis.__ai4a11yBlocks;
+  if (!B || typeof B.setPersonal !== 'function') return;
+  B.setPersonal(${JSON.stringify(personal || {})}, ${JSON.stringify(explicit || null)});
+  const SHORTCUT = ${JSON.stringify(shortcut || null)};
+  if (typeof B.setShortcut !== 'function') return;
+  B.setShortcut(SHORTCUT, { name: SHORTCUT && SHORTCUT.name, toggle: (key) => {
+    const rt = globalThis.__ai4a11yRuntime;
+    const on = !(rt && rt.adapters && rt.adapters[key]);
+    return chrome.runtime.sendMessage({ type: 'ai4a11y:toggle', key, on }).then((r) => (r && r.ok ? (on ? 'on' : 'off') : null), () => null);
+  } });
+})();`;
 }
 
 /** The chrome.userScripts registration for one adapter: the blocks, the person's settings, then its script. */
-export function registrationFor(entry, { personal = {}, explicit = null } = {}) {
+export function registrationFor(entry, { personal = {}, explicit = null, shortcut = null } = {}) {
   return {
     id: scriptId(keyOf(entry)),
     matches: chromeMatchPatterns(entry.urlPatterns || []),
-    js: [{ file: BLOCKS_FILE }, { code: personalScript({ personal, explicit }) }, { code: buildUserScript(entry) }],
+    js: [{ file: BLOCKS_FILE }, { code: personalScript({ personal, explicit, shortcut }) }, { code: buildUserScript(entry) }],
     runAt: 'document_idle',
     world: 'USER_SCRIPT',
     allFrames: false,
@@ -237,7 +252,8 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
 ${PREVIEW_SPEAK}
   const blocks = B && typeof B.create === 'function' ? B.create({ adapter: 'preview', personal: ${JSON.stringify(personal || {})}, explicit: ${JSON.stringify(explicit || null)},
     ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })),
-    ...(viaWorker ? { profile: (request) => ask({ type: 'ai4a11y:profile', request }), zoom: (request) => ask({ type: 'ai4a11y:zoom', request }), speak: speakVia(KEY) } : {}) }) : null;
+    ...(viaWorker ? { profile: (request) => ask({ type: 'ai4a11y:profile', request }), zoom: (request) => ask({ type: 'ai4a11y:zoom', request }), speak: speakVia(KEY),
+      adjustable: (info) => ask({ type: 'ai4a11y:adjustable', ...info }) } : {}) }) : null;
   const TOOLKIT = Object.freeze({
     data: Object.freeze({
       get: async (k) => (k === undefined ? Object.fromEntries(store) : store.get(k)),

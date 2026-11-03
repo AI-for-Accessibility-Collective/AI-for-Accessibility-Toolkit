@@ -39,14 +39,19 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
 - Read them with `s.profile.get()` (the keys are in the building blocks
   reference, "The person's settings"). Where your brief says what the
   person can adjust, let them adjust it **in the adapter** (a control it
-  adds, or the keyboard shortcuts your brief gives you, with
-  `s.keys.shortcut`), and save it with `s.profile.set(changes)`: it applies
-  to this site. Your brief says how the person chooses **every site**
-  (`s.profile.set(changes, { scope: 'all' })`). `set()` only works right
-  after the person's own click or key on your UI or shortcut; never call it
-  on load.
+  adds, or the toolkit's shortcut, below), and save it with
+  `s.profile.set(changes)`: it applies to this site. The person chooses
+  **every site** in the extension's popup, not in your adapter. `set()`
+  only works right after the person's own click or key on your UI or their
+  shortcut; never call it on load.
+- **No shortcuts of your own.** The toolkit has one pair of keys, which the
+  person gives to one adapter in the extension's popup. If your adapter
+  adjusts something, say what with `s.keys.adjust({ label, settings, up,
+  down })`; when the person gives it the shortcut, its keys call `up()` and
+  `down()`. Otherwise the toolkit's first key turns your adapter on and off
+  by itself; do nothing for it.
 - Say what changed with `s.announce(...)`, in plain words ("Text size 150%
-  on this site."), and how to use it on every site.
+  on this site.").
 - Follow changes made elsewhere with `s.profile.onChange(...)` where your
   adapter applies a setting.
 - What your brief calls "suggested in onboarding for" is only which people
@@ -82,9 +87,13 @@ The verifier's tools, as for the catalog adapters (pass `file` as
   piece of speech, which also sends word events). `personal` sets the
   person's settings; `ai` gives fixed answers by task (such as
   `{"simplify": "…"}`) or `"live"` for the real model. In a check, `await
-  __verifyClick('#selector')` and `await __verifyPress('Alt+Shift+Equal')`
-  are the person's own click and key (trusted), which `profile.set` and
-  speech need; `element.click()` is not.
+  __verifyClick('#selector')` and `await __verifyPress('Escape')` are the
+  person's own click and key (trusted), which `profile.set` and speech
+  need; `element.click()` is not. The toolkit's shortcut is given to your
+  adapter there, with its default keys: `await
+  __verifyPress('Alt+Shift+ArrowUp')` and `'Alt+Shift+ArrowDown'` call your
+  `keys.adjust` up and down, and `__verifyHost.adjustable` is what you
+  said it adjusts.
 - `verify_on_sites` runs it on the robustness pages and on popular real
   sites (news, shopping, documentation, government). It reports what must
   hold on any page.
@@ -143,7 +152,7 @@ Your last message is the report, in plain text, starting with one line:
     Outcome: verified | issues-left | could-not-verify
 
 then:
-- what the adapter does, in two sentences, and its shortcuts and options;
+- what the adapter does, in two sentences, what the shortcut adjusts in it (if anything), and its options;
 - what you verified (the test page, the specs, the checks, the sites);
 - each problem you found and fixed, with its evidence;
 - what is left, with its evidence, and why you could not fix it;

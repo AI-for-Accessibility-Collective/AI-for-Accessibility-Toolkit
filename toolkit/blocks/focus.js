@@ -2,17 +2,16 @@
 //
 //   s.focus.region(el)            move focus to a region that is not focusable itself
 //   s.focus.keepWhenRemoving(el)  move focus out before el goes, so it is not lost
-//   s.keys.shortcut({ code: 'KeyD', alt: true }, fn)
+//   s.keys.adjust({ label: 'Text size', settings: ['fontScale'], up, down })
 //
-// A shortcut is never taken from a text field or editable region, never with
-// Ctrl or Meta held (browser and screen reader commands, AltGr on many
-// keyboards), and never for a reserved key. Scrolling to a region follows
-// reduced motion.
+// keys.adjust: what the toolkit's one shortcut does when the person gives it
+// to this adapter (shortcut.js): up and down adjust what the adapter
+// adjusts. The keys are never taken from a text field or editable region.
+// Scrolling to a region follows reduced motion.
 
 import { reducedMotion } from './shared.js';
 
 const NATIVELY_FOCUSABLE = /^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY|IFRAME)$/;
-const RESERVED = new Set(['Tab', 'Escape', 'Enter', 'NumpadEnter', 'Space', 'F5', 'F6', 'F7', 'F11', 'F12']);
 
 export function focusBlock(s, env) {
   const { doc } = env;
@@ -46,23 +45,24 @@ export function focusBlock(s, env) {
   return { region, keepWhenRemoving };
 }
 
-export function keysBlock(s, env) {
-  const { doc } = env;
-  const editable = (t) => !!(t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"]'));
+/** A text field or editable region, where keys are the person's typing. */
+export const editable = (t) => !!(t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"]'));
 
-  function shortcut(key, fn, { allowInFields = false } = {}) {
-    const want = { code: key.code, alt: !!key.alt, shift: !!key.shift };
-    if (!want.code || (RESERVED.has(want.code) && !want.alt)) throw new Error(`${want.code || 'That key'} is reserved; use another, with Alt.`);
-    return s.listen(doc, 'keydown', (e) => {
-      if (e.code !== want.code || e.altKey !== want.alt || e.shiftKey !== want.shift) return;
-      if (e.ctrlKey || e.metaKey || e.isComposing) return;
-      if (!allowInFields && editable(e.target)) return;
-      e.preventDefault();
-      // The person's own key on a shortcut counts as using the adapter (profile.set).
-      if (e.isTrusted) env.shared.lastShortcut = Date.now();
-      fn(e);
-    }, true);
+// Adapters have no shortcuts of their own: the toolkit has one pair of keys
+// the person gives to one adapter (shortcut.js). An adapter that has
+// something to adjust says how, and gets the pair when it is the one.
+export function keysBlock(s, env) {
+  const { shared } = env;
+
+  function adjust({ label, settings = [], up, down } = {}) {
+    if (!s.alive() || typeof up !== 'function' || typeof down !== 'function') return () => {};
+    const entry = { label: String(label || env.adapter).slice(0, 60), settings: (settings || []).map(String), up, down, session: s };
+    shared.adjusters.set(env.key, entry);
+    if (env.transport.adjustable) Promise.resolve(env.transport.adjustable({ label: entry.label, settings: entry.settings })).catch(() => {});
+    const stop = () => { if (shared.adjusters.get(env.key) === entry) shared.adjusters.delete(env.key); };
+    s.onEnd(stop);
+    return stop;
   }
 
-  return { shortcut };
+  return { adjust };
 }

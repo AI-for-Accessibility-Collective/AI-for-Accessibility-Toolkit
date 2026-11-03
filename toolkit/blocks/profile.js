@@ -11,7 +11,7 @@
 // follows them to other pages and devices and wins over what the toolkit
 // derived from their needs. Only the person can change it: set() works only
 // right after their own click, tap or key on the toolkit's UI in this page
-// (a panel or button an adapter added) or on an adapter's shortcut, never
+// (a panel or button an adapter added) or their shortcut (keys.adjust), never
 // from the adapter alone. The change applies in this page at once, for every
 // adapter, whether or not it could be saved. Only settings can be set
 // (SETTABLE_KEYS), checked and kept in range.
@@ -31,7 +31,7 @@ export function profileBlock(s, env) {
     return key === undefined ? p : p[key];
   }
 
-  /** Whether the person just used the toolkit's UI or one of its shortcuts. */
+  /** Whether the person just used the toolkit's UI or their shortcut. */
   function byPerson() {
     const now = Date.now();
     const last = shared.lastInput;

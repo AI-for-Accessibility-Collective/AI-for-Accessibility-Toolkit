@@ -12,7 +12,8 @@
 // argument (runtime.js is the bundle it injects); a host embedding adapters
 // itself calls createBlocks with its own `ai` transport.
 
-export { createBlocks, setPersonal } from './create.js';
+export { createBlocks, setPersonal, setShortcut } from './create.js';
+export { SHORTCUT_FIELD, SHORTCUT_DEFAULT, parseCombo, comboOf, checkCombo, normalCombo, comboLabel, shortcutFromProfile, shortcutKeysFromProfile } from './shortcut.js';
 export { Ended } from './session.js';
 export { BLOCK_NAMES, BLOCKS_VERSION } from './names.js';
 export { CATALOG, EXAMPLE } from './catalog.js';

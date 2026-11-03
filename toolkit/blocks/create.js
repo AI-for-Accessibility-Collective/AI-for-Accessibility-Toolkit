@@ -10,6 +10,8 @@ import { watchInput } from './watch.js';
 import { captureInPage } from './ai.js';
 import { BLOCK_NAMES, BLOCKS_VERSION } from './names.js';
 import { personalForSite } from './personal-sites.js';
+import { comboOf } from './shortcut.js';
+import { editable } from './focus.js';
 
 const EMPTY = Object.freeze({});
 
@@ -42,6 +44,7 @@ export function setPersonal(win, personal, explicit) {
  * @param {object} [options]
  * @param {Window} [options.win]  the window the blocks work in
  * @param {string} [options.adapter]  the adapter's id, for element ids
+ * @param {string} [options.key]  its registry key (owner/app/id), which the person's shortcut names; by default the id
  * @param {object} [options.personal]  the person's settings (personalFromProfile), for the whole page; leave it out where the runtime sets them (setPersonal)
  * @param {{general?: object, sites?: object}} [options.explicit]  what they set themselves (explicitFromMemories); this page's site is picked
  * @param {(request: {kind: 'text'|'vision', task: string, input: string, options: object, image?: object, rect?: object}) => Promise<{text: string|null, reason?: string}>} [options.ai]
@@ -53,14 +56,16 @@ export function setPersonal(win, personal, explicit) {
  *   the browser's zoom for this tab. Without it, zoom.supported is false.
  * @param {(request: {text: string, speechRate: number, pitch: number, lang: string, voice: string|null}, onEvent: (e: {type: string, charIndex?: number, length?: number}) => void) => {stop(): void, pause(): void, resume(): void}} [options.speak]
  *   the host's speech (the extension's chrome.tts). Without it, speech.say uses the page's speechSynthesis.
+ * @param {(info: {label: string, settings: string[]}) => Promise<void>} [options.adjustable]
+ *   tells the host what the adapter adjusts (keys.adjust), for the person choosing what their shortcut does.
  */
-export function createBlocks({ win = globalThis, adapter = 'adapter', personal, explicit = null, ai = null, capture, profile = null, zoom = null, speak = null } = {}) {
+export function createBlocks({ win = globalThis, adapter = 'adapter', key, personal, explicit = null, ai = null, capture, profile = null, zoom = null, speak = null, adjustable = null } = {}) {
   if (!win || !win.document) throw new Error('createBlocks needs a window with a document.');
   const shared = sharedState(win);
   const fn = (f) => (typeof f === 'function' ? f : null);
   const env = {
-    win, doc: win.document, shared, adapter,
-    transport: { ai: fn(ai), profile: fn(profile), zoom: fn(zoom), speak: fn(speak) },
+    win, doc: win.document, shared, adapter, key: String(key || adapter),
+    transport: { ai: fn(ai), profile: fn(profile), zoom: fn(zoom), speak: fn(speak), adjustable: fn(adjustable) },
     capture: typeof capture === 'function' ? capture : (el) => captureInPage(el, win),
   };
   // The person's settings are page-wide: given here, or by the runtime
@@ -91,4 +96,44 @@ export function createBlocks({ win = globalThis, adapter = 'adapter', personal, 
     blocks: BLOCK_NAMES,
     version: BLOCKS_VERSION,
   });
+}
+
+/**
+ * The person's shortcut in this page (shortcut.js), from the runtime with
+ * their settings: one pair of keys for one adapter, or null (off). With the
+ * adapter running and adjusting something (keys.adjust), up and down adjust
+ * it; otherwise the first key alone turns it on or off on this site, through
+ * `toggle(key)`, which resolves to 'on', 'off' or null, and says so.
+ * @param {Window} win
+ * @param {{adapter: string, up: string, down: string}|null} shortcut
+ * @param {{name?: string, toggle?: (key: string) => Promise<'on'|'off'|null>}} [host]
+ */
+export function setShortcut(win, shortcut, { name, toggle } = {}) {
+  const shared = sharedState(win);
+  shared.shortcut = shortcut && shortcut.adapter ? { ...shortcut, name: String(name || shortcut.adapter.split('/').pop()), toggle } : null;
+  if (shared.shortcutListening) return;
+  shared.shortcutListening = true;
+  let speaker = null;
+  win.document.addEventListener('keydown', (e) => {
+    const sc = shared.shortcut;
+    if (!sc || e.isComposing || e.ctrlKey || e.metaKey) return;
+    const combo = comboOf(e);
+    const which = combo === sc.up ? 'up' : combo === sc.down ? 'down' : null;
+    if (!which || editable(e.target)) return;
+    const a = shared.adjusters.get(sc.adapter);
+    if (a && a.session.alive()) {
+      e.preventDefault();
+      // The person's own key counts as using the adapter (profile.set).
+      if (e.isTrusted) shared.lastShortcut = Date.now();
+      try { a[which](e); } catch { /* the adapter's */ }
+      return;
+    }
+    if (which !== 'up' || e.repeat || typeof sc.toggle !== 'function') return;
+    e.preventDefault();
+    Promise.resolve(sc.toggle(sc.adapter)).then((state) => {
+      if (state !== 'on' && state !== 'off') return;
+      speaker ||= createBlocks({ win, adapter: 'toolkit' }).session();
+      speaker.announce(`${sc.name} ${state} on this site.`);
+    }, () => {});
+  }, true);
 }

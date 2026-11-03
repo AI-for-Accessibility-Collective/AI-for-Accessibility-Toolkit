@@ -38,7 +38,10 @@
 //                                         // real model through the service's own
 //                                         // prompts and checks (GEMINI_API_KEY)
 // Checks can use trusted input, as the person's own: await __verifyClick(selector),
-// await __verifyPress('Escape').
+// await __verifyPress('Escape'). The toolkit's shortcut is given to the
+// adapter, with the default keys (Alt+Shift+ArrowUp and ArrowDown): what it
+// adjusts (keys.adjust) is in __verifyHost.adjustable, and a press with
+// nothing to adjust counts in __verifyHost.toggles.
 
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
@@ -103,7 +106,7 @@ async function answerAi(spec, request, page, count) {
 
 /** In the page, before the adapter: the extension's side of the blocks, recorded. */
 function fakeHost() {
-  const rec = { zoom: 1, zoomCalls: [], profile: [], spoken: [] };
+  const rec = { zoom: 1, zoomCalls: [], profile: [], spoken: [], adjustable: null, toggles: 0 };
   Object.defineProperty(globalThis, '__verifyHost', { value: rec, configurable: true });
   const handle = async (m) => {
     if (m.type === 'ai4a11y:ai') return { ok: true, result: await globalThis.__verifyAi(m.request) };
@@ -115,6 +118,7 @@ function fakeHost() {
       if (r.op === 'restore') { rec.zoom = 1; return { ok: true, result: { ok: true } }; }
     }
     if (m.type === 'ai4a11y:profile') { rec.profile.push({ changes: r.changes, scope: r.scope }); return { ok: true, result: { saved: true } }; }
+    if (m.type === 'ai4a11y:adjustable') { rec.adjustable = { label: m.label, settings: m.settings }; return { ok: true, result: null }; }
     return { ok: false, error: 'not offered here' };
   };
   // Speech: each word as an event, then the end, as chrome.tts sends them.
@@ -138,6 +142,9 @@ function fakeHost() {
   };
   if (!globalThis.chrome) Object.defineProperty(globalThis, 'chrome', { value: {}, configurable: true, writable: true });
   Object.defineProperty(globalThis.chrome, 'runtime', { value: { sendMessage: handle, connect }, configurable: true });
+  // The person gave the toolkit's shortcut to this adapter, with the default keys.
+  const B = globalThis.__ai4a11yBlocks;
+  if (B && B.setShortcut) B.setShortcut({ adapter: 'preview', up: 'Alt+Shift+ArrowUp', down: 'Alt+Shift+ArrowDown' }, { name: 'The adapter', toggle: async () => { rec.toggles++; return null; } });
 }
 // Libraries an adapter expects the page (the extension) to have loaded, for
 // test pages to load from /_vendor/ (reader-mode uses Mozilla's Readability).

@@ -62,3 +62,15 @@ details summary { cursor: pointer; color: var(--green); font-weight: 600; margin
   fill: currentColor;
   vertical-align: -0.05em;
 }
+
+/* The shortcut and the enabled list. */
+select { width: 100%; font: inherit; min-height: 36px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: white; }
+.keys { margin: 8px 0 0; display: grid; gap: 4px; }
+.keys div { display: flex; align-items: center; gap: 8px; }
+.keys dt { width: 3.5em; font-weight: 600; font-size: .78rem; }
+.keys dd { margin: 0; display: flex; align-items: center; gap: 8px; }
+kbd { font: .78rem ui-monospace, SFMono-Regular, Menlo, monospace; background: white; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 2px 6px; }
+.keys .text-button, #reset-keys { min-height: 24px; }
+.capturing { outline: 3px solid #3d7fd9; outline-offset: 2px; }
+.compact li { padding: 8px 10px; }
+.every-site { justify-self: start; min-height: 28px; margin-top: 2px; }

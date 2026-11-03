@@ -262,19 +262,18 @@ Always, whatever the config:
 
 ### Focus and keys (`focus`)
 
-Move focus without losing it, and add keyboard shortcuts that do not clash.
+Move focus without losing it, and say what the person's shortcut adjusts when they give it to your adapter.
 
 ```javascript
 s.focus.region(el)                    // focus a region that is not focusable itself
 s.focus.keepWhenRemoving(el)          // before el goes, move focus out of it
-s.keys.shortcut({ code: 'KeyD', alt: true }, (e) => ...)
+s.keys.adjust({ label: 'Text size', settings: ['fontScale'], up: () => ..., down: () => ... })
 ```
 
 | Config | Default | What it does |
 |---|---|---|
-| `code` |  | shortcut(): the key's KeyboardEvent.code, e.g. 'KeyD', 'Digit1'. |
-| `alt` | `false` | shortcut(): with Alt (Option). |
-| `shift` | `false` | shortcut(): with Shift. |
+| `label` |  | adjust(): what up and down change, for the person choosing their shortcut ('Text size'). |
+| `settings` | `[]` | adjust(): the person's settings it changes, so they can use this site's values on every site from the extension. |
 
 From the person's profile, over your value:
 
@@ -282,7 +281,8 @@ From the person's profile, over your value:
 
 Always, whatever the config:
 
-- A shortcut never fires in a text field or editable region, never with Ctrl or Meta held, and never for Tab, Escape, Enter or Space without Alt.
+- Adapters have no shortcuts of their own. The toolkit has one pair of keys, off until the person gives it to one adapter: with keys.adjust, up and down adjust; without (or while it is off on the site), the first key turns it on and off on this site.
+- up() and down() count as the person's own key, so they may call profile.set; they never fire in a text field or editable region.
 - The temporary tabindex region() adds goes when focus leaves.
 
 ### Text (`text`)
@@ -456,7 +456,7 @@ From the person's profile, over your value:
 
 Always, whatever the config:
 
-- Only the person changes their profile: set() works only right after their own click, tap or key on the toolkit's UI in this page or on an adapter's shortcut; otherwise it returns { applied: false, reason: 'not-by-person' }.
+- Only the person changes their profile: set() works only right after their own click, tap or key on the toolkit's UI in this page or their shortcut (keys.adjust); otherwise it returns { applied: false, reason: 'not-by-person' }.
 - Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, lineHeight, letterSpacing, targetSize, motionReducer, contrastMode, darkMode.
 - The change applies in this page at once, for every adapter, and is saved to the profile where the host can ({ saved }).
 - What the person set for a site wins over what they set for every site, which wins over what the toolkit derived from their needs.

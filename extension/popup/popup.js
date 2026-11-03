@@ -1,6 +1,11 @@
 // The runtime's popup: connect to a toolkit, see which installed adapters
 // target the current page and what happened when they ran, and switch one
-// off for this site. Everything else is managed in the developer console.
+// off for this site; see every enabled adapter; and give the toolkit's one
+// shortcut (toolkit/blocks/shortcut.js) to an adapter and choose its keys,
+// saved in the person's profile. Everything else is managed in the
+// developer console.
+
+import { comboOf, comboLabel, checkCombo, SHORTCUT_DEFAULT } from '../vendor/blocks/shortcut.js';
 
 const $ = (id) => document.getElementById(id);
 let tab = null;
@@ -47,6 +52,8 @@ async function render() {
   $('who-url').textContent = new URL(connection.url).host;
   $('who-uid').textContent = connection.uid;
   $('open-console').href = `${connection.url}/developer#/adapters`;
+  renderShortcut(state);
+  renderEnabled(state);
   const total = state.adapters.length;
   $('installed-count').textContent = `${total} adapter${total === 1 ? '' : 's'} installed in this browser runtime${state.lastSync ? ` · checked ${new Date(state.lastSync).toLocaleTimeString()}` : ''}.`;
 
@@ -92,9 +99,115 @@ async function render() {
     else if (!on) item.append(el('span', 'result', 'Off on this site.'));
     else if (r) item.append(el('span', `result ${r.status}`, `${RESULT_TEXT[r.status] || r.status}${r.message ? `: ${r.message}` : ''}`));
     else item.append(el('span', 'result', 'Runs when the page loads. Reload the page if it was open before.'));
+    // What the person adjusted with it here, for every site.
+    const adj = state.adjustable?.[key];
+    const site = new URL(origin).hostname.toLowerCase().replace(/^www\./, '');
+    const setHere = (adj?.settings || []).filter(k => state.explicit?.sites?.[site]?.[k] !== undefined);
+    if (setHere.length) {
+      const every = el('button', 'secondary every-site', `Use my ${adj.label.toLowerCase()} on every site`);
+      every.type = 'button';
+      every.addEventListener('click', async () => {
+        every.disabled = true;
+        try { await ask('everySite', { key, origin }); say(`Your ${adj.label.toLowerCase()} from ${site} is now used on every site.`); } catch (e) { say(e.message, true); every.disabled = false; }
+      });
+      item.append(every);
+    }
     list.append(item);
   }
   show(origin);
+}
+
+// ── the shortcut ─────────────────────────────────────────────────────────────
+
+let capturing = null; // 'up' | 'down' while waiting for the person's keys
+
+function renderShortcut(state) {
+  const keys = state.shortcutKeys || SHORTCUT_DEFAULT;
+  const assigned = state.shortcutSetting?.adapter || '';
+  const enabled = (state.adapters || []).filter(a => a.enabled && a.available && a.portable);
+  const select = $('shortcut-adapter');
+  const options = [el('option', '', 'Off')];
+  options[0].value = '';
+  for (const a of enabled) {
+    const key = `${a.adapter.owner}/${a.adapter.appId}/${a.adapter.id}`;
+    const o = el('option', '', a.name || a.adapter.id);
+    o.value = key;
+    options.push(o);
+  }
+  if (document.activeElement !== select) { select.replaceChildren(...options); select.value = assigned; }
+  if (capturing !== 'up') $('key-up').textContent = comboLabel(keys.up);
+  if (capturing !== 'down') $('key-down').textContent = comboLabel(keys.down);
+  const a = enabled.find(x => `${x.adapter.owner}/${x.adapter.appId}/${x.adapter.id}` === assigned);
+  const adj = a && state.adjustable?.[assigned];
+  $('shortcut-does').textContent = !a ? 'Off. Choose an adapter to use the keys.'
+    : adj ? `${comboLabel(keys.up)} and ${comboLabel(keys.down)} adjust ${adj.label.toLowerCase()} in ${a.name}. On a site where it is off, ${comboLabel(keys.up)} turns it on.`
+      : `${comboLabel(keys.up)} turns ${a.name} on and off on the site you are on.`;
+}
+
+$('shortcut-adapter').addEventListener('change', async () => {
+  const adapter = $('shortcut-adapter').value || null;
+  try {
+    await ask('setShortcut', { adapter });
+    say(adapter ? `The shortcut is for ${$('shortcut-adapter').selectedOptions[0].textContent}.` : 'The shortcut is off.');
+  } catch (e) { say(e.message, true); }
+  render().catch(e => say(e.message, true));
+});
+
+function startCapture(which) {
+  capturing = which;
+  const kbd = $(`key-${which}`);
+  kbd.textContent = 'Press the keys…';
+  kbd.classList.add('capturing');
+  say(`Press the new ${which} keys, with Alt (Option on a Mac). Escape cancels.`);
+}
+function stopCapture() {
+  if (!capturing) return;
+  $(`key-${capturing}`).classList.remove('capturing');
+  capturing = null;
+}
+$('change-up').addEventListener('click', () => startCapture('up'));
+$('change-down').addEventListener('click', () => startCapture('down'));
+document.addEventListener('keydown', async (e) => {
+  if (!capturing) return;
+  if (e.key === 'Escape') { e.preventDefault(); stopCapture(); say('Kept the keys as they were.'); render().catch(() => {}); return; }
+  const combo = comboOf(e);
+  if (!combo) return; // a modifier on its own: wait for the key
+  e.preventDefault();
+  const why = checkCombo(combo);
+  if (why) { say(why, true); return; }
+  const which = capturing;
+  stopCapture();
+  try {
+    await ask('setShortcut', { adapter: current?.state?.shortcutSetting?.adapter || null, [which]: combo });
+    say(`The ${which} key is now ${comboLabel(combo)}.`);
+  } catch (err) { say(err.message, true); }
+  render().catch(() => {});
+}, true);
+$('reset-keys').addEventListener('click', async () => {
+  try {
+    await ask('setShortcut', { adapter: current?.state?.shortcutSetting?.adapter || null, ...SHORTCUT_DEFAULT });
+    say(`The keys are ${comboLabel(SHORTCUT_DEFAULT.up)} and ${comboLabel(SHORTCUT_DEFAULT.down)}.`);
+  } catch (e) { say(e.message, true); }
+  render().catch(() => {});
+});
+
+// ── every enabled adapter ────────────────────────────────────────────────────
+
+function renderEnabled(state) {
+  const enabled = (state.adapters || []).filter(a => a.enabled && a.available);
+  const items = enabled.map((a) => {
+    const item = el('li');
+    const key = `${a.adapter.owner}/${a.adapter.appId}/${a.adapter.id}`;
+    item.append(el('strong', '', a.name || a.adapter.id));
+    const where = (a.urlPatterns || []).slice(0, 3).join(', ') + ((a.urlPatterns || []).length > 3 ? ', …' : '');
+    item.append(el('span', 'from', `Runs on ${where || 'no pages'}${!a.portable ? ' · cannot run in the browser' : ''}`));
+    const off = Object.entries(a.sites || {}).filter(([, on]) => on === false).map(([o]) => new URL(o).host);
+    if (off.length) item.append(el('span', 'result', `Off on ${off.join(', ')}`));
+    if (state.shortcutSetting?.adapter === key) item.append(el('span', 'result applied', 'Has the shortcut'));
+    return item;
+  });
+  if (!items.length) items.push(el('li', 'empty', 'No adapter is enabled. Install one in the console.'));
+  $('enabled-adapters').replaceChildren(...items);
 }
 
 async function renderConnect() {

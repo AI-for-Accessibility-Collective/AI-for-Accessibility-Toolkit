@@ -640,6 +640,15 @@ Decided by the project lead, 2026-11-03:
   both at once: changing both together does not work well, and the toolkit
   does not prescribe one. The developer sets a default method, the person's
   setting overrides it, and the block applies only the chosen one.
+- **One shortcut, off by default.** Adapters have no keyboard shortcuts of
+  their own. The toolkit has one pair of keys (default Alt+Shift+Up and
+  Alt+Shift+Down, which the person can change), off until the person gives
+  it to one adapter in the extension's popup. For an adapter that adjusts
+  something, the pair turns it up and down; for one with nothing to adjust,
+  one key turns it on and off on the site. It is kept in the person's
+  profile (`fields.adapterShortcut`), so it follows them. (Decided after the
+  first core adapters were built with shortcuts of their own, which would
+  have clashed with each other and with sites.)
 - **What the person changes in an adapter is recorded, and applies to the
   site they changed it on**, with an option to apply it to every site.
   Proposed mechanism (mine, not built yet): a profile block whose `set`
@@ -661,6 +670,14 @@ Decided by the project lead, 2026-11-03:
   worker to `/v1/ai` with the person's token, which never reaches the page.
   Each sync reads the profile; a change to the personal settings rebuilds
   the scripts, so open pages pick it up.
+- The shortcut: `toolkit/blocks/shortcut.js` (the rules: Alt, never Ctrl
+  or Meta, never the browser's keys), `s.keys.adjust({ label, settings,
+  up, down })` in place of `keys.shortcut`, and one page-wide key handler
+  the runtime sets from the person's profile (`setShortcut`). The popup
+  lists every enabled adapter, gives the shortcut to one or turns it off,
+  records new keys, and offers "Use my … on every site" for what the person
+  adjusted on the site they are on. Tested in real Chromium
+  (`npm run test:runtime:e2e`).
 - Two blocks added for the decisions above: **profile** (`s.profile.get`,
   `set(changes, { scope: 'site' | 'all' })`, `onChange`): an adapter
   records a setting the person chose, only right after their own click or

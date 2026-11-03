@@ -100,9 +100,12 @@ condition from what they ask for.
    - **Record what the person changes.** When your adapter lets the person
      adjust something that is one of their settings (text size, speech
      rate), save it with `s.profile.set(...)` from that control: it applies
-     to this site, and offer "every site" as a choice
-     (`{ scope: 'all' }`). Bigger text is the browser's zoom or the text
+     to this site; the person can use it on every site from the
+     extension. Bigger text is the browser's zoom or the text
      size, as `s.zoom.method()` says, never both.
+   - **No shortcuts of your own.** The person has one pair of keys, which
+     they give to one adapter in the extension. If yours adjusts something,
+     say what with `s.keys.adjust({ label, settings, up, down })`.
 4. **Preview it with checks** on their page with `browser_preview`: the file,
    a name, the URL patterns of the site it is for (such as
    `https://example.com/*`), and **checks**. A check is the body of an async

@@ -293,6 +293,14 @@ try {
     });
     // Without the person, nothing is saved.
     s.profile.set({ fontScale: 200 }).then((r) => { document.body.dataset.unasked = r.reason; });
+    // What the person's shortcut does, when they give it to this adapter.
+    const step = async (by) => {
+      const n = Math.max(100, Math.min(200, (s.profile.get('fontScale') || 100) + by));
+      await s.profile.set({ fontScale: n });
+      await s.zoom.set(n / 100);
+      document.body.dataset.size = String(n);
+    };
+    s.keys.adjust({ label: 'Text size', settings: ['fontScale'], up: () => step(10), down: () => step(-10) });
     document.body.dataset.personal = JSON.stringify(toolkit.personal);
   },
   disable() { this.s?.end(); delete document.body.dataset.personal; },
@@ -318,6 +326,57 @@ try {
   await page.reload();
   await page.waitForFunction(() => document.body.dataset.personal === '{"fontScale":150,"textSizeMethod":"zoom"}', null, background);
   assert.equal(await zoomNow(), 1.5, 'Chrome kept the zoom for the site');
+  // ── the shortcut: off until the person gives it to an adapter, in the popup ──
+  const shortcutPopup = await context.newPage();
+  await shortcutPopup.goto(`chrome-extension://${extId}/popup/popup.html?tab=${shopTabId}`);
+  await shortcutPopup.locator('#connected').waitFor();
+  await shortcutPopup.locator('#enabled-adapters li', { hasText: 'Text size' }).waitFor();
+  assert.match(await shortcutPopup.locator('#enabled-adapters').innerText(), /Big buttons[\s\S]*Runs on http:\/\/localhost\/\*/);
+  assert.equal(await shortcutPopup.locator('#shortcut-adapter').inputValue(), '', 'off by default');
+  await page.bringToFront();
+  await page.keyboard.press('Alt+Shift+ArrowUp');
+  await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => document.body.dataset.size), undefined, 'the keys do nothing while it is off');
+  await shortcutPopup.locator('#shortcut-adapter').selectOption({ label: 'Text size' });
+  await until(async () => (await runtime(() => globalThis.ai4a11yRuntime.readState())).shortcutSetting?.adapter === 'dev/console/text-size', 'the shortcut to be saved');
+  await shortcutPopup.locator('#shortcut-does', { hasText: 'adjust text size in Text size' }).waitFor();
+  // In the person's profile, so it follows them.
+  assert.deepEqual((await librarianCall('getProfile', [])).fields.adapterShortcut, { adapter: 'dev/console/text-size', up: 'Alt+Shift+ArrowUp', down: 'Alt+Shift+ArrowDown' });
+  await page.bringToFront();
+  await page.keyboard.press('Alt+Shift+ArrowUp');
+  await page.waitForFunction(() => document.body.dataset.size === '160', null, background);
+  assert.equal(await zoomNow(), 1.6);
+  await page.keyboard.press('Alt+Shift+ArrowDown');
+  await page.waitForFunction(() => document.body.dataset.size === '150', null, background);
+  // The person chooses other keys; the browser's own are refused.
+  await shortcutPopup.bringToFront();
+  await shortcutPopup.locator('#change-up').click();
+  await shortcutPopup.keyboard.press('Alt+Shift+KeyT');
+  assert.match(await shortcutPopup.locator('#status').innerText(), /browser already uses/);
+  await shortcutPopup.keyboard.press('Alt+Shift+KeyJ');
+  await until(async () => (await runtime(() => globalThis.ai4a11yRuntime.readState())).shortcutKeys?.up === 'Alt+Shift+KeyJ', 'the new key');
+  // Given to an adapter with nothing to adjust: the first key turns it off and on, on this site.
+  await shortcutPopup.locator('#shortcut-adapter').selectOption({ label: 'Big buttons' });
+  await until(async () => (await runtime(() => globalThis.ai4a11yRuntime.readState())).shortcutSetting?.adapter === 'dev/console/big-buttons', 'the shortcut to move');
+  await page.bringToFront();
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Alt+Shift+KeyJ');
+  await page.waitForFunction(() => document.body.dataset.bigButtons === undefined, null, background);
+  await until(async () => (await registry.installed('browser-runtime')).adapters.find(a => a.adapter.id === 'big-buttons')?.sites?.[shop] === false, 'off on this site');
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Alt+Shift+KeyJ');
+  await page.waitForFunction(() => document.body.dataset.bigButtons === 'r3:60', null, background);
+  // Off: the keys do nothing.
+  await shortcutPopup.locator('#shortcut-adapter').selectOption({ label: 'Off' });
+  await until(async () => !(await runtime(() => globalThis.ai4a11yRuntime.readState())).shortcutSetting, 'the shortcut off');
+  assert.deepEqual((await librarianCall('getProfile', [])).fields.adapterShortcut, { adapter: null, up: 'Alt+Shift+KeyJ', down: 'Alt+Shift+ArrowDown' }, 'its keys are kept');
+  await page.bringToFront();
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Alt+Shift+KeyJ');
+  await page.waitForTimeout(800);
+  assert.equal(await page.evaluate(() => document.body.dataset.bigButtons), 'r3:60');
+  await shortcutPopup.close();
+
   // Uninstalled: the zoom from before comes back.
   await registry.uninstall('browser-runtime', { owner: 'dev', appId: 'console', id: 'text-size' });
   await until(async () => (await zoomNow()) === 1, 'the zoom to be put back');

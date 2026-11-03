@@ -142,7 +142,7 @@ async function agents() {
     provider: { google: { options: { apiKey: '{env:GEMINI_API_KEY}' } } },
     mcp: { verifier: { type: 'remote', url: mcpServer.url, headers: { authorization: `Bearer ${token}` }, oauth: false, codemode: false } },
     permissions: ['webfetch', 'websearch', 'task', 'question'].map(action => ({ action, resource: '*', effect: 'deny' })),
-    instructions: [path.join(HERE, reviewBase ? 'REVIEW.md' : create ? 'CREATE.md' : 'AGENTS.md')],
+    instructions: [path.join(HERE, reviewBase ? (core ? 'REVIEW-CORE.md' : 'REVIEW.md') : create ? 'CREATE.md' : 'AGENTS.md')],
     skills: [path.join(ROOT, '.claude/skills'), ...skills],
   }, null, 2));
 
@@ -161,7 +161,8 @@ async function agents() {
     const events = createWriteStream(path.join(logs, `${name}.jsonl`));
     const pages = core ? 'tools/test/verify-core/pages' : 'tools/test/verify/pages';
     const task = reviewBase
-      ? `Review the changes to the ${core ? 'core' : 'built-in'} adapter ${folder}/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`
+      ? (core ? `Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`
+        : `Review the changes to the built-in adapter ${folder}/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`)
       : create ? createTask(briefs.get(name))
       : `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;
     const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `${reviewBase ? 'review' : create ? 'create' : 'verify'} ${name}`, task], {

@@ -32,6 +32,8 @@ export function sharedState(win) {
         lastInput: null,           // {target, at}: the person's last click or key
         inputWatch: false,
         route: null,               // {listeners, stop}
+        adjusters: new Map(),      // adapter key -> what the toolkit's shortcut adjusts (keys.adjust)
+        shortcut: null,            // the person's shortcut here, when they gave it to an adapter
       },
     });
   }

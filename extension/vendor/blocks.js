@@ -29,8 +29,12 @@
           lastInput: null,
           // {target, at}: the person's last click or key
           inputWatch: false,
-          route: null
+          route: null,
           // {listeners, stop}
+          adjusters: /* @__PURE__ */ new Map(),
+          // adapter key -> what the toolkit's shortcut adjusts (keys.adjust)
+          shortcut: null
+          // the person's shortcut here, when they gave it to an adapter
         }
       });
     }
@@ -773,7 +777,6 @@
 
   // toolkit/blocks/focus.js
   var NATIVELY_FOCUSABLE = /^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY|IFRAME)$/;
-  var RESERVED = /* @__PURE__ */ new Set(["Tab", "Escape", "Enter", "NumpadEnter", "Space", "F5", "F6", "F7", "F11", "F12"]);
   function focusBlock(s, env) {
     const { doc } = env;
     const focusable = (el) => NATIVELY_FOCUSABLE.test(el.tagName) && !el.disabled || el.hasAttribute("tabindex");
@@ -801,22 +804,23 @@
     }
     return { region, keepWhenRemoving };
   }
+  var editable = (t) => !!(t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"]'));
   function keysBlock(s, env) {
-    const { doc } = env;
-    const editable = (t) => !!(t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"]'));
-    function shortcut(key, fn, { allowInFields = false } = {}) {
-      const want = { code: key.code, alt: !!key.alt, shift: !!key.shift };
-      if (!want.code || RESERVED.has(want.code) && !want.alt) throw new Error(`${want.code || "That key"} is reserved; use another, with Alt.`);
-      return s.listen(doc, "keydown", (e) => {
-        if (e.code !== want.code || e.altKey !== want.alt || e.shiftKey !== want.shift) return;
-        if (e.ctrlKey || e.metaKey || e.isComposing) return;
-        if (!allowInFields && editable(e.target)) return;
-        e.preventDefault();
-        if (e.isTrusted) env.shared.lastShortcut = Date.now();
-        fn(e);
-      }, true);
+    const { shared } = env;
+    function adjust({ label, settings = [], up, down } = {}) {
+      if (!s.alive() || typeof up !== "function" || typeof down !== "function") return () => {
+      };
+      const entry = { label: String(label || env.adapter).slice(0, 60), settings: (settings || []).map(String), up, down, session: s };
+      shared.adjusters.set(env.key, entry);
+      if (env.transport.adjustable) Promise.resolve(env.transport.adjustable({ label: entry.label, settings: entry.settings })).catch(() => {
+      });
+      const stop = () => {
+        if (shared.adjusters.get(env.key) === entry) shared.adjusters.delete(env.key);
+      };
+      s.onEnd(stop);
+      return stop;
     }
-    return { shortcut };
+    return { adjust };
   }
 
   // toolkit/blocks/text.js
@@ -2042,6 +2046,14 @@
   var BLOCKS_VERSION = "2026-11-03";
   var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "speech.out", "speech.in", "media", "profile", "zoom"]);
 
+  // toolkit/blocks/shortcut.js
+  var SHORTCUT_DEFAULT = Object.freeze({ up: "Alt+Shift+ArrowUp", down: "Alt+Shift+ArrowDown" });
+  var MODIFIER_CODES = /^(Alt|Shift|Control|Meta|OS)(Left|Right)?$/;
+  function comboOf(e) {
+    if (!e || !e.code || MODIFIER_CODES.test(e.code)) return "";
+    return [e.ctrlKey && "Ctrl", e.metaKey && "Meta", e.altKey && "Alt", e.shiftKey && "Shift", e.code].filter(Boolean).join("+");
+  }
+
   // toolkit/blocks/create.js
   var EMPTY = Object.freeze({});
   function setPersonal(win, personal, explicit) {
@@ -2065,7 +2077,7 @@
       }
     }
   }
-  function createBlocks({ win = globalThis, adapter = "adapter", personal, explicit = null, ai = null, capture, profile = null, zoom = null, speak = null } = {}) {
+  function createBlocks({ win = globalThis, adapter = "adapter", key, personal, explicit = null, ai = null, capture, profile = null, zoom = null, speak = null, adjustable = null } = {}) {
     if (!win || !win.document) throw new Error("createBlocks needs a window with a document.");
     const shared = sharedState(win);
     const fn = (f) => typeof f === "function" ? f : null;
@@ -2074,7 +2086,8 @@
       doc: win.document,
       shared,
       adapter,
-      transport: { ai: fn(ai), profile: fn(profile), zoom: fn(zoom), speak: fn(speak) },
+      key: String(key || adapter),
+      transport: { ai: fn(ai), profile: fn(profile), zoom: fn(zoom), speak: fn(speak), adjustable: fn(adjustable) },
       capture: typeof capture === "function" ? capture : (el) => captureInPage(el, win)
     };
     if (personal !== void 0 || explicit) setPersonal(win, personal, explicit);
@@ -2105,6 +2118,38 @@
       version: BLOCKS_VERSION
     });
   }
+  function setShortcut(win, shortcut, { name, toggle } = {}) {
+    const shared = sharedState(win);
+    shared.shortcut = shortcut && shortcut.adapter ? { ...shortcut, name: String(name || shortcut.adapter.split("/").pop()), toggle } : null;
+    if (shared.shortcutListening) return;
+    shared.shortcutListening = true;
+    let speaker = null;
+    win.document.addEventListener("keydown", (e) => {
+      const sc = shared.shortcut;
+      if (!sc || e.isComposing || e.ctrlKey || e.metaKey) return;
+      const combo = comboOf(e);
+      const which = combo === sc.up ? "up" : combo === sc.down ? "down" : null;
+      if (!which || editable(e.target)) return;
+      const a = shared.adjusters.get(sc.adapter);
+      if (a && a.session.alive()) {
+        e.preventDefault();
+        if (e.isTrusted) shared.lastShortcut = Date.now();
+        try {
+          a[which](e);
+        } catch {
+        }
+        return;
+      }
+      if (which !== "up" || e.repeat || typeof sc.toggle !== "function") return;
+      e.preventDefault();
+      Promise.resolve(sc.toggle(sc.adapter)).then((state) => {
+        if (state !== "on" && state !== "off") return;
+        speaker ||= createBlocks({ win, adapter: "toolkit" }).session();
+        speaker.announce(`${sc.name} ${state} on this site.`);
+      }, () => {
+      });
+    }, true);
+  }
 
   // toolkit/blocks/runtime.js
   if (!globalThis.__ai4a11yBlocks) {
@@ -2113,7 +2158,8 @@
       value: Object.freeze({
         version: BLOCKS_VERSION,
         create: (options) => createBlocks({ ...options, win: globalThis }),
-        setPersonal: (personal, explicit) => setPersonal(globalThis, personal, explicit)
+        setPersonal: (personal, explicit) => setPersonal(globalThis, personal, explicit),
+        setShortcut: (shortcut, host) => setShortcut(globalThis, shortcut, host)
       })
     });
   }

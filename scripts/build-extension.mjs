@@ -31,6 +31,7 @@ const FILES = [
   // The person's settings for the blocks, as the web surface derives them.
   'blocks/personal.js',
   'blocks/personal-sites.js',
+  'blocks/shortcut.js',
   'core/ability.js',
   'core/strength.js',
   'core/units.js',

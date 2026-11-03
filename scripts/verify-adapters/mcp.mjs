@@ -120,6 +120,8 @@ function hostText(r) {
     if (h.zoomCalls?.length) lines.push(`Zoom: ${h.zoomCalls.join(', ')}.`);
     if (h.profile?.length) lines.push(`Saved to the person's profile: ${h.profile.map(p => `${JSON.stringify(p.changes)} for ${p.scope === 'all' ? 'every site' : 'this site'}`).join('; ')}.`);
     if (h.spoken?.length) lines.push(`Spoken (${h.spoken.length}): ${h.spoken.slice(0, 3).map(x => JSON.stringify(String(x.text).slice(0, 80))).join(', ')}.`);
+    if (h.adjustable) lines.push(`The shortcut adjusts: ${h.adjustable.label} (${(h.adjustable.settings || []).join(', ') || 'no settings named'}).`);
+    if (h.toggles) lines.push(`The shortcut's first key, with nothing to adjust, would turn it on or off (${h.toggles} press${h.toggles === 1 ? '' : 'es'}).`);
   }
   if (Number.isFinite(r.aiCalls) && r.aiCalls) lines.push(`AI calls: ${r.aiCalls}.`);
   if (r.zoomLeft !== undefined) lines.push(`After disable() the zoom is still ${r.zoomLeft}: it was not put back.`);

@@ -30,6 +30,7 @@ import { createRegistryClient } from './vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP, normalizedUrl, urlPatternRegExpSource } from './vendor/protocol/adapter/index.js';
 import { registrationFor, runnable, teardownScript, buildUserScript, personalScript, scriptId, keyOf, SCRIPT_PREFIX, BLOCKS_FILE, PREVIEW_KEY } from './runtime/scripts.js';
 import { personalFromProfile, explicitFromMemories, personalFromSettings, siteOf, SETTABLE_KEYS } from './vendor/blocks/personal.js';
+import { shortcutFromProfile, shortcutKeysFromProfile, checkCombo, normalCombo, SHORTCUT_FIELD } from './vendor/blocks/shortcut.js';
 import { isAllowedServerUrl, readConnection, writeConnection, instanceId, runtimeLabel } from './runtime/config.js';
 
 const APP = BROWSER_RUNTIME_APP;
@@ -75,11 +76,11 @@ const codeOf = (script) => (script.js || []).map(j => j.code || `file:${j.file}`
 // The adapter's own script, without the person's settings before it.
 const adapterCodeOf = (script) => { const js = script.js || []; return js.length ? (js[js.length - 1].code || '') : ''; };
 
-async function reconcile(adapters, personal, explicit) {
+async function reconcile(adapters, personal, explicit, shortcut) {
   const status = userScriptsStatus();
   if (!status.available) return { registered: 0, ...status };
   await ensureWorld();
-  const desired = runnable(adapters).map(a => registrationFor(a, { personal, explicit }));
+  const desired = runnable(adapters).map(a => registrationFor(a, { personal, explicit, shortcut }));
   const current = (await chrome.userScripts.getScripts()).filter(s => s.id.startsWith(SCRIPT_PREFIX));
   const currentById = new Map(current.map(s => [s.id, s]));
   const desiredIds = new Set(desired.map(s => s.id));
@@ -102,21 +103,21 @@ async function reconcile(adapters, personal, explicit) {
 }
 
 // Pages that are already open run the new code now (or stop the old one).
-async function applyToOpenTabs(adapters, { removed = [], changed = [] }, personal, explicit, personalChanged = false) {
+async function applyToOpenTabs(adapters, { removed = [], changed = [] }, personal, explicit, personalChanged = false, shortcut = null) {
   if (typeof chrome.userScripts?.execute !== 'function' || (!removed.length && !changed.length && !personalChanged)) return;
   const byId = new Map(runnable(adapters).map(a => [scriptId(keyOf(a)), a]));
   const tabs = (await chrome.tabs.query({})).filter(t => /^https?:/.test(t.url || ''));
   const jobs = [];
   for (const tab of tabs) {
     // The person's settings, in place: the adapters keep running.
-    if (personalChanged) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ code: personalScript({ personal, explicit }) }], injectImmediately: true }));
+    if (personalChanged) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ code: personalScript({ personal, explicit, shortcut }) }], injectImmediately: true }));
     for (const id of removed) {
       const key = id.slice(SCRIPT_PREFIX.length).replaceAll('~', '/');
       jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ code: teardownScript(key) }] }));
     }
     for (const id of changed) {
       const entry = byId.get(id);
-      if (entry) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ file: BLOCKS_FILE }, { code: personalScript({ personal, explicit }) }, { code: buildUserScript(entry) }], injectImmediately: true }));
+      if (entry) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ file: BLOCKS_FILE }, { code: personalScript({ personal, explicit, shortcut }) }, { code: buildUserScript(entry) }], injectImmediately: true }));
     }
   }
   // A tab that cannot take scripts (the Web Store, a crashed page) is skipped.
@@ -177,28 +178,35 @@ async function syncOnce(reason) {
     // script, so open pages pick it up. Unreadable: keep the last ones.
     let personal = state.personal || {};
     let explicit = state.explicit || null;
+    let shortcutSetting = state.shortcutSetting || null;
+    let shortcutKeys = state.shortcutKeys || shortcutKeysFromProfile(null);
     try {
       const got = await client.profile.get();
       personal = personalFromProfile(got?.profile ?? got);
+      shortcutSetting = shortcutFromProfile(got?.profile ?? got);
+      shortcutKeys = shortcutKeysFromProfile(got?.profile ?? got);
     } catch { /* the profile could not be read this time */ }
     try {
       explicit = explicitFromMemories((await librarian('listMemories', [{ status: 'active' }]))?.memories);
     } catch { /* the same */ }
-    const personalChanged = JSON.stringify([personal, explicit]) !== JSON.stringify([state.personal || {}, state.explicit || null]);
+    const personalChanged = JSON.stringify([personal, explicit, shortcutSetting]) !== JSON.stringify([state.personal || {}, state.explicit || null, state.shortcutSetting || null]);
     let trusted = !!state.etag && scripts.available && reason !== 'reconnect' && !personalChanged;
     if (trusted) {
       const ours = (await chrome.userScripts.getScripts()).filter(x => x.id.startsWith(SCRIPT_PREFIX)).length;
       trusted = ours === state.registered;
     }
     const answer = await client.installed(APP, { includeCode: true, ...(trusted ? { ifEtag: state.etag } : {}) });
-    if (answer.unchanged) return writeState({ lastSync: new Date().toISOString(), error: null, scripts });
-    const outcome = await reconcile(answer.adapters, personal, explicit);
-    await applyToOpenTabs(answer.adapters, outcome, personal, explicit, personalChanged);
+    if (answer.unchanged) return writeState({ lastSync: new Date().toISOString(), error: null, scripts, shortcutKeys });
+    // The shortcut names its adapter, for what it announces.
+    const assigned = shortcutSetting && answer.adapters.find(a => keyOf(a) === shortcutSetting.adapter);
+    const shortcut = assigned ? { ...shortcutSetting, name: assigned.name || assigned.adapter.id } : null;
+    const outcome = await reconcile(answer.adapters, personal, explicit, shortcut);
+    await applyToOpenTabs(answer.adapters, outcome, personal, explicit, personalChanged, shortcut);
     // The popup needs no code.
     const listed = answer.adapters.map(({ package: pkg, descriptor, ...a }) => ({ ...a, portable: !!pkg }));
     const next = await writeState({
       etag: scripts.available ? answer.etag : null, registered: outcome.registered,
-      adapters: listed, lastSync: new Date().toISOString(), error: null, scripts, personal, explicit,
+      adapters: listed, lastSync: new Date().toISOString(), error: null, scripts, personal, explicit, shortcutSetting, shortcutKeys,
     });
     await staleZoomInOpenTabs(next).catch(() => {});
     return next;
@@ -312,7 +320,7 @@ async function knownAdapter(key) {
 // ── the blocks' profile, zoom and speech ─────────────────────────────────────
 
 chrome.runtime.onUserScriptMessage?.addListener((message, sender, sendResponse) => {
-  const handler = { 'ai4a11y:profile': profileCall, 'ai4a11y:zoom': zoomCall }[message?.type];
+  const handler = { 'ai4a11y:profile': profileCall, 'ai4a11y:zoom': zoomCall, 'ai4a11y:adjustable': adjustableCall, 'ai4a11y:toggle': toggleCall }[message?.type];
   if (!handler) return false;
   handler(message, sender).then(result => sendResponse({ ok: true, result }), error => sendResponse({ ok: false, error: error.message }));
   return true;
@@ -338,6 +346,31 @@ async function profileCall(message, sender) {
   if (scope === 'general') for (const k of Object.keys(changes)) await librarian('removeScopedSetting', [`origin:${site}`, k]).catch(() => {});
   sync('profile');
   return { saved: true };
+}
+
+// keys.adjust: what an adapter adjusts, for the popup, where the person
+// chooses which adapter their shortcut goes to.
+async function adjustableCall(message) {
+  const key = String(message.key || '');
+  if (key === PREVIEW_KEY || !(await knownAdapter(key))) return null;
+  const state = await readState();
+  const settings = (Array.isArray(message.settings) ? message.settings : []).filter(k => SETTABLE_KEYS.includes(k));
+  const info = { label: String(message.label || '').slice(0, 60), settings };
+  if (JSON.stringify(state.adjustable?.[key]) !== JSON.stringify(info)) await writeState({ adjustable: { ...(state.adjustable || {}), [key]: info } });
+  return null;
+}
+
+// The shortcut's first key, for an adapter with nothing to adjust: on or off
+// on this site, as the popup's switch. Only for the adapter the person gave
+// their shortcut to.
+async function toggleCall(message, sender) {
+  const key = String(message.key || '');
+  const state = await readState();
+  if (!state.shortcutSetting || state.shortcutSetting.adapter !== key) throw new Error('The shortcut is not for this adapter.');
+  let origin;
+  try { origin = new URL(sender.url).origin; } catch { throw new Error('No site.'); }
+  await handlers.setSite({ key, origin, on: message.on === true });
+  return { on: message.on === true };
 }
 
 // zoom: the browser's own zoom, which Chrome keeps per site. What the site's
@@ -579,6 +612,42 @@ const handlers = {
     const [owner, appId, id] = String(key).split('/');
     await client.install(APP, { owner, appId, id }, { sites: { [origin]: on === true } });
     return sync('site');
+  },
+  /**
+   * The person's one shortcut (toolkit/blocks/shortcut.js), in their
+   * profile: which adapter it goes to (null turns it off) and its keys.
+   */
+  async setShortcut({ adapter = null, up, down }) {
+    const state = await readState();
+    let value = null;
+    if (adapter) {
+      if (!(state.adapters || []).some(a => keyOf(a) === adapter)) throw new Error('That adapter is not installed in this browser.');
+      const keys = { up: up || state.shortcutKeys?.up, down: down || state.shortcutKeys?.down };
+      if (!keys.up || !keys.down) Object.assign(keys, shortcutKeysFromProfile(null), up ? { up } : {}, down ? { down } : {});
+      for (const k of ['up', 'down']) { const why = checkCombo(keys[k]); if (why) throw new Error(why); keys[k] = normalCombo(keys[k]); }
+      if (keys.up === keys.down) throw new Error('The two keys must be different.');
+      value = { adapter, ...keys };
+    } else {
+      // Off keeps the keys the person chose, for next time.
+      const keys = { up: up || state.shortcutKeys?.up, down: down || state.shortcutKeys?.down };
+      for (const k of ['up', 'down']) if (keys[k]) { const why = checkCombo(keys[k]); if (why) throw new Error(why); keys[k] = normalCombo(keys[k]); }
+      value = keys.up && keys.down ? { adapter: null, ...keys } : null;
+    }
+    await librarian('setProfileField', [`fields.${SHORTCUT_FIELD}`, value]);
+    await sync('shortcut');
+    return { shortcut: value?.adapter ? value : null };
+  },
+  /** What the person adjusted with an adapter on this site, for every site. */
+  async everySite({ key, origin }) {
+    const state = await readState();
+    const settings = state.adjustable?.[key]?.settings || [];
+    const site = siteOf(origin || '');
+    const values = Object.fromEntries(settings.filter(k => state.explicit?.sites?.[site]?.[k] !== undefined).map(k => [k, state.explicit.sites[site][k]]));
+    if (!Object.keys(values).length) throw new Error('Nothing set on this site yet.');
+    await librarian('recordScopedSettings', ['general', values, { writer: 'person' }]);
+    for (const k of Object.keys(values)) await librarian('removeScopedSetting', [`origin:${site}`, k]).catch(() => {});
+    await sync('profile');
+    return { values };
   },
   /** For the popup: does this URL fall inside an installed adapter's patterns? */
   async forUrl({ url }) {

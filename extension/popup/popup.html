@@ -45,6 +45,18 @@
     <h2 id="page-heading">On this page</h2>
     <p id="page-origin" class="hint"></p>
     <ul id="page-adapters" class="adapters" aria-labelledby="page-heading"></ul>
+    <h2 id="shortcut-heading">Shortcut</h2>
+    <p class="hint">One pair of keys, for one adapter you choose. For an adapter that adjusts something (like text size), the keys turn it up and down. For any other, the first key turns it on and off on the site you are on.</p>
+    <label for="shortcut-adapter">Use the shortcut for</label>
+    <select id="shortcut-adapter"><option value="">Off</option></select>
+    <p id="shortcut-does" class="hint"></p>
+    <dl class="keys" aria-labelledby="shortcut-heading">
+      <div><dt id="up-label">Up</dt><dd><kbd id="key-up"></kbd> <button id="change-up" class="text-button" type="button" aria-describedby="up-label">Change</button></dd></div>
+      <div><dt id="down-label">Down</dt><dd><kbd id="key-down"></kbd> <button id="change-down" class="text-button" type="button" aria-describedby="down-label">Change</button></dd></div>
+    </dl>
+    <button id="reset-keys" class="text-button" type="button">Use the default keys</button>
+    <h2 id="enabled-heading">Enabled in this browser</h2>
+    <ul id="enabled-adapters" class="adapters compact" aria-labelledby="enabled-heading"></ul>
     <p id="installed-count" class="hint"></p>
     <div class="actions">
       <a id="open-console" href="#" target="_blank" rel="noreferrer">Manage adapters in the console <!-- arrow-up-right-from-square, Font Awesome Free 6.7.2 (CC BY 4.0, https://fontawesome.com/license/free) --><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l82.7 0L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3l0 82.7c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160c0-17.7-14.3-32-32-32L320 0zM80 32C35.8 32 0 67.8 0 112L0 432c0 44.2 35.8 80 80 80l320 0c44.2 0 80-35.8 80-80l0-112c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 112c0 8.8-7.2 16-16 16L80 448c-8.8 0-16-7.2-16-16l0-320c0-8.8 7.2-16 16-16l112 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 32z"/></svg></a>
