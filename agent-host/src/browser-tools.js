@@ -51,7 +51,7 @@ function axeOf(a) {
 }
 
 /** What the agent reads about the axe-core check. */
-function axeText(axe) {
+export function axeText(axe) {
   if (!axe) return 'Accessibility check: axe-core did not run on this preview (the sidebar may be an older version). Ask the person to reload the extension.';
   if (axe.error) return `Accessibility check: axe-core could not run (${axe.error}).`;
   const wcag = (r) => (r.wcag.length ? ` (WCAG ${r.wcag.join(', ')})` : '');
@@ -83,7 +83,7 @@ function axeConcern(axe) {
 }
 
 /** What the agent reads about how far the page moved. */
-function shiftText(shift) {
+export function shiftText(shift) {
   if (!Number.isFinite(shift)) return '';
   if (shift < 0.01) return 'Layout shift: 0 (nothing on screen moved).';
   return `Layout shift: ${shift} (0 is steady; 0.1 or more is a lot). ${shift >= 0.1 ? 'Unless the person asked for things to change size or place, the page moved more than it should: see "Keep the page steady and familiar" in your instructions.' : 'Make sure only what the person asked to change moved.'}`;

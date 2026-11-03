@@ -16,3 +16,4 @@ build/
 /data/
 /server/data/
 onboarding/onboarding-data/
+.verify-logs/
