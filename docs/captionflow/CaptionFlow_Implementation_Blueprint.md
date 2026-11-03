@@ -37,16 +37,6 @@ flowchart TB
 - `toolkit/core/{ability,datastore,librarian}.js`, `toolkit/core/skill.js`, `toolkit/skills/builtin/quiet-video.md`: profile/skills foundations. `toolkit/platforms/chrome/web-surface.js` maps captions/simplification needs to web settings.
 - `tools/adapters/translate-page.js`: page text translation, not a caption translator. It does not natively include Swahili in its `LANG_CODES` map.
 
-## Proposed code ownership (create these files only as needed)
-
-| Owner | Branch | Code boundaries | Tuesday/next PR acceptance |
-|---|---|---|---|
-| Brian — Technical lead/integration | `feature/architecture-integration` | `captionflow/src/contracts.*`, `captionflow/src/pipeline.*`, integration tests, docs | Run a *mocked* end-to-end flow with a video fixture; establish shared interface and error paths; all features integrate without hidden provider dependencies |
-| Keya — Transcription | `feature/transcription` | `captionflow/src/transcription/*`, timed-ASR adapter, transcription fixtures | Accept local/allowed video; produce `segments[]` with real timestamps, language and explicit unavailable/errors; English and Swahili smoke tests; provider credentials stay server-side |
-| Kenn — Caption processing | `feature/caption-processing` | `captionflow/src/captions/*` | Plain-language rewrite, English/Swahili selection, segmentation and timing preservation, original fallback; tests for dates, numbers, names, medical terms, empty/uncertain output |
-| Joan — Player/accessibility UX | `feature/accessible-player` | `captionflow/src/player/*`, UI and browser tests | Video and timed caption rendering; readable size/contrast, keyboard focus, speed, pause/replay, original/plain toggle; accessible responsive prototype and demonstrable keyboard/mobile use |
-| Bernard — Toolkit preferences + QA/docs | `feature/toolkit-personalisation` | `captionflow/src/preferences/*`, relevant skill/adapter integration, acceptance scenarios, README/issues | Genuine Librarian/profile/AbilityModel use; persist approved settings and undo; document unsupported app-specific settings; tests of preference mapping and consent, README and issue log |
-
 **Integration contracts (proposed, not current toolkit API)**
 
 1. **Input:** `{ videoId, sourceUrlOrFile, consent, existingTrack? }`; support a locally controlled sample for a reliable demo.
