@@ -9,6 +9,10 @@
 //                    the spec to tools/test/verify/<name>.json, so
 //                    `node scripts/verify-adapters/run.mjs --replay` runs it
 //                    again without an agent.
+//   verify_on_sites  the same on each live page in sites.json (W3C's BAD
+//                    demo, Deque's workshop, Wikipedia, ...), for
+//                    robustness: what holds on any page. Saved as
+//                    tools/test/verify/<name>-sites.json.
 //   run_tests        the adapter's unit test (tools/test/<name>-test.js) and
 //                    the catalog's conformance test.
 //   contrast_ratio   the WCAG contrast ratio of two colours (the agent has no
@@ -17,13 +21,11 @@
 // The result text is the sidebar's (axeText, shiftText from the agent host).
 //
 // run.mjs serves it over HTTP on 127.0.0.1, as the agent host serves the
-// browser tools: opencode 2.0.30 calls a remote server's tools directly when
-// its codemode is off, but a local (stdio) server's only through code mode,
-// which runs the agent's JavaScript on this machine.
+// browser tools, so one browser serves every agent.
 
 import readline from 'node:readline';
 import http from 'node:http';
-import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,6 +34,7 @@ import { axeText, shiftText } from '../../agent-host/src/browser-tools.js';
 import { getContrastRatio, parseColor } from '../../tools/utils/color.js';
 
 const SPECS = path.join(ROOT, 'tools/test/verify');
+export const SITES = JSON.parse(readFileSync(path.join(ROOT, 'scripts/verify-adapters/sites.json'), 'utf8')).sites;
 const NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
 let verifier = null;
 
@@ -53,6 +56,19 @@ const TOOLS = [
         viewport: { type: 'object', description: '{"width", "height"}; default 1280 by 800. Use 320 wide to check reflow.', properties: { width: { type: 'number' }, height: { type: 'number' } } },
         reducedMotion: { type: 'string', enum: ['reduce', 'no-preference'] },
         screenshot: { type: 'boolean', description: 'Also return a screenshot of the page with the adapter on.' },
+      },
+    },
+  },
+  {
+    name: 'verify_on_sites',
+    description: `Run the adapter, as verify_adapter does, on each live page in the robustness list: ${SITES.map(s => `${s.name} (${s.about})`).join('; ')}. Reports per page: whether enable() applied or skipped, page errors during the run, the axe-core problems it added, the layout shift, and what disable() left of its marks (or whether the page is back exactly, when the page holds still). Your checks are optional here and must hold on any page. Saves what you ran to tools/test/verify/<name>-sites.json.`,
+    inputSchema: {
+      type: 'object', required: ['name', 'file'],
+      properties: {
+        name: { type: 'string', description: 'The adapter file\'s name without .js.' },
+        file: { type: 'string' }, export: { type: 'string' }, options: { type: 'object' }, ai: { type: 'object' }, harness: { type: 'object' },
+        checks: { type: 'array', description: 'Optional checks that hold on any page.', items: { type: 'object', required: ['name', 'code'], properties: { name: { type: 'string' }, code: { type: 'string' } } } },
+        sites: { type: 'array', items: { type: 'string' }, description: 'Only these sites, by name. Default: all.' },
       },
     },
   },
@@ -79,9 +95,7 @@ function resultText(name, r, saved) {
   if (r.checks?.length) lines.push('Checks (before enable → after):', ...r.checks.map((c, i) => `- ${saved.checks[i]?.name}: ${c.before ? 'pass' : 'fail'} → ${c.after ? 'pass' : 'fail'}${c.error ? ` (${c.error})` : ''}`));
   if (r.status === 'applied') {
     lines.push(axeText(r.axe).replace(/ \(the intopia-web-accessibility skill\)/, ''));
-    if (r.disable !== 'ran') lines.push(`disable(): ${r.disable}`);
-    lines.push(r.restored ? 'After disable() the page is back exactly as it was.'
-      : `After disable() the page is NOT back as it was. First difference (HTML around it):\n  before: ${r.difference?.before}\n  after:  ${r.difference?.after}`);
+    lines.push(...restoreText(r));
   }
   if (r.announced?.length) lines.push(`Announced: ${r.announced.map(a => JSON.stringify(a)).join(', ')}`);
   lines.push(r.errors?.length ? `Page errors:\n${r.errors.map(e => `- ${e.slice(0, 300)}`).join('\n')}` : 'No page errors.');
@@ -89,7 +103,54 @@ function resultText(name, r, saved) {
   return lines.filter(Boolean).join('\n');
 }
 
+function restoreText(r) {
+  const lines = [];
+  if (r.disable !== 'ran') lines.push(`disable(): ${r.disable}`);
+  if (r.leftovers?.length) lines.push(`After disable() these marks are left in the page: ${r.leftovers.join(' ')}`);
+  if (r.restored === true) lines.push('After disable() the page is back exactly as it was.');
+  else if (r.restored === 'unknown') lines.push('The page changes by itself, so it cannot be compared exactly; disable() left none of its marks.');
+  else if (r.difference) lines.push(`After disable() the page is NOT back as it was. First difference (HTML around it):\n  before: ${r.difference.before}\n  after:  ${r.difference.after}`);
+  return lines;
+}
+
+/** One live page's result, in a few lines. */
+function siteText(site, r) {
+  if (r.error) return `## ${site.name}: could not run (${r.error})`;
+  const lines = [`## ${site.name} (${site.url}): ${r.status}${r.message ? ` (${r.message})` : ''}`];
+  if (r.status === 'applied') {
+    lines.push(`- ${r.changes ?? '?'} changes; layout shift ${r.shift ?? '?'}${r.shift >= 0.1 ? ' (a lot)' : ''}.`);
+    if (r.axe?.error) lines.push(`- axe-core could not run: ${r.axe.error}`);
+    for (const a of r.axe?.added || []) lines.push(`- ADDED ${a.id}: ${a.help}${a.wcag.length ? ` (WCAG ${a.wcag.join(', ')})` : ''}, on ${a.count}: ${(a.targets || []).join('; ')}${a.summary ? ` (${a.summary.replace(/\s+/g, ' ').slice(0, 200)})` : ''}`);
+    if (r.axe?.fixed?.length) lines.push(`- fixed: ${r.axe.fixed.map(a => `${a.id} on ${a.count}`).join('; ')}`);
+    (r.checks || []).forEach((c, i) => { if (!c.after) lines.push(`- check ${i + 1} fails after enable()${c.error ? `: ${c.error}` : ''}`); });
+    lines.push(...restoreText(r).map(l => `- ${l}`));
+  }
+  if (r.errors?.length) lines.push(`- errors during the run (the adapter's, or the site's own: look at them): ${r.errors.map(e => e.slice(0, 200)).join(' | ')}`);
+  return lines.join('\n');
+}
+
 const handlers = {
+  async verify_on_sites(args) {
+    if (!NAME.test(String(args.name || ''))) return text('name must be lowercase letters, digits and dashes.', true);
+    const { name, sites: only, ...rest } = args;
+    const sites = SITES.filter(s => !only?.length || only.includes(s.name));
+    verifier ||= await openVerifier();
+    const results = [];
+    const queue = [...sites];
+    await Promise.all(Array.from({ length: 4 }, async () => {
+      for (let site; (site = queue.shift());) {
+        let r;
+        try { r = await verifier.verify({ ...rest, page: site.url, checks: rest.checks || [] }); } catch (e) { r = { error: e.message.slice(0, 200) }; }
+        results.push([site, r]);
+      }
+    }));
+    mkdirSync(SPECS, { recursive: true });
+    writeFileSync(path.join(SPECS, `${name}-sites.json`), JSON.stringify({ ...rest, sites: 'all' }, null, 2) + '\n');
+    results.sort((a, b) => sites.indexOf(a[0]) - sites.indexOf(b[0]));
+    return text([...results.map(([site, r]) => siteText(site, r)),
+      `Saved as tools/test/verify/${name}-sites.json. Problems on these pages that were there before enable() are the site's. A live page can fail to load or change between runs: run it again before you act on one odd result.`].join('\n\n'));
+  },
+
   async verify_adapter(args) {
     if (!NAME.test(String(args.name || ''))) return text('name must be lowercase letters, digits and dashes.', true);
     const { screenshot, ...spec } = args;

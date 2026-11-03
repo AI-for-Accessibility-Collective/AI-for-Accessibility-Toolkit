@@ -7,22 +7,19 @@
 //     Needs Chromium (npx playwright install chromium), like
 //     tools/test/browser-validate.js, so `npm test` does not run it.
 //
-//   node scripts/verify-adapters/run.mjs --agent [name ...] [--parallel 4]
-//       [--logs DIR] [--skills DIR,...]
-//     An opencode agent per adapter (AGENTS.md here), with verify_adapter and
-//     run_tests (mcp.mjs), verifies it and fixes what fails, editing this
-//     checkout: run it in a worktree. Gemini through opencode's google
-//     provider, with the key in GEMINI_API_KEY. Writes each agent's report
-//     and events to DIR.
+//   node scripts/verify-adapters/run.mjs --agent --sandboxed [name ...]
+//       [--parallel 4] [--logs DIR] [--skills DIR,...]
+//     An opencode agent per adapter (AGENTS.md here), with the verifier's
+//     tools (mcp.mjs), verifies it and fixes what fails, editing this
+//     checkout. Gemini through opencode's google provider, with the key in
+//     GEMINI_API_KEY. Writes each agent's report and events to DIR.
 //
-//     On your own machine the agent runs as you, so it gets only what the job
-//     needs: reading and editing files, the skills, and the verifier's tools.
-//     No shell, no code mode (opencode's `execute`, which runs its
-//     JavaScript here), no subagents, nothing outside this checkout.
-//     `--auto` approves only what is not denied. With --sandboxed, in the
-//     container this folder's Dockerfile builds (on the agent host VM, under
-//     gVisor, with only a copy of the repository), it also has a shell and
-//     code mode. Never web tools: the job needs none, as the sidebar's agent.
+//     Only in the container this folder's Dockerfile builds, on the agent
+//     host VM under gVisor with a copy of the repository (--sandboxed says
+//     you are there): the agent has a shell and opencode's code mode
+//     (`execute`, which runs its JavaScript, and through which it calls the
+//     verifier's tools). Never on your own machine, where both would run as
+//     you. No web tools: the job needs none, as for the sidebar's agent.
 
 import { spawn } from 'node:child_process';
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, createWriteStream } from 'node:fs';
@@ -30,7 +27,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { randomBytes } from 'node:crypto';
 import { openVerifier, ROOT } from './harness.mjs';
-import { serveHttp } from './mcp.mjs';
+import { serveHttp, SITES } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
 
 const HERE = path.join(ROOT, 'scripts/verify-adapters');
@@ -41,8 +38,8 @@ const NOT_ADAPTERS = new Set(['index', '_primitives', 'agent-watch-shapes', 'age
 const argv = process.argv.slice(2);
 const flag = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ? argv.splice(i, 2)[1] : fallback; };
 const mode = argv.includes('--agent') ? 'agent' : argv.includes('--replay') ? 'replay' : null;
+if (mode === 'agent' && !argv.includes('--sandboxed')) { console.error('Run the agents in the verify container on the agent host VM (see Dockerfile), with --sandboxed.'); process.exit(2); }
 const parallel = Number(flag('--parallel', 4));
-const sandboxed = argv.includes('--sandboxed');
 const logs = path.resolve(flag('--logs', path.join(ROOT, '.verify-logs')));
 const skills = flag('--skills', '').split(',').filter(Boolean);
 const names = argv.filter(a => !a.startsWith('--'));
@@ -56,23 +53,33 @@ async function replay() {
     .filter(n => !names.length || names.some(x => n === x || n.startsWith(`${x}-`)));
   const v = await openVerifier();
   let failed = 0;
+  const runs = [];
   for (const name of specs) {
     const spec = JSON.parse(readFileSync(path.join(SPECS, `${name}.json`), 'utf8'));
+    if (spec.sites) for (const site of SITES) runs.push([`${name} @ ${site.name}`, { ...spec, page: site.url, checks: spec.checks || [] }, true]);
+    else runs.push([name, spec, false]);
+  }
+  for (const [name, spec, live] of runs) {
     let r;
-    try { r = await v.verify(spec); } catch (e) { r = { status: 'failed', message: e.message }; }
+    try { r = await v.verify(spec); } catch (e) { r = { status: live ? 'unreachable' : 'failed', message: e.message.slice(0, 200) }; }
     const problems = [];
-    if (r.status !== 'applied') problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
+    // On a live page, skipping (nothing to do there) is fine, and a page that does not load is reported, not failed.
+    const fine = live ? ['applied', 'skipped', 'unreachable'] : ['applied'];
+    if (!fine.includes(r.status)) problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
+    else if (r.status === 'unreachable') console.log(`SKIP: ${name} (${r.message})`);
+    if (r.leftovers?.length) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
     const bad = (r.checks || []).map((c, i) => (!c.after ? spec.checks[i]?.name : null)).filter(Boolean);
     if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
     if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
     for (const rule of r.axe?.added || []) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);
-    if (r.status === 'applied' && !r.restored) problems.push('disable() does not restore the page');
+    if (r.status === 'applied' && r.restored === false) problems.push('disable() does not restore the page');
     if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
     if (problems.length) failed++;
+    if (r.status === 'unreachable') continue;
     console.log(`${problems.length ? 'FAIL' : 'PASS'}: ${name}${r.status === 'applied' ? ` (shift ${r.shift ?? '-'})` : ''}${problems.length ? `\n  ${problems.join('\n  ')}` : ''}`);
   }
   await v.close();
-  console.log(`\n${specs.length - failed} passed, ${failed} failed`);
+  console.log(`\n${runs.length - failed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);
 }
 
@@ -88,11 +95,8 @@ async function agents() {
     $schema: 'https://opencode.ai/config.json',
     model: MODEL,
     provider: { google: { options: { apiKey: '{env:GEMINI_API_KEY}' } } },
-    // Over HTTP, so its tools are called directly (see mcp.mjs).
     mcp: { verifier: { type: 'remote', url: mcpServer.url, headers: { authorization: `Bearer ${token}` }, oauth: false, codemode: false } },
-    // opencode 2.0.30's tool names: shell (not bash), execute (code mode).
-    permissions: [...(sandboxed ? [] : ['shell', 'bash', 'execute']), 'webfetch', 'websearch', 'task', 'question', 'external_directory']
-      .map(action => ({ action, resource: '*', effect: 'deny' })),
+    permissions: ['webfetch', 'websearch', 'task', 'question'].map(action => ({ action, resource: '*', effect: 'deny' })),
     instructions: [path.join(HERE, 'AGENTS.md')],
     skills: [path.join(ROOT, '.claude/skills'), ...skills],
   }, null, 2));
