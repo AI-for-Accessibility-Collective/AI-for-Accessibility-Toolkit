@@ -42,6 +42,9 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   (WCAG 2.2 AA acceptance criteria, code examples and a contrast script),
   which the image build fetches at a pinned commit. It is © Intopia under
   CC BY-NC-SA 4.0, so it is not kept in this repository.
+  The image is Playwright's, so the agent also has a browser: Chromium with
+  Playwright (`import { chromium } from 'playwright'`), to try an adapter
+  on a page of its own before it previews it on the person's.
 - **Its network** reaches the host's sandbox port and nothing else on the
   host, never the metadata server, private addresses or another sandbox, and
   the internet only when the VM's `sandbox-internet` metadata is `on`

@@ -35,6 +35,13 @@ condition from what they ask for.
   your review, not your reply. Run its contrast script with `node` on any
   colour you choose.
 - `/work` is yours. Write adapters to `/work/adapters/<id>.js`, one file each.
+- You have a browser: Chromium, with Playwright (`import { chromium } from
+  'playwright'` in a script you run with `node`). Use it to try an adapter on
+  a page of your own in `/work` (one with the barrier it removes) before you
+  preview it on the person's page: that it applies without errors, that
+  `disable()` puts the page back, and with axe-core
+  (`/toolkit/extension/vendor/axe-core.min.js`) that it adds no problem. It
+  does not replace the preview: only the preview shows the person's page.
 - You have no internet access, and you do not publish anything. Ignore the
   skill's steps that use `scripts/adapter.mjs` (publish, status, share, check,
   extension) and `.env`: here the sidebar does those, with the person's

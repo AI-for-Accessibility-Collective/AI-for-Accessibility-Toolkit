@@ -1,9 +1,11 @@
 # One account's sandbox: opencode 2.0.30, a read-only copy of the toolkit
-# (its code, docs and the ai4a11y-toolkit skill) and Intopia's accessibility
-# skill. The host starts it with gVisor, no capabilities, a read-only root,
+# (its code, docs and the ai4a11y-toolkit skill), Intopia's accessibility
+# skill, and a browser: Chromium with Playwright, so the agent can test what
+# it builds on a page of its own before it previews on the person's. The host starts it with gVisor, no capabilities, a read-only root,
 # and a network that reaches only the host's sandbox port. Build context: the repository root.
 #   docker build -f agent-host/sandbox/Dockerfile -t agent-sandbox .
-FROM node:24-slim
+# Playwright's image: Node and Chromium with the libraries it needs.
+FROM mcr.microsoft.com/playwright:v1.59.1-noble
 
 ARG OPENCODE_VERSION=2.0.30
 ARG OPENCODE_SHA256=b184222cb56e747dc1503ab6e1788f48975d6cdd7511de56464b5757d1fff586
@@ -17,6 +19,10 @@ RUN curl -fsSL "https://opencode.ai/files/bin/${OPENCODE_VERSION}/opencode-linux
  && install -m 0755 "$(find /tmp/opencode -type f -name opencode | head -1)" /usr/local/bin/opencode \
  && rm -rf /tmp/opencode /tmp/opencode.tgz \
  && opencode --version
+# Playwright for the agent's own scripts: importable from anywhere ("playwright"
+# resolves through /node_modules), with the image's browsers.
+RUN npm install --prefix /opt/agent --no-audit --no-fund playwright@1.59.1 \
+ && ln -s /opt/agent/node_modules /node_modules
 # opencode waits forever without its model catalog, and cannot download it here.
 RUN mkdir -p /opt/agent && curl -fsSL https://models.dev/api.json -o /opt/agent/models.json
 
