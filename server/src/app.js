@@ -31,6 +31,7 @@ import { withAiContext } from './ai-context.js';
 import { createProfileEvents, cleanSelection, PROFILE_WRITES } from './profile-events.js';
 import { auditAccounts } from './audit.js';
 import { createAgentProxy, AGENT_PREFIX, agentContentLogged } from './agent-proxy.js';
+import { createAiRoutes, aiContentLogged } from './ai.js';
 
 const ADMIN_TOKENS_PREFIX = '/admin/tokens';
 const ADMIN_USERS_PREFIX = '/admin/users';
@@ -44,6 +45,7 @@ const PROVIDERS_PREFIX = '/v1/providers';
 const PROFILE_PREFIX = '/v1/profile';
 const MCP_PREFIX = '/v1/mcp/';
 const APPS_PREFIX = '/v1/apps';
+const BLOCKS_AI_PREFIX = '/v1/ai/';
 const SDK_PREFIX = '/sdk/';
 
 /** @param {Object} config
@@ -57,7 +59,7 @@ const SDK_PREFIX = '/sdk/';
  *  @param {ReturnType<import('./log.js').createLogger>} [config.log]  structured logger (silent by default)
  *  @returns {((req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) & {relay: ReturnType<typeof createRelay>, accounts: ReturnType<typeof createAccounts>, activity: ReturnType<typeof createActivityLog>}}
  */
-export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {} }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {} }) {
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
@@ -105,6 +107,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
   const metaPayload = buildMeta({ version });
   const agentProxy = createAgentProxy({ authenticate: (req) => authenticate(req), hostUrl: agentHost.url, secret: agentHost.secret, fetch: agentHost.fetch, log });
+  // The model behind the building blocks' AI (toolkit/blocks), for adapters.
+  const aiRoutes = createAiRoutes({ store, withUserLock, authenticate: (req) => authenticate(req), caller: ai.caller || null, log, ...(ai.dailyPerAccount ? { dailyPerAccount: ai.dailyPerAccount } : {}), ...(ai.dailyPerAdapter ? { dailyPerAdapter: ai.dailyPerAdapter } : {}) });
   const adaptersRouter = createAdaptersRouter({ store, adminPassword, withUserLock });
   const accounts = auditAccounts(createAccounts({ store, secret: tokenSecret || adminPassword, relay }), log);
   const authenticate = async (req) => {
@@ -152,6 +156,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       relay.dropUser(uid);
       profileEvents.dropUser(uid);
       activity.forget(uid);
+      aiRoutes.forget(uid);
       await registry.dropUser(uid);
       const revoked = await revokeTokensFor(store, uid);
       const wiped = await store.deleteUser(uid);
@@ -165,7 +170,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
   function listener(req, res) {
     const started = process.hrtime.bigint();
-    if (logContent && agentContentLogged(pathOf(req))) captureContent(req, res);
+    if (logContent && agentContentLogged(pathOf(req)) && aiContentLogged(pathOf(req))) captureContent(req, res);
     res.once('close', () => logRequest(req, res, started));
     handle(req, res).catch((e) => {
       const path = pathOf(req);
@@ -389,6 +394,11 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
     if (pathname.startsWith(PROFILE_PREFIX + '/')) {
       return profileEvents.route(req, res, method, pathname);
+    }
+
+    // The building blocks' AI, for adapters that hold no key of their own.
+    if (pathname.startsWith(BLOCKS_AI_PREFIX)) {
+      return aiRoutes.route(req, res, method, pathname);
     }
 
     if (method === 'POST' && pathname.startsWith(LIBRARIAN_PREFIX)) {

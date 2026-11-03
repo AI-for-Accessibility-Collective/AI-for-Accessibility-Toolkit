@@ -96,6 +96,12 @@
     },
     "./adapter-mcp": {
       "default": "./adapter-mcp/index.js"
+    },
+    "./blocks": {
+      "default": "./blocks/index.js"
+    },
+    "./blocks/ai/prompts.js": {
+      "default": "./blocks/ai/prompts.js"
     }
   },
   "files": [
@@ -108,6 +114,7 @@
     "registry/",
     "protocol/",
     "adapter-mcp/",
+    "blocks/",
     "skills/",
     "types/",
     "README.md"

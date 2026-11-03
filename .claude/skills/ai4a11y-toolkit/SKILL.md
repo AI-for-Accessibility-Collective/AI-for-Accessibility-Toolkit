@@ -63,6 +63,8 @@ The person says what should change, you write the file, and the toolkit runs it 
    - It exports one object with `enable(options, toolkit)` and `disable()`. `options` are its parameters. `toolkit` is how it reaches the toolkit, as itself: `await toolkit.data.get(key)`, `toolkit.data.set(key, value)` and `toolkit.data.delete(key)` keep its own values, and `toolkit.observe('Moved the ruler down the page.')` tells the toolkit what the person did (one plain sentence; never page content or anything they typed). Each returns a promise, and rejects when the browser is not connected, so the adapter works without them.
    - `enable()` makes the change and remembers what it changed. `disable()` puts the page back exactly as it was.
    - Plain browser JavaScript only: no `import`, no network calls (`fetch`, `XMLHttpRequest`, `WebSocket`), no `eval`.
+   - Build on the toolkit's **building blocks** where one fits; read `reference/building-blocks.md` before you write. In `enable()`, `const s = toolkit.session()` and make every change through it (`s.setStyle`, `s.css`, `s.tooltip`, `s.highlight`, `s.speech.say`, ...); `disable()` is `s.end()`, which puts the page back. The blocks bring what is easy to get wrong (Escape closes a tooltip, a late answer never changes the page after `disable()`, colours keep their contrast), and they follow the person's profile: what you set is a default that the person's own settings (speech rate, reading level, text size, reduced motion) override.
+   - For AI (simplify, summarize, define, translate, label a control, describe an image or a chart), use `s.ai.text(task, text, fields)` or `s.ai.vision(task, element, fields)`: the toolkit runs the model with its own prompt for the task, adapted by your fields (reading level, tone, audience, context, terms to keep, instructions), and checks the answer. The adapter needs no key and no network. An answer is a string or `null`; on `null`, leave the page as it is.
 
    ```javascript
    // Bigger buttons: makes small buttons at least 44 pixels tall,
@@ -165,6 +167,7 @@ console.log('Quick Start OK:', JSON.stringify(model));
 
 Read these from this skill's folder when a task needs them:
 
+- `reference/building-blocks.md`: the building blocks an adapter gets on `toolkit` (session, styles, watch, page, highlight, announce, tooltip, panel, focus and keys, text, AI text and vision, speech, media): each one's calls, config, what the person's profile overrides, and what it always does; the AI tasks and their prompt fields.
 - `reference/adapter-mcp.md`: sharing adapters between apps through the toolkit's registry, the SDK (`createRegistryClient`, `connectToToolkit`, live control), the registry's MCP tools, the browser runtime, visibility and adapter data.
 - `reference/http-api.md`: the hosted service's HTTP endpoints and the `/v1/librarian/{method}` mapping, for a client in any language.
 - `reference/core-api.md`: embedding the core in-process: every Librarian and Datastore method by concern, and the ports a host implements.
@@ -226,7 +229,7 @@ ADMIN_PASSWORD=dev npm run dev:workshop      # from the repo root; --workshop le
 For a workshop, the admin console's **Fill in team-1 … team-10** makes a batch
 of accounts and shows each password once (print or copy them then).
 
-**Environment variables** (parsed from the server source at doc-generation time): `ADMIN_PASSWORD`, `AGENT_HOST_SECRET`, `AGENT_HOST_URL`, `CORS_ORIGINS`, `DATA_DIR`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `K_SERVICE`, `LOG_CONTENT`, `LOG_FORMAT`, `LOG_LEVEL`, `NODE_ENV`, `PORT`, `TOKEN_SECRET`, `TOOLKIT_BUCKET`, `WS_GEMINI_KEY`. `TOOLKIT_BUCKET` switches storage from the `DATA_DIR` file backend to GCS; `GEMINI_API_KEY` enables the server-side LLM lane (`extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt`) so clients never need a key; `ADMIN_PASSWORD` (a generated 16-character password) guards `/admin` (the admin console: developer accounts and tokens); `TOKEN_SECRET` derives each account's default token (it falls back to `ADMIN_PASSWORD`; when the secret in use changes, each account gets a new default token at its next sign-in and apps need the new one).
+**Environment variables** (parsed from the server source at doc-generation time): `ADMIN_PASSWORD`, `AGENT_HOST_SECRET`, `AGENT_HOST_URL`, `AI_DAILY_CALLS`, `AI_DAILY_CALLS_PER_ADAPTER`, `CORS_ORIGINS`, `DATA_DIR`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `K_SERVICE`, `LOG_CONTENT`, `LOG_FORMAT`, `LOG_LEVEL`, `NODE_ENV`, `PORT`, `TOKEN_SECRET`, `TOOLKIT_BUCKET`, `WS_GEMINI_KEY`. `TOOLKIT_BUCKET` switches storage from the `DATA_DIR` file backend to GCS; `GEMINI_API_KEY` enables the server-side LLM lane (`extract`/`reflect`/`buildSkill`/`interpretNeedsPrompt`) so clients never need a key; `ADMIN_PASSWORD` (a generated 16-character password) guards `/admin` (the admin console: developer accounts and tokens); `TOKEN_SECRET` derives each account's default token (it falls back to `ADMIN_PASSWORD`; when the secret in use changes, each account gets a new default token at its next sign-in and apps need the new one).
 
 **npm scripts** (`server/package.json`):
 - `npm run start` — `node index.js`

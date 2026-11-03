@@ -233,6 +233,50 @@ await test('the runtime sends a token only to https or this computer', () => {
   for (const bad of ['http://toolkit.example', 'ftp://localhost', 'http://localhost.evil.org', 'https://user:pw@toolkit.example', '', 'nonsense']) assert.equal(isAllowedServerUrl(bad), false, bad);
 });
 
+// The blocks bundle as the runtime injects it, in a real DOM: an adapter
+// gets toolkit.session(), toolkit.page and toolkit.personal, its AI goes to
+// the service worker as the adapter, and disable() puts the page back.
+await test('with the blocks bundle, an adapter builds on toolkit.session() and its AI goes through the service worker', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { createRequire } = await import('node:module');
+  const { JSDOM } = createRequire(import.meta.url)('jsdom');
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
+  const html = '<!doctype html><html><body><main><p id="p">A long paragraph about the terms of the loan.</p></main></body></html>';
+  const dom = new JSDOM(html, { url: 'https://shop.example/terms', runScripts: 'outside-only' });
+  const w = dom.window;
+  const sent = [];
+  w.chrome = { runtime: { sendMessage: async (m) => { sent.push(m); return m.type === 'ai4a11y:ai' ? { ok: true, result: { text: 'Plain words about the loan.' } } : { ok: true }; } } };
+  w.log = () => {};
+  w.eval(readFileSync(path.join(root, 'extension', 'vendor', 'blocks.js'), 'utf8'));
+  const code = `export default {
+    async enable(options, toolkit) {
+      this.s = toolkit.session();
+      const p = toolkit.page.main().querySelector('p');
+      const plain = await this.s.ai.text('simplify', p.textContent, { tone: 'friendly' });
+      this.s.text.replaceBlock(p, plain);
+      window.__personal = toolkit.personal;
+    },
+    disable() { this.s.end(); },
+  };`;
+  const before = w.document.body.innerHTML;
+  w.eval(buildUserScript(entry({ package: { format: 'web-module@1', code } }), { personal: { readingLevel: 'easy-read' } }));
+  for (let i = 0; i < 20 && !sent.some(m => m.type === 'ai4a11y:report'); i++) await settle();
+  const ai = sent.find(m => m.type === 'ai4a11y:ai');
+  assert.equal(ai.key, 'ada/console/big-buttons');
+  assert.deepEqual({ ...ai.request, options: { ...ai.request.options } }, { kind: 'text', task: 'simplify', input: 'A long paragraph about the terms of the loan.', options: { tone: 'friendly', readingLevel: 'easy-read' } });
+  assert.equal(sent.find(m => m.type === 'ai4a11y:report').status, 'applied');
+  assert.match(w.document.body.textContent, /Plain words about the loan\./);
+  assert.equal(w.__personal.readingLevel, 'easy-read');
+  w.eval(teardownScript('ada/console/big-buttons'));
+  assert.equal(w.document.body.innerHTML, before);
+});
+
+await test('registrations inject the blocks before the adapter', () => {
+  const reg = registrationFor(entry(), { personal: { speechRate: 1.5 } });
+  assert.deepEqual(reg.js[0], { file: 'vendor/blocks.js' });
+  assert.match(reg.js[1].code, /"speechRate":1\.5/);
+});
+
 await test('extension/vendor matches the toolkit modules', () => {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
   execFileSync(process.execPath, [path.join(root, 'scripts', 'build-extension.mjs'), '--check'], { stdio: 'pipe' });

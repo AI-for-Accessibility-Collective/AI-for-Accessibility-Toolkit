@@ -11,6 +11,10 @@
 //                a reload (chrome.userScripts.execute, Chrome 135+)
 //   report       what each script reports (applied, failed, skipped, removed,
 //                with the page origin only) goes back with adapter_report
+//   blocks       the building blocks' AI (ai.text, ai.vision) goes to the
+//                toolkit's /v1/ai with the token, which stays here; each
+//                sync reads the person's profile, and its personal settings
+//                (speech rate, reading level, ...) go into every script
 //   wake-ups     install/startup, a 30-second alarm, the registry's
 //                notification stream while the worker is awake, and the
 //                developer console page itself (bridge.js) right after a save
@@ -21,7 +25,8 @@
 
 import { createRegistryClient } from './vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP, normalizedUrl, urlPatternRegExpSource } from './vendor/protocol/adapter/index.js';
-import { registrationFor, runnable, teardownScript, buildUserScript, scriptId, keyOf, SCRIPT_PREFIX } from './runtime/scripts.js';
+import { registrationFor, runnable, teardownScript, buildUserScript, scriptId, keyOf, SCRIPT_PREFIX, BLOCKS_FILE, PREVIEW_KEY } from './runtime/scripts.js';
+import { personalFromProfile } from './vendor/blocks/personal.js';
 import { isAllowedServerUrl, readConnection, writeConnection, instanceId, runtimeLabel } from './runtime/config.js';
 
 const APP = BROWSER_RUNTIME_APP;
@@ -63,11 +68,13 @@ async function ensureWorld() {
   worldConfigured = true;
 }
 
-async function reconcile(adapters) {
+const codeOf = (script) => (script.js || []).map(j => j.code || `file:${j.file}`).join('\n');
+
+async function reconcile(adapters, personal) {
   const status = userScriptsStatus();
   if (!status.available) return { registered: 0, ...status };
   await ensureWorld();
-  const desired = runnable(adapters).map(registrationFor);
+  const desired = runnable(adapters).map(a => registrationFor(a, { personal }));
   const current = (await chrome.userScripts.getScripts()).filter(s => s.id.startsWith(SCRIPT_PREFIX));
   const currentById = new Map(current.map(s => [s.id, s]));
   const desiredIds = new Set(desired.map(s => s.id));
@@ -77,14 +84,14 @@ async function reconcile(adapters) {
   for (const script of desired) {
     const before = currentById.get(script.id);
     if (!before) { await chrome.userScripts.register([script]); changed.push(script.id); continue; }
-    const same = before.js?.[0]?.code === script.js[0].code && JSON.stringify(before.matches) === JSON.stringify(script.matches);
+    const same = codeOf(before) === codeOf(script) && JSON.stringify(before.matches) === JSON.stringify(script.matches);
     if (!same) { await chrome.userScripts.update([script]); changed.push(script.id); }
   }
   return { registered: desired.length, removed, changed, ...status };
 }
 
 // Pages that are already open run the new code now (or stop the old one).
-async function applyToOpenTabs(adapters, { removed = [], changed = [] }) {
+async function applyToOpenTabs(adapters, { removed = [], changed = [] }, personal) {
   if (typeof chrome.userScripts?.execute !== 'function' || (!removed.length && !changed.length)) return;
   const byId = new Map(runnable(adapters).map(a => [scriptId(keyOf(a)), a]));
   const tabs = (await chrome.tabs.query({})).filter(t => /^https?:/.test(t.url || ''));
@@ -96,7 +103,7 @@ async function applyToOpenTabs(adapters, { removed = [], changed = [] }) {
     }
     for (const id of changed) {
       const entry = byId.get(id);
-      if (entry) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ code: buildUserScript(entry) }], injectImmediately: true }));
+      if (entry) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ file: BLOCKS_FILE }, { code: buildUserScript(entry, { personal }) }], injectImmediately: true }));
     }
   }
   // A tab that cannot take scripts (the Web Store, a crashed page) is skipped.
@@ -153,20 +160,28 @@ async function syncOnce(reason) {
     // The etag only stands for scripts that are really registered: none while
     // user scripts are off, and not after Chrome dropped them (an extension
     // reload or update).
-    let trusted = !!state.etag && scripts.available && reason !== 'reconnect';
+    // The person's settings the blocks follow. A change rebuilds every
+    // script, so open pages pick it up. Unreadable: keep the last ones.
+    let personal = state.personal || {};
+    try {
+      const got = await client.profile.get();
+      personal = personalFromProfile(got?.profile ?? got);
+    } catch { /* the profile could not be read this time */ }
+    const personalChanged = JSON.stringify(personal) !== JSON.stringify(state.personal || {});
+    let trusted = !!state.etag && scripts.available && reason !== 'reconnect' && !personalChanged;
     if (trusted) {
       const ours = (await chrome.userScripts.getScripts()).filter(x => x.id.startsWith(SCRIPT_PREFIX)).length;
       trusted = ours === state.registered;
     }
     const answer = await client.installed(APP, { includeCode: true, ...(trusted ? { ifEtag: state.etag } : {}) });
     if (answer.unchanged) return writeState({ lastSync: new Date().toISOString(), error: null, scripts });
-    const outcome = await reconcile(answer.adapters);
-    await applyToOpenTabs(answer.adapters, outcome);
+    const outcome = await reconcile(answer.adapters, personal);
+    await applyToOpenTabs(answer.adapters, outcome, personal);
     // The popup needs no code.
     const listed = answer.adapters.map(({ package: pkg, descriptor, ...a }) => ({ ...a, portable: !!pkg }));
     return writeState({
       etag: scripts.available ? answer.etag : null, registered: outcome.registered,
-      adapters: listed, lastSync: new Date().toISOString(), error: null, scripts,
+      adapters: listed, lastSync: new Date().toISOString(), error: null, scripts, personal,
     });
   } catch (e) {
     const message = e?.code === 'unauthorized' || /401|unauthorized/i.test(e?.message || '') ? 'The toolkit did not accept the token. Connect again.' : `Could not reach the toolkit: ${e?.message || e}`;
@@ -217,6 +232,59 @@ async function adapterCall(message, sender) {
   if (message.op === 'set') return data.set(message.k, message.value);
   if (message.op === 'delete') return data.delete(message.k ?? undefined);
   throw new Error(`Unknown data operation ${message.op}.`);
+}
+
+// The building blocks' AI (toolkit/blocks ai.text, ai.vision): an installed
+// adapter or the sidebar's preview asks, and the toolkit answers with its own
+// model, prompts and checks. The token never reaches the page.
+chrome.runtime.onUserScriptMessage?.addListener((message, sender, sendResponse) => {
+  if (message?.type !== 'ai4a11y:ai') return false;
+  aiCall(message, sender).then(result => sendResponse({ ok: true, result }), error => sendResponse({ ok: false, error: error.message }));
+  return true;
+});
+
+async function aiCall(message, sender) {
+  const key = String(message.key || '');
+  if (key !== PREVIEW_KEY) {
+    const state = await readState();
+    if (!(state.adapters || []).some(a => keyOf(a) === key)) throw new Error('This adapter is not installed in this browser.');
+  }
+  const connection = await readConnection();
+  if (!connection) return { text: null, reason: 'not-connected' };
+  const r = message.request || {};
+  const kind = r.kind === 'vision' ? 'vision' : 'text';
+  let image = r.image;
+  if (kind === 'vision' && !image && r.rect) {
+    image = await captureRect(sender.tab, r.rect).catch(() => null);
+    if (!image) return { text: null, reason: 'not-captured' };
+  }
+  const res = await fetch(`${connection.url}/v1/ai/${kind}`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${connection.token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ task: r.task, input: r.input || '', options: r.options || {}, adapter: key, ...(image ? { image } : {}) }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { text: null, reason: body.error || `http-${res.status}` };
+  return { text: typeof body.text === 'string' ? body.text : null, ...(body.reason ? { reason: body.reason } : {}) };
+}
+
+// What the person sees of an element, from the visible tab: for an element
+// the page cannot draw itself (another site's image). It must be in view.
+async function captureRect(tab, rect) {
+  if (!tab || tab.windowId === undefined) return null;
+  const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
+  const bitmap = await createImageBitmap(await (await fetch(dataUrl)).blob());
+  const scale = bitmap.width / Math.max(1, rect.viewportWidth || bitmap.width);
+  const sx = Math.max(0, Math.round(rect.x * scale)), sy = Math.max(0, Math.round(rect.y * scale));
+  const sw = Math.min(bitmap.width - sx, Math.round(rect.width * scale)), sh = Math.min(bitmap.height - sy, Math.round(rect.height * scale));
+  if (sw < 4 || sh < 4) return null;
+  const fit = Math.min(1, 1024 / Math.max(sw, sh));
+  const canvas = new OffscreenCanvas(Math.round(sw * fit), Math.round(sh * fit));
+  canvas.getContext('2d').drawImage(bitmap, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  const bytes = new Uint8Array(await (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer());
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return { mimeType: 'image/png', data: btoa(binary) };
 }
 
 chrome.runtime.onUserScriptMessage?.addListener((message, sender) => {

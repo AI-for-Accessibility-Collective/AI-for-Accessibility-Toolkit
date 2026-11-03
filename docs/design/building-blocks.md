@@ -1,7 +1,8 @@
-> Internal design document: a proposal, 2026-11-03. It describes what the
-> code does today and what we propose to build; nothing in "Proposed" exists
-> yet. This is a research prototype (pre-alpha, adapters unvalidated), so the
-> blocks are scoped to what our adapters already need, not a general UI kit.
+> Internal design document, 2026-11-03. It started as a proposal; the
+> decisions below are recorded in "Decisions", and the blocks are now in
+> `toolkit/blocks/` (see "What exists now"). This is a research prototype
+> (pre-alpha, adapters unvalidated), so the blocks are scoped to what our
+> adapters already need, not a general UI kit.
 
 # Building blocks for adapters
 
@@ -512,9 +513,10 @@ schema and examples teach the builder.)
 
 ## How the blocks reach adapters
 
-- **Built-in adapters** import them as ES modules from a new `tools/blocks/`.
-  `_primitives.js` and the shared parts of `tools/utils/` move in, behind
-  the same exports.
+- **Built-in adapters** would import them as ES modules from
+  `toolkit/blocks/`, once the package boundary allows the catalog to import
+  the toolkit (see "Not done yet"). `_primitives.js` and the shared parts of
+  `tools/utils/` would move in, behind the same exports.
 - **Agent-built adapters** get them on the `toolkit` argument. The runtime
   already builds `TOOLKIT` in two places, for installed adapters and for
   previews (`extension/runtime/scripts.js`). Both would add the blocks from
@@ -571,15 +573,68 @@ These are not part of the proposal, but they are true today:
 - fix-links, fix-tables, generate-alt, generate-labels and wcag-fixes have
   no restore; their changes stay until the page reloads.
 
-## Questions to decide
+## Decisions
 
-1. **Profile or builder: who wins for personal settings?** The proposal is
-   the profile, for rate, voice, colours, size, reading level and language.
-2. **Should the toolkit own default prompts?** This reverses `ai.js`'s
-   stated position that hosts write their own.
-3. **Should agent-built adapters get AI through the service** (the
-   `/v1/ai` route, the service's key, budgets)? Or should AI stay limited to
-   built-in adapters for now?
-4. **Should block config be a separate vocabulary from settings?** The
-   proposal is yes: settings are the person's, block config is the
-   builder's.
+The project lead decided, 2026-11-03:
+
+1. **The person's profile wins.** A builder's or adapter's value for a
+   personal setting is only a default: speech rate, reading level, text
+   size, reduced motion and contrast come from the profile when it has them.
+2. **The toolkit supplies low-level prompts**, such as simplification, with
+   customization fields, because a task like simplifying needs the
+   builder's language, tone, style and relevant information. This reverses
+   `ai.js`'s position that hosts write their own prompts.
+3. **Agent-built adapters get AI through the service** (`/v1/ai`), with
+   budgets.
+4. **The blocks live in the toolkit** (`toolkit/blocks/`), the adapters the
+   agent builds use them, and a skill documents them.
+
+Choices made while building it (mine, open to change):
+
+- Block config is its own vocabulary (`toolkit/blocks/catalog.js`), apart
+  from the settings vocabulary: settings are the person's, block config is
+  the builder's. The person's settings reach the blocks as `personal`
+  (`toolkit/blocks/personal.js`, derived from the profile).
+- The prompt fields are `readingLevel`, `language`, `tone`, `audience`,
+  `context`, `keep`, `glossary`, `instructions`, `template`,
+  `maxSentences`, `maxChars`, `purpose`, `minRatio` and `maxRatio`
+  (`toolkit/blocks/ai/prompts.js`). No field can remove the fence around the
+  page text or the output contract, and the gates always run.
+- Limits: 500 AI calls per account per day and 200 per adapter
+  (`AI_DAILY_CALLS`, `AI_DAILY_CALLS_PER_ADAPTER`), 40 per adapter session,
+  and an off switch per account (`PUT /v1/ai/settings`). What a page sends
+  to `/v1/ai` is never logged.
+- The gates stay in `tools/utils/ai-output.js`; the service imports them.
+  The toolkit may not import the catalog, so a host that runs its own model
+  imports the gates from there too.
+
+## What exists now
+
+- `toolkit/blocks/`: the 15 blocks, `createBlocks()`, the catalog the skill
+  reference is generated from, the prompts, and `personalFromProfile()`.
+  Tests: `toolkit/test/blocks.test.mjs`.
+- The browser runtime injects the blocks bundle (`extension/vendor/blocks.js`,
+  built by `npm run build:extension`) before every adapter and every
+  sidebar preview. `enable(options, toolkit)` gets `toolkit.session()`,
+  `toolkit.page` and `toolkit.personal`. AI calls go through the service
+  worker to `/v1/ai` with the person's token, which never reaches the page.
+  Each sync reads the profile; a change to the personal settings rebuilds
+  the scripts, so open pages pick it up.
+- The service: `server/src/ai.js` (`POST /v1/ai/text`, `/v1/ai/vision`,
+  `GET /v1/ai/usage`, `PUT /v1/ai/settings`). Tests: `server/test/ai.test.mjs`.
+- The builder learns them from the skill's `reference/building-blocks.md`
+  (generated from the catalog) and from `agent-host/sandbox/AGENTS.md`.
+
+Not done yet:
+
+- **The built-in adapters still use their own copies.** Moving them onto
+  the blocks means the catalog (`tools/`) importing the toolkit, which the
+  package boundaries forbid today (`scripts/import-boundaries-test.mjs`:
+  "the catalog stands alone"). That needs a decision first. Order of work
+  steps 1-3 and 5-6 (moving unpin-sticky, read-aloud, simplify-text and the
+  rest) wait on it.
+- The CLI's own prompts (`cli/ai4a11y/page.py`) are unchanged.
+- The registry does not publish the blocks' schemas yet; the skill
+  reference is where the builder reads them.
+- The agent host image has to be rebuilt to carry the new skill reference,
+  AGENTS.md and the bundle, and the extension reloaded.

@@ -95,6 +95,10 @@ const KNOWN_EDGES = {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'marketplace listings may carry an Adapter MCP descriptor, validated and digested with the same contract code',
   },
+  'server/src/ai.js': {
+    to: ['toolkit/blocks/ai/prompts.js', 'tools/utils/ai-output.js'],
+    why: "the building blocks' AI route builds its prompts with the toolkit's own and gates the answers with the catalog's checks, so adapters get exactly what the blocks document",
+  },
   'server/src/meta.js': {
     to: ['toolkit/index.js', 'toolkit/platforms/node/kv.js'],
     why: 'the /v1/meta payload and server/API.md are introspected from a real librarian built on an in-memory KV',

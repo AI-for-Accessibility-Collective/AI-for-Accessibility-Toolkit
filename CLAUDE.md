@@ -19,6 +19,12 @@ in `docs/architecture.md`. This section is the code map.
     `ports/` and `sync/` — never a surface, adapter, or catalog.
   - `ports/` — the interfaces a host implements (KVStore, Clock, Scheduler,
     Consent, actuation). The core reaches every platform capability through these.
+  - `blocks/` — the **building blocks** adapters compose (session/undo,
+    styles, watch, page, highlight, announce, tooltip, panel, focus/keys,
+    text, AI text and vision with the toolkit's default prompts, speech,
+    media). Browser code, not core. The runtime hands them to every adapter
+    on `toolkit`; `catalog.js` generates the skill's
+    `reference/building-blocks.md`. Their AI runs on the service's `/v1/ai`.
   - `surfaces/` — pure renderers mapping an AbilityModel → per-platform settings
     (`web.js`, `mobile.js`, `xr.js`).
   - `platforms/node/`, `platforms/chrome/` — reference host implementations of the

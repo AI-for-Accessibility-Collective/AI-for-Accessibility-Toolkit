@@ -15,6 +15,11 @@
 //     values, and toolkit.observe(text or {text, type, data}) tells the
 //     toolkit what the person did. Who can read either follows the adapter's
 //     visibility.
+//   - gives it the building blocks (toolkit/blocks): toolkit.session(),
+//     toolkit.page and toolkit.personal, from the bundle injected before the
+//     script (BLOCKS_FILE). Their AI goes through the service worker to the
+//     toolkit's /v1/ai, and `personal` is the person's profile settings as of
+//     the last sync, which override what the adapter sets as defaults.
 // All adapters in a page share one USER_SCRIPT world, so a later
 // chrome.userScripts.execute can find and disable a running adapter.
 
@@ -23,6 +28,8 @@ import {
 } from '../vendor/protocol/adapter/index.js';
 
 export const SCRIPT_PREFIX = 'rt-';
+/** The building blocks, bundled (npm run build:extension); injected before each adapter. */
+export const BLOCKS_FILE = 'vendor/blocks.js';
 
 /** `ada/redbird/big-buttons` -> `rt-ada~redbird~big-buttons` (no "/" in a script id). */
 export const scriptId = (key) => SCRIPT_PREFIX + key.replaceAll('/', '~');
@@ -36,6 +43,14 @@ const PREAMBLE = String.raw`
     try { chrome.runtime.sendMessage({ type: 'ai4a11y:report', key: KEY, revision: REVISION, origin: location.origin, status, message: message ? String(message).slice(0, 500) : undefined }); } catch (e) { /* the extension is reloading */ }
   };
   const errorText = (e) => (e && (e.stack || e.message)) ? String(e.message || e) : String(e);
+  // The building blocks for this adapter, when the bundle is in the page.
+  const blocksFor = (key, personal, ask) => {
+    const B = globalThis.__ai4a11yBlocks;
+    if (!B || typeof B.create !== 'function') return {};
+    const b = B.create({ adapter: key.split('/').pop(), personal,
+      ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })) });
+    return { session: b.session, page: b.page, personal: b.personal, blocks: b.blocks };
+  };
   const turnOff = () => {
     const running = rt.adapters[KEY];
     if (!running) return false;
@@ -48,7 +63,7 @@ const PREAMBLE = String.raw`
  * The script for one installed, available adapter.
  * @param {object} entry one item of adapter_installed (with its package)
  */
-export function buildUserScript(entry) {
+export function buildUserScript(entry, { personal = {} } = {}) {
   const key = keyOf(entry);
   const factory = moduleFactorySource(entry.package.code);
   const scope = (entry.urlPatterns || []).map(urlPatternRegExpSource);
@@ -60,6 +75,7 @@ export function buildUserScript(entry) {
   const OFF_ON = ${JSON.stringify(off)};
   const PARAMETERS = ${JSON.stringify(entry.parameters || {})};
   const ENTRY = ${JSON.stringify(entry.package.entry || null)};
+  const PERSONAL = ${JSON.stringify(personal || {})};
 ${PREAMBLE}
   const ask = (message) => chrome.runtime.sendMessage({ ...message, key: KEY }).then((r) => {
     if (!r || !r.ok) throw new Error((r && r.error) || 'the toolkit did not answer');
@@ -72,6 +88,7 @@ ${PREAMBLE}
       delete: (k) => ask({ type: 'ai4a11y:data', op: 'delete', k }),
     }),
     observe: (o) => ask({ type: 'ai4a11y:observe', text: typeof o === 'string' ? o : o && o.text, kind: o && o.type, data: o && o.data }),
+    ...blocksFor(KEY, PERSONAL, ask),
   });
   const wasRunning = turnOff();
   const port = location.port || (location.protocol === 'https:' ? '443' : '80');
@@ -113,12 +130,12 @@ ${PREAMBLE}
 })();`;
 }
 
-/** The chrome.userScripts registration for one adapter. */
-export function registrationFor(entry) {
+/** The chrome.userScripts registration for one adapter: the blocks, then its script. */
+export function registrationFor(entry, options = {}) {
   return {
     id: scriptId(keyOf(entry)),
     matches: chromeMatchPatterns(entry.urlPatterns || []),
-    js: [{ code: buildUserScript(entry) }],
+    js: [{ file: BLOCKS_FILE }, { code: buildUserScript(entry, options) }],
     runAt: 'document_idle',
     world: 'USER_SCRIPT',
     allFrames: false,
@@ -157,8 +174,8 @@ const CHECK_MS = 5000;
 const SETTLE_MS = 400;
 const AXE_MS = 30000;
 
-/** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[], audit?: boolean}} preview */
-export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [], audit = false }) {
+/** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[], audit?: boolean, personal?: object}} preview */
+export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [], audit = false, personal = {} }) {
   const factory = moduleFactorySource(code);
   const scope = (urlPatterns || []).map(urlPatternRegExpSource);
   const checkList = (checks || []).map(c => `async function () {\n${c.code}\n}`).join(',\n');
@@ -170,6 +187,14 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
   const running = rt.adapters[KEY];
   if (running) { delete rt.adapters[KEY]; try { running.adapter.disable(); } catch (e) { /* the old preview's problem */ } }
   const store = new Map();
+  // The blocks' AI reaches the toolkit as the preview; nothing else does.
+  const ask = (message) => chrome.runtime.sendMessage({ ...message, key: KEY }).then((r) => {
+    if (!r || !r.ok) throw new Error((r && r.error) || 'the toolkit did not answer');
+    return r.result;
+  });
+  const B = globalThis.__ai4a11yBlocks;
+  const blocks = B && typeof B.create === 'function' ? B.create({ adapter: 'preview', personal: ${JSON.stringify(personal || {})},
+    ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })) }) : null;
   const TOOLKIT = Object.freeze({
     data: Object.freeze({
       get: async (k) => (k === undefined ? Object.fromEntries(store) : store.get(k)),
@@ -177,6 +202,7 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
       delete: async (k) => { if (k === undefined) store.clear(); else store.delete(k); },
     }),
     observe: async () => {},
+    ...(blocks ? { session: blocks.session, page: blocks.page, personal: blocks.personal, blocks: blocks.blocks } : {}),
   });
   const port = location.port || (location.protocol === 'https:' ? '443' : '80');
   const here = location.protocol + '//' + location.hostname.toLowerCase() + ':' + port + location.pathname;

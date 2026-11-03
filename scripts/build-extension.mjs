@@ -2,13 +2,17 @@
 // extension/vendor/, at the same relative paths, so their imports resolve
 // unchanged inside the unpacked extension (Chrome does not follow files
 // outside the extension's folder). Also axe-core, the copy the CLI pins
-// (cli/axe-core.min.js), which the sidebar's previews run in the page.
+// (cli/axe-core.min.js), which the sidebar's previews run in the page, and
+// the building blocks (toolkit/blocks) bundled into one script,
+// vendor/blocks.js, which the runtime injects before each adapter: user
+// scripts cannot import.
 //
 //   node scripts/build-extension.mjs           copy
 //   node scripts/build-extension.mjs --check   fail if a copy differs (CI)
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { buildSync } from 'esbuild';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const FILES = [
@@ -24,18 +28,29 @@ const FILES = [
   'protocol/adapter/access.js',
   'adapter-mcp/client.js',
   'adapter-mcp/registry.js',
+  'blocks/personal.js',
 ];
 const VENDOR = path.join(ROOT, 'extension', 'vendor');
 // Other files, as [source under the repository, path under vendor/].
 const OTHER = [['cli/axe-core.min.js', 'axe-core.min.js']];
-const COPIES = [...FILES.map(f => [path.join('toolkit', f), f]), ...OTHER];
+// Bundles, as [entry under the repository, path under vendor/].
+const BUNDLES = [['toolkit/blocks/runtime.js', 'blocks.js']];
+const COPIES = [...FILES.map(f => [path.join('toolkit', f), f]), ...OTHER, ...BUNDLES];
 const check = process.argv.includes('--check');
+
+function bundle(entry) {
+  const out = buildSync({
+    entryPoints: [path.join(ROOT, entry)], absWorkingDir: ROOT, bundle: true, format: 'iife', write: false, charset: 'utf8', legalComments: 'none',
+    banner: { js: `// Generated from ${entry} by scripts/build-extension.mjs: do not edit.` },
+  });
+  return Buffer.from(out.outputFiles[0].text);
+}
 
 const stale = [];
 for (const [origin, file] of COPIES) {
   const from = path.join(ROOT, origin);
   const to = path.join(VENDOR, file);
-  const source = readFileSync(from);
+  const source = BUNDLES.some(([b]) => b === origin) ? bundle(origin) : readFileSync(from);
   if (check) {
     if (!existsSync(to) || !readFileSync(to).equals(source)) stale.push(file);
     continue;

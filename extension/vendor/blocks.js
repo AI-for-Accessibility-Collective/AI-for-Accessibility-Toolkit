@@ -1,0 +1,1937 @@
+// Generated from toolkit/blocks/runtime.js by scripts/build-extension.mjs: do not edit.
+"use strict";
+(() => {
+  // toolkit/blocks/shared.js
+  var KEY = "__ai4a11yBlocksShared";
+  var UI_ATTR = "data-ai4a11y-ui";
+  function sharedState(win) {
+    if (!win[KEY]) {
+      Object.defineProperty(win, KEY, {
+        configurable: true,
+        value: {
+          nextId: 1,
+          // Nodes and values the blocks wrote, so watchers never react to them.
+          ourNodes: /* @__PURE__ */ new WeakSet(),
+          ourAttrs: /* @__PURE__ */ new WeakMap(),
+          // element -> Map(attribute -> value written)
+          ourText: /* @__PURE__ */ new WeakMap(),
+          // text node -> value written
+          liveRegions: {},
+          // politeness -> element
+          liveUsers: /* @__PURE__ */ new Set(),
+          // sessions that announced and are still open
+          voice: null,
+          // the utterance speaking now, page-wide
+          filters: /* @__PURE__ */ new Map(),
+          // `${session}:${name}` -> CSS filter value
+          cache: /* @__PURE__ */ new Map(),
+          // AI answers for this page
+          lastInput: null,
+          // {target, at}: the person's last click or key
+          inputWatch: false,
+          route: null
+          // {listeners, stop}
+        }
+      });
+    }
+    return win[KEY];
+  }
+  function isOurs(node) {
+    const el = node && (node.nodeType === 1 ? node : node.parentElement);
+    return !!(el && el.closest && el.closest(`[${UI_ATTR}]`));
+  }
+  function resolveConfig(defaults, builder, personal, personalKeys = {}) {
+    const out = { ...defaults };
+    for (const [k, v] of Object.entries(builder || {})) if (v !== void 0) out[k] = v;
+    for (const [k, p] of Object.entries(personalKeys)) {
+      const v = personal && personal[p];
+      if (v !== void 0 && v !== null) out[k] = v;
+    }
+    return out;
+  }
+  function reducedMotion(env) {
+    if (env.personal && env.personal.reduceMotion) return true;
+    try {
+      return !!env.win.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    } catch {
+      return false;
+    }
+  }
+  var hasLayout = (doc) => !!(doc.documentElement && doc.documentElement.clientWidth > 0);
+  var cssName = (prop) => prop.startsWith("--") ? prop : prop.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+  var slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "adapter";
+
+  // toolkit/blocks/styles.js
+  var FILTER_STYLE_ID = "ai4a11y-filters";
+  function stylesBlock(s, env) {
+    const sheets = /* @__PURE__ */ new Map();
+    function css(name, text, { scope } = {}) {
+      if (!s.alive()) return null;
+      let el = sheets.get(name);
+      if (!el) {
+        el = env.doc.createElement("style");
+        el.id = `ai4a11y-${s.id}-${String(name).replace(/[^\w-]/g, "-")}`;
+        el.setAttribute(UI_ATTR, "ui");
+        sheets.set(name, el);
+        s.append(env.doc.head || env.doc.documentElement, el);
+        s.onEnd(() => sheets.delete(name));
+      }
+      el.textContent = String(text);
+      if (scope) s.addClass(env.doc.documentElement, scope);
+      return {
+        el,
+        update: (next) => {
+          if (s.alive()) el.textContent = String(next);
+        }
+      };
+    }
+    function writeFilters() {
+      const { filters } = env.shared;
+      let el = env.doc.getElementById(FILTER_STYLE_ID);
+      if (!filters.size) {
+        if (el) el.remove();
+        return;
+      }
+      if (!el) {
+        el = env.doc.createElement("style");
+        el.id = FILTER_STYLE_ID;
+        el.setAttribute(UI_ATTR, "ui");
+        env.shared.ourNodes.add(el);
+        (env.doc.head || env.doc.documentElement).appendChild(el);
+      }
+      el.textContent = `html { filter: ${[...filters.values()].join(" ")} !important; }`;
+    }
+    function filter(name, value) {
+      if (!s.alive()) return;
+      const key = `${s.id}:${name}`;
+      const had = env.shared.filters.has(key);
+      if (value) env.shared.filters.set(key, String(value));
+      else env.shared.filters.delete(key);
+      writeFilters();
+      if (!had) s.onEnd(() => {
+        env.shared.filters.delete(key);
+        writeFilters();
+      });
+    }
+    return { css, filter };
+  }
+
+  // toolkit/blocks/watch.js
+  var ROUTE_POLL_MS = 1e3;
+  var QUERIES = {
+    reducedMotion: "(prefers-reduced-motion: reduce)",
+    moreContrast: "(prefers-contrast: more)",
+    dark: "(prefers-color-scheme: dark)",
+    forcedColors: "(forced-colors: active)"
+  };
+  function watchInput(env) {
+    const { shared, doc } = env;
+    if (shared.inputWatch) return;
+    shared.inputWatch = true;
+    const note = (e) => {
+      if (e.isTrusted) shared.lastInput = { target: e.target, at: Date.now() };
+    };
+    for (const type of ["pointerdown", "keydown", "input"]) doc.addEventListener(type, note, true);
+  }
+  function watchBlock(s, env) {
+    const { shared, win, doc } = env;
+    const ourRecord = (r) => {
+      if (r.type === "attributes") {
+        const m = shared.ourAttrs.get(r.target);
+        return !!m && m.has(r.attributeName) && m.get(r.attributeName) === r.target.getAttribute(r.attributeName);
+      }
+      if (r.type === "characterData") return shared.ourText.get(r.target) === r.target.nodeValue;
+      return false;
+    };
+    function added(root, fn, opts = {}) {
+      if (!s.alive() || typeof win.MutationObserver !== "function") return () => {
+      };
+      const { debounceMs = 0, cap = 500, types = ["childList"], selector = null } = opts;
+      const target = root || doc.body || doc.documentElement;
+      let pending = /* @__PURE__ */ new Set();
+      let timer = null;
+      const flush = () => {
+        timer = null;
+        const list = [...pending].slice(0, cap);
+        pending = /* @__PURE__ */ new Set();
+        for (const el of list) if (s.alive() && el.isConnected && !isOurs(el)) fn(el);
+      };
+      const take = (el) => {
+        if (!el || el.nodeType !== 1 || isOurs(el)) return;
+        if (!selector) {
+          pending.add(el);
+          return;
+        }
+        if (el.matches(selector)) pending.add(el);
+        for (const m of el.querySelectorAll(selector)) if (pending.size < cap * 2) pending.add(m);
+      };
+      const mo = new win.MutationObserver((records) => {
+        if (!s.alive()) return;
+        for (const r of records) {
+          if (ourRecord(r)) continue;
+          if (r.type === "childList") {
+            for (const n of r.addedNodes) if (!shared.ourNodes.has(n)) take(n);
+          } else {
+            take(r.target.nodeType === 1 ? r.target : r.target.parentElement);
+          }
+        }
+        if (!pending.size) return;
+        if (debounceMs > 0) {
+          win.clearTimeout(timer);
+          timer = win.setTimeout(flush, debounceMs);
+        } else flush();
+      });
+      mo.observe(target, {
+        subtree: true,
+        childList: types.includes("childList"),
+        attributes: types.includes("attributes"),
+        characterData: types.includes("characterData")
+      });
+      const stop = () => {
+        mo.disconnect();
+        win.clearTimeout(timer);
+      };
+      s.onEnd(stop);
+      return stop;
+    }
+    function route(fn) {
+      if (!s.alive()) return () => {
+      };
+      if (!shared.route) {
+        const listeners = /* @__PURE__ */ new Set();
+        let last = win.location.href;
+        const check = () => {
+          const now = win.location.href;
+          if (now === last) return;
+          last = now;
+          for (const l of [...listeners]) {
+            try {
+              l(now);
+            } catch {
+            }
+          }
+        };
+        const nav = win.navigation;
+        nav?.addEventListener?.("currententrychange", check);
+        win.addEventListener("popstate", check);
+        win.addEventListener("hashchange", check);
+        const poll = win.setInterval(check, ROUTE_POLL_MS);
+        shared.route = {
+          listeners,
+          stop: () => {
+            nav?.removeEventListener?.("currententrychange", check);
+            win.removeEventListener("popstate", check);
+            win.removeEventListener("hashchange", check);
+            win.clearInterval(poll);
+            shared.route = null;
+          }
+        };
+      }
+      const handler = (url) => {
+        if (s.alive()) fn(url);
+      };
+      const r = shared.route;
+      r.listeners.add(handler);
+      const stop = () => {
+        r.listeners.delete(handler);
+        if (!r.listeners.size && shared.route === r) r.stop();
+      };
+      s.onEnd(stop);
+      return stop;
+    }
+    function prefs(fn) {
+      const lists = {};
+      const read = () => {
+        const out = {};
+        for (const [k, q] of Object.entries(QUERIES)) {
+          try {
+            out[k] = !!(lists[k] || (lists[k] = win.matchMedia?.(q)))?.matches;
+          } catch {
+            out[k] = false;
+          }
+        }
+        if (env.personal.reduceMotion) out.reducedMotion = true;
+        return out;
+      };
+      const now = read();
+      if (typeof fn === "function" && s.alive()) {
+        fn(now);
+        for (const list of Object.values(lists)) if (list?.addEventListener) s.listen(list, "change", () => fn(read()));
+      }
+      return now;
+    }
+    function byPerson(el, { withinMs = 1e3 } = {}) {
+      const last = shared.lastInput;
+      if (!last || !el || Date.now() - last.at > withinMs) return false;
+      return el === last.target || typeof el.contains === "function" && last.target && el.contains(last.target);
+    }
+    return { added, route, prefs, byPerson };
+  }
+
+  // toolkit/blocks/color.js
+  function parseColor(value) {
+    const v = String(value || "").trim().toLowerCase();
+    let m = /^#([0-9a-f]{3,8})$/.exec(v);
+    if (m) {
+      let h = m[1];
+      if (h.length === 3 || h.length === 4) h = [...h].map((c) => c + c).join("");
+      if (h.length !== 6 && h.length !== 8) return null;
+      const n = (i) => parseInt(h.slice(i, i + 2), 16);
+      return [n(0), n(2), n(4), h.length === 8 ? n(6) / 255 : 1];
+    }
+    m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?\s*\)$/.exec(v);
+    if (m) {
+      const a = m[4] === void 0 ? 1 : m[4].endsWith("%") ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
+      return [+m[1], +m[2], +m[3], a];
+    }
+    if (v === "white") return [255, 255, 255, 1];
+    if (v === "black") return [0, 0, 0, 1];
+    if (v === "transparent") return [0, 0, 0, 0];
+    return null;
+  }
+  var channel = (c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  var luminance = ([r, g, b]) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  function contrast(a, b) {
+    const ca = Array.isArray(a) ? a : parseColor(a);
+    const cb = Array.isArray(b) ? b : parseColor(b);
+    if (!ca || !cb) return 1;
+    const [hi, lo] = [luminance(ca), luminance(cb)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+  function backgroundOf(el, win) {
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const c = parseColor(win.getComputedStyle(n).backgroundColor);
+      if (c && c[3] >= 0.5) return c;
+    }
+    return [255, 255, 255, 1];
+  }
+  function textColorOf(el, win) {
+    return parseColor(win.getComputedStyle(el).color) || [0, 0, 0, 1];
+  }
+  function pick(candidates, against, min) {
+    return candidates.find((c) => contrast(c, against) >= min) || null;
+  }
+
+  // toolkit/blocks/highlight.js
+  var BACKGROUNDS = ["#fff3a0", "#ffe066", "#cfe8ff", "#d4f5d4", "#1a1a1a"];
+  var LINES = ["#1a5fb4", "#c01c28", "#9a5b00", "#000000", "#ffbf00", "#ffffff"];
+  var HIGHLIGHT_DEFAULTS = { style: "background", color: "auto", width: 3 };
+  var FOLLOW_DEFAULTS = { source: ["pointer", "focus"], height: 40, dimOutside: 0.4, color: "#ffe066" };
+  var RING_DEFAULTS = { color: "auto", width: 3 };
+  function highlightBlock(s, env) {
+    const { doc, win } = env;
+    let n = 0;
+    function paint(el, c) {
+      const text = textColorOf(el, win);
+      const bg = backgroundOf(el, win);
+      if (c.style === "background") {
+        const wanted2 = c.color === "auto" ? null : parseColor(c.color);
+        const color = wanted2 && contrast(wanted2, text) >= 4.5 ? c.color : pick(BACKGROUNDS, text, 4.5);
+        if (color) return `background-color: ${color} !important; box-shadow: 0 0 0 2px ${color} !important;`;
+      }
+      const wanted = c.color === "auto" || c.style === "background" ? null : parseColor(c.color);
+      const line = wanted && contrast(wanted, bg) >= 3 ? c.color : pick(LINES, bg, 3) || "#000000";
+      if (c.style === "underline") return `text-decoration: underline ${c.width}px ${line} !important; text-underline-offset: 3px !important;`;
+      return `outline: ${c.width}px solid ${line} !important; outline-offset: 2px !important;`;
+    }
+    function element(target, opts = {}) {
+      const c = resolveConfig(HIGHLIGHT_DEFAULTS, opts, env.personal, {});
+      const cls = `ai4a11y-hl-${s.id}-${++n}`;
+      const sheet = s.css(`hl-${n}`, "");
+      let current = null;
+      const move = (el) => {
+        if (!s.alive()) return;
+        if (current && current !== el) current.classList.remove(cls);
+        current = el || null;
+        if (!current) return;
+        sheet?.update(`.${cls} { ${paint(current, c)} }`);
+        if (!current.classList.contains(cls)) current.classList.add(cls);
+      };
+      s.onEnd(() => {
+        if (current) {
+          current.classList.remove(cls);
+          if (!current.getAttribute("class")) current.removeAttribute("class");
+        }
+        current = null;
+      });
+      move(target);
+      return { move, clear: () => move(null), get element() {
+        return current;
+      } };
+    }
+    function range(initial, opts = {}) {
+      const c = resolveConfig({ color: "auto" }, opts, env.personal, {});
+      const name = `ai4a11y-${s.id}-r${++n}`.replace(/[^\w-]/g, "-");
+      const registry = win.CSS && win.CSS.highlights;
+      const supported = !!(registry && typeof win.Highlight === "function");
+      const bg = c.color === "auto" ? "#ffe066" : c.color;
+      const fg = contrast(bg, "#000000") >= contrast(bg, "#ffffff") ? "#000000" : "#ffffff";
+      s.css(`range-${n}`, `::highlight(${name}) { background-color: ${bg}; color: ${fg}; }`);
+      const hl = supported ? new win.Highlight() : null;
+      if (hl) {
+        registry.set(name, hl);
+        s.onEnd(() => registry.delete(name));
+      }
+      const move = (r) => {
+        if (!hl || !s.alive()) return;
+        hl.clear();
+        if (r) hl.add(r);
+      };
+      move(initial);
+      return { move, clear: () => move(null), supported };
+    }
+    function follow(opts = {}) {
+      const c = resolveConfig(FOLLOW_DEFAULTS, opts, env.personal, {});
+      const sources = Array.isArray(c.source) ? c.source : [c.source];
+      const still = reducedMotion(env);
+      const pane = (name) => {
+        const el = s.el("div", { attrs: { "aria-hidden": "true", "data-ai4a11y-band": name } });
+        el.setAttribute("style", `position:fixed;left:0;right:0;pointer-events:none;z-index:2147483645;${still ? "" : "transition:top .08s linear,height .08s linear;"}`);
+        return s.append(doc.body, el);
+      };
+      const dim = Math.max(0, Math.min(0.9, Number(c.dimOutside) || 0));
+      const above = dim ? pane("above") : null;
+      const band = pane("band");
+      const below = dim ? pane("below") : null;
+      const h = Math.max(8, Number(c.height) || 40);
+      if (dim) {
+        above.style.background = below.style.background = `rgba(0,0,0,${dim})`;
+        above.style.top = "0px";
+        band.style.background = "transparent";
+      } else {
+        band.style.background = c.color;
+        band.style.opacity = "0.3";
+        band.style.mixBlendMode = "multiply";
+      }
+      let y = (win.innerHeight || 600) / 2;
+      const draw = () => {
+        const top = Math.round(y - h / 2);
+        band.style.top = `${top}px`;
+        band.style.height = `${h}px`;
+        if (dim) {
+          above.style.height = `${Math.max(0, top)}px`;
+          below.style.top = `${top + h}px`;
+          below.style.bottom = "0px";
+        }
+      };
+      let queued = false;
+      const moveTo = (nextY) => {
+        y = nextY;
+        if (queued) return;
+        queued = true;
+        s.frame(() => {
+          queued = false;
+          draw();
+        });
+      };
+      if (sources.includes("pointer")) s.listen(doc, "pointermove", (e) => moveTo(e.clientY), { passive: true, capture: true });
+      if (sources.includes("focus")) {
+        s.listen(doc, "focusin", (e) => {
+          const r = e.target?.getBoundingClientRect?.();
+          if (r && r.height) moveTo(r.top + r.height / 2);
+        }, true);
+      }
+      draw();
+      const panes = [above, band, below].filter(Boolean);
+      return {
+        moveTo,
+        hide: () => panes.forEach((p) => {
+          p.hidden = true;
+        }),
+        show: () => panes.forEach((p) => {
+          p.hidden = false;
+        })
+      };
+    }
+    function focusRing(opts = {}) {
+      const c = resolveConfig(RING_DEFAULTS, opts, env.personal, {});
+      const width = Math.max(2, Math.min(8, Number(c.width) || 3));
+      const color = c.color === "auto" ? "#1a5fb4" : c.color;
+      const scope = `ai4a11y-ring-${s.id}`.replace(/[^\w-]/g, "-");
+      s.css("ring", `html.${scope} :focus-visible {
+  outline: ${width}px solid ${color} !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 ${width + 2}px ${color} !important;
+}`, { scope });
+      return { scope };
+    }
+    return { element, range, follow, focusRing };
+  }
+
+  // toolkit/blocks/tooltip.js
+  var TOOLTIP_DEFAULTS = {
+    trigger: "[title]",
+    content: "title",
+    delayMs: 350,
+    hideDelayMs: 150,
+    placement: "below",
+    describe: true,
+    maxWidth: 320,
+    theme: "dark"
+  };
+  var THEMES = {
+    dark: "background:#1f1f1f;color:#ffffff;border:1px solid #ffffff;",
+    light: "background:#ffffff;color:#1f1f1f;border:1px solid #1f1f1f;"
+  };
+  function tooltipBlock(s, env) {
+    const { doc, win } = env;
+    let n = 0;
+    return function tooltip(opts = {}) {
+      const c = resolveConfig(TOOLTIP_DEFAULTS, opts, env.personal, {});
+      if (!s.alive()) return null;
+      const id = `ai4a11y-tip-${s.id}-${++n}`.replace(/[^\w-]/g, "-");
+      const tip = s.el("div", { attrs: { role: "tooltip", id } });
+      tip.hidden = true;
+      const scale = env.personal.textScale ? Math.max(1, Number(env.personal.textScale)) : 1;
+      s.css(`tip-${n}`, `#${id} { position: fixed; left: 0; top: 0; z-index: 2147483646; box-sizing: border-box;
+  max-width: min(${Number(c.maxWidth) || 320}px, calc(100vw - 16px)); padding: 8px 10px; border-radius: 6px;
+  font: ${Math.round(14 * scale)}px/1.45 system-ui, sans-serif; text-align: start; white-space: normal;
+  ${THEMES[c.theme] || THEMES.dark} box-shadow: 0 2px 8px rgba(0,0,0,.3); pointer-events: auto; }
+#${id}[hidden] { display: none !important; }`);
+      s.append(doc.body, tip);
+      let current = null;
+      let token = 0;
+      let showTimer = 0, hideTimer = 0;
+      let pointerAt = null;
+      const dismissed = /* @__PURE__ */ new Set();
+      const titles = /* @__PURE__ */ new WeakMap();
+      const triggerOf = (node) => {
+        const el = node && (node.nodeType === 1 ? node : node.parentElement);
+        if (!el || !el.closest || tip.contains(el)) return null;
+        for (let n2 = el; n2 && n2.nodeType === 1; n2 = n2.parentElement) {
+          if (titles.has(n2)) return n2;
+          try {
+            if (n2.matches(c.trigger)) return n2;
+          } catch {
+            return null;
+          }
+        }
+        return null;
+      };
+      const has = (el, node) => !!(el && node && (el === node || el.contains(node)));
+      const overTip = () => has(tip, pointerAt);
+      const focused = (t) => has(t, doc.activeElement);
+      const forgetDismissed = () => {
+        for (const t of [...dismissed]) if (!has(t, pointerAt) && !focused(t)) dismissed.delete(t);
+      };
+      const describe = (t, on) => {
+        if (!c.describe) return;
+        const ids = (t.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean).filter((x) => x !== id);
+        if (on) ids.push(id);
+        if (ids.length) t.setAttribute("aria-describedby", ids.join(" "));
+        else t.removeAttribute("aria-describedby");
+        env.shared.ourAttrs.set(t, new Map([...env.shared.ourAttrs.get(t) || [], ["aria-describedby", t.getAttribute("aria-describedby")]]));
+      };
+      function hide() {
+        token++;
+        win.clearTimeout(showTimer);
+        win.clearTimeout(hideTimer);
+        if (current) describe(current, false);
+        current = null;
+        tip.hidden = true;
+      }
+      function place(t) {
+        tip.style.left = "0px";
+        tip.style.top = "0px";
+        const w = tip.offsetWidth, h = tip.offsetHeight;
+        const r = t.getBoundingClientRect();
+        const vw = win.innerWidth || doc.documentElement.clientWidth, vh = win.innerHeight || doc.documentElement.clientHeight;
+        const gap = 6;
+        const below = r.bottom + gap, above = r.top - gap - h;
+        const left = Math.max(4, Math.min(r.left, vw - w - 4));
+        const fits = (top2) => top2 >= 0 && top2 + h <= vh;
+        const covers = (top2) => {
+          const f = doc.activeElement;
+          if (!f || f === doc.body || has(t, f) || has(tip, f)) return false;
+          const fr = f.getBoundingClientRect();
+          return fr.width && !(fr.right <= left || fr.left >= left + w || fr.bottom <= top2 || fr.top >= top2 + h);
+        };
+        const order = c.placement === "above" ? [above, below] : [below, above];
+        const top = order.find((y) => fits(y) && !covers(y)) ?? order.find(fits) ?? Math.max(0, Math.min(below, vh - h));
+        tip.style.left = `${Math.round(left)}px`;
+        tip.style.top = `${Math.round(top)}px`;
+      }
+      async function open(t) {
+        if (!s.alive() || dismissed.has(t)) return;
+        win.clearTimeout(hideTimer);
+        if (current === t && !tip.hidden) return;
+        if (current && current !== t) describe(current, false);
+        current = t;
+        const my = ++token;
+        let content;
+        try {
+          if (c.content === "title") {
+            if (t.hasAttribute("title")) {
+              titles.set(t, t.getAttribute("title"));
+              s.setAttr(t, "title", null);
+            }
+            content = titles.get(t) || "";
+          } else {
+            content = typeof c.content === "function" ? c.content(t) : c.content;
+          }
+          if (content && typeof content.then === "function") content = await content;
+        } catch {
+          content = null;
+        }
+        if (!s.alive() || my !== token || current !== t || dismissed.has(t)) return;
+        if (content === null || content === void 0 || content === "") {
+          hide();
+          return;
+        }
+        tip.textContent = "";
+        if (typeof content === "string") tip.textContent = content;
+        else tip.append(content);
+        tip.hidden = false;
+        describe(t, true);
+        place(t);
+      }
+      function scheduleHide() {
+        win.clearTimeout(hideTimer);
+        hideTimer = s.timer(() => {
+          if (!current) return;
+          if (overTip() || has(current, pointerAt) || focused(current)) return;
+          hide();
+        }, Number(c.hideDelayMs) || 0);
+      }
+      s.listen(doc, "mouseover", (e) => {
+        pointerAt = e.target;
+        forgetDismissed();
+        if (has(tip, e.target)) {
+          win.clearTimeout(hideTimer);
+          return;
+        }
+        const t = triggerOf(e.target);
+        if (t && t === current) {
+          win.clearTimeout(hideTimer);
+          return;
+        }
+        win.clearTimeout(showTimer);
+        if (t) showTimer = s.timer(() => {
+          if (has(t, pointerAt)) open(t);
+        }, Number(c.delayMs) || 0);
+        if (current) scheduleHide();
+      }, true);
+      s.listen(doc, "mouseout", (e) => {
+        if (e.relatedTarget) return;
+        pointerAt = null;
+        if (current) scheduleHide();
+      }, true);
+      s.listen(doc, "focusin", (e) => {
+        forgetDismissed();
+        const t = triggerOf(e.target);
+        if (t) {
+          win.clearTimeout(showTimer);
+          open(t);
+        } else if (current && !has(tip, e.target)) scheduleHide();
+      }, true);
+      s.listen(doc, "focusout", (e) => {
+        if (current && has(current, e.target) && !has(current, e.relatedTarget)) scheduleHide();
+        for (const t of [...dismissed]) if (has(t, e.target) && !has(t, e.relatedTarget) && !has(t, pointerAt)) dismissed.delete(t);
+      }, true);
+      s.listen(doc, "keydown", (e) => {
+        if (e.key !== "Escape" || !current) return;
+        dismissed.add(current);
+        hide();
+      }, true);
+      s.onEnd(hide);
+      return {
+        el: tip,
+        open: (t) => open(t),
+        hide,
+        get trigger() {
+          return current;
+        }
+      };
+    };
+  }
+
+  // toolkit/blocks/panel.js
+  var PANEL_DEFAULTS = {
+    kind: "dialog",
+    label: "Panel",
+    near: null,
+    corner: "bottom-right",
+    focus: "from-trigger",
+    returnTo: null,
+    inert: false,
+    theme: "page",
+    width: 360,
+    zIndex: 2147483646
+  };
+  var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  function panelBlock(s, env) {
+    const { doc, win } = env;
+    let n = 0;
+    return function panel(opts = {}) {
+      const c = resolveConfig(PANEL_DEFAULTS, opts, env.personal, {});
+      if (!s.alive()) return null;
+      const id = `ai4a11y-panel-${s.id}-${++n}`.replace(/[^\w-]/g, "-");
+      const full = c.kind === "fullscreen";
+      const root = s.el("section", {
+        attrs: {
+          id,
+          role: c.kind === "disclosure" ? "region" : "dialog",
+          "aria-labelledby": `${id}-title`,
+          "aria-modal": full ? "true" : void 0
+        }
+      });
+      root.hidden = true;
+      const head = s.el("div", { attrs: { class: "ai4a11y-panel-head" } });
+      const title = s.el("h2", { text: c.label, attrs: { id: `${id}-title`, tabindex: "-1" } });
+      const close = s.el("button", { text: "Close", attrs: { type: "button" } });
+      const body = s.el("div", { attrs: { class: "ai4a11y-panel-body" } });
+      head.append(title, close);
+      root.append(head, body);
+      const pageStyle = win.getComputedStyle(doc.body || doc.documentElement);
+      const theme = c.theme === "dark" ? { bg: "#1f1f1f", fg: "#ffffff", font: "system-ui, sans-serif" } : c.theme === "light" ? { bg: "#ffffff", fg: "#1f1f1f", font: "system-ui, sans-serif" } : { bg: "#ffffff", fg: "#1f1f1f", font: pageStyle.fontFamily || "system-ui, sans-serif" };
+      const width = Math.max(200, Number(c.width) || 360);
+      const scale = env.personal.textScale ? Math.max(1, Number(env.personal.textScale)) : 1;
+      const corner = String(c.corner || "bottom-right");
+      const sides = `${corner.includes("top") ? "top" : "bottom"}: 16px; ${corner.includes("left") ? "left" : "right"}: 16px;`;
+      s.css(`panel-${n}`, `#${id} { position: fixed; ${full ? "inset: 0;" : `${sides} width: min(${width}px, calc(100vw - 32px)); max-height: calc(100vh - 32px);`}
+  z-index: ${Number(c.zIndex) || 2147483646}; box-sizing: border-box; overflow: auto; padding: 12px 16px 16px;
+  background: ${theme.bg}; color: ${theme.fg}; font-family: ${theme.font}; font-size: ${Math.round(16 * scale)}px; line-height: 1.5;
+  border: 2px solid ${theme.fg}; border-radius: ${full ? "0" : "8px"}; box-shadow: 0 4px 16px rgba(0,0,0,.3); text-align: start; }
+#${id}[hidden] { display: none !important; }
+#${id} .ai4a11y-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+#${id} h2 { all: revert; margin: 0; font: 600 1.1em/1.3 inherit; color: inherit; }
+#${id} button { all: revert; min-width: 44px; min-height: 32px; padding: 4px 12px; font: inherit; color: ${theme.fg}; background: transparent; border: 2px solid ${theme.fg}; border-radius: 6px; cursor: pointer; }
+#${id} :focus-visible { outline: 3px solid ${theme.fg} !important; outline-offset: 2px !important; }`);
+      s.append(doc.body, root);
+      let opener = null;
+      let inerted = [];
+      function position() {
+        const near = c.near && c.near.isConnected ? c.near : null;
+        if (full || !near) return;
+        const r = near.getBoundingClientRect();
+        const vh = win.innerHeight, vw = win.innerWidth;
+        const w = root.offsetWidth, h = root.offsetHeight;
+        const left = Math.max(16, Math.min(r.left, vw - w - 16));
+        const top = r.bottom + 8 + h <= vh ? r.bottom + 8 : r.top - 8 - h >= 0 ? r.top - 8 - h : null;
+        if (top === null) return;
+        Object.assign(root.style, { left: `${left}px`, top: `${top}px`, right: "auto", bottom: "auto" });
+      }
+      function open(by) {
+        if (!s.alive() || !root.hidden) return;
+        opener = by || doc.activeElement;
+        root.hidden = false;
+        position();
+        if (full && c.inert) {
+          for (const child of doc.body.children) {
+            if (child === root || child.hasAttribute(UI_ATTR) || child.hasAttribute("inert") || child.matches('[aria-live], [role="status"], [role="alert"]')) continue;
+            child.setAttribute("inert", "");
+            inerted.push(child);
+          }
+        }
+        if (c.focus === "always" || c.focus === "from-trigger" && by) title.focus();
+      }
+      function shut() {
+        if (root.hidden) return;
+        const hadFocus = root.contains(doc.activeElement);
+        root.hidden = true;
+        for (const el of inerted) el.removeAttribute("inert");
+        inerted = [];
+        if (hadFocus) {
+          const back = [c.returnTo, opener].find((el) => el && el.isConnected && el !== doc.body);
+          if (back && typeof back.focus === "function") back.focus();
+        }
+      }
+      s.listen(close, "click", shut);
+      s.listen(full ? doc : root, "keydown", (e) => {
+        if (e.key !== "Escape" || root.hidden) return;
+        e.stopPropagation();
+        shut();
+      }, full);
+      s.onEnd(shut);
+      return {
+        el: root,
+        body,
+        title,
+        closeButton: close,
+        open,
+        close: shut,
+        get isOpen() {
+          return !root.hidden;
+        },
+        focusable: () => [...root.querySelectorAll(FOCUSABLE)]
+      };
+    };
+  }
+
+  // toolkit/blocks/focus.js
+  var NATIVELY_FOCUSABLE = /^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY|IFRAME)$/;
+  var RESERVED = /* @__PURE__ */ new Set(["Tab", "Escape", "Enter", "NumpadEnter", "Space", "F5", "F6", "F7", "F11", "F12"]);
+  function focusBlock(s, env) {
+    const { doc } = env;
+    const focusable = (el) => NATIVELY_FOCUSABLE.test(el.tagName) && !el.disabled || el.hasAttribute("tabindex");
+    function region(el, { scroll = true } = {}) {
+      if (!s.alive() || !el) return;
+      if (!focusable(el)) {
+        s.setAttr(el, "tabindex", "-1");
+        const drop = () => {
+          el.removeEventListener("blur", drop);
+          if (el.getAttribute("tabindex") === "-1") el.removeAttribute("tabindex");
+        };
+        el.addEventListener("blur", drop);
+      }
+      el.focus({ preventScroll: true });
+      if (scroll && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ block: "start", behavior: reducedMotion(env) ? "auto" : "smooth" });
+      }
+    }
+    function keepWhenRemoving(el) {
+      if (!el || !el.contains(doc.activeElement)) return;
+      let target = el.parentElement;
+      while (target && target !== doc.body && !focusable(target)) target = target.parentElement;
+      if (!target || target === doc.body) target = el.parentElement || doc.body;
+      region(target, { scroll: false });
+    }
+    return { region, keepWhenRemoving };
+  }
+  function keysBlock(s, env) {
+    const { doc } = env;
+    const editable = (t) => !!(t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"]'));
+    function shortcut(key, fn, { allowInFields = false } = {}) {
+      const want = { code: key.code, alt: !!key.alt, shift: !!key.shift };
+      if (!want.code || RESERVED.has(want.code) && !want.alt) throw new Error(`${want.code || "That key"} is reserved; use another, with Alt.`);
+      return s.listen(doc, "keydown", (e) => {
+        if (e.code !== want.code || e.altKey !== want.alt || e.shiftKey !== want.shift) return;
+        if (e.ctrlKey || e.metaKey || e.isComposing) return;
+        if (!allowInFields && editable(e.target)) return;
+        e.preventDefault();
+        fn(e);
+      }, true);
+    }
+    return { shortcut };
+  }
+
+  // toolkit/blocks/text.js
+  var WRAP_DEFAULTS = { cap: 500, skip: "" };
+  var REPLACE_DEFAULTS = { showOriginal: true, label: "Simplified", originalLabel: "Show original", replacedLabel: "Show simplified" };
+  var toRegExp = (match) => {
+    if (match instanceof RegExp) return new RegExp(match.source, match.flags.includes("g") ? match.flags : match.flags + "g");
+    if (typeof match === "string" && match) return new RegExp(match, "gu");
+    throw new Error("text.wrap needs `match`: a regular expression, or its source as a string.");
+  };
+  function textBlock(s, env) {
+    const { doc } = env;
+    function wrap(root, opts = {}) {
+      const c = resolveConfig(WRAP_DEFAULTS, opts, env.personal, {});
+      if (!s.alive() || !root) return 0;
+      const re = toRegExp(c.match);
+      const build = typeof c.build === "function" ? c.build : (word) => {
+        const span = doc.createElement("span");
+        span.textContent = word;
+        return span;
+      };
+      let count = 0;
+      for (const node of env.page.textNodes(root, { skip: c.skip, includeReplaced: false })) {
+        if (count >= c.cap) break;
+        const text = node.nodeValue;
+        re.lastIndex = 0;
+        if (!re.test(text)) continue;
+        re.lastIndex = 0;
+        const wrapper = doc.createElement("span");
+        wrapper.setAttribute("data-ai4a11y-text", s.id);
+        let last = 0;
+        for (const m of text.matchAll(re)) {
+          if (!m[0] || count >= c.cap) break;
+          if (m.index > last) wrapper.append(text.slice(last, m.index));
+          const made = build(m[0], m);
+          wrapper.append(made && made.nodeType ? made : m[0]);
+          last = m.index + m[0].length;
+          count++;
+        }
+        if (last < text.length) wrapper.append(text.slice(last));
+        s.replace(node, wrapper);
+      }
+      if (count) s.css("text-wrap", `[data-ai4a11y-text="${s.id}"] { all: unset; display: inline; }`);
+      return count;
+    }
+    function set(node, text) {
+      if (!node || node.nodeType !== 3) return;
+      s.setText(node, text);
+    }
+    function replaceBlock(el, text, opts = {}) {
+      const c = resolveConfig(REPLACE_DEFAULTS, opts, env.personal, {});
+      if (!s.alive() || !el || !el.parentNode || text === null || text === void 0 || !String(text).trim()) return null;
+      const box = s.el("div", { kind: "content", attrs: { "data-ai4a11y-replaced": s.id } });
+      const inner = doc.createElement("div");
+      for (const para of String(text).split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)) {
+        const p = doc.createElement("p");
+        p.textContent = para;
+        inner.append(p);
+      }
+      box.append(inner);
+      s.setAttr(el, "hidden", "");
+      s.insert(el.parentNode, box, el.nextSibling);
+      let showingOriginal = false;
+      let button = null;
+      if (c.showOriginal) {
+        const bar = s.el("div", { attrs: { class: "ai4a11y-replaced-bar" } });
+        button = s.el("button", { text: c.originalLabel, attrs: { type: "button" } });
+        bar.append(button);
+        s.insert(box.parentNode, bar, box.nextSibling);
+        s.listen(button, "click", () => toggle());
+        s.css("replace-block", `[data-ai4a11y-replaced] > div > p { margin: 0 0 .75em; }
+.ai4a11y-replaced-bar { margin: 4px 0 12px; }
+.ai4a11y-replaced-bar button { font: inherit; font-size: .9em; min-height: 32px; padding: 2px 10px; cursor: pointer; }`);
+      }
+      function toggle(original = !showingOriginal) {
+        if (!s.alive()) return;
+        showingOriginal = original;
+        if (original) {
+          el.removeAttribute("hidden");
+          box.hidden = true;
+        } else {
+          el.setAttribute("hidden", "");
+          box.hidden = false;
+        }
+        env.shared.ourAttrs.set(el, new Map([...env.shared.ourAttrs.get(el) || [], ["hidden", el.getAttribute("hidden")]]));
+        if (button) button.textContent = original ? c.replacedLabel : c.originalLabel;
+      }
+      s.onEnd(() => {
+        if (showingOriginal) el.setAttribute("hidden", "");
+      });
+      return { el: box, original: el, toggle, get showingOriginal() {
+        return showingOriginal;
+      } };
+    }
+    return { wrap, set, replaceBlock, nodes: (root, opts) => env.page.textNodes(root, opts) };
+  }
+
+  // toolkit/blocks/ai/prompts.js
+  var STR = (max) => ({ type: "string", maxLength: max });
+  var PROMPT_FIELDS = Object.freeze({
+    readingLevel: { description: "'plain', 'easy-read', or a school grade from 1 to 12. From the person's profile when it has one.", personal: true, anyOf: [{ enum: ["plain", "easy-read"] }, { type: "integer", minimum: 1, maximum: 12 }] },
+    language: { ...STR(40), description: "The language to answer in, e.g. 'Spanish' or 'es'. For translate, the target. By default the language of the text.", personal: true },
+    tone: { ...STR(60), description: "e.g. 'friendly', 'formal', 'calm'. By default the tone of the original." },
+    audience: { ...STR(200), description: "Who reads the answer, in a phrase, e.g. 'visitors new to banking terms'. Describe what they need, not a condition." },
+    context: { ...STR(2e3), description: "What the model needs to understand the text: the page title, the heading, the sentence around a word, the site." },
+    keep: { type: "array", maxItems: 50, items: STR(80), description: "Terms to keep exactly as written: names, drug names, product codes." },
+    glossary: { type: "object", maxProperties: 30, additionalProperties: STR(200), description: "{ term: explanation } for terms the answer should explain your way." },
+    instructions: { ...STR(1e3), description: 'Anything else, in a few plain sentences: "Use British spelling." "Explain each step as a numbered list."' },
+    template: { ...STR(4e3), description: "A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}." },
+    maxSentences: { type: "integer", minimum: 1, maximum: 20, description: "At most this many sentences (summarize, define)." },
+    maxChars: { type: "integer", minimum: 20, maximum: 2e3, description: "At most this many characters (define, label, describe, chart)." },
+    purpose: { enum: ["alt", "long"], description: "describe: 'alt' is one sentence for alt text, 'long' a fuller description." },
+    minRatio: { type: "number", minimum: 0, maximum: 1, description: "Reject a rewrite shorter than this share of the input (gate)." },
+    maxRatio: { type: "number", minimum: 0.5, maximum: 5, description: "Reject a rewrite longer than this many times the input (gate)." }
+  });
+  var TASKS = Object.freeze({
+    simplify: { kind: "text", input: "a passage", gate: "rewrite", minRatio: 0.3, maxRatio: 2, summary: "Rewrite a passage in plain language, keeping every fact." },
+    summarize: { kind: "text", input: "a passage", gate: "summary", maxSentences: 3, summary: "A short summary of a passage: the main point and anything the reader must do." },
+    define: { kind: "text", input: "a word or phrase (put the sentence it is in into context)", gate: "short-passage", maxChars: 240, maxSentences: 2, summary: "What a word or phrase means here, in one or two plain sentences." },
+    translate: { kind: "text", input: "a passage", gate: "rewrite", minRatio: 0.25, maxRatio: 4, summary: "Translate a passage into `language`, keeping names, numbers and links." },
+    rewrite: { kind: "text", input: "a passage", gate: "rewrite", minRatio: 0.2, maxRatio: 3, needs: "instructions or template", summary: "Rewrite a passage the way `instructions` say." },
+    label: { kind: "text", input: "what is known about the control: its type, its current text, nearby text", gate: "short", maxChars: 60, summary: "A short accessible name (1-4 words) for a control." },
+    linkText: { kind: "text", input: "the link's text, its address and the sentence around it", gate: "short", maxChars: 60, summary: "Link text (2-8 words) that says where a link goes." },
+    columnHeader: { kind: "text", input: "the column's cells, one per line", gate: "short", maxChars: 60, summary: "A short header (1-4 words) for a table column." },
+    describe: { kind: "vision", input: "an image of the element", gate: "description", maxChars: 150, summary: "Describe an image for a person who cannot see it (alt text, or a longer description)." },
+    chart: { kind: "vision", input: "an image of a chart", gate: "description", maxChars: 1200, summary: "Describe a chart: its type, axes, trend, and the highest and lowest values." }
+  });
+
+  // toolkit/blocks/ai.js
+  var AI_DEFAULTS = { budget: 40, maxInputChars: 6e3 };
+  var PERSONAL = { readingLevel: "readingLevel", language: "language" };
+  var OPTION_KEYS = ["readingLevel", "language", "tone", "audience", "context", "keep", "glossary", "instructions", "template", "maxSentences", "maxChars", "purpose", "minRatio", "maxRatio"];
+  var CACHE_MAX = 300;
+  function aiBlock(s, env) {
+    let used = 0;
+    const transport = env.transport || {};
+    function cached(key, make) {
+      const cache = env.shared.cache;
+      let p = cache.get(key);
+      if (p) return { p, fresh: false };
+      if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value);
+      p = make();
+      cache.set(key, p);
+      p.then((v) => {
+        if (v === null) cache.delete(key);
+      });
+      return { p, fresh: true };
+    }
+    function options(opts) {
+      const c = resolveConfig(AI_DEFAULTS, opts, env.personal, PERSONAL);
+      const o = {};
+      for (const k of OPTION_KEYS) if (c[k] !== void 0 && c[k] !== null && c[k] !== "") o[k] = c[k];
+      return { c, o };
+    }
+    async function ask(kind, task, input, opts, extra) {
+      if (!s.alive()) return null;
+      if (!TASKS[task] || TASKS[task].kind !== kind) throw new Error(`ai.${kind} has no task "${task}". Tasks: ${Object.entries(TASKS).filter(([, t]) => t.kind === kind).map(([k]) => k).join(", ")}.`);
+      if (typeof transport.ai !== "function") return null;
+      const { c, o } = options(opts);
+      const key = `${kind}\0${task}\0${JSON.stringify(o)}\0${input}\0${extra.cacheKey || ""}`;
+      const hit = env.shared.cache.has(key);
+      if (!hit && used >= c.budget) return null;
+      const { p, fresh } = cached(key, () => Promise.resolve().then(() => transport.ai({ kind, task, input, options: o, ...extra.request })).then((r) => r && typeof r.text === "string" && r.text.trim() ? r.text.trim() : null, () => null));
+      if (fresh) used++;
+      const out = await p;
+      return s.alive() ? out : null;
+    }
+    async function text(task, input, opts = {}) {
+      const t = String(input ?? "").trim();
+      const max = Number(opts.maxInputChars) || AI_DEFAULTS.maxInputChars;
+      if (!t || t.length > max) return null;
+      return ask("text", task, t, opts, {});
+    }
+    async function vision(task, el, opts = {}) {
+      if (!s.alive() || !el) return null;
+      let image = null, rect = null;
+      try {
+        image = typeof env.capture === "function" ? await env.capture(el) : null;
+      } catch {
+        image = null;
+      }
+      if (!image) {
+        const r = el.getBoundingClientRect();
+        if (!r.width || !r.height) return null;
+        rect = { x: r.left, y: r.top, width: r.width, height: r.height, viewportWidth: env.win.innerWidth, viewportHeight: env.win.innerHeight };
+      }
+      const note = String(opts.about || "").slice(0, 500);
+      const id = image ? `${image.data.length}:${image.data.slice(0, 64)}:${image.data.slice(-64)}` : JSON.stringify(rect);
+      return ask("vision", task, note, opts, { cacheKey: id, request: image ? { image } : { rect } });
+    }
+    return {
+      text,
+      vision,
+      get used() {
+        return used;
+      },
+      get available() {
+        return typeof transport.ai === "function";
+      }
+    };
+  }
+  async function captureInPage(el, win) {
+    const doc = el.ownerDocument;
+    const MAX = 1024;
+    const toPayload = (dataUrl) => {
+      const m = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/.exec(dataUrl || "");
+      return m ? { mimeType: m[1], data: m[2] } : null;
+    };
+    const draw = (source, w, h) => {
+      const scale = Math.min(1, MAX / Math.max(w, h));
+      const canvas = doc.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(w * scale));
+      canvas.height = Math.max(1, Math.round(h * scale));
+      canvas.getContext("2d").drawImage(source, 0, 0, canvas.width, canvas.height);
+      return toPayload(canvas.toDataURL("image/png"));
+    };
+    try {
+      if (el.tagName === "CANVAS") return draw(el, el.width, el.height);
+      if (el.tagName === "IMG" && el.complete && el.naturalWidth) return draw(el, el.naturalWidth, el.naturalHeight);
+      if (el.tagName && el.tagName.toLowerCase() === "svg") {
+        const r = el.getBoundingClientRect();
+        const xml = new win.XMLSerializer().serializeToString(el);
+        const img = new win.Image();
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = "data:image/svg+xml;base64," + win.btoa(unescape(encodeURIComponent(xml)));
+        });
+        return draw(img, r.width || img.naturalWidth || 300, r.height || img.naturalHeight || 150);
+      }
+    } catch {
+    }
+    return null;
+  }
+
+  // toolkit/blocks/speech.js
+  var SAY_DEFAULTS = { rate: 1, pitch: 1, voice: null, lang: null, chunkChars: 220, waitForGesture: true };
+  var LISTEN_DEFAULTS = { lang: null, feedback: "announce", maxErrors: 3 };
+  function speechBlock(s, env) {
+    const { win, doc, shared } = env;
+    function source(input) {
+      if (typeof input === "string") return { text: input, map: null };
+      if (!input || input.nodeType !== 1) return { text: String(input ?? ""), map: null };
+      let text = "";
+      const map = [];
+      for (const node of env.page.textNodes(input)) {
+        if (text && !/\s$/.test(text)) text += " ";
+        map.push({ node, start: text.length, end: text.length + node.nodeValue.length });
+        text += node.nodeValue;
+      }
+      return { text, map };
+    }
+    function chunks(text, max) {
+      const out = [];
+      const parts = text.match(/[^.!?。！？\n]+[.!?。！？]*[\s]*|\n+/g) || [text];
+      let cur = "", start = 0, pos = 0;
+      for (const p of parts) {
+        if (cur && cur.length + p.length > max) {
+          out.push({ text: cur, start });
+          start = pos;
+          cur = "";
+        }
+        cur += p;
+        pos += p.length;
+      }
+      if (cur.trim()) out.push({ text: cur, start });
+      return out.filter((c) => c.text.trim());
+    }
+    function say(input, opts = {}) {
+      const c = resolveConfig(SAY_DEFAULTS, opts, env.personal, { rate: "speechRate" });
+      const synth = win.speechSynthesis;
+      const Utterance = win.SpeechSynthesisUtterance;
+      let resolveDone;
+      const done = new Promise((r) => {
+        resolveDone = r;
+      });
+      const handle = {
+        supported: !!(synth && Utterance),
+        done,
+        get speaking() {
+          return state === "speaking" || state === "paused";
+        },
+        pause() {
+          if (state === "speaking") {
+            state = "paused";
+            synth.pause();
+          }
+        },
+        resume() {
+          if (state === "paused") {
+            state = "speaking";
+            synth.resume();
+          }
+        },
+        stop() {
+          finish(true);
+        }
+      };
+      let state = "waiting";
+      if (!s.alive() || !handle.supported) {
+        resolveDone(false);
+        return handle;
+      }
+      const { text, map } = source(input);
+      const parts = chunks(text, Math.max(40, Number(c.chunkChars) || 220));
+      if (!parts.length) {
+        resolveDone(false);
+        return handle;
+      }
+      const rangeAt = (abs, len) => {
+        if (!map) return null;
+        const entry = map.find((m) => abs >= m.start && abs < m.end);
+        if (!entry) return null;
+        const r = doc.createRange();
+        const from = abs - entry.start;
+        r.setStart(entry.node, from);
+        r.setEnd(entry.node, Math.min(entry.node.nodeValue.length, from + Math.max(1, len)));
+        return r;
+      };
+      const wordLength = (abs) => {
+        const m = /^[\p{L}\p{N}'’-]+/u.exec(text.slice(abs));
+        return m ? m[0].length : 1;
+      };
+      const voice = () => {
+        const voices = synth.getVoices ? synth.getVoices() : [];
+        return voices.find((v) => v.name === c.voice) || c.lang && voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(String(c.lang).toLowerCase())) || null;
+      };
+      function finish(stopped) {
+        if (state === "done") return;
+        const wasActive = state !== "waiting";
+        state = "done";
+        if (shared.voice === handle) {
+          shared.voice = null;
+          if (wasActive) synth.cancel();
+        }
+        if (c.onWord) try {
+          c.onWord(null, -1);
+        } catch {
+        }
+        resolveDone(!stopped);
+      }
+      function speak(i) {
+        if (state === "done" || !s.alive()) return;
+        if (i >= parts.length) {
+          finish(false);
+          return;
+        }
+        const part = parts[i];
+        const u = new Utterance(part.text);
+        u.rate = Math.max(0.5, Math.min(2, Number(c.rate) || 1));
+        u.pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));
+        u.lang = c.lang || doc.documentElement.lang || "";
+        const v = voice();
+        if (v) u.voice = v;
+        u.onboundary = (e) => {
+          if (state === "done" || e.name && e.name !== "word" || !c.onWord) return;
+          const abs = part.start + e.charIndex;
+          try {
+            c.onWord(rangeAt(abs, e.charLength || wordLength(abs)), abs);
+          } catch {
+          }
+        };
+        u.onend = () => {
+          if (state !== "done" && s.alive()) {
+            try {
+              c.onChunk?.(i + 1, parts.length);
+            } catch {
+            }
+            speak(i + 1);
+          }
+        };
+        u.onerror = (e) => {
+          if (e.error !== "interrupted" && e.error !== "canceled") finish(true);
+        };
+        synth.speak(u);
+      }
+      function start() {
+        if (state !== "waiting" || !s.alive()) return;
+        if (shared.voice && shared.voice !== handle) shared.voice.stop();
+        shared.voice = handle;
+        state = "speaking";
+        synth.cancel();
+        speak(0);
+      }
+      s.listen(doc, "keydown", (e) => {
+        if (e.key === "Escape" && handle.speaking) handle.stop();
+      }, true);
+      s.onEnd(() => finish(true));
+      const activation = win.navigator && win.navigator.userActivation;
+      if (c.waitForGesture && activation && !activation.hasBeenActive) {
+        const go = (e) => {
+          if (e.isTrusted && e.key !== "Escape") {
+            off1();
+            off2();
+            start();
+          }
+        };
+        const off1 = s.listen(doc, "pointerdown", go, true);
+        const off2 = s.listen(doc, "keydown", go, true);
+      } else {
+        start();
+      }
+      return handle;
+    }
+    function listen(opts = {}) {
+      const c = resolveConfig(LISTEN_DEFAULTS, opts, env.personal, {});
+      const Recognition = win.SpeechRecognition || win.webkitSpeechRecognition;
+      const handle = { supported: !!Recognition, listening: false, stop() {
+      } };
+      if (!s.alive() || !Recognition) return handle;
+      const commands = Object.entries(c.commands || {}).map(([phrase, fn]) => {
+        const p = phrase.toLowerCase().trim();
+        const re = p.includes("*") ? new RegExp("^" + p.split("*").map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("(.+?)") + "$") : null;
+        return { p, re, fn };
+      });
+      const say2 = (m) => {
+        if (c.feedback === "announce") s.announce(m);
+      };
+      const badge = s.el("div", { attrs: { role: "group", "aria-label": "Voice commands" } });
+      const label = s.el("span", { text: "Listening" });
+      const stopButton = s.el("button", { text: "Stop listening", attrs: { type: "button" } });
+      badge.append(label, stopButton);
+      badge.setAttribute("style", "position:fixed;left:16px;bottom:16px;z-index:2147483646;display:flex;gap:8px;align-items:center;padding:6px 10px;background:#1f1f1f;color:#fff;border:2px solid #fff;border-radius:8px;font:14px/1.4 system-ui,sans-serif;");
+      stopButton.setAttribute("style", "min-height:32px;min-width:44px;padding:2px 10px;font:inherit;color:#fff;background:transparent;border:2px solid #fff;border-radius:6px;cursor:pointer;");
+      s.append(doc.body, badge);
+      s.listen(stopButton, "click", () => stop("Stopped listening."));
+      const rec = new Recognition();
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.lang = c.lang || doc.documentElement.lang || win.navigator && win.navigator.language || "en-US";
+      let errors = 0;
+      let restart = 0;
+      function stop(message) {
+        if (!handle.listening && badge.hidden) return;
+        handle.listening = false;
+        win.clearTimeout(restart);
+        try {
+          rec.abort();
+        } catch {
+        }
+        badge.hidden = true;
+        if (message) say2(message);
+      }
+      handle.stop = () => stop("Stopped listening.");
+      rec.onresult = (e) => {
+        const result = e.results[e.results.length - 1];
+        if (!result || !result.isFinal) return;
+        errors = 0;
+        const heard = String(result[0].transcript || "").toLowerCase().replace(/[.,!?]/g, "").trim();
+        for (const cmd of commands) {
+          const m = cmd.re ? cmd.re.exec(heard) : heard === cmd.p ? [heard] : null;
+          if (!m) continue;
+          try {
+            cmd.fn(m[1], heard);
+          } catch {
+          }
+          return;
+        }
+        if (typeof c.onUnknown === "function") c.onUnknown(heard);
+        else say2(`No command "${heard}".`);
+      };
+      rec.onerror = (e) => {
+        if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+          stop("Voice commands are off: this site may not use the microphone.");
+          return;
+        }
+        if (e.error === "no-speech" || e.error === "aborted") return;
+        errors++;
+        if (errors >= c.maxErrors) stop("Voice commands stopped after repeated errors. Turn them on again to retry.");
+      };
+      rec.onend = () => {
+        if (!handle.listening || !s.alive()) return;
+        restart = win.setTimeout(() => {
+          if (handle.listening && s.alive()) {
+            try {
+              rec.start();
+            } catch {
+            }
+          }
+        }, 250 + Math.min(errors, 5) * 500);
+      };
+      s.onEnd(() => stop());
+      handle.listening = true;
+      try {
+        rec.start();
+      } catch {
+        stop("Voice commands could not start.");
+        return handle;
+      }
+      say2("Listening for voice commands.");
+      return handle;
+    }
+    return { say, listen };
+  }
+
+  // toolkit/blocks/media.js
+  var PAUSE_DEFAULTS = { showControls: false };
+  function mediaBlock(s, env) {
+    const isMedia = (el) => !!el && (el.tagName === "VIDEO" || el.tagName === "AUDIO");
+    function pause(el, opts = {}) {
+      if (!s.alive() || !isMedia(el)) return false;
+      const c = resolveConfig(PAUSE_DEFAULTS, opts, env.personal, {});
+      const playing = !el.paused || el.autoplay && !(el.played && el.played.length) && !el.currentTime;
+      let personTouched = false;
+      const mark = () => {
+        if (s.watch.byPerson(el, { withinMs: 1500 })) personTouched = true;
+      };
+      s.setAttr(el, "autoplay", null);
+      if (c.showControls) s.setAttr(el, "controls", "");
+      try {
+        el.pause();
+      } catch {
+      }
+      s.listen(el, "play", mark);
+      s.listen(el, "pause", mark);
+      s.onEnd(() => {
+        if (!playing || personTouched || !el.paused || !el.isConnected) return;
+        const p = el.play();
+        if (p && typeof p.catch === "function") p.catch(() => {
+        });
+      });
+      return playing;
+    }
+    function pauseAll(root = env.doc, opts = {}) {
+      let n = 0;
+      for (const el of root.querySelectorAll("video, audio")) if (pause(el, opts)) n++;
+      return n;
+    }
+    function mute(el) {
+      if (!s.alive() || !isMedia(el) || el.muted) return false;
+      let personTouched = false;
+      el.muted = true;
+      s.listen(el, "volumechange", () => {
+        if (!el.muted && s.watch.byPerson(el, { withinMs: 1500 })) personTouched = true;
+      });
+      s.onEnd(() => {
+        if (!personTouched && el.muted) el.muted = false;
+      });
+      return true;
+    }
+    function captions(video, { lang } = {}) {
+      if (!s.alive() || !video || !video.textTracks) return null;
+      const want = String(lang || env.personal.language || env.doc.documentElement.lang || env.win.navigator && env.win.navigator.language || "").toLowerCase().split("-")[0];
+      const tracks = [...video.textTracks].filter((t) => t.kind === "captions" || t.kind === "subtitles");
+      if (!tracks.length) return null;
+      if (tracks.some((t) => t.mode === "showing")) return tracks.find((t) => t.mode === "showing");
+      const choice = want && tracks.find((t) => (t.language || "").toLowerCase().split("-")[0] === want) || tracks.find((t) => t.kind === "captions") || tracks[0];
+      const before = tracks.map((t) => [t, t.mode]);
+      choice.mode = "showing";
+      s.onEnd(() => {
+        if (choice.mode === "showing") for (const [t, mode] of before) t.mode = mode;
+      });
+      return choice;
+    }
+    return { pause, pauseAll, mute, captions };
+  }
+
+  // toolkit/blocks/session.js
+  var Ended = class extends Error {
+    constructor() {
+      super("The session ended.");
+      this.name = "Ended";
+    }
+  };
+  function createSession(env, config = {}) {
+    const always = config.restore === "always";
+    const undo = [];
+    let open = true;
+    const { shared } = env;
+    const id = `${slug(env.adapter)}-${shared.nextId++}`;
+    const restoreAttr = (el, name, value, index) => {
+      const later = [...el.attributes].slice(index).filter((a) => a.name !== name).map((a) => [a.name, a.value]);
+      for (const [n] of later) el.removeAttribute(n);
+      el.setAttribute(name, value);
+      for (const [n, v] of later) el.setAttribute(n, v);
+    };
+    const noteAttr = (el, name, value) => {
+      let m = shared.ourAttrs.get(el);
+      if (!m) shared.ourAttrs.set(el, m = /* @__PURE__ */ new Map());
+      m.set(name, value);
+    };
+    const s = {
+      id,
+      get ended() {
+        return !open;
+      },
+      alive: () => open,
+      personal: env.personal,
+      /** Run fn on end(), in reverse order with the rest. */
+      onEnd(fn) {
+        if (open) undo.push(fn);
+      },
+      setAttr(el, name, value) {
+        if (!open || !el) return;
+        const had = el.hasAttribute(name);
+        const before = el.getAttribute(name);
+        const index = [...el.attributes].findIndex((a) => a.name === name);
+        const next = value === null || value === void 0 || value === false ? null : String(value);
+        if (next === null) el.removeAttribute(name);
+        else el.setAttribute(name, next);
+        noteAttr(el, name, next);
+        undo.push(() => {
+          if (!always && el.getAttribute(name) !== next) return;
+          if (!had) el.removeAttribute(name);
+          else if (el.hasAttribute(name)) el.setAttribute(name, before);
+          else restoreAttr(el, name, before, index);
+          noteAttr(el, name, had ? before : null);
+        });
+      },
+      setStyle(el, prop, value, priority = "") {
+        if (!open || !el || !el.style) return;
+        const p = cssName(prop);
+        const hadAttr = el.hasAttribute("style");
+        const beforeAttr = el.getAttribute("style");
+        const before = el.style.getPropertyValue(p);
+        const beforePriority = el.style.getPropertyPriority(p);
+        el.style.setProperty(p, value, priority);
+        const set = el.style.getPropertyValue(p);
+        noteAttr(el, "style", el.getAttribute("style"));
+        undo.push(() => {
+          if (!always && el.style.getPropertyValue(p) !== set) return;
+          if (before) el.style.setProperty(p, before, beforePriority);
+          else el.style.removeProperty(p);
+          if (!hadAttr && !el.getAttribute("style")) el.removeAttribute("style");
+          else if (hadAttr) {
+            const probe = env.doc.createElement("div");
+            probe.setAttribute("style", beforeAttr);
+            if (probe.style.cssText === el.style.cssText) el.setAttribute("style", beforeAttr);
+          }
+          noteAttr(el, "style", el.getAttribute("style"));
+        });
+      },
+      addClass(el, ...names) {
+        if (!open || !el) return;
+        for (const name of names) {
+          if (!name || el.classList.contains(name)) continue;
+          el.classList.add(name);
+          noteAttr(el, "class", el.getAttribute("class"));
+          undo.push(() => {
+            el.classList.remove(name);
+            if (!el.getAttribute("class")) el.removeAttribute("class");
+          });
+        }
+      },
+      /** Put `node` into `parent` before `before` (or last); it goes on end(). */
+      insert(parent, node, before = null) {
+        if (!open || !parent || !node) return node;
+        parent.insertBefore(node, before && before.parentNode === parent ? before : null);
+        shared.ourNodes.add(node);
+        undo.push(() => {
+          if (node.parentNode) node.parentNode.removeChild(node);
+        });
+        return node;
+      },
+      append(parent, node) {
+        return s.insert(parent, node, null);
+      },
+      /** Swap a page node for a new one; the same old node comes back on end(). */
+      replace(oldNode, newNode) {
+        if (!open || !oldNode || !oldNode.parentNode) return newNode;
+        oldNode.parentNode.replaceChild(newNode, oldNode);
+        shared.ourNodes.add(newNode);
+        undo.push(() => {
+          if (newNode.parentNode) newNode.parentNode.replaceChild(oldNode, newNode);
+        });
+        return newNode;
+      },
+      /** Take a node out of the page; it goes back where it was on end(). */
+      remove(node) {
+        if (!open || !node || !node.parentNode) return;
+        const parent = node.parentNode;
+        const next = node.nextSibling;
+        parent.removeChild(node);
+        undo.push(() => {
+          if (node.parentNode) return;
+          parent.insertBefore(node, next && next.parentNode === parent ? next : null);
+        });
+      },
+      /** Change a text node's text; the original comes back unless the page changed it since. */
+      setText(node, text) {
+        if (!open || !node) return;
+        const before = node.nodeValue;
+        const next = String(text);
+        node.nodeValue = next;
+        shared.ourText.set(node, next);
+        undo.push(() => {
+          if (always || node.nodeValue === next) node.nodeValue = before;
+        });
+      },
+      listen(target, type, fn, options) {
+        if (!open || !target) return () => {
+        };
+        const handler = (e) => {
+          if (open) fn(e);
+        };
+        target.addEventListener(type, handler, options);
+        const capture = typeof options === "boolean" ? options : !!(options && options.capture);
+        const off = () => target.removeEventListener(type, handler, capture);
+        undo.push(off);
+        return off;
+      },
+      timer(fn, ms = 0) {
+        if (!open) return 0;
+        const t = env.win.setTimeout(() => {
+          if (open) fn();
+        }, ms);
+        undo.push(() => env.win.clearTimeout(t));
+        return t;
+      },
+      every(fn, ms) {
+        if (!open) return 0;
+        const t = env.win.setInterval(() => {
+          if (open) fn();
+        }, ms);
+        undo.push(() => env.win.clearInterval(t));
+        return t;
+      },
+      frame(fn) {
+        if (!open) return;
+        const raf = env.win.requestAnimationFrame ? env.win.requestAnimationFrame.bind(env.win) : (f) => env.win.setTimeout(f, 16);
+        raf(() => {
+          if (open) fn();
+        });
+      },
+      /** Await a promise of your own; throws Ended if the session ended meanwhile. */
+      guard(promise) {
+        return Promise.resolve(promise).then(
+          (v) => {
+            if (!open) throw new Ended();
+            return v;
+          },
+          (e) => {
+            if (!open) throw new Ended();
+            throw e;
+          }
+        );
+      },
+      /** A new element marked as the toolkit's own UI (not yet in the page). */
+      el(tag, { text, attrs, kind = "ui" } = {}) {
+        const node = env.doc.createElement(tag);
+        node.setAttribute(UI_ATTR, kind);
+        if (text !== void 0) node.textContent = String(text);
+        for (const [k, v] of Object.entries(attrs || {})) if (v !== void 0 && v !== null && v !== false) node.setAttribute(k, v === true ? "" : String(v));
+        return node;
+      },
+      announce: (message, options) => {
+        if (open) {
+          shared.liveUsers.add(s);
+          env.announce(message, options);
+        }
+      },
+      /** Undo everything, in reverse. Idempotent; never throws. */
+      end() {
+        if (!open) return false;
+        open = false;
+        for (let i = undo.length - 1; i >= 0; i--) {
+          try {
+            undo[i]();
+          } catch {
+          }
+        }
+        undo.length = 0;
+        shared.liveUsers.delete(s);
+        if (!shared.liveUsers.size) env.announce.release();
+        return true;
+      }
+    };
+    s.announce.batch = (key, message, options) => {
+      if (open) {
+        shared.liveUsers.add(s);
+        env.announce.batch(key, message, options);
+      }
+    };
+    const styles = stylesBlock(s, env);
+    s.css = styles.css;
+    s.filter = styles.filter;
+    s.watch = watchBlock(s, env);
+    s.highlight = highlightBlock(s, env);
+    s.tooltip = tooltipBlock(s, env);
+    s.panel = panelBlock(s, env);
+    s.focus = focusBlock(s, env);
+    s.keys = keysBlock(s, env);
+    s.text = textBlock(s, env);
+    s.ai = aiBlock(s, env);
+    s.speech = speechBlock(s, env);
+    s.media = mediaBlock(s, env);
+    s.page = env.page;
+    return s;
+  }
+
+  // toolkit/blocks/page.js
+  var SKIP_SELECTOR = [
+    "script",
+    "style",
+    "noscript",
+    "template",
+    "svg",
+    "math",
+    "canvas",
+    "iframe",
+    "object",
+    "textarea",
+    "input",
+    "select",
+    "option",
+    "code",
+    "pre",
+    "kbd",
+    "samp",
+    "var",
+    '[contenteditable=""]',
+    '[contenteditable="true"]',
+    "[aria-live]",
+    '[role="status"]',
+    '[role="alert"]',
+    '[role="log"]',
+    '[role="timer"]',
+    '[role="marquee"]',
+    `[${UI_ATTR}="ui"]`
+  ].join(", ");
+  var BLOCK = /^(address|article|aside|blockquote|dd|div|dl|dt|figcaption|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|section|table|td|th|tr|ul|br|summary|details)$/i;
+  var INTERACTIVE = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="option"], [tabindex]:not([tabindex="-1"])';
+  var NAME_FROM_CONTENT = /^(a|button|summary|h[1-6]|label|legend|caption|figcaption|option|td|th|li|dt)$/i;
+  var CONTENT_ROLES = /* @__PURE__ */ new Set(["button", "link", "menuitem", "menuitemcheckbox", "menuitemradio", "tab", "checkbox", "radio", "switch", "option", "treeitem", "cell", "columnheader", "rowheader", "heading", "tooltip"]);
+  var squash = (t) => String(t || "").replace(/\s+/g, " ").trim();
+  function pageBlock(env) {
+    const { doc, win } = env;
+    const layout = () => hasLayout(doc);
+    function isVisible(el) {
+      if (!el || el.nodeType !== 1 || !el.isConnected) return false;
+      if (el.closest("[hidden]")) return false;
+      const style = win.getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" || parseFloat(style.opacity) === 0) return false;
+      if (!layout()) return true;
+      if (typeof el.checkVisibility === "function" && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    }
+    function main() {
+      const visible = (list) => [...list].filter((el) => isVisible(el) && !isOurs(el));
+      const marked = visible(doc.querySelectorAll('main, [role="main" i]'));
+      if (marked.length) return marked[0];
+      const articles = visible(doc.querySelectorAll("article"));
+      if (articles.length) return articles.sort((a, b) => b.textContent.length - a.textContent.length)[0];
+      return visible(doc.querySelectorAll("#main, #content, .content"))[0] || doc.body || doc.documentElement;
+    }
+    function textNodes(root, { skip = "", includeReplaced = true } = {}) {
+      const out = [];
+      if (!root) return out;
+      const skipSel = skip ? `${SKIP_SELECTOR}, ${skip}` : SKIP_SELECTOR;
+      const hiddenCache = /* @__PURE__ */ new Map();
+      const hidden = (el) => {
+        if (hiddenCache.has(el)) return hiddenCache.get(el);
+        let h = false;
+        if (el.matches(skipSel) || el.hidden || el.getAttribute("aria-hidden") === "true") h = true;
+        else if (el.getAttribute(UI_ATTR) === "content" && !includeReplaced) h = true;
+        else {
+          const st = win.getComputedStyle(el);
+          h = st.display === "none" || st.visibility === "hidden";
+        }
+        if (!h && el.parentElement && el !== root) h = hidden(el.parentElement);
+        hiddenCache.set(el, h);
+        return h;
+      };
+      const walker = doc.createTreeWalker(
+        root,
+        4
+        /* SHOW_TEXT */
+      );
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!n.nodeValue.trim()) continue;
+        const parent = n.parentElement;
+        if (!parent || hidden(parent)) continue;
+        out.push(n);
+      }
+      return out;
+    }
+    function readableText(root, { blockPause = "\n", skip = "", includeReplaced = true } = {}) {
+      let text = "";
+      let lastBlock = null;
+      for (const node of textNodes(root, { skip, includeReplaced })) {
+        let block = node.parentElement;
+        while (block && block !== root && !BLOCK.test(block.tagName)) block = block.parentElement;
+        if (text && block !== lastBlock) text = text.replace(/\s+$/, "") + blockPause;
+        lastBlock = block;
+        text += node.nodeValue.replace(/\s+/g, " ");
+      }
+      return text.replace(/[ \t]+/g, " ").trim();
+    }
+    function headings({ maxLevel = 6, root = doc.body } = {}) {
+      const out = [];
+      if (!root) return out;
+      for (const el of root.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading" i]')) {
+        if (isOurs(el) || !isVisible(el) || el.closest('[aria-hidden="true"]')) continue;
+        const aria = parseInt(el.getAttribute("aria-level"), 10);
+        const level = /^H[1-6]$/.test(el.tagName) && !el.hasAttribute("aria-level") ? +el.tagName[1] : aria >= 1 ? aria : 2;
+        if (level > maxLevel) continue;
+        out.push({ el, level, text: nameOf(el) });
+      }
+      return out;
+    }
+    function contentText(el) {
+      let t = "";
+      for (const n of el.childNodes) {
+        if (n.nodeType === 3) t += n.nodeValue;
+        else if (n.nodeType === 1) {
+          if (n.hidden || n.getAttribute("aria-hidden") === "true" || /^(script|style|template|input|textarea|select)$/i.test(n.tagName)) continue;
+          if (n.tagName === "IMG") t += " " + (n.getAttribute("alt") || "") + " ";
+          else t += " " + contentText(n) + " ";
+        }
+      }
+      return t;
+    }
+    function labelledBy(el) {
+      const ids = (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean);
+      return ids.map((id) => doc.getElementById(id)).filter(Boolean).map((ref) => squash(ref.getAttribute("aria-label")) || squash(contentText(ref)) || squash(ref.getAttribute("title"))).join(" ");
+    }
+    function labelFor(el) {
+      const labels = el.labels ? [...el.labels] : [];
+      if (!labels.length && el.id) labels.push(...doc.querySelectorAll(`label[for="${CSS_escape(el.id)}"]`));
+      const wrap = el.closest("label");
+      if (wrap && !labels.includes(wrap)) labels.push(wrap);
+      return labels.map((l) => squash(contentText(l))).filter(Boolean).join(" ");
+    }
+    function nameOf(el) {
+      if (!el || el.nodeType !== 1) return "";
+      const tag = el.tagName;
+      const type = (el.getAttribute("type") || "").toLowerCase();
+      const isField = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
+      const role = (el.getAttribute("role") || "").toLowerCase().split(/\s+/)[0];
+      const candidates = [
+        labelledBy(el),
+        el.getAttribute("aria-label"),
+        tag === "IMG" || tag === "INPUT" && type === "image" || tag === "AREA" ? el.getAttribute("alt") : "",
+        isField ? labelFor(el) : "",
+        tag === "INPUT" && /^(button|submit|reset)$/.test(type) ? el.getAttribute("value") : "",
+        NAME_FROM_CONTENT.test(tag) || CONTENT_ROLES.has(role) ? contentText(el) : "",
+        tag === "FIELDSET" ? el.querySelector("legend")?.textContent : "",
+        tag === "TABLE" ? el.querySelector("caption")?.textContent : "",
+        el.getAttribute("title"),
+        isField ? el.getAttribute("placeholder") : "",
+        tag === "INPUT" && type === "submit" ? "Submit" : tag === "INPUT" && type === "reset" ? "Reset" : ""
+      ];
+      return candidates.map(squash).find(Boolean) || "";
+    }
+    function find(name, { within = doc.body, selector = INTERACTIVE } = {}) {
+      const want = squash(name).toLowerCase();
+      if (!want || !within) return null;
+      let best = null, bestScore = 0;
+      for (const el of within.querySelectorAll(selector)) {
+        if (isOurs(el) || !isVisible(el)) continue;
+        const have = nameOf(el).toLowerCase();
+        if (!have) continue;
+        const score = have === want ? 3 : have.startsWith(want) ? 2 : have.includes(want) ? 1 : 0;
+        if (score > bestScore) {
+          best = el;
+          bestScore = score;
+          if (score === 3) break;
+        }
+      }
+      return best;
+    }
+    return {
+      main,
+      textNodes,
+      readableText,
+      headings,
+      nameOf,
+      find,
+      isVisible,
+      isOurs: (el) => isOurs(el),
+      background: (el) => backgroundOf(el, win),
+      contrast
+    };
+  }
+  function CSS_escape(s) {
+    return String(s).replace(/["\\]/g, "\\$&");
+  }
+
+  // toolkit/blocks/announce.js
+  var SR_ONLY = "position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;border:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;";
+  function announcer(env) {
+    const { doc, win, shared } = env;
+    const batches = /* @__PURE__ */ new Map();
+    let batchTimer = null;
+    function region(politeness) {
+      let r = shared.liveRegions[politeness];
+      if (r && r.isConnected) return { el: r, fresh: false };
+      r = doc.createElement("div");
+      r.setAttribute(UI_ATTR, "ui");
+      r.setAttribute("aria-live", politeness);
+      r.setAttribute("aria-atomic", "true");
+      r.setAttribute("style", SR_ONLY);
+      shared.ourNodes.add(r);
+      (doc.body || doc.documentElement).appendChild(r);
+      shared.liveRegions[politeness] = r;
+      return { el: r, fresh: true };
+    }
+    const pending = shared.livePending || (shared.livePending = {});
+    function announce(message, { politeness = "polite", maxChars = 300 } = {}) {
+      const text = String(message ?? "").replace(/\s+/g, " ").trim().slice(0, maxChars);
+      if (!text) return;
+      const p = politeness === "assertive" ? "assertive" : "polite";
+      const { el, fresh } = region(p);
+      if (pending[p]) {
+        pending[p].text += " " + text;
+        return;
+      }
+      el.textContent = "";
+      pending[p] = { text };
+      win.setTimeout(() => {
+        const entry = pending[p];
+        delete pending[p];
+        if (entry && el.isConnected) el.textContent = entry.text;
+      }, fresh ? 250 : 60);
+    }
+    announce.batch = (key, message, { windowMs = 400, politeness = "polite" } = {}) => {
+      batches.set(key, { message, politeness });
+      if (batchTimer) return;
+      batchTimer = win.setTimeout(() => {
+        batchTimer = null;
+        const list = [...batches.values()];
+        batches.clear();
+        const assertive = list.some((b) => b.politeness === "assertive");
+        announce(list.map((b) => b.message).join(" "), { politeness: assertive ? "assertive" : "polite" });
+      }, windowMs);
+    };
+    announce.release = () => {
+      for (const [k, el] of Object.entries(shared.liveRegions)) {
+        el.remove();
+        delete shared.liveRegions[k];
+      }
+      for (const k of Object.keys(pending)) delete pending[k];
+      win.clearTimeout(batchTimer);
+      batchTimer = null;
+      batches.clear();
+    };
+    return announce;
+  }
+
+  // toolkit/blocks/names.js
+  var BLOCKS_VERSION = "2026-11-03";
+  var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "speech.out", "speech.in", "media"]);
+
+  // toolkit/blocks/create.js
+  function createBlocks({ win = globalThis, adapter = "adapter", personal = {}, ai = null, capture } = {}) {
+    if (!win || !win.document) throw new Error("createBlocks needs a window with a document.");
+    const env = {
+      win,
+      doc: win.document,
+      shared: sharedState(win),
+      adapter,
+      personal: Object.freeze({ ...personal || {} }),
+      transport: { ai: typeof ai === "function" ? ai : null },
+      capture: typeof capture === "function" ? capture : (el) => captureInPage(el, win)
+    };
+    env.page = pageBlock(env);
+    env.announce = announcer(env);
+    watchInput(env);
+    return Object.freeze({
+      session: (config) => createSession(env, config),
+      page: env.page,
+      personal: env.personal,
+      blocks: BLOCK_NAMES,
+      version: BLOCKS_VERSION
+    });
+  }
+
+  // toolkit/blocks/personal.js
+  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function personalFromProfile(profile) {
+    const out = {};
+    const fields = profile && profile.fields || {};
+    const needs = Array.isArray(fields.needs) ? fields.needs : [];
+    for (const need of needs) {
+      if (!need || typeof need !== "object") continue;
+      const v = need.value;
+      switch (need.dimension) {
+        case "readAloudRate":
+          if (Number.isFinite(Number(v))) out.speechRate = clamp(Number(v), 0.5, 2);
+          break;
+        case "textSize":
+          if (Number.isFinite(Number(v))) out.textScale = clamp(Number(v), 1, 3);
+          break;
+        case "reduceMotion":
+          out.reduceMotion = !!v;
+          break;
+        case "darkTheme":
+          out.darkTheme = !!v;
+          break;
+        case "contrast":
+          if (v) out.contrast = v === true ? "more" : String(v);
+          break;
+        case "simplify":
+          if (v) out.simplify = true;
+          break;
+        default:
+          break;
+      }
+    }
+    const level = fields.readingLevel;
+    if (level === "plain" || level === "easy-read") out.readingLevel = level;
+    else if (level !== null && level !== void 0 && Number.isFinite(parseInt(level, 10))) out.readingLevel = clamp(parseInt(level, 10), 1, 12);
+    const style = profile && profile.metaPreferences && profile.metaPreferences.language;
+    if (!out.readingLevel && (style === "plain" || out.simplify)) out.readingLevel = "plain";
+    delete out.simplify;
+    return Object.freeze(out);
+  }
+  var PERSONAL_KEYS = Object.freeze({
+    speechRate: "Speaking rate, 0.5-2 (profile need readAloudRate). Overrides speech.say({ rate }).",
+    readingLevel: "'plain', 'easy-read' or a grade 1-12 (profile readingLevel, or plain language). Overrides ai.text({ readingLevel }).",
+    textScale: "Text size multiplier, 1-3 (profile need textSize). Tooltips and panels scale their text by it.",
+    reduceMotion: "true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting.",
+    contrast: "'more' or a contrast mode when the profile asks for more contrast.",
+    darkTheme: "true when the profile asks for a dark theme."
+  });
+
+  // toolkit/blocks/runtime.js
+  if (!globalThis.__ai4a11yBlocks) {
+    Object.defineProperty(globalThis, "__ai4a11yBlocks", {
+      configurable: true,
+      value: Object.freeze({
+        version: BLOCKS_VERSION,
+        create: (options) => createBlocks({ ...options, win: globalThis }),
+        personalFromProfile
+      })
+    });
+  }
+})();

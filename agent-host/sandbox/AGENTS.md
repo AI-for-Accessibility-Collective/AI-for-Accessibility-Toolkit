@@ -34,6 +34,13 @@ condition from what they ask for.
   the adapter adds or changes. Its step 6 (listing your decisions) is for
   your review, not your reply. Run its contrast script with `node` on any
   colour you choose.
+- The toolkit's **building blocks** are what an adapter builds on: undoing
+  its changes, stylesheets, reading and watching the page, highlighting,
+  announcing to screen readers, tooltips, panels, focus and shortcuts, text
+  changes, AI (simplify, summarize, define, translate, label, describe an
+  image or a chart), speech and media. The skill's
+  `reference/building-blocks.md` lists each one's calls, config and what it
+  always does. Read it before you write your first adapter.
 - `/work` is yours. Write adapters to `/work/adapters/<id>.js`, one file each.
 - You have a browser: Chromium, with Playwright (`import { chromium } from
   'playwright'` in a script you run with `node`). Use it to try an adapter on
@@ -42,6 +49,12 @@ condition from what they ask for.
   `disable()` puts the page back, and with axe-core
   (`/toolkit/extension/vendor/axe-core.min.js`) that it adds no problem. It
   does not replace the preview: only the preview shows the person's page.
+  To give the adapter its building blocks there, add
+  `/toolkit/extension/vendor/blocks.js` to the page first
+  (`page.addScriptTag({ path })`) and pass
+  `window.__ai4a11yBlocks.create({ adapter: '<id>' })` as `toolkit`. AI
+  answers are `null` in your browser (it has no internet); the preview on
+  the person's page has them.
 - You have no internet access, and you do not publish anything. Ignore the
   skill's steps that use `scripts/adapter.mjs` (publish, status, share, check,
   extension) and `.env`: here the sidebar does those, with the person's
@@ -68,6 +81,22 @@ condition from what they ask for.
    the person did, never page content or anything they typed. Follow
    "Keep the page steady and familiar" and "Accessible to WCAG 2.2 AA"
    below.
+   - **Build on the blocks.** In `enable()`, `const s = toolkit.session()`
+     and make every change through it; `disable()` is `s.end()`. Use a
+     block wherever one does what you need (a tooltip, a panel, a
+     highlight, speech, an announcement) rather than writing your own: each
+     already meets the rules below that are easy to get wrong.
+   - **AI goes through the blocks**: `await s.ai.text('simplify', text,
+     { context, keep, tone })`, `s.ai.vision('describe', img)`. The toolkit
+     runs the model with its own prompt for the task, adapted by your
+     fields, and checks the answer. Prefer the fields to `instructions`, and
+     `instructions` to a whole `template`. An answer is a string or `null`:
+     on `null`, leave the page as it is. Ask for one block of text at a
+     time, only what the person asked to change, and never more than the
+     adapter needs: each call counts against the person's daily limit.
+   - **The person's settings win.** What you set (a speech rate, a reading
+     level) is a default; the blocks use the person's profile where it says
+     otherwise. Do not work around it.
 4. **Preview it with checks** on their page with `browser_preview`: the file,
    a name, the URL patterns of the site it is for (such as
    `https://example.com/*`), and **checks**. A check is the body of an async
@@ -144,8 +173,8 @@ change are barriers too, for many people.
   not from your own taste.
 - **Be consistent.** The same thing has the same name, look and place
   everywhere it appears, on every page the adapter runs on (WCAG 3.2.3,
-  3.2.4). Style through one stylesheet the adapter adds (a `<style>` element,
-  with your own class or `data-` attribute on what you change), not with
+  3.2.4). Style through one stylesheet the adapter adds (`s.css(...)`, with
+  your own class or `data-` attribute on what you change), not with
   different inline styles element by element.
 - **Move nothing the person did not ask to move.** If the change needs space
   (bigger targets, bigger text), let the page reflow once, when `enable()`

@@ -22,7 +22,7 @@
 
 import { readConnection } from '../runtime/config.js';
 import { pageOutline } from '../runtime/page.js';
-import { buildPreviewScript, previewTeardownScript, AXE_FILE } from '../runtime/scripts.js';
+import { buildPreviewScript, previewTeardownScript, AXE_FILE, BLOCKS_FILE } from '../runtime/scripts.js';
 import { createRegistryClient } from '../vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP } from '../vendor/protocol/adapter/index.js';
 
@@ -216,9 +216,12 @@ async function runPreview(request) {
   }
   let result;
   try {
-    // axe-core first, in the same world, for the preview's accessibility check.
+    // axe-core and the building blocks first, in the same world. The
+    // blocks follow the person's settings as of the runtime's last sync.
+    const { runtimeState } = await chrome.storage.session.get('runtimeState').catch(() => ({}));
+    const personal = runtimeState?.personal || {};
     const [res] = await chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', injectImmediately: true,
-      js: [{ file: AXE_FILE }, { code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks, audit: true }) }] });
+      js: [{ file: AXE_FILE }, { file: BLOCKS_FILE }, { code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks, audit: true, personal }) }] });
     result = res?.result || { status: 'failed', message: res?.error || 'the page gave no result' };
   } catch (e) {
     result = { status: 'failed', message: e.message };

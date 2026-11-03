@@ -11,6 +11,8 @@
 //                   either, the slow lane throws 'no-server-key' when actually
 //                   invoked; the fast lane is unaffected.
 //   GEMINI_MODEL    default gemini-3.8-flash
+//   AI_DAILY_CALLS  the building blocks' AI (/v1/ai): calls per account per
+//                   day, default 500; AI_DAILY_CALLS_PER_ADAPTER, default 200
 //   LOG_CONTENT     off: leave request and response bodies and AI prompts and
 //                   replies out of the log (they are in it by default, with
 //                   passwords, tokens and keys redacted)
@@ -72,6 +74,12 @@ function boot() {
   const geminiCaller = createGeminiCaller({ apiKey: geminiApiKey, model: geminiModel, log, logContent });
 
   const toolkitHost = createToolkitHost({ store, geminiCaller });
+  // The building blocks' AI sends page content: never logged, whatever LOG_CONTENT says.
+  const ai = {
+    caller: geminiApiKey ? createGeminiCaller({ apiKey: geminiApiKey, model: geminiModel, log, logContent: false }) : null,
+    dailyPerAccount: Number(process.env.AI_DAILY_CALLS) || undefined,
+    dailyPerAdapter: Number(process.env.AI_DAILY_CALLS_PER_ADAPTER) || undefined,
+  };
 
   let corsOrigins = (process.env.CORS_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean);
   // --workshop: any web page (Redbird on localhost:8000, a participant's own
@@ -87,7 +95,7 @@ function boot() {
   const tokenSecret = process.env.TOKEN_SECRET || undefined;
   // The extension's assistant sidebar: the agent host on its own VM (agent-host/).
   const agentHost = { url: process.env.AGENT_HOST_URL || null, secret: process.env.AGENT_HOST_SECRET || null };
-  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log, logContent, agentHost });
+  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log, logContent, agentHost, ai });
   const server = http.createServer(listener);
   server.listen(port, () => {
     log.info('server.started', {
