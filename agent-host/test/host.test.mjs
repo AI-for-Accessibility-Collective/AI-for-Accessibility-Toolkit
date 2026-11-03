@@ -185,7 +185,7 @@ await test('an adapter that adds accessibility problems, or was not checked with
 });
 
 await test('reading the accessibility skill gets its own line', () => {
-  assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'skill', state: { status: 'completed', input: { name: 'intopia-web-accessibility' } } } }).entry.text, 'Opening the accessibility guidance (WCAG)');
+  assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'skill', state: { status: 'completed', input: { id: 'intopia-web-accessibility' } } } }).entry.text, 'Opening the accessibility guidance (WCAG)');
   assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'skill', state: { status: 'completed', input: { name: 'ai4a11y-toolkit' } } } }).entry.text, 'Opening the toolkit skill');
   assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'read', state: { status: 'completed', input: { filePath: '/opt/agent/skills/intopia-web-accessibility/INDEX.md' } } } }).entry.text, 'Reading accessibility guidance (WCAG)');
 });

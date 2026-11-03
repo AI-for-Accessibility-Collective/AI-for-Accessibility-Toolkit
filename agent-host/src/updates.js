@@ -32,7 +32,7 @@ export function stepLabel(tool, input = {}) {
     return pathOf(input).includes('/toolkit') ? 'Reading the toolkit’s guides and code' : 'Looking over its work';
   }
   if (WRITES.has(name)) return /adapters?\//.test(pathOf(input)) || /\.m?js$/.test(pathOf(input)) ? 'Writing the adapter' : 'Writing notes';
-  if (name === 'skill') return /accessib|wcag|intopia/i.test(String(input?.name || '')) ? 'Opening the accessibility guidance (WCAG)' : 'Opening the toolkit skill';
+  if (name === 'skill') return /accessib|wcag|intopia/i.test(String(input?.id || input?.name || '')) ? 'Opening the accessibility guidance (WCAG)' : 'Opening the toolkit skill';
   if (name === 'bash' || name === 'shell') return 'Running a check';
   if (name === 'todowrite' || name === 'todoread') return 'Planning the next steps';
   if (name === 'webfetch' || name === 'websearch') return 'Looking something up';
