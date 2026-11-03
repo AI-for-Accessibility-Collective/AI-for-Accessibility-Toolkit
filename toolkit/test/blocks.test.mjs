@@ -141,9 +141,9 @@ await test('watch.byPerson: true only for a recent trusted click or key inside t
 });
 
 await test('watch.prefs: the profile turns reduced motion on even when the system does not', async () => {
-  const { tk } = page('<p>x</p>', { personal: { reduceMotion: true } });
+  const { tk } = page('<p>x</p>', { personal: { motionReducer: true } });
   const s = tk.session();
-  assert.equal(s.watch.prefs().reducedMotion, true);
+  assert.equal(s.watch.prefs().motionReducer, true);
   s.end();
 });
 
@@ -265,6 +265,17 @@ await test('tooltip: opens on hover, can be hovered, a click never closes it, Es
   assert.equal(tip.el.hidden, false, 'opens again once the pointer left and came back');
   s.end();
   assert.equal(html(), before);
+});
+
+await test("tooltip and panel: the profile's text size wins over the builder's fontScale", async () => {
+  const { tk, doc } = page('<abbr title="x">y</abbr>', { personal: { fontScale: 150 } });
+  const s = tk.session();
+  s.tooltip({ trigger: 'abbr', fontScale: 100 });
+  s.panel({ label: 'P', fontScale: 120 });
+  const css = [...doc.querySelectorAll('style')].map((x) => x.textContent).join('\n');
+  assert.match(css, /font: 21px\/1\.45/);
+  assert.match(css, /font-size: 24px/);
+  s.end();
 });
 
 await test('tooltip: stays while its trigger has focus, and a late answer never opens it after Escape', async () => {
@@ -435,7 +446,7 @@ await test("speech.say: the profile's rate, words as DOM ranges, one voice page-
   const spoken = fakeSpeech(win);
   const s = tk.session();
   const words = [];
-  const r = s.speech.say($('#p'), { rate: 0.8, onWord: (range) => { if (range) words.push(range.toString()); } });
+  const r = s.speech.say($('#p'), { speechRate: 0.8, onWord: (range) => { if (range) words.push(range.toString()); } });
   await r.done;
   assert.equal(spoken[0].rate, 1.6);
   assert.equal(words[0], 'One');
@@ -517,12 +528,12 @@ await test('media.pause: plays again only what was playing, and never what the p
 
 // ── the person's settings ───────────────────────────────────────────────────
 
-await test('personalFromProfile: only what the profile says, clamped', async () => {
+await test("personalFromProfile: the web surface's settings, in the settings vocabulary, only what the profile says", async () => {
   const p = personalFromProfile({
     metaPreferences: { language: 'plain' },
-    fields: { needs: [{ dimension: 'readAloudRate', value: 3 }, { dimension: 'textSize', value: 1.5 }, { dimension: 'reduceMotion', value: true }, { dimension: 'contrast', value: true }] },
+    fields: { needs: [{ dimension: 'readAloudRate', value: 3 }, { dimension: 'textSize', value: 1.5 }, { dimension: 'reduceMotion', value: true }, { dimension: 'contrast', value: true }, { dimension: 'darkTheme', value: true }] },
   });
-  assert.deepEqual({ ...p }, { speechRate: 2, textScale: 1.5, reduceMotion: true, contrast: 'more', readingLevel: 'plain' });
+  assert.deepEqual({ ...p }, { speechRate: 2, fontScale: 150, motionReducer: true, contrastMode: 'light', darkMode: true, readingLevel: 'plain' });
   assert.deepEqual({ ...personalFromProfile({ fields: { readingLevel: '6' } }) }, { readingLevel: 6 });
   assert.deepEqual({ ...personalFromProfile(null) }, {});
 });
@@ -540,8 +551,8 @@ await test('prompts: the fields shape the prompt; the fence and the output contr
   const t = buildPrompt('rewrite', 'Some text.', { template: 'Make this a haiku: {text} Tone {tone}.', tone: 'calm' }).prompt;
   assert.match(t, /^Make this a haiku: <text>\nSome text.\n<\/text> Tone calm\./);
   assert.ok(t.includes(NO_ANSWER));
-  assert.match(buildPrompt('translate', 'Hola', { language: 'English' }).prompt, /Translate the text below into English\./);
-  assert.throws(() => cleanOptions('translate', {}), /needs `language`/);
+  assert.match(buildPrompt('translate', 'Hola', { translateTo: 'English' }).prompt, /Translate the text below into English\./);
+  assert.throws(() => cleanOptions('translate', {}), /needs `translateTo`/);
   assert.throws(() => cleanOptions('rewrite', {}), /needs instructions or template/);
   assert.throws(() => cleanOptions('simplify', { template: 'no slot' }), /must contain \{text\}/);
   assert.throws(() => cleanOptions('simplify', { voice: 'x' }), /Unknown option "voice"/);

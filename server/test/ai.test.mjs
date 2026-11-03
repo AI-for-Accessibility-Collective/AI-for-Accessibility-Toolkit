@@ -24,7 +24,14 @@ async function test(name, fn) {
 
 const prompts = [];
 let reply = (prompt) => 'Plain words about the loan and what it costs each year.';
-const caller = async (prompt, { images = [] } = {}) => { prompts.push({ prompt, images }); return reply(prompt); };
+// Each answer is billed as 1,000,000 input and 100,000 output tokens: at the
+// test price below, $1 + $1 = $2 a call.
+const caller = Object.assign(async (prompt, { images = [], onUsage } = {}) => {
+  prompts.push({ prompt, images });
+  onUsage?.({ model: 'test-model', promptTokens: 1_000_000, outputTokens: 60_000, thoughtsTokens: 40_000 });
+  return reply(prompt);
+}, { model: 'test-model' });
+const price = () => ({ input: 1, output: 10 });
 
 async function boot({ ai }) {
   const dir = await mkdtemp(path.join(tmpdir(), 'ai-route-test-'));
@@ -41,7 +48,7 @@ async function boot({ ai }) {
   return { base, dir, lines, mint, stop };
 }
 
-const svc = await boot({ ai: { caller, dailyPerAccount: 6, dailyPerAdapter: 3 } });
+const svc = await boot({ ai: { caller, price, dailyBudgetUsd: 100, dailyPerAdapter: 3 } });
 const token = await svc.mint('ada');
 const call = (p, body, { method = 'POST', tok = token } = {}) => fetch(svc.base + p, {
   method, headers: { authorization: `Bearer ${tok}`, ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined,
@@ -78,7 +85,7 @@ await test('bad requests say what is wrong, and cost nothing', async () => {
   assert.match((await r1.json()).message, /simplify/);
   const r2 = await call('/v1/ai/text', { task: 'translate', input: 'Hola' });
   assert.equal(r2.status, 400);
-  assert.match((await r2.json()).message, /language/);
+  assert.match((await r2.json()).message, /translateTo/);
   assert.equal((await call('/v1/ai/text', { task: 'simplify', input: 'x', options: { voice: 'a' } })).status, 400);
   assert.equal((await call('/v1/ai/vision', { task: 'describe', image: { mimeType: 'image/gif', data: 'R0lG' } })).status, 400);
   assert.equal((await call('/v1/ai/text', { task: 'simplify', input: 'x' }, { tok: 'aat_wrong' })).status, 401);
@@ -94,19 +101,35 @@ await test('vision: the image goes to the model with the prompt', async () => {
   reply = () => 'Plain words about the loan and what it costs each year.';
 });
 
-await test('daily limits: per adapter, then per account (429); usage says where it stands', async () => {
+await test('the budget is dollars per account, from the tokens each call was billed; adapters have a call limit', async () => {
   const usage = await (await call('/v1/ai/usage', null, { method: 'GET' })).json();
-  assert.equal(usage.limit, 6);
+  assert.equal(usage.budgetUsd, 100);
+  assert.equal(usage.spentUsd, 10, 'five answered calls at $2');
   assert.equal(usage.perAdapterLimit, 3);
   assert.equal(usage.byAdapter['ada/browser-runtime/plain'], 1);
-  const svc2 = await boot({ ai: { caller, dailyPerAccount: 4, dailyPerAdapter: 2 } });
+  // $5 a day. A call is let through when its estimate fits; what Google
+  // bills is counted after, so the last call may go past by its own cost.
+  const svc2 = await boot({ ai: { caller, price, dailyBudgetUsd: 5, dailyPerAdapter: 2 } });
   const t2 = await svc2.mint('bo');
   const c2 = (body) => fetch(svc2.base + '/v1/ai/text', { method: 'POST', headers: { authorization: `Bearer ${t2}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const statuses = [];
   for (let i = 0; i < 3; i++) statuses.push((await c2({ task: 'simplify', input: PASSAGE, adapter: 'bo/x/one' })).status);
-  for (let i = 0; i < 3; i++) statuses.push((await c2({ task: 'simplify', input: PASSAGE, adapter: `bo/x/n${i}` })).status);
-  assert.deepEqual(statuses, [200, 200, 429, 200, 200, 429]);
+  assert.deepEqual(statuses, [200, 200, 429], 'the adapter limit');
+  assert.equal((await c2({ task: 'simplify', input: PASSAGE, adapter: 'bo/x/two' })).status, 200, '$4 spent: it fits');
+  const over = await c2({ task: 'simplify', input: PASSAGE, adapter: 'bo/x/two' });
+  assert.equal(over.status, 429, '$6 spent');
+  assert.match((await over.json()).message, /\$5 AI budget/);
   svc2.stop();
+});
+
+await test('calls made at once cannot run past the budget together', async () => {
+  const svc4 = await boot({ ai: { caller, price, dailyBudgetUsd: 0.01 } });
+  const t4 = await svc4.mint('di');
+  const one = () => fetch(svc4.base + '/v1/ai/text', { method: 'POST', headers: { authorization: `Bearer ${t4}`, 'content-type': 'application/json' }, body: JSON.stringify({ task: 'simplify', input: PASSAGE }) }).then(r => r.status);
+  // Each call's estimate is about $0.009 at this price: only one fits.
+  const statuses = await Promise.all([one(), one(), one()]);
+  assert.deepEqual(statuses.sort(), [200, 429, 429]);
+  svc4.stop();
 });
 
 await test('the account can switch it off (not with an app token); off is 403', async () => {

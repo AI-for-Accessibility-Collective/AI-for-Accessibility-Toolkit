@@ -593,17 +593,23 @@ Choices made while building it (mine, open to change):
 
 - Block config is its own vocabulary (`toolkit/blocks/catalog.js`), apart
   from the settings vocabulary: settings are the person's, block config is
-  the builder's. The person's settings reach the blocks as `personal`
-  (`toolkit/blocks/personal.js`, derived from the profile).
+  the builder's (a tooltip's delay, a panel's corner). Where the two overlap,
+  they share the settings vocabulary's name (the project lead's decision):
+  `speechRate`, `fontScale`, `motionReducer`, `contrastMode`, `darkMode`,
+  `translateTo`, and the profile's `readingLevel`. The person's values reach
+  the blocks as `personal` (`toolkit/blocks/personal.js`), derived by the web
+  surface's own `deriveWebSettings`, and win over the builder's.
 - The prompt fields are `readingLevel`, `language`, `tone`, `audience`,
   `context`, `keep`, `glossary`, `instructions`, `template`,
   `maxSentences`, `maxChars`, `purpose`, `minRatio` and `maxRatio`
   (`toolkit/blocks/ai/prompts.js`). No field can remove the fence around the
   page text or the output contract, and the gates always run.
-- Limits: 500 AI calls per account per day and 200 per adapter
-  (`AI_DAILY_CALLS`, `AI_DAILY_CALLS_PER_ADAPTER`), 40 per adapter session,
-  and an off switch per account (`PUT /v1/ai/settings`). What a page sends
-  to `/v1/ai` is never logged.
+- Limits: $200 of AI per account per day (the project lead's number,
+  `AI_DAILY_BUDGET_USD`), priced from the tokens each response reports at
+  the model's standard-tier rate, because the response carries token counts
+  and no cost; 200 calls per adapter per day and 40 per adapter session
+  (mine); an off switch per account (`PUT /v1/ai/settings`). What a page
+  sends to `/v1/ai` is never logged.
 - The gates stay in `tools/utils/ai-output.js`; the service imports them.
   The toolkit may not import the catalog, so a host that runs its own model
   imports the gates from there too.

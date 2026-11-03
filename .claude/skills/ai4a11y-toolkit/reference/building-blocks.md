@@ -32,12 +32,12 @@ export default {
 
 | Key in `toolkit.personal` | What it is |
 |---|---|
-| `speechRate` | Speaking rate, 0.5-2 (profile need readAloudRate). Overrides speech.say({ rate }). |
-| `readingLevel` | 'plain', 'easy-read' or a grade 1-12 (profile readingLevel, or plain language). Overrides ai.text({ readingLevel }). |
-| `textScale` | Text size multiplier, 1-3 (profile need textSize). Tooltips and panels scale their text by it. |
-| `reduceMotion` | true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting. |
-| `contrast` | 'more' or a contrast mode when the profile asks for more contrast. |
-| `darkTheme` | true when the profile asks for a dark theme. |
+| `speechRate` | Speaking rate, 0.5-2. speech.say({ speechRate }) uses the profile's over yours. |
+| `fontScale` | Text size in percent, 100-200. Tooltips and panels scale their text by it (their `fontScale`). |
+| `motionReducer` | true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting. |
+| `contrastMode` | 'light' or 'yellow-black' when the profile asks for more contrast. |
+| `darkMode` | true when the profile asks for a dark theme. |
+| `readingLevel` | 'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours. |
 
 ## The blocks
 
@@ -90,7 +90,7 @@ React to what changes while the adapter runs.
 ```javascript
 s.watch.added(root, (el) => ..., { debounceMs, cap, types, selector })
 s.watch.route((url) => ...)           // the address changed without a page load
-s.watch.prefs((p) => ...)             // { reducedMotion, moreContrast, dark, forcedColors }
+s.watch.prefs((p) => ...)             // { motionReducer, moreContrast, darkMode, forcedColors }
 s.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped or typed in el
 ```
 
@@ -104,7 +104,7 @@ s.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped
 
 From the person's profile, over your value:
 
-- `reduceMotion`: prefs().reducedMotion is true when the profile asks for it, even if the system does not.
+- `motionReducer`: prefs() reports motionReducer, darkMode and moreContrast as true when the profile asks for them, even if the system does not.
 
 Always, whatever the config:
 
@@ -158,7 +158,7 @@ s.highlight.focusRing({ color, width })
 
 From the person's profile, over your value:
 
-- `reduceMotion`: The band does not animate.
+- `motionReducer`: The band does not animate.
 
 Always, whatever the config:
 
@@ -206,10 +206,11 @@ const t = s.tooltip(...); t.open(el); t.hide()
 | `describe` | `true` | Point the trigger's aria-describedby at it while open. |
 | `maxWidth` | `320` | Pixels. |
 | `theme` | `"dark"` | 'dark' or 'light'. |
+| `fontScale` | `100` | Text size in percent. |
 
 From the person's profile, over your value:
 
-- `textScale`: Its text is scaled up by the profile's text size.
+- `fontScale`: The profile's text size wins over yours.
 
 Always, whatever the config:
 
@@ -241,6 +242,11 @@ p.body.append(content); p.open(button); p.close(); p.isOpen
 | `theme` | `"page"` | 'page' (the page's font), 'light' or 'dark'. |
 | `width` | `360` | Pixels (not fullscreen). |
 | `zIndex` | `2147483646` | Stacking order. |
+| `fontScale` | `100` | Text size in percent. |
+
+From the person's profile, over your value:
+
+- `fontScale`: The profile's text size wins over yours.
 
 Always, whatever the config:
 
@@ -268,7 +274,7 @@ s.keys.shortcut({ code: 'KeyD', alt: true }, (e) => ...)
 
 From the person's profile, over your value:
 
-- `reduceMotion`: region() scrolls without animation.
+- `motionReducer`: region() scrolls without animation.
 
 Always, whatever the config:
 
@@ -309,7 +315,7 @@ Ask the toolkit's model for text, with its default prompt for the task adapted b
 ```javascript
 const plain = await s.ai.text('simplify', text, { context, keep: ['Medicare'], tone: 'friendly' })
 const meaning = await s.ai.text('define', word, { context: sentence, maxChars: 200 })
-const es = await s.ai.text('translate', text, { language: 'Spanish' })
+const es = await s.ai.text('translate', text, { translateTo: 'Spanish' })
 const name = await s.ai.text('label', 'icon button, search form, magnifier icon')
 s.ai.available                       // false where no model is wired (then every call is null)
 ```
@@ -318,12 +324,11 @@ s.ai.available                       // false where no model is wired (then ever
 |---|---|---|
 | `budget` | `40` | Calls per session (cached answers are free). |
 | `maxInputChars` | `6000` | Longer input gets null, not a cut: send one block at a time. |
-| `fields` |  | The prompt fields (readingLevel, language, tone, audience, context, keep, glossary, instructions, template, maxSentences, maxChars, minRatio, maxRatio): see "Prompts" below. |
+| `fields` |  | The prompt fields (readingLevel, translateTo, language, tone, audience, context, keep, glossary, instructions, template, maxSentences, maxChars, minRatio, maxRatio): see "Prompts" below. |
 
 From the person's profile, over your value:
 
 - `readingLevel`: The profile's reading level (or plain language) wins over yours.
-- `language`: A profile language, when it has one, wins over yours.
 
 Always, whatever the config:
 
@@ -355,13 +360,13 @@ Always, whatever the config:
 Read text aloud, with word-by-word events for highlighting.
 
 ```javascript
-const r = s.speech.say(elementOrText, { rate, voice, lang, onWord: (range) => h.move(range), onChunk })
+const r = s.speech.say(elementOrText, { speechRate, voice, lang, onWord: (range) => h.move(range), onChunk })
 r.pause(); r.resume(); r.stop(); await r.done; r.speaking
 ```
 
 | Config | Default | What it does |
 |---|---|---|
-| `rate` | `1` | 0.5-2. |
+| `speechRate` | `1` | 0.5-2. |
 | `pitch` | `1` | 0-2. |
 | `voice` |  | A voice name from speechSynthesis.getVoices(). |
 | `lang` |  | e.g. 'en-GB'. By default the page's language. |
@@ -370,7 +375,7 @@ r.pause(); r.resume(); r.stop(); await r.done; r.speaking
 
 From the person's profile, over your value:
 
-- `speechRate`: The profile's speaking rate wins over `rate`.
+- `speechRate`: The profile's speaking rate wins over yours.
 
 Always, whatever the config:
 
@@ -427,7 +432,7 @@ Each task has the toolkit's own prompt, written to its language rules (plain lan
 | `simplify` | `s.ai.text` | a passage | Rewrite a passage in plain language, keeping every fact. |
 | `summarize` | `s.ai.text` | a passage | A short summary of a passage: the main point and anything the reader must do. |
 | `define` | `s.ai.text` | a word or phrase (put the sentence it is in into context) | What a word or phrase means here, in one or two plain sentences. |
-| `translate` | `s.ai.text` | a passage | Translate a passage into `language`, keeping names, numbers and links. |
+| `translate` | `s.ai.text` | a passage | Translate a passage into `translateTo`, keeping names, numbers and links. |
 | `rewrite` | `s.ai.text` | a passage | Rewrite a passage the way `instructions` say. |
 | `label` | `s.ai.text` | what is known about the control: its type, its current text, nearby text | A short accessible name (1-4 words) for a control. |
 | `linkText` | `s.ai.text` | the link's text, its address and the sentence around it | Link text (2-8 words) that says where a link goes. |
@@ -438,14 +443,15 @@ Each task has the toolkit's own prompt, written to its language rules (plain lan
 | Field | What it does |
 |---|---|
 | `readingLevel` | 'plain', 'easy-read', or a school grade from 1 to 12. From the person's profile when it has one. (personal) |
-| `language` | The language to answer in, e.g. 'Spanish' or 'es'. For translate, the target. By default the language of the text. (personal) |
+| `translateTo` | translate: the language to translate into, e.g. 'Spanish' (the settings vocabulary's translateTo). |
+| `language` | The language to answer in, e.g. 'Spanish'. By default the language of the text. |
 | `tone` | e.g. 'friendly', 'formal', 'calm'. By default the tone of the original. |
 | `audience` | Who reads the answer, in a phrase, e.g. 'visitors new to banking terms'. Describe what they need, not a condition. |
 | `context` | What the model needs to understand the text: the page title, the heading, the sentence around a word, the site. |
 | `keep` | Terms to keep exactly as written: names, drug names, product codes. |
 | `glossary` | { term: explanation } for terms the answer should explain your way. |
 | `instructions` | Anything else, in a few plain sentences: "Use British spelling." "Explain each step as a numbered list." |
-| `template` | A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}. |
+| `template` | A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {translateTo}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}. |
 | `maxSentences` | At most this many sentences (summarize, define). |
 | `maxChars` | At most this many characters (define, label, describe, chart). |
 | `purpose` | describe: 'alt' is one sentence for alt text, 'long' a fuller description. |

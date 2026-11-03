@@ -11,8 +11,12 @@
 //                   either, the slow lane throws 'no-server-key' when actually
 //                   invoked; the fast lane is unaffected.
 //   GEMINI_MODEL    default gemini-3.8-flash
-//   AI_DAILY_CALLS  the building blocks' AI (/v1/ai): calls per account per
-//                   day, default 500; AI_DAILY_CALLS_PER_ADAPTER, default 200
+//   AI_DAILY_BUDGET_USD  the building blocks' AI (/v1/ai): US dollars per
+//                   account per day (UTC), default 200, metered from the
+//                   tokens each call used at the model's price (gemini.js);
+//                   AI_DAILY_CALLS_PER_ADAPTER, calls per adapter, default 200;
+//                   AI_PRICE_INPUT_PER_MTOK and AI_PRICE_OUTPUT_PER_MTOK
+//                   override the price, in dollars per million tokens
 //   LOG_CONTENT     off: leave request and response bodies and AI prompts and
 //                   replies out of the log (they are in it by default, with
 //                   passwords, tokens and keys redacted)
@@ -77,8 +81,11 @@ function boot() {
   // The building blocks' AI sends page content: never logged, whatever LOG_CONTENT says.
   const ai = {
     caller: geminiApiKey ? createGeminiCaller({ apiKey: geminiApiKey, model: geminiModel, log, logContent: false }) : null,
-    dailyPerAccount: Number(process.env.AI_DAILY_CALLS) || undefined,
+    dailyBudgetUsd: Number(process.env.AI_DAILY_BUDGET_USD) || undefined,
     dailyPerAdapter: Number(process.env.AI_DAILY_CALLS_PER_ADAPTER) || undefined,
+    price: process.env.AI_PRICE_INPUT_PER_MTOK && process.env.AI_PRICE_OUTPUT_PER_MTOK
+      ? () => ({ input: Number(process.env.AI_PRICE_INPUT_PER_MTOK), output: Number(process.env.AI_PRICE_OUTPUT_PER_MTOK) })
+      : undefined,
   };
 
   let corsOrigins = (process.env.CORS_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean);

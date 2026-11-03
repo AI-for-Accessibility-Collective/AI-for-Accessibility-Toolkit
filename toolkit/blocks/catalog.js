@@ -61,7 +61,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     api: [
       's.watch.added(root, (el) => ..., { debounceMs, cap, types, selector })',
       's.watch.route((url) => ...)           // the address changed without a page load',
-      's.watch.prefs((p) => ...)             // { reducedMotion, moreContrast, dark, forcedColors }',
+      's.watch.prefs((p) => ...)             // { motionReducer, moreContrast, darkMode, forcedColors }',
       's.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped or typed in el',
     ],
     config: {
@@ -71,7 +71,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       selector: { default: null, description: 'Only elements matching this (and matches inside added subtrees).' },
       withinMs: { default: 1000, description: 'byPerson: how recent the click or key must be.' },
     },
-    personal: { reduceMotion: 'prefs().reducedMotion is true when the profile asks for it, even if the system does not.' },
+    personal: { motionReducer: 'prefs() reports motionReducer, darkMode and moreContrast as true when the profile asks for them, even if the system does not.' },
     invariants: ['Never reacts to the toolkit\'s own UI or to what a block wrote.', 'Stops on end().'],
   },
   {
@@ -109,7 +109,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       ...cfg(FOLLOW_DEFAULTS, { source: "follow(): 'pointer', 'focus' or both.", height: 'follow(): band height in pixels.', dimOutside: 'follow(): how much to dim above and below the band, 0-0.9; 0 tints the band instead.' }),
       ringWidth: { default: RING_DEFAULTS.width, description: 'focusRing(): width in pixels (passed as `width`).' },
     },
-    personal: { reduceMotion: 'The band does not animate.' },
+    personal: { motionReducer: 'The band does not animate.' },
     invariants: [
       'A background that would fail 4.5:1 against the text is not drawn; an outline that passes 3:1 is drawn instead.',
       'Text ranges use the CSS Custom Highlight API: the page\'s text nodes are never split or wrapped.',
@@ -145,8 +145,9 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       describe: 'Point the trigger\'s aria-describedby at it while open.',
       maxWidth: 'Pixels.',
       theme: "'dark' or 'light'.",
+      fontScale: 'Text size in percent.',
     }),
-    personal: { textScale: 'Its text is scaled up by the profile\'s text size.' },
+    personal: { fontScale: 'The profile\'s text size wins over yours.' },
     invariants: [
       'It can be hovered without closing.',
       'Escape closes it, and it stays closed while the pointer or focus stays on that trigger.',
@@ -175,7 +176,9 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       theme: "'page' (the page's font), 'light' or 'dark'.",
       width: 'Pixels (not fullscreen).',
       zIndex: 'Stacking order.',
+      fontScale: 'Text size in percent.',
     }),
+    personal: { fontScale: 'The profile\'s text size wins over yours.' },
     invariants: ['A visible Close button at least 24 pixels.', 'Escape closes it.', 'It takes focus only when its focus policy says so.', 'On close, focus returns only if it was inside.', 'Placed near an element, it never covers it.'],
   },
   {
@@ -188,7 +191,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       "s.keys.shortcut({ code: 'KeyD', alt: true }, (e) => ...)",
     ],
     config: { code: { default: null, description: "shortcut(): the key's KeyboardEvent.code, e.g. 'KeyD', 'Digit1'." }, alt: { default: false, description: 'shortcut(): with Alt (Option).' }, shift: { default: false, description: 'shortcut(): with Shift.' } },
-    personal: { reduceMotion: 'region() scrolls without animation.' },
+    personal: { motionReducer: 'region() scrolls without animation.' },
     invariants: ['A shortcut never fires in a text field or editable region, never with Ctrl or Meta held, and never for Tab, Escape, Enter or Space without Alt.', 'The temporary tabindex region() adds goes when focus leaves.'],
   },
   {
@@ -215,15 +218,15 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     api: [
       "const plain = await s.ai.text('simplify', text, { context, keep: ['Medicare'], tone: 'friendly' })",
       "const meaning = await s.ai.text('define', word, { context: sentence, maxChars: 200 })",
-      "const es = await s.ai.text('translate', text, { language: 'Spanish' })",
+      "const es = await s.ai.text('translate', text, { translateTo: 'Spanish' })",
       "const name = await s.ai.text('label', 'icon button, search form, magnifier icon')",
       's.ai.available                       // false where no model is wired (then every call is null)',
     ],
     config: {
       ...cfg(AI_DEFAULTS, { budget: 'Calls per session (cached answers are free).', maxInputChars: 'Longer input gets null, not a cut: send one block at a time.' }),
-      fields: { default: null, description: 'The prompt fields (readingLevel, language, tone, audience, context, keep, glossary, instructions, template, maxSentences, maxChars, minRatio, maxRatio): see "Prompts" below.' },
+      fields: { default: null, description: 'The prompt fields (readingLevel, translateTo, language, tone, audience, context, keep, glossary, instructions, template, maxSentences, maxChars, minRatio, maxRatio): see "Prompts" below.' },
     },
-    personal: { readingLevel: 'The profile\'s reading level (or plain language) wins over yours.', language: 'A profile language, when it has one, wins over yours.' },
+    personal: { readingLevel: 'The profile\'s reading level (or plain language) wins over yours.' },
     invariants: [
       'The page text is fenced and marked as content, never instructions; the output contract (only the answer) is always added.',
       'Every answer is checked before you get it: refusals, guesses and answers of the wrong length come back as null.',
@@ -246,11 +249,11 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     title: 'Speech: speak',
     summary: 'Read text aloud, with word-by-word events for highlighting.',
     api: [
-      'const r = s.speech.say(elementOrText, { rate, voice, lang, onWord: (range) => h.move(range), onChunk })',
+      'const r = s.speech.say(elementOrText, { speechRate, voice, lang, onWord: (range) => h.move(range), onChunk })',
       'r.pause(); r.resume(); r.stop(); await r.done; r.speaking',
     ],
-    config: cfg(SAY_DEFAULTS, { rate: '0.5-2.', pitch: '0-2.', voice: 'A voice name from speechSynthesis.getVoices().', lang: "e.g. 'en-GB'. By default the page's language.", chunkChars: 'Longest piece spoken at once (browsers cut long ones off).', waitForGesture: 'Wait for the person\'s first click or key where the browser requires it.' }),
-    personal: { speechRate: 'The profile\'s speaking rate wins over `rate`.' },
+    config: cfg(SAY_DEFAULTS, { speechRate: '0.5-2.', pitch: '0-2.', voice: 'A voice name from speechSynthesis.getVoices().', lang: "e.g. 'en-GB'. By default the page's language.", chunkChars: 'Longest piece spoken at once (browsers cut long ones off).', waitForGesture: 'Wait for the person\'s first click or key where the browser requires it.' }),
+    personal: { speechRate: 'The profile\'s speaking rate wins over yours.' },
     invariants: ['One voice at a time, page-wide: a new say() stops the last.', 'Escape always stops it.', 'It never starts before the person has used the page.'],
   },
   {

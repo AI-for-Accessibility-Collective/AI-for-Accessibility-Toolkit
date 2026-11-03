@@ -6,7 +6,8 @@
 // anyone's condition. A builder adapts a task without rewriting it:
 //
 //   readingLevel  'plain', 'easy-read' or a school grade (1-12); personal
-//   language      the language to answer in (for translate, the target); personal
+//   translateTo   translate: the language to translate into (the settings vocabulary's name)
+//   language      the language to answer in; by default the text's
 //   tone          e.g. 'friendly', 'formal'; by default the original's tone
 //   audience      who reads the answer, in a phrase ('visitors new to banking terms')
 //   context       what the model needs to know: the page, the heading, the sentence around it
@@ -32,14 +33,15 @@ const STR = (max) => ({ type: 'string', maxLength: max });
  *  the person's profile when it has them, over the builder's value. */
 export const PROMPT_FIELDS = Object.freeze({
   readingLevel: { description: "'plain', 'easy-read', or a school grade from 1 to 12. From the person's profile when it has one.", personal: true, anyOf: [{ enum: ['plain', 'easy-read'] }, { type: 'integer', minimum: 1, maximum: 12 }] },
-  language: { ...STR(40), description: "The language to answer in, e.g. 'Spanish' or 'es'. For translate, the target. By default the language of the text.", personal: true },
+  translateTo: { ...STR(40), description: "translate: the language to translate into, e.g. 'Spanish' (the settings vocabulary's translateTo)." },
+  language: { ...STR(40), description: "The language to answer in, e.g. 'Spanish'. By default the language of the text." },
   tone: { ...STR(60), description: "e.g. 'friendly', 'formal', 'calm'. By default the tone of the original." },
   audience: { ...STR(200), description: "Who reads the answer, in a phrase, e.g. 'visitors new to banking terms'. Describe what they need, not a condition." },
   context: { ...STR(2000), description: 'What the model needs to understand the text: the page title, the heading, the sentence around a word, the site.' },
   keep: { type: 'array', maxItems: 50, items: STR(80), description: 'Terms to keep exactly as written: names, drug names, product codes.' },
   glossary: { type: 'object', maxProperties: 30, additionalProperties: STR(200), description: '{ term: explanation } for terms the answer should explain your way.' },
   instructions: { ...STR(1000), description: 'Anything else, in a few plain sentences: "Use British spelling." "Explain each step as a numbered list."' },
-  template: { ...STR(4000), description: 'A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}.' },
+  template: { ...STR(4000), description: 'A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {translateTo}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}.' },
   maxSentences: { type: 'integer', minimum: 1, maximum: 20, description: 'At most this many sentences (summarize, define).' },
   maxChars: { type: 'integer', minimum: 20, maximum: 2000, description: 'At most this many characters (define, label, describe, chart).' },
   purpose: { enum: ['alt', 'long'], description: "describe: 'alt' is one sentence for alt text, 'long' a fuller description." },
@@ -52,7 +54,7 @@ export const TASKS = Object.freeze({
   simplify: { kind: 'text', input: 'a passage', gate: 'rewrite', minRatio: 0.3, maxRatio: 2, summary: 'Rewrite a passage in plain language, keeping every fact.' },
   summarize: { kind: 'text', input: 'a passage', gate: 'summary', maxSentences: 3, summary: 'A short summary of a passage: the main point and anything the reader must do.' },
   define: { kind: 'text', input: 'a word or phrase (put the sentence it is in into context)', gate: 'short-passage', maxChars: 240, maxSentences: 2, summary: 'What a word or phrase means here, in one or two plain sentences.' },
-  translate: { kind: 'text', input: 'a passage', gate: 'rewrite', minRatio: 0.25, maxRatio: 4, summary: 'Translate a passage into `language`, keeping names, numbers and links.' },
+  translate: { kind: 'text', input: 'a passage', gate: 'rewrite', minRatio: 0.25, maxRatio: 4, summary: 'Translate a passage into `translateTo`, keeping names, numbers and links.' },
   rewrite: { kind: 'text', input: 'a passage', gate: 'rewrite', minRatio: 0.2, maxRatio: 3, needs: 'instructions or template', summary: 'Rewrite a passage the way `instructions` say.' },
   label: { kind: 'text', input: "what is known about the control: its type, its current text, nearby text", gate: 'short', maxChars: 60, summary: 'A short accessible name (1-4 words) for a control.' },
   linkText: { kind: 'text', input: "the link's text, its address and the sentence around it", gate: 'short', maxChars: 60, summary: 'Link text (2-8 words) that says where a link goes.' },
@@ -95,7 +97,7 @@ export function cleanOptions(task, options = {}) {
     out[k] = v;
   }
   if (out.template && !out.template.includes('{text}')) throw new Error('A template must contain {text}, where the input goes.');
-  if (task === 'translate' && !out.language) throw new Error('translate needs `language`, the language to translate into.');
+  if (task === 'translate' && !out.translateTo) throw new Error('translate needs `translateTo`, the language to translate into.');
   if (t.needs && !out.instructions && !out.template) throw new Error(`${task} needs ${t.needs}.`);
   return out;
 }
@@ -111,6 +113,7 @@ function slots(task, input, o) {
     context: o.context || '',
     readingLevel: o.readingLevel === undefined ? '' : String(o.readingLevel),
     language: o.language || '',
+    translateTo: o.translateTo || '',
     tone: o.tone || '',
     audience: o.audience || '',
     keep: (o.keep || []).join(', '),
@@ -140,7 +143,7 @@ function taskBody(task, o) {
       `Use at most ${maxSentences} short sentences and at most ${maxChars} characters. Do not use the word itself to explain it.`,
     ];
     case 'translate': return [
-      `Translate the text below into ${o.language}.`,
+      `Translate the text below into ${o.translateTo}.`,
       'Keep the meaning, the tone and the structure. Keep names, numbers, addresses, links and code as they are. Do not summarize or explain.',
     ];
     case 'rewrite': return [

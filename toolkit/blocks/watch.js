@@ -11,10 +11,11 @@
 import { isOurs } from './shared.js';
 
 const ROUTE_POLL_MS = 1000;
+// Named as the settings vocabulary names the same thing, where it has one.
 const QUERIES = {
-  reducedMotion: '(prefers-reduced-motion: reduce)',
+  motionReducer: '(prefers-reduced-motion: reduce)',
   moreContrast: '(prefers-contrast: more)',
-  dark: '(prefers-color-scheme: dark)',
+  darkMode: '(prefers-color-scheme: dark)',
   forcedColors: '(forced-colors: active)',
 };
 
@@ -128,8 +129,10 @@ export function watchBlock(s, env) {
       for (const [k, q] of Object.entries(QUERIES)) {
         try { out[k] = !!(lists[k] || (lists[k] = win.matchMedia?.(q)))?.matches; } catch { out[k] = false; }
       }
-      // The person's profile turns reduced motion on even when the system does not.
-      if (env.personal.reduceMotion) out.reducedMotion = true;
+      // The person's profile turns these on even when the system does not.
+      if (env.personal.motionReducer) out.motionReducer = true;
+      if (env.personal.darkMode) out.darkMode = true;
+      if (env.personal.contrastMode) out.moreContrast = true;
       return out;
     };
     const now = read();

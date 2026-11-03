@@ -26,6 +26,40 @@ import { aiContext } from './ai-context.js';
 import { silentLogger, loggedContent } from './log.js';
 
 export const GEMINI_MODEL = 'gemini-3.8-flash';
+
+// What a call costs, in US dollars per million tokens, from Google's Gemini
+// API pricing page (standard tier, paid; checked 2026-11-03:
+// https://ai.google.dev/gemini-api/docs/pricing). Thinking tokens are billed
+// as output. Each model's list runs oldest first; an entry applies before its
+// `until` date (UTC). AI_PRICE_INPUT_PER_MTOK / AI_PRICE_OUTPUT_PER_MTOK
+// override it (server/index.js), for another model or a price change.
+export const GEMINI_PRICES = {
+  'gemini-3.8-flash': [
+    { until: '2027-01-01', input: 0.75, output: 3.75 }, // introductory rate
+    { input: 1.5, output: 7.5 },
+  ],
+};
+
+/** {input, output} dollars per million tokens for `model` at `when`. A model
+ *  not in the table is priced at the highest rate the table knows, so a
+ *  budget errs toward stopping early rather than late. */
+export function priceFor(model, when = Date.now()) {
+  const list = GEMINI_PRICES[model];
+  if (!list) {
+    const all = Object.values(GEMINI_PRICES).flat();
+    return { input: Math.max(...all.map(p => p.input)), output: Math.max(...all.map(p => p.output)), known: false };
+  }
+  const day = new Date(when).toISOString().slice(0, 10);
+  const p = list.find(e => !e.until || day < e.until) || list[list.length - 1];
+  return { input: p.input, output: p.output, known: true };
+}
+
+/** Dollars for one call's usage ({promptTokens, outputTokens, thoughtsTokens}). */
+export function costOf(usage, price) {
+  const input = Number(usage?.promptTokens) || 0;
+  const output = (Number(usage?.outputTokens) || 0) + (Number(usage?.thoughtsTokens) || 0);
+  return (input * price.input + output * price.output) / 1e6;
+}
 const REQUEST_TIMEOUT_MS = 30_000;
 // At the model's default thinking, learning from a few observations took
 // about 27 seconds, against the 30-second limit; at low it took about 4,
@@ -46,7 +80,9 @@ function apiUrl(model) {
  *  fast lane (everything except extract/reflect/buildSkill/
  *  interpretNeedsPrompt) is completely unaffected. */
 export function createGeminiCaller({ apiKey, model = GEMINI_MODEL, log = silentLogger, logContent = true, fetch: fetcher = (...a) => globalThis.fetch(...a) } = {}) {
-  return async function serverGeminiCaller(prompt, { images = [] } = {}) {
+  // onUsage({model, promptTokens, outputTokens, thoughtsTokens}) hears what
+  // each answered call used, for a caller that keeps a budget (ai.js).
+  return Object.assign(async function serverGeminiCaller(prompt, { images = [], onUsage } = {}) {
     const { uid, purpose = 'unknown' } = aiContext.getStore() || {};
     const started = Date.now();
     const base = {
@@ -99,11 +135,13 @@ export function createGeminiCaller({ apiKey, model = GEMINI_MODEL, log = silentL
       ...(logContent ? { reply: loggedContent(text) } : {}),
       promptTokens: u.promptTokenCount, outputTokens: u.candidatesTokenCount, thoughtsTokens: u.thoughtsTokenCount, totalTokens: u.totalTokenCount,
     };
+    // Billed whether or not it gave text.
+    try { onUsage?.({ model, promptTokens: u.promptTokenCount, outputTokens: u.candidatesTokenCount, thoughtsTokens: u.thoughtsTokenCount }); } catch { /* the listener's problem */ }
     if (!text) {
       done('warn', 'no-text', fields);
       throw new Error(`Gemini returned no text (${fields.finishReason || 'no candidate'})`);
     }
     done('info', 'ok', fields);
     return text;
-  };
+  }, { model });
 }

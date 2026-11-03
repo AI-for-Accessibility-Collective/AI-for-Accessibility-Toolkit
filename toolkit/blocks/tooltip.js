@@ -17,7 +17,7 @@ import { resolveConfig } from './shared.js';
 
 export const TOOLTIP_DEFAULTS = {
   trigger: '[title]', content: 'title', delayMs: 350, hideDelayMs: 150,
-  placement: 'below', describe: true, maxWidth: 320, theme: 'dark',
+  placement: 'below', describe: true, maxWidth: 320, theme: 'dark', fontScale: 100,
 };
 
 const THEMES = {
@@ -30,12 +30,12 @@ export function tooltipBlock(s, env) {
   let n = 0;
 
   return function tooltip(opts = {}) {
-    const c = resolveConfig(TOOLTIP_DEFAULTS, opts, env.personal, {});
+    const c = resolveConfig(TOOLTIP_DEFAULTS, opts, env.personal, { fontScale: 'fontScale' });
     if (!s.alive()) return null;
     const id = `ai4a11y-tip-${s.id}-${++n}`.replace(/[^\w-]/g, '-');
     const tip = s.el('div', { attrs: { role: 'tooltip', id } });
     tip.hidden = true;
-    const scale = env.personal.textScale ? Math.max(1, Number(env.personal.textScale)) : 1;
+    const scale = Math.max(1, (Number(c.fontScale) || 100) / 100);
     s.css(`tip-${n}`, `#${id} { position: fixed; left: 0; top: 0; z-index: 2147483646; box-sizing: border-box;
   max-width: min(${Number(c.maxWidth) || 320}px, calc(100vw - 16px)); padding: 8px 10px; border-radius: 6px;
   font: ${Math.round(14 * scale)}px/1.45 system-ui, sans-serif; text-align: start; white-space: normal;

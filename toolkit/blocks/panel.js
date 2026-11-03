@@ -12,7 +12,7 @@ import { resolveConfig, UI_ATTR } from './shared.js';
 
 export const PANEL_DEFAULTS = {
   kind: 'dialog', label: 'Panel', near: null, corner: 'bottom-right', focus: 'from-trigger',
-  returnTo: null, inert: false, theme: 'page', width: 360, zIndex: 2147483646,
+  returnTo: null, inert: false, theme: 'page', width: 360, zIndex: 2147483646, fontScale: 100,
 };
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -22,7 +22,7 @@ export function panelBlock(s, env) {
   let n = 0;
 
   return function panel(opts = {}) {
-    const c = resolveConfig(PANEL_DEFAULTS, opts, env.personal, {});
+    const c = resolveConfig(PANEL_DEFAULTS, opts, env.personal, { fontScale: 'fontScale' });
     if (!s.alive()) return null;
     const id = `ai4a11y-panel-${s.id}-${++n}`.replace(/[^\w-]/g, '-');
     const full = c.kind === 'fullscreen';
@@ -46,7 +46,7 @@ export function panelBlock(s, env) {
       : c.theme === 'light' ? { bg: '#ffffff', fg: '#1f1f1f', font: 'system-ui, sans-serif' }
       : { bg: '#ffffff', fg: '#1f1f1f', font: pageStyle.fontFamily || 'system-ui, sans-serif' };
     const width = Math.max(200, Number(c.width) || 360);
-    const scale = env.personal.textScale ? Math.max(1, Number(env.personal.textScale)) : 1;
+    const scale = Math.max(1, (Number(c.fontScale) || 100) / 100);
     const corner = String(c.corner || 'bottom-right');
     const sides = `${corner.includes('top') ? 'top' : 'bottom'}: 16px; ${corner.includes('left') ? 'left' : 'right'}: 16px;`;
     s.css(`panel-${n}`, `#${id} { position: fixed; ${full ? 'inset: 0;' : `${sides} width: min(${width}px, calc(100vw - 32px)); max-height: calc(100vh - 32px);`}

@@ -1,6 +1,6 @@
 // Blocks 13 and 14, speech: speak to the person, and listen for commands.
 //
-//   const r = s.speech.say(article, { onWord: (range) => hl.move(range) });
+//   const r = s.speech.say(article, { speechRate: 1.2, onWord: (range) => hl.move(range) });
 //   r.pause(); r.resume(); r.stop();
 //   s.speech.listen({ commands: { 'next heading': () => ..., 'click *': (name) => s.page.find(name)?.click() } });
 //
@@ -16,7 +16,7 @@
 
 import { resolveConfig } from './shared.js';
 
-export const SAY_DEFAULTS = { rate: 1, pitch: 1, voice: null, lang: null, chunkChars: 220, waitForGesture: true };
+export const SAY_DEFAULTS = { speechRate: 1, pitch: 1, voice: null, lang: null, chunkChars: 220, waitForGesture: true };
 export const LISTEN_DEFAULTS = { lang: null, feedback: 'announce', maxErrors: 3 };
 
 export function speechBlock(s, env) {
@@ -50,7 +50,7 @@ export function speechBlock(s, env) {
   }
 
   function say(input, opts = {}) {
-    const c = resolveConfig(SAY_DEFAULTS, opts, env.personal, { rate: 'speechRate' });
+    const c = resolveConfig(SAY_DEFAULTS, opts, env.personal, { speechRate: 'speechRate' });
     const synth = win.speechSynthesis;
     const Utterance = win.SpeechSynthesisUtterance;
     let resolveDone;
@@ -99,7 +99,7 @@ export function speechBlock(s, env) {
       if (i >= parts.length) { finish(false); return; }
       const part = parts[i];
       const u = new Utterance(part.text);
-      u.rate = Math.max(0.5, Math.min(2, Number(c.rate) || 1));
+      u.rate = Math.max(0.5, Math.min(2, Number(c.speechRate) || 1));
       u.pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));
       u.lang = c.lang || doc.documentElement.lang || '';
       const v = voice();

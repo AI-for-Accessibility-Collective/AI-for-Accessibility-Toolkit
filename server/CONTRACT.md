@@ -66,7 +66,7 @@
 | DELETE | `/v1/adapters/{appId}/{id}/install` | clear installed for the calling uid |
 | POST | `/v1/ai/text` | the building blocks' AI for adapters `{task, input, options?, adapter?}` → `{text\|null, reason?, task, version, usage}` (see "Server-side LLM") |
 | POST | `/v1/ai/vision` | the same for an image `{task, image: {mimeType, data}, input?, options?, adapter?}` |
-| GET | `/v1/ai/usage` | today's calls `{day, calls, limit, perAdapterLimit, byAdapter, enabled, available}` |
+| GET | `/v1/ai/usage` | today's spending `{day, spentUsd, budgetUsd, calls, perAdapterLimit, byAdapter, enabled, available}` |
 | PUT | `/v1/ai/settings` | `{enabled}` switches the blocks' AI off or on for the account (default token or session) |
 | GET | `/admin/accounts` | list developer accounts with token and live-app counts; `?passwords=1` → `{passwords: [{uid, displayName, password\|null, reason?}]}`, every admin-issued password; `?format=csv` → the same as a CSV download (username, name, password, password_note, status, last_sign_in, created, app_tokens, has_data) |
 | POST | `/admin/accounts` | make an account `{uid, displayName?, password?}` → 201 `{account, password?}` |
@@ -394,9 +394,16 @@ image), each with the toolkit's own prompt (`toolkit/blocks/ai/prompts.js`)
 adapted by the builder's fields, and it checks every answer with the
 catalog's gates (`tools/utils/ai-output.js`) before returning it: a refusal,
 a guess or an answer of the wrong length comes back as `{text: null, reason}`.
-Each account has a daily limit (`AI_DAILY_CALLS`, default 500) and so does
-each adapter in it (`AI_DAILY_CALLS_PER_ADAPTER`, default 200); over it the
-answer is 429. `PUT /v1/ai/settings {enabled: false}` switches it off for the
+Each account has a daily budget in US dollars (`AI_DAILY_BUDGET_USD`,
+default 200, per UTC day). Gemini's answers carry token counts, not prices,
+so the service prices each call from the tokens it was billed for (input,
+output and thinking) at the model's published standard-tier rate
+(`GEMINI_PRICES` in `server/src/gemini.js`; `AI_PRICE_INPUT_PER_MTOK` and
+`AI_PRICE_OUTPUT_PER_MTOK` override it). While a call is out, an estimate of
+its cost is held against the budget, so calls made at once cannot pass it
+together; the last call let through can go past it by its own cost. Each
+adapter also has a daily number of calls (`AI_DAILY_CALLS_PER_ADAPTER`,
+default 200). Over either, the answer is 429. `PUT /v1/ai/settings {enabled: false}` switches it off for the
 account. The text and images sent are page content: neither the request log
 nor the AI call log keeps them.
 

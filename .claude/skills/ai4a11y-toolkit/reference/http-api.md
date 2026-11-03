@@ -53,7 +53,7 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 | DELETE | `/v1/adapters/{appId}/{id}/install` | clear installed for the calling uid |
 | POST | `/v1/ai/text` | the building blocks' AI for adapters `{task, input, options?, adapter?}` → `{text\|null, reason?, task, version, usage}` (see "Server-side LLM") |
 | POST | `/v1/ai/vision` | the same for an image `{task, image: {mimeType, data}, input?, options?, adapter?}` |
-| GET | `/v1/ai/usage` | today's calls `{day, calls, limit, perAdapterLimit, byAdapter, enabled, available}` |
+| GET | `/v1/ai/usage` | today's spending `{day, spentUsd, budgetUsd, calls, perAdapterLimit, byAdapter, enabled, available}` |
 | PUT | `/v1/ai/settings` | `{enabled}` switches the blocks' AI off or on for the account (default token or session) |
 | GET | `/admin/accounts` | list developer accounts with token and live-app counts; `?passwords=1` → `{passwords: [{uid, displayName, password\|null, reason?}]}`, every admin-issued password; `?format=csv` → the same as a CSV download (username, name, password, password_note, status, last_sign_in, created, app_tokens, has_data) |
 | POST | `/admin/accounts` | make an account `{uid, displayName?, password?}` → 201 `{account, password?}` |

@@ -28,7 +28,13 @@ const FILES = [
   'protocol/adapter/access.js',
   'adapter-mcp/client.js',
   'adapter-mcp/registry.js',
+  // The person's settings for the blocks, as the web surface derives them.
   'blocks/personal.js',
+  'core/ability.js',
+  'core/strength.js',
+  'core/units.js',
+  'core/surface.js',
+  'platforms/chrome/web-surface.js',
 ];
 const VENDOR = path.join(ROOT, 'extension', 'vendor');
 // Other files, as [source under the repository, path under vendor/].

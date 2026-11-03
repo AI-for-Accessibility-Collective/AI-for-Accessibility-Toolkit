@@ -20,8 +20,8 @@ import { TASKS } from './ai/prompts.js';
 
 export const AI_DEFAULTS = { budget: 40, maxInputChars: 6000 };
 // Personal fields: the person's profile wins over the builder's value.
-const PERSONAL = { readingLevel: 'readingLevel', language: 'language' };
-const OPTION_KEYS = ['readingLevel', 'language', 'tone', 'audience', 'context', 'keep', 'glossary', 'instructions', 'template', 'maxSentences', 'maxChars', 'purpose', 'minRatio', 'maxRatio'];
+const PERSONAL = { readingLevel: 'readingLevel', translateTo: 'translateTo' };
+const OPTION_KEYS = ['readingLevel', 'translateTo', 'language', 'tone', 'audience', 'context', 'keep', 'glossary', 'instructions', 'template', 'maxSentences', 'maxChars', 'purpose', 'minRatio', 'maxRatio'];
 const CACHE_MAX = 300;
 
 export function aiBlock(s, env) {

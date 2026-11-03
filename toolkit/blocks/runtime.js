@@ -5,7 +5,6 @@
 // one page filter.
 
 import { createBlocks } from './create.js';
-import { personalFromProfile } from './personal.js';
 import { BLOCKS_VERSION } from './names.js';
 
 if (!globalThis.__ai4a11yBlocks) {
@@ -14,7 +13,6 @@ if (!globalThis.__ai4a11yBlocks) {
     value: Object.freeze({
       version: BLOCKS_VERSION,
       create: (options) => createBlocks({ ...options, win: globalThis }),
-      personalFromProfile,
     }),
   });
 }

@@ -61,7 +61,7 @@ export function resolveConfig(defaults, builder, personal, personalKeys = {}) {
 
 /** Reduced motion: the system setting or the person's profile. */
 export function reducedMotion(env) {
-  if (env.personal && env.personal.reduceMotion) return true;
+  if (env.personal && env.personal.motionReducer) return true;
   try { return !!env.win.matchMedia?.('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
 }
 

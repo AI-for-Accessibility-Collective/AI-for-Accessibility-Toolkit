@@ -50,7 +50,7 @@
     return out;
   }
   function reducedMotion(env) {
-    if (env.personal && env.personal.reduceMotion) return true;
+    if (env.personal && env.personal.motionReducer) return true;
     try {
       return !!env.win.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     } catch {
@@ -119,9 +119,9 @@
   // toolkit/blocks/watch.js
   var ROUTE_POLL_MS = 1e3;
   var QUERIES = {
-    reducedMotion: "(prefers-reduced-motion: reduce)",
+    motionReducer: "(prefers-reduced-motion: reduce)",
     moreContrast: "(prefers-contrast: more)",
-    dark: "(prefers-color-scheme: dark)",
+    darkMode: "(prefers-color-scheme: dark)",
     forcedColors: "(forced-colors: active)"
   };
   function watchInput(env) {
@@ -250,7 +250,9 @@
             out[k] = false;
           }
         }
-        if (env.personal.reduceMotion) out.reducedMotion = true;
+        if (env.personal.motionReducer) out.motionReducer = true;
+        if (env.personal.darkMode) out.darkMode = true;
+        if (env.personal.contrastMode) out.moreContrast = true;
         return out;
       };
       const now = read();
@@ -470,7 +472,8 @@
     placement: "below",
     describe: true,
     maxWidth: 320,
-    theme: "dark"
+    theme: "dark",
+    fontScale: 100
   };
   var THEMES = {
     dark: "background:#1f1f1f;color:#ffffff;border:1px solid #ffffff;",
@@ -480,12 +483,12 @@
     const { doc, win } = env;
     let n = 0;
     return function tooltip(opts = {}) {
-      const c = resolveConfig(TOOLTIP_DEFAULTS, opts, env.personal, {});
+      const c = resolveConfig(TOOLTIP_DEFAULTS, opts, env.personal, { fontScale: "fontScale" });
       if (!s.alive()) return null;
       const id = `ai4a11y-tip-${s.id}-${++n}`.replace(/[^\w-]/g, "-");
       const tip = s.el("div", { attrs: { role: "tooltip", id } });
       tip.hidden = true;
-      const scale = env.personal.textScale ? Math.max(1, Number(env.personal.textScale)) : 1;
+      const scale = Math.max(1, (Number(c.fontScale) || 100) / 100);
       s.css(`tip-${n}`, `#${id} { position: fixed; left: 0; top: 0; z-index: 2147483646; box-sizing: border-box;
   max-width: min(${Number(c.maxWidth) || 320}px, calc(100vw - 16px)); padding: 8px 10px; border-radius: 6px;
   font: ${Math.round(14 * scale)}px/1.45 system-ui, sans-serif; text-align: start; white-space: normal;
@@ -659,14 +662,15 @@
     inert: false,
     theme: "page",
     width: 360,
-    zIndex: 2147483646
+    zIndex: 2147483646,
+    fontScale: 100
   };
   var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
   function panelBlock(s, env) {
     const { doc, win } = env;
     let n = 0;
     return function panel(opts = {}) {
-      const c = resolveConfig(PANEL_DEFAULTS, opts, env.personal, {});
+      const c = resolveConfig(PANEL_DEFAULTS, opts, env.personal, { fontScale: "fontScale" });
       if (!s.alive()) return null;
       const id = `ai4a11y-panel-${s.id}-${++n}`.replace(/[^\w-]/g, "-");
       const full = c.kind === "fullscreen";
@@ -688,7 +692,7 @@
       const pageStyle = win.getComputedStyle(doc.body || doc.documentElement);
       const theme = c.theme === "dark" ? { bg: "#1f1f1f", fg: "#ffffff", font: "system-ui, sans-serif" } : c.theme === "light" ? { bg: "#ffffff", fg: "#1f1f1f", font: "system-ui, sans-serif" } : { bg: "#ffffff", fg: "#1f1f1f", font: pageStyle.fontFamily || "system-ui, sans-serif" };
       const width = Math.max(200, Number(c.width) || 360);
-      const scale = env.personal.textScale ? Math.max(1, Number(env.personal.textScale)) : 1;
+      const scale = Math.max(1, (Number(c.fontScale) || 100) / 100);
       const corner = String(c.corner || "bottom-right");
       const sides = `${corner.includes("top") ? "top" : "bottom"}: 16px; ${corner.includes("left") ? "left" : "right"}: 16px;`;
       s.css(`panel-${n}`, `#${id} { position: fixed; ${full ? "inset: 0;" : `${sides} width: min(${width}px, calc(100vw - 32px)); max-height: calc(100vh - 32px);`}
@@ -907,14 +911,15 @@
   var STR = (max) => ({ type: "string", maxLength: max });
   var PROMPT_FIELDS = Object.freeze({
     readingLevel: { description: "'plain', 'easy-read', or a school grade from 1 to 12. From the person's profile when it has one.", personal: true, anyOf: [{ enum: ["plain", "easy-read"] }, { type: "integer", minimum: 1, maximum: 12 }] },
-    language: { ...STR(40), description: "The language to answer in, e.g. 'Spanish' or 'es'. For translate, the target. By default the language of the text.", personal: true },
+    translateTo: { ...STR(40), description: "translate: the language to translate into, e.g. 'Spanish' (the settings vocabulary's translateTo)." },
+    language: { ...STR(40), description: "The language to answer in, e.g. 'Spanish'. By default the language of the text." },
     tone: { ...STR(60), description: "e.g. 'friendly', 'formal', 'calm'. By default the tone of the original." },
     audience: { ...STR(200), description: "Who reads the answer, in a phrase, e.g. 'visitors new to banking terms'. Describe what they need, not a condition." },
     context: { ...STR(2e3), description: "What the model needs to understand the text: the page title, the heading, the sentence around a word, the site." },
     keep: { type: "array", maxItems: 50, items: STR(80), description: "Terms to keep exactly as written: names, drug names, product codes." },
     glossary: { type: "object", maxProperties: 30, additionalProperties: STR(200), description: "{ term: explanation } for terms the answer should explain your way." },
     instructions: { ...STR(1e3), description: 'Anything else, in a few plain sentences: "Use British spelling." "Explain each step as a numbered list."' },
-    template: { ...STR(4e3), description: "A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}." },
+    template: { ...STR(4e3), description: "A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {translateTo}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}." },
     maxSentences: { type: "integer", minimum: 1, maximum: 20, description: "At most this many sentences (summarize, define)." },
     maxChars: { type: "integer", minimum: 20, maximum: 2e3, description: "At most this many characters (define, label, describe, chart)." },
     purpose: { enum: ["alt", "long"], description: "describe: 'alt' is one sentence for alt text, 'long' a fuller description." },
@@ -925,7 +930,7 @@
     simplify: { kind: "text", input: "a passage", gate: "rewrite", minRatio: 0.3, maxRatio: 2, summary: "Rewrite a passage in plain language, keeping every fact." },
     summarize: { kind: "text", input: "a passage", gate: "summary", maxSentences: 3, summary: "A short summary of a passage: the main point and anything the reader must do." },
     define: { kind: "text", input: "a word or phrase (put the sentence it is in into context)", gate: "short-passage", maxChars: 240, maxSentences: 2, summary: "What a word or phrase means here, in one or two plain sentences." },
-    translate: { kind: "text", input: "a passage", gate: "rewrite", minRatio: 0.25, maxRatio: 4, summary: "Translate a passage into `language`, keeping names, numbers and links." },
+    translate: { kind: "text", input: "a passage", gate: "rewrite", minRatio: 0.25, maxRatio: 4, summary: "Translate a passage into `translateTo`, keeping names, numbers and links." },
     rewrite: { kind: "text", input: "a passage", gate: "rewrite", minRatio: 0.2, maxRatio: 3, needs: "instructions or template", summary: "Rewrite a passage the way `instructions` say." },
     label: { kind: "text", input: "what is known about the control: its type, its current text, nearby text", gate: "short", maxChars: 60, summary: "A short accessible name (1-4 words) for a control." },
     linkText: { kind: "text", input: "the link's text, its address and the sentence around it", gate: "short", maxChars: 60, summary: "Link text (2-8 words) that says where a link goes." },
@@ -936,8 +941,8 @@
 
   // toolkit/blocks/ai.js
   var AI_DEFAULTS = { budget: 40, maxInputChars: 6e3 };
-  var PERSONAL = { readingLevel: "readingLevel", language: "language" };
-  var OPTION_KEYS = ["readingLevel", "language", "tone", "audience", "context", "keep", "glossary", "instructions", "template", "maxSentences", "maxChars", "purpose", "minRatio", "maxRatio"];
+  var PERSONAL = { readingLevel: "readingLevel", translateTo: "translateTo" };
+  var OPTION_KEYS = ["readingLevel", "translateTo", "language", "tone", "audience", "context", "keep", "glossary", "instructions", "template", "maxSentences", "maxChars", "purpose", "minRatio", "maxRatio"];
   var CACHE_MAX = 300;
   function aiBlock(s, env) {
     let used = 0;
@@ -1042,7 +1047,7 @@
   }
 
   // toolkit/blocks/speech.js
-  var SAY_DEFAULTS = { rate: 1, pitch: 1, voice: null, lang: null, chunkChars: 220, waitForGesture: true };
+  var SAY_DEFAULTS = { speechRate: 1, pitch: 1, voice: null, lang: null, chunkChars: 220, waitForGesture: true };
   var LISTEN_DEFAULTS = { lang: null, feedback: "announce", maxErrors: 3 };
   function speechBlock(s, env) {
     const { win, doc, shared } = env;
@@ -1075,7 +1080,7 @@
       return out.filter((c) => c.text.trim());
     }
     function say(input, opts = {}) {
-      const c = resolveConfig(SAY_DEFAULTS, opts, env.personal, { rate: "speechRate" });
+      const c = resolveConfig(SAY_DEFAULTS, opts, env.personal, { speechRate: "speechRate" });
       const synth = win.speechSynthesis;
       const Utterance = win.SpeechSynthesisUtterance;
       let resolveDone;
@@ -1155,7 +1160,7 @@
         }
         const part = parts[i];
         const u = new Utterance(part.text);
-        u.rate = Math.max(0.5, Math.min(2, Number(c.rate) || 1));
+        u.rate = Math.max(0.5, Math.min(2, Number(c.speechRate) || 1));
         u.pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));
         u.lang = c.lang || doc.documentElement.lang || "";
         const v = voice();
@@ -1874,63 +1879,13 @@
     });
   }
 
-  // toolkit/blocks/personal.js
-  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  function personalFromProfile(profile) {
-    const out = {};
-    const fields = profile && profile.fields || {};
-    const needs = Array.isArray(fields.needs) ? fields.needs : [];
-    for (const need of needs) {
-      if (!need || typeof need !== "object") continue;
-      const v = need.value;
-      switch (need.dimension) {
-        case "readAloudRate":
-          if (Number.isFinite(Number(v))) out.speechRate = clamp(Number(v), 0.5, 2);
-          break;
-        case "textSize":
-          if (Number.isFinite(Number(v))) out.textScale = clamp(Number(v), 1, 3);
-          break;
-        case "reduceMotion":
-          out.reduceMotion = !!v;
-          break;
-        case "darkTheme":
-          out.darkTheme = !!v;
-          break;
-        case "contrast":
-          if (v) out.contrast = v === true ? "more" : String(v);
-          break;
-        case "simplify":
-          if (v) out.simplify = true;
-          break;
-        default:
-          break;
-      }
-    }
-    const level = fields.readingLevel;
-    if (level === "plain" || level === "easy-read") out.readingLevel = level;
-    else if (level !== null && level !== void 0 && Number.isFinite(parseInt(level, 10))) out.readingLevel = clamp(parseInt(level, 10), 1, 12);
-    const style = profile && profile.metaPreferences && profile.metaPreferences.language;
-    if (!out.readingLevel && (style === "plain" || out.simplify)) out.readingLevel = "plain";
-    delete out.simplify;
-    return Object.freeze(out);
-  }
-  var PERSONAL_KEYS = Object.freeze({
-    speechRate: "Speaking rate, 0.5-2 (profile need readAloudRate). Overrides speech.say({ rate }).",
-    readingLevel: "'plain', 'easy-read' or a grade 1-12 (profile readingLevel, or plain language). Overrides ai.text({ readingLevel }).",
-    textScale: "Text size multiplier, 1-3 (profile need textSize). Tooltips and panels scale their text by it.",
-    reduceMotion: "true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting.",
-    contrast: "'more' or a contrast mode when the profile asks for more contrast.",
-    darkTheme: "true when the profile asks for a dark theme."
-  });
-
   // toolkit/blocks/runtime.js
   if (!globalThis.__ai4a11yBlocks) {
     Object.defineProperty(globalThis, "__ai4a11yBlocks", {
       configurable: true,
       value: Object.freeze({
         version: BLOCKS_VERSION,
-        create: (options) => createBlocks({ ...options, win: globalThis }),
-        personalFromProfile
+        create: (options) => createBlocks({ ...options, win: globalThis })
       })
     });
   }

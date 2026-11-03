@@ -13,13 +13,16 @@
 // key, and gates the answer with the catalog's checks (tools/utils/
 // ai-output.js) before it goes back: a refusal, a guess or an answer of the
 // wrong length comes back as null, which an adapter treats as "leave the page
-// alone". Each account has a daily limit, and so does each adapter in it.
+// alone". Each account has a daily budget in US dollars, metered from the
+// tokens Google bills for each call (gemini.js, GEMINI_PRICES), and each
+// adapter in it a daily number of calls.
 //
 // What a page sends here is page content: neither the request log nor the
 // AI call log keeps it (app.js, and the caller made with logContent off).
 
 import { sendJSON, sendHttpError, readJSON, HttpError } from './http.js';
 import { withAiContext } from './ai-context.js';
+import { priceFor, costOf } from './gemini.js';
 import { buildPrompt, TASKS, NO_ANSWER, PROMPT_VERSION } from '../../toolkit/blocks/ai/prompts.js';
 import { rejectRewrite, rejectShortText, cleanShortText, startsWithRefusal, opensWithFirstPersonRefusal, containsUncertainty } from '../../tools/utils/ai-output.js';
 
@@ -29,6 +32,11 @@ const MAX_INPUT_CHARS = 12_000;
 const MAX_IMAGE_CHARS = 4_000_000;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const FLUSH_MS = 2000;
+// What a call is assumed to cost until Google says what it did: about four
+// characters a token, an image about 1,100 tokens, and up to 800 tokens of
+// answer and thinking. Held against the budget while the call is out, so
+// calls made at once cannot run past it together.
+const ESTIMATE = { charsPerToken: 4, imageTokens: 1100, outputTokens: 800 };
 
 /** Whether the request log may keep a request's body: never for page content. */
 export const aiContentLogged = (pathname) => !pathname.startsWith(`${AI_PREFIX}/`);
@@ -76,24 +84,28 @@ export function gateAnswer(task, answer, input, options = {}) {
  * @param {(uid: string, fn: () => Promise<any>) => Promise<any>} o.withUserLock
  * @param {(req: any) => Promise<any>} o.authenticate
  * @param {((prompt: string, opts?: {images?: object[]}) => Promise<string>)|null} o.caller  the model; null when the service has no key
- * @param {number} [o.dailyPerAccount]
- * @param {number} [o.dailyPerAdapter]
+ * @param {number} [o.dailyBudgetUsd]  US dollars per account per day (UTC)
+ * @param {number} [o.dailyPerAdapter]  calls per adapter per day
+ * @param {(model: string) => {input: number, output: number}} [o.price]  dollars per million tokens
  */
-export function createAiRoutes({ store, withUserLock, authenticate, caller, log, dailyPerAccount = 500, dailyPerAdapter = 200, now = () => Date.now() }) {
+export function createAiRoutes({ store, withUserLock, authenticate, caller, log, dailyBudgetUsd = 200, dailyPerAdapter = 200, price, now = () => Date.now() }) {
   const usage = new Map();   // uid -> promise of its usage record
   const timers = new Map();  // uid -> flush timer
+  const held = new Map();    // uid -> dollars held for calls still out
+  const priceOf = price || ((model) => priceFor(model, now()));
+  const dollars = (n) => Math.round(n * 1e6) / 1e6;
   const today = () => new Date(now()).toISOString().slice(0, 10);
 
   function load(uid) {
     if (!usage.has(uid)) {
       const p = store.readJSON(AI_USAGE_DOC(uid)).catch(() => null).then((doc) => ({
-        day: doc?.day || today(), calls: doc?.calls || 0, byAdapter: doc?.byAdapter || {}, enabled: doc?.enabled !== false,
+        day: doc?.day || today(), calls: doc?.calls || 0, spentUsd: doc?.spentUsd || 0, byAdapter: doc?.byAdapter || {}, enabled: doc?.enabled !== false,
       }));
       usage.set(uid, p);
       p.catch(() => usage.delete(uid));
     }
     return usage.get(uid).then((u) => {
-      if (u.day !== today()) Object.assign(u, { day: today(), calls: 0, byAdapter: {} });
+      if (u.day !== today()) Object.assign(u, { day: today(), calls: 0, spentUsd: 0, byAdapter: {} });
       return u;
     });
   }
@@ -113,15 +125,25 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller, log,
     timers.set(uid, t);
   }
 
-  async function take(uid, adapter) {
+  async function take(uid, adapter, estimate) {
     const u = await load(uid);
     if (!u.enabled) return { error: 'ai-off', status: 403, message: 'AI for adapters is switched off for this account.' };
-    if (u.calls >= dailyPerAccount) return { error: 'ai-budget', status: 429, message: `This account used its ${dailyPerAccount} AI calls for today.` };
+    const out = held.get(uid) || 0;
+    if (u.spentUsd + out + estimate > dailyBudgetUsd) return { error: 'ai-budget', status: 429, message: `This account reached its $${dailyBudgetUsd} AI budget for today.` };
     if (adapter && (u.byAdapter[adapter] || 0) >= dailyPerAdapter) return { error: 'ai-budget', status: 429, message: `This adapter used its ${dailyPerAdapter} AI calls for today.` };
+    held.set(uid, out + estimate);
     u.calls++;
     if (adapter) u.byAdapter[adapter] = (u.byAdapter[adapter] || 0) + 1;
     flushLater(uid);
     return { usage: u };
+  }
+
+  // The call is back: release what was held and count what Google billed.
+  function settle(uid, u, estimate, cost) {
+    const left = (held.get(uid) || 0) - estimate;
+    if (left > 1e-9) held.set(uid, left); else held.delete(uid);
+    u.spentUsd = dollars(u.spentUsd + cost);
+    flushLater(uid);
   }
 
   async function ask(req, res, rec, kind) {
@@ -149,24 +171,31 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller, log,
       return sendJSON(res, 400, { error: 'bad-options', message: e.message });
     }
     if (!caller) return sendJSON(res, 503, { error: 'ai-unavailable', message: 'This toolkit has no AI model set up.' });
-    const taken = await take(rec.uid, adapter);
+    const rate = priceOf(caller.model);
+    const estimate = costOf({
+      promptTokens: Math.ceil(built.prompt.length / ESTIMATE.charsPerToken) + images.length * ESTIMATE.imageTokens,
+      outputTokens: ESTIMATE.outputTokens,
+    }, rate);
+    const taken = await take(rec.uid, adapter, estimate);
     if (taken.error) return sendJSON(res, taken.status, { error: taken.error, message: taken.message });
 
     const started = Date.now();
-    let answer;
+    let answer, cost = 0;
     try {
-      answer = await withAiContext(rec.uid, `blocks.${task}`, () => caller(built.prompt, { images }));
+      answer = await withAiContext(rec.uid, `blocks.${task}`, () => caller(built.prompt, { images, onUsage: (used) => { cost = costOf(used, priceOf(used.model || caller.model)); } }));
     } catch (e) {
-      log?.warn('ai.blocks', { uid: rec.uid, task, adapter, outcome: 'model-error', error: e, ms: Date.now() - started });
+      settle(rec.uid, taken.usage, estimate, cost);
+      log?.warn('ai.blocks', { uid: rec.uid, task, adapter, outcome: 'model-error', error: e, costUsd: dollars(cost), ms: Date.now() - started });
       return sendJSON(res, 200, { text: null, reason: 'model-error', task, version: PROMPT_VERSION });
     }
+    settle(rec.uid, taken.usage, estimate, cost);
     const gated = gateAnswer(task, answer, input, built.options);
     log?.info('ai.blocks', {
       uid: rec.uid, task, adapter, outcome: gated.text === null ? 'rejected' : 'ok', reason: gated.reason,
-      inputChars: input.length, answerChars: gated.text?.length, ms: Date.now() - started,
+      inputChars: input.length, answerChars: gated.text?.length, costUsd: dollars(cost), ms: Date.now() - started,
       message: `AI block ${task} for ${adapter || 'an adapter'} ${gated.text === null ? `rejected (${gated.reason})` : 'ok'}`,
     });
-    return sendJSON(res, 200, { ...gated, task, version: PROMPT_VERSION, usage: { calls: taken.usage.calls, limit: dailyPerAccount } });
+    return sendJSON(res, 200, { ...gated, task, version: PROMPT_VERSION, usage: { spentUsd: taken.usage.spentUsd, budgetUsd: dailyBudgetUsd } });
   }
 
   async function route(req, res, method, pathname) {
@@ -177,7 +206,7 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller, log,
       if (method === 'POST' && pathname === `${AI_PREFIX}/vision`) return await ask(req, res, rec, 'vision');
       if (method === 'GET' && pathname === `${AI_PREFIX}/usage`) {
         const u = await load(rec.uid);
-        return sendJSON(res, 200, { day: u.day, calls: u.calls, limit: dailyPerAccount, perAdapterLimit: dailyPerAdapter, byAdapter: u.byAdapter, enabled: u.enabled, available: !!caller });
+        return sendJSON(res, 200, { day: u.day, spentUsd: u.spentUsd, budgetUsd: dailyBudgetUsd, calls: u.calls, perAdapterLimit: dailyPerAdapter, byAdapter: u.byAdapter, enabled: u.enabled, available: !!caller });
       }
       if (method === 'PUT' && pathname === `${AI_PREFIX}/settings`) {
         // A token bound to one app speaks for that app, not for the account.
@@ -199,6 +228,7 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller, log,
   /** Drop what is kept for a deleted account (inside its queue). */
   function forget(uid) {
     usage.delete(uid);
+    held.delete(uid);
     clearTimeout(timers.get(uid));
     timers.delete(uid);
   }
