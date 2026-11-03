@@ -49,6 +49,10 @@ export const LinkHighlighter = {
         outline: 3px solid ${color} !important;
         outline-offset: 2px !important;
       }
+      .${this.bodyClass} a[href][${this.ownColorAttr}]:focus,
+      .${this.bodyClass} a[href][${this.ownColorAttr}]:focus-visible {
+        outline-color: currentColor !important;
+      }
     `;
     (document.head || document.documentElement).appendChild(style);
     if (document.body) document.body.classList.add(this.bodyClass);
@@ -89,7 +93,8 @@ export const LinkHighlighter = {
   // The link color is dark: on a dark header or a colored button it made
   // links unreadable (dark blue on dark red). Those keep the page's own
   // color, which the page already made readable there; the underline and
-  // weight still mark them as links.
+  // weight still mark them as links, and their focus outline uses
+  // currentColor to remain contrasting and visible.
   keepOwnColor(a) {
     if (!a || a.nodeType !== 1 || this.ownColor.has(a)) return;
     try {
@@ -115,7 +120,9 @@ export const LinkHighlighter = {
   reveal(a) {
     if (!a || a.nodeType !== 1 || this.titled.has(a)) return false;
     if (a.hasAttribute('title')) return false;
-    const href = a.getAttribute('href');
+    const rawHref = a.getAttribute('href');
+    if (!rawHref) return false;
+    const href = rawHref.trim();
     if (!href || href.startsWith('#')) return false; // same-page jump, no destination to reveal
     let host = '';
     try { host = new URL(href, window.location.href).host; } catch { return false; }

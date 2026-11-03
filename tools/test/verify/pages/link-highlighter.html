@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Community Hub - Articles and Resources</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #222222;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1a202c;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: #000;
+      color: #fff;
+      padding: 8px;
+      z-index: 100;
+    }
+    .skip-link:focus {
+      top: 0;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    article {
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 1.3rem;
+      color: #1a202c;
+    }
+    p {
+      margin: 0.75rem 0;
+    }
+    /* Before adapter: links lack distinct underline */
+    main a, aside a, footer a {
+      color: #0b57d0;
+      text-decoration: none;
+    }
+    .button-link {
+      display: inline-block;
+      background-color: #0b57d0;
+      color: #ffffff !important;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    aside {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-top: 1.5rem;
+    }
+    footer {
+      background-color: #edf2f7;
+      color: #4a5568;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    button {
+      background-color: #2b6cb0;
+      color: #ffffff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:focus-visible {
+      outline: 2px solid #2b6cb0;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header>
+    <h1>Community Hub</h1>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a id="nav-home" href="https://community.example.org/home">Home</a></li>
+        <li><a id="nav-topics" href="https://community.example.org/topics">Topics</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <article>
+      <h2>Researching Assistive Tech</h2>
+      <p>
+        Recent updates in digital accessibility research highlight the need for unmistakable link affordances.
+        To read the original report on user navigation barriers,
+        <a id="link-external" href="https://research.partner-site.org/reports/a11y-2026">read more</a>.
+      </p>
+      <p>
+        We also evaluated how screen readers and magnification tools interact with browser links.
+        If you want to view the full dataset and methodology,
+        <a id="link-clickhere" href="https://data.external-stats.io/downloads/methodology">click here</a>.
+      </p>
+      <p>
+        For guidelines from standards bodies, see the
+        <a id="link-described" href="https://w3.org/WAI" title="W3C Web Accessibility Initiative Guidelines">W3C WAI standards</a>.
+      </p>
+      <p>
+        Our internal archive is also available for members. You can explore past issues in our
+        <a id="link-relative" href="/archive/summary">monthly archive</a>.
+      </p>
+      <p>
+        <a id="link-btn" href="https://signup.partner.org/join" class="button-link">Join the partner program</a>
+      </p>
+      <p>
+        Stay updated with our newsletter:
+        <button id="newsletter-btn" type="button">Subscribe</button>
+      </p>
+    </article>
+
+    <aside aria-label="Support and Contact">
+      <h2>Need Help?</h2>
+      <p>
+        Questions about our projects? Feel free to reach out to our team at
+        <a id="link-email" href="mailto:support@community.example.org">support@community.example.org</a>
+        or call us directly via <a id="link-phone" href="tel:+18005550199">phone support</a>.
+      </p>
+      <!-- Same-page anchor target without href -->
+      <a id="back-anchor"></a>
+      <p><a id="link-top" href="#main-content">Back to top</a></p>
+      <p><a id="link-ws-fragment" href="   #main-content">Jump to top (spaced)</a></p>
+    </aside>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Community Hub. All rights reserved.</p>
+  </footer>
+</body>
+</html>
