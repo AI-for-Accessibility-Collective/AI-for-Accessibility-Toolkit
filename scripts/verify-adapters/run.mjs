@@ -12,14 +12,25 @@
 //     An opencode agent per adapter (AGENTS.md here), with verify_adapter and
 //     run_tests (mcp.mjs), verifies it and fixes what fails, editing this
 //     checkout: run it in a worktree. Gemini through opencode's google
-//     provider, with the key in GEMINI_API_KEY. The agent has no shell and
-//     no web access. Writes each agent's report and events to DIR.
+//     provider, with the key in GEMINI_API_KEY. Writes each agent's report
+//     and events to DIR.
+//
+//     On your own machine the agent runs as you, so it gets only what the job
+//     needs: reading and editing files, the skills, and the verifier's tools.
+//     No shell, no code mode (opencode's `execute`, which runs its
+//     JavaScript here), no subagents, nothing outside this checkout.
+//     `--auto` approves only what is not denied. With --sandboxed, in the
+//     container this folder's Dockerfile builds (on the agent host VM, under
+//     gVisor, with only a copy of the repository), it also has a shell and
+//     code mode. Never web tools: the job needs none, as the sidebar's agent.
 
 import { spawn } from 'node:child_process';
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, createWriteStream } from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
+import { randomBytes } from 'node:crypto';
 import { openVerifier, ROOT } from './harness.mjs';
+import { serveHttp } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
 
 const HERE = path.join(ROOT, 'scripts/verify-adapters');
@@ -31,6 +42,7 @@ const argv = process.argv.slice(2);
 const flag = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ? argv.splice(i, 2)[1] : fallback; };
 const mode = argv.includes('--agent') ? 'agent' : argv.includes('--replay') ? 'replay' : null;
 const parallel = Number(flag('--parallel', 4));
+const sandboxed = argv.includes('--sandboxed');
 const logs = path.resolve(flag('--logs', path.join(ROOT, '.verify-logs')));
 const skills = flag('--skills', '').split(',').filter(Boolean);
 const names = argv.filter(a => !a.startsWith('--'));
@@ -70,14 +82,17 @@ async function agents() {
   const queue = names.length ? names : all;
   mkdirSync(logs, { recursive: true });
   const config = path.join(logs, 'opencode.json');
+  const token = randomBytes(24).toString('hex');
+  const mcpServer = await serveHttp({ token });
   writeFileSync(config, JSON.stringify({
     $schema: 'https://opencode.ai/config.json',
     model: MODEL,
     provider: { google: { options: { apiKey: '{env:GEMINI_API_KEY}' } } },
-    // Tools called directly, not through opencode's code mode (the agent writing
-    // JavaScript that calls them), as on the agent host.
-    mcp: { verifier: { type: 'local', command: ['node', path.join(HERE, 'mcp.mjs')], codemode: false } },
-    permissions: ['bash', 'webfetch', 'websearch', 'question', 'external_directory'].map(action => ({ action, resource: '*', effect: 'deny' })),
+    // Over HTTP, so its tools are called directly (see mcp.mjs).
+    mcp: { verifier: { type: 'remote', url: mcpServer.url, headers: { authorization: `Bearer ${token}` }, oauth: false, codemode: false } },
+    // opencode 2.0.30's tool names: shell (not bash), execute (code mode).
+    permissions: [...(sandboxed ? [] : ['shell', 'bash', 'execute']), 'webfetch', 'websearch', 'task', 'question', 'external_directory']
+      .map(action => ({ action, resource: '*', effect: 'deny' })),
     instructions: [path.join(HERE, 'AGENTS.md')],
     skills: [path.join(ROOT, '.claude/skills'), ...skills],
   }, null, 2));
@@ -113,6 +128,7 @@ async function agents() {
   await Promise.all(Array.from({ length: Math.min(parallel, pending.length) }, async () => {
     while (pending.length) await work(pending.shift());
   }));
+  await mcpServer.close();
   writeFileSync(path.join(logs, 'summary.json'), JSON.stringify(results, null, 2) + '\n');
   console.log(JSON.stringify(results, null, 2));
 }

@@ -28,7 +28,9 @@ control the adapter adds or changes.
 - `contrast_ratio` gives the WCAG contrast ratio of two colours. Use it
   where the accessibility skill says to run its contrast script; in a check,
   compare computed colours in the page.
-- File reading and editing. You have no shell and no internet.
+- File reading and editing, and a shell when you run in the verify
+  container (you can run `node tools/test/<name>-test.js` and the skill's
+  contrast script yourself). No internet, and no web tools.
 
 ## How you work
 

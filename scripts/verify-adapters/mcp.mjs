@@ -1,4 +1,4 @@
-// An MCP server (stdio) that gives an opencode agent the sidebar's verifiers
+// An MCP server (stdio, or streamable HTTP with serveHttp) that gives an opencode agent the sidebar's verifiers
 // for the catalog's built-in adapters (harness.mjs), and the adapter's own
 // tests:
 //
@@ -15,11 +15,18 @@
 //                    shell to run the accessibility skill's script).
 //
 // The result text is the sidebar's (axeText, shiftText from the agent host).
+//
+// run.mjs serves it over HTTP on 127.0.0.1, as the agent host serves the
+// browser tools: opencode 2.0.30 calls a remote server's tools directly when
+// its codemode is off, but a local (stdio) server's only through code mode,
+// which runs the agent's JavaScript on this machine.
 
 import readline from 'node:readline';
+import http from 'node:http';
 import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { openVerifier, ROOT } from './harness.mjs';
 import { axeText, shiftText } from '../../agent-host/src/browser-tools.js';
 import { getContrastRatio, parseColor } from '../../tools/utils/color.js';
@@ -122,23 +129,48 @@ const handlers = {
   },
 };
 
-function reply(id, result) { process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, result }) + '\n'); }
-function error(id, message) { process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, error: { code: -32603, message } }) + '\n'); }
-
-const rl = readline.createInterface({ input: process.stdin });
-rl.on('line', async (line) => {
-  let msg;
-  try { msg = JSON.parse(line); } catch { return; }
-  const { id, method, params } = msg;
-  if (id === undefined) return; // notifications
+/** One JSON-RPC request in, its response out (null for a notification). */
+export async function dispatch(msg) {
+  const { id, method, params } = msg || {};
+  if (id === undefined || id === null) return null;
+  const reply = (result) => ({ jsonrpc: '2.0', id, result });
   try {
-    if (method === 'initialize') reply(id, { protocolVersion: params?.protocolVersion || '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'adapter-verifier', version: '1.0.0' } });
-    else if (method === 'tools/list') reply(id, { tools: TOOLS });
-    else if (method === 'tools/call') {
+    if (method === 'initialize') return reply({ protocolVersion: params?.protocolVersion || '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'adapter-verifier', version: '1.0.0' } });
+    if (method === 'tools/list') return reply({ tools: TOOLS });
+    if (method === 'ping') return reply({});
+    if (method === 'tools/call') {
       const h = handlers[params?.name];
-      reply(id, h ? await h(params.arguments || {}) : text(`Unknown tool ${params?.name}.`, true));
-    } else if (method === 'ping') reply(id, {});
-    else error(id, `Unknown method ${method}`);
-  } catch (e) { reply(id, text(`The verifier failed: ${e.message}`, true)); }
-});
-rl.on('close', async () => { await verifier?.close(); process.exit(0); });
+      return reply(h ? await h(params.arguments || {}) : text(`Unknown tool ${params?.name}.`, true));
+    }
+    return { jsonrpc: '2.0', id, error: { code: -32601, message: `Unknown method ${method}` } };
+  } catch (e) { return reply(text(`The verifier failed: ${e.message}`, true)); }
+}
+
+/** Streamable HTTP (JSON replies) on 127.0.0.1, for requests with the token. Resolves to { url, close }. */
+export function serveHttp({ token }) {
+  const server = http.createServer(async (req, res) => {
+    const send = (status, body) => { res.writeHead(status, { 'content-type': 'application/json' }); res.end(JSON.stringify(body)); };
+    if (req.method !== 'POST') { res.writeHead(405, { allow: 'POST' }); return res.end(); }
+    if (req.headers.authorization !== `Bearer ${token}`) return send(401, { error: 'unauthorized' });
+    let msg;
+    try { const chunks = []; for await (const c of req) chunks.push(c); msg = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { return send(400, { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'parse error' } }); }
+    const out = await dispatch(msg);
+    if (!out) { res.writeHead(202); return res.end(); }
+    send(200, out);
+  });
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({
+    url: `http://127.0.0.1:${server.address().port}/mcp`,
+    close: async () => { await new Promise((r) => server.close(r)); await verifier?.close(); },
+  })));
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const rl = readline.createInterface({ input: process.stdin });
+  rl.on('line', async (line) => {
+    let msg;
+    try { msg = JSON.parse(line); } catch { return; }
+    const out = await dispatch(msg);
+    if (out) process.stdout.write(JSON.stringify(out) + '\n');
+  });
+  rl.on('close', async () => { await verifier?.close(); process.exit(0); });
+}
