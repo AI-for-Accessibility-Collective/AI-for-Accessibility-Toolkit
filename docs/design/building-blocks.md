@@ -614,6 +614,24 @@ Choices made while building it (mine, open to change):
   The toolkit may not import the catalog, so a host that runs its own model
   imports the gates from there too.
 
+## Browser settings, zoom and text size
+
+Decided by the project lead, 2026-11-03:
+
+- **Zoom is set through the Chrome DevTools Protocol.** CDP has no command
+  for Chrome's own page zoom, and `Emulation.setPageScaleFactor` is pinch
+  zoom (no reflow). `Emulation.setDeviceMetricsOverride` with the viewport
+  divided by the zoom factor and the device scale factor multiplied by it
+  is what browser zoom does to a page (checked: at 200% a 1280-pixel window
+  gives `innerWidth` 640, `devicePixelRatio` 2, and the page's narrow-screen
+  layout). The verifier and the CLI already drive pages over CDP.
+- **No dyslexia font.** Its benefit is not shown, so no block offers it and
+  the core set of adapters does not include it.
+- **Zoom or text size is the person's or the developer's choice**, never
+  both at once: changing both together does not work well, and the toolkit
+  does not prescribe one. The developer sets a default method, the person's
+  setting overrides it, and the block applies only the chosen one.
+
 ## What exists now
 
 - `toolkit/blocks/`: the 15 blocks, `createBlocks()`, the catalog the skill
