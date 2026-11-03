@@ -22,7 +22,7 @@
 //     you. No web tools: the job needs none, as for the sidebar's agent.
 
 import { spawn } from 'node:child_process';
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, createWriteStream } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, createWriteStream } from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { randomBytes } from 'node:crypto';
@@ -102,12 +102,21 @@ async function agents() {
   }, null, 2));
 
   const results = {};
-  const work = async (name) => {
+  // Each agent its own home: opencode servers started together in one home
+  // collide ("Standalone server exited before reporting readiness").
+  const homeOf = (name) => {
+    const home = path.join(logs, 'home', name);
+    mkdirSync(path.join(home, '.cache/opencode'), { recursive: true });
+    const models = '/opt/agent/models.json';
+    if (existsSync(models) && !existsSync(path.join(home, '.cache/opencode/models.json'))) copyFileSync(models, path.join(home, '.cache/opencode/models.json'));
+    return home;
+  };
+  const work = async (name, attempt = 1) => {
     const started = Date.now();
     const events = createWriteStream(path.join(logs, `${name}.jsonl`));
     const task = `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;
     const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `verify ${name}`, task], {
-      cwd: ROOT, env: { ...process.env, OPENCODE_CONFIG: config }, stdio: ['ignore', 'pipe', 'pipe'],
+      cwd: ROOT, env: { ...process.env, OPENCODE_CONFIG: config, HOME: homeOf(name) }, stdio: ['ignore', 'pipe', 'pipe'],
     });
     const timer = setTimeout(() => child.kill('SIGTERM'), 40 * 60_000);
     let text = '';
@@ -123,13 +132,15 @@ async function agents() {
     const code = await new Promise((r) => (child.exitCode !== null ? r(child.exitCode) : child.on('close', r)));
     clearTimeout(timer);
     events.end();
+    if (!text && attempt === 1 && /before reporting readiness/.test(stderr)) return work(name, 2);
     const report = text || `(no report; opencode exited ${code})\n${stderr}`;
     writeFileSync(path.join(logs, `${name}.md`), report + '\n');
     results[name] = (/^Outcome:\s*([a-z-]+)/m.exec(report) || [, 'no-report'])[1];
     console.log(`${name}: ${results[name]} (${Math.round((Date.now() - started) / 60000)} min)`);
   };
   const pending = [...queue];
-  await Promise.all(Array.from({ length: Math.min(parallel, pending.length) }, async () => {
+  await Promise.all(Array.from({ length: Math.min(parallel, pending.length) }, async (_, i) => {
+    await new Promise((r) => setTimeout(r, i * 5000)); // staggered starts
     while (pending.length) await work(pending.shift());
   }));
   await mcpServer.close();
