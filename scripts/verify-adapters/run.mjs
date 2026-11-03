@@ -67,12 +67,12 @@ async function replay() {
     const fine = live ? ['applied', 'skipped', 'unreachable'] : ['applied'];
     if (!fine.includes(r.status)) problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
     else if (r.status === 'unreachable') console.log(`SKIP: ${name} (${r.message})`);
-    if (r.leftovers?.length) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
+    if (r.leftovers?.length && spec.restores !== false) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
     const bad = (r.checks || []).map((c, i) => (!c.after ? spec.checks[i]?.name : null)).filter(Boolean);
     if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
     if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
     for (const rule of r.axe?.added || []) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);
-    if (r.status === 'applied' && r.restored === false) problems.push('disable() does not restore the page');
+    if (r.status === 'applied' && r.restored === false && spec.restores !== false) problems.push('disable() does not restore the page');
     if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
     if (problems.length) failed++;
     if (r.status === 'unreachable') continue;

@@ -53,6 +53,7 @@ const TOOLS = [
         checks: { type: 'array', description: 'Checks, as in the sidebar: each the body of an async function run in the page before enable() and again after it, returning true when the page is as it should be.', items: { type: 'object', required: ['name', 'code'], properties: { name: { type: 'string' }, code: { type: 'string' } } } },
         ai: { type: 'object', description: 'Fixed answers for the AI functions the adapter calls (tools/utils/ai.js), by name, such as {"describeImage": "A red bicycle."}. Without one, that function is unavailable, as when no AI is set up. What the adapter announces is in globalThis.__verifyAnnounced.' },
         harness: { type: 'object', description: 'Only for a file of fix functions rather than an adapter object: {"enable": "...", "disable": "..."}, async function bodies, with m the file\'s exports and options the options.', properties: { enable: { type: 'string' }, disable: { type: 'string' } } },
+        restores: { type: 'boolean', description: 'false for a file of fixes that has no way to undo them (they are meant to stay): what disable() leaves is then expected.' },
         viewport: { type: 'object', description: '{"width", "height"}; default 1280 by 800. Use 320 wide to check reflow.', properties: { width: { type: 'number' }, height: { type: 'number' } } },
         reducedMotion: { type: 'string', enum: ['reduce', 'no-preference'] },
         screenshot: { type: 'boolean', description: 'Also return a screenshot of the page with the adapter on.' },
