@@ -86,11 +86,18 @@ function install({ exportName, harness, ai }) {
   return { ok: true };
 }
 
-/** The page's HTML, ignoring empty class and style attributes (left by classList and style removals, harmless). */
+/**
+ * The page's HTML, ignoring what makes no difference: empty class and style
+ * attributes (left by classList and style removals) and the order of
+ * attributes (removing one and setting it again moves it to the end).
+ */
 function snapshot() {
   const copy = document.documentElement.cloneNode(true);
   for (const el of [copy, ...copy.querySelectorAll('*')]) {
     for (const name of ['class', 'style']) if (el.hasAttribute(name) && !el.getAttribute(name).trim()) el.removeAttribute(name);
+    const attrs = [...el.attributes].map((a) => [a.name, a.value]).sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0));
+    for (const [name] of attrs) el.removeAttribute(name);
+    for (const [name, value] of attrs) el.setAttribute(name, value);
   }
   return copy.outerHTML;
 }
