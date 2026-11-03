@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Focus and Keyboard Navigation</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding-top: 70px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1f2328;
+      background-color: #ffffff;
+      line-height: 1.5;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background-color: #1f2328;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 16px;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: #1f2328;
+    }
+    .lead {
+      font-size: 1.125rem;
+      color: #59636e;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    input[type="text"] {
+      width: 100%;
+      max-width: 360px;
+      padding: 8px 12px;
+      border: 1px solid #d1d9e0;
+      border-radius: 6px;
+      font-size: 1rem;
+      color: #1f2328;
+      background: #ffffff;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 24px 0;
+    }
+    button {
+      padding: 10px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid #d1d9e0;
+      background-color: #f6f8fa;
+      color: #1f2328;
+    }
+    #btn-suppressed {
+      outline: none !important;
+    }
+    #search-input {
+      outline: 0;
+    }
+    .spacer {
+      height: 450px;
+      background: #f6f8fa;
+      border: 1px dashed #d1d9e0;
+      border-radius: 8px;
+      margin: 24px 0;
+      padding: 24px;
+      color: #59636e;
+    }
+    .deep-spacer {
+      height: 1200px;
+      margin-top: 24px;
+      background: #fafafa;
+      border: 1px solid #e1e4e8;
+      border-radius: 8px;
+      padding: 24px;
+    }
+    footer {
+      border-top: 1px solid #d1d9e0;
+      padding: 24px;
+      text-align: center;
+      color: #59636e;
+      background: #f6f8fa;
+    }
+    footer a {
+      color: #0969da;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header role="banner">
+    <h2>Portal Console</h2>
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#dashboard" id="nav-dash">Dashboard</a></li>
+        <li><a href="#reports" id="nav-reports">Reports</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <h1>Focus and Keyboard Accessibility</h1>
+    <p class="lead" id="lead-text">
+      This test environment provides focusable controls, suppressed outlines,
+      and elements subject to fixed header obstruction.
+    </p>
+
+    <div class="form-group">
+      <label for="search-input">Search items</label>
+      <input id="search-input" type="text" placeholder="Type a keyword...">
+    </div>
+
+    <div class="btn-row">
+      <button id="btn-default" type="button">Default Button</button>
+      <button id="btn-suppressed" type="button">Suppressed Outline Button</button>
+      <a href="#details" id="link-standard" style="padding: 10px 18px; color: #0969da; text-decoration: underline;">Standard Link</a>
+    </div>
+
+    <div class="spacer" id="spacer-block">
+      <p>Content spacer block to permit scrolling test items beneath the sticky header.</p>
+    </div>
+
+    <div id="under-header-container" style="padding: 12px 0;">
+      <button id="btn-under-header" type="button">Element Subject to Header Overlap</button>
+    </div>
+
+    <div class="deep-spacer">
+      <p>Scrollable document section ensuring ample scroll height for reflow and clearance testing.</p>
+    </div>
+  </main>
+
+  <footer role="contentinfo">
+    <p>&copy; 2026 AI for Accessibility. <a href="#privacy" id="footer-privacy">Privacy Statement</a></p>
+  </footer>
+</body>
+</html>

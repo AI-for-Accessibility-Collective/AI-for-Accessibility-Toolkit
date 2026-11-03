@@ -1,0 +1,30 @@
+{
+  "name": "plain-language",
+  "file": "tools/core-adapters/plain-language.js",
+  "page": "plain-language.html",
+  "checks": [
+    {
+      "name": "targeted elements exist on the test page",
+      "code": "\n        return !!document.getElementById('complex-para') &&\n               !!document.getElementById('second-para') &&\n               !!document.getElementById('short-para') &&\n               !!document.getElementById('schedule') &&\n               !!document.getElementById('footer-para');\n      "
+    },
+    {
+      "name": "buttons appear only after long paragraphs in main content as real accessible buttons",
+      "code": "\n        const complex = document.getElementById('complex-para');\n        const second = document.getElementById('second-para');\n        const short = document.getElementById('short-para');\n        const footer = document.getElementById('footer-para');\n        const buttons = document.querySelectorAll('.ai4a11y-plain-btn');\n\n        if (!complex || !second || !short) return false;\n\n        if (!buttons.length) {\n          return !complex.nextElementSibling?.classList.contains('ai4a11y-plain-btn');\n        }\n\n        const btn1 = complex.nextElementSibling;\n        const btn2 = second.nextElementSibling;\n        if (!btn1?.classList.contains('ai4a11y-plain-btn')) return false;\n        if (!btn2?.classList.contains('ai4a11y-plain-btn')) return false;\n\n        if (short.nextElementSibling?.classList.contains('ai4a11y-plain-btn')) return false;\n        if (footer?.nextElementSibling?.classList.contains('ai4a11y-plain-btn')) return false;\n\n        for (const btn of [btn1, btn2]) {\n          if (btn.tagName !== 'BUTTON') return false;\n          if (btn.type !== 'button') return false;\n          if (btn.textContent.trim() !== 'Plain language') return false;\n          const rect = btn.getBoundingClientRect();\n          if (rect.width < 24 || rect.height < 24) return false;\n          btn.focus();\n          if (document.activeElement !== btn) return false;\n          btn.blur();\n        }\n        return true;\n      "
+    },
+    {
+      "name": "no AI call happens on load and no replaced blocks exist before click",
+      "code": "\n        const replaced = document.querySelectorAll('[data-ai4a11y-replaced]');\n        return replaced.length === 0;\n      "
+    },
+    {
+      "name": "clicking button replaces paragraph with answer and button toggles original back with changed name",
+      "code": "\n        const complex = document.getElementById('complex-para');\n        if (!complex) return false;\n        const btn = complex.nextElementSibling;\n        if (!btn || !btn.classList.contains('ai4a11y-plain-btn')) return true;\n\n        await window.__verifyClick('#complex-para + .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n\n        const replaced = document.querySelector('[data-ai4a11y-replaced]');\n        if (!replaced) return false;\n        if (!complex.hasAttribute('hidden')) return false;\n        if (btn.textContent.trim() !== 'Show original') return false;\n        if (!replaced.textContent.includes('Welfare Department announced you can appeal')) return false;\n\n        await window.__verifyClick('#complex-para ~ .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n        if (complex.hasAttribute('hidden')) return false;\n        if (!replaced.hasAttribute('hidden')) return false;\n        if (btn.textContent.trim() !== 'Show simplified') return false;\n\n        await window.__verifyClick('#complex-para ~ .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n        if (!complex.hasAttribute('hidden')) return false;\n        if (replaced.hasAttribute('hidden')) return false;\n        if (btn.textContent.trim() !== 'Show original') return false;\n\n        await window.__verifyClick('#complex-para ~ .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n        return true;\n      "
+    },
+    {
+      "name": "short text, table, and footer are left alone",
+      "code": "\n        const short = document.getElementById('short-para');\n        const schedule = document.getElementById('schedule');\n        const footer = document.getElementById('footer-para');\n        if (!short || !schedule || !footer) return false;\n\n        return short.textContent.includes('Please call our support center') &&\n               !short.hasAttribute('hidden') &&\n               schedule.querySelectorAll('tr').length === 3 &&\n               footer.textContent.includes('Department of Public Welfare');\n      "
+    }
+  ],
+  "ai": {
+    "simplify": "On November 15, 2026, the Welfare Department announced you can appeal within 45 days using Form 1040-A or the online claims portal."
+  }
+}

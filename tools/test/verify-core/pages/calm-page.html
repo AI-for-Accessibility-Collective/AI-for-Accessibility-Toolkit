@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calm Page Testing Ground</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      color: #0f172a;
+      background-color: #ffffff;
+    }
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 10px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 8px 16px;
+      font-weight: 700;
+      text-decoration: underline;
+      z-index: 100;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .skip-link:focus {
+      top: 10px;
+      outline: 3px solid #0284c7;
+      outline-offset: 2px;
+    }
+    header {
+      background-color: #f8fafc;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 1rem 1.5rem;
+    }
+    .header-content {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+    nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #0369a1;
+      text-decoration: underline;
+      font-weight: 600;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    nav a:focus-visible, button:focus-visible, input:focus-visible, video:focus-visible {
+      outline: 3px solid #0284c7;
+      outline-offset: 2px;
+    }
+    main {
+      max-width: 960px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    section {
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background-color: #ffffff;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: #0f172a;
+    }
+    p {
+      margin: 0 0 1rem 0;
+      color: #334155;
+    }
+
+    /* Animation 1: Continuous rotation */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spinning-badge {
+      display: inline-block;
+      width: 44px;
+      height: 44px;
+      background-color: #0284c7;
+      color: #ffffff;
+      text-align: center;
+      line-height: 44px;
+      border-radius: 50%;
+      animation: spin 3s linear infinite;
+    }
+
+    /* Animation 2: Smooth transition box */
+    .transition-box {
+      display: inline-block;
+      padding: 10px 16px;
+      background-color: #f1f5f9;
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      transition: transform 1s ease-in-out;
+    }
+
+    /* Animation 3: Content hidden by animation start state */
+    @keyframes revealEntry {
+      0% { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .hidden-entry-state {
+      opacity: 0;
+      animation: revealEntry 3s forwards;
+      padding: 12px;
+      background-color: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 4px;
+      margin-top: 1rem;
+      color: #14532d;
+    }
+    .hidden-entry-state p {
+      color: #14532d;
+      margin: 0;
+    }
+
+    /* Animation 4: CSS Ticker / Marquee-like scrolling */
+    @keyframes tickerScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .news-ticker {
+      overflow: hidden;
+      white-space: nowrap;
+      background-color: #f1f5f9;
+      border-left: 4px solid #0284c7;
+      padding: 0.75rem 1rem;
+      animation: tickerScroll 10s linear infinite;
+    }
+
+    /* Carousel */
+    .carousel-container {
+      position: relative;
+    }
+    .carousel-controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0f172a;
+      color: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      min-height: 44px;
+      min-width: 44px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #1e293b;
+    }
+
+    @keyframes carouselPan {
+      0%, 20% { transform: translateX(0); }
+      33%, 53% { transform: translateX(-33.333%); }
+      66%, 86% { transform: translateX(-66.666%); }
+      100% { transform: translateX(0); }
+    }
+    .carousel-viewport {
+      overflow: hidden;
+      width: 100%;
+    }
+    .carousel-track {
+      display: flex;
+      width: 300%;
+      animation: carouselPan 12s ease-in-out infinite;
+    }
+    .carousel-slide {
+      flex: 1 0 33.333%;
+      padding: 1rem;
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+
+    /* Rotator */
+    .rotator-slides {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .rotator-slide {
+      padding: 0.75rem 1rem;
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+    .rotator-slide.is-active {
+      background-color: #e0f2fe;
+      border-color: #0284c7;
+      font-weight: 600;
+    }
+
+    /* Media grid */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .media-card {
+      padding: 0.75rem;
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+    .media-card h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: #0f172a;
+    }
+    video {
+      display: block;
+      width: 100%;
+      height: 140px;
+      background-color: #000000;
+      border-radius: 4px;
+    }
+
+    /* Form */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 360px;
+      margin-bottom: 1rem;
+    }
+    label {
+      font-weight: 600;
+      color: #0f172a;
+    }
+    input[type="email"] {
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      font-size: 1rem;
+      color: #0f172a;
+      background-color: #ffffff;
+    }
+    footer {
+      background-color: #f8fafc;
+      border-top: 1px solid #cbd5e1;
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <header>
+    <div class="header-content">
+      <h1>Calm Page Testing Ground</h1>
+      <nav aria-label="Main navigation">
+        <ul>
+          <li><a href="#animations-section">Animations</a></li>
+          <li><a href="#media-section">Media</a></li>
+          <li><a href="#carousel-section">Carousel</a></li>
+          <li><a href="#feedback-section">Feedback</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Section 1: CSS Animations & Transitions -->
+    <section id="animations-section" aria-labelledby="anim-heading">
+      <h2 id="anim-heading">CSS Animations &amp; Transitions</h2>
+      <p>Continuous keyframes and transitions that should be stilled.</p>
+      <div id="spin-badge" class="spinning-badge" aria-label="Loading badge">★</div>
+      <div id="trans-box" class="transition-box">Smooth Transition Area</div>
+
+      <!-- Content hidden by animation start state -->
+      <div id="hidden-entry" class="hidden-entry-state">
+        <p id="hidden-entry-text">Important announcement originally hidden by an animation start state.</p>
+      </div>
+
+      <!-- Ticker -->
+      <div id="news-ticker" class="news-ticker" role="region" aria-label="Breaking news ticker">
+        <span>Breaking News: Central district inaugurates accessible community center and pedestrian plaza.</span>
+      </div>
+    </section>
+
+    <!-- Section 2: Autoplaying & Looping Media -->
+    <section id="media-section" aria-labelledby="media-heading">
+      <h2 id="media-heading">Autoplaying Video &amp; GIF-like Media</h2>
+      <div class="media-grid">
+        <div class="media-card">
+          <h3>Autoplaying Video</h3>
+          <video id="autoplay-video" width="240" height="140" autoplay muted playsinline loop aria-label="Autoplaying city traffic stream">
+            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0ACity" srclang="en" label="English" default>
+          </video>
+        </div>
+        <div class="media-card">
+          <h3>Muted Looping Video (GIF-like)</h3>
+          <video id="loop-video" width="240" height="140" autoplay muted loop playsinline aria-label="Looping demonstration graphic">
+            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0AGraphic" srclang="en" label="English" default>
+          </video>
+        </div>
+        <div class="media-card">
+          <h3>Paused Video (With Controls)</h3>
+          <video id="paused-video" width="240" height="140" controls muted aria-label="Interview recording, initially paused">
+            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0AInterview" srclang="en" label="English" default>
+          </video>
+        </div>
+        <div class="media-card">
+          <h3>User-Interactive Video</h3>
+          <video id="user-play-video" width="240" height="140" controls muted aria-label="User play demonstration video">
+            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0APlay%20Demo" srclang="en" label="English" default>
+          </video>
+          <button id="play-user-video-btn" type="button" class="btn" style="margin-top: 0.5rem;">Play Video</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Carousels & Rotators -->
+    <section id="carousel-section" class="carousel-container" role="region" aria-roledescription="carousel" aria-label="Featured Articles">
+      <h2>Featured Articles Carousel</h2>
+      <div class="carousel-controls">
+        <button id="prev-slide" type="button" class="btn" aria-label="Previous article">Previous</button>
+        <button id="next-slide" type="button" class="btn" aria-label="Next article">Next</button>
+      </div>
+      <div class="carousel-viewport">
+        <div id="carousel-track" class="carousel-track">
+          <div id="slide-1" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="1 of 3: Urban Forest Expansion">
+            <h3>Urban Forest Expansion</h3>
+            <p>Over five thousand native trees planted across suburban parks this season.</p>
+          </div>
+          <div id="slide-2" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="2 of 3: Clean Energy Milestone">
+            <h3>Clean Energy Milestone</h3>
+            <p>Solar and wind generation exceeds seventy percent of municipal energy requirements.</p>
+          </div>
+          <div id="slide-3" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="3 of 3: Civic Tech Showcase">
+            <h3>Civic Tech Showcase</h3>
+            <p>Annual exhibition features open-source assistive technologies developed by local teams.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scripted class rotator -->
+      <div id="rotator-section" class="rotator-slides" role="region" aria-roledescription="carousel" aria-label="Quick Highlights">
+        <div id="rot-slide-a" class="rotator-slide is-active" role="group" aria-roledescription="slide" aria-label="Highlight 1">Solar Grid Modernization</div>
+        <div id="rot-slide-b" class="rotator-slide" role="group" aria-roledescription="slide" aria-label="Highlight 2">High-Speed Rail Expansion</div>
+      </div>
+    </section>
+
+    <!-- Section 4: Ordinary Static & Interactive Content -->
+    <section id="feedback-section" aria-labelledby="feedback-heading">
+      <h2 id="feedback-heading">Community Feedback</h2>
+      <p id="feedback-para">We welcome input on town planning, public facilities, and municipal digital services.</p>
+      <form id="subscribe-form">
+        <div class="form-group">
+          <label for="user-email">Email address for newsletters</label>
+          <input id="user-email" type="email" placeholder="resident@example.org" required>
+        </div>
+        <button id="submit-form-btn" type="submit" class="btn">Submit Feedback</button>
+      </form>
+      <div id="form-status" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footer-text">&copy; 2026 Calm Page Testing Ground. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // User play button
+    const userVideo = document.getElementById('user-play-video');
+    document.getElementById('play-user-video-btn').addEventListener('click', () => {
+      userVideo.play().catch(() => {});
+    });
+
+    // Form submission
+    const form = document.getElementById('subscribe-form');
+    const status = document.getElementById('form-status');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      status.textContent = 'Feedback received. Thank you!';
+    });
+  </script>
+</body>
+</html>

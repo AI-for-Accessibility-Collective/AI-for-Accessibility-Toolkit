@@ -1,0 +1,33 @@
+{
+  "name": "text-size-narrow",
+  "file": "tools/core-adapters/text-size.js",
+  "page": "text-size.html",
+  "personal": {
+    "fontScale": 150,
+    "textSizeMethod": "font",
+    "lineHeight": 1.5,
+    "letterSpacing": 0.12
+  },
+  "checks": [
+    {
+      "name": "no sideways scrolling at 320 pixels wide",
+      "code": "\n        const doc = document.documentElement;\n        if (doc.scrollWidth > doc.clientWidth + 1) return false;\n        return true;\n      "
+    },
+    {
+      "name": "WCAG 1.4.12 spacing applied with no text cut off at 320 pixels wide",
+      "code": "\n        const fixedCard = document.getElementById('fixed-card');\n        if (!fixedCard) return false;\n        if (fixedCard.scrollHeight > fixedCard.clientHeight + 1) return false;\n\n        for (const el of document.querySelectorAll('main p, main h1, main h2, main h3')) {\n          if (el.scrollHeight > el.clientHeight + 1) return false;\n        }\n        return true;\n      "
+    },
+    {
+      "name": "computed sizes of text are scaled at 320 pixels wide",
+      "code": "\n        const p = document.getElementById('lead-paragraph');\n        const h1 = document.querySelector('h1');\n        if (!p || !h1) return false;\n\n        const pFs = parseFloat(window.getComputedStyle(p).fontSize);\n        const h1Fs = parseFloat(window.getComputedStyle(h1).fontSize);\n        if (Math.abs(pFs - 24) > 0.5) return false;\n        if (Math.abs(h1Fs - 48) > 1.0) return false;\n        return true;\n      "
+    },
+    {
+      "name": "landmarks and form controls remain functional and accessible at 320 pixels wide",
+      "code": "\n        const main = document.querySelector('main');\n        const nav = document.querySelector('nav');\n        const radio = document.getElementById('opt1');\n        const chk = document.getElementById('chk1');\n        if (!main || !nav || !radio || !chk) return false;\n        if (!radio.checked) return false;\n        chk.click();\n        if (!chk.checked) return false;\n        chk.click();\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 800
+  }
+}

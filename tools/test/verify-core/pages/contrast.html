@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contrast Adapter Verification</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: #ffffff;
+      color: #111111;
+      line-height: 1.5;
+    }
+    header, nav, main, footer, section, article {
+      display: block;
+      margin-bottom: 16px;
+    }
+    button, a {
+      display: inline-block;
+      margin: 4px 0;
+      min-height: 24px;
+      min-width: 24px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="high-contrast-large" style="font-size: 26px; color: #003366; background-color: #ffffff;">Contrast Test Page</h1>
+    <nav aria-label="Main Navigation">
+      <a id="high-contrast-link" href="#main" style="color: #002244; background-color: #ffffff;">Main content</a>
+      <a id="low-contrast-link" href="#article" style="color: #999999; background-color: #ffffff;">Article link</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section aria-labelledby="sec-heading">
+      <h2 id="sec-heading" style="color: #111111; background-color: #ffffff;">Articles and Tests</h2>
+      <article id="article">
+        <h2 id="low-contrast-large" style="font-size: 24px; color: #aaaaaa; background-color: #ffffff;">Low Contrast Large Heading</h2>
+        <p id="high-contrast-text" style="color: #111111; background-color: #ffffff;">This is high contrast text that already passes WCAG AA contrast requirements.</p>
+        <p id="low-contrast-gray" style="color: #888888; background-color: #ffffff;">This is normal text with low contrast gray color that fails WCAG AA.</p>
+        <p id="low-contrast-blue" style="color: #6699ff; background-color: #ffffff;">This is normal text with low contrast blue color that fails WCAG AA.</p>
+        <div style="background-color: #111111; padding: 8px;">
+          <p id="low-contrast-dark" style="color: #555555; background-color: #111111;">This is text on a dark container with insufficient contrast.</p>
+        </div>
+      </article>
+
+      <section aria-labelledby="controls-heading">
+        <h3 id="controls-heading" style="color: #222222; background-color: #ffffff;">Controls</h3>
+        <button id="high-contrast-button" type="button" style="color: #000000; background-color: #eeeeee; border: 1px solid #333;">Accessible Button</button>
+        <button id="low-contrast-button" type="button" style="color: #888888; background-color: #ffffff; border: 1px solid #888;">Low Contrast Button</button>
+      </section>
+
+      <section aria-labelledby="media-heading">
+        <h3 id="media-heading" style="color: #222222; background-color: #ffffff;">Media Elements</h3>
+        <img id="test-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%2300aa00'/%3E%3C/svg%3E" alt="Green test square" width="40" height="40">
+        <canvas id="test-canvas" width="40" height="40" aria-label="Test canvas"></canvas>
+        <video id="test-video" width="40" height="40" aria-label="Test video"></video>
+        <div id="bg-image-box" style="background-image: linear-gradient(to right, #000000, #333333); padding: 8px;">
+          <p id="bg-image-text" style="color: #ffffff;">Text over gradient background should be left alone</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footer-text" style="color: #222222; background-color: #ffffff;">Footer content for verification.</p>
+  </footer>
+</body>
+</html>

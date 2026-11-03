@@ -1,0 +1,18 @@
+{
+  "name": "captions-on-personal",
+  "file": "tools/core-adapters/captions-on.js",
+  "page": "captions-on.html",
+  "personal": {
+    "language": "fr"
+  },
+  "checks": [
+    {
+      "name": "personal language preference selects French track on multilingual video",
+      "code": "\n        const v = document.getElementById('video-multilingual');\n        if (!v) return false;\n        const tracks = [...(v.textTracks || [])];\n        const fr = tracks.find((t) => t.language === 'fr');\n        const en = tracks.find((t) => t.language === 'en');\n        if (!fr || !en) return false;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) {\n          return fr.mode === 'disabled' && en.mode === 'disabled';\n        }\n        return fr.mode === 'showing' && en.mode === 'disabled';\n      "
+    },
+    {
+      "name": "track modes return to what they were after disable()",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const v = document.getElementById('video-multilingual');\n        if (!v) return false;\n        const fr = [...v.textTracks].find(t => t.language === 'fr');\n        if (!fr || fr.mode !== 'showing') return false;\n\n        adapter.disable();\n        const modeAfterDisable = fr.mode;\n\n        adapter.enable();\n        const modeAfterReEnable = fr.mode;\n\n        return modeAfterDisable === 'disabled' && modeAfterReEnable === 'showing';\n      "
+    }
+  ]
+}

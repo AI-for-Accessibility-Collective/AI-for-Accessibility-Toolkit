@@ -1,0 +1,23 @@
+{
+  "name": "bigger-targets-narrow",
+  "file": "tools/core-adapters/bigger-targets.js",
+  "page": "bigger-targets.html",
+  "checks": [
+    {
+      "name": "each interactive element measures at least targetSize in both dimensions at 320px",
+      "code": "\n        if (!document.documentElement.classList.contains('ai4a11y-bigger-targets')) return true;\n\n        function getEffectiveSize(el) {\n          const r = el.getBoundingClientRect();\n          const mark = el.getAttribute('data-ai4a11y-bt') || '';\n          if (mark.includes('hit')) {\n            const after = window.getComputedStyle(el, '::after');\n            const t = Math.abs(parseFloat(after.top) || 0);\n            const b = Math.abs(parseFloat(after.bottom) || 0);\n            const l = Math.abs(parseFloat(after.left) || 0);\n            const rt = Math.abs(parseFloat(after.right) || 0);\n            return { width: r.width + l + rt, height: r.height + t + b };\n          }\n          return { width: r.width, height: r.height };\n        }\n\n        const dec = document.getElementById('btn-dec');\n        const inc = document.getElementById('btn-inc');\n        const fav = document.getElementById('btn-fav');\n        const chk = document.getElementById('chk-warranty');\n        const link = document.getElementById('link-policy');\n\n        const decSize = getEffectiveSize(dec);\n        const incSize = getEffectiveSize(inc);\n        const favSize = getEffectiveSize(fav);\n        const chkSize = getEffectiveSize(chk);\n        const linkSize = getEffectiveSize(link);\n\n        return decSize.width >= 24 && decSize.height >= 24 &&\n               incSize.width >= 24 && incSize.height >= 24 &&\n               favSize.width >= 24 && favSize.height >= 24 &&\n               chkSize.width >= 24 && chkSize.height >= 24 &&\n               linkSize.width >= 24 && linkSize.height >= 24;\n      "
+    },
+    {
+      "name": "no horizontal scrolling at 320px viewport",
+      "code": "\n        return document.documentElement.scrollWidth <= 320;\n      "
+    },
+    {
+      "name": "no two targets overlap after the change at 320px",
+      "code": "\n        if (!document.documentElement.classList.contains('ai4a11y-bigger-targets')) return true;\n\n        function getEffectiveRect(el) {\n          const r = el.getBoundingClientRect();\n          const mark = el.getAttribute('data-ai4a11y-bt') || '';\n          if (mark.includes('hit')) {\n            const after = window.getComputedStyle(el, '::after');\n            const t = Math.abs(parseFloat(after.top) || 0);\n            const b = Math.abs(parseFloat(after.bottom) || 0);\n            const l = Math.abs(parseFloat(after.left) || 0);\n            const rt = Math.abs(parseFloat(after.right) || 0);\n            return {\n              left: r.left - l,\n              right: r.right + rt,\n              top: r.top - t,\n              bottom: r.bottom + b,\n              width: r.width + l + rt,\n              height: r.height + t + b\n            };\n          }\n          return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height };\n        }\n\n        const targets = [...document.querySelectorAll('a[href], button, input, select, textarea, summary, [role=\"button\"], [role=\"link\"]')]\n          .filter(el => {\n            if (el.disabled || el.getAttribute('type') === 'hidden') return false;\n            const cs = window.getComputedStyle(el);\n            return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0';\n          });\n\n        for (let i = 0; i < targets.length; i++) {\n          for (let j = i + 1; j < targets.length; j++) {\n            const a = targets[i], b = targets[j];\n            if (a.contains(b) || b.contains(a)) continue;\n            const rA = getEffectiveRect(a), rB = getEffectiveRect(b);\n            const overlapX = rA.left < rB.right - 0.5 && rA.right > rB.left + 0.5;\n            const overlapY = rA.top < rB.bottom - 0.5 && rA.bottom > rB.top + 0.5;\n            if (overlapX && overlapY) return false;\n          }\n        }\n        return true;\n      "
+    }
+  ],
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

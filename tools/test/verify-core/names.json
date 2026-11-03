@@ -1,0 +1,27 @@
+{
+  "name": "names",
+  "file": "tools/core-adapters/names.js",
+  "page": "names.html",
+  "checks": [
+    {
+      "name": "unnamed controls and informative image receive accessible names",
+      "code": "\n        const btn = document.getElementById('btn-unnamed');\n        const link = document.getElementById('link-unnamed');\n        const input = document.getElementById('input-unnamed');\n        const img = document.getElementById('img-informative');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.getAttribute('aria-label') !== 'Search catalog') return false;\n        if (link.getAttribute('aria-label') !== 'Search catalog') return false;\n        if (input.getAttribute('aria-label') !== 'Search catalog') return false;\n        if (img.getAttribute('alt') !== 'Community garden plot with fresh green plants') return false;\n        return true;\n      "
+    },
+    {
+      "name": "controls and images that already had a name keep it exactly",
+      "code": "\n        const btn = document.getElementById('btn-named');\n        const link = document.getElementById('link-named');\n        const input = document.getElementById('input-named');\n        const img = document.getElementById('img-named');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.textContent.trim() !== 'Subscribe to Newsletter') return false;\n        if (btn.hasAttribute('aria-label')) return false;\n        if (link.textContent.trim() !== 'View volunteer details') return false;\n        if (link.hasAttribute('aria-label')) return false;\n        const label = document.querySelector('label[for=\"input-named\"]');\n        if (!label || label.textContent.trim() !== 'Your Email') return false;\n        if (input.hasAttribute('aria-label')) return false;\n        if (img.getAttribute('alt') !== 'Garden plot map showing vegetable beds') return false;\n        return true;\n      "
+    },
+    {
+      "name": "decorative images are marked with empty alt and not sent to AI",
+      "code": "\n        const spacer = document.getElementById('img-spacer');\n        const pres = document.getElementById('img-presentation');\n        const decor = document.getElementById('img-decorative-alt');\n        if (!spacer || !pres || !decor) return false;\n        if (spacer.getAttribute('alt') !== '') return false;\n        if (pres.getAttribute('alt') !== '') return false;\n        if (decor.getAttribute('alt') !== '') return false;\n        return true;\n      "
+    },
+    {
+      "name": "hidden elements are left untouched",
+      "code": "\n        const btnHidden = document.getElementById('btn-hidden');\n        const imgHidden = document.getElementById('img-hidden');\n        if (!btnHidden || !imgHidden) return false;\n        if (btnHidden.hasAttribute('aria-label')) return false;\n        if (imgHidden.hasAttribute('alt')) return false;\n        return true;\n      "
+    }
+  ],
+  "ai": {
+    "label": "Search catalog",
+    "describe": "Community garden plot with fresh green plants"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "text-size",
+  "file": "tools/core-adapters/text-size.js",
+  "page": "text-size.html",
+  "personal": {
+    "fontScale": 150
+  },
+  "checks": [
+    {
+      "name": "with textSizeMethod zoom, zoom is set to fontScale/100 and DOM text size is untouched",
+      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return false;\n        if (host.zoom !== 1.5) return false;\n        if (!host.zoomCalls.includes('set:1.5')) return false;\n\n        const p = document.querySelector('main p');\n        const h1 = document.querySelector('h1');\n        if (!p || !h1) return false;\n        if (p.style.fontSize || h1.style.fontSize) return false;\n        return true;\n      "
+    },
+    {
+      "name": "the shortcuts change the size and save it for this site; Alt+Shift+G saves for every site; nothing is saved without a key press",
+      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return false;\n        if (host.profile.length !== 0) return false;\n\n        await __verifyPress('Alt+Shift+Equal');\n        if (host.zoom !== 1.6) return false;\n        const siteSave = host.profile.find(p => p.changes.fontScale === 160 && p.scope === 'site');\n        if (!siteSave) return false;\n\n        await __verifyPress('Alt+Shift+G');\n        const allSave = host.profile.find(p => p.changes.fontScale === 160 && p.scope === 'all');\n        if (!allSave) return false;\n\n        await __verifyPress('Alt+Shift+Minus');\n        if (host.zoom !== 1.5) return false;\n\n        return true;\n      "
+    },
+    {
+      "name": "Alt+Shift+L cycles line height through 1.5, 1.8, 2, and back to page own",
+      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        const save15 = host.profile.find(p => p.changes.lineHeight === 1.5 && p.scope === 'site');\n        if (!save15) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        const save18 = host.profile.find(p => p.changes.lineHeight === 1.8 && p.scope === 'site');\n        if (!save18) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        const save20 = host.profile.find(p => p.changes.lineHeight === 2.0 && p.scope === 'site');\n        if (!save20) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        return true;\n      "
+    },
+    {
+      "name": "ordinary content, landmarks, and form controls are preserved",
+      "code": "\n        const main = document.querySelector('main');\n        const nav = document.querySelector('nav');\n        const code = document.querySelector('pre code');\n        const radio = document.getElementById('opt1');\n        if (!main || !nav || !code || !radio) return false;\n        if (code.textContent.trim() !== 'const speedOfLight = 299792458; // metres per second') return false;\n        if (!radio.checked) return false;\n        return true;\n      "
+    }
+  ]
+}

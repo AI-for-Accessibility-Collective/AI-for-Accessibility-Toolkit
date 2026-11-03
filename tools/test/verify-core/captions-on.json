@@ -1,0 +1,35 @@
+{
+  "name": "captions-on",
+  "file": "tools/core-adapters/captions-on.js",
+  "page": "captions-on.html",
+  "checks": [
+    {
+      "name": "a video with a captions track in the page's language has that track showing",
+      "code": "\n        const v = document.getElementById('video-single-track');\n        if (!v) return false;\n        const track = v.textTracks?.[0];\n        if (!track) return false;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) {\n          return track.mode === 'disabled';\n        }\n        return track.mode === 'showing' && track.language === 'en';\n      "
+    },
+    {
+      "name": "with two tracks, the matching language is chosen",
+      "code": "\n        const v = document.getElementById('video-multilingual');\n        if (!v) return false;\n        const tracks = [...(v.textTracks || [])];\n        const fr = tracks.find((t) => t.language === 'fr');\n        const en = tracks.find((t) => t.language === 'en');\n        if (!fr || !en) return false;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) {\n          return fr.mode === 'disabled' && en.mode === 'disabled';\n        }\n        return en.mode === 'showing' && fr.mode === 'disabled';\n      "
+    },
+    {
+      "name": "media added later gets its captions on",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const container = document.getElementById('dynamic-media-container');\n        if (!container) return false;\n\n        const video = document.createElement('video');\n        video.id = 'video-dynamic-test';\n        video.controls = true;\n        const track = document.createElement('track');\n        track.kind = 'captions';\n        track.srclang = 'en';\n        track.label = 'English';\n        track.src = 'data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:02.000%0ADynamic';\n        video.appendChild(track);\n        container.appendChild(video);\n\n        await new Promise((r) => setTimeout(r, 80));\n\n        const dynTrack = video.textTracks?.[0];\n        const ok = dynTrack && dynTrack.mode === 'showing';\n        video.remove();\n        return Boolean(ok);\n      "
+    },
+    {
+      "name": "a video without tracks is untouched",
+      "code": "\n        const v = document.getElementById('video-no-tracks');\n        if (!v) return false;\n        const hasNoTracks = (v.textTracks?.length || 0) === 0;\n        const hasNoMarks = !v.hasAttribute('data-ai4a11y-ui') && !v.dataset.ai4a11yCaptions;\n        return hasNoTracks && hasNoMarks;\n      "
+    },
+    {
+      "name": "track modes return to what they were after disable()",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const v = document.getElementById('video-single-track');\n        if (!v || !v.textTracks?.[0]) return false;\n        if (v.textTracks[0].mode !== 'showing') return false;\n\n        adapter.disable();\n        const modeAfterDisable = v.textTracks[0].mode;\n\n        adapter.enable();\n        const modeAfterReEnable = v.textTracks[0].mode;\n\n        return modeAfterDisable === 'disabled' && modeAfterReEnable === 'showing';\n      "
+    },
+    {
+      "name": "nothing starts playing",
+      "code": "\n        const mediaElements = [...document.querySelectorAll('video, audio')];\n        if (!mediaElements.length) return false;\n        return mediaElements.every((el) => el.paused && el.currentTime === 0);\n      "
+    },
+    {
+      "name": "content to leave alone is left alone and controls are accessible",
+      "code": "\n        const h1 = document.querySelector('header h1');\n        const nav = document.querySelector('nav');\n        const btn = document.getElementById('btn-load-more');\n        const prose = document.getElementById('prose-policy');\n        if (!h1 || !nav || !btn || !prose) return false;\n        if (!h1.textContent.includes('Community Media Archive')) return false;\n        if (!prose.textContent.includes('All archived recordings remain freely available')) return false;\n\n        const rect = btn.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n\n        btn.focus();\n        if (document.activeElement !== btn) return false;\n        btn.blur();\n        return true;\n      "
+    }
+  ]
+}

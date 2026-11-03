@@ -1,0 +1,20 @@
+{
+  "name": "names-no-ai",
+  "file": "tools/core-adapters/names.js",
+  "page": "names.html",
+  "checks": [
+    {
+      "name": "with AI unavailable unnamed controls and informative images remain unchanged",
+      "code": "\n        const btn = document.getElementById('btn-unnamed');\n        const link = document.getElementById('link-unnamed');\n        const input = document.getElementById('input-unnamed');\n        const img = document.getElementById('img-informative');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.hasAttribute('aria-label')) return false;\n        if (link.hasAttribute('aria-label')) return false;\n        if (input.hasAttribute('aria-label')) return false;\n        if (img.hasAttribute('alt')) return false;\n        return true;\n      "
+    },
+    {
+      "name": "controls that already had a name keep it exactly",
+      "code": "\n        const btn = document.getElementById('btn-named');\n        const link = document.getElementById('link-named');\n        const input = document.getElementById('input-named');\n        const img = document.getElementById('img-named');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.textContent.trim() !== 'Subscribe to Newsletter') return false;\n        if (link.textContent.trim() !== 'View volunteer details') return false;\n        if (img.getAttribute('alt') !== 'Garden plot map showing vegetable beds') return false;\n        return true;\n      "
+    },
+    {
+      "name": "decorative images are still marked alt empty without AI",
+      "code": "\n        const spacer = document.getElementById('img-spacer');\n        const pres = document.getElementById('img-presentation');\n        if (!spacer || !pres) return false;\n        if (spacer.getAttribute('alt') !== '') return false;\n        if (pres.getAttribute('alt') !== '') return false;\n        return true;\n      "
+    }
+  ],
+  "ai": {}
+}

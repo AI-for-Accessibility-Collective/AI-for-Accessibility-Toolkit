@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Civic Services and Public Guide</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #fbfbfb;
+    }
+    .site-header {
+      background: #0f2d59;
+      color: #ffffff;
+      padding: 16px 24px;
+    }
+    .site-header a {
+      color: #ffffff;
+    }
+    .cookie-notice {
+      background: #fff3cd;
+      color: #533f03;
+      padding: 10px 24px;
+      font-size: 14px;
+      border-bottom: 1px solid #ffeeba;
+    }
+    .site-navigation {
+      background: #1b4b8a;
+      padding: 8px 24px;
+    }
+    .site-navigation ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .site-navigation a {
+      color: #ffffff;
+      text-decoration: underline;
+      display: inline-block;
+      min-width: 24px;
+      min-height: 24px;
+      line-height: 24px;
+    }
+    .site-navigation a:focus-visible {
+      outline: 3px solid #ffdd00;
+      outline-offset: 2px;
+    }
+    .layout-container {
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: flex;
+      gap: 24px;
+    }
+    .content {
+      flex: 1;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .sidebar {
+      width: 240px;
+      background: #f0f4f8;
+      padding: 16px;
+      border-radius: 8px;
+    }
+    .site-footer {
+      background: #222222;
+      color: #eeeeee;
+      padding: 24px;
+      margin-top: 48px;
+      text-align: center;
+      font-size: 14px;
+    }
+    button {
+      min-height: 32px;
+      min-width: 32px;
+      padding: 6px 14px;
+      font: inherit;
+      cursor: pointer;
+      background: #0f2d59;
+      color: #ffffff;
+      border: 2px solid transparent;
+      border-radius: 4px;
+    }
+    button:focus-visible {
+      outline: 3px solid #0f2d59;
+      outline-offset: 2px;
+    }
+    a:focus-visible {
+      outline: 3px solid #0f2d59;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Cookie banner: must not become landmark or main -->
+  <div id="cookie-notice" class="cookie-notice">
+    Cookie notice: We use essential cookies to maintain service continuity and accessibility.
+  </div>
+
+  <!-- Unmarked masthead/header -->
+  <div id="masthead" class="site-header">
+    <div class="logo">Civic Services Portal</div>
+  </div>
+
+  <!-- Unmarked navigation -->
+  <div id="primary-nav" class="site-navigation">
+    <ul>
+      <li><a href="#h-overview">Overview</a></li>
+      <li><a href="#h-eligibility">Eligibility</a></li>
+      <li><a href="#h-application">Applications</a></li>
+      <li><a href="#h-resources">Resources</a></li>
+      <li><a href="#h-contact">Contact</a></li>
+    </ul>
+  </div>
+
+  <div class="layout-container">
+    <!-- Unmarked main content block -->
+    <div id="main-content" class="content">
+      <h1 id="h-title">Civic Services and Public Guide</h1>
+      <p>
+        Welcome to the public accessibility and civic services guide. This comprehensive directory provides official
+        information regarding municipal programs, public initiatives, documentation standards, and community support
+        frameworks available throughout the upcoming calendar year.
+      </p>
+
+      <h2 id="h-overview">Overview of Community Programs</h2>
+      <p>
+        The civic programs administered by the city provide direct grants, assistive technology allocations, and
+        transportation accommodations to qualifying households and nonprofit organizations across every district.
+      </p>
+
+      <h3 id="h-eligibility">Eligibility Requirements</h3>
+      <p>
+        Residents seeking access to grant opportunities must demonstrate local residency for at least twelve consecutive
+        months, submit standard income verification, and present verified identification documents.
+      </p>
+
+      <h3 id="h-application">Application Process</h3>
+      <p>
+        Applications may be completed online or submitted through neighborhood service centers. All submissions are
+        reviewed by an intake officer within five business days from receipt.
+      </p>
+
+      <p id="prose-links">
+        For step-by-step instructions, read our <a href="#h-eligibility">guidelines document</a>, review our
+        <a href="#h-application">process outline</a>, or consult the municipal charter.
+      </p>
+
+      <h2 id="h-resources">Support Resources</h2>
+      <p>
+        Multiple advocacy teams and regional partners operate dedicated advisory desks to assist community members
+        in drafting documentation and scheduling accessibility evaluations.
+      </p>
+
+      <h3 id="h-contact">Direct Contacts</h3>
+      <p>
+        Contact our civic help desk via telephone, video relay, or secure online ticket system.
+      </p>
+
+      <div style="margin-top: 16px;">
+        <button id="btn-action" type="button">Submit Feedback</button>
+      </div>
+
+      <!-- Hidden and presentational headings to verify filtering -->
+      <h2 hidden>Archived Information</h2>
+      <h2 aria-hidden="true">Ignored Screen Reader Information</h2>
+      <h2 role="presentation">Decorative Heading</h2>
+    </div>
+
+    <!-- Existing landmark: complementary sidebar -->
+    <div id="sidebar-widget" class="sidebar" role="complementary" aria-label="Quick links">
+      <h2>Quick Reference</h2>
+      <p>Office hours: Monday through Friday, 8:30 AM to 5:00 PM.</p>
+    </div>
+  </div>
+
+  <!-- Unmarked footer / contentinfo -->
+  <div id="site-footer" class="site-footer">
+    <p>Municipal Civic Center &bull; 100 Civic Way, Suite 400</p>
+    <p>&copy; 2026 Civic Accessibility Services. All rights reserved.</p>
+  </div>
+</body>
+</html>

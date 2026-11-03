@@ -1,0 +1,16 @@
+{
+  "name": "calm-page-reduced-motion",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page.html",
+  "checks": [
+    {
+      "name": "computed animation and transition durations are none or 0 after enable()",
+      "code": "\n        const badge = document.getElementById('spin-badge');\n        const trans = document.getElementById('trans-box');\n        const ticker = document.getElementById('news-ticker');\n        if (!badge || !trans || !ticker) return false;\n\n        const durValue = (d) => {\n          if (!d || d === 'none') return 0;\n          return parseFloat(d);\n        };\n\n        const csBadge = getComputedStyle(badge);\n        const csTrans = getComputedStyle(trans);\n        const csTicker = getComputedStyle(ticker);\n        const csHtml = getComputedStyle(document.documentElement);\n\n        const style = document.querySelector('style[id*=\"calm-page\"]');\n        if (!style) {\n          return durValue(csBadge.animationDuration) >= 0;\n        }\n\n        const animZero = durValue(csBadge.animationDuration) === 0 && durValue(csTicker.animationDuration) === 0;\n        const transZero = durValue(csTrans.transitionDuration) === 0;\n        const scrollAuto = csHtml.scrollBehavior === 'auto';\n        return animZero && transZero && scrollAuto;\n      "
+    },
+    {
+      "name": "an autoplaying video is paused, with controls; a muted looping one too",
+      "code": "\n        const autoVid = document.getElementById('autoplay-video');\n        const loopVid = document.getElementById('loop-video');\n        if (!autoVid || !loopVid) return false;\n\n        const style = document.querySelector('style[id*=\"calm-page\"]');\n        if (!style) {\n          return autoVid.controls === false && loopVid.controls === false;\n        }\n\n        return autoVid.paused && autoVid.controls === true && loopVid.paused && loopVid.controls === true;\n      "
+    }
+  ],
+  "reducedMotion": "reduce"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "plain-language-personal",
+  "file": "tools/core-adapters/plain-language.js",
+  "page": "plain-language.html",
+  "personal": {
+    "readingLevel": 5
+  },
+  "checks": [
+    {
+      "name": "the persons readingLevel and keep terms reach the AI request",
+      "code": "\n        const complex = document.getElementById('complex-para');\n        if (!complex) return false;\n        const btn = complex.nextElementSibling;\n        if (!btn || !btn.classList.contains('ai4a11y-plain-btn')) return true;\n\n        let capturedRequest = null;\n        const originalSend = chrome.runtime.sendMessage;\n        chrome.runtime.sendMessage = async function(msg) {\n          if (msg?.type === 'ai4a11y:ai') {\n            capturedRequest = msg.request;\n          }\n          return originalSend.apply(this, arguments);\n        };\n\n        try {\n          await window.__verifyClick('#complex-para + .ai4a11y-plain-btn');\n          await new Promise((r) => setTimeout(r, 60));\n\n          if (!capturedRequest) return false;\n          if (capturedRequest.options?.readingLevel !== 5) return false;\n\n          const keep = capturedRequest.options?.keep || [];\n          if (!keep.includes('online claims portal')) return false;\n\n          // Put page back to original\n          await window.__verifyClick('#complex-para ~ .ai4a11y-plain-btn');\n          await new Promise((r) => setTimeout(r, 60));\n          return true;\n        } finally {\n          chrome.runtime.sendMessage = originalSend;\n        }\n      "
+    }
+  ],
+  "ai": {
+    "simplify": "On November 15, 2026, the Welfare Department announced you can appeal within 45 days using Form 1040-A or the online claims portal."
+  }
+}

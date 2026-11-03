@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Media Archive — Video and Audio Resources</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --primary: #004d80;
+      --border: #cccccc;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+    }
+    header, nav, main, footer {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    header {
+      border-bottom: 2px solid var(--border);
+    }
+    nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0;
+    }
+    nav a {
+      color: var(--primary);
+      text-decoration: underline;
+      padding: 0.5rem 0.75rem;
+      display: inline-block;
+      min-width: 44px;
+      min-height: 44px;
+      box-sizing: border-box;
+    }
+    nav a:focus, button:focus {
+      outline: 3px solid #000000;
+      outline-offset: 2px;
+    }
+    .media-card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background: #fdfdfd;
+    }
+    video, audio {
+      display: block;
+      width: 100%;
+      max-width: 640px;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    button {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      min-width: 44px;
+      min-height: 44px;
+      cursor: pointer;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: #4a4a4a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Community Media Archive</h1>
+    <p id="archive-description">Public repository of educational videos, community lectures, and audio recordings.</p>
+  </header>
+
+  <nav aria-label="Main Navigation">
+    <ul>
+      <li><a href="#lectures" id="nav-lectures">Lectures</a></li>
+      <li><a href="#podcasts" id="nav-podcasts">Audio Stories</a></li>
+      <li><a href="#help" id="nav-help">Help &amp; FAQ</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-content">
+    <section id="lectures" aria-labelledby="heading-lectures">
+      <h2 id="heading-lectures">Video Lectures</h2>
+
+      <div class="media-card" id="card-single-track">
+        <h3 id="title-single">Introduction to Web Accessibility</h3>
+        <p id="desc-single">An introductory session covering accessible markup, landmarks, and captioning requirements.</p>
+        <video id="video-single-track" controls preload="metadata" title="Introduction to Web Accessibility lecture video">
+          <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AWelcome%20to%20web%20accessibility" srclang="en" label="English">
+        </video>
+      </div>
+
+      <div class="media-card" id="card-multilingual">
+        <h3 id="title-multi">Digital Preservation Methods</h3>
+        <p id="desc-multi">Techniques for archiving community heritage materials in multilingual settings.</p>
+        <video id="video-multilingual" controls preload="metadata" title="Digital Preservation Methods multilingual video">
+          <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0APr%C3%A9servation%20num%C3%A9rique" srclang="fr" label="French">
+          <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ADigital%20preservation%20methods" srclang="en" label="English">
+        </video>
+      </div>
+
+      <div class="media-card" id="card-no-tracks">
+        <h3 id="title-no-tracks">Visual Demonstration</h3>
+        <p id="desc-no-tracks">A silent visual demonstration of book-scanning hardware without audio commentary.</p>
+        <video id="video-no-tracks" controls preload="metadata" title="Silent scanner hardware demonstration">
+        </video>
+      </div>
+    </section>
+
+    <section id="podcasts" aria-labelledby="heading-podcasts">
+      <h2 id="heading-podcasts">Audio Stories</h2>
+      <div class="media-card" id="card-audio">
+        <h3 id="title-audio">Community Oral History Project</h3>
+        <p id="desc-audio">Interviews with local library historians recorded in 2026.</p>
+        <audio id="audio-with-track" controls preload="metadata" title="Oral History interview recording">
+          <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AOral%20history%20interview" srclang="en" label="English">
+        </audio>
+      </div>
+    </section>
+
+    <section id="dynamic-section" aria-labelledby="heading-dynamic">
+      <h2 id="heading-dynamic">Interactive Player</h2>
+      <p id="desc-dynamic">Use the button below to load an additional video stream on demand.</p>
+      <button type="button" id="btn-load-more">Load Next Lecture</button>
+      <div id="dynamic-media-container"></div>
+    </section>
+
+    <section id="help" aria-labelledby="heading-help">
+      <h2 id="heading-help">Archive Notes &amp; Policies</h2>
+      <p id="prose-policy">All archived recordings remain freely available to educational institutions and researchers worldwide. For transcript corrections, contact the digital repository curator.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p id="footer-text">© 2026 Community Media Archive. Content licensed under Creative Commons Attribution 4.0.</p>
+  </footer>
+</body>
+</html>

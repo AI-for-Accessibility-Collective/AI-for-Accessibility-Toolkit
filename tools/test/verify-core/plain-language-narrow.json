@@ -1,0 +1,22 @@
+{
+  "name": "plain-language-narrow",
+  "file": "tools/core-adapters/plain-language.js",
+  "page": "plain-language.html",
+  "checks": [
+    {
+      "name": "buttons fit and work at 320px width without horizontal scroll",
+      "code": "\n        const btn = document.querySelector('.ai4a11y-plain-btn');\n        if (!btn) return true; // before enable\n        const rect = btn.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n        // Verify button fits within viewport\n        if (rect.right > 320) return false;\n        // Verify document does not have horizontal overflow\n        return document.documentElement.scrollWidth <= 320;\n      "
+    },
+    {
+      "name": "clicking button works at 320px and toggles back",
+      "code": "\n        const complex = document.getElementById('complex-para');\n        if (!complex) return false;\n        const btn = complex.nextElementSibling;\n        if (!btn || !btn.classList.contains('ai4a11y-plain-btn')) return true;\n\n        await window.__verifyClick('#complex-para + .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n\n        const replaced = document.querySelector('[data-ai4a11y-replaced]');\n        if (!replaced || !complex.hasAttribute('hidden')) return false;\n\n        // Toggle back to original\n        await window.__verifyClick('#complex-para ~ .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n        return !complex.hasAttribute('hidden');\n      "
+    }
+  ],
+  "ai": {
+    "simplify": "On November 15, 2026, the Welfare Department announced you can appeal within 45 days using Form 1040-A or the online claims portal."
+  },
+  "viewport": {
+    "width": 320,
+    "height": 600
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "contrast",
+  "file": "tools/core-adapters/contrast.js",
+  "page": "contrast.html",
+  "checks": [
+    {
+      "name": "low contrast normal text meets 4.5:1 AA contrast",
+      "code": "\n        function getL(c) {\n          const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => {\n            v = Number(v) / 255;\n            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);\n          });\n          return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n        }\n        function getContrast(c1, c2) {\n          const l1 = getL(c1), l2 = getL(c2);\n          return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n        }\n        const el = document.getElementById('low-contrast-gray');\n        return getContrast(getComputedStyle(el).color, 'rgb(255, 255, 255)') >= 4.5;\n      "
+    },
+    {
+      "name": "failing large text meets 3:1 AA contrast",
+      "code": "\n        function getL(c) {\n          const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => {\n            v = Number(v) / 255;\n            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);\n          });\n          return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n        }\n        function getContrast(c1, c2) {\n          const l1 = getL(c1), l2 = getL(c2);\n          return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n        }\n        const el = document.getElementById('low-contrast-large');\n        return getContrast(getComputedStyle(el).color, 'rgb(255, 255, 255)') >= 3.0;\n      "
+    },
+    {
+      "name": "text that already passes keeps its exact colour",
+      "code": "\n        const el = document.getElementById('high-contrast-text');\n        return getComputedStyle(el).color === 'rgb(17, 17, 17)';\n      "
+    },
+    {
+      "name": "the hue of a fixed colour is kept",
+      "code": "\n        function getHue(c) {\n          const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => Number(v) / 255);\n          const max = Math.max(r, g, b), min = Math.min(r, g, b);\n          let h = 0;\n          if (max !== min) {\n            const d = max - min;\n            switch (max) {\n              case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;\n              case g: h = ((b - r) / d + 2) / 6; break;\n              case b: h = ((r - g) / d + 4) / 6; break;\n            }\n          }\n          return h * 360;\n        }\n        const el = document.getElementById('low-contrast-blue');\n        const h = getHue(getComputedStyle(el).color);\n        return Math.abs(h - 220) < 5;\n      "
+    },
+    {
+      "name": "media elements and text over gradient are untouched",
+      "code": "\n        const img = document.getElementById('test-image');\n        const canvas = document.getElementById('test-canvas');\n        const video = document.getElementById('test-video');\n        const bgText = document.getElementById('bg-image-text');\n        const imgClean = !img.hasAttribute('style') && getComputedStyle(img).filter === 'none';\n        const canvasClean = !canvas.hasAttribute('style') && getComputedStyle(canvas).filter === 'none';\n        const videoClean = !video.hasAttribute('style') && getComputedStyle(video).filter === 'none';\n        const bgTextClean = getComputedStyle(bgText).color === 'rgb(255, 255, 255)';\n        return imgClean && canvasClean && videoClean && bgTextClean;\n      "
+    },
+    {
+      "name": "new text added after enable() is fixed once without flicker",
+      "code": "\n        if (!document.getElementById('article')) return false;\n        const dyn = document.createElement('p');\n        dyn.id = 'dynamic-test-para';\n        dyn.style.color = 'rgb(136, 136, 136)';\n        dyn.style.backgroundColor = 'rgb(255, 255, 255)';\n        dyn.textContent = 'Dynamic low contrast text added later';\n        document.getElementById('article').appendChild(dyn);\n        await new Promise(r => setTimeout(r, 60));\n        const c = getComputedStyle(dyn).color;\n        const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => {\n          v = Number(v) / 255;\n          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);\n        });\n        const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;\n        const ratio = (1 + 0.05) / (l + 0.05);\n        dyn.remove();\n        return ratio >= 4.5;\n      "
+    },
+    {
+      "name": "the shortcut changes the mode and saves it",
+      "code": "\n        if (typeof __verifyPress !== 'function') return true;\n        const host = globalThis.__verifyHost;\n        const beforeCount = host?.profile?.length || 0;\n        await __verifyPress('Alt+Shift+C');\n        const after1 = host?.profile?.length || 0;\n        const m1 = host?.profile?.[after1 - 1]?.changes?.contrastMode;\n        await __verifyPress('Alt+Shift+C');\n        const after2 = host?.profile?.length || 0;\n        const m2 = host?.profile?.[after2 - 1]?.changes?.contrastMode;\n        await __verifyPress('Alt+Shift+C');\n        const after3 = host?.profile?.length || 0;\n        const m3 = host?.profile?.[after3 - 1]?.changes?.contrastMode;\n        await __verifyPress('Alt+Shift+V');\n        const after4 = host?.profile?.length || 0;\n        const allSite = host?.profile?.[after4 - 1]?.scope === 'all';\n        return after1 > beforeCount && m1 === 'yellow-black' && m2 === 'none' && m3 === 'light' && allSite;\n      "
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Announce Changes Test Page</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      color: #111827;
+      background: #ffffff;
+    }
+    header, nav, main, footer {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 12px;
+      width: 100%;
+    }
+    header {
+      border-bottom: 2px solid #e5e7eb;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0 0;
+    }
+    nav a, button {
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      color: #1e40af;
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    nav a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid #1d4ed8;
+      outline-offset: 2px;
+    }
+    input[type="text"] {
+      max-width: 100%;
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid #4b5563;
+      border-radius: 6px;
+      font-size: 16px;
+      color: #111827;
+      background: #ffffff;
+    }
+    .card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    .status-box, .status-item {
+      padding: 12px;
+      background: #ecfdf5;
+      border: 1px solid #6ee7b7;
+      border-radius: 6px;
+      color: #065f46;
+      margin: 8px 0;
+    }
+    footer {
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #4b5563;
+      margin-top: 32px;
+    }
+  </style>
+</head>
+<body>
+  <header role="banner">
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="#/overview" id="nav-overview">Overview</a></li>
+        <li><a href="#/profile" id="nav-profile">Profile</a></li>
+        <li><a href="#/settings" id="nav-settings">Settings</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <h1 id="page-title">Account Dashboard</h1>
+
+    <div class="card">
+      <label for="search-input">Search records</label><br>
+      <input id="search-input" type="text" placeholder="Type here...">
+      <button type="button" id="search-button">Search</button>
+    </div>
+
+    <!-- Container where dynamic status messages appear -->
+    <div id="message-container" class="card">
+      <p id="message-placeholder">No active status messages.</p>
+    </div>
+
+    <!-- Container that already has aria-live (page-handled) -->
+    <div id="existing-live" aria-live="polite" class="card">
+      <p id="existing-placeholder">Existing live region ready.</p>
+    </div>
+
+    <!-- SPA view container for client-side route changes -->
+    <div id="spa-view" class="card">
+      <h2 id="view-heading">Overview View</h2>
+      <p id="view-desc">Welcome to your dashboard overview.</p>
+    </div>
+
+    <!-- Container for testing rapid burst of additions -->
+    <div id="burst-container" class="card">
+      <p id="burst-placeholder">Notification feed area.</p>
+    </div>
+
+    <!-- Ordinary page content to leave undisturbed -->
+    <article id="ordinary-content" class="card">
+      <h2>Profile Overview</h2>
+      <p>Your subscription is active and in good standing.</p>
+    </article>
+  </main>
+
+  <footer role="contentinfo">
+    <p>&copy; 2026 AI for Accessibility. All rights reserved.</p>
+  </footer>
+</body>
+</html>

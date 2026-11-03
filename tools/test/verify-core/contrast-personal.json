@@ -1,0 +1,18 @@
+{
+  "name": "contrast-personal",
+  "file": "tools/core-adapters/contrast.js",
+  "page": "contrast.html",
+  "personal": {
+    "contrastMode": "yellow-black"
+  },
+  "checks": [
+    {
+      "name": "yellow-black mode: computed colours of text and backgrounds",
+      "code": "\n        const p1 = document.getElementById('low-contrast-gray');\n        const p2 = document.getElementById('high-contrast-text');\n        const h1 = document.getElementById('high-contrast-large');\n        const btn = document.getElementById('high-contrast-button');\n        const c1 = getComputedStyle(p1).color;\n        const c2 = getComputedStyle(p2).color;\n        const ch1 = getComputedStyle(h1).color;\n        const cb = getComputedStyle(btn).color;\n        const bg1 = getComputedStyle(p1).backgroundColor;\n        const bgBody = getComputedStyle(document.body).backgroundColor;\n\n        const isYellow = (c) => c === 'rgb(255, 255, 0)';\n        const isBlack = (bg) => bg === 'rgb(0, 0, 0)';\n\n        return isYellow(c1) && isYellow(c2) && isYellow(ch1) && isYellow(cb) && isBlack(bg1) && isBlack(bgBody);\n      "
+    },
+    {
+      "name": "media elements are untouched in yellow-black mode",
+      "code": "\n        const img = document.getElementById('test-image');\n        const canvas = document.getElementById('test-canvas');\n        const video = document.getElementById('test-video');\n        const imgClean = !img.hasAttribute('style') && getComputedStyle(img).filter === 'none';\n        const canvasClean = !canvas.hasAttribute('style') && getComputedStyle(canvas).filter === 'none';\n        const videoClean = !video.hasAttribute('style') && getComputedStyle(video).filter === 'none';\n        return imgClean && canvasClean && videoClean;\n      "
+    }
+  ]
+}

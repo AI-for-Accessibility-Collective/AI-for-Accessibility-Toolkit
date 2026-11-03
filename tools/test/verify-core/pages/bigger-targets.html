@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Outdoor Gear Co. - Compact Camping Stove</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+    header {
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 0.75rem 1.5rem;
+    }
+    header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.4rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav a {
+      color: #ffffff;
+      text-decoration: underline;
+      font-size: 0.95rem;
+    }
+    main {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    .product-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 1.5rem;
+      background: #f8fafc;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.3rem;
+      color: #0f172a;
+    }
+    .price {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #0f172a;
+      margin: 0.5rem 0;
+    }
+    /* Undersized buttons touching each other - fails axe-core target-size */
+    .qty-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      margin: 0.75rem 0;
+    }
+    .qty-btn {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 1px solid #64748b;
+      background: #e2e8f0;
+      color: #0f172a;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .qty-val {
+      width: 32px;
+      height: 18px;
+      text-align: center;
+      font-size: 12px;
+      border: 1px solid #64748b;
+      margin: 0;
+      padding: 0;
+    }
+    .fav-btn {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #ef4444;
+      background: #fee2e2;
+      color: #ef4444;
+      cursor: pointer;
+      border-radius: 50%;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin-left: 0.5rem;
+    }
+    /* Standard large button that should not be changed */
+    .btn-primary {
+      height: 48px;
+      min-width: 140px;
+      padding: 0 1.5rem;
+      background: #025a8a;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.75rem;
+    }
+    .btn-disabled {
+      height: 36px;
+      padding: 0 1rem;
+      background: #e2e8f0;
+      color: #94a3b8;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      cursor: not-allowed;
+      margin-left: 0.5rem;
+    }
+    /* Small checkbox barrier with pointer-events: none on label */
+    .checkbox-row {
+      margin: 1rem 0;
+      display: flex;
+      align-items: center;
+    }
+    .tiny-checkbox {
+      width: 14px;
+      height: 14px;
+      margin: 0 6px 0 0;
+    }
+    .unclickable-label {
+      pointer-events: none;
+      font-size: 0.95rem;
+      color: #1e293b;
+      cursor: default;
+    }
+    /* Tight toolbar where growing would overflow container */
+    .tight-container {
+      width: 90px;
+      overflow: hidden;
+      display: flex;
+      gap: 2px;
+      border: 1px solid #cbd5e1;
+      padding: 2px;
+      margin: 1rem 0;
+      background: #ffffff;
+    }
+    .tight-btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      font-size: 11px;
+      border: 1px solid #64748b;
+      background: #f1f5f9;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    /* Running text with inline link */
+    .info-section {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .info-section p {
+      margin: 0.5rem 0;
+      line-height: 1.6;
+    }
+    .info-section a {
+      color: #0369a1;
+      text-decoration: underline;
+    }
+    footer {
+      max-width: 800px;
+      margin: 2rem auto 1rem auto;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #475569;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Outdoor Gear Co.</h1>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a id="nav-home" href="#home">Home</a></li>
+        <li><a id="nav-gear" href="#gear">Camp Gear</a></li>
+        <li><a id="nav-sale" href="#sale">Sale</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article class="product-card">
+      <h2>Ultra-compact Trekking Stove</h2>
+      <p class="price">$39.99</p>
+
+      <div class="control-row">
+        <label for="qty-input">Quantity:</label>
+        <div class="qty-group">
+          <button id="btn-dec" class="qty-btn" type="button" aria-label="Decrease quantity">−</button>
+          <input id="qty-input" class="qty-val" type="text" value="1" readonly>
+          <button id="btn-inc" class="qty-btn" type="button" aria-label="Increase quantity">+</button>
+        </div>
+        <button id="btn-fav" class="fav-btn" type="button" aria-label="Add to wishlist">♥</button>
+      </div>
+
+      <div class="checkbox-row">
+        <input id="chk-warranty" class="tiny-checkbox" type="checkbox">
+        <label id="lbl-warranty" class="unclickable-label" for="chk-warranty">Add 2-year accidental damage protection ($5)</label>
+      </div>
+
+      <div id="tight-toolbar" class="tight-container" title="Toolbar">
+        <button id="tool-a" class="tight-btn" type="button" aria-label="Tool A">A</button>
+        <button id="tool-b" class="tight-btn" type="button" aria-label="Tool B">B</button>
+        <button id="tool-c" class="tight-btn" type="button" aria-label="Tool C">C</button>
+      </div>
+
+      <div>
+        <button id="btn-cart" class="btn-primary" type="button">Add to Cart</button>
+        <button id="btn-dis" class="btn-disabled" type="button" disabled>Out of Stock: Fuel</button>
+      </div>
+
+      <div class="info-section">
+        <p id="para-desc">
+          Engineered for alpine enthusiasts, this titanium micro-burner weighs only 48 grams.
+          Please read our detailed <a id="link-policy" href="#policy">warranty policy and return guidelines</a> before taking it on multi-day expeditions.
+        </p>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Outdoor Gear Co. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Wire interactive button behavior
+    document.getElementById('btn-inc')?.addEventListener('click', () => {
+      const el = document.getElementById('qty-input');
+      if (el) el.value = String(parseInt(el.value || '1', 10) + 1);
+    });
+    document.getElementById('btn-dec')?.addEventListener('click', () => {
+      const el = document.getElementById('qty-input');
+      if (el) {
+        const v = parseInt(el.value || '1', 10);
+        if (v > 1) el.value = String(v - 1);
+      }
+    });
+  </script>
+</body>
+</html>

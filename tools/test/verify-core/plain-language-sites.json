@@ -1,0 +1,7 @@
+{
+  "file": "tools/core-adapters/plain-language.js",
+  "ai": {
+    "simplify": "This is a simplified plain language explanation of the paragraph for testing purposes."
+  },
+  "sites": "all"
+}
