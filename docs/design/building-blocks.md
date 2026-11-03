@@ -717,6 +717,15 @@ Decided by the project lead, 2026-11-03:
   The verifier now stays on each real site for a while, scrolling, and
   reports what the adapter said, how many AI calls it made and how long
   `enable()` took.
+- Building and reviewing the core adapters ran in rounds: a first build,
+  a review, block changes, a rebuild of what had problems, and again
+  (7e9ec0cd, 0536ec33, 2a719c94 are the builds as the agents wrote them).
+  The second round added `text.fit`, batches from `watch.added`,
+  `speech.say({ from })`, explicit offs kept in the person's settings,
+  and the toolkit's own fixed UI counted by `focus.keepVisible`. The
+  verifier then took InterA11y's tools, rubrics and judge
+  (`scripts/verify-adapters/intera11y/`), limited to what the adapter
+  created, changed or styled, and a keyboard audit in every replay.
 - The service: `server/src/ai.js` (`POST /v1/ai/text`, `/v1/ai/vision`,
   `GET /v1/ai/usage`, `PUT /v1/ai/settings`). Tests: `server/test/ai.test.mjs`.
 - The builder learns them from the skill's `reference/building-blocks.md`
