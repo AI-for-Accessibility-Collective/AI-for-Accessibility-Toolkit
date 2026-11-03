@@ -725,7 +725,11 @@ Decided by the project lead, 2026-11-03:
   and the toolkit's own fixed UI counted by `focus.keepVisible`. The
   verifier then took InterA11y's tools, rubrics and judge
   (`scripts/verify-adapters/intera11y/`), limited to what the adapter
-  created, changed or styled, and a keyboard audit in every replay.
+  created, changed or styled, and a keyboard audit in every replay. The
+  fourth review led to timers that return a function to cancel them,
+  `speech.say` of a selection, captions that follow a track in the
+  person's language added later, and ten adapters rebuilt (9d33d0eb
+  briefs; the build as the agents wrote it follows).
 - The service: `server/src/ai.js` (`POST /v1/ai/text`, `/v1/ai/vision`,
   `GET /v1/ai/usage`, `PUT /v1/ai/settings`). Tests: `server/test/ai.test.mjs`.
 - The builder learns them from the skill's `reference/building-blocks.md`

@@ -1,8 +1,4 @@
 {
   "file": "tools/core-adapters/names.js",
-  "ai": {
-    "label": "Store action",
-    "describe": "A scenic mountain landscape with pine trees."
-  },
   "sites": "all"
 }

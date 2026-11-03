@@ -1,30 +1,38 @@
-// bigger-targets.js — Enlarges small links, buttons, and form controls to at least targetSize CSS pixels.
-// Barrier: Small clickable controls are difficult or impossible for people with motor
-// differences, tremors, limited fine motor control, or alternative input devices to hit reliably (WCAG 2.5.8 / 2.5.5).
+// bigger-targets.js — Enlarges small links, buttons and form controls to meet target size.
+// Barrier: People with motor differences, tremors, reduced fine dexterity, older adults,
+// or people using eye-gaze or head-pointer inputs struggle or fail to hit small interactive controls.
 //
 // Suggested in onboarding for: motor (a suggestion only, never a gate).
 // The person's settings it reads: targetSize, bigTargets.
 // What the person can adjust: With the person's shortcut (s.keys.adjust, label 'Target size',
-// settings ['targetSize']): up and down step targetSize through 24, 32, 44 pixels, saved for this site and announced.
+//   settings ['targetSize']): up and down step targetSize through 24, 32, 44 pixels,
+//   saved for this site and announced.
 //
 // Options:
-//   targetSize: Smallest size of an interactive control in CSS pixels. Defaults to 24 (WCAG 2.5.8 minimum; 44 is WCAG 2.5.5).
+//   targetSize: Smallest size of an interactive target in CSS pixels (default 24, WCAG 2.5.8; 44 is WCAG 2.5.5).
+//   bigTargets: Boolean, whether target enlargement is active (default true).
 //
 // Decisions:
-//   • Measures interactive controls before changing anything, modifying only those that are smaller than targetSize.
-//   • Prefers growing hit areas without moving surrounding content (pseudo-elements or padding with negative margin),
-//     ensuring the page reflows at most once at enable() and layout shift stays under 0.1.
-//   • Inline links in running text maintain line-height and line readability without doubling line spacing.
-//   • Never shrinks any element that already meets or exceeds targetSize.
-//   • Never covers neighbouring targets: hit areas expand into free space and take at most half the distance to adjacent targets.
-//   • A new targetSize redoes all sizes in a new s.group(), cleanly undoing previous styles without clearing on page changes.
-//   • Uses s.watch.added with { batch: true } to process dynamically added elements in a single pass without re-measuring existing targets.
-//   • Focus styles are left entirely to the browser or dedicated focus adapters (nothing outside its job).
-//   • All added rules, classes, and attributes are fully reversible on disable() via the session.
+//   • Measures before it changes anything: each interactive control is evaluated once and only
+//     grown if its rendered dimensions are smaller than targetSize.
+//   • Prefers growing the hit area without moving surrounding content:
+//     - Buttons, form controls and non-inline interactive elements receive min-width/min-height.
+//     - Checked afterwards: if growing the element causes its container to overflow or causes page overflow,
+//       the direct growth is undone and it falls back to an expanded pseudo-element hit area.
+//     - Text links and inline controls keep their visual layout and text flow; an invisible ::after
+//       expands their clickable hit area into available free space without affecting line height.
+//     - Checkboxes and radios are enlarged to a dedicated box size (at least 24px) so native inputs stay hit-accessible.
+//     - Labels that label a control are made clickable if disabled by pointer-events, but never duplicate sizing.
+//   • Overlap prevention: hit areas expand only into available free space and take at most half the gap
+//     between neighbouring interactive elements, guaranteeing targets never cover each other.
+//   • Dynamic content: elements added later are observed via s.watch.added with { batch: true }.
+//     The batch and its immediate neighbouring targets are measured once and adjusted without redoing existing targets.
+//   • Size adjustment: a new targetSize redoes all sizes in a fresh s.group(), cleanly undoing previous sizing.
+//   • Pure target sizing: no focus styling or changes outside its accessibility mandate.
 //
 // What it cannot do:
-//   • Cannot expand targets within native OS dropdown dialogs or third-party cross-origin iframes.
-//   • Cannot guarantee 44px targets when adjacent interactive controls touch with zero clearance without overlapping.
+//   • Cannot expand targets within cross-origin or canvas-drawn interfaces that do not expose DOM elements.
+//   • Cannot extend hit areas outside the viewport or beyond clipping ancestor bounds.
 
 const TARGET_SELECTORS = [
   'a[href]',
@@ -33,7 +41,6 @@ const TARGET_SELECTORS = [
   'select',
   'textarea',
   'summary',
-  'label',
   '[role="button"]',
   '[role="link"]',
   '[role="tab"]',
@@ -44,476 +51,407 @@ const TARGET_SELECTORS = [
   '[role="switch"]',
   '[onclick]',
   '[tabindex]:not([tabindex="-1"])',
+  'label',
 ];
-const TARGETS = TARGET_SELECTORS.join(',');
-const MARK = 'data-ai4a11y-bt';
-const ID_ATTR = 'data-ai4a11y-bt-id';
-const NO_PSEUDO = /^(INPUT|SELECT|TEXTAREA|IMG|VIDEO|AUDIO|IFRAME|CANVAS|svg|OBJECT|EMBED)$/i;
+const TARGET_QUERY = TARGET_SELECTORS.join(',');
+
+const NO_PSEUDO = /^(INPUT|SELECT|TEXTAREA|IMG|VIDEO|AUDIO|IFRAME|CANVAS|SVG|OBJECT|EMBED)$/i;
 const BOX_TYPES = /^(checkbox|radio)$/i;
 const NO_GROW_TYPES = /^(hidden|range|file|color|image)$/i;
 const GROW_ROLES = /^(button|tab|menuitem|switch|option)$/i;
 
-function isClear(color) {
-  return !color || color === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(color);
-}
+const SIZES = [24, 32, 44];
 
-function hasExistingAfter(el) {
-  try {
-    const after = window.getComputedStyle(el, '::after').content;
-    return !!after && after !== 'none' && after !== 'normal';
-  } catch {
-    return false;
+function isInsideLinkOrButton(el) {
+  let p = el.parentElement;
+  while (p && p !== document.body && p !== document.documentElement) {
+    const tag = p.tagName;
+    if ((tag === 'A' && p.hasAttribute('href')) || tag === 'BUTTON') return true;
+    const role = p.getAttribute('role');
+    if (role === 'button' || role === 'link') return true;
+    p = p.parentElement;
   }
+  return false;
 }
 
-function getNextSize(current) {
-  if (current < 24) return 24;
-  if (current < 32) return 32;
-  return 44;
-}
-
-function getPrevSize(current) {
-  if (current > 32) return 32;
-  if (current > 24) return 24;
-  return current <= 0 ? 0 : 24;
-}
-
-function markElement(el, token, group) {
-  const cur = el.getAttribute(MARK) || '';
-  const tokens = new Set(cur ? cur.split(/\s+/) : []);
-  for (const t of token.split(/\s+/)) {
-    if (t) tokens.add(t);
+function resolveControlForLabel(label) {
+  if (label.htmlFor) {
+    const el = document.getElementById(label.htmlFor);
+    if (el) return el;
   }
-  group.setAttr(el, MARK, [...tokens].join(' '));
-}
-
-function unmarkElement(el, group, ...tokensToRemove) {
-  const cur = el.getAttribute(MARK) || '';
-  const tokens = (cur ? cur.split(/\s+/) : []).filter((t) => !tokensToRemove.includes(t));
-  group.setAttr(el, MARK, tokens.length ? tokens.join(' ') : null);
-}
-
-function getCandidates(root, s) {
-  const list = [];
-  if (root.matches && root.matches(TARGETS)) {
-    if (!s.page.isOurs(root) && !root.closest('[data-ai4a11y-ui]')) {
-      if (!root.disabled && root.getAttribute('aria-disabled') !== 'true') {
-        list.push(root);
-      }
-    }
-  }
-  const matches = root.querySelectorAll(TARGETS);
-  for (const el of matches) {
-    if (s.page.isOurs(el) || el.closest('[data-ai4a11y-ui]')) continue;
-    if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
-    if (el.tagName === 'INPUT' && (el.getAttribute('type') || '').toLowerCase() === 'hidden') continue;
-    const parentTarget = el.parentElement ? el.parentElement.closest(TARGETS) : null;
-    if (parentTarget && !s.page.isOurs(parentTarget)) {
-      if (!(parentTarget.tagName === 'LABEL' && el.tagName === 'INPUT')) {
-        continue;
-      }
-    }
-    list.push(el);
-  }
-  return list;
+  return label.querySelector('input, select, textarea, button, [role="button"], [role="checkbox"], [role="radio"]');
 }
 
 export default {
   enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
-    this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
 
-    const doc = document;
-    if (!doc || (!doc.body && !doc.documentElement)) return false;
-
     const s = (this.s = this.toolkit.session());
+    const personal = s.profile.get() || {};
 
-    // Resolve initial target size
-    const profileTargetSize = s.profile.get('targetSize');
-    const bigTargetsPref = s.profile.get('bigTargets');
-    let activeSize = 24;
-
-    if (profileTargetSize !== undefined && profileTargetSize !== null && Number.isFinite(Number(profileTargetSize))) {
-      activeSize = Number(profileTargetSize);
-    } else if (bigTargetsPref === false) {
-      activeSize = 0;
-    } else if (this.options.targetSize !== undefined && Number.isFinite(Number(this.options.targetSize))) {
-      activeSize = Number(this.options.targetSize);
+    if (personal.bigTargets === false || options.bigTargets === false) {
+      this.disable();
+      return false;
     }
 
-    let currentGroup = null;
-    let processed = new WeakSet();
-    let allTargetRects = [];
-    let ruleCounter = 0;
-    let rulesCss = '';
-    let rulesSheet = null;
+    let currentTargetSize = Number(personal.targetSize || options.targetSize || 24);
+    if (!Number.isFinite(currentTargetSize) || currentTargetSize <= 0) currentTargetSize = 24;
 
-    const processTargets = (elements, group, targetSize) => {
-      if (targetSize <= 0 || !group || group.ended) return;
-      const root = doc.documentElement;
-      const docW = root.clientWidth;
-      const docSW = root.scrollWidth;
-      const boxSize = Math.max(24, Math.min(targetSize, Math.round(targetSize * 0.55)));
+    const root = document.body || document.documentElement;
+    if (!root) {
+      this.disable();
+      return false;
+    }
 
-      // ── READ PASS: detect small interactive elements
-      const candidates = [];
-      const scrollContainerCache = new WeakMap();
-      for (const el of elements) {
-        if (!el || !el.isConnected || processed.has(el)) continue;
-        if (s.page.isOurs(el) || el.closest('[data-ai4a11y-ui]')) continue;
-        if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+    let sizeGroup = null;
+    let nextHitId = 1;
+    let hitRules = new Map();
+    let hitStyle = null;
+    const processed = new WeakSet();
+    const unclickableLabels = new Set();
 
-        const tag = el.tagName;
-        const type = (el.getAttribute('type') || '').toLowerCase();
-        if (tag === 'INPUT' && NO_GROW_TYPES.test(type)) continue;
+    const isCandidate = (el) => {
+      if (!el || !el.isConnected) return false;
+      if (el.closest && el.closest('[data-ai4a11y-ui]')) return false;
+      if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
 
-        let r;
+      const tag = el.tagName;
+      const type = (el.getAttribute('type') || '').toLowerCase();
+      if (tag === 'INPUT' && type === 'hidden') return false;
+
+      if (isInsideLinkOrButton(el)) return false;
+
+      if (tag === 'LABEL') {
+        const ctrl = resolveControlForLabel(el);
+        if (!ctrl) return false;
+        let ctrlVisible = false;
         try {
-          r = el.getBoundingClientRect();
-        } catch {
-          continue;
+          const ccs = window.getComputedStyle(ctrl);
+          const cr = ctrl.getBoundingClientRect();
+          ctrlVisible = ccs.display !== 'none' && ccs.visibility !== 'hidden' && (cr.width > 0 || cr.height > 0);
+        } catch {}
+        if (ctrlVisible) {
+          try {
+            if (window.getComputedStyle(el).pointerEvents === 'none') {
+              unclickableLabels.add(el);
+            }
+          } catch {}
+          return false;
         }
-        if (r.width < 4 || r.height < 4) continue;
-
-        let cs;
-        try {
-          cs = window.getComputedStyle(el);
-        } catch {
-          continue;
-        }
-        if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) continue;
-
-        const isSmall = r.width < targetSize || r.height < targetSize;
-        allTargetRects.push({ el, r });
-        processed.add(el);
-
-        if (!isSmall) continue;
-        candidates.push({ el, cs, r });
       }
 
-      if (!candidates.length) return;
+      let cs;
+      try { cs = window.getComputedStyle(el); } catch { return false; }
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.display === 'contents') return false;
+      if (parseFloat(cs.opacity) === 0) return false;
 
-      // ── WRITE PASS 1: marks for boxes and growable buttons
-      const marks = [];
-      const grown = [];
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return false;
 
-      for (const item of candidates) {
-        const { el, cs, r } = item;
+      return true;
+    };
+
+    const mark = (el, token) => {
+      const cur = el.getAttribute('data-ai4a11y-bt') || '';
+      const tokens = new Set(cur.split(/\s+/).filter(Boolean));
+      for (const t of token.split(/\s+/).filter(Boolean)) tokens.add(t);
+      const next = [...tokens].join(' ');
+      if (next !== cur) sizeGroup.setAttr(el, 'data-ai4a11y-bt', next);
+    };
+
+    const unmark = (el, token) => {
+      const cur = el.getAttribute('data-ai4a11y-bt') || '';
+      const tokens = new Set(cur.split(/\s+/).filter(Boolean));
+      for (const t of token.split(/\s+/).filter(Boolean)) tokens.delete(t);
+      const next = [...tokens].join(' ');
+      sizeGroup.setAttr(el, 'data-ai4a11y-bt', next || null);
+    };
+
+    const processItems = (targets, MIN, BOX, contextTargets = targets) => {
+      if (!targets.length) return;
+      const docEl = document.documentElement;
+      const docW = docEl.clientWidth;
+      const docSW = docEl.scrollWidth;
+
+      if (unclickableLabels.size) {
+        for (const lbl of unclickableLabels) {
+          if (lbl.isConnected) mark(lbl, 'label');
+        }
+        unclickableLabels.clear();
+      }
+
+      const items = [];
+      for (const el of targets) {
+        processed.add(el);
+        const r = el.getBoundingClientRect();
+        if (!r.width && !r.height) continue;
+        let cs;
+        try { cs = window.getComputedStyle(el); } catch { continue; }
         const tag = el.tagName;
         const type = (el.getAttribute('type') || '').toLowerCase();
+        const isBox = tag === 'INPUT' && BOX_TYPES.test(type);
+        const threshold = isBox ? BOX : MIN;
+        const small = r.width < threshold || r.height < threshold;
+        if (!small) continue;
+        items.push({ el, cs, r, tag, type, isBox });
+      }
 
-        // Checkboxes and radios
-        if (tag === 'INPUT' && BOX_TYPES.test(type)) {
-          if (cs.opacity !== '0' && cs.position !== 'absolute' && (r.width < boxSize || r.height < boxSize)) {
-            marks.push([el, 'box']);
-            item.kind = 'box';
-          }
-          let label = el.closest('label') || (el.labels && el.labels[0]);
-          if (!label && el.id) {
-            try {
-              label = doc.querySelector(`label[for="${CSS.escape(el.id)}"]`);
-            } catch {
-              label = null;
-            }
-          }
-          if (label) {
-            try {
-              if (window.getComputedStyle(label).pointerEvents === 'none') {
-                marks.push([label, 'label']);
-              }
-            } catch {
-              /* ignore */
-            }
-          }
+      if (!items.length) return;
+
+      const grown = [];
+      for (const it of items) {
+        const { el, cs, r, tag, type, isBox } = it;
+        if (isBox) {
+          it.kind = 'box';
+          mark(el, 'box');
           continue;
         }
 
-        // Inline elements don't accept min-width/min-height layout sizing
-        if (cs.display === 'inline' || cs.display === 'contents') continue;
+        if (cs.display === 'inline') {
+          it.kind = 'hit';
+          continue;
+        }
 
         const role = el.getAttribute('role') || '';
         const text = (el.textContent || '').trim();
-        const iconLike = r.width < targetSize && r.height < targetSize && (text.length <= 2 || !!el.querySelector('svg, img, i'));
-        const looksLikeButton = !isClear(cs.backgroundColor) || (parseFloat(cs.borderTopWidth) > 0 && !isClear(cs.borderTopColor));
+        const iconLike = r.width < MIN && r.height < MIN && text.length <= 2;
         const overlaid = cs.position === 'absolute' || cs.position === 'fixed';
-        const growable =
-          !overlaid &&
-          (tag === 'BUTTON' ||
-            tag === 'SELECT' ||
-            tag === 'SUMMARY' ||
-            (tag === 'INPUT' && !NO_GROW_TYPES.test(type)) ||
-            GROW_ROLES.test(role) ||
-            iconLike ||
-            (tag !== 'LABEL' && looksLikeButton));
 
-        if (!growable) continue;
+        const growable = !overlaid && (
+          tag === 'BUTTON' ||
+          tag === 'SELECT' ||
+          tag === 'SUMMARY' ||
+          (tag === 'INPUT' && !NO_GROW_TYPES.test(type)) ||
+          GROW_ROLES.test(role) ||
+          iconLike
+        );
 
-        const p = el.parentElement;
-        const g = p && p.parentElement;
-        item.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
-        item.kind = 'grow';
-        const token = text && parseFloat(cs.fontSize) < targetSize * 0.45 && iconLike ? 'grow glyph' : 'grow';
-        marks.push([el, token]);
-        grown.push(item);
+        if (growable) {
+          const p = el.parentElement;
+          const g = p && p.parentElement;
+          it.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
+          it.kind = 'grow';
+          const glyph = iconLike && parseFloat(cs.fontSize) < MIN * 0.45;
+          mark(el, glyph ? 'grow glyph' : 'grow');
+          grown.push(it);
+        } else {
+          it.kind = 'hit';
+        }
       }
 
-      for (const [el, token] of marks) {
-        markElement(el, token, group);
-      }
-
-      // ── READ PASS 2: check container overflow for grown elements
       if (grown.length) {
         const undo = grown.filter((it) => {
-          const curR = it.el.getBoundingClientRect();
-          return (
-            it.before.some(([a, w, h]) => a.scrollWidth - a.clientWidth > w + 1 || a.scrollHeight - a.clientHeight > h + 1) ||
-            (curR.right > docW + 0.5 && it.r.right <= docW + 0.5)
-          );
+          const rNow = it.el.getBoundingClientRect();
+          const overflowsContainer = it.before.some(([a, w, h]) => (a.scrollWidth - a.clientWidth) > w + 1 || (a.scrollHeight - a.clientHeight) > h + 1);
+          const pushesDoc = rNow.right > docW + 0.5 && it.r.right <= docW + 0.5;
+          return overflowsContainer || pushesDoc;
         });
 
         for (const it of undo) {
-          unmarkElement(it.el, group, 'grow', 'glyph');
-          it.kind = null;
+          unmark(it.el, 'grow');
+          unmark(it.el, 'glyph');
+          it.kind = 'hit';
         }
 
-        if (root.scrollWidth > docSW + 1) {
+        if (docEl.scrollWidth > docSW + 1) {
           for (const it of grown) {
             if (it.kind === 'grow') {
-              unmarkElement(it.el, group, 'grow', 'glyph');
-              it.kind = null;
+              unmark(it.el, 'grow');
+              unmark(it.el, 'glyph');
+              it.kind = 'hit';
             }
           }
         }
       }
 
-      // ── READ PASS 3: calculate hit areas for remaining small controls
-      const newRules = [];
+      const allRects = (contextTargets || targets).map((el) => ({ el, r: el.getBoundingClientRect() }));
+      const defaultBox = { left: 0, right: docW, top: -window.scrollY, bottom: docEl.scrollHeight - window.scrollY };
+      const scrollBoxCache = new WeakMap();
 
-      for (const item of candidates) {
-        if (item.kind) continue;
-        const { el, cs } = item;
-        const curR = el.getBoundingClientRect();
-        if (curR.width >= targetSize && curR.height >= targetSize) continue;
+      for (const it of items) {
+        if (it.kind !== 'hit') continue;
+        const { el, cs } = it;
+        if (NO_PSEUDO.test(el.tagName)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width >= MIN && r.height >= MIN) continue;
         if (el.getClientRects().length > 1) continue;
 
-        const canPseudo = !NO_PSEUDO.test(el.tagName) && cs.overflow === 'visible' && !hasExistingAfter(el);
+        const wantX = Math.max(0, MIN - r.width);
+        const wantY = Math.max(0, MIN - r.height);
+        let left = Math.floor(wantX / 2);
+        let right = Math.ceil(wantX / 2);
+        let top = Math.floor(wantY / 2);
+        let bottom = Math.ceil(wantY / 2);
 
-        // Check if control wraps other targets
-        const inner = el.querySelector(TARGETS);
-        if (inner && !(el.tagName === 'LABEL' && [...el.querySelectorAll(TARGETS)].every((c) => c.tagName === 'INPUT'))) {
-          continue;
-        }
+        const rTopBound = r.top - MIN;
+        const rBottomBound = r.bottom + MIN;
+        const rLeftBound = r.left - MIN;
+        const rRightBound = r.right + MIN;
 
-        const wantX = Math.max(0, (targetSize - curR.width) / 2);
-        const wantY = Math.max(0, (targetSize - curR.height) / 2);
-        let top = wantY;
-        let bottom = wantY;
-        let left = wantX;
-        let right = wantX;
-
-        // Never cover neighbouring controls: take at most half the free space
-        for (const o of allTargetRects) {
-          if (o.el === el) continue;
+        for (const o of allRects) {
           const q = o.r;
-          if (q.bottom < curR.top - targetSize || q.top > curR.bottom + targetSize) continue;
-          if (q.right < curR.left - targetSize || q.left > curR.right + targetSize) continue;
-          if (o.el.contains(el) || el.contains(o.el)) continue;
-
-          const overlapX = q.left < curR.right + right && q.right > curR.left - left;
-          const overlapY = q.top < curR.bottom + bottom && q.bottom > curR.top - top;
-          if (overlapX && q.bottom <= curR.top + 0.5) top = Math.min(top, Math.max(0, (curR.top - q.bottom) / 2));
-          if (overlapX && q.top >= curR.bottom - 0.5) bottom = Math.min(bottom, Math.max(0, (q.top - curR.bottom) / 2));
-          if (overlapY && q.right <= curR.left + 0.5) left = Math.min(left, Math.max(0, (curR.left - q.right) / 2));
-          if (overlapY && q.left >= curR.right - 0.5) right = Math.min(right, Math.max(0, (q.left - curR.right) / 2));
-        }
-
-        // Clamp against scrollable container boundaries and page edges
-        let box = { left: 0, right: docW, top: -window.scrollY, bottom: root.scrollHeight - window.scrollY };
-        let scrollParent = null;
-        for (let a = el.parentElement; a && a !== doc.body; a = a.parentElement) {
-          if (scrollContainerCache.has(a)) {
-            scrollParent = scrollContainerCache.get(a);
-            break;
-          }
-          let sBox;
-          try {
-            sBox = window.getComputedStyle(a);
-          } catch {
+          if (q.bottom < rTopBound || q.top > rBottomBound || q.right < rLeftBound || q.left > rRightBound) {
             continue;
           }
-          if (sBox.overflowX !== 'visible' || sBox.overflowY !== 'visible') {
-            scrollParent = a;
+          if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
+
+          const overlapX = q.left < r.right + right && q.right > r.left - left;
+          const overlapY = q.top < r.bottom + bottom && q.bottom > r.top - top;
+          if (overlapX && q.bottom <= r.top + 0.5) top = Math.min(top, Math.floor((r.top - q.bottom) / 2));
+          if (overlapX && q.top >= r.bottom - 0.5) bottom = Math.min(bottom, Math.floor((q.top - r.bottom) / 2));
+          if (overlapY && q.right <= r.left + 0.5) left = Math.min(left, Math.floor((r.left - q.right) / 2));
+          if (overlapY && q.left >= r.right - 0.5) right = Math.min(right, Math.floor((q.left - r.right) / 2));
+        }
+
+        let box = defaultBox;
+        for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+          if (scrollBoxCache.has(a)) {
+            box = scrollBoxCache.get(a);
             break;
           }
-        }
-        if (el.parentElement) scrollContainerCache.set(el.parentElement, scrollParent);
-        if (scrollParent) {
-          const ar = scrollParent.getBoundingClientRect();
-          const x0 = ar.left + scrollParent.clientLeft - scrollParent.scrollLeft;
-          const y0 = ar.top + scrollParent.clientTop - scrollParent.scrollTop;
-          box = { left: x0, right: x0 + scrollParent.scrollWidth, top: y0, bottom: y0 + scrollParent.scrollHeight };
+          if (a.scrollHeight > a.clientHeight || a.scrollWidth > a.clientWidth) {
+            let sBox;
+            try { sBox = window.getComputedStyle(a); } catch { break; }
+            if (sBox.overflowX !== 'visible' || sBox.overflowY !== 'visible') {
+              const ar = a.getBoundingClientRect();
+              const x0 = ar.left + a.clientLeft - a.scrollLeft;
+              const y0 = ar.top + a.clientTop - a.scrollTop;
+              box = { left: x0, right: x0 + a.clientWidth, top: y0, bottom: y0 + a.clientHeight };
+              scrollBoxCache.set(a, box);
+              break;
+            }
+          }
         }
 
         const px = (v) => Math.max(0, Math.floor(v));
-        const t = px(Math.min(top, curR.top - box.top));
-        const b = px(Math.min(bottom, box.bottom - curR.bottom));
-        const l = px(Math.min(left, curR.left - box.left));
-        const rt = px(Math.min(right, box.right - curR.right));
+        const t = px(Math.min(top, r.top - box.top));
+        const b = px(Math.min(bottom, box.bottom - r.bottom));
+        const l = px(Math.min(left, r.left - box.left));
+        const rt = px(Math.min(right, box.right - r.right));
 
-        if (t + b + l + rt < 1) continue;
-
-        ruleCounter++;
-        const ruleId = ruleCounter;
-        group.setAttr(el, ID_ATTR, String(ruleId));
-
-        if (canPseudo) {
-          const rel = cs.position === 'static';
-          markElement(el, rel ? 'hit rel' : 'hit', group);
-          newRules.push(
-            `html.ai4a11y-bigger-targets [${ID_ATTR}="${ruleId}"]::after { top: -${t}px !important; right: -${rt}px !important; bottom: -${b}px !important; left: -${l}px !important; }`
-          );
-        } else {
-          markElement(el, 'pad', group);
-          newRules.push(
-            `html.ai4a11y-bigger-targets [${ID_ATTR}="${ruleId}"] { padding-top: ${t}px !important; padding-right: ${rt}px !important; padding-bottom: ${b}px !important; padding-left: ${l}px !important; margin-top: -${t}px !important; margin-right: -${rt}px !important; margin-bottom: -${b}px !important; margin-left: -${l}px !important; }`
-          );
+        if (t + b + l + rt >= 2) {
+          const id = String(nextHitId++);
+          sizeGroup.setAttr(el, 'data-ai4a11y-bt-id', id);
+          mark(el, cs.position === 'static' ? 'hit rel' : 'hit');
+          hitRules.set(id, `[data-ai4a11y-bt-id="${id}"]::after { top: -${t}px; right: -${rt}px; bottom: -${b}px; left: -${l}px; }`);
         }
       }
 
-      // ── WRITE PASS 4: update per-element hit area stylesheet
-      if (newRules.length && rulesSheet) {
-        rulesCss += (rulesCss ? '\n' : '') + newRules.join('\n');
-        rulesSheet.update(rulesCss);
+      if (hitStyle) {
+        hitStyle.update([...hitRules.values()].join('\n'));
       }
     };
 
-    const applyTargetSize = (size) => {
-      if (currentGroup) {
-        currentGroup.end();
-        currentGroup = null;
+    const redoAll = () => {
+      if (sizeGroup) sizeGroup.end();
+      sizeGroup = s.group();
+      nextHitId = 1;
+      hitRules.clear();
+
+      const MIN = currentTargetSize;
+      const BOX = Math.max(24, Math.round(MIN * 0.55));
+
+      sizeGroup.css(
+        'base',
+        `[data-ai4a11y-bt~="grow"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; }
+[data-ai4a11y-bt~="glyph"] { font-size: ${Math.round(MIN * 0.45)}px !important; }
+[data-ai4a11y-bt~="box"] { width: ${BOX}px !important; height: ${BOX}px !important; min-width: ${BOX}px !important; min-height: ${BOX}px !important; flex-shrink: 0 !important; }
+[data-ai4a11y-bt~="label"] { pointer-events: auto !important; cursor: pointer !important; }
+[data-ai4a11y-bt~="rel"] { position: relative !important; }
+[data-ai4a11y-bt~="hit"]::after { content: "" !important; position: absolute !important; pointer-events: auto !important; }`
+      );
+
+      hitStyle = sizeGroup.css('hits', '');
+
+      const initialTargets = [];
+      for (const el of root.querySelectorAll(TARGET_QUERY)) {
+        if (isCandidate(el)) initialTargets.push(el);
       }
 
-      processed = new WeakSet();
-      allTargetRects = [];
-      ruleCounter = 0;
-      rulesCss = '';
-      rulesSheet = null;
-
-      if (size <= 0) return;
-
-      currentGroup = s.group();
-      const boxSize = Math.max(24, Math.min(size, Math.round(size * 0.55)));
-      const baseCss = `
-html.ai4a11y-bigger-targets [${MARK}~="grow"] {
-  min-width: ${size}px !important;
-  min-height: ${size}px !important;
-}
-html.ai4a11y-bigger-targets [${MARK}~="glyph"] {
-  font-size: ${Math.max(12, Math.round(size * 0.45))}px !important;
-}
-html.ai4a11y-bigger-targets [${MARK}~="box"] {
-  width: ${boxSize}px !important;
-  height: ${boxSize}px !important;
-  flex-shrink: 0 !important;
-}
-html.ai4a11y-bigger-targets [${MARK}~="label"] {
-  pointer-events: auto !important;
-  cursor: pointer !important;
-}
-html.ai4a11y-bigger-targets [${MARK}~="rel"] {
-  position: relative !important;
-}
-html.ai4a11y-bigger-targets [${MARK}~="hit"]::after {
-  content: "" !important;
-  position: absolute !important;
-  pointer-events: auto !important;
-}
-`;
-      currentGroup.css('bt-base', baseCss, { scope: 'ai4a11y-bigger-targets' });
-      rulesSheet = currentGroup.css('bt-rules', '');
-
-      const root = doc.body || doc.documentElement;
-      const initialCandidates = getCandidates(root, s);
-      processTargets(initialCandidates, currentGroup, size);
+      processItems(initialTargets, MIN, BOX, initialTargets);
     };
 
-    // Apply current size
-    applyTargetSize(activeSize);
+    redoAll();
 
-    // Watch for elements added later in batches
-    const root = doc.body || doc.documentElement;
     s.watch.added(
       root,
-      (batch) => {
-        if (activeSize <= 0 || !currentGroup || currentGroup.ended) return;
-        const newCandidates = [];
-        for (const node of batch) {
-          if (node.nodeType !== 1) continue;
-          if (s.page.isOurs(node) || node.closest('[data-ai4a11y-ui]')) continue;
-          if (node.matches && node.matches(TARGETS) && !processed.has(node)) {
-            if (!node.disabled && node.getAttribute('aria-disabled') !== 'true') {
-              newCandidates.push(node);
-            }
+      (addedElements) => {
+        if (!s.alive()) return;
+        const MIN = currentTargetSize;
+        const BOX = Math.max(24, Math.round(MIN * 0.55));
+
+        const batchTargets = [];
+        const contextElements = new Set();
+
+        for (const added of addedElements) {
+          if (isCandidate(added) && !processed.has(added)) {
+            batchTargets.push(added);
           }
-          for (const child of node.querySelectorAll(TARGETS)) {
-            if (!processed.has(child) && !s.page.isOurs(child) && !child.closest('[data-ai4a11y-ui]')) {
-              if (!child.disabled && child.getAttribute('aria-disabled') !== 'true') {
-                newCandidates.push(child);
+          if (added.querySelectorAll) {
+            for (const desc of added.querySelectorAll(TARGET_QUERY)) {
+              if (isCandidate(desc) && !processed.has(desc)) {
+                batchTargets.push(desc);
               }
             }
           }
         }
-        if (!newCandidates.length) return;
-        processTargets(newCandidates, currentGroup, activeSize);
+
+        if (!batchTargets.length) return;
+
+        for (const t of batchTargets) {
+          contextElements.add(t);
+          const p = t.parentElement;
+          if (p) {
+            for (const sib of p.querySelectorAll(TARGET_QUERY)) {
+              if (sib.isConnected) contextElements.add(sib);
+            }
+          }
+        }
+
+        processItems(batchTargets, MIN, BOX, [...contextElements]);
       },
-      { batch: true }
+      { batch: true, debounceMs: 40, cap: 1000 }
     );
 
-    // Follow profile changes made elsewhere
-    s.profile.onChange((personal, changed) => {
-      if (!changed) return;
-      if ('targetSize' in changed || 'bigTargets' in changed) {
-        let newSize = activeSize;
-        if (changed.targetSize !== undefined && changed.targetSize !== null && Number.isFinite(Number(changed.targetSize))) {
-          newSize = Number(changed.targetSize);
-        } else if (changed.bigTargets === false && !('targetSize' in changed)) {
-          newSize = 0;
-        }
-        if (newSize !== activeSize) {
-          activeSize = newSize;
-          applyTargetSize(newSize);
-        }
+    const step = async (dir) => {
+      const idx = SIZES.indexOf(currentTargetSize);
+      let next;
+      if (dir > 0) {
+        if (idx === -1) next = SIZES.find((sz) => sz > currentTargetSize) || SIZES[SIZES.length - 1];
+        else next = SIZES[Math.min(SIZES.length - 1, idx + 1)];
+      } else {
+        if (idx === -1) next = [...SIZES].reverse().find((sz) => sz < currentTargetSize) || SIZES[0];
+        else next = SIZES[Math.max(0, idx - 1)];
       }
-    });
+      if (next === currentTargetSize) return;
 
-    // Provide shortcut adjustment
+      const res = await s.profile.set({ targetSize: next });
+      if (res?.applied) {
+        s.announce(`Target size ${next}px on this site.`);
+      }
+    };
+
     s.keys.adjust({
       label: 'Target size',
       settings: ['targetSize'],
-      up: async () => {
-        const next = getNextSize(activeSize);
-        if (next !== activeSize) {
-          const r = await s.profile.set({ targetSize: next });
-          if (r && r.applied) {
-            activeSize = next;
-            applyTargetSize(next);
-            s.announce(`Target size ${next} pixels on this site.`);
-          }
+      up: () => step(1),
+      down: () => step(-1),
+    });
+
+    s.profile.onChange((p, changed) => {
+      if (p?.bigTargets === false) {
+        this.disable();
+        return;
+      }
+      if (changed && 'targetSize' in changed) {
+        const nextSize = Number(changed.targetSize);
+        if (Number.isFinite(nextSize) && nextSize > 0 && nextSize !== currentTargetSize) {
+          currentTargetSize = nextSize;
+          redoAll();
         }
-      },
-      down: async () => {
-        const prev = getPrevSize(activeSize);
-        if (prev !== activeSize) {
-          const r = await s.profile.set({ targetSize: prev });
-          if (r && r.applied) {
-            activeSize = prev;
-            applyTargetSize(prev);
-            s.announce(`Target size ${prev} pixels on this site.`);
-          }
-        }
-      },
+      }
     });
   },
 

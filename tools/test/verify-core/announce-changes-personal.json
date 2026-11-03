@@ -6,7 +6,7 @@
   "checks": [
     {
       "name": "a message added to the page is announced once (the shared live region's text)",
-      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const container = document.getElementById('toast-container');\n        if (!container) return false;\n\n        const toast = document.createElement('div');\n        toast.className = 'toast-notification message';\n        toast.textContent = 'Settings updated successfully';\n        container.appendChild(toast);\n\n        await new Promise((r) => setTimeout(r, 600));\n\n        const liveRegion = document.querySelector('[data-ai4a11y-ui][aria-live]');\n        const text = liveRegion?.textContent || '';\n        const ok = text.includes('Settings updated successfully');\n        toast.remove();\n        return Boolean(ok);\n      "
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const container = document.getElementById('toast-container');\n      if (!container) return false;\n\n      const toast = document.createElement('div');\n      toast.className = 'toast-notification message';\n      toast.textContent = 'Settings updated successfully';\n      container.appendChild(toast);\n\n      await new Promise((r) => setTimeout(r, 600));\n\n      const liveRegion = document.querySelector('[data-ai4a11y-ui][aria-live]');\n      const text = liveRegion?.textContent || '';\n      const ok = text.includes('Settings updated successfully');\n      toast.remove();\n      return Boolean(ok);\n    "
     }
   ]
 }

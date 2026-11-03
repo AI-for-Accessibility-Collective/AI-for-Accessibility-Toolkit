@@ -1,423 +1,226 @@
-// names.js — Gives buttons, links, form fields, and images accessible names or descriptions.
-// Barrier: Interactive elements (buttons, links, form fields) without accessible names
-// and informative images without alternative text are inaccessible to people using screen
-// readers, speech navigation, or braille displays (WCAG 4.1.2, 1.1.1, 2.4.4, 2.5.3).
+// names.js — Gives buttons, links, form fields, and informative images accessible names and descriptions.
+// Barrier: Screen reader users and speech-control users cannot navigate or interact with
+// unnamed controls, or understand the purpose of informative images lacking text alternatives.
 //
 // Suggested in onboarding for: vision (a suggestion only, never a gate).
 // The person's settings it reads: none.
 // What the person can adjust: nothing (the shortcut, if given, turns it on and off).
-// Prior work to learn from: tools/adapters/generate-labels.js, tools/adapters/generate-alt.js, tools/adapters/wcag-fixes.js.
 //
 // Options:
-//   limit: Maximum number of AI calls per page (default: 10, option allows up to 20).
+//   limit: Maximum number of elements to query AI for per page. Defaults to 10.
 //
 // Decisions:
-//   • Measures first with toolkit.page.nameOf(el): never renames any control that already has a name.
-//   • Inspects page-first signals without AI before spending any AI budget:
-//       1) title attributes on the element or child elements;
-//       2) <title> element inside SVG icons;
-//       3) keywords or words extracted from an icon's class name (e.g. btn-search -> "Search");
-//       4) words extracted from an image file name, BUT only for small icons (<= 48 by 48 pixels);
-//       5) the last meaningful path part of a link's destination (e.g. /account/settings -> "Settings");
-//       6) nearby label, placeholder, name attribute, or sibling/parent text for form fields.
-//   • Never names a photo or illustration (> 48x48 pixels) from its file name; on null from AI, it is left as it was.
-//   • Never sends decorative images (tiny <= 1x1, spacers, tracking pixels, role="presentation" or role="none") to AI.
-//     Marks clearly decorative images with alt="" only when certain.
-//   • Only sends images to AI vision (s.ai.vision('describe', img, { purpose: 'alt' })) when informative (> 48x48 pixels and not decorative).
-//   • Never calls AI for hidden content (!toolkit.page.isVisible(el)) or toolkit UI.
-//   • Prioritizes visible nameless elements first, asking AI once per element, up to the configured limit per page.
-//   • On null or unavailable AI answer, leaves the element exactly as it was.
-//   • Applies names via s.setAttr(el, 'aria-label', name) for controls, and s.setAttr(img, 'alt', description) for images.
-//   • Listens for dynamic content with s.watch.added(..., { batch: true }) to name added controls within remaining budget.
-//   • Cleanly restores original attributes on disable() through session cleanup.
-//   • Returns false when nothing on the page was changed.
+//   • Measures first with s.page.nameOf: never renames controls or images that already have names.
+//   • Names from the page first without AI:
+//     - Element's own title attribute
+//     - SVG title elements inside the control
+//     - Words extracted from icon CSS class names or icon image file names (<= 48x48)
+//     - Link's last URL path segment (ignoring '#' or '?' links)
+//     - Associated placeholder, name attribute, or nearby label text
+//   • Matches whole word tokens from classes and file names; style words (btn, icon, primary, etc.) are excluded.
+//   • File names only name small icons (<= 48x48); photos/illustrations (> 48px) are never named from file names.
+//   • Clearly decorative images (tiny <= 1x1, spacers) are marked alt=""; role="presentation" images are left alone.
+//   • Marks small or clearly decorative images inside named controls alt="".
+//   • Queries AI (s.ai.text for controls, s.ai.vision for images) only for still-nameless, visible elements.
+//   • Caps AI calls to options.limit (default 10) to respect the person's daily budget.
+//   • On null from the AI or when AI is unavailable, elements are left exactly as they were.
+//   • Undoes all attribute changes cleanly on disable() via session cleanup.
 //
 // What it cannot do:
-//   • Cannot generate descriptions for complex charts or diagrams without specialized vision models.
-//   • Cannot infer names for custom div controls that lack text, attributes, semantic roles, or visual context.
+//   • Cannot invent descriptions for images or controls when AI is unavailable and page signals are absent.
+//   • Does not label hidden or off-screen controls.
 
-const JUNK_RE = /^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken|null|undefined|nan|unknown|none|true|false|img|image|icon|button|btn|pic|picture|untitled|default)$/i;
+const STYLE_WORDS = new Set([
+  'btn', 'button', 'icon', 'fa', 'fas', 'far', 'fal', 'fad', 'fab',
+  'glyphicon', 'material-icons', 'material-symbols', 'feather',
+  'primary', 'secondary', 'tertiary', 'success', 'danger', 'warning', 'info',
+  'default', 'light', 'dark', 'large', 'small', 'medium', 'sm', 'md', 'lg', 'xl', 'xs',
+  'active', 'disabled', 'link', 'nav', 'item', 'wrap', 'wrapper', 'container',
+  'group', 'box', 'bar', 'toggle', 'ui', 'action', 'widget', 'control', 'component',
+  'element', 'clickable', 'pressable', 'touchable', 'view', 'svg', 'img', 'image',
+  'pic', 'picture', 'photo', 'inline', 'block', 'flex', 'grid', 'row', 'col',
+  'left', 'right', 'top', 'bottom', 'center', 'header', 'footer', 'sidebar',
+]);
 
-function isJunkName(text) {
-  if (!text || typeof text !== 'string') return true;
-  const t = text.trim();
-  if (t.length < 2 || t.length > 80) return true;
-  if (/^[\d_\-.:;/#?&=+*^%$@!~`]+$/.test(t)) return true;
-  if (/^[a-f0-9]{16,}$/i.test(t)) return true;
-  return JUNK_RE.test(t);
+const JUNK_WORDS = new Set([
+  'q', 's', 'utf8', 'token', 'id', 'csrf', '_csrf', 'authenticity_token',
+  'requestverificationtoken', 'null', 'undefined', 'true', 'false', 'none',
+  'empty', 'blank', 'test', 'temp', 'tmp',
+]);
+
+function wordsFrom(str) {
+  if (!str || typeof str !== 'string') return [];
+  const clean = str
+    .replace(/[?#].*$/, '')
+    .replace(/\.(png|jpe?g|svg|gif|webp|avif|ico|bmp|html?|php|aspx?|jsp)$/i, '');
+  const tokens = clean
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  return tokens.filter((t) => !STYLE_WORDS.has(t) && !JUNK_WORDS.has(t) && !/^\d+$/.test(t));
 }
 
-function capitalize(s) {
-  if (!s) return '';
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function formatWords(words) {
+  if (!words || !words.length) return '';
+  const joined = words.join(' ');
+  return joined.charAt(0).toUpperCase() + joined.slice(1);
 }
 
-const ICON_PATTERNS = {
-  close: ['close', 'dismiss', 'x-btn', 'btn-close', 'cancel', 'clear-btn'],
-  menu: ['menu', 'hamburger', 'nav-toggle', 'navigation-toggle', 'drawer-toggle'],
-  search: ['search', 'find', 'magnifier', 'lookup'],
-  submit: ['submit', 'send', 'paper-plane'],
-  play: ['play', 'start'],
-  pause: ['pause', 'hold'],
-  next: ['next', 'forward', 'arrow-right', 'chevron-right', 'caret-right'],
-  previous: ['prev', 'previous', 'back', 'arrow-left', 'chevron-left', 'caret-left'],
-  expand: ['expand', 'dropdown', 'chevron-down', 'caret-down', 'angle-down'],
-  collapse: ['collapse', 'chevron-up', 'caret-up', 'angle-up'],
-  settings: ['settings', 'config', 'gear', 'cog', 'preferences'],
-  delete: ['delete', 'remove', 'trash', 'bin'],
-  edit: ['edit', 'pencil', 'modify', 'write'],
-  share: ['share', 'social'],
-  like: ['like', 'heart', 'favorite', 'thumbs-up'],
-  copy: ['copy', 'clipboard', 'duplicate'],
-  home: ['home', 'house'],
-  cart: ['cart', 'shopping-cart', 'basket', 'bag'],
-  user: ['user', 'account', 'profile', 'avatar', 'person'],
-  help: ['help', 'question', 'faq', 'support'],
-  info: ['info', 'information'],
-  mail: ['mail', 'email', 'envelope', 'inbox'],
-  phone: ['phone', 'telephone', 'call'],
-  filter: ['filter', 'funnel'],
-  download: ['download'],
-  upload: ['upload'],
-  print: ['print', 'printer'],
-  refresh: ['refresh', 'reload', 'sync', 'rotate'],
-  notifications: ['bell', 'notification', 'alarm'],
-  star: ['star'],
-  calendar: ['calendar', 'date'],
-  messages: ['chat', 'message', 'comment'],
-};
-
-function wordsFromIconClass(className) {
-  if (!className || typeof className !== 'string') return null;
-  const lower = className.toLowerCase();
-
-  for (const [label, keywords] of Object.entries(ICON_PATTERNS)) {
-    if (keywords.some((kw) => lower.includes(kw))) {
-      return capitalize(label.replace(/[-_]/g, ' '));
-    }
-  }
-
-  const tokens = lower.split(/\s+/);
-  for (const token of tokens) {
-    const stripped = token
-      .replace(/^(fa[srlbd]?|bi|glyphicon|icon|btn|ui-icon|feather|material-icons)[-_:]/i, '')
-      .replace(/[-_](icon|btn|button)$/i, '');
-    if (stripped.length >= 3 && !isJunkName(stripped)) {
-      const words = stripped.replace(/[-_]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
-      if (words && !isJunkName(words)) {
-        return capitalize(words);
-      }
-    }
-  }
-  return null;
-}
-
-function wordsFromFilename(src) {
-  if (!src || typeof src !== 'string') return null;
-  if (src.startsWith('data:')) return null;
-  try {
-    const url = src.split('?')[0].split('#')[0];
-    const filename = url.substring(url.lastIndexOf('/') + 1);
-    const basename = filename.substring(0, filename.lastIndexOf('.')) || filename;
-    if (!basename || basename.length < 2) return null;
-    if (/^[0-9a-f]{8,}$/i.test(basename)) return null;
-    if (/^\d+$/.test(basename)) return null;
-
-    const parts = basename
-      .replace(/^(icon|btn|img|pic|asset)[-_]/i, '')
-      .replace(/[-_](icon|btn|button|small|tiny|thumb|thumbnail|16x16|24x24|32x32|48x48)$/i, '')
-      .replace(/[-_]+/g, ' ')
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .trim();
-
-    if (parts && parts.length >= 3 && !isJunkName(parts)) {
-      return capitalize(parts);
-    }
-  } catch {}
-  return null;
-}
-
-function getImageDimensions(img) {
-  const rect = typeof img.getBoundingClientRect === 'function' ? img.getBoundingClientRect() : { width: 0, height: 0 };
+function getImageSize(img) {
   const attrW = parseInt(img.getAttribute('width') || '0', 10);
   const attrH = parseInt(img.getAttribute('height') || '0', 10);
-  const w = rect.width || img.naturalWidth || attrW;
-  const h = rect.height || img.naturalHeight || attrH;
-  return { w, h };
+  if (attrW > 0 && attrH > 0) return { width: attrW, height: attrH };
+
+  const naturalW = img.naturalWidth || 0;
+  const naturalH = img.naturalHeight || 0;
+  if (naturalW > 0 && naturalH > 0) return { width: naturalW, height: naturalH };
+
+  try {
+    const rect = img.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) return { width: rect.width, height: rect.height };
+  } catch {}
+
+  return { width: attrW || naturalW || 0, height: attrH || naturalH || 0 };
 }
 
-function isSmallIcon(img) {
-  if (!img || img.tagName !== 'IMG') return false;
-  const { w, h } = getImageDimensions(img);
-  return w > 0 && h > 0 && w <= 48 && h <= 48;
+function isTinyOrSpacer(img) {
+  const size = getImageSize(img);
+  if (size.width > 0 && size.width <= 1 && size.height > 0 && size.height <= 1) return true;
+  const src = img.getAttribute('src') || '';
+  return /spacer|pixel|blank|clear|1x1/i.test(src);
 }
 
-function isClearlyDecorative(img) {
-  if (!img || img.tagName !== 'IMG') return false;
-  const role = (img.getAttribute('role') || '').toLowerCase();
-  if (role === 'presentation' || role === 'none') return true;
-  if (img.getAttribute('aria-hidden') === 'true') return true;
+function isExplicitlyDecorative(img) {
+  const role = (img.getAttribute('role') || '').toLowerCase().trim();
+  return role === 'presentation' || role === 'none';
+}
 
-  const { w, h } = getImageDimensions(img);
-  if ((w > 0 && w <= 1) || (h > 0 && h <= 1)) return true;
-
-  const src = (img.getAttribute('src') || img.src || '').toLowerCase();
-  if (/(?:^|[_\-/])(spacer|blank|pixel|1x1|dot|tracker|transparent|clear)\.(gif|png|jpe?g|webp|svg)/i.test(src)) return true;
-  if (src.startsWith('data:image/gif;base64,R0lGODlhAQAB')) return true;
-
+function hasFieldAccessibleName(field) {
+  if (field.getAttribute('aria-label')?.trim()) return true;
+  const labelledBy = field.getAttribute('aria-labelledby');
+  if (labelledBy) {
+    const ids = labelledBy.trim().split(/\s+/);
+    for (const id of ids) {
+      const el = field.ownerDocument.getElementById(id);
+      if (el && (el.getAttribute('aria-label')?.trim() || el.textContent.trim())) return true;
+    }
+  }
+  if (field.labels && field.labels.length > 0) {
+    for (const l of field.labels) {
+      if (l.textContent.trim()) return true;
+    }
+  }
+  if (field.id) {
+    const forLabels = field.ownerDocument.querySelectorAll(`label[for="${CSS.escape(field.id)}"]`);
+    for (const l of forLabels) {
+      if (l.textContent.trim()) return true;
+    }
+  }
+  const wrapLabel = field.closest('label');
+  if (wrapLabel) {
+    const clone = wrapLabel.cloneNode(true);
+    clone.querySelectorAll('input, select, textarea, button').forEach((n) => n.remove());
+    if (clone.textContent.trim()) return true;
+  }
+  if (field.getAttribute('title')?.trim()) return true;
   return false;
 }
 
-function isInformativeImage(img) {
-  if (!img || img.tagName !== 'IMG') return false;
-  if (isClearlyDecorative(img)) return false;
-  const { w, h } = getImageDimensions(img);
-  return w > 48 && h > 48;
+function getNearbyLabelText(field) {
+  const extract = (el) => {
+    if (!el || el.nodeType !== 1) return '';
+    const tag = el.tagName;
+    if (/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(tag)) return '';
+    if (tag === 'LABEL' && el.htmlFor && el.htmlFor !== field.id) return '';
+    if (tag === 'LABEL' && el.querySelector('input, select, textarea') && !el.contains(field)) return '';
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll('script, style, svg, input, select, textarea, button').forEach((n) => n.remove());
+    const raw = (clone.textContent || '').trim().replace(/:\s*$/, '').trim();
+    if (!raw || raw.length > 60 || /\n/.test(raw)) return '';
+    if (JUNK_WORDS.has(raw.toLowerCase())) return '';
+    return raw;
+  };
+
+  const prev = field.previousElementSibling;
+  if (prev) {
+    const text = extract(prev);
+    if (text) return text;
+  }
+  const next = field.nextElementSibling;
+  if (next) {
+    const text = extract(next);
+    if (text) return text;
+  }
+  const parent = field.parentElement;
+  if (parent && parent.children.length <= 4) {
+    for (const child of parent.children) {
+      if (child !== field) {
+        const text = extract(child);
+        if (text) return text;
+      }
+    }
+  }
+  return '';
 }
 
-function wordsFromLinkPath(link) {
-  if (!link) return null;
-  const rawHref = link.getAttribute('href');
-  if (!rawHref) return null;
-  const href = rawHref.trim();
-  if (!href || href === '#' || href.startsWith('javascript:')) return null;
-
-  if (href.startsWith('mailto:')) {
-    const email = href.slice(7).split('?')[0].trim();
-    return email ? `Email ${email}` : 'Email';
+function extractIconClassWords(el) {
+  const classNames = [];
+  if (el.className && typeof el.className === 'string') classNames.push(el.className);
+  for (const child of el.querySelectorAll('[class]')) {
+    if (child.className && typeof child.className === 'string') classNames.push(child.className);
   }
-  if (href.startsWith('tel:')) {
-    const phone = href.slice(4).split('?')[0].trim();
-    return phone ? `Call ${phone}` : 'Call';
+  for (const cls of classNames) {
+    const words = wordsFrom(cls);
+    if (words.length > 0) return words;
   }
+  return [];
+}
 
-  let pathname = '';
+function getSvgTitle(el) {
+  return el.querySelector('svg title')?.textContent?.trim() || '';
+}
+
+function getLinkPathWords(link) {
+  const rawHref = (link.getAttribute('href') || '').trim();
+  if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('?') || rawHref.startsWith('javascript:')) {
+    return '';
+  }
   try {
-    pathname = new URL(href, window.location.href).pathname;
-  } catch {
-    pathname = href.split(/[?#]/)[0];
-  }
-
-  pathname = pathname.replace(/\/+$/, '');
-  const segments = pathname.split('/').filter(Boolean);
-  if (!segments.length) return null;
-
-  let last = segments[segments.length - 1];
-  last = last.replace(/\.[a-zA-Z0-9]+$/, '');
-  if (/^(index|home|default|main)$/i.test(last) && segments.length > 1) {
-    last = segments[segments.length - 2];
-  }
-
-  if (last && !isJunkName(last)) {
-    const words = last.replace(/[-_]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
-    if (words && words.length >= 3 && !isJunkName(words)) {
-      return capitalize(words);
+    const url = new URL(rawHref, link.ownerDocument.baseURI);
+    const segments = url.pathname.split('/').filter(Boolean);
+    const last = segments.pop();
+    if (last) {
+      const words = wordsFrom(last);
+      return formatWords(words);
     }
-  }
-  return null;
+  } catch {}
+  return '';
 }
 
-function wordsFromNearbyLabel(input, doc) {
-  if (!input) return null;
-
-  if (input.placeholder && !isJunkName(input.placeholder)) {
-    return input.placeholder.trim();
-  }
-
-  if (input.name && !isJunkName(input.name)) {
-    const formatted = input.name
-      .replace(/[-_]+/g, ' ')
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .trim();
-    if (formatted && formatted.length >= 3 && !isJunkName(formatted)) {
-      return capitalize(formatted);
+function markDecorativeImagesInside(control, s) {
+  for (const img of control.querySelectorAll('img')) {
+    if (img.hasAttribute('alt') && img.getAttribute('alt') !== '') continue;
+    const size = getImageSize(img);
+    const isSmall = size.width > 0 && size.width <= 48 && size.height > 0 && size.height <= 48;
+    if (isSmall || isTinyOrSpacer(img) || isExplicitlyDecorative(img)) {
+      s.setAttr(img, 'alt', '');
     }
   }
-
-  if (input.labels && input.labels.length) {
-    const text = input.labels[0].textContent?.trim();
-    if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
-      return text.replace(/:$/, '');
-    }
-  }
-
-  if (input.id) {
-    try {
-      const lbl = doc.querySelector(`label[for="${CSS.escape(input.id)}"]`);
-      const text = lbl?.textContent?.trim();
-      if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
-        return text.replace(/:$/, '');
-      }
-    } catch {}
-  }
-
-  const prev = input.previousElementSibling;
-  if (prev && !/^(SCRIPT|STYLE|TEMPLATE|INPUT|SELECT|TEXTAREA|BUTTON|H[1-6])$/i.test(prev.tagName)) {
-    const text = prev.textContent?.trim().replace(/:$/, '');
-    if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
-      return text;
-    }
-  }
-
-  const next = input.nextElementSibling;
-  if (next && !/^(SCRIPT|STYLE|TEMPLATE|INPUT|SELECT|TEXTAREA|BUTTON|H[1-6])$/i.test(next.tagName)) {
-    const text = next.textContent?.trim().replace(/:$/, '');
-    if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
-      return text;
-    }
-  }
-
-  const parent = input.parentElement;
-  if (parent && !/^(BODY|HTML|MAIN|FORM|SECTION|ARTICLE|NAV|ASIDE|HEADER|FOOTER)$/i.test(parent.tagName)) {
-    if (!parent.querySelector('h1, h2, h3, h4, h5, h6')) {
-      const clone = parent.cloneNode(true);
-      for (const el of clone.querySelectorAll('script, style, template, input, select, textarea, button')) {
-        el.remove();
-      }
-      const text = clone.textContent?.trim().replace(/:$/, '');
-      if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
-        return text;
-      }
-    }
-  }
-
-  return null;
 }
 
-function wordsFromChildTitle(el) {
-  if (!el) return null;
-  const svgTitle = el.querySelector('svg title')?.textContent?.trim();
-  if (svgTitle && !isJunkName(svgTitle)) return svgTitle;
-
-  const child = el.querySelector('[title]');
-  if (child) {
-    const title = child.getAttribute('title')?.trim();
-    if (title && !isJunkName(title)) return title;
-  }
-
-  return null;
-}
-
-function hasProperName(el, page, doc) {
-  if (!el) return true;
-  const tag = el.tagName;
-  const isField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-
-  if (isField) {
-    const type = (el.getAttribute('type') || '').toLowerCase();
-    if (/^(button|submit|reset)$/.test(type)) {
-      return Boolean(el.getAttribute('value') || el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.getAttribute('title'));
-    }
-    if (el.getAttribute('aria-label')?.trim()) return true;
-    if (el.getAttribute('aria-labelledby')?.trim()) return true;
-    if (el.getAttribute('title')?.trim()) return true;
-    if (el.labels && el.labels.length > 0) return true;
-    if (el.id && doc.querySelector(`label[for="${CSS.escape(el.id)}"]`)) return true;
-    if (el.closest('label')) return true;
-    return false;
-  }
-
-  const name = page.nameOf(el);
-  return Boolean(name && name.trim());
-}
-
-function findPageFirstName(el, page, doc) {
-  const tag = el.tagName;
-  const isButton = tag === 'BUTTON' || el.getAttribute('role') === 'button' || (tag === 'INPUT' && /^(button|submit|reset)$/i.test(el.getAttribute('type') || ''));
-  const isLink = tag === 'A' || el.getAttribute('role') === 'link';
-  const isField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || /^(textbox|searchbox|combobox|listbox|slider|spinbutton|checkbox|radio|switch)$/i.test(el.getAttribute('role') || '');
-  const isImg = tag === 'IMG';
-
-  if (isImg && !isSmallIcon(el)) {
-    return null;
-  }
-
-  const titleName = wordsFromChildTitle(el);
-  if (titleName) return titleName;
-
-  const classCandidate = [
-    typeof el.className === 'string' ? el.className : '',
-    ...Array.from(el.querySelectorAll('i, span, svg, em')).map((c) => (typeof c.className === 'string' ? c.className : '')),
-  ].filter(Boolean);
-  for (const cls of classCandidate) {
-    const w = wordsFromIconClass(cls);
-    if (w) return w;
-  }
-
-  if (isButton || isLink) {
-    const innerImg = el.querySelector('img');
-    if (innerImg && isSmallIcon(innerImg)) {
-      const w = wordsFromFilename(innerImg.getAttribute('src') || innerImg.src);
-      if (w) return w;
-    }
-  }
-
-  if (isImg && isSmallIcon(el)) {
-    const w = wordsFromFilename(el.getAttribute('src') || el.src);
-    if (w) return w;
-  }
-
-  if (isLink) {
-    const pathName = wordsFromLinkPath(el);
-    if (pathName) return pathName;
-  }
-
-  if (isField) {
-    const nearby = wordsFromNearbyLabel(el, doc);
-    if (nearby) return nearby;
-  }
-
-  return null;
-}
-
-function getContextForElement(el) {
+function getControlContext(el) {
   const parent = el.parentElement;
   if (!parent) return '';
   const clone = parent.cloneNode(true);
-  for (const s of clone.querySelectorAll('script, style, template, noscript')) {
-    s.remove();
-  }
-  return (clone.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  clone.querySelectorAll('script, style, svg').forEach((n) => n.remove());
+  const text = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  return text.slice(0, 100);
 }
-
-function findHeadingFor(el, doc) {
-  let prev = el;
-  while (prev) {
-    let sibling = prev.previousElementSibling;
-    while (sibling) {
-      const h = sibling.matches?.('h1, h2, h3, h4, h5, h6, [role="heading"]')
-        ? sibling
-        : sibling.querySelector?.('h1, h2, h3, h4, h5, h6, [role="heading"]');
-      if (h) return (h.textContent || '').replace(/\s+/g, ' ').trim();
-      sibling = sibling.previousElementSibling;
-    }
-    prev = prev.parentElement;
-  }
-  const mainHeading = doc.querySelector('h1, h2, [role="heading"]');
-  return mainHeading?.textContent?.trim() || doc.title || '';
-}
-
-function buildLabelInput(el) {
-  const tag = el.tagName.toLowerCase();
-  const type = el.getAttribute('type') || '';
-  const role = el.getAttribute('role') || '';
-  const kind = role || (tag === 'input' ? `${type} field` : tag);
-  const context = getContextForElement(el);
-  const href = el.getAttribute('href') || '';
-  const name = el.getAttribute('name') || '';
-  const placeholder = el.getAttribute('placeholder') || '';
-  const cls = (typeof el.className === 'string' ? el.className : '') || '';
-
-  const parts = [`Control type: ${kind}`];
-  if (name) parts.push(`name: ${name}`);
-  if (placeholder) parts.push(`placeholder: ${placeholder}`);
-  if (href) parts.push(`href: ${href}`);
-  if (cls) parts.push(`class: ${cls}`);
-  if (context) parts.push(`context: ${context}`);
-  return parts.join('; ').slice(0, 500);
-}
-
-const CONTROL_SELECTOR = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], [role="link"], [role="textbox"], [role="searchbox"], [role="combobox"], [role="listbox"], [role="slider"], [role="spinbutton"], [role="checkbox"], [role="radio"], [role="switch"]';
 
 export default {
   async enable(options = {}, toolkit) {
@@ -427,224 +230,254 @@ export default {
     if (!this.toolkit) return false;
 
     const s = (this.s = this.toolkit.session());
+    const limit = typeof this.options.limit === 'number' ? this.options.limit : 10;
     const doc = document;
-    const page = this.toolkit.page;
+    const root = doc.body || doc.documentElement;
+    if (!root) {
+      this.disable();
+      return false;
+    }
 
-    const limit = Math.max(0, Math.min(20, Number(this.options.limit ?? this.options.maxAiCalls ?? 10)));
-    let aiCallsCount = 0;
-    let fixesCount = 0;
-    const askedAi = new WeakSet();
+    let appliedCount = 0;
+    const aiQueue = [];
+    const processed = new WeakSet();
 
-    const processElement = async (el) => {
-      if (!el || !el.isConnected || page.isOurs(el) || !page.isVisible(el)) return false;
+    const processElement = (el) => {
+      if (!s.page.isVisible(el)) return;
 
       const tag = el.tagName;
-      const isImg = tag === 'IMG';
+      const role = (el.getAttribute('role') || '').toLowerCase().trim();
 
-      if (isImg) {
-        if (el.hasAttribute('alt') || el.getAttribute('aria-label') || el.getAttribute('aria-labelledby')) {
-          return false;
-        }
+      // 1. Images
+      if (tag === 'IMG') {
+        if (el.hasAttribute('alt')) return;
+        if (isExplicitlyDecorative(el)) return;
 
-        if (isClearlyDecorative(el)) {
-          const role = (el.getAttribute('role') || '').toLowerCase();
-          if (role !== 'presentation' && role !== 'none') {
-            s.setAttr(el, 'alt', '');
-            fixesCount++;
-            return true;
-          }
-          return false;
-        }
-
-        const parentControl = el.closest('button, a[href], [role="button"], [role="link"]');
-        if (parentControl && (hasProperName(parentControl, page, doc) || parentControl.getAttribute('aria-label'))) {
+        if (isTinyOrSpacer(el)) {
           s.setAttr(el, 'alt', '');
-          fixesCount++;
-          return true;
+          appliedCount++;
+          return;
         }
 
-        if (isSmallIcon(el)) {
-          const pageFirstName = findPageFirstName(el, page, doc);
-          if (pageFirstName) {
-            s.setAttr(el, 'alt', pageFirstName);
-            fixesCount++;
-            return true;
+        const size = getImageSize(el);
+        const isSmall = size.width > 0 && size.width <= 48 && size.height > 0 && size.height <= 48;
+        const isInformative = size.width > 48 || size.height > 48;
+
+        const parentControl = el.closest('button, [role="button"], a[href], [role="link"]');
+        if (parentControl && s.page.nameOf(parentControl)) {
+          if (isSmall || isTinyOrSpacer(el)) {
+            s.setAttr(el, 'alt', '');
+            appliedCount++;
+            return;
           }
-          return false;
         }
 
-        if (isInformativeImage(el)) {
-          if (aiCallsCount >= limit || askedAi.has(el)) return false;
-          askedAi.add(el);
-          aiCallsCount++;
-          try {
-            const alt = await s.ai.vision('describe', el, { purpose: 'alt' });
-            if (!s.alive()) return false;
-            if (alt && typeof alt === 'string' && alt.trim()) {
-              s.setAttr(el, 'alt', alt.trim());
-              fixesCount++;
-              return true;
+        if (isSmall) {
+          const fileWords = wordsFrom(el.getAttribute('src') || el.src);
+          if (fileWords.length > 0) {
+            s.setAttr(el, 'alt', formatWords(fileWords));
+            appliedCount++;
+          }
+          return;
+        }
+
+        if (isInformative) {
+          aiQueue.push(el);
+        }
+        return;
+      }
+
+      // 2. Buttons and Links
+      const isButton = tag === 'BUTTON' || role === 'button' || (tag === 'INPUT' && /^(button|submit|reset)$/i.test(el.type));
+      const isLink = (tag === 'A' && el.hasAttribute('href')) || role === 'link';
+
+      if (isButton || isLink) {
+        const currentName = s.page.nameOf(el);
+        if (currentName) {
+          markDecorativeImagesInside(el, s);
+          return;
+        }
+
+        let name = el.getAttribute('title')?.trim() || '';
+
+        if (!name) {
+          const svgTitle = getSvgTitle(el);
+          if (svgTitle) name = svgTitle;
+        }
+
+        if (!name) {
+          const classWords = extractIconClassWords(el);
+          if (classWords.length > 0) name = formatWords(classWords);
+        }
+
+        if (!name) {
+          const childImg = el.querySelector('img');
+          if (childImg) {
+            const size = getImageSize(childImg);
+            if (size.width > 0 && size.width <= 48 && size.height > 0 && size.height <= 48) {
+              const fileWords = wordsFrom(childImg.getAttribute('src') || childImg.src);
+              if (fileWords.length > 0) name = formatWords(fileWords);
             }
-          } catch {}
-        }
-        return false;
-      }
-
-      if (hasProperName(el, page, doc)) {
-        const innerImg = el.querySelector('img:not([alt])');
-        if (innerImg) {
-          s.setAttr(innerImg, 'alt', '');
-          fixesCount++;
-        }
-        return false;
-      }
-
-      const pageFirstName = findPageFirstName(el, page, doc);
-      if (pageFirstName) {
-        s.setAttr(el, 'aria-label', pageFirstName);
-        fixesCount++;
-        const innerImg = el.querySelector('img:not([alt])');
-        if (innerImg) {
-          s.setAttr(innerImg, 'alt', '');
-          fixesCount++;
-        }
-        return true;
-      }
-
-      if (aiCallsCount >= limit || askedAi.has(el)) return false;
-      askedAi.add(el);
-      aiCallsCount++;
-
-      try {
-        const context = findHeadingFor(el, doc);
-        const label = await s.ai.text('label', buildLabelInput(el), { context });
-        if (!s.alive()) return false;
-        if (label && typeof label === 'string' && label.trim()) {
-          s.setAttr(el, 'aria-label', label.trim());
-          fixesCount++;
-          const innerImg = el.querySelector('img:not([alt])');
-          if (innerImg) {
-            s.setAttr(innerImg, 'alt', '');
-            fixesCount++;
           }
-          return true;
         }
-      } catch {}
 
-      return false;
+        if (!name && isLink) {
+          const pathName = getLinkPathWords(el);
+          if (pathName) name = pathName;
+        }
+
+        if (name) {
+          s.setAttr(el, 'aria-label', name);
+          appliedCount++;
+          markDecorativeImagesInside(el, s);
+        } else {
+          aiQueue.push(el);
+        }
+        return;
+      }
+
+      // 3. Form fields
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) {
+        const type = (el.getAttribute('type') || '').toLowerCase();
+        if (type === 'image') {
+          if (el.hasAttribute('alt') && el.getAttribute('alt').trim()) return;
+        } else if (hasFieldAccessibleName(el)) {
+          return;
+        }
+
+        let name = el.getAttribute('title')?.trim() || '';
+
+        if (!name && el.placeholder && !JUNK_WORDS.has(el.placeholder.toLowerCase().trim())) {
+          name = el.placeholder.trim();
+        }
+
+        if (!name && el.name) {
+          const nameWords = wordsFrom(el.name);
+          if (nameWords.length > 0) name = formatWords(nameWords);
+        }
+
+        if (!name) {
+          const nearby = getNearbyLabelText(el);
+          if (nearby) name = nearby;
+        }
+
+        if (name) {
+          s.setAttr(el, 'aria-label', name);
+          appliedCount++;
+        } else {
+          aiQueue.push(el);
+        }
+      }
     };
 
-    const root = doc.body || doc.documentElement;
-    if (!root) return false;
+    const elements = root.querySelectorAll(
+      'button, [role="button"], a[href], [role="link"], input:not([type="hidden"]), textarea, select, img'
+    );
+    for (const el of elements) {
+      processElement(el);
+    }
 
-    // First collect all controls and images
-    const controls = Array.from(root.querySelectorAll(CONTROL_SELECTOR)).filter((el) => page.isVisible(el) && !page.isOurs(el));
-    const images = Array.from(root.querySelectorAll('img')).filter((el) => page.isVisible(el) && !page.isOurs(el));
+    // 4. AI for remaining nameless visible elements
+    let aiCalls = 0;
+    for (const el of aiQueue) {
+      if (!s.alive()) break;
+      if (aiCalls >= limit) break;
+      if (processed.has(el)) continue;
+      if (!s.page.isVisible(el)) continue;
 
-    // Page-first pass for all controls and non-AI images
-    const aiCandidates = [];
+      processed.add(el);
 
-    for (const ctrl of controls) {
-      if (hasProperName(ctrl, page, doc)) {
-        const innerImg = ctrl.querySelector('img:not([alt])');
-        if (innerImg) {
-          s.setAttr(innerImg, 'alt', '');
-          fixesCount++;
-        }
-        continue;
-      }
-
-      const pageFirstName = findPageFirstName(ctrl, page, doc);
-      if (pageFirstName) {
-        s.setAttr(ctrl, 'aria-label', pageFirstName);
-        fixesCount++;
-        const innerImg = ctrl.querySelector('img:not([alt])');
-        if (innerImg) {
-          s.setAttr(innerImg, 'alt', '');
-          fixesCount++;
+      if (el.tagName === 'IMG') {
+        if (el.hasAttribute('alt')) continue;
+        aiCalls++;
+        const desc = await s.ai.vision('describe', el, { purpose: 'alt' });
+        if (desc && s.alive()) {
+          s.setAttr(el, 'alt', desc.trim());
+          appliedCount++;
         }
       } else {
-        aiCandidates.push(ctrl);
-      }
-    }
-
-    for (const img of images) {
-      if (img.hasAttribute('alt') || img.getAttribute('aria-label') || img.getAttribute('aria-labelledby')) {
-        continue;
-      }
-
-      if (isClearlyDecorative(img)) {
-        const role = (img.getAttribute('role') || '').toLowerCase();
-        if (role !== 'presentation' && role !== 'none') {
-          s.setAttr(img, 'alt', '');
-          fixesCount++;
+        if (s.page.nameOf(el)) continue;
+        const role = el.getAttribute('role') || el.tagName.toLowerCase();
+        const ctx = getControlContext(el);
+        const input = [role, ctx].filter(Boolean).join(': ');
+        aiCalls++;
+        const label = await s.ai.text('label', input, {
+          context: doc.title || undefined,
+        });
+        if (label && s.alive()) {
+          s.setAttr(el, 'aria-label', label.trim());
+          appliedCount++;
+          markDecorativeImagesInside(el, s);
         }
-        continue;
-      }
-
-      const parentControl = img.closest('button, a[href], [role="button"], [role="link"]');
-      if (parentControl && (hasProperName(parentControl, page, doc) || parentControl.getAttribute('aria-label'))) {
-        s.setAttr(img, 'alt', '');
-        fixesCount++;
-        continue;
-      }
-
-      if (isSmallIcon(img)) {
-        const pageFirstName = findPageFirstName(img, page, doc);
-        if (pageFirstName) {
-          s.setAttr(img, 'alt', pageFirstName);
-          fixesCount++;
-        }
-        continue;
-      }
-
-      if (isInformativeImage(img)) {
-        aiCandidates.push(img);
       }
     }
 
-    // Sort AI candidates: in-viewport first
-    aiCandidates.sort((a, b) => {
-      const ra = a.getBoundingClientRect();
-      const rb = b.getBoundingClientRect();
-      const aInView = ra.top >= 0 && ra.top <= window.innerHeight;
-      const bInView = rb.top >= 0 && rb.top <= window.innerHeight;
-      if (aInView && !bInView) return -1;
-      if (!aInView && bInView) return 1;
-      return 0;
-    });
-
-    // Run AI pass up to limit
-    for (const el of aiCandidates) {
-      if (aiCallsCount >= limit || !s.alive()) break;
-      await processElement(el);
+    if (appliedCount === 0) {
+      this.disable();
+      return false;
     }
 
-    // Watch for dynamically added nodes
+    // Watch for dynamically added elements and apply page-first fixes
     s.watch.added(
       root,
-      async (addedElements) => {
-        if (!s.alive()) return;
-        for (const el of addedElements) {
-          if (!s.alive()) break;
-          if (el.matches?.(CONTROL_SELECTOR) || el.matches?.('img')) {
-            await processElement(el);
+      (added) => {
+        if (!s.alive() || !added || added.nodeType !== 1) return;
+        if (!s.page.isVisible(added)) return;
+
+        if (added.tagName === 'IMG') {
+          if (added.hasAttribute('alt') || isExplicitlyDecorative(added)) return;
+          if (isTinyOrSpacer(added)) {
+            s.setAttr(added, 'alt', '');
+            return;
           }
-          if (typeof el.querySelectorAll === 'function') {
-            for (const child of el.querySelectorAll(`${CONTROL_SELECTOR}, img`)) {
-              if (!s.alive()) break;
-              await processElement(child);
+          const size = getImageSize(added);
+          if (size.width > 0 && size.width <= 48 && size.height > 0 && size.height <= 48) {
+            const fileWords = wordsFrom(added.getAttribute('src') || added.src);
+            if (fileWords.length > 0) {
+              s.setAttr(added, 'alt', formatWords(fileWords));
             }
+          }
+          return;
+        }
+
+        const tag = added.tagName;
+        if (tag === 'BUTTON' || added.getAttribute('role') === 'button' || tag === 'A' || added.getAttribute('role') === 'link') {
+          if (s.page.nameOf(added)) return;
+          let name = added.getAttribute('title')?.trim() || getSvgTitle(added);
+          if (!name) {
+            const classWords = extractIconClassWords(added);
+            if (classWords.length > 0) name = formatWords(classWords);
+          }
+          if (!name && (tag === 'A' || added.getAttribute('role') === 'link')) {
+            name = getLinkPathWords(added);
+          }
+          if (name) {
+            s.setAttr(added, 'aria-label', name);
+            markDecorativeImagesInside(added, s);
+          }
+        } else if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) {
+          if (hasFieldAccessibleName(added)) return;
+          let name = added.getAttribute('title')?.trim();
+          if (!name && added.placeholder && !JUNK_WORDS.has(added.placeholder.toLowerCase().trim())) {
+            name = added.placeholder.trim();
+          }
+          if (!name && added.name) {
+            const nameWords = wordsFrom(added.name);
+            if (nameWords.length > 0) name = formatWords(nameWords);
+          }
+          if (!name) {
+            const nearby = getNearbyLabelText(added);
+            if (nearby) name = nearby;
+          }
+          if (name) {
+            s.setAttr(added, 'aria-label', name);
           }
         }
       },
       { batch: true }
     );
 
-    if (fixesCount === 0) {
-      this.disable();
-      return false;
-    }
+    return true;
   },
 
   disable() {

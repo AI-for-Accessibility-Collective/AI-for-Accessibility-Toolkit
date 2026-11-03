@@ -1,36 +1,37 @@
-// read-aloud.js — Reads main content or selected text aloud with word highlighting.
-// Barrier: Blind people, people with low vision, learning disabilities, or reading
-// difficulties need spoken text with visible word tracking to follow along.
+// read-aloud.js — Reads the main content or selected text aloud with word highlighting.
+// Barrier: People with visual, reading, or cognitive impairments may have difficulty
+// reading on-screen text, tracking their place while reading, or processing dense prose
+// without auditory reinforcement.
 //
 // Suggested in onboarding for: reading, vision (a suggestion only, never a gate).
-// The person's settings it reads: speechRate (speaking rate, 0.5 to 2.0).
-// What the person can adjust: speechRate with Slower and Faster buttons in its
-// control bar (steps of 0.1, 0.5 to 2), and with the person's shortcut (s.keys.adjust,
-// label 'Speech rate', settings ['speechRate']): up faster, down slower. Saved for
-// this site and announced.
+// The person's settings it reads: speechRate.
+// What the person can adjust:
+//   • speechRate with Slower and Faster buttons in its control bar (steps of 0.1, 0.5 to 2.0).
+//   • With the person's shortcut (s.keys.adjust, label 'Speech rate', settings ['speechRate']):
+//     up faster, down slower, saved for this site and announced.
 //
 // Options:
-//   speechRate: Default speaking rate (0.5 to 2.0). Default: 1.0. Profile overrides.
-//   pitch: Speaking pitch (0.0 to 2.0). Default: 1.0.
-//   lang: BCP-47 language tag (e.g. 'en-US'). Default: undefined (uses page language).
-//   voice: Preferred voice name. Default: null.
-//   target: Selector string or element to read. Default: undefined (uses s.page.main()).
+//   speechRate: Default speaking rate (0.5 to 2.0). Defaults to 1.0 (overridden by profile).
 //
 // Decisions:
-//   • Starts speech only from its own Play button, never on load.
-//   • Escape stops speech immediately.
-//   • Control bar provides Play/Pause, Stop, Slower, Faster controls.
-//   • Controls are sized at least 24x24 px (WCAG 2.5.8) with discernible names and 3:1 focus outlines.
-//   • Placed fixed at bottom-right with bottom padding on the body so it covers no content (WCAG 2.4.11).
-//   • Skips navigation, the toolkit's UI, and hidden text (display:none, aria-hidden, hidden attribute).
-//   • Highlighting uses CSS Custom Highlight API via s.highlight.range, clearing on stop.
-//   • Speech rate changes while speaking seamlessly continue from the current word at the new rate.
-//   • Rate changes are saved for this site (s.profile.set) and announced via s.announce.
-//   • Registers s.keys.adjust so the person's shortcut adjusts speech rate.
+//   • Reads main content (or text the person selected) aloud on request, never on load.
+//   • Highlights each word as it is spoken using s.speech.say with onWord and s.highlight.range.
+//   • Starts only from its own Play button; Escape stops reading immediately.
+//   • Injects a small control bar (Play/Pause, Stop, Slower, Faster) fixed at the bottom.
+//   • The bar adds to the page's own bottom padding instead of replacing it, ensuring no content
+//     is covered when scrolled to the end.
+//   • Uses s.focus.keepVisible() so focused elements are never hidden behind the bar.
+//   • Speech uses the browser's own in the runtime (via s.speech.say).
+//   • Skips navigation, the toolkit's UI, and hidden text automatically.
+//   • No 'every site' button: the person chooses that in the extension popup.
+//   • Rate changes restart speech once from the current word (s.speech.say(el, { from }))
+//     in s.profile.onChange; a rate changed while paused is used when playback resumes.
+//   • Announce the rate set() actually applied via s.announce.
+//   • If the page contains no readable text, disables itself and returns false.
 //
 // What it cannot do:
-//   • Cannot read content inaccessible to the browser's text walker or inside cross-origin iframes.
-//   • Does not provide synthetic voice generation beyond what the browser / OS TTS provides.
+//   • Cannot read text embedded inside bitmap images or canvas elements without OCR.
+//   • Cannot override speech synthesis if browser or system audio is muted.
 
 export default {
   enable(options = {}, toolkit) {
@@ -38,309 +39,345 @@ export default {
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
+
     const s = (this.s = this.toolkit.session());
-    const doc = document;
-    const win = window;
 
-    let currentHandle = null;
-    let isPlaying = false;
-    let isPaused = false;
-    let fullText = '';
-    let textMap = [];
-    let currentOffsetInFull = 0;
-    let currentAbsInUtterance = 0;
-    let lastSpokenRate = 1.0;
-
-    const hl = s.highlight.range(null);
-
-    function getRate() {
-      const profileRate = s.profile.get('speechRate');
-      if (profileRate !== undefined && profileRate !== null && Number.isFinite(Number(profileRate))) {
-        return Math.max(0.5, Math.min(2.0, Number(profileRate)));
-      }
-      const optRate = Number(options.speechRate);
-      if (Number.isFinite(optRate)) {
-        return Math.max(0.5, Math.min(2.0, optRate));
-      }
-      return 1.0;
+    // Check readable text
+    const main = this.toolkit.page.main();
+    const text = main ? this.toolkit.page.readableText(main) : '';
+    if (!text || !text.trim()) {
+      this.disable();
+      return false;
     }
 
-    function buildMap(el) {
-      let text = '';
-      const map = [];
-      for (const node of s.page.textNodes(el)) {
-        if (text && !/\s$/.test(text)) text += ' ';
-        map.push({ node, start: text.length, end: text.length + node.nodeValue.length });
-        text += node.nodeValue;
-      }
-      return { text, map };
-    }
+    this.currentOffset = 0;
+    this.currentSource = null;
+    this._paused = false;
+    this._rateChangedWhilePaused = false;
+    this._restarting = false;
+    this.handle = null;
+    this.hl = s.highlight.range(null);
 
-    function findRangeAt(abs) {
-      if (!textMap || !textMap.length) return null;
-      const entry = textMap.find((m) => abs >= m.start && abs < m.end);
-      if (!entry) return null;
-      const m = /^[\p{L}\p{N}'’-]+/u.exec(fullText.slice(abs));
-      const len = m ? m[0].length : 1;
-      const r = doc.createRange();
-      const from = abs - entry.start;
-      r.setStart(entry.node, from);
-      r.setEnd(entry.node, Math.min(entry.node.nodeValue.length, from + Math.max(1, len)));
-      return r;
-    }
-
-    const stop = () => {
-      if (currentHandle) {
-        currentHandle.stop();
-        currentHandle = null;
-      }
-      isPlaying = false;
-      isPaused = false;
-      currentOffsetInFull = 0;
-      currentAbsInUtterance = 0;
-      hl.clear();
-      updateButtons();
-    };
-
-    function startSpeaking(inputToSay, offsetInFull) {
-      currentOffsetInFull = offsetInFull;
-      currentAbsInUtterance = 0;
-      const rate = getRate();
-      lastSpokenRate = rate;
-
-      const handle = s.speech.say(inputToSay, {
-        speechRate: rate,
-        pitch: options.pitch,
-        lang: options.lang,
-        voice: options.voice,
-        waitForGesture: false,
-        onWord: (range, abs) => {
-          if (abs < 0) {
-            hl.clear();
-            return;
-          }
-          currentAbsInUtterance = abs;
-          if (range) {
-            hl.move(range);
-          } else if (textMap.length) {
-            const r = findRangeAt(currentOffsetInFull + abs);
-            if (r) hl.move(r);
-          }
-        },
-      });
-
-      currentHandle = handle;
-      isPlaying = true;
-      isPaused = false;
-      updateButtons();
-
-      handle.done.then(() => {
-        if (currentHandle === handle) {
-          isPlaying = false;
-          isPaused = false;
-          currentHandle = null;
-          hl.clear();
-          updateButtons();
-        }
-      });
-    }
-
-    function playOrPause() {
-      // If currently paused, resume
-      if (currentHandle && isPaused) {
-        currentHandle.resume();
-        isPaused = false;
-        updateButtons();
-        return;
-      }
-
-      // If currently speaking, pause
-      if (currentHandle && isPlaying) {
-        currentHandle.pause();
-        isPaused = true;
-        updateButtons();
-        return;
-      }
-
-      // Start speaking: check selection first
-      const sel = win.getSelection ? win.getSelection() : null;
-      const selText = sel && !sel.isCollapsed ? sel.toString().trim() : '';
-
-      if (selText) {
-        fullText = selText;
-        textMap = [];
-        startSpeaking(selText, 0);
-        return;
-      }
-
-      // Target main content
-      const mainTarget = (typeof options.target === 'string'
-        ? doc.querySelector(options.target)
-        : options.target) || s.page.main();
-
-      if (!mainTarget) return;
-
-      const mapped = buildMap(mainTarget);
-      fullText = mapped.text;
-      textMap = mapped.map;
-      if (!fullText.trim()) return;
-
-      startSpeaking(mainTarget, 0);
-    }
-
-    function restartFromCurrentWord(newRate) {
-      if (!currentHandle || !isPlaying || isPaused) return;
-      const currentPos = currentOffsetInFull + currentAbsInUtterance;
-      const remaining = fullText.slice(currentPos);
-      if (!remaining.trim()) {
-        stop();
-        return;
-      }
-      currentHandle.stop();
-      startSpeaking(remaining, currentPos);
-    }
-
-    async function changeRate(delta) {
-      const cur = getRate();
-      const next = Math.max(0.5, Math.min(2.0, Math.round((cur + delta) * 10) / 10));
-      const res = await s.profile.set({ speechRate: next });
-      if (res && res.applied) {
-        const appliedRate = s.profile.get('speechRate') ?? next;
-        s.announce(`Speech rate ${appliedRate} on this site.`);
-        if (isPlaying && !isPaused) {
-          restartFromCurrentWord(appliedRate);
-        }
-      }
-    }
-
+    // Keys adjust
     s.keys.adjust({
       label: 'Speech rate',
       settings: ['speechRate'],
-      up: () => changeRate(0.1),
-      down: () => changeRate(-0.1),
+      up: () => this.faster(),
+      down: () => this.slower(),
     });
 
-    s.listen(doc, 'keydown', (e) => {
-      if (e.key === 'Escape' && isPlaying) {
-        stop();
-      }
-    }, true);
-
+    // Profile onChange
     s.profile.onChange((personal, changed) => {
-      if (changed && 'speechRate' in changed) {
-        const newRate = personal.speechRate;
-        if (isPlaying && !isPaused && newRate !== lastSpokenRate) {
-          restartFromCurrentWord(newRate);
+      if (changed && changed.speechRate !== undefined) {
+        if (this.speaking && !this.paused) {
+          this._startSpeaking(this.currentOffset);
+        } else if (this.paused) {
+          this._rateChangedWhilePaused = true;
         }
       }
     });
 
-    s.css('read-aloud-style', `
-      .ai4a11y-read-aloud-bar {
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        z-index: 2147483645;
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        padding: 6px 8px;
-        background: #ffffff;
-        color: #000000;
-        border: 2px solid #333333;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        font: 14px/1.4 system-ui, -apple-system, sans-serif;
-        max-width: calc(100vw - 24px);
-        box-sizing: border-box;
-      }
-      .ai4a11y-read-aloud-bar button {
-        min-width: 44px;
-        min-height: 28px;
-        line-height: 20px;
-        padding: 4px 8px;
-        font: inherit;
-        font-weight: 500;
-        color: #000000;
-        background: #ffffff;
-        border: 1px solid #767676;
-        border-radius: 4px;
-        cursor: pointer;
-        box-sizing: border-box;
-      }
-      .ai4a11y-read-aloud-bar button:hover {
-        background: #f0f0f0;
-      }
-      .ai4a11y-read-aloud-bar button:focus-visible {
-        outline: 2px solid #005fcc;
-        outline-offset: 2px;
-      }
-    `);
-
-    s.setStyle(doc.body, 'paddingBottom', '64px');
+    // Keep visible so bar never hides focus
     s.focus.keepVisible();
 
-    const bar = s.el('div', {
+    // Escape listener
+    s.listen(document, 'keydown', (e) => {
+      if (e.key === 'Escape' && (this.speaking || this.paused)) {
+        this.stop();
+      }
+    }, true);
+
+    // CSS for bar and controls
+    s.css('read-aloud', `
+.ai4a11y-read-aloud-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483646;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #1f1f1f;
+  color: #ffffff;
+  border-top: 2px solid #555555;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+}
+.ai4a11y-read-aloud-bar button {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #ffffff;
+  background-color: #2e2e2e;
+  border: 2px solid #cccccc;
+  border-radius: 6px;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.ai4a11y-read-aloud-bar button:hover {
+  background-color: #444444;
+  border-color: #ffffff;
+}
+.ai4a11y-read-aloud-bar button:focus {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+}
+.ai4a11y-read-aloud-bar button:focus:not(:focus-visible) {
+  outline: none !important;
+}
+.ai4a11y-read-aloud-bar button:focus-visible {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 2px !important;
+}
+`);
+
+    // Build the bar
+    const bar = (this.bar = s.el('div', {
       attrs: {
+        class: 'ai4a11y-read-aloud-bar',
         role: 'region',
         'aria-label': 'Read aloud controls',
-        class: 'ai4a11y-read-aloud-bar',
       },
-    });
+    }));
 
-    const btnPlay = s.el('button', {
+    const btnPlay = (this.btnPlay = s.el('button', {
       text: 'Play',
-      attrs: { type: 'button', 'aria-label': 'Play', 'data-action': 'play' },
-    });
+      attrs: {
+        type: 'button',
+        'data-action': 'play',
+        'aria-label': 'Play',
+      },
+    }));
 
     const btnStop = s.el('button', {
       text: 'Stop',
-      attrs: { type: 'button', 'aria-label': 'Stop', 'data-action': 'stop' },
+      attrs: {
+        type: 'button',
+        'data-action': 'stop',
+        'aria-label': 'Stop',
+      },
     });
 
     const btnSlower = s.el('button', {
       text: 'Slower',
-      attrs: { type: 'button', 'aria-label': 'Slower', 'data-action': 'slower' },
+      attrs: {
+        type: 'button',
+        'data-action': 'slower',
+        'aria-label': 'Slower',
+      },
     });
 
     const btnFaster = s.el('button', {
       text: 'Faster',
-      attrs: { type: 'button', 'aria-label': 'Faster', 'data-action': 'faster' },
+      attrs: {
+        type: 'button',
+        'data-action': 'faster',
+        'aria-label': 'Faster',
+      },
     });
 
-    function updateButtons() {
-      if (isPlaying && !isPaused) {
-        btnPlay.textContent = 'Pause';
-        btnPlay.setAttribute('aria-label', 'Pause');
-      } else if (isPaused) {
-        btnPlay.textContent = 'Play';
-        btnPlay.setAttribute('aria-label', 'Play');
-      } else {
-        btnPlay.textContent = 'Play';
-        btnPlay.setAttribute('aria-label', 'Play');
-      }
+    bar.append(btnPlay, btnStop, btnSlower, btnFaster);
+
+    s.listen(btnPlay, 'click', () => this.toggle());
+    s.listen(btnStop, 'click', () => this.stop());
+    s.listen(btnSlower, 'click', () => this.slower());
+    s.listen(btnFaster, 'click', () => this.faster());
+
+    const doc = document;
+    const body = doc.body || doc.documentElement;
+    const origPaddingBottom = (doc.body && window.getComputedStyle(doc.body).paddingBottom) || '0px';
+    const origPaddingVal = parseFloat(origPaddingBottom) || 0;
+
+    s.append(body, bar);
+
+    const barHeight = bar.offsetHeight || 48;
+    if (doc.body) {
+      s.setStyle(doc.body, 'padding-bottom', `${origPaddingVal + barHeight + 8}px`);
     }
 
-    s.listen(btnPlay, 'click', () => playOrPause());
-    s.listen(btnStop, 'click', () => stop());
-    s.listen(btnSlower, 'click', () => changeRate(-0.1));
-    s.listen(btnFaster, 'click', () => changeRate(0.1));
-
-    bar.append(btnPlay, btnStop, btnSlower, btnFaster);
-    s.append(doc.body, bar);
-
-    this.play = playOrPause;
-    this.stop = stop;
-    this.changeRate = changeRate;
-    this.getRate = getRate;
-    Object.defineProperty(this, 'speaking', { get: () => isPlaying && !isPaused, configurable: true });
-    Object.defineProperty(this, 'paused', { get: () => isPaused, configurable: true });
-    Object.defineProperty(this, 'currentHandle', { get: () => currentHandle, configurable: true });
+    return true;
   },
 
   disable() {
-    this.stop?.();
+    this.stop();
     this.s?.end();
     this.s = null;
+    this.handle = null;
+    this.hl = null;
+    this.bar = null;
+    this.btnPlay = null;
+    this.currentSource = null;
+  },
+
+  getRate() {
+    const p = this.s?.profile?.get('speechRate');
+    if (p !== undefined && p !== null && Number.isFinite(Number(p))) {
+      return Math.round(Number(p) * 10) / 10;
+    }
+    const opt = this.options?.speechRate;
+    if (opt !== undefined && opt !== null && Number.isFinite(Number(opt))) {
+      return Math.round(Number(opt) * 10) / 10;
+    }
+    return 1.0;
+  },
+
+  get speaking() {
+    return Boolean(this.handle && this.handle.speaking && !this._paused);
+  },
+
+  get paused() {
+    return Boolean(this._paused);
+  },
+
+  _updateButtons(speaking, paused) {
+    if (!this.btnPlay) return;
+    if (speaking && !paused) {
+      this.btnPlay.textContent = 'Pause';
+      this.btnPlay.setAttribute('aria-label', 'Pause');
+    } else {
+      this.btnPlay.textContent = 'Play';
+      this.btnPlay.setAttribute('aria-label', 'Play');
+    }
+  },
+
+  _startSpeaking(from = 0) {
+    if (!this.s || !this.s.alive()) return;
+    this._restarting = true;
+    if (this.handle) {
+      this.handle.stop();
+      this.handle = null;
+    }
+    this._restarting = false;
+
+    const source = this.currentSource || this.toolkit?.page?.main() || document.body;
+    const rate = this.getRate();
+
+    this.handle = this.s.speech.say(source, {
+      speechRate: rate,
+      from,
+      onWord: (range, offset) => {
+        if (!range) {
+          if (!this._restarting && !this.paused) {
+            this.hl?.clear();
+            this.handle = null;
+            this.currentOffset = 0;
+            this._updateButtons(false, false);
+          }
+          return;
+        }
+        this.currentOffset = offset;
+        this.hl?.move(range);
+      },
+    });
+
+    if (this.handle && this.handle.done) {
+      this.handle.done.then((completed) => {
+        if (completed) {
+          this._paused = false;
+          this._rateChangedWhilePaused = false;
+          this.currentOffset = 0;
+          this.handle = null;
+          this.hl?.clear();
+          this._updateButtons(false, false);
+        }
+      });
+    }
+
+    this._updateButtons(true, false);
+  },
+
+  play() {
+    const sel = (typeof window !== 'undefined' && window.getSelection) ? window.getSelection() : null;
+    const hasSelection = sel && !sel.isCollapsed && sel.toString().trim().length > 0;
+    this.currentSource = hasSelection
+      ? (sel.rangeCount ? sel.getRangeAt(0).cloneRange() : sel)
+      : (this.toolkit?.page?.main() || document.body);
+    this.currentOffset = 0;
+    this._paused = false;
+    this._rateChangedWhilePaused = false;
+    this._startSpeaking(0);
+  },
+
+  pause() {
+    if (!this.speaking || this.paused) return;
+    this._paused = true;
+    if (this.handle) {
+      this.handle.pause();
+    }
+    this._updateButtons(false, true);
+  },
+
+  resume() {
+    if (!this.paused) return;
+    this._paused = false;
+    if (this._rateChangedWhilePaused) {
+      this._rateChangedWhilePaused = false;
+      this._startSpeaking(this.currentOffset);
+    } else if (this.handle) {
+      this.handle.resume();
+      this._updateButtons(true, false);
+    } else {
+      this._startSpeaking(this.currentOffset);
+    }
+  },
+
+  toggle() {
+    if (this.speaking) {
+      this.pause();
+    } else if (this.paused) {
+      this.resume();
+    } else {
+      this.play();
+    }
+  },
+
+  stop() {
+    this._paused = false;
+    this._rateChangedWhilePaused = false;
+    this.currentOffset = 0;
+    if (this.handle) {
+      this.handle.stop();
+      this.handle = null;
+    }
+    this.hl?.clear();
+    this._updateButtons(false, false);
+  },
+
+  async faster() {
+    if (!this.s || !this.s.alive()) return;
+    const current = this.getRate();
+    const next = Math.min(2.0, Math.round((current + 0.1) * 10) / 10);
+    if (next !== current) {
+      const res = await this.s.profile.set({ speechRate: next });
+      if (res && res.applied) {
+        this.s.announce(`Speech rate ${next} on this site.`);
+      }
+    }
+  },
+
+  async slower() {
+    if (!this.s || !this.s.alive()) return;
+    const current = this.getRate();
+    const next = Math.max(0.5, Math.round((current - 0.1) * 10) / 10);
+    if (next !== current) {
+      const res = await this.s.profile.set({ speechRate: next });
+      if (res && res.applied) {
+        this.s.announce(`Speech rate ${next} on this site.`);
+      }
+    }
   },
 };

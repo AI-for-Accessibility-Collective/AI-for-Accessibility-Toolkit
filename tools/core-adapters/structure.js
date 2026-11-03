@@ -1,13 +1,7 @@
-// structure.js — Gives the page a structure people can navigate by:
-// adds missing landmarks (main, navigation, banner, contentinfo) with ARIA roles
-// only where the page has none and the region is unambiguous, and provides an
-// outline of the page's headings in an accessible panel (s.panel) opened from a
-// 'Page outline' button (s.focus.entry).
-//
-// Barrier: Unstructured pages (div-soup, missing landmarks) prevent screen reader
-// and keyboard users from navigating by landmark regions. People with motor, visual,
-// or cognitive barriers who cannot easily skim or scroll long pages need clear
-// signposting and heading navigation to reach relevant sections directly.
+// structure.js — Gives the page a structure people can navigate by.
+// Barrier: Pages built with generic containers (div-soup) lack ARIA landmarks and
+// clear heading structure, preventing screen reader and keyboard users from jumping
+// directly to main content, navigation, headers, footers, or specific sections.
 //
 // Suggested in onboarding for: vision, motor (a suggestion only, never a gate).
 // The person's settings it reads: none.
@@ -16,151 +10,210 @@
 // after any skip link, visible when focused, so it covers nothing.
 //
 // Options:
-//   maxLevel: Deepest heading level to include in the outline (1 to 6, default 6).
+//   landmarks: boolean (default true) — whether to infer and add missing ARIA landmarks.
+//   outline: boolean (default true) — whether to provide the page outline panel.
+//   maxLevel: number (default 6) — deepest heading level to include in the outline (1–6).
 //
 // Decisions:
-//   • Adds missing landmarks (main, navigation, banner, contentinfo) using ARIA roles
-//     only where the page has none and candidate regions are unambiguous.
-//   • Never overwrites an existing ARIA role, and never assigns landmark roles to
-//     native landmark elements (<header>, <main>, <footer>, <nav>, <aside>).
-//   • Banner (site header) requires header-like class or id naming, rejects consent/cookie
-//     bars, rejects blocks containing main, and requires text length < 2000 characters.
-//   • Contentinfo (footer) requires footer-like class/id or copyright notice near end,
-//     rejects blocks containing header/main/nav, and requires text length < 1500 characters.
-//   • Navigation requires token-based nav naming, at least 3 links, link density > 0.4,
-//     and is only added to the primary nav candidate when no navigation landmark exists.
-//   • Main landmark requires top-level content block with > 100 characters of text,
-//     neither containing nor contained inside other landmarks; prefers blocks named
-//     main/content, falling back to the largest content block.
-//   • The 'Page outline' button uses s.focus.entry({ label: 'Page outline', onActivate }),
-//     placing it first in tab order after any skip link, visible only when focused.
-//   • The outline panel is built with s.panel({ kind: 'dialog', label: 'Page outline' }),
-//     providing a dialog with its own Close button and accessible name.
-//   • Choosing a heading item in the outline closes the panel and moves focus to the
-//     target heading with s.focus.region(heading). Escape closes the panel and returns
-//     focus to the 'Page outline' button.
-//   • Never changes headings' levels or text.
-//   • The panel never covers the content it points to: upon choosing a heading, the panel
-//     closes immediately and scrolls the heading into view.
-//   • If no landmarks are missing and no headings exist on the page, enable() returns false.
+//   • Adds missing ARIA landmarks (main, navigation, banner, contentinfo) only where
+//     the page has none and the region is unambiguous.
+//   • Gives a landmark role only to a div or section, never to a list (ul, ol) or a native element.
+//   • A header or footer inside an article, section, aside, main, or nav is not the page's
+//     banner or contentinfo: it neither counts as one nor stops a region from being main content.
+//   • Never overwrites existing roles or native semantic elements.
+//   • Provides an outline of the page's headings in an accessible dialog panel (s.panel)
+//     opened from a 'Page outline' button (s.focus.entry).
+//   • Lists headings in document order with levels (H1–H6), accessible names, and links.
+//   • Choosing a heading moves focus to that heading (s.focus.region) and closes the panel.
+//   • Closing the panel (via Escape or Close button) returns focus to the 'Page outline' button.
+//   • Never changes headings' levels, tag names, or text content.
+//   • The panel never covers the content it points to; it sits in a corner and closes on activation.
+//   • Ends the session and returns false if there are no landmarks to add and no headings.
 //
 // What it cannot do:
-//   • Cannot infer landmarks where page containers lack structural or semantic hints.
-//   • Does not fix improper heading hierarchies or generate missing heading text.
+//   • Cannot fix heading hierarchy or missing heading text in page content.
+//   • Cannot infer landmarks on pages with ambiguous or fragmented layouts.
 
-const LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
-const SHELL_SELECTOR = 'header, footer, main, [role="banner"], [role="contentinfo"], [role="main"]';
-const MAIN_ID = /^(main|content|main-?content|primary)$/i;
-
-const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
-const NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
-const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|copyright)\b/i;
-const COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
-
-function hint(re, el) {
-  return re.test(el.className || '') || re.test(el.id || '');
+function isDivOrSection(el) {
+  if (!el || el.nodeType !== 1) return false;
+  const tag = el.tagName;
+  return tag === 'DIV' || tag === 'SECTION';
 }
 
-function looksLikeNav(el) {
-  const cls = Array.from(el.classList || []).some((c) => /(?:^|[-_])nav(?:bar|igation)?(?:[-_]|$)/i.test(c));
-  const id = /(?:^|[-_])nav(?:bar|igation)?(?:[-_]|$)/i.test(el.id || '');
-  return (cls || id) && !/cookie|consent|privacy|notice|alert|promo/i.test((el.className || '') + ' ' + (el.id || ''));
+function isPageHeader(el) {
+  if (!el || el.tagName !== 'HEADER') return false;
+  return !el.closest('article, section, aside, main, nav, [role="article"], [role="region"], [role="complementary"], [role="main"], [role="navigation"]');
 }
 
-function ensureBanner(s, doc, page) {
-  if (doc.querySelector('header, [role="banner"]')) return false;
-  const candidates = Array.from(doc.querySelectorAll('div, section, td, aside'))
-    .filter((e) => !page.isOurs(e) && page.isVisible(e))
-    .filter((e) => !e.getAttribute('role'))
-    .filter((e) => hint(HEADER_HINT, e) && !hint(NOT_HEADER, e))
-    .filter((e) => !e.closest(LANDMARK_SELECTOR))
-    .filter((e) => !e.querySelector('main, [role="main"]'))
-    .filter((e) => (e.textContent?.trim().length || 0) < 2000);
-  const el = candidates[0];
-  if (!el) return false;
-  s.setAttr(el, 'role', 'banner');
-  return true;
+function isPageFooter(el) {
+  if (!el || el.tagName !== 'FOOTER') return false;
+  return !el.closest('article, section, aside, main, nav, [role="article"], [role="region"], [role="complementary"], [role="main"], [role="navigation"]');
 }
 
-function ensureContentinfo(s, doc, page) {
-  if (doc.querySelector('footer, [role="contentinfo"]')) return false;
-  const candidates = Array.from(doc.querySelectorAll('div, section, td, aside'))
-    .filter((e) => !page.isOurs(e) && page.isVisible(e))
-    .filter((e) => !e.getAttribute('role'))
-    .filter((e) => !e.closest(LANDMARK_SELECTOR))
-    .filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || '').slice(-400)))
-    .filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]'))
-    .filter((e) => (e.textContent?.trim().length || 0) < 1500);
-  const el = candidates[candidates.length - 1];
-  if (!el) return false;
-  s.setAttr(el, 'role', 'contentinfo');
-  return true;
-}
-
-function ensureNavigation(s, doc, page) {
-  if (doc.querySelector('nav, [role="navigation"]')) return false;
-  const candidates = Array.from(doc.querySelectorAll('div, section, ul, ol'))
-    .filter((e) => !page.isOurs(e) && page.isVisible(e))
-    .filter((e) => !e.getAttribute('role'))
-    .filter((e) => !e.closest('nav, [role="navigation"], main, [role="main"]'))
-    .filter((e) => !e.querySelector('main, [role="main"]'))
-    .filter((e) => looksLikeNav(e))
-    .filter((e) => {
-      const links = e.querySelectorAll('a').length;
-      const textLen = e.textContent?.trim().length || 1;
-      return links >= 3 && (links * 15) / textLen > 0.4 && textLen < 2500;
-    });
-  const el = candidates[0];
-  if (!el) return false;
-  s.setAttr(el, 'role', 'navigation');
-  return true;
-}
-
-function ensureMain(s, doc, page) {
-  if (doc.querySelector('main, [role="main"]')) return false;
-
-  const isCandidate = (el) => {
-    if (page.isOurs(el) || !page.isVisible(el)) return false;
-    const tag = el.tagName.toLowerCase();
-    if (['header', 'footer', 'nav', 'aside', 'script', 'style', 'noscript'].includes(tag)) return false;
-    if (el.getAttribute('role')) return false;
-    if ((el.textContent?.trim().length || 0) <= 100) return false;
-    if (el.querySelector(SHELL_SELECTOR)) return false;
-    if (el.closest(LANDMARK_SELECTOR)) return false;
-    return true;
-  };
-
-  let level = doc.body ? Array.from(doc.body.children) : [];
-  let candidates = level.filter(isCandidate);
-  if (candidates.length === 0) {
-    const shell = level.find((el) =>
-      !el.closest(LANDMARK_SELECTOR) &&
-      (el.textContent?.trim().length || 0) > 100 &&
-      el.querySelector(LANDMARK_SELECTOR)
-    );
-    if (shell) candidates = Array.from(shell.children).filter(isCandidate);
+function hasBanner(doc) {
+  if (doc.querySelector('[role="banner"]')) return true;
+  for (const h of doc.querySelectorAll('header')) {
+    if (isPageHeader(h)) return true;
   }
-  if (candidates.length === 0) return false;
+  return false;
+}
+
+function hasContentinfo(doc) {
+  if (doc.querySelector('[role="contentinfo"]')) return true;
+  for (const f of doc.querySelectorAll('footer')) {
+    if (isPageFooter(f)) return true;
+  }
+  return false;
+}
+
+function hasMain(doc) {
+  return Boolean(doc.querySelector('main, [role="main"]'));
+}
+
+function hasNavigation(doc) {
+  return Boolean(doc.querySelector('nav, [role="navigation"]'));
+}
+
+function isLandmark(el) {
+  if (!el || el.nodeType !== 1) return false;
+  const tag = el.tagName;
+  if (tag === 'MAIN' || tag === 'NAV' || tag === 'ASIDE') return true;
+  if (tag === 'HEADER' && isPageHeader(el)) return true;
+  if (tag === 'FOOTER' && isPageFooter(el)) return true;
+  const role = (el.getAttribute('role') || '').toLowerCase();
+  return ['main', 'banner', 'contentinfo', 'navigation', 'complementary'].includes(role);
+}
+
+function isInsideLandmark(el) {
+  let p = el.parentElement;
+  while (p && p !== el.ownerDocument.body && p !== el.ownerDocument.documentElement) {
+    if (isLandmark(p)) return true;
+    p = p.parentElement;
+  }
+  return false;
+}
+
+function containsPageLandmarks(el) {
+  if (el.querySelector('main, [role="main"], [role="banner"], [role="contentinfo"]')) return true;
+  for (const h of el.querySelectorAll('header')) {
+    if (isPageHeader(h)) return true;
+  }
+  for (const f of el.querySelectorAll('footer')) {
+    if (isPageFooter(f)) return true;
+  }
+  return false;
+}
+
+const MAIN_ID = /^(main|content|main-?content|primary|main-area)$/i;
+
+function isMainCandidate(el) {
+  if (!isDivOrSection(el)) return false;
+  if (el.getAttribute('role')) return false;
+  if (isInsideLandmark(el)) return false;
+  if (containsPageLandmarks(el)) return false;
+  const isNamed = MAIN_ID.test(el.id || '') || (el.classList && (el.classList.contains('main') || el.classList.contains('content')));
+  const textLen = el.textContent?.trim().length || 0;
+  if (!isNamed && textLen <= 100) return false;
+  if (isNamed && textLen <= 20) return false;
+  return true;
+}
+
+function findMain(doc) {
+  if (hasMain(doc)) return null;
+  const body = doc.body;
+  if (!body) return null;
+
+  let candidates = Array.from(body.children).filter(isMainCandidate);
+
+  if (candidates.length === 0) {
+    const shell = Array.from(body.children).find((el) =>
+      isDivOrSection(el) &&
+      !isInsideLandmark(el) &&
+      (el.textContent?.trim().length || 0) > 100 &&
+      containsPageLandmarks(el)
+    );
+    if (shell) {
+      candidates = Array.from(shell.children).filter(isMainCandidate);
+    }
+  }
+
+  if (candidates.length === 0) {
+    const namedEls = Array.from(body.querySelectorAll('div, section')).filter(isMainCandidate);
+    candidates = namedEls.filter((el) =>
+      MAIN_ID.test(el.id || '') ||
+      (el.classList && (el.classList.contains('main') || el.classList.contains('content')))
+    );
+  }
+
+  if (candidates.length === 0) return null;
 
   const named = candidates.filter((el) =>
     MAIN_ID.test(el.id || '') ||
     (el.classList && (el.classList.contains('main') || el.classList.contains('content')))
   );
-  const main = (named.length ? named : candidates).reduce((a, b) =>
-    (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b
-  );
-
-  s.setAttr(main, 'role', 'main');
-  return true;
+  const pool = named.length > 0 ? named : candidates;
+  return pool.reduce((a, b) => ((a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b));
 }
 
-function fixAllLandmarks(s, doc, page) {
-  let count = 0;
-  if (ensureBanner(s, doc, page)) count++;
-  if (ensureNavigation(s, doc, page)) count++;
-  if (ensureContentinfo(s, doc, page)) count++;
-  if (ensureMain(s, doc, page)) count++;
-  return count;
+const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar|site-header|page-header)\b/i;
+const NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo|modal|dialog/i;
+
+function findBanner(doc) {
+  if (hasBanner(doc)) return null;
+  const candidates = Array.from(doc.querySelectorAll('div, section'))
+    .filter(isDivOrSection)
+    .filter((e) => !e.getAttribute('role'))
+    .filter((e) => !isInsideLandmark(e))
+    .filter((e) => {
+      const hintStr = (e.className || '') + ' ' + (e.id || '');
+      return HEADER_HINT.test(hintStr) && !NOT_HEADER.test(hintStr);
+    })
+    .filter((e) => !e.querySelector('main, [role="main"]'))
+    .filter((e) => (e.textContent?.trim().length || 0) < 2500);
+
+  return candidates[0] || null;
+}
+
+const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|site-info)\b/i;
+const COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
+
+function findContentinfo(doc) {
+  if (hasContentinfo(doc)) return null;
+  const candidates = Array.from(doc.querySelectorAll('div, section'))
+    .filter(isDivOrSection)
+    .filter((e) => !e.getAttribute('role'))
+    .filter((e) => !isInsideLandmark(e))
+    .filter((e) => {
+      const hintStr = (e.className || '') + ' ' + (e.id || '');
+      if (/cookie|consent|banner|header/i.test(hintStr)) return false;
+      return FOOTER_HINT.test(hintStr) || COPYRIGHT_RE.test((e.textContent || '').slice(-400));
+    })
+    .filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"]'))
+    .filter((e) => (e.textContent?.trim().length || 0) < 2500);
+
+  return candidates[candidates.length - 1] || null;
+}
+
+const NAV_HINT = /\b(nav|navbar|navigation|site-nav|main-nav|primary-nav|menu-bar)\b/i;
+
+function findNavigation(doc) {
+  if (hasNavigation(doc)) return null;
+  const candidates = Array.from(doc.querySelectorAll('div, section'))
+    .filter(isDivOrSection)
+    .filter((e) => !e.getAttribute('role'))
+    .filter((e) => !isInsideLandmark(e))
+    .filter((e) => {
+      const hintStr = (e.className || '') + ' ' + (e.id || '');
+      return NAV_HINT.test(hintStr) && !/unavailable|navigate/i.test(hintStr);
+    })
+    .filter((e) => {
+      const links = e.querySelectorAll('a').length;
+      if (links < 2) return false;
+      const textLen = e.textContent?.trim().length || 1;
+      return (links * 15) / textLen > 0.2 || Boolean(e.querySelector('ul, ol'));
+    });
+
+  return candidates[0] || null;
 }
 
 export default {
@@ -169,147 +222,189 @@ export default {
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
-
     const s = (this.s = this.toolkit.session());
+
     const doc = document;
-    const page = this.toolkit.page;
-    const maxLevel = Math.max(1, Math.min(6, Number(this.options.maxLevel) || 6));
+    let landmarksAdded = 0;
 
-    const fixedCount = fixAllLandmarks(s, doc, page);
-    const initialHeadings = page.headings({ maxLevel })
-      .filter((h) => h.text && h.text.trim())
-      .filter((h) => h.el.getAttribute('role') !== 'presentation' && h.el.getAttribute('role') !== 'none');
+    if (this.options.landmarks !== false) {
+      const banner = findBanner(doc);
+      if (banner) {
+        s.setAttr(banner, 'role', 'banner');
+        landmarksAdded++;
+      }
 
-    if (fixedCount === 0 && initialHeadings.length === 0) {
+      const nav = findNavigation(doc);
+      if (nav) {
+        s.setAttr(nav, 'role', 'navigation');
+        landmarksAdded++;
+      }
+
+      const main = findMain(doc);
+      if (main) {
+        s.setAttr(main, 'role', 'main');
+        landmarksAdded++;
+      }
+
+      const footer = findContentinfo(doc);
+      if (footer) {
+        s.setAttr(footer, 'role', 'contentinfo');
+        landmarksAdded++;
+      }
+    }
+
+    const maxLevel = typeof this.options.maxLevel === 'number' ? this.options.maxLevel : 6;
+    const initialHeadings = s.page.headings({ maxLevel });
+
+    if (landmarksAdded === 0 && initialHeadings.length === 0) {
+      this.disable();
       return false;
     }
 
-    if (initialHeadings.length > 0) {
+    if (this.options.outline !== false) {
+      s.css(
+        'ai4a11y-structure-styles',
+        `
+.ai4a11y-outline-list {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.ai4a11y-outline-item {
+  margin: 2px 0 !important;
+  list-style: none !important;
+}
+.ai4a11y-outline-item[data-level="1"] { padding-left: 0 !important; }
+.ai4a11y-outline-item[data-level="2"] { padding-left: 12px !important; }
+.ai4a11y-outline-item[data-level="3"] { padding-left: 24px !important; }
+.ai4a11y-outline-item[data-level="4"] { padding-left: 36px !important; }
+.ai4a11y-outline-item[data-level="5"] { padding-left: 48px !important; }
+.ai4a11y-outline-item[data-level="6"] { padding-left: 60px !important; }
+
+.ai4a11y-outline-link {
+  all: revert !important;
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  min-height: 28px !important;
+  padding: 4px 6px !important;
+  color: #0b3d91 !important;
+  background: transparent !important;
+  text-decoration: underline !important;
+  border-radius: 4px !important;
+  font: 500 14px/1.4 system-ui, -apple-system, sans-serif !important;
+  box-sizing: border-box !important;
+}
+.ai4a11y-outline-link:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  text-decoration: none !important;
+}
+.ai4a11y-outline-link:focus-visible {
+  outline: 3px solid #1a5fb4 !important;
+  outline-offset: 2px !important;
+}
+.ai4a11y-outline-level {
+  display: inline-block !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  padding: 2px 5px !important;
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-radius: 3px !important;
+  flex-shrink: 0 !important;
+  text-decoration: none !important;
+}
+.ai4a11y-outline-text {
+  flex-grow: 1 !important;
+  word-break: break-word !important;
+}
+.ai4a11y-outline-empty {
+  margin: 8px 0 !important;
+  font-style: italic !important;
+  color: #4b5563 !important;
+}
+`
+      );
+
       const panel = s.panel({
         kind: 'dialog',
         label: 'Page outline',
         corner: 'bottom-right',
-        width: 360,
+        width: 340,
+        theme: 'page',
       });
 
-      s.css('ai4a11y-structure-styles', `
-        .ai4a11y-outline-link:focus,
-        .ai4a11y-outline-link:focus-visible {
-          outline: 3px solid #0b3d91 !important;
-          outline-offset: 2px !important;
-        }
-        .ai4a11y-outline-link:hover {
-          background: rgba(11, 61, 145, 0.08) !important;
-        }
-      `);
-
-      let idCounter = 0;
+      let headingIdSeq = 0;
       const renderOutline = () => {
-        const headings = page.headings({ maxLevel })
-          .filter((h) => h.text && h.text.trim())
-          .filter((h) => h.el.getAttribute('role') !== 'presentation' && h.el.getAttribute('role') !== 'none');
         panel.body.replaceChildren();
-
-        if (headings.length === 0) {
-          const emptyMsg = s.el('p', {
+        const currentHeadings = s.page.headings({ maxLevel });
+        if (currentHeadings.length === 0) {
+          const empty = s.el('p', {
             text: 'No headings on this page',
             attrs: { class: 'ai4a11y-outline-empty' },
           });
-          emptyMsg.style.cssText = 'margin: 0; padding: 8px 0; color: inherit;';
-          panel.body.append(emptyMsg);
+          panel.body.append(empty);
           return;
         }
 
-        const nav = s.el('nav', {
-          attrs: {
-            'aria-label': 'Headings',
-            class: 'ai4a11y-outline-nav',
-          },
-        });
-        const list = s.el('ol', {
+        const list = s.el('ul', {
           attrs: {
             role: 'list',
             class: 'ai4a11y-outline-list',
           },
         });
-        list.style.cssText = 'list-style: none; margin: 0; padding: 0;';
 
-        for (const { el, level, text } of headings) {
-          if (!el.id) {
-            let id;
-            do {
-              id = `ai4a11y-heading-${++idCounter}`;
-            } while (doc.getElementById(id));
-            s.setAttr(el, 'id', id);
+        for (const h of currentHeadings) {
+          if (!h.el.id) {
+            let hid = `ai4a11y-heading-${++headingIdSeq}`;
+            while (doc.getElementById(hid)) {
+              hid = `ai4a11y-heading-${++headingIdSeq}`;
+            }
+            s.setAttr(h.el, 'id', hid);
           }
 
-          const li = s.el('li', {
+          const item = s.el('li', {
             attrs: {
               class: 'ai4a11y-outline-item',
-              'data-level': String(level),
+              'data-level': String(h.level),
             },
           });
-          li.style.cssText = `margin: 4px 0; padding-left: ${(level - 1) * 16}px;`;
 
           const link = s.el('a', {
             attrs: {
-              href: `#${el.id}`,
               class: 'ai4a11y-outline-link',
-              'data-level': String(level),
+              href: `#${h.el.id}`,
+              'data-level': String(h.level),
             },
           });
-          link.style.cssText = 'display: inline-flex; align-items: baseline; gap: 8px; min-height: 28px; padding: 4px 8px; color: #0b3d91; text-decoration: underline; border-radius: 4px; box-sizing: border-box;';
 
           const badge = s.el('span', {
-            text: `H${level}`,
+            text: `H${h.level}`,
             attrs: { class: 'ai4a11y-outline-level' },
           });
-          badge.style.cssText = 'font-weight: 700; font-size: 0.85em; opacity: 0.85; flex-shrink: 0;';
 
-          const labelSpan = s.el('span', {
-            text,
+          const textSpan = s.el('span', {
+            text: h.text || `Heading level ${h.level}`,
             attrs: { class: 'ai4a11y-outline-text' },
           });
 
-          link.append(badge, labelSpan);
-          li.append(link);
-          list.append(li);
+          link.append(badge, ' ', textSpan);
+
+          s.listen(link, 'click', (e) => {
+            e.preventDefault();
+            s.focus.region(h.el);
+            panel.close();
+          });
+
+          item.append(link);
+          list.append(item);
         }
 
-        nav.append(list);
-        panel.body.append(nav);
+        panel.body.append(list);
       };
 
-      const jumpToHeading = (target) => {
-        panel.close();
-        s.focus.region(target);
-      };
-
-      s.listen(panel.body, 'click', (e) => {
-        const link = e.target.closest('a.ai4a11y-outline-link');
-        if (!link) return;
-        e.preventDefault();
-        const href = link.getAttribute('href');
-        if (!href || !href.startsWith('#')) return;
-        const target = doc.getElementById(href.slice(1));
-        if (target) {
-          jumpToHeading(target);
-        }
-      });
-
-      s.listen(panel.body, 'keydown', (e) => {
-        if (e.key === ' ' || e.key === 'Spacebar') {
-          const link = e.target.closest('a.ai4a11y-outline-link');
-          if (!link) return;
-          e.preventDefault();
-          const href = link.getAttribute('href');
-          if (!href || !href.startsWith('#')) return;
-          const target = doc.getElementById(href.slice(1));
-          if (target) {
-            jumpToHeading(target);
-          }
-        }
-      });
+      renderOutline();
 
       const entryBtn = s.focus.entry({
         label: 'Page outline',
@@ -318,16 +413,13 @@ export default {
           panel.open(entryBtn);
         },
       });
-
-      this.panel = panel;
-      this.entryBtn = entryBtn;
     }
+
+    return true;
   },
 
   disable() {
     this.s?.end();
     this.s = null;
-    this.panel = null;
-    this.entryBtn = null;
   },
 };

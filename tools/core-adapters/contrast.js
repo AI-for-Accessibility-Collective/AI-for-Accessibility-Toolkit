@@ -19,9 +19,11 @@
 //     are adjusted, darkening or lightening the text colour while keeping its hue.
 //   • Leaves text that already meets the ratio alone, and images, video and canvas untouched.
 //   • In 'yellow-black' mode, applies yellow on black to all text via a single stylesheet (s.css).
+//   • Yellow-black never removes background images (icons and sprites stay) and never styles inside an <svg>.
 //   • Each mode lives in its own s.group(); switching modes ends the active group, restoring
 //     the page before the next mode applies, without hand-written undo logic.
 //   • The person's darkMode setting reflects a preference and is not assumed to be the page's background.
+//   • An element hidden when it is first seen is measured when it is shown, never marked done while hidden.
 //   • Measures each element once, and handles text added later (s.watch.added) without flicker.
 //   • Listens for shortcut adjustments (s.keys.adjust) and profile changes (s.profile.onChange).
 //
@@ -35,16 +37,19 @@ html, body {
   background-color: #000000 !important;
   color: #ffff00 !important;
 }
-*:not(img):not(video):not(canvas):not(svg):not(picture):not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *) {
+*:not(img):not(video):not(canvas):not(svg):not(svg *):not(picture):not(picture *):not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *) {
   background-color: #000000 !important;
-  background-image: none !important;
   color: #ffff00 !important;
   border-color: #ffff00 !important;
 }
-a:not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *),
-a:not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *):visited {
+a:not(svg *):not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *),
+a:not(svg *):not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *):visited {
   color: #ffff00 !important;
   text-decoration: underline !important;
+}
+:focus-visible {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 2px !important;
 }
 `;
 
@@ -94,11 +99,30 @@ export default {
     const setupLight = (group) => {
       const measured = new WeakSet();
 
+      let io = null;
+      if (typeof window !== 'undefined' && typeof window.IntersectionObserver === 'function') {
+        io = new window.IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            const target = entry.target;
+            if (s.page.isVisible(target)) {
+              io.unobserve(target);
+              checkElement(target);
+            }
+          }
+        });
+        group.onEnd(() => io.disconnect());
+      }
+
       const checkElement = (el) => {
         if (!el || measured.has(el)) return;
+        if (el.matches && el.matches('script, style, noscript, template, svg, svg *, math, math *, canvas, iframe, object, [data-ai4a11y-ui], [data-ai4a11y-ui] *')) return;
+
+        if (!s.page.isVisible(el)) {
+          if (io) io.observe(el);
+          return;
+        }
+
         measured.add(el);
-        if (!s.page.isVisible(el)) return;
-        if (el.matches('script, style, noscript, template, svg, math, canvas, iframe, object, [data-ai4a11y-ui], [data-ai4a11y-ui] *')) return;
 
         const info = s.page.textContrast(el);
         if (info && info.fix) {
@@ -106,10 +130,12 @@ export default {
         }
       };
 
-      const processSubtree = (root) => {
-        if (!root || !root.isConnected) return;
-        const doc = root.ownerDocument || document;
-        const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      const collectTextParents = (sub, set) => {
+        if (!sub || !sub.isConnected) return;
+        if (sub.matches && sub.matches('script, style, noscript, template, svg, svg *, math, math *, canvas, iframe, object, [data-ai4a11y-ui], [data-ai4a11y-ui] *')) return;
+
+        const doc = sub.ownerDocument || document;
+        const walker = doc.createTreeWalker(sub, NodeFilter.SHOW_TEXT, {
           acceptNode(node) {
             if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
             const parent = node.parentElement;
@@ -120,9 +146,15 @@ export default {
             return NodeFilter.FILTER_ACCEPT;
           },
         });
-        const elements = new Set();
         for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-          elements.add(n.parentElement);
+          set.add(n.parentElement);
+        }
+      };
+
+      const processBatch = (list) => {
+        const elements = new Set();
+        for (const item of list) {
+          collectTextParents(item, elements);
         }
         for (const el of elements) {
           checkElement(el);
@@ -131,11 +163,15 @@ export default {
 
       const root = document.body || document.documentElement;
       if (root) {
-        processSubtree(root);
+        processBatch([root]);
 
-        group.watch.added(root, (el) => {
-          processSubtree(el);
-        });
+        group.watch.added(
+          root,
+          (batchList) => {
+            processBatch(batchList);
+          },
+          { types: ['childList', 'attributes'], batch: true }
+        );
       }
     };
 
@@ -185,7 +221,6 @@ export default {
         if (next !== activeMode) {
           const r = await s.profile.set({ contrastMode: next });
           if (r && r.applied) {
-            applyMode(next);
             announceMode(s, next);
           }
         }
@@ -195,7 +230,6 @@ export default {
         if (prev !== activeMode) {
           const r = await s.profile.set({ contrastMode: prev });
           if (r && r.applied) {
-            applyMode(prev);
             announceMode(s, prev);
           }
         }

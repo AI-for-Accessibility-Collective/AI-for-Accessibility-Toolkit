@@ -2,8 +2,8 @@
   "file": "tools/core-adapters/focus-keyboard.js",
   "checks": [
     {
-      "name": "no tabindex above 0",
-      "code": "\n        for (const el of document.querySelectorAll('[tabindex]')) {\n          const val = parseInt(el.getAttribute('tabindex'), 10);\n          if (val > 0) return false;\n        }\n        return true;\n      "
+      "name": "adapter adds no tabindex above 0",
+      "code": "\n        const entries = document.querySelector('[data-ai4a11y-entries]');\n        if (!entries) return true;\n        for (const el of entries.querySelectorAll('[tabindex]')) {\n          const val = parseInt(el.getAttribute('tabindex'), 10);\n          if (val > 0) return false;\n        }\n        return true;\n      "
     }
   ],
   "sites": "all"

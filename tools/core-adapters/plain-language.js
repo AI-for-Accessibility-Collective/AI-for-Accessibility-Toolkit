@@ -1,37 +1,89 @@
-// plain-language.js — Lets the person read long or hard paragraphs in plain language.
-// Barrier: Long, dense, or complex paragraphs create cognitive barriers for people
-// with learning disabilities, cognitive differences, or lower reading proficiency.
+// plain-language.js — Simplifies long or complex paragraphs into plain language on request.
+// Barrier: Cognitive, reading, and learning barriers make dense prose, bureaucratic jargon,
+// and complex sentence structures difficult to comprehend.
 //
 // Suggested in onboarding for: cognitive, reading (a suggestion only, never a gate).
-// The person's settings it reads: readingLevel (from profile).
+// The person's settings it reads: readingLevel (from profile/personal settings).
 // What the person can adjust: nothing in the profile (reading level is a profile field,
-//   not a setting); the person chooses which parts to simplify.
-// Prior work to learn from: tools/adapters/simplify-text.js.
+// not a setting); the person chooses which parts to simplify.
 //
 // Options:
-//   minChars: Minimum character count for a paragraph to be considered long (default: 200).
-//   readingLevel: Default reading level if not set in profile (e.g. 'plain', 'easy-read', 1-12).
-//   keep: Additional terms to preserve exactly in rewrites (default: []).
-//   maxParagraphsBeforeSection: Maximum long paragraphs before switching to one button
-//     per section (default: 8).
+//   minChars: Minimum character count for a paragraph to be considered long (default: 140).
+//   minWords: Minimum word count for a paragraph to be considered long (default: 20).
+//   maxParagraphsBeforeSection: Maximum number of long paragraphs before switching to
+//     one button per section (default: 8).
+//   readingLevel: Default reading level when not specified in profile (default: 'plain').
 //
 // Decisions:
-//   • Never simplifies on load; rewrites happen only on request when a button is clicked.
-//   • Never sends more than one paragraph at a time to s.ai.text('simplify', ...).
-//   • Places a small 'Plain language' button after each long paragraph in the main content
-//     (or one button per section when there are more than 8 long paragraphs).
-//   • When simplified, replaces the paragraph using s.text.replaceBlock with showOriginal: false,
-//     and changes the button text to 'Show original' for one-click toggle back.
-//   • While a request is in flight, the button maintains focus with aria-busy="true" and
-//     aria-disabled="true", never native disabled (avoiding focus drop in Chromium).
-//   • Extracts names, numbers, dates, and links' meaning to pass in the prompt's `keep` list.
-//   • If AI is unavailable or returns null, leaves the paragraph untouched and announces
-//     that it could not simplify via s.announce.
-//   • Cleanly restores original DOM on disable() through session cleanup.
+//   • Never simplifies on load and never sends more than the paragraph asked for.
+//   • Identifies long paragraphs strictly within the main content area (s.page.main()).
+//   • Inserts a small 'Plain language' button after each long paragraph, or one per
+//     section when long paragraphs exceed maxParagraphsBeforeSection.
+//   • In section mode, each long paragraph belongs to its innermost section or article,
+//     and paragraphs outside every section get one button of their own.
+//   • Extracts terms to keep in prompt: proper names, numbers, dates, times, currency,
+//     percentages, links' meaning, and acronyms (all capitals).
+//   • While a simplification request is pending, the button retains focus with aria-disabled
+//     and aria-busy, never disabled (avoiding Chrome focus-drop to page).
+//   • On null AI response, leaves the paragraph untouched and announces failure.
+//   • Replaces text via s.text.replaceBlock and toggles between simplified and original.
+//   • Ends session before enable() returns false if no qualifying content exists.
 //
 // What it cannot do:
-//   • Does not rewrite non-prose content (code, tables, mathematical formulas, navigation).
-//   • Does not simplify content if no AI model is connected or budget is exhausted.
+//   • Cannot simplify without an AI model available (degrades gracefully).
+//   • Does not simplify data tables, code blocks, or forms.
+//   • Does not translate language (use translation adapter).
+
+function extractKeep(el) {
+  const text = el.textContent || '';
+  const keep = new Set();
+
+  // Links' meaning/text
+  if (el.querySelectorAll) {
+    for (const a of el.querySelectorAll('a')) {
+      const t = a.textContent.trim();
+      if (t && t.length <= 80) keep.add(t);
+    }
+  }
+
+  // Dates (e.g. January 15, 2024 or November 30, 2026)
+  const dateRegex = /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:,\s+\d{4})?\b/gi;
+  for (const m of text.matchAll(dateRegex)) {
+    if (m[0] && m[0].length <= 80) keep.add(m[0].trim());
+  }
+
+  // Times (e.g. 4:30 PM)
+  const timeRegex = /\b\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?\b/g;
+  for (const m of text.matchAll(timeRegex)) {
+    if (m[0] && m[0].length <= 80) keep.add(m[0].trim());
+  }
+
+  // Names with honorifics (e.g. Dr. Robert Miller)
+  const honorificRegex = /\b(?:Dr\.|Mr\.|Mrs\.|Ms\.|Prof\.)\s+[A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)*\b/g;
+  for (const m of text.matchAll(honorificRegex)) {
+    if (m[0] && m[0].length <= 80) keep.add(m[0].trim());
+  }
+
+  // Acronyms (all capitals, 2+ letters)
+  const acronymRegex = /\b[A-Z]{2,}\b/g;
+  for (const m of text.matchAll(acronymRegex)) {
+    if (m[0] && m[0].length <= 80) keep.add(m[0]);
+  }
+
+  // Numbers, currency, percentages
+  const numRegex = /\b(?:\$\d+(?:,\d{3})*(?:\.\d+)?|\d+(?:,\d{3})*(?:\.\d+)?(?:%|\b))\b/g;
+  for (const m of text.matchAll(numRegex)) {
+    if (m[0] && m[0].length <= 80) keep.add(m[0]);
+  }
+
+  // Multi-word proper names (e.g. Medicare Part B)
+  const properRegex = /\b[A-Z][a-z]+(?:\s+[A-Z][a-zA-Z0-9]*)+\b/g;
+  for (const m of text.matchAll(properRegex)) {
+    if (m[0] && m[0].length <= 80) keep.add(m[0].trim());
+  }
+
+  return Array.from(keep).slice(0, 50);
+}
 
 export default {
   enable(options = {}, toolkit) {
@@ -39,101 +91,98 @@ export default {
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
+
     const s = (this.s = this.toolkit.session());
 
-    const minChars = Number(this.options.minChars) || 200;
-    const maxParagraphsBeforeSection = Number(this.options.maxParagraphsBeforeSection) || 8;
-    const extraKeep = Array.isArray(this.options.keep) ? this.options.keep : [];
-    const defaultReadingLevel = this.options.readingLevel || 'plain';
+    const main = this.toolkit.page?.main?.() || document.querySelector('main, [role="main" i], article') || document.body;
+    if (!main) {
+      this.disable();
+      return false;
+    }
 
-    const main = this.toolkit.page.main();
-    if (!main) return false;
+    const minChars = this.options.minChars ?? 140;
+    const minWords = this.options.minWords ?? 20;
 
-    // Helper: is element a long paragraph in main content?
-    const isLongParagraph = (p) => {
-      if (!p || p.tagName !== 'P') return false;
-      if (!this.toolkit.page.isVisible(p) || this.toolkit.page.isOurs(p)) return false;
-      if (p.closest('nav, header, footer, aside, table, pre, code, form, dialog, template, noscript')) return false;
-      if (p.querySelector('table')) return false;
-      const text = this.toolkit.page.readableText(p);
-      return text.length >= minChars && text.length <= 6000;
-    };
+    const allP = Array.from(main.querySelectorAll('p'));
+    const longParas = allP.filter((p) => {
+      if (p.closest('aside, nav, header, footer, [role="complementary"], [role="navigation"]')) return false;
+      if (this.toolkit.page?.isOurs?.(p)) return false;
+      if (p.hidden || p.getAttribute('aria-hidden') === 'true') return false;
+      if (this.toolkit.page && !this.toolkit.page.isVisible(p)) return false;
+      const text = (p.textContent || '').trim();
+      if (text.length < minChars) return false;
+      const words = text.split(/\s+/).filter(Boolean);
+      if (words.length < minWords) return false;
+      return true;
+    });
 
-    const longParas = [...main.querySelectorAll('p')].filter(isLongParagraph);
-    if (!longParas.length) return false;
+    if (longParas.length === 0) {
+      this.disable();
+      return false;
+    }
 
-    // Inject stylesheet with high-contrast, unobtrusive button styling
     s.css(
       'plain-language-styles',
-      `
-      .ai4a11y-plain-btn {
-        display: inline-block;
-        font: inherit;
-        font-size: 0.85em;
-        line-height: normal;
-        min-height: 24px;
-        min-width: 24px;
-        padding: 3px 10px;
-        margin: 4px 0 10px 0;
-        box-sizing: border-box;
-        border: 1px solid currentColor;
-        border-radius: 4px;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-        vertical-align: middle;
-      }
-      .ai4a11y-plain-btn:focus-visible {
-        outline: 2px solid currentColor;
-        outline-offset: 2px;
-      }
-      .ai4a11y-plain-btn[aria-busy="true"] {
-        cursor: wait;
-        opacity: 0.7;
-      }
-      `
+      `.ai4a11y-plain-btn {
+  display: inline-block;
+  margin: 4px 0 16px;
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  min-height: 28px;
+  min-width: 24px;
+  box-sizing: border-box;
+  color: inherit;
+  background-color: transparent;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  vertical-align: middle;
+}
+.ai4a11y-plain-btn:hover {
+  background-color: rgba(128, 128, 128, 0.15);
+}
+.ai4a11y-plain-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.ai4a11y-plain-btn[aria-disabled="true"] {
+  opacity: 0.65;
+  cursor: wait;
+}
+.ai4a11y-plain-section-btn {
+  margin: 8px 0 16px;
+}`
     );
 
-    const extractKeepTerms = (el) => {
-      const terms = new Set(extraKeep);
-      for (const a of el.querySelectorAll('a')) {
-        const text = a.textContent.trim();
-        if (text && text.length <= 80) terms.add(text);
-      }
-      const text = el.textContent || '';
-      const dateRegex = /\b(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:,\s+\d{4})?|\d{1,2}\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}|\d{4}-\d{2}-\d{2})\b/gi;
-      for (const match of text.matchAll(dateRegex)) {
-        if (match[0].length <= 80) terms.add(match[0]);
-      }
-      const numRegex = /\b(?:\$|€|£|¥)?\d+(?:[.,]\d+)*(?:%|st|nd|rd|th)?\b/g;
-      for (const match of text.matchAll(numRegex)) {
-        if (match[0].length <= 80) terms.add(match[0]);
-      }
-      const nameRegex = /\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g;
-      for (const match of text.matchAll(nameRegex)) {
-        if (match[0].length <= 80 && match[0].length > 2) terms.add(match[0]);
-      }
-      return [...terms].filter((t) => typeof t === 'string' && t.trim().length > 0 && t.length <= 80).slice(0, 50);
+    const replacements = new Map();
+
+    const simplifyParagraph = async (p) => {
+      if (replacements.has(p)) return replacements.get(p);
+      const text = p.textContent.trim();
+      const readingLevel = s.profile?.get?.('readingLevel') || this.options.readingLevel || 'plain';
+      const keep = extractKeep(p);
+      const heading = p.closest('section, article')?.querySelector('h1, h2, h3, h4, h5, h6')?.textContent || '';
+      const context = (heading ? `${heading} — ` : '') + (document.title || '');
+
+      const simplified = await s.ai.text('simplify', text, { readingLevel, keep, context });
+      if (!s.alive() || !simplified) return null;
+
+      const rep = s.text.replaceBlock(p, simplified, { showOriginal: false });
+      if (!rep) return null;
+
+      const entry = { rep, simplified };
+      replacements.set(p, entry);
+      return entry;
     };
 
-    const findHeadingFor = (el) => {
-      const headings = [...main.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"]')].filter(
-        (h) => this.toolkit.page.isVisible(h) && !this.toolkit.page.isOurs(h)
-      );
-      let closest = null;
-      for (const h of headings) {
-        if (h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) {
-          closest = h;
-        }
-      }
-      return closest?.textContent?.trim() || document.title || '';
-    };
+    const maxParagraphsBeforeSection = this.options.maxParagraphsBeforeSection ?? 8;
+    const useSections = longParas.length > maxParagraphsBeforeSection;
 
-    if (longParas.length <= maxParagraphsBeforeSection) {
-      // Paragraph mode: one button after each long paragraph
+    if (!useSections) {
       for (const p of longParas) {
-        let rep = null;
-        let showingOriginal = true;
         const btn = s.el('button', {
           text: 'Plain language',
           attrs: {
@@ -141,118 +190,73 @@ export default {
             class: 'ai4a11y-plain-btn',
           },
         });
+        s.insert(p.parentNode, btn, p.nextSibling);
 
+        let busy = false;
         s.listen(btn, 'click', async () => {
-          if (!s.alive()) return;
-          if (btn.getAttribute('aria-busy') === 'true' || btn.getAttribute('aria-disabled') === 'true') return;
-
-          if (!showingOriginal) {
-            if (rep) rep.toggle(true);
-            btn.textContent = 'Plain language';
-            showingOriginal = true;
-            s.announce('Showing original text.');
+          if (!s.alive() || busy || btn.getAttribute('aria-disabled') === 'true') return;
+          const existing = replacements.get(p);
+          if (existing) {
+            const showingOrig = existing.rep.showingOriginal;
+            existing.rep.toggle(!showingOrig);
+            if (existing.rep.showingOriginal) {
+              btn.textContent = 'Plain language';
+              s.announce('Original text shown.');
+            } else {
+              btn.textContent = 'Show original';
+              s.announce('Simplified text shown.');
+            }
             return;
           }
 
-          if (rep) {
-            rep.toggle(false);
-            btn.textContent = 'Show original';
-            showingOriginal = false;
-            s.announce('Showing plain language.');
-            return;
-          }
-
+          busy = true;
           s.setAttr(btn, 'aria-busy', 'true');
           s.setAttr(btn, 'aria-disabled', 'true');
-
           try {
-            const text = this.toolkit.page.readableText(p);
-            const keep = extractKeepTerms(p);
-            const context = findHeadingFor(p);
-            const plain = await s.ai.text('simplify', text, {
-              readingLevel: defaultReadingLevel,
-              context,
-              keep,
-            });
-
+            const res = await simplifyParagraph(p);
             if (!s.alive()) return;
-
-            s.setAttr(btn, 'aria-busy', null);
-            s.setAttr(btn, 'aria-disabled', null);
-
-            if (!plain) {
-              s.announce('Could not simplify this paragraph.');
-              return;
-            }
-
-            rep = s.text.replaceBlock(p, plain, { showOriginal: false });
-            if (rep) {
+            if (res) {
               btn.textContent = 'Show original';
-              showingOriginal = false;
-              s.announce('Showing plain language.');
+              s.announce('Simplified text shown.');
+            } else {
+              s.announce('Could not simplify this text.');
             }
-          } catch {
-            if (!s.alive()) return;
-            s.setAttr(btn, 'aria-busy', null);
-            s.setAttr(btn, 'aria-disabled', null);
-            s.announce('Could not simplify this paragraph.');
+          } finally {
+            if (s.alive()) {
+              busy = false;
+              s.setAttr(btn, 'aria-busy', null);
+              s.setAttr(btn, 'aria-disabled', null);
+            }
           }
         });
-
-        s.insert(p.parentNode, btn, p.nextSibling);
       }
     } else {
-      // Section mode: one button per section containing long paragraphs
-      const getSections = () => {
-        const sectionNodes = [...main.querySelectorAll('section, article')].filter((sec) =>
-          longParas.some((p) => sec.contains(p))
-        );
-        if (sectionNodes.length > 1) {
-          return sectionNodes
-            .map((sec) => ({
-              heading: sec.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]'),
-              anchor: sec.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]') || sec.firstElementChild,
-              paras: longParas.filter((p) => sec.contains(p)),
-            }))
-            .filter((s) => s.paras.length > 0);
-        }
+      // Group paragraphs by innermost section or article; outside paragraphs get their own group
+      const sectionMap = new Map();
+      const outsideParas = [];
 
-        const headings = [...main.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"]')].filter(
-          (h) => this.toolkit.page.isVisible(h) && !this.toolkit.page.isOurs(h)
-        );
-        if (headings.length > 1) {
-          const groups = new Map();
-          for (const p of longParas) {
-            let prevHeading = null;
-            for (const h of headings) {
-              if (h.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING) {
-                prevHeading = h;
-              }
-            }
-            const key = prevHeading || headings[0];
-            if (!groups.has(key)) groups.set(key, []);
-            groups.get(key).push(p);
+      for (const p of longParas) {
+        const sec = p.closest('section, article');
+        if (sec && main.contains(sec)) {
+          if (!sectionMap.has(sec)) {
+            sectionMap.set(sec, []);
           }
-          return [...groups.entries()].map(([heading, paras]) => ({
-            heading,
-            anchor: heading,
-            paras,
-          }));
+          sectionMap.get(sec).push(p);
+        } else {
+          outsideParas.push(p);
         }
+      }
 
-        return [
-          {
-            heading: main.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]'),
-            anchor: main.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]') || longParas[0],
-            paras: longParas,
-          },
-        ];
-      };
+      const groups = [];
+      for (const [sec, paras] of sectionMap.entries()) {
+        groups.push({ container: sec, paras });
+      }
+      if (outsideParas.length > 0) {
+        groups.push({ container: null, paras: outsideParas });
+      }
 
-      const sections = getSections();
-      for (const section of sections) {
-        const repMap = new Map();
-        let showingOriginal = true;
+      for (const group of groups) {
+        const { container, paras } = group;
         const btn = s.el('button', {
           text: 'Plain language',
           attrs: {
@@ -261,93 +265,63 @@ export default {
           },
         });
 
+        if (container) {
+          const heading = container.querySelector('h1, h2, h3, h4, h5, h6');
+          if (heading && container.contains(heading)) {
+            s.insert(heading.parentNode, btn, heading.nextSibling);
+          } else {
+            s.insert(container, btn, container.firstChild);
+          }
+        } else {
+          const firstP = paras[0];
+          s.insert(firstP.parentNode, btn, firstP);
+        }
+
+        let secBusy = false;
         s.listen(btn, 'click', async () => {
-          if (!s.alive()) return;
-          if (btn.getAttribute('aria-busy') === 'true' || btn.getAttribute('aria-disabled') === 'true') return;
-
-          if (!showingOriginal) {
-            for (const p of section.paras) {
-              const rep = repMap.get(p);
-              if (rep) rep.toggle(true);
+          if (!s.alive() || secBusy || btn.getAttribute('aria-disabled') === 'true') return;
+          const allExisting = paras.every((p) => replacements.has(p));
+          if (allExisting) {
+            const anyShowingOriginal = paras.some((p) => replacements.get(p)?.rep.showingOriginal);
+            if (anyShowingOriginal) {
+              for (const p of paras) {
+                const entry = replacements.get(p);
+                if (entry && entry.rep.showingOriginal) entry.rep.toggle(false);
+              }
+              btn.textContent = 'Show original';
+              s.announce('Simplified section shown.');
+            } else {
+              for (const p of paras) {
+                const entry = replacements.get(p);
+                if (entry && !entry.rep.showingOriginal) entry.rep.toggle(true);
+              }
+              btn.textContent = 'Plain language';
+              s.announce('Original section text shown.');
             }
-            btn.textContent = 'Plain language';
-            showingOriginal = true;
-            s.announce('Showing original text.');
             return;
           }
 
-          const allCached = section.paras.every((p) => repMap.has(p));
-          if (allCached) {
-            for (const p of section.paras) {
-              const rep = repMap.get(p);
-              if (rep) rep.toggle(false);
-            }
-            btn.textContent = 'Show original';
-            showingOriginal = false;
-            s.announce('Showing plain language.');
-            return;
-          }
-
+          secBusy = true;
           s.setAttr(btn, 'aria-busy', 'true');
           s.setAttr(btn, 'aria-disabled', 'true');
-
           try {
-            const context = section.heading?.textContent?.trim() || document.title || '';
-            const results = await Promise.all(
-              section.paras.map(async (p) => {
-                if (repMap.has(p)) return { p, rep: repMap.get(p) };
-                const text = this.toolkit.page.readableText(p);
-                const keep = extractKeepTerms(p);
-                const plain = await s.ai.text('simplify', text, {
-                  readingLevel: defaultReadingLevel,
-                  context,
-                  keep,
-                });
-                return { p, plain };
-              })
-            );
-
+            const results = await Promise.all(paras.map((p) => simplifyParagraph(p)));
             if (!s.alive()) return;
-
-            s.setAttr(btn, 'aria-busy', null);
-            s.setAttr(btn, 'aria-disabled', null);
-
-            let simplifiedCount = 0;
-            for (const item of results) {
-              if (item.rep) {
-                item.rep.toggle(false);
-                simplifiedCount++;
-              } else if (item.plain) {
-                const r = s.text.replaceBlock(item.p, item.plain, { showOriginal: false });
-                if (r) {
-                  repMap.set(item.p, r);
-                  simplifiedCount++;
-                }
-              }
-            }
-
-            if (simplifiedCount === 0) {
+            const anySuccess = results.some(Boolean);
+            if (anySuccess) {
+              btn.textContent = 'Show original';
+              s.announce('Simplified section shown.');
+            } else {
               s.announce('Could not simplify this section.');
-              return;
             }
-
-            btn.textContent = 'Show original';
-            showingOriginal = false;
-            s.announce('Showing plain language.');
-          } catch {
-            if (!s.alive()) return;
-            s.setAttr(btn, 'aria-busy', null);
-            s.setAttr(btn, 'aria-disabled', null);
-            s.announce('Could not simplify this section.');
+          } finally {
+            if (s.alive()) {
+              secBusy = false;
+              s.setAttr(btn, 'aria-busy', null);
+              s.setAttr(btn, 'aria-disabled', null);
+            }
           }
         });
-
-        const anchor = section.anchor;
-        if (anchor && anchor.parentNode) {
-          s.insert(anchor.parentNode, btn, anchor.nextSibling);
-        } else if (section.paras[0]?.parentNode) {
-          s.insert(section.paras[0].parentNode, btn, section.paras[0].nextSibling);
-        }
       }
     }
   },

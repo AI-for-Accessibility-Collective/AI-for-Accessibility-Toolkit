@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Metropolitan Community Health Care Center</title>
   <style>
     body {
@@ -63,6 +64,16 @@
     a:focus-visible, button:focus-visible {
       outline: 2px solid #0056b3;
       outline-offset: 2px;
+    }
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0.75rem;
+      }
+      header, nav, main, aside, footer {
+        padding: 0.75rem;
+      }
     }
   </style>
 </head>

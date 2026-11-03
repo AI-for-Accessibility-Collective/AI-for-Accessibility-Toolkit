@@ -9,7 +9,7 @@
   "checks": [
     {
       "name": "with textSizeMethod zoom, zoom is set to fontScale/100 and text size alone is not touched",
-      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        const isEnabled = adapter && adapter.s && !adapter.s.ended;\n        if (!isEnabled) {\n          return (globalThis.__verifyHost?.zoomCalls?.length || 0) === 0;\n        }\n\n        const zoomCalls = globalThis.__verifyHost?.zoomCalls || [];\n        const hasSetZoom = zoomCalls.some(c => c === 'set:1.5');\n        const zoomValue = globalThis.__verifyHost?.zoom === 1.5;\n\n        const bodyText = document.getElementById('body-text');\n        const noInlineFontSize = !bodyText.style.fontSize;\n\n        return hasSetZoom && zoomValue && noInlineFontSize;\n      "
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const isEnabled = adapter && adapter.s && !adapter.s.ended;\n      if (!isEnabled) {\n        return (globalThis.__verifyHost?.zoomCalls?.length || 0) === 0;\n      }\n\n      const zoomCalls = globalThis.__verifyHost?.zoomCalls || [];\n      const hasSetZoom = zoomCalls.some(c => c === 'set:1.5');\n      const zoomValue = globalThis.__verifyHost?.zoom === 1.5;\n\n      const bodyText = document.getElementById('body-text');\n      const noInlineFontSize = !bodyText.style.fontSize;\n\n      return hasSetZoom && zoomValue && noInlineFontSize;\n    "
     }
   ]
 }

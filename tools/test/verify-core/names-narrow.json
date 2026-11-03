@@ -5,15 +5,15 @@
   "checks": [
     {
       "name": "controls that already had a name keep it exactly at narrow width",
-      "code": "\n        const btn = document.getElementById('btn-named');\n        const link = document.getElementById('link-named');\n        const input = document.getElementById('input-named');\n        const img = document.getElementById('img-named');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.textContent.trim() !== 'Checkout Now' || btn.hasAttribute('aria-label')) return false;\n        if (link.textContent.trim() !== 'Home' || link.hasAttribute('aria-label')) return false;\n        if (input.value !== 'Fragile item' || input.hasAttribute('aria-label')) return false;\n        if (img.getAttribute('alt') !== 'Blue sports backpack') return false;\n        return true;\n      "
+      "code": "\n      const btn = document.getElementById('btn-named');\n      const link = document.getElementById('link-named');\n      const input = document.getElementById('input-named');\n      const img = document.getElementById('img-named');\n      if (!btn || !link || !input || !img) return false;\n      if (btn.textContent.trim() !== 'Checkout Now' || btn.hasAttribute('aria-label')) return false;\n      if (link.textContent.trim() !== 'Home' || link.hasAttribute('aria-label')) return false;\n      if (input.value !== 'Fragile item' || input.hasAttribute('aria-label')) return false;\n      if (img.getAttribute('alt') !== 'Blue sports backpack') return false;\n      return true;\n    "
     },
     {
       "name": "page-first rules name controls without AI at narrow width",
-      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const svgBtn = document.getElementById('btn-svg-title');\n        const iconBtn = document.getElementById('btn-icon-class');\n        const pathLink = document.getElementById('link-path');\n        const placeholderInput = document.getElementById('input-placeholder');\n\n        if (!svgBtn || !iconBtn || !pathLink || !placeholderInput) return false;\n        return svgBtn.getAttribute('aria-label') === 'Close dialog' &&\n               iconBtn.getAttribute('aria-label') === 'Search' &&\n               pathLink.getAttribute('aria-label') === 'Shopping cart' &&\n               placeholderInput.getAttribute('aria-label') === 'Search products';\n      "
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      const svgBtn = document.getElementById('btn-svg-title');\n      const iconBtn = document.getElementById('btn-icon-class');\n      const pathLink = document.getElementById('link-path');\n      const placeholderInput = document.getElementById('input-placeholder');\n\n      if (!svgBtn || !iconBtn || !pathLink || !placeholderInput) return false;\n      return svgBtn.getAttribute('aria-label') === 'Close dialog' &&\n             iconBtn.getAttribute('aria-label') === 'Search' &&\n             pathLink.getAttribute('aria-label') === 'Shopping cart' &&\n             placeholderInput.getAttribute('aria-label') === 'Search products';\n    "
     },
     {
       "name": "no horizontal scrollbar at 320px width",
-      "code": "\n        return document.documentElement.scrollWidth <= document.documentElement.clientWidth;\n      "
+      "code": "\n      return document.documentElement.scrollWidth <= document.documentElement.clientWidth;\n    "
     }
   ],
   "ai": {

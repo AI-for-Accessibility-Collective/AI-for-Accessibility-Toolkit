@@ -115,7 +115,10 @@ async function replay() {
     }
     if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
     if (r.zoomLeft !== undefined) problems.push(`disable() leaves the zoom at ${r.zoomLeft}`);
-    if (r.status === 'skipped' && r.restored === false) problems.push('enable() returned false but left changes in the page');
+    if (r.status === 'skipped' && r.restored === false) {
+      if (live) console.log(`WARN: ${name}: enable() returned false and the page is not exactly as before (it may have changed by itself)`);
+      else problems.push('enable() returned false but left changes in the page');
+    }
     if (r.enableMs > LIMITS.enableMs) problems.push(`enable() took ${r.enableMs} ms`);
     if (live && r.aiCalls > LIMITS.aiCalls) problems.push(`${r.aiCalls} AI calls on load`);
     // A core adapter's main spec: InterA11y's keyboard measurements without

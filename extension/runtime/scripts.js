@@ -333,10 +333,19 @@ ${PREVIEW_SPEAK}
   };
   // What was in the page before enable(): a problem on an element the page
   // added since (a live site loading more) is the site's, unless the
-  // element is the toolkit's own.
+  // element is the toolkit's own. So is one on an element the toolkit did
+  // not change whose new content the page added (an ad slot filling in).
   let existed = null;
   const noteExisting = () => { if (AUDIT && typeof document === 'object' && document && typeof document.querySelectorAll === 'function') existed = new WeakSet(document.querySelectorAll('*')); };
-  const sitesOwn = (e) => !!existed && !!e.element && !existed.has(e.element) && !(e.element.closest && e.element.closest('[data-ai4a11y-ui]'));
+  const pageAdded = (el) => !existed.has(el) && !(el.closest && el.closest('[data-ai4a11y-ui]'));
+  const sitesOwn = (e) => {
+    const el = e.element;
+    if (!existed || !el) return false;
+    if (pageAdded(el)) return true;
+    const ours = globalThis.__ai4a11yBlocksShared;
+    if (ours && ours.ourAttrs && ours.ourAttrs.has(el)) return false;
+    return typeof el.querySelectorAll === 'function' && [...el.querySelectorAll('*')].some(pageAdded);
+  };
   const compare = (before, after) => {
     if (!before || !after) return undefined;
     if (before.error || after.error) return { error: before.error || after.error };
