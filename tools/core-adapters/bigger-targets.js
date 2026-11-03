@@ -1,32 +1,30 @@
-// bigger-targets.js — Makes small links, buttons and form controls at least targetSize pixels to hit.
-// Barrier: People with motor differences, tremors, reduced fine motor control,
-// or using alternative pointers (eye gaze, head tracking, touch on mobile)
-// struggle to hit tiny interactive targets.
+// bigger-targets.js — Enlarges small links, buttons, and form controls to at least targetSize CSS pixels.
+// Barrier: Small clickable controls are difficult or impossible for people with motor
+// differences, tremors, limited fine motor control, or alternative input devices to hit reliably (WCAG 2.5.8 / 2.5.5).
 //
 // Suggested in onboarding for: motor (a suggestion only, never a gate).
 // The person's settings it reads: targetSize, bigTargets.
-// What the person can adjust: With the person's shortcut (s.keys.adjust, label 'Target size', settings targetSize):
-//   up and down step targetSize through 24, 32, 44 pixels, saved for this site and announced.
+// What the person can adjust: With the person's shortcut (s.keys.adjust, label 'Target size',
+// settings ['targetSize']): up and down step targetSize through 24, 32, 44 pixels, saved for this site and announced.
 //
 // Options:
-//   targetSize: Smallest size of an interactive control in CSS pixels (default 24, WCAG 2.5.8; 44 is WCAG 2.5.5).
+//   targetSize: Smallest size of an interactive control in CSS pixels. Defaults to 24 (WCAG 2.5.8 minimum; 44 is WCAG 2.5.5).
 //
 // Decisions:
-//   • Measures before it changes anything, changing only controls that are smaller than targetSize.
-//   • Prefers growing hit areas without moving surrounding content:
-//     - buttons, fields, and ARIA controls grow with min-width/min-height, falling back to hit areas if container overflows.
-//     - checkboxes and radio buttons are sized to targetSize, and unclickable labels are restored to clickable.
-//     - inline links in running text keep their line height readable (no doubling of line height), using hit areas and spacing.
-//     - hit areas (::after pseudo-element and padding/negative margins) take at most half the free space to neighbours.
-//   • Never shrinks an element that is already large enough.
-//   • Never covers a neighbouring interactive target (targets never overlap).
-//   • Measures each interactive element once; elements added later are handled by themselves.
-//   • A new targetSize redoes the sizes in a new s.group(), never by clearing and redoing on each change of the page.
-//   • Leaves focus indicators and focus styles alone (handled by focus adapter).
+//   • Measures interactive controls before changing anything, modifying only those that are smaller than targetSize.
+//   • Prefers growing hit areas without moving surrounding content (pseudo-elements or padding with negative margin),
+//     ensuring the page reflows at most once at enable() and layout shift stays under 0.1.
+//   • Inline links in running text maintain line-height and line readability without doubling line spacing.
+//   • Never shrinks any element that already meets or exceeds targetSize.
+//   • Never covers neighbouring targets: hit areas expand into free space and take at most half the distance to adjacent targets.
+//   • A new targetSize redoes all sizes in a new s.group(), cleanly undoing previous styles without clearing on page changes.
+//   • Uses s.watch.added with { batch: true } to process dynamically added elements in a single pass without re-measuring existing targets.
+//   • Focus styles are left entirely to the browser or dedicated focus adapters (nothing outside its job).
+//   • All added rules, classes, and attributes are fully reversible on disable() via the session.
 //
 // What it cannot do:
-//   • Cannot expand targets inside <canvas>, embedded <iframe>, or raster image maps.
-//   • Cannot expand targets clipped by ancestor containers with overflow: hidden where expansion would exceed the container.
+//   • Cannot expand targets within native OS dropdown dialogs or third-party cross-origin iframes.
+//   • Cannot guarantee 44px targets when adjacent interactive controls touch with zero clearance without overlapping.
 
 const TARGET_SELECTORS = [
   'a[href]',
@@ -35,6 +33,7 @@ const TARGET_SELECTORS = [
   'select',
   'textarea',
   'summary',
+  'label',
   '[role="button"]',
   '[role="link"]',
   '[role="tab"]',
@@ -43,29 +42,80 @@ const TARGET_SELECTORS = [
   '[role="checkbox"]',
   '[role="radio"]',
   '[role="switch"]',
-  '[role="menuitemcheckbox"]',
-  '[role="menuitemradio"]',
   '[onclick]',
   '[tabindex]:not([tabindex="-1"])',
-].join(', ');
-
-const NO_GROW_TYPES = /^(hidden|range|color|file|image)$/i;
-const BOX_TYPES = /^(checkbox|radio)$/i;
+];
+const TARGETS = TARGET_SELECTORS.join(',');
+const MARK = 'data-ai4a11y-bt';
+const ID_ATTR = 'data-ai4a11y-bt-id';
 const NO_PSEUDO = /^(INPUT|SELECT|TEXTAREA|IMG|VIDEO|AUDIO|IFRAME|CANVAS|svg|OBJECT|EMBED)$/i;
+const BOX_TYPES = /^(checkbox|radio)$/i;
+const NO_GROW_TYPES = /^(hidden|range|file|color|image)$/i;
 const GROW_ROLES = /^(button|tab|menuitem|switch|option)$/i;
-const SIZES = [24, 32, 44];
 
 function isClear(color) {
   return !color || color === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(color);
 }
 
-function resolveTargetSize(options, profile) {
-  const pTarget = profile?.get?.('targetSize');
-  if (typeof pTarget === 'number' && pTarget >= 24) return pTarget;
-  if (profile?.get?.('bigTargets') === true && !options?.targetSize) return 44;
-  const optTarget = Number(options?.targetSize || options?.minSize);
-  if (Number.isFinite(optTarget) && optTarget >= 24) return optTarget;
-  return 24;
+function hasExistingAfter(el) {
+  try {
+    const after = window.getComputedStyle(el, '::after').content;
+    return !!after && after !== 'none' && after !== 'normal';
+  } catch {
+    return false;
+  }
+}
+
+function getNextSize(current) {
+  if (current < 24) return 24;
+  if (current < 32) return 32;
+  return 44;
+}
+
+function getPrevSize(current) {
+  if (current > 32) return 32;
+  if (current > 24) return 24;
+  return current <= 0 ? 0 : 24;
+}
+
+function markElement(el, token, group) {
+  const cur = el.getAttribute(MARK) || '';
+  const tokens = new Set(cur ? cur.split(/\s+/) : []);
+  for (const t of token.split(/\s+/)) {
+    if (t) tokens.add(t);
+  }
+  group.setAttr(el, MARK, [...tokens].join(' '));
+}
+
+function unmarkElement(el, group, ...tokensToRemove) {
+  const cur = el.getAttribute(MARK) || '';
+  const tokens = (cur ? cur.split(/\s+/) : []).filter((t) => !tokensToRemove.includes(t));
+  group.setAttr(el, MARK, tokens.length ? tokens.join(' ') : null);
+}
+
+function getCandidates(root, s) {
+  const list = [];
+  if (root.matches && root.matches(TARGETS)) {
+    if (!s.page.isOurs(root) && !root.closest('[data-ai4a11y-ui]')) {
+      if (!root.disabled && root.getAttribute('aria-disabled') !== 'true') {
+        list.push(root);
+      }
+    }
+  }
+  const matches = root.querySelectorAll(TARGETS);
+  for (const el of matches) {
+    if (s.page.isOurs(el) || el.closest('[data-ai4a11y-ui]')) continue;
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+    if (el.tagName === 'INPUT' && (el.getAttribute('type') || '').toLowerCase() === 'hidden') continue;
+    const parentTarget = el.parentElement ? el.parentElement.closest(TARGETS) : null;
+    if (parentTarget && !s.page.isOurs(parentTarget)) {
+      if (!(parentTarget.tagName === 'LABEL' && el.tagName === 'INPUT')) {
+        continue;
+      }
+    }
+    list.push(el);
+  }
+  return list;
 }
 
 export default {
@@ -75,310 +125,400 @@ export default {
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
 
+    const doc = document;
+    if (!doc || (!doc.body && !doc.documentElement)) return false;
+
     const s = (this.s = this.toolkit.session());
-    this.currentGroup = null;
-    this.trackedElements = new Set();
-    this.seen = new WeakSet();
 
-    let currentTargetSize = resolveTargetSize(this.options, s.profile);
+    // Resolve initial target size
+    const profileTargetSize = s.profile.get('targetSize');
+    const bigTargetsPref = s.profile.get('bigTargets');
+    let activeSize = 24;
 
-    const stepSize = async (dir) => {
-      let next;
-      if (dir > 0) {
-        next = SIZES.find((sz) => sz > currentTargetSize) ?? SIZES[SIZES.length - 1];
-      } else {
-        next = [...SIZES].reverse().find((sz) => sz < currentTargetSize) ?? SIZES[0];
-      }
-      if (next === currentTargetSize) return;
-      const res = await s.profile.set({ targetSize: next });
-      if (res && res.applied) {
-        currentTargetSize = next;
-        applyAll(currentTargetSize);
-        s.announce(`Target size ${next} pixels on this site.`);
-      }
-    };
+    if (profileTargetSize !== undefined && profileTargetSize !== null && Number.isFinite(Number(profileTargetSize))) {
+      activeSize = Number(profileTargetSize);
+    } else if (bigTargetsPref === false) {
+      activeSize = 0;
+    } else if (this.options.targetSize !== undefined && Number.isFinite(Number(this.options.targetSize))) {
+      activeSize = Number(this.options.targetSize);
+    }
 
-    s.keys.adjust({
-      label: 'Target size',
-      settings: ['targetSize'],
-      up: () => stepSize(1),
-      down: () => stepSize(-1),
-    });
+    let currentGroup = null;
+    let processed = new WeakSet();
+    let allTargetRects = [];
+    let ruleCounter = 0;
+    let rulesCss = '';
+    let rulesSheet = null;
 
-    s.profile.onChange((personal, changed) => {
-      if (changed && 'targetSize' in changed) {
-        const next = Number(changed.targetSize);
-        if (Number.isFinite(next) && next >= 24 && next !== currentTargetSize) {
-          currentTargetSize = next;
-          applyAll(currentTargetSize);
-        }
-      }
-    });
-
-    const isInteractiveCandidate = (el) => {
-      if (!el || el.nodeType !== 1) return false;
-      if (s.page.isOurs(el) || el.hasAttribute('data-ai4a11y-ui') || el.closest('[data-ai4a11y-ui]')) return false;
-      if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
-      if (el.tagName === 'INPUT' && NO_GROW_TYPES.test(el.type || '')) return false;
-      return true;
-    };
-
-    const processElements = (group, elements, size, allElements) => {
-      const MIN = size;
-      const root = document.documentElement;
+    const processTargets = (elements, group, targetSize) => {
+      if (targetSize <= 0 || !group || group.ended) return;
+      const root = doc.documentElement;
       const docW = root.clientWidth;
       const docSW = root.scrollWidth;
+      const boxSize = Math.max(24, Math.min(targetSize, Math.round(targetSize * 0.55)));
 
-      const items = [];
+      // ── READ PASS: detect small interactive elements
+      const candidates = [];
+      const scrollContainerCache = new WeakMap();
       for (const el of elements) {
-        if (!el.isConnected) continue;
-        const r = el.getBoundingClientRect();
-        if (!r.width || !r.height) continue;
+        if (!el || !el.isConnected || processed.has(el)) continue;
+        if (s.page.isOurs(el) || el.closest('[data-ai4a11y-ui]')) continue;
+        if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+
+        const tag = el.tagName;
+        const type = (el.getAttribute('type') || '').toLowerCase();
+        if (tag === 'INPUT' && NO_GROW_TYPES.test(type)) continue;
+
+        let r;
+        try {
+          r = el.getBoundingClientRect();
+        } catch {
+          continue;
+        }
+        if (r.width < 4 || r.height < 4) continue;
+
         let cs;
-        try { cs = window.getComputedStyle(el); } catch { continue; }
-        if (cs.display === 'none' || cs.visibility === 'hidden') continue;
-        items.push({ el, cs, r, small: r.width < MIN || r.height < MIN });
+        try {
+          cs = window.getComputedStyle(el);
+        } catch {
+          continue;
+        }
+        if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) continue;
+
+        const isSmall = r.width < targetSize || r.height < targetSize;
+        allTargetRects.push({ el, r });
+        processed.add(el);
+
+        if (!isSmall) continue;
+        candidates.push({ el, cs, r });
       }
 
-      const grown = [];
-      const needsHitArea = [];
+      if (!candidates.length) return;
 
-      for (const it of items) {
-        if (!it.small) continue;
-        const { el, cs, r } = it;
+      // ── WRITE PASS 1: marks for boxes and growable buttons
+      const marks = [];
+      const grown = [];
+
+      for (const item of candidates) {
+        const { el, cs, r } = item;
         const tag = el.tagName;
         const type = (el.getAttribute('type') || '').toLowerCase();
 
-        // 1. Checkboxes and radio buttons
+        // Checkboxes and radios
         if (tag === 'INPUT' && BOX_TYPES.test(type)) {
-          if (cs.opacity !== '0' && cs.position !== 'absolute') {
-            group.setAttr(el, 'data-ai4a11y-bt', 'box');
+          if (cs.opacity !== '0' && cs.position !== 'absolute' && (r.width < boxSize || r.height < boxSize)) {
+            marks.push([el, 'box']);
+            item.kind = 'box';
           }
-          const label = el.closest('label') || (el.labels && el.labels[0]);
+          let label = el.closest('label') || (el.labels && el.labels[0]);
+          if (!label && el.id) {
+            try {
+              label = doc.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+            } catch {
+              label = null;
+            }
+          }
           if (label) {
             try {
               if (window.getComputedStyle(label).pointerEvents === 'none') {
-                group.setAttr(label, 'data-ai4a11y-bt', 'label');
+                marks.push([label, 'label']);
               }
-            } catch {}
+            } catch {
+              /* ignore */
+            }
           }
           continue;
         }
 
-        // Inline elements don't accept min-width/min-height in CSS; they get hit area
-        if (cs.display === 'inline' || cs.display === 'contents') {
-          needsHitArea.push(it);
-          continue;
-        }
+        // Inline elements don't accept min-width/min-height layout sizing
+        if (cs.display === 'inline' || cs.display === 'contents') continue;
 
         const role = el.getAttribute('role') || '';
         const text = (el.textContent || '').trim();
-        const iconLike = r.width < MIN && r.height < MIN && text.length <= 2;
+        const iconLike = r.width < targetSize && r.height < targetSize && (text.length <= 2 || !!el.querySelector('svg, img, i'));
         const looksLikeButton = !isClear(cs.backgroundColor) || (parseFloat(cs.borderTopWidth) > 0 && !isClear(cs.borderTopColor));
         const overlaid = cs.position === 'absolute' || cs.position === 'fixed';
+        const growable =
+          !overlaid &&
+          (tag === 'BUTTON' ||
+            tag === 'SELECT' ||
+            tag === 'SUMMARY' ||
+            (tag === 'INPUT' && !NO_GROW_TYPES.test(type)) ||
+            GROW_ROLES.test(role) ||
+            iconLike ||
+            (tag !== 'LABEL' && looksLikeButton));
 
-        const growable = !overlaid && (
-          tag === 'BUTTON' ||
-          tag === 'SELECT' ||
-          tag === 'SUMMARY' ||
-          (tag === 'INPUT' && !NO_GROW_TYPES.test(type)) ||
-          GROW_ROLES.test(role) ||
-          iconLike ||
-          (tag !== 'LABEL' && looksLikeButton)
-        );
+        if (!growable) continue;
 
-        if (!growable) {
-          needsHitArea.push(it);
-          continue;
-        }
-
-        // 2. Growable elements: measure ancestors before growth to detect container overflow
         const p = el.parentElement;
         const g = p && p.parentElement;
-        const ancestors = [p, g].filter(Boolean);
-        it.beforeOverflow = ancestors.map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
-
-        group.setAttr(el, 'data-ai4a11y-bt', 'grow');
-        if (text && parseFloat(cs.fontSize) < MIN * 0.45 && iconLike) {
-          group.setStyle(el, 'font-size', `${Math.round(MIN * 0.45)}px`, 'important');
-        }
-        grown.push(it);
+        item.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
+        item.kind = 'grow';
+        const token = text && parseFloat(cs.fontSize) < targetSize * 0.45 && iconLike ? 'grow glyph' : 'grow';
+        marks.push([el, token]);
+        grown.push(item);
       }
 
-      // Check if growing caused any container or page overflow
-      for (const it of grown) {
-        const rAfter = it.el.getBoundingClientRect();
-        const overflowed = it.beforeOverflow.some(
-          ([a, w, h]) => (a.scrollWidth - a.clientWidth) > w + 1 || (a.scrollHeight - a.clientHeight) > h + 1
-        ) || (rAfter.right > docW + 0.5 && it.r.right <= docW + 0.5);
-
-        if (overflowed) {
-          group.setAttr(it.el, 'data-ai4a11y-bt', null);
-          group.setStyle(it.el, 'font-size', '');
-          needsHitArea.push(it);
-        }
+      for (const [el, token] of marks) {
+        markElement(el, token, group);
       }
 
-      if (grown.length && root.scrollWidth > docSW + 1) {
-        for (const it of grown) {
-          if (it.el.getAttribute('data-ai4a11y-bt') === 'grow') {
-            group.setAttr(it.el, 'data-ai4a11y-bt', null);
-            group.setStyle(it.el, 'font-size', '');
-            needsHitArea.push(it);
+      // ── READ PASS 2: check container overflow for grown elements
+      if (grown.length) {
+        const undo = grown.filter((it) => {
+          const curR = it.el.getBoundingClientRect();
+          return (
+            it.before.some(([a, w, h]) => a.scrollWidth - a.clientWidth > w + 1 || a.scrollHeight - a.clientHeight > h + 1) ||
+            (curR.right > docW + 0.5 && it.r.right <= docW + 0.5)
+          );
+        });
+
+        for (const it of undo) {
+          unmarkElement(it.el, group, 'grow', 'glyph');
+          it.kind = null;
+        }
+
+        if (root.scrollWidth > docSW + 1) {
+          for (const it of grown) {
+            if (it.kind === 'grow') {
+              unmarkElement(it.el, group, 'grow', 'glyph');
+              it.kind = null;
+            }
           }
         }
       }
 
-      // 3. Hit area for inline links and controls that could not grow,
-      // sized against where everything sits now after the first pass.
-      const rectsNow = allElements.filter((el) => el.isConnected).map((el) => ({ el, r: el.getBoundingClientRect() }));
+      // ── READ PASS 3: calculate hit areas for remaining small controls
+      const newRules = [];
 
-      for (const it of needsHitArea) {
-        const { el, cs } = it;
-        if (el.disabled) continue;
-        const r = el.getBoundingClientRect();
-        if (r.width >= MIN && r.height >= MIN) continue;
-        if (el.getClientRects().length > 1) continue; // multi-line wrapped link
-        if (cs.overflow !== 'visible') continue;
+      for (const item of candidates) {
+        if (item.kind) continue;
+        const { el, cs } = item;
+        const curR = el.getBoundingClientRect();
+        if (curR.width >= targetSize && curR.height >= targetSize) continue;
+        if (el.getClientRects().length > 1) continue;
 
-        const inner = el.querySelector(TARGET_SELECTORS);
-        if (inner && !(el.tagName === 'LABEL' && [...el.querySelectorAll(TARGET_SELECTORS)].every((c) => c.tagName === 'INPUT'))) {
+        const canPseudo = !NO_PSEUDO.test(el.tagName) && cs.overflow === 'visible' && !hasExistingAfter(el);
+
+        // Check if control wraps other targets
+        const inner = el.querySelector(TARGETS);
+        if (inner && !(el.tagName === 'LABEL' && [...el.querySelectorAll(TARGETS)].every((c) => c.tagName === 'INPUT'))) {
           continue;
         }
 
-        const relative = cs.position === 'static';
-        if (relative && [...el.querySelectorAll('*')].some((d) => /absolute|fixed/.test(window.getComputedStyle(d).position))) {
-          continue;
-        }
-
-        const wantX = Math.max(0, (MIN - r.width) / 2);
-        const wantY = Math.max(0, (MIN - r.height) / 2);
+        const wantX = Math.max(0, (targetSize - curR.width) / 2);
+        const wantY = Math.max(0, (targetSize - curR.height) / 2);
         let top = wantY;
         let bottom = wantY;
         let left = wantX;
         let right = wantX;
 
-        // Take at most half the free space to any neighbouring target so targets never overlap
-        for (const o of rectsNow) {
-          if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
+        // Never cover neighbouring controls: take at most half the free space
+        for (const o of allTargetRects) {
+          if (o.el === el) continue;
           const q = o.r;
-          const overlapX = q.left < r.right + right && q.right > r.left - left;
-          const overlapY = q.top < r.bottom + bottom && q.bottom > r.top - top;
-          if (overlapX && q.bottom <= r.top + 0.5) top = Math.min(top, Math.max(0, (r.top - q.bottom) / 2));
-          if (overlapX && q.top >= r.bottom - 0.5) bottom = Math.min(bottom, Math.max(0, (q.top - r.bottom) / 2));
-          if (overlapY && q.right <= r.left + 0.5) left = Math.min(left, Math.max(0, (r.left - q.right) / 2));
-          if (overlapY && q.left >= r.right - 0.5) right = Math.min(right, Math.max(0, (q.left - r.right) / 2));
+          if (q.bottom < curR.top - targetSize || q.top > curR.bottom + targetSize) continue;
+          if (q.right < curR.left - targetSize || q.left > curR.right + targetSize) continue;
+          if (o.el.contains(el) || el.contains(o.el)) continue;
+
+          const overlapX = q.left < curR.right + right && q.right > curR.left - left;
+          const overlapY = q.top < curR.bottom + bottom && q.bottom > curR.top - top;
+          if (overlapX && q.bottom <= curR.top + 0.5) top = Math.min(top, Math.max(0, (curR.top - q.bottom) / 2));
+          if (overlapX && q.top >= curR.bottom - 0.5) bottom = Math.min(bottom, Math.max(0, (q.top - curR.bottom) / 2));
+          if (overlapY && q.right <= curR.left + 0.5) left = Math.min(left, Math.max(0, (curR.left - q.right) / 2));
+          if (overlapY && q.left >= curR.right - 0.5) right = Math.min(right, Math.max(0, (q.left - curR.right) / 2));
         }
 
-        // Clamp to container / viewport edges
+        // Clamp against scrollable container boundaries and page edges
         let box = { left: 0, right: docW, top: -window.scrollY, bottom: root.scrollHeight - window.scrollY };
-        for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
-          const as = window.getComputedStyle(a);
-          if (as.overflowX !== 'visible' || as.overflowY !== 'visible') {
-            const ar = a.getBoundingClientRect();
-            const x0 = ar.left + a.clientLeft - a.scrollLeft;
-            const y0 = ar.top + a.clientTop - a.scrollTop;
-            box = { left: x0, right: x0 + a.scrollWidth, top: y0, bottom: y0 + a.scrollHeight };
+        let scrollParent = null;
+        for (let a = el.parentElement; a && a !== doc.body; a = a.parentElement) {
+          if (scrollContainerCache.has(a)) {
+            scrollParent = scrollContainerCache.get(a);
+            break;
+          }
+          let sBox;
+          try {
+            sBox = window.getComputedStyle(a);
+          } catch {
+            continue;
+          }
+          if (sBox.overflowX !== 'visible' || sBox.overflowY !== 'visible') {
+            scrollParent = a;
             break;
           }
         }
+        if (el.parentElement) scrollContainerCache.set(el.parentElement, scrollParent);
+        if (scrollParent) {
+          const ar = scrollParent.getBoundingClientRect();
+          const x0 = ar.left + scrollParent.clientLeft - scrollParent.scrollLeft;
+          const y0 = ar.top + scrollParent.clientTop - scrollParent.scrollTop;
+          box = { left: x0, right: x0 + scrollParent.scrollWidth, top: y0, bottom: y0 + scrollParent.scrollHeight };
+        }
 
         const px = (v) => Math.max(0, Math.floor(v));
-        const t = px(Math.min(top, r.top - box.top));
-        const b = px(Math.min(bottom, box.bottom - r.bottom));
-        const l = px(Math.min(left, r.left - box.left));
-        const rt = px(Math.min(right, box.right - r.right));
+        const t = px(Math.min(top, curR.top - box.top));
+        const b = px(Math.min(bottom, box.bottom - curR.bottom));
+        const l = px(Math.min(left, curR.left - box.left));
+        const rt = px(Math.min(right, box.right - curR.right));
 
-        if (t + b + l + rt < 2) continue;
+        if (t + b + l + rt < 1) continue;
 
-        group.setStyle(el, '--ai4a11y-bt-t', `-${t}px`);
-        group.setStyle(el, '--ai4a11y-bt-b', `-${b}px`);
-        group.setStyle(el, '--ai4a11y-bt-l', `-${l}px`);
-        group.setStyle(el, '--ai4a11y-bt-r', `-${rt}px`);
-        group.setAttr(el, 'data-ai4a11y-bt-hit', `${t} ${rt} ${b} ${l}`);
+        ruleCounter++;
+        const ruleId = ruleCounter;
+        group.setAttr(el, ID_ATTR, String(ruleId));
 
-        const tokens = ['hit'];
-        if (relative) tokens.push('rel');
-        group.setAttr(el, 'data-ai4a11y-bt', tokens.join(' '));
+        if (canPseudo) {
+          const rel = cs.position === 'static';
+          markElement(el, rel ? 'hit rel' : 'hit', group);
+          newRules.push(
+            `html.ai4a11y-bigger-targets [${ID_ATTR}="${ruleId}"]::after { top: -${t}px !important; right: -${rt}px !important; bottom: -${b}px !important; left: -${l}px !important; }`
+          );
+        } else {
+          markElement(el, 'pad', group);
+          newRules.push(
+            `html.ai4a11y-bigger-targets [${ID_ATTR}="${ruleId}"] { padding-top: ${t}px !important; padding-right: ${rt}px !important; padding-bottom: ${b}px !important; padding-left: ${l}px !important; margin-top: -${t}px !important; margin-right: -${rt}px !important; margin-bottom: -${b}px !important; margin-left: -${l}px !important; }`
+          );
+        }
+      }
+
+      // ── WRITE PASS 4: update per-element hit area stylesheet
+      if (newRules.length && rulesSheet) {
+        rulesCss += (rulesCss ? '\n' : '') + newRules.join('\n');
+        rulesSheet.update(rulesCss);
       }
     };
 
-    const applyAll = (size) => {
-      if (this.currentGroup) {
-        this.currentGroup.end();
-        this.currentGroup = null;
+    const applyTargetSize = (size) => {
+      if (currentGroup) {
+        currentGroup.end();
+        currentGroup = null;
       }
-      this.currentGroup = s.group();
 
-      const css = `
-:root {
-  --ai4a11y-bt-size: ${size}px;
+      processed = new WeakSet();
+      allTargetRects = [];
+      ruleCounter = 0;
+      rulesCss = '';
+      rulesSheet = null;
+
+      if (size <= 0) return;
+
+      currentGroup = s.group();
+      const boxSize = Math.max(24, Math.min(size, Math.round(size * 0.55)));
+      const baseCss = `
+html.ai4a11y-bigger-targets [${MARK}~="grow"] {
+  min-width: ${size}px !important;
+  min-height: ${size}px !important;
 }
-[data-ai4a11y-bt~="grow"] {
-  min-width: var(--ai4a11y-bt-size) !important;
-  min-height: var(--ai4a11y-bt-size) !important;
-  box-sizing: border-box !important;
+html.ai4a11y-bigger-targets [${MARK}~="glyph"] {
+  font-size: ${Math.max(12, Math.round(size * 0.45))}px !important;
 }
-[data-ai4a11y-bt~="box"] {
-  width: var(--ai4a11y-bt-size) !important;
-  height: var(--ai4a11y-bt-size) !important;
+html.ai4a11y-bigger-targets [${MARK}~="box"] {
+  width: ${boxSize}px !important;
+  height: ${boxSize}px !important;
   flex-shrink: 0 !important;
 }
-[data-ai4a11y-bt~="label"] {
+html.ai4a11y-bigger-targets [${MARK}~="label"] {
   pointer-events: auto !important;
   cursor: pointer !important;
 }
-[data-ai4a11y-bt~="rel"] {
+html.ai4a11y-bigger-targets [${MARK}~="rel"] {
   position: relative !important;
 }
-[data-ai4a11y-bt~="hit"]::after {
+html.ai4a11y-bigger-targets [${MARK}~="hit"]::after {
   content: "" !important;
   position: absolute !important;
-  top: var(--ai4a11y-bt-t, 0px) !important;
-  bottom: var(--ai4a11y-bt-b, 0px) !important;
-  left: var(--ai4a11y-bt-l, 0px) !important;
-  right: var(--ai4a11y-bt-r, 0px) !important;
   pointer-events: auto !important;
-  z-index: 1 !important;
 }
 `;
-      this.currentGroup.css('bigger-targets-styles', css);
+      currentGroup.css('bt-base', baseCss, { scope: 'ai4a11y-bigger-targets' });
+      rulesSheet = currentGroup.css('bt-rules', '');
 
-      const elements = [...document.querySelectorAll(TARGET_SELECTORS)].filter(isInteractiveCandidate);
-      this.trackedElements = new Set(elements);
-      for (const el of elements) this.seen.add(el);
-
-      processElements(this.currentGroup, elements, size, elements);
+      const root = doc.body || doc.documentElement;
+      const initialCandidates = getCandidates(root, s);
+      processTargets(initialCandidates, currentGroup, size);
     };
 
-    applyAll(currentTargetSize);
+    // Apply current size
+    applyTargetSize(activeSize);
 
-    // Watch for dynamically added elements: size only the new element by itself,
-    // never clearing or redoing existing elements.
-    const docRoot = document.body || document.documentElement;
-    if (docRoot) {
-      s.watch.added(
-        docRoot,
-        (el) => {
-          if (!this.s || this.s.ended || !this.currentGroup) return;
-          if (!isInteractiveCandidate(el)) return;
-          if (this.seen.has(el)) return;
+    // Watch for elements added later in batches
+    const root = doc.body || doc.documentElement;
+    s.watch.added(
+      root,
+      (batch) => {
+        if (activeSize <= 0 || !currentGroup || currentGroup.ended) return;
+        const newCandidates = [];
+        for (const node of batch) {
+          if (node.nodeType !== 1) continue;
+          if (s.page.isOurs(node) || node.closest('[data-ai4a11y-ui]')) continue;
+          if (node.matches && node.matches(TARGETS) && !processed.has(node)) {
+            if (!node.disabled && node.getAttribute('aria-disabled') !== 'true') {
+              newCandidates.push(node);
+            }
+          }
+          for (const child of node.querySelectorAll(TARGETS)) {
+            if (!processed.has(child) && !s.page.isOurs(child) && !child.closest('[data-ai4a11y-ui]')) {
+              if (!child.disabled && child.getAttribute('aria-disabled') !== 'true') {
+                newCandidates.push(child);
+              }
+            }
+          }
+        }
+        if (!newCandidates.length) return;
+        processTargets(newCandidates, currentGroup, activeSize);
+      },
+      { batch: true }
+    );
 
-          this.seen.add(el);
-          this.trackedElements.add(el);
+    // Follow profile changes made elsewhere
+    s.profile.onChange((personal, changed) => {
+      if (!changed) return;
+      if ('targetSize' in changed || 'bigTargets' in changed) {
+        let newSize = activeSize;
+        if (changed.targetSize !== undefined && changed.targetSize !== null && Number.isFinite(Number(changed.targetSize))) {
+          newSize = Number(changed.targetSize);
+        } else if (changed.bigTargets === false && !('targetSize' in changed)) {
+          newSize = 0;
+        }
+        if (newSize !== activeSize) {
+          activeSize = newSize;
+          applyTargetSize(newSize);
+        }
+      }
+    });
 
-          processElements(this.currentGroup, [el], currentTargetSize, [...this.trackedElements]);
-        },
-        { selector: TARGET_SELECTORS, debounceMs: 100 }
-      );
-    }
+    // Provide shortcut adjustment
+    s.keys.adjust({
+      label: 'Target size',
+      settings: ['targetSize'],
+      up: async () => {
+        const next = getNextSize(activeSize);
+        if (next !== activeSize) {
+          const r = await s.profile.set({ targetSize: next });
+          if (r && r.applied) {
+            activeSize = next;
+            applyTargetSize(next);
+            s.announce(`Target size ${next} pixels on this site.`);
+          }
+        }
+      },
+      down: async () => {
+        const prev = getPrevSize(activeSize);
+        if (prev !== activeSize) {
+          const r = await s.profile.set({ targetSize: prev });
+          if (r && r.applied) {
+            activeSize = prev;
+            applyTargetSize(prev);
+            s.announce(`Target size ${prev} pixels on this site.`);
+          }
+        }
+      },
+    });
   },
 
   disable() {
     this.s?.end();
     this.s = null;
-    this.currentGroup = null;
-    this.trackedElements = null;
-    this.seen = null;
   },
 };

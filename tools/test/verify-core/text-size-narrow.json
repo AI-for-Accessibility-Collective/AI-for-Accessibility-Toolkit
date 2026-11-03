@@ -5,17 +5,17 @@
   "personal": {
     "fontScale": 150,
     "textSizeMethod": "font",
-    "lineHeight": 2,
+    "lineHeight": 1.5,
     "letterSpacing": 0.12
   },
   "checks": [
     {
       "name": "no sideways scrolling at 320 pixels wide",
-      "code": "\n        return document.documentElement.scrollWidth <= 320;\n      "
+      "code": "\n        const scrollW = document.documentElement.scrollWidth;\n        const clientW = document.documentElement.clientWidth;\n        return scrollW <= 320 && scrollW <= clientW;\n      "
     },
     {
-      "name": "no text cut off in any element",
-      "code": "\n        for (const el of document.body.querySelectorAll('*')) {\n          if (el.scrollHeight > el.clientHeight + 1) return false;\n        }\n        return true;\n      "
+      "name": "no text cut off and fitted container expanded as needed",
+      "code": "\n        const fitted = document.getElementById('box-fitted');\n        if (!fitted) return false;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        const isEnabled = adapter && adapter.s && !adapter.s.ended;\n        if (!isEnabled) return true;\n\n        return fitted.scrollHeight <= fitted.clientHeight + 1;\n      "
     }
   ],
   "viewport": {

@@ -2,102 +2,110 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Accessible Hardware Store - Quality Tools & Fasteners</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Gear Pro - Studio Monitors &amp; Accessories</title>
   <style>
     * {
       box-sizing: border-box;
     }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.5;
-      color: #1a1a1a;
+      color: #1e293b;
       background-color: #ffffff;
     }
     header {
-      background-color: #1e293b;
+      background-color: #0f172a;
       color: #ffffff;
       padding: 1rem 1.5rem;
     }
     header h1 {
       margin: 0 0 0.5rem 0;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
     }
     nav ul {
       display: flex;
-      gap: 1.5rem;
+      gap: 1rem;
       list-style: none;
       margin: 0;
       padding: 0;
     }
     nav a {
-      color: #ffffff;
+      color: #38bdf8;
       text-decoration: underline;
+      font-size: 0.95rem;
     }
     main {
       max-width: 800px;
       margin: 1.5rem auto;
       padding: 0 1rem;
     }
-    .product-box {
+    .product-card {
       border: 1px solid #cbd5e1;
       border-radius: 8px;
       padding: 1.5rem;
       background: #f8fafc;
-      margin-bottom: 1.5rem;
     }
     h2 {
       margin-top: 0;
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       color: #0f172a;
     }
-    /* Barrier: Tiny increment/decrement buttons that sit close together */
-    .controls-row {
+    .price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0.5rem 0;
+    }
+    .control-row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 6px;
+      gap: 0.5rem;
       margin: 1rem 0;
     }
+    /* Small buttons (barrier: 20x20) */
     .qty-btn {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       padding: 0;
       border: 1px solid #64748b;
-      background: #f1f5f9;
+      background: #e2e8f0;
       color: #0f172a;
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1;
       cursor: pointer;
-      border-radius: 2px;
+      border-radius: 3px;
     }
     .qty-input {
-      width: 32px;
-      height: 18px;
+      width: 36px;
+      height: 20px;
       text-align: center;
       border: 1px solid #64748b;
-      border-radius: 2px;
-      font-size: 12px;
+      border-radius: 3px;
+      font-size: 13px;
       padding: 0;
     }
-    .star-btn {
-      width: 18px;
-      height: 18px;
-      padding: 0;
-      border: 1px solid #eab308;
-      background: #fef9c3;
-      color: #854d0e;
+    .icon-fav {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #e11d48;
+      background: #ffe4e6;
+      color: #e11d48;
       cursor: pointer;
       border-radius: 50%;
       font-size: 11px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      padding: 0;
     }
-    /* Large primary control that should remain untouched */
+    /* Standard large button that must not be changed */
     .btn-large {
       height: 48px;
-      min-width: 140px;
+      min-width: 120px;
       padding: 0 1.5rem;
       background: #2563eb;
       color: #ffffff;
@@ -107,13 +115,13 @@
       font-weight: 600;
       cursor: pointer;
     }
-    /* Small checkbox with unclickable label */
-    .checkbox-wrap {
+    /* Small checkbox barrier (13x13) with pointer-events: none on label */
+    .checkbox-row {
       margin: 1rem 0;
     }
-    .small-checkbox {
-      width: 14px;
-      height: 14px;
+    .tiny-checkbox {
+      width: 13px;
+      height: 13px;
       margin: 0 6px 0 0;
       vertical-align: middle;
     }
@@ -123,127 +131,131 @@
       color: #334155;
       cursor: default;
     }
-    /* Tight toolbar container: fixed 90px width that cannot fit three 44px buttons */
-    .tight-toolbar {
+    /* Tight toolbar where growing without care would overflow container */
+    .tight-container {
       width: 90px;
       overflow: hidden;
       display: flex;
       gap: 2px;
       border: 1px solid #cbd5e1;
       padding: 2px;
-      background: #ffffff;
       margin: 1rem 0;
+      background: #ffffff;
     }
     .tight-btn {
       width: 20px;
       height: 20px;
       padding: 0;
       font-size: 11px;
-      border: 1px solid #94a3b8;
-      background: #f8fafc;
-      color: #1e293b;
+      border: 1px solid #64748b;
+      background: #f1f5f9;
+      color: #0f172a;
       cursor: pointer;
     }
-    /* Paragraph with inline links */
-    .article-section {
-      margin-top: 1.5rem;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 1rem;
+    /* Two adjacent targets with small gap to test overlap prevention */
+    .adjacent-row {
+      display: flex;
+      gap: 8px;
+      margin: 1rem 0;
     }
-    .article-section p {
-      font-size: 16px;
-      line-height: 24px;
-      margin: 0 0 1rem 0;
-    }
-    .article-section a {
-      color: #2563eb;
-      text-decoration: underline;
-    }
-    /* ARIA button */
-    .aria-pill {
-      display: inline-block;
+    .adj-btn {
       width: 20px;
       height: 20px;
-      line-height: 18px;
-      text-align: center;
-      background: #e2e8f0;
-      color: #1e293b;
-      border: 1px solid #94a3b8;
-      border-radius: 3px;
+      padding: 0;
+      border: 1px solid #64748b;
+      background: #f1f5f9;
+      font-size: 11px;
       cursor: pointer;
-      font-size: 12px;
+    }
+    /* Running text with inline link */
+    .prose-block {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+      line-height: 24px;
+      font-size: 15px;
+    }
+    .prose-block a {
+      color: #0284c7;
+      text-decoration: underline;
+    }
+    .disabled-btn {
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border: 1px solid #cbd5e1;
+      background: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
     }
     footer {
-      background-color: #f1f5f9;
-      color: #475569;
-      padding: 1rem;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #f8fafc;
+      border-top: 1px solid #cbd5e1;
       text-align: center;
-      font-size: 0.85rem;
+      font-size: 0.875rem;
+      color: #64748b;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1 id="site-title">Precision Fasteners & Hardware</h1>
+    <h1>Audio Gear Pro</h1>
     <nav aria-label="Main Navigation">
       <ul>
-        <li><a href="#catalog" id="nav-catalog">Catalog</a></li>
-        <li><a href="#deals" id="nav-deals">Special Deals</a></li>
-        <li><a href="#about" id="nav-about">Company About</a></li>
+        <li><a href="#speakers" id="nav-speakers">Speakers</a></li>
+        <li><a href="#headphones" id="nav-headphones">Headphones</a></li>
+        <li><a href="#cables" id="nav-cables">Cables</a></li>
       </ul>
     </nav>
   </header>
 
-  <main>
-    <div class="product-box">
-      <h2>Titanium Hex Nut M4 (Pack of 100)</h2>
-      <p id="prose-desc">Lightweight aerospace-grade titanium hex fasteners for demanding mechanical assemblies.</p>
+  <main id="main-content">
+    <article class="product-card">
+      <h2 id="product-title">Reference Studio Monitor MK-II</h2>
+      <div class="price">$249.00</div>
 
-      <!-- Small controls: quantity decrement, input, increment, favorite button -->
-      <div class="controls-row" id="qty-row">
-        <button type="button" class="qty-btn" id="btn-dec" aria-label="Decrease quantity">−</button>
-        <input type="text" class="qty-input" id="qty-field" value="1" aria-label="Quantity">
+      <div class="control-row">
+        <label for="qty-field" style="font-weight: 500;">Qty:</label>
+        <button type="button" class="qty-btn" id="btn-dec" aria-label="Decrease quantity">-</button>
+        <input type="text" id="qty-field" class="qty-input" value="1" aria-label="Quantity">
         <button type="button" class="qty-btn" id="btn-inc" aria-label="Increase quantity">+</button>
-        <button type="button" class="star-btn" id="btn-fav" aria-label="Save to favorites">★</button>
-        <div role="button" tabindex="0" class="aria-pill" id="btn-aria" aria-label="Quick specs">+</div>
-      </div>
-
-      <!-- Sized primary button and disabled control to leave alone -->
-      <div class="controls-row">
+        <button type="button" class="icon-fav" id="btn-fav" aria-label="Add to wishlist">&hearts;</button>
         <button type="button" class="btn-large" id="btn-cart">Add to Cart</button>
-        <button type="button" class="qty-btn" id="btn-disabled" disabled aria-label="Out of stock">✕</button>
+        <button type="button" class="disabled-btn" id="btn-disabled" disabled aria-label="Quick preview unavailable">x</button>
       </div>
 
-      <!-- Small checkbox with unclickable label -->
-      <div class="checkbox-wrap">
-        <label id="shipping-label" for="expedited-shipping" class="unclickable-label">
-          <input type="checkbox" id="expedited-shipping" class="small-checkbox">
-          Include express certified shipping
-        </label>
+      <div class="checkbox-row">
+        <input type="checkbox" id="chk-warranty" class="tiny-checkbox">
+        <label for="chk-warranty" id="lbl-warranty" class="unclickable-label">Add 2-year accidental damage protection</label>
       </div>
 
-      <!-- Tight container with fixed 75px width that cannot fit three 44px buttons -->
-      <div class="tight-toolbar" id="tight-container" aria-label="Formatting tools">
-        <button type="button" class="tight-btn" id="t-btn-1" aria-label="Align left">L</button>
-        <button type="button" class="tight-btn" id="t-btn-2" aria-label="Align center">C</button>
-        <button type="button" class="tight-btn" id="t-btn-3" aria-label="Align right">R</button>
+      <div class="adjacent-row" id="adjacent-container">
+        <button type="button" class="adj-btn" id="btn-adj-1" aria-label="Step 1">1</button>
+        <button type="button" class="adj-btn" id="btn-adj-2" aria-label="Step 2">2</button>
       </div>
-    </div>
 
-    <!-- Running text with inline links -->
-    <div class="article-section">
-      <p id="inline-paragraph">
-        Read our <a href="#specs" id="link-specs">specifications</a> for metallurgical details.
-        You can also check the <a href="#help" id="link-help">fastener guide</a> to select thread pitches.
-      </p>
-    </div>
+      <div class="tight-container" id="tight-box">
+        <button type="button" class="tight-btn" id="btn-t1" aria-label="Preset 1">A</button>
+        <button type="button" class="tight-btn" id="btn-t2" aria-label="Preset 2">B</button>
+        <button type="button" class="tight-btn" id="btn-t3" aria-label="Preset 3">C</button>
+      </div>
 
-    <!-- Target container for dynamic elements added later -->
-    <div id="dynamic-container"></div>
+      <div class="prose-block" id="prose-section">
+        <p id="prose-paragraph">
+          Designed for precision audio mastering, the MK-II brings flat frequency response to your desktop.
+          Read our full warranty terms in the <a href="#warranty" id="link-inline">warranty policy</a> before placing your order.
+          All standard orders qualify for express processing.
+        </p>
+      </div>
+
+      <div id="dynamic-container"></div>
+    </article>
   </main>
 
   <footer>
-    <p>&copy; 2026 Precision Fasteners Ltd. All rights reserved.</p>
+    <p>&copy; 2026 Audio Gear Pro. All rights reserved.</p>
   </footer>
 </body>
 </html>

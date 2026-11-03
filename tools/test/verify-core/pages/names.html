@@ -2,191 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Names and Labels Test Dashboard</title>
+  <title>Store — Names for controls and images</title>
   <style>
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, sans-serif;
       margin: 0;
-      padding: 1.5rem;
-      background: #f8fafc;
-      color: #1e293b;
-      line-height: 1.5;
+      padding: 8px;
+      color: #222;
+      background: #fff;
     }
-    header, main, footer {
-      max-width: 900px;
-      margin: 0 auto 1.5rem auto;
-      background: #ffffff;
-      padding: 1.25rem 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    header, nav, main, aside, footer, section {
+      margin-bottom: 6px;
+      padding: 4px 8px;
+      border: 1px solid #ddd;
     }
-    section {
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid #e2e8f0;
+    h1, h2, h3, p {
+      margin: 4px 0;
     }
-    h1 {
-      font-size: 1.5rem;
-      margin: 0 0 0.5rem 0;
-    }
-    h2 {
-      font-size: 1.2rem;
-      margin: 0 0 0.75rem 0;
-      color: #334155;
-    }
-    .control-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      align-items: center;
-      margin-bottom: 0.75rem;
-    }
-    button, a[role="button"], a {
+    button, a, input, textarea {
+      margin: 2px;
+      display: inline-block;
       min-width: 24px;
       min-height: 24px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      vertical-align: middle;
+      box-sizing: border-box;
     }
-    .btn-style {
-      padding: 0.5rem 1rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-      background: #f1f5f9;
-      color: #0f172a;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .btn-style:focus-visible {
-      outline: 2px solid #2563eb;
-      outline-offset: 2px;
-    }
-    input[type="text"], input[type="email"] {
-      padding: 0.4rem 0.6rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-    }
-    .bulk-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 0.5rem;
+    .burst-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Names and Labels Test Dashboard</h1>
-    <p id="prose-intro">This dashboard verifies accessible naming for controls, forms, and images.</p>
+  <header role="banner">
+    <h1>Metropolitan Community Store</h1>
   </header>
 
+  <nav aria-label="Main navigation">
+    <a id="link-named" href="/home">Home</a>
+    <a id="link-path" href="/user/shopping-cart"></a>
+  </nav>
+
   <main>
-    <!-- Section 1: Pre-existing properly named elements -->
-    <section aria-labelledby="sec-named-title">
-      <h2 id="sec-named-title">Already Named Elements</h2>
-      <div class="control-row">
-        <button id="btn-already-named" type="button" class="btn-style">Save Preferences</button>
-        <a id="link-already-named" href="/overview" class="btn-style">Overview</a>
-        <div>
-          <label for="input-already-named">User Handle</label>
-          <input id="input-already-named" type="text" value="alice">
-        </div>
-        <img id="img-already-named" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%236366f1'/%3E%3C/svg%3E" width="60" height="60" alt="User Avatar">
-        <img id="img-already-decorative" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%2394a3b8'/%3E%3C/svg%3E" width="60" height="60" alt="">
-      </div>
+    <h2>Featured Products and Controls</h2>
+
+    <!-- Named controls that must be left alone -->
+    <section aria-labelledby="named-heading">
+      <h3 id="named-heading">Existing Named Controls</h3>
+      <button id="btn-named" type="button">Checkout Now</button>
+      <label for="input-named">Customer Notes</label>
+      <input id="input-named" type="text" value="Fragile item">
+      <img id="img-named" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='blue'/></svg>" alt="Blue sports backpack" width="100" height="100">
+      <img id="img-explicit-decorative" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='50'><rect width='200' height='50' fill='yellow'/></svg>" alt="" width="200" height="50">
     </section>
 
-    <!-- Section 2: Page-first naming without AI -->
-    <section aria-labelledby="sec-page-first-title">
-      <h2 id="sec-page-first-title">Page-First Naming (No AI Needed)</h2>
-      <div class="control-row">
-        <!-- Title attribute on child -->
-        <button id="btn-page-title" type="button" class="btn-style"><span title="Account Settings"></span></button>
-        <!-- SVG title element -->
-        <button id="btn-svg-title" type="button" class="btn-style">
-          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><title>Close Window</title><rect width="24" height="24" fill="#64748b"/></svg>
-        </button>
-        <!-- Icon class -->
-        <button id="btn-icon-class" type="button" class="btn-style"><i class="fa fa-search"></i></button>
-        <!-- Link with icon class -->
-        <a id="link-icon-class" href="/cart" class="btn-style"><span class="icon-shopping-cart"></span></a>
-        <!-- Image file name -->
-        <img id="img-file-name" src="assets/download-report.png" width="64" height="64">
-        <!-- Link last path segment -->
-        <a id="link-path-part" href="/customer-support" class="btn-style"></a>
-        <!-- Form field with nearby sibling text -->
-        <div>
-          <span id="label-email-text">Email Address:</span>
-          <input id="input-nearby-sibling" type="email">
-        </div>
-        <!-- Form field with name attribute -->
-        <div>
-          <input id="input-by-name" type="text" name="postal_code">
-        </div>
-        <!-- Image with figcaption -->
-        <figure>
-          <img id="img-by-figcaption" src="assets/sunset-harbor.jpg" width="64" height="64">
-          <figcaption>Harbor at dawn</figcaption>
-        </figure>
-      </div>
+    <!-- Page-first candidates (no AI needed) -->
+    <section aria-labelledby="pagefirst-heading">
+      <h3 id="pagefirst-heading">Page-first Named Controls</h3>
+      <button id="btn-svg-title" type="button">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24">
+          <title>Close dialog</title>
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      </button>
+      <button id="btn-icon-class" class="btn-search" type="button">
+        <span class="fa fa-search"></span>
+      </button>
+      <button id="btn-small-icon" type="button">
+        <img src="trash-can.png" width="24" height="24">
+      </button>
+      <input id="input-placeholder" type="text" placeholder="Search products">
+      <input id="input-name" type="text" name="customer_email">
+      <span class="field-label">Special instructions:</span>
+      <textarea id="input-nearby"></textarea>
+      <img id="img-small-icon" src="star-rating.png" width="32" height="32">
     </section>
 
-    <!-- Section 3: Decorative images -->
-    <section aria-labelledby="sec-decorative-title">
-      <h2 id="sec-decorative-title">Decorative and Sub-Threshold Images</h2>
-      <div class="control-row">
-        <!-- Presentation role (unlabeled) -->
-        <img id="img-role-presentation" role="presentation" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23cbd5e1'/%3E%3C/svg%3E" width="80" height="80">
-        <!-- Tiny spacer (unlabeled) -->
-        <img id="img-decorative-spacer" src="images/spacer.gif" width="10" height="10">
-        <!-- Tiny 12x12 image (unlabeled) -->
-        <img id="img-tiny-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Crect width='12' height='12' fill='%23cbd5e1'/%3E%3C/svg%3E" width="12" height="12">
-        <!-- 32x32 image: <= 48px, non-decorative, but below informative threshold (no alt) -->
-        <img id="img-small-nondecorative" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%2364748b'/%3E%3C/svg%3E" width="32" height="32">
-      </div>
+    <!-- Decorative images (never sent to AI) -->
+    <section aria-labelledby="decorative-heading">
+      <h3 id="decorative-heading">Decorative Images</h3>
+      <img id="img-spacer" src="spacer.gif" width="1" height="1">
+      <img id="img-presentation" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='20'><rect width='120' height='20' fill='gray'/></svg>" role="presentation" width="120" height="20">
     </section>
 
-    <!-- Section 4: AI-dependent controls and informative images -->
-    <section aria-labelledby="sec-ai-title">
-      <h2 id="sec-ai-title">AI Dependent Elements</h2>
-      <div class="control-row">
-        <button id="btn-ai-control" type="button" class="btn-custom-x"></button>
-        <a id="link-ai-control" href="#" class="nav-custom-y"></a>
-        <input id="input-ai-field" type="text" class="field-custom-z">
-        <!-- Informative image > 48x48 (no alt) -->
-        <img id="img-ai-informative" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%2310b981'/%3E%3C/svg%3E" width="80" height="80">
-      </div>
+    <!-- Photo with descriptive file name (must not be named from file name) -->
+    <section aria-labelledby="photo-heading">
+      <h3 id="photo-heading">Photos and Illustrations</h3>
+      <img id="img-large-photo" src="golden-retriever-playing-fetch.jpg" width="100" height="80">
     </section>
 
-    <!-- Section 5: Hidden controls (must never receive AI calls) -->
-    <section aria-labelledby="sec-hidden-title" style="margin-bottom: 0;">
-      <h2 id="sec-hidden-title">Hidden Elements</h2>
-      <button id="btn-hidden-display" type="button" style="display: none;"></button>
-      <a id="link-hidden-attr" href="#" hidden></a>
-      <input id="input-hidden-aria" type="text" aria-hidden="true">
+    <!-- Elements requiring AI (no page-first signals) -->
+    <section aria-labelledby="ai-heading">
+      <h3 id="ai-heading">Elements Requiring AI</h3>
+      <button id="btn-ai" type="button"></button>
+      <a id="link-ai" href="#"></a>
+      <p><input id="input-ai" type="text"></p>
+      <img id="img-ai" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='80'><rect width='100' height='80' fill='green'/></svg>" width="100" height="80">
     </section>
 
-    <!-- Section 6: Bulk unnamed controls for budget/limit verification -->
-    <section aria-labelledby="sec-bulk-title">
-      <h2 id="sec-bulk-title">Bulk Unnamed Controls</h2>
-      <div id="bulk-unnamed-container" class="bulk-grid">
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
-        <button class="bulk-btn-x" type="button"></button>
+    <!-- Hidden elements (must never be sent to AI) -->
+    <section aria-labelledby="hidden-heading">
+      <h3 id="hidden-heading">Hidden Elements</h3>
+      <button id="btn-hidden" type="button" style="display:none"></button>
+      <a id="link-hidden" href="/hidden" hidden></a>
+      <img id="img-hidden" src="hidden.png" width="100" height="100" style="visibility:hidden">
+    </section>
+
+    <!-- Burst of unnamed controls to test AI limit capping -->
+    <section aria-labelledby="burst-heading">
+      <h3 id="burst-heading">Additional Unnamed Controls</h3>
+      <div class="burst-wrap">
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
+        <button type="button"></button>
       </div>
     </section>
   </main>
 
-  <footer>
-    <p id="prose-footer">Dashboard footer with legal notes and accessibility policy.</p>
+  <aside aria-label="Related links">
+    <p>Customer Service hours: Monday to Friday, 9am to 5pm.</p>
+  </aside>
+
+  <footer role="contentinfo">
+    <p>&copy; 2026 Metropolitan Community Store. All rights reserved.</p>
   </footer>
 </body>
 </html>

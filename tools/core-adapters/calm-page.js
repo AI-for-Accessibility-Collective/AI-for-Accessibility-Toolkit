@@ -1,50 +1,49 @@
-// calm-page.js — Stops motion that starts on its own: CSS animations, transitions,
-// smooth scrolling, autoplaying video, GIF-like animated images, and auto-advancing carousels.
-// Barrier: People with vestibular disorders, motion sensitivity, ADHD, or cognitive barriers
-// can experience dizziness, nausea, distraction, or lose their reading position when content
-// moves, animates, autoplays, or advances automatically (WCAG 2.2.2 Pause, Stop, Hide; 2.3.1).
+// calm-page.js — Stops animations, smooth scrolling, autoplaying media, carousels, and marquees.
+// Barrier: People with vestibular disorders, photosensitive epilepsy, motion sensitivity,
+// or cognitive/attention impairments experience dizziness, nausea, distraction, or loss
+// of position when content moves, scrolls, loops, or advances on its own (WCAG 2.2.2, 2.3.1).
 //
 // Suggested in onboarding for: sensory, cognitive (a suggestion only, never a gate).
 // The person's settings it reads: motionReducer.
 // What the person can adjust: nothing (the shortcut, if given, turns it on and off).
 //
 // Options:
-//   stopAnimations: Whether to stop CSS animations and transitions (default: true).
-//   pauseMedia:     Whether to pause autoplaying videos and animated media (default: true).
-//   stopCarousels:  Whether to pause auto-advancing carousels and marquees (default: true).
+//   stopAnimations: boolean, stops CSS animations and transitions (defaults to true).
+//   pauseVideos: boolean, pauses autoplaying and looping videos with controls (defaults to true).
+//   stopCarousels: boolean, pauses auto-advancing carousels and keeps controls (defaults to true).
+//   stopMarquees: boolean, halts marquee elements and scrolling tickers (defaults to true).
 //
 // Decisions:
-//   • Injects one reversible stylesheet via s.css that sets animation and transition durations
-//     and delays to 0s, iteration count to 1, fill mode to forwards, and scroll behavior to auto.
-//     Content stays visible in its final state.
-//   • Pauses autoplaying video and looping muted media (GIF-like animated images) through s.media.pause,
-//     showing controls so the person has a visible way to play them.
-//   • Captures late play events: if initiated by the person (s.watch.byPerson), playback continues;
-//     if started by the page, pauses with controls.
-//   • Pauses running Web Animations API (WAAPI) animations via getAnimations(), resuming on disable.
-//   • Stops auto-advancing carousels (WCAG 2.2.2):
-//     - When the carousel has its own pause/stop control, uses it to stop advancement and keeps controls.
-//     - Otherwise holds the active slide shown by observing class/attribute mutations and scroll events.
-//     - If the page attempts to auto-advance more than 4 times, stops holding rather than fight the page.
-//     - Measures once per carousel and never reads the scroll width of every element on the page.
-//   • Stops <marquee> elements with .stop(), restarting only what was running on disable().
-//   • Reversible by construction: disable() ends the session (s.end()), which restores original styles,
-//     resumes only media that was playing before enable(), and leaves user-started playback playing.
-//   • Announces "Page calmed: animations, autoplay and auto-advancing paused."
+//   • Injects one stylesheet (s.css) setting animation-duration: 0s !important,
+//     animation-delay: 0s !important, animation-iteration-count: 1 !important,
+//     animation-fill-mode: both !important, transition-duration: 0s !important,
+//     transition-delay: 0s !important, and scroll-behavior: auto !important.
+//   • Guarantees content hidden by an animation start state stays visible in its final state.
+//   • Pauses autoplaying, playing, and muted looping videos via s.media.pause(v, { showControls: true }),
+//     adding native controls so the person has a visible way to play them.
+//   • Never touches videos that the person starts or plays after enable().
+//   • On disable(), restarts only what was playing before enable(); anything the person
+//     played or started stays as they left it.
+//   • For carousels: uses the carousel's own pause or stop button when present (WCAG 2.2.2).
+//     Clicks the control ONLY when:
+//       1) It is inside the carousel (aria-roledescription="carousel", or a region/group
+//          whose accessible name contains "carousel" or "slideshow").
+//       2) Its accessible name contains "pause" or "stop" (never by class name).
+//       3) It is a button, not a submit button, and not inside a form.
+//       4) The carousel is playing (accessible name or aria-pressed indicates playing).
+//     Never clicks any button outside a carousel, even if named Stop or Pause.
+//   • If a carousel has no pause control: holds the shown slide by keeping only the track's
+//     direct children (slides) in their current state; never changes other elements' classes.
+//     If the page script fights back more than 3 times, stops holding rather than fight the page.
+//   • Measure once: never reads the scroll width of every element on the page.
+//   • Stops running <marquee> elements via .stop() and restarts them on disable() via .start().
+//   • Says nothing on load: no announcements are made so screen readers remain uninterrupted.
 //
 // What it cannot do:
-//   • Cannot freeze GIF animations embedded within Canvas 2D or WebGL surfaces without redrawing.
-//   • Cannot prevent external plugin video players (Flash/Silverlight) from executing internal scripts.
-
-const CAROUSEL_SELECTOR = [
-  '[aria-roledescription="carousel"]',
-  '[class*="carousel" i]',
-  '[class*="slider" i]',
-  '[class*="rotat" i]',
-  '[class*="slideshow" i]',
-  '[data-carousel]',
-  '[data-slider]',
-].join(', ');
+//   • Cannot pause frame-by-frame animations rendered entirely inside an inaccessible HTML5
+//     <canvas> or WebGL canvas that does not expose external playback controls.
+//   • Cannot intercept background network refreshes or server-sent data updates that modify DOM
+//     without triggering standard motion or media APIs.
 
 export default {
   enable(options = {}, toolkit) {
@@ -53,295 +52,366 @@ export default {
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
 
+    const doc = document;
+    if (!doc || (!doc.body && !doc.documentElement)) return false;
+
     const s = (this.s = this.toolkit.session());
-    const root = document.body || document.documentElement;
-    if (!root) return false;
 
-    const stopAnimations = this.options.stopAnimations !== false;
-    const pauseMediaOpt = this.options.pauseMedia !== false;
-    const stopCarouselsOpt = this.options.stopCarousels !== false;
+    // Respect person's profile setting: if motionReducer is set, motion reduction is forced.
+    const motionReducerPref = s.profile.get('motionReducer');
 
-    // 1. One stylesheet that halts CSS animations, transitions and smooth scrolling.
-    // Content stays visible in its final state (fill-mode: forwards).
+    // Options (defaults all true unless explicitly disabled and motionReducer not set)
+    const stopAnimations = motionReducerPref || this.options.stopAnimations !== false;
+    const pauseVideos = this.options.pauseVideos !== false;
+    const stopCarousels = this.options.stopCarousels !== false;
+    const stopMarquees = this.options.stopMarquees !== false;
+
+    // 1. One stylesheet for CSS animations, transitions, smooth scrolling, and carousels
     if (stopAnimations) {
       const cssRules = `
-        *, *::before, *::after {
-          animation-duration: 0s !important;
-          animation-delay: 0s !important;
-          animation-iteration-count: 1 !important;
-          animation-fill-mode: forwards !important;
-          transition-duration: 0s !important;
-          transition-delay: 0s !important;
-          scroll-behavior: auto !important;
-        }
-        html {
-          scroll-behavior: auto !important;
-        }
-        [aria-roledescription="carousel"], [aria-roledescription="carousel"] *,
-        [class*="carousel" i], [class*="carousel" i] *,
-        [class*="slider" i], [class*="slider" i] *,
-        [class*="slideshow" i], [class*="slideshow" i] *,
-        [class*="rotat" i], [class*="rotat" i] *,
-        [class*="ticker" i], [class*="ticker" i] *,
-        [class*="marquee" i], [class*="marquee" i] * {
-          animation-play-state: paused !important;
-        }
-      `;
-      s.css('calm-page-styles', cssRules);
+*, *::before, *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  animation-fill-mode: both !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+html {
+  scroll-behavior: auto !important;
+}
+[class*="carousel" i], [class*="slider" i], [class*="rotat" i], [class*="ticker" i], [class*="marquee" i], [aria-roledescription="carousel" i],
+[class*="carousel" i] *, [class*="slider" i] *, [class*="rotat" i] *, [class*="ticker" i] *, [class*="marquee" i] *, [aria-roledescription="carousel" i] * {
+  animation-play-state: paused !important;
+}
+marquee {
+  overflow: hidden !important;
+}
+`;
+      s.css('calm-page', cssRules);
 
-      // Web Animations API (WAAPI): pause running animations not driven by CSS
-      if (typeof document !== 'undefined' && typeof document.getAnimations === 'function') {
-        try {
-          const runningWaapi = [];
-          for (const anim of document.getAnimations()) {
-            if (anim.playState === 'running' && anim.constructor && anim.constructor.name !== 'CSSAnimation') {
-              try {
-                anim.pause();
-                runningWaapi.push(anim);
-              } catch {}
+      // Finish or pause WAAPI animations so content hidden at start reaches final state
+      try {
+        if (typeof doc.getAnimations === 'function') {
+          for (const anim of doc.getAnimations()) {
+            try {
+              if (anim.playState === 'running') {
+                const timing = anim.effect?.getTiming?.();
+                if (timing && timing.iterations === Infinity) {
+                  anim.pause();
+                  s.onEnd(() => {
+                    try { if (anim.playState === 'paused') anim.play(); } catch {}
+                  });
+                } else {
+                  anim.finish();
+                }
+              }
+            } catch {
+              try { anim.pause(); } catch {}
             }
           }
-          if (runningWaapi.length) {
-            s.onEnd(() => {
-              for (const anim of runningWaapi) {
-                try {
-                  if (anim.playState === 'paused') anim.play();
-                } catch {}
-              }
-            });
-          }
-        } catch {}
-      }
-    }
-
-    // 2. Media handling via s.media
-    const seenMedia = new WeakSet();
-
-    const handleMediaElement = (el) => {
-      if (!el || (el.tagName !== 'VIDEO' && el.tagName !== 'AUDIO')) return;
-      if (seenMedia.has(el)) return;
-      seenMedia.add(el);
-
-      const isLoopingMuted = el.hasAttribute('loop') && el.muted;
-      const isAuto = el.autoplay || el.hasAttribute('autoplay');
-      const isPlaying = !el.paused;
-
-      if (isPlaying || isAuto || isLoopingMuted) {
-        s.media.pause(el, { showControls: true });
-      }
-    };
-
-    if (pauseMediaOpt) {
-      for (const m of root.querySelectorAll('video, audio')) {
-        handleMediaElement(m);
-      }
-
-      // Late play events: if initiated by the person, leave it playing; otherwise pause with controls
-      s.listen(
-        document,
-        'play',
-        (e) => {
-          const v = e.target;
-          if (!v || (v.tagName !== 'VIDEO' && v.tagName !== 'AUDIO')) return;
-          if (s.watch.byPerson(v, { withinMs: 1500 })) return;
-          if (typeof navigator !== 'undefined' && navigator.userActivation && navigator.userActivation.isActive) return;
-          s.media.pause(v, { showControls: true });
-        },
-        true
-      );
-    }
-
-    // 3. Marquee elements
-    for (const m of root.querySelectorAll('marquee')) {
-      try {
-        m.stop();
-        s.onEnd(() => {
-          try { m.start(); } catch {}
-        });
+        }
       } catch {}
     }
 
-    // 4. Carousels
-    const handledCarousels = new WeakSet();
-
-    const findPauseControl = (carousel) => {
-      const candidates = [carousel];
-      if (carousel.parentElement && carousel.parentElement !== document.body && carousel.parentElement !== document.documentElement) {
-        candidates.push(carousel.parentElement);
-      }
-      const buttons = [];
-      for (const c of candidates) {
-        buttons.push(...c.querySelectorAll('button, [role="button"], input[type="button"]'));
-      }
-      for (const btn of buttons) {
-        const label = (btn.getAttribute('aria-label') || '').toLowerCase();
-        const title = (btn.getAttribute('title') || '').toLowerCase();
-        const text = (btn.textContent || '').trim().toLowerCase();
-        const cls = (typeof btn.className === 'string' ? btn.className : '').toLowerCase();
-        const isPause = (str) => /\b(pause|stop)\b/i.test(str);
-        if (isPause(label) || isPause(title) || isPause(text) || isPause(cls)) {
-          return btn;
+    // 2. Videos and media
+    if (pauseVideos) {
+      const handleMedia = (el) => {
+        if (!el || (el.tagName !== 'VIDEO' && el.tagName !== 'AUDIO')) return;
+        const isAutoplayingOrPlaying = !el.paused || el.autoplay || el.hasAttribute('autoplay') || el.loop;
+        if (isAutoplayingOrPlaying) {
+          s.media.pause(el, { showControls: true });
         }
-        if (btn.hasAttribute('aria-pressed') && btn.getAttribute('aria-pressed') === 'false' && /play|auto|rotat|slide/i.test(label + ' ' + title + ' ' + text)) {
-          return btn;
-        }
+      };
+
+      for (const el of doc.querySelectorAll('video, audio')) {
+        handleMedia(el);
       }
-      return null;
-    };
 
-    const handleCarousel = (carousel) => {
-      if (!carousel || handledCarousels.has(carousel)) return;
-      handledCarousels.add(carousel);
+      // Watch for added media
+      s.watch.added(
+        doc.body || doc.documentElement,
+        (el) => {
+          if (el.tagName === 'VIDEO' || el.tagName === 'AUDIO') {
+            handleMedia(el);
+          } else if (el.querySelectorAll) {
+            for (const v of el.querySelectorAll('video, audio')) handleMedia(v);
+          }
+        },
+        { selector: 'video, audio' }
+      );
 
-      // Check if carousel has its own pause/stop control
-      const pauseBtn = findPauseControl(carousel);
-      if (pauseBtn) {
-        let userInteracted = false;
-        s.listen(carousel, 'pointerdown', () => { userInteracted = true; });
-        s.listen(carousel, 'keydown', () => { userInteracted = true; });
+      // Catch media that starts playing later without user interaction
+      s.listen(doc, 'play', (e) => {
+        const v = e.target;
+        if (!v || (v.tagName !== 'VIDEO' && v.tagName !== 'AUDIO')) return;
+        if (s.watch.byPerson(v, { withinMs: 1500 }) || s.watch.byPerson(doc.body, { withinMs: 1500 })) return;
+        handleMedia(v);
+      }, true);
+    }
+
+    // 3. Marquees
+    if (stopMarquees) {
+      const handleMarquee = (m) => {
+        if (!m || m.tagName !== 'MARQUEE') return;
         try {
-          pauseBtn.click();
+          if (typeof m.stop === 'function') {
+            m.stop();
+            s.onEnd(() => { try { m.start(); } catch {} });
+          }
         } catch {}
+      };
 
-        s.onEnd(() => {
-          if (!userInteracted) {
-            const label = (pauseBtn.getAttribute('aria-label') || '').toLowerCase();
-            const title = (pauseBtn.getAttribute('title') || '').toLowerCase();
-            const text = (pauseBtn.textContent || '').trim().toLowerCase();
-            const isPlay = (str) => /\b(play|start|resume)\b/i.test(str);
-            if (isPlay(label) || isPlay(title) || isPlay(text) || pauseBtn.getAttribute('aria-pressed') === 'true') {
+      for (const m of doc.querySelectorAll('marquee')) {
+        handleMarquee(m);
+      }
+
+      s.watch.added(
+        doc.body || doc.documentElement,
+        (el) => {
+          if (el.tagName === 'MARQUEE') handleMarquee(el);
+          else if (el.querySelectorAll) {
+            for (const m of el.querySelectorAll('marquee')) handleMarquee(m);
+          }
+        },
+        { selector: 'marquee' }
+      );
+    }
+
+    // 4. Carousels
+    if (stopCarousels) {
+      // Find enclosing carousel container for a control
+      const findEnclosingCarousel = (el) => {
+        let curr = el.parentElement;
+        while (curr && curr !== doc.body && curr !== doc.documentElement) {
+          const roleDesc = (curr.getAttribute('aria-roledescription') || '').toLowerCase();
+          if (roleDesc === 'carousel') return curr;
+          const role = (curr.getAttribute('role') || '').toLowerCase();
+          if (role === 'region' || role === 'group') {
+            const name = (s.page.nameOf(curr) || curr.getAttribute('aria-label') || '').toLowerCase();
+            if (/carousel|slideshow/i.test(name)) return curr;
+          }
+          curr = curr.parentElement;
+        }
+        return null;
+      };
+
+      // Gather candidate carousels
+      const carousels = new Set();
+      for (const c of doc.querySelectorAll('[aria-roledescription="carousel" i]')) {
+        carousels.add(c);
+      }
+      for (const r of doc.querySelectorAll('[role="region" i], [role="group" i]')) {
+        const name = (s.page.nameOf(r) || r.getAttribute('aria-label') || '').toLowerCase();
+        if (/carousel|slideshow/i.test(name)) carousels.add(r);
+      }
+      for (const c of doc.querySelectorAll('[class*="carousel" i], [class*="swiper" i], [class*="slick" i]')) {
+        carousels.add(c);
+      }
+
+      const handledCarousels = new WeakSet();
+
+      const handleCarousel = (carousel) => {
+        if (!carousel || handledCarousels.has(carousel)) return;
+        handledCarousels.add(carousel);
+
+        // Check if this carousel qualifies for clicking its own pause/stop control
+        const isQualifiedCarousel = (() => {
+          const roleDesc = (carousel.getAttribute('aria-roledescription') || '').toLowerCase();
+          if (roleDesc === 'carousel') return true;
+          const role = (carousel.getAttribute('role') || (carousel.tagName === 'SECTION' ? 'region' : '')).toLowerCase();
+          if (role === 'region' || role === 'group') {
+            const name = (s.page.nameOf(carousel) || carousel.getAttribute('aria-label') || '').toLowerCase();
+            return /carousel|slideshow/i.test(name);
+          }
+          return false;
+        })();
+
+        let pauseBtn = null;
+        if (isQualifiedCarousel) {
+          const buttons = carousel.querySelectorAll('button, [role="button"]');
+          for (const btn of buttons) {
+            // Must be inside the carousel
+            if (findEnclosingCarousel(btn) !== carousel && !carousel.contains(btn)) continue;
+            // Must be a button
+            const isBtn = btn.tagName === 'BUTTON' || btn.getAttribute('role') === 'button';
+            if (!isBtn) continue;
+            // Must not be a submit button and not in a form
+            if (btn.closest('form') || btn.form) continue;
+            if ((btn.getAttribute('type') || '').toLowerCase() === 'submit') continue;
+            // Accessible name says pause or stop (not its class)
+            const btnName = (s.page.nameOf(btn) || btn.getAttribute('aria-label') || btn.innerText || btn.textContent || '').trim();
+            if (!/\b(pause|stop)\b/i.test(btnName)) continue;
+            // Carousel is playing (its name or aria-pressed says so)
+            if (btn.getAttribute('aria-pressed') === 'true') continue;
+
+            pauseBtn = btn;
+            break;
+          }
+        }
+
+        if (pauseBtn) {
+          // WCAG 2.2.2: Use its own pause control
+          let userTouched = false;
+          const markTouch = () => {
+            if (s.watch.byPerson(carousel, { withinMs: 1500 })) userTouched = true;
+          };
+          s.listen(carousel, 'click', markTouch);
+          s.listen(carousel, 'keydown', markTouch);
+
+          try {
+            pauseBtn.click();
+          } catch {}
+
+          // On disable: restart only what was playing
+          s.onEnd(() => {
+            if (!userTouched && pauseBtn && pauseBtn.isConnected) {
               try { pauseBtn.click(); } catch {}
+            }
+          });
+        } else {
+          // Otherwise hold the slide shown
+          holdSlides(carousel);
+        }
+      };
+
+      const holdSlides = (carousel) => {
+        const findTrack = () => {
+          const candidates = [
+            ...carousel.querySelectorAll('[class*="track" i], [class*="slides" i], ul, ol, div'),
+            carousel,
+          ];
+          for (const c of candidates) {
+            const children = Array.from(c.children);
+            if (children.length >= 2 && children.every(ch =>
+              ch.getAttribute('aria-roledescription') === 'slide' ||
+              ch.getAttribute('role') === 'group' ||
+              /\bslide\b/i.test(ch.className || '') ||
+              ch.classList.contains('slide')
+            )) {
+              return c;
+            }
+          }
+          // Fallback: look for container with 2+ slide-like children
+          for (const c of candidates) {
+            const children = Array.from(c.children);
+            if (children.length >= 2 && children.some(ch =>
+              ch.getAttribute('aria-roledescription') === 'slide' ||
+              ch.classList.contains('slide')
+            )) {
+              return c;
+            }
+          }
+          return null;
+        };
+
+        const track = findTrack();
+        if (!track) return;
+
+        const findActive = () => {
+          const currentSlides = Array.from(track.children);
+          const byClass = currentSlides.find(s => /\b(active|is-active|current|selected|visible|show)\b/i.test(s.className || ''));
+          if (byClass) return byClass;
+          const byAria = currentSlides.find(s => s.getAttribute('aria-hidden') === 'false' || s.getAttribute('aria-selected') === 'true');
+          if (byAria) return byAria;
+          const byDisplay = currentSlides.find(s => s.style.display && s.style.display !== 'none');
+          if (byDisplay) return byDisplay;
+          return currentSlides[0];
+        };
+
+        let heldSlide = findActive();
+        let fights = 0;
+        let stopped = false;
+
+        const mo = new MutationObserver(() => {
+          if (!s.alive() || stopped) return;
+
+          // If the person just interacted with the carousel, accept their slide change
+          if (s.watch.byPerson(carousel, { withinMs: 1500 })) {
+            heldSlide = findActive();
+            fights = 0;
+            return;
+          }
+
+          const currentActive = findActive();
+          if (currentActive && currentActive !== heldSlide) {
+            fights++;
+            if (fights > 3) {
+              // Stop holding rather than fight the page
+              stopped = true;
+              mo.disconnect();
+              return;
+            }
+
+            // Revert state: change ONLY the slides (track's own children), never another element
+            mo.disconnect();
+            try {
+              // Revert classes
+              const activeTokens = (currentActive.className || '').split(/\s+/).filter(Boolean);
+              const heldTokens = (heldSlide.className || '').split(/\s+/).filter(Boolean);
+              for (const token of activeTokens) {
+                if (/\b(active|is-active|current|selected|visible|show)\b/i.test(token) || (!heldTokens.includes(token) && !token.startsWith('ai4a11y-'))) {
+                  currentActive.classList.remove(token);
+                  heldSlide.classList.add(token);
+                }
+              }
+
+              // Revert aria-hidden
+              if (currentActive.getAttribute('aria-hidden') === 'false' && heldSlide.getAttribute('aria-hidden') === 'true') {
+                currentActive.setAttribute('aria-hidden', 'true');
+                heldSlide.setAttribute('aria-hidden', 'false');
+              }
+
+              // Revert aria-selected
+              if (currentActive.getAttribute('aria-selected') === 'true' && heldSlide.getAttribute('aria-selected') === 'false') {
+                currentActive.setAttribute('aria-selected', 'false');
+                heldSlide.setAttribute('aria-selected', 'true');
+              }
+
+              // Revert display
+              if (currentActive.style.display && currentActive.style.display !== 'none' && heldSlide.style.display === 'none') {
+                currentActive.style.display = 'none';
+                heldSlide.style.display = '';
+              }
+            } finally {
+              if (!stopped && s.alive()) {
+                mo.observe(track, {
+                  attributes: true,
+                  attributeFilter: ['class', 'style', 'aria-hidden', 'aria-selected'],
+                  subtree: true,
+                });
+              }
             }
           }
         });
-        return;
-      }
 
-      // Otherwise hold the slide shown
-      const slideSelector = '[aria-roledescription="slide"], [class*="slide" i], [class*="item" i]';
-      let slides = Array.from(carousel.querySelectorAll(slideSelector));
-      if (!slides.length && carousel.children.length > 1) {
-        slides = Array.from(carousel.children);
-      }
-      if (!slides.length) return;
+        mo.observe(track, {
+          attributes: true,
+          attributeFilter: ['class', 'style', 'aria-hidden', 'aria-selected'],
+          subtree: true,
+        });
 
-      const isActive = (el) => {
-        const cls = typeof el.className === 'string' ? el.className.toLowerCase() : '';
-        return /\b(active|current|is-active|selected|visible)\b/.test(cls) ||
-               el.getAttribute('aria-hidden') === 'false' ||
-               el.getAttribute('aria-selected') === 'true';
+        s.onEnd(() => mo.disconnect());
       };
 
-      let activeSlide = slides.find(isActive) || slides[0];
-      let activeClasses = new Set(activeSlide.classList);
-      let scrollPos = carousel.scrollLeft; // Measure once per carousel
-      let fightCount = 0;
-      let givenUp = false;
-      let reverting = false;
-
-      s.listen(carousel, 'scroll', () => {
-        if (givenUp || reverting) return;
-        if (s.watch.byPerson(carousel, { withinMs: 1500 })) {
-          scrollPos = carousel.scrollLeft;
-          fightCount = 0;
-          return;
-        }
-        fightCount++;
-        if (fightCount > 4) {
-          givenUp = true;
-          return;
-        }
-        reverting = true;
-        try {
-          carousel.scrollLeft = scrollPos;
-        } catch {}
-        reverting = false;
-      });
-
-      const observer = new MutationObserver(() => {
-        if (givenUp || reverting) return;
-
-        if (s.watch.byPerson(carousel, { withinMs: 1500 })) {
-          const nowActive = slides.find(isActive);
-          if (nowActive) {
-            activeSlide = nowActive;
-            activeClasses = new Set(nowActive.classList);
-          }
-          fightCount = 0;
-          return;
-        }
-
-        fightCount++;
-        if (fightCount > 4) {
-          givenUp = true;
-          observer.disconnect();
-          return;
-        }
-
-        reverting = true;
-        for (const slide of slides) {
-          if (slide === activeSlide) {
-            if (!slide.classList.contains('active') && activeClasses.has('active')) slide.classList.add('active');
-            if (!slide.classList.contains('is-active') && activeClasses.has('is-active')) slide.classList.add('is-active');
-            if (!slide.classList.contains('current') && activeClasses.has('current')) slide.classList.add('current');
-            if (slide.hasAttribute('aria-hidden') && slide.getAttribute('aria-hidden') === 'true') {
-              slide.setAttribute('aria-hidden', 'false');
-            }
-          } else {
-            slide.classList.remove('active', 'is-active', 'current');
-            if (slide.hasAttribute('aria-hidden') && slide.getAttribute('aria-hidden') === 'false') {
-              slide.setAttribute('aria-hidden', 'true');
-            }
-          }
-        }
-        observer.takeRecords();
-        reverting = false;
-      });
-
-      observer.observe(carousel, {
-        attributes: true,
-        attributeFilter: ['class', 'aria-hidden', 'aria-selected', 'hidden'],
-        subtree: true,
-      });
-
-      s.onEnd(() => observer.disconnect());
-    };
-
-    if (stopCarouselsOpt) {
-      for (const c of root.querySelectorAll(CAROUSEL_SELECTOR)) {
-        handleCarousel(c);
+      for (const carousel of carousels) {
+        handleCarousel(carousel);
       }
+
+      s.watch.added(
+        doc.body || doc.documentElement,
+        (el) => {
+          if (!el) return;
+          const roleDesc = (el.getAttribute?.('aria-roledescription') || '').toLowerCase();
+          if (roleDesc === 'carousel') handleCarousel(el);
+          else if (el.querySelectorAll) {
+            for (const c of el.querySelectorAll('[aria-roledescription="carousel" i]')) handleCarousel(c);
+          }
+        },
+        { selector: '[aria-roledescription="carousel" i], [class*="carousel" i]' }
+      );
     }
-
-    // 5. Watch for dynamically added media and carousels
-    s.watch.added(
-      root,
-      (el) => {
-        if (!el || el.nodeType !== 1) return;
-        if (pauseMediaOpt) {
-          if (el.tagName === 'VIDEO' || el.tagName === 'AUDIO') {
-            handleMediaElement(el);
-          } else if (el.querySelectorAll) {
-            for (const m of el.querySelectorAll('video, audio')) {
-              handleMediaElement(m);
-            }
-          }
-        }
-        if (stopCarouselsOpt) {
-          if (el.matches && el.matches(CAROUSEL_SELECTOR)) {
-            handleCarousel(el);
-          } else if (el.querySelectorAll) {
-            for (const c of el.querySelectorAll(CAROUSEL_SELECTOR)) {
-              handleCarousel(c);
-            }
-          }
-        }
-      },
-      { selector: `video, audio, ${CAROUSEL_SELECTOR}` }
-    );
-
-    s.announce('Page calmed: animations, autoplay and auto-advancing paused.');
-    return true;
   },
 
   disable() {

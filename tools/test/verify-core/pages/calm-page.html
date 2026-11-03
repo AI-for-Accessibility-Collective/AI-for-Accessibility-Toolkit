@@ -3,489 +3,402 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aurora Science &amp; Technology Observatory</title>
+  <title>Calm Page Demonstration and Verification</title>
   <style>
-    :root {
-      --bg: #ffffff;
-      --text: #1a202c;
-      --primary: #005a9c;
-      --primary-hover: #003e6b;
-      --surface: #f7fafc;
-      --border: #e2e8f0;
-      --accent: #2b6cb0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.5;
-    }
-
+    /* Reset & Accessible Base */
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #ffffff;
+      scroll-behavior: smooth;
     }
-
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+    header, nav, main, aside, footer, section {
       padding: 1rem 1.5rem;
     }
-
-    .header-content {
-      max-width: 960px;
-      margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
+    header {
+      background: #f0f4f8;
+      border-bottom: 1px solid #d0d7de;
     }
-
-    h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: var(--primary);
-    }
-
     nav ul {
-      list-style: none;
       display: flex;
-      gap: 1.25rem;
-      margin: 0;
+      gap: 1rem;
+      list-style: none;
       padding: 0;
-      flex-wrap: wrap;
+      margin: 0;
     }
-
     nav a {
-      color: var(--primary);
+      color: #0969da;
       text-decoration: underline;
-      font-weight: 500;
       min-height: 24px;
-      display: inline-flex;
-      align-items: center;
+      display: inline-block;
     }
-
-    nav a:hover, nav a:focus-visible {
-      color: var(--primary-hover);
-      outline: 2px solid var(--primary);
+    nav a:focus-visible, button:focus-visible {
+      outline: 3px solid #0969da;
       outline-offset: 2px;
     }
 
-    main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 1.5rem;
+    /* Animation and transition test elements */
+    @keyframes pulseEffect {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
     }
-
-    section {
-      margin-bottom: 2.5rem;
-    }
-
-    h2 {
-      font-size: 1.25rem;
-      color: var(--text);
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 0.5rem;
-      margin-top: 0;
-    }
-
-    /* CSS Animation Barrier: spinning radar icon */
-    @keyframes spinRadar {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    .radar-spinner {
+    .pulsing-badge {
       display: inline-block;
-      width: 32px;
-      height: 32px;
-      border: 3px solid #cbd5e0;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spinRadar 2.5s infinite linear;
-      vertical-align: middle;
-      margin-right: 0.5rem;
-    }
-
-    /* CSS Transition Barrier */
-    .transition-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem;
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
-    }
-
-    /* Animation start-state barrier: content hidden by keyframes */
-    @keyframes revealHeroContent {
-      from {
-        opacity: 0;
-        visibility: hidden;
-      }
-      to {
-        opacity: 1;
-        visibility: visible;
-      }
-    }
-
-    .hero-reveal {
-      opacity: 0;
-      visibility: hidden;
-      animation: revealHeroContent 3s forwards;
-      background: #edf2f7;
-      border-left: 4px solid var(--primary);
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 0 4px 4px 0;
-    }
-
-    /* Video layout */
-    .media-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .media-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 1rem;
-    }
-
-    .media-box h3 {
-      margin-top: 0;
-      font-size: 1.1rem;
-    }
-
-    video {
-      width: 100%;
-      height: auto;
-      max-height: 200px;
-      background: #000;
-      display: block;
+      padding: 0.35rem 0.75rem;
+      background: #116329;
+      color: #ffffff;
       border-radius: 4px;
+      animation: pulseEffect 2s infinite ease-in-out;
     }
 
-    /* Carousel components */
-    .carousel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+    .smooth-box {
       padding: 1rem;
+      margin: 1rem 0;
+      background: #eef2f7;
+      border: 1px solid #c8d1dc;
+      transition: background-color 0.5s ease, border-color 0.5s ease;
+    }
+
+    /* Content hidden by animation start state */
+    @keyframes fadeInReveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reveal-box {
+      opacity: 0;
+      padding: 1rem;
+      margin: 1rem 0;
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      animation: fadeInReveal 3s forwards;
+    }
+
+    /* Carousels */
+    .carousel-section {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+    }
+    .slides-track {
       position: relative;
+      min-height: 120px;
+      overflow: hidden;
+      margin: 1rem 0;
     }
-
-    .carousel-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .slides-container {
-      min-height: 100px;
-      position: relative;
-    }
-
-    .carousel-slide {
+    .slide {
       display: none;
       padding: 1rem;
-      background: #fff;
-      border: 1px solid var(--border);
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
       border-radius: 4px;
     }
-
-    .carousel-slide.active {
+    .slide.active {
       display: block;
     }
 
     button {
-      background: var(--primary);
-      color: #ffffff;
-      border: none;
-      border-radius: 4px;
+      font-size: 1rem;
+      min-width: 24px;
+      min-height: 24px;
       padding: 0.5rem 1rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      min-height: 36px;
-      min-width: 36px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    button:hover {
-      background: var(--primary-hover);
-    }
-
-    button:focus-visible {
-      outline: 3px solid var(--primary);
-      outline-offset: 2px;
-    }
-
-    marquee {
-      background: #e2e8f0;
-      padding: 0.5rem;
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
       border-radius: 4px;
-      font-weight: 500;
+      color: #24292f;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #eaeef2;
+    }
+
+    /* Videos */
+    video {
       display: block;
-      margin-bottom: 1.5rem;
+      max-width: 100%;
+      height: auto;
+      margin: 0.5rem 0;
+      background: #000;
+    }
+
+    /* Non-carousel slider widget */
+    .slider-widget {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: #fff8c5;
+      border: 1px solid #d4a72c;
+      border-radius: 6px;
     }
 
     footer {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 1.5rem;
-      text-align: center;
+      border-top: 1px solid #d0d7de;
+      margin-top: 2rem;
       font-size: 0.9rem;
-      color: #4a5568;
+      color: #57606a;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <h1>
-        <span class="radar-spinner" id="radar-spinner" aria-hidden="true"></span>
-        <span class="radar-spinner" id="spin-badge" aria-hidden="true"></span>
-        Aurora Observatory
-      </h1>
-      <nav aria-label="Main Navigation">
-        <ul>
-          <li><a href="#overview">Overview</a></li>
-          <li><a href="#media-section">Media</a></li>
-          <li><a href="#featured-research">Featured</a></li>
-          <li><a href="#sky-highlights">Highlights</a></li>
-        </ul>
-      </nav>
-    </div>
+  <header role="banner">
+    <h1>Calm Page Accessibility Verification</h1>
+    <p>Current server time: <span id="live-time">00:00:00</span></p>
+    <nav aria-label="Site Navigation">
+      <ul>
+        <li><a href="#media-section">Media</a></li>
+        <li><a href="#carousel-section">Carousels</a></li>
+        <li><a href="#animation-section">Animations</a></li>
+      </ul>
+    </nav>
   </header>
 
-  <main>
-    <marquee id="space-marquee" behavior="scroll" direction="left">
-      Observatory Alert: Solar radiation telemetry updated at 08:00 UTC. Geomagnetic storm warning active.
-    </marquee>
-
-    <!-- Overview & Hidden Animation Start State -->
-    <!-- Overview & Hidden Animation Start State -->
-    <section id="overview" aria-labelledby="overview-heading">
-      <h2 id="overview-heading">Mission Overview</h2>
-      <div class="transition-card" id="transition-card">
-        <div id="trans-box" style="transition: opacity 0.4s ease, transform 0.4s ease;">
-          <p>The Aurora Observatory tracks cosmic radiation and exoplanet atmospheric variations across multiple spectral bands.</p>
-        </div>
-        <div id="hero-reveal" class="hero-reveal">
-          <p id="hero-reveal-text"><strong>Key Finding:</strong> High-resolution infrared spectroscopy confirmed water vapor signatures on exoplanet Kepler-186f.</p>
-        </div>
+  <main id="main">
+    <!-- Animation & Transition Section -->
+    <section id="animation-section" aria-labelledby="heading-animations">
+      <h2 id="heading-animations">Animation and Motion Safety</h2>
+      <p>Content should remain calm and steady without unrequested visual movement.</p>
+      
+      <div>
+        <span id="badge-pulsing" class="pulsing-badge">Active Updates</span>
       </div>
-      <div id="news-ticker" style="animation: spinRadar 3s linear infinite;"></div>
-    </section>
 
-    <!-- Autoplaying Video & Looping Muted Video -->
-    <section id="media-section" aria-labelledby="media-heading">
-      <h2 id="media-heading">Live Telemetry Feeds</h2>
-      <div class="media-grid">
-        <div class="media-box">
-          <h3>Primary Telescope Feed (Autoplaying)</h3>
-          <video id="video-autoplay" autoplay muted playsinline aria-label="Primary telescope optical feed">
-            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0APrimary%20feed" srclang="en" label="English" default>
-          </video>
-          <video id="autoplay-video" autoplay muted playsinline aria-label="Secondary optical feed" style="display: none;">
-            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ASecondary%20feed" srclang="en" label="English" default>
-          </video>
-        </div>
+      <div id="smooth-transition-box" class="smooth-box">
+        Interactive state transitions apply immediately without motion.
+      </div>
 
-        <div class="media-box">
-          <h3>Atmospheric Simulation (Muted, Looping)</h3>
-          <video id="video-loop" autoplay muted loop playsinline aria-label="Atmospheric moisture simulation loop">
-            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ASimulation" srclang="en" label="English" default>
-          </video>
-          <video id="loop-video" autoplay muted loop playsinline aria-label="Secondary simulation loop" style="display: none;">
-            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0ASecondary%20simulation" srclang="en" label="English" default>
-          </video>
-        </div>
-
-        <div class="media-box">
-          <h3>Archival Recording (Initially Paused)</h3>
-          <video id="video-paused" controls muted aria-label="Archival calibration recording">
-            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:05.000%0AArchive" srclang="en" label="English" default>
-          </video>
-        </div>
+      <!-- Hidden by animation start state -->
+      <div id="anim-start-hidden" class="reveal-box">
+        <h3>Critical Announcement Content</h3>
+        <p>This message was hidden at the animation start state (opacity: 0) and must be visible in its final state.</p>
       </div>
     </section>
 
-    <!-- Carousel 1: With its own pause/stop control -->
-    <section id="featured-research" aria-labelledby="featured-heading">
-      <h2 id="featured-heading">Featured Research</h2>
-      <div id="carousel-controlled" class="carousel" role="region" aria-roledescription="carousel" aria-label="Featured Research Carousel">
-        <div class="carousel-toolbar">
-          <span>Auto-advancing research highlights</span>
-          <button id="btn-pause-carousel" type="button" aria-label="Pause autoplay">Pause</button>
-        </div>
-        <div class="slides-container" id="featured-slides">
-          <div id="feat-slide-1" class="carousel-slide active" role="group" aria-roledescription="slide" aria-label="1 of 3: Deep Sky Mapping">
-            <h3>Deep Sky Mapping</h3>
-            <p>Completed 10,000 square degree optical survey of the northern celestial hemisphere.</p>
-          </div>
-          <div id="feat-slide-2" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="2 of 3: Gravitational Waves">
-            <h3>Gravitational Waves</h3>
-            <p>Detection of binary neutron star merger optical counterpart in cluster NGC 4993.</p>
-          </div>
-          <div id="feat-slide-3" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="3 of 3: Stellar Spectroscopy">
-            <h3>Stellar Spectroscopy</h3>
-            <p>Analysis of high-metallicity stellar flares across nearby red dwarf systems.</p>
-          </div>
-        </div>
+    <!-- Media Section -->
+    <section id="media-section" aria-labelledby="heading-media">
+      <h2 id="heading-media">Video and Media Playback</h2>
+      <p>Autoplaying media must be paused with a visible way to play it.</p>
+
+      <!-- Autoplaying video -->
+      <div>
+        <h3>Autoplaying Promo Video</h3>
+        <video id="video-autoplay" width="320" height="180" autoplay muted playsinline title="Autoplaying promotional clip"></video>
+      </div>
+
+      <!-- Muted looping video (GIF-like) -->
+      <div>
+        <h3>Muted Looping Background Animation</h3>
+        <video id="video-looping" width="320" height="180" autoplay loop muted playsinline title="Looping ambient motion"></video>
+      </div>
+
+      <!-- Initially paused video -->
+      <div>
+        <h3>User-Requested Documentary Video</h3>
+        <video id="video-paused" width="320" height="180" controls muted playsinline title="Documentary interview"></video>
+        <button id="btn-play-paused" type="button">Play User Video</button>
       </div>
     </section>
 
-    <!-- Carousel 2: Script-driven without a pause control -->
-    <section id="sky-highlights" aria-labelledby="sky-heading">
-      <h2 id="sky-heading">Daily Sky Highlights</h2>
-      <div id="carousel-uncontrolled" class="carousel" role="region" aria-roledescription="carousel" aria-label="Daily Sky Highlights Carousel">
-        <div class="carousel-toolbar">
-          <span>Continuous astronomical observations</span>
-          <div>
-            <button id="btn-prev-sky" type="button" aria-label="Previous observation">Previous</button>
-            <button id="btn-next-sky" type="button" aria-label="Next observation">Next</button>
+    <!-- Carousels Section -->
+    <section id="carousel-section" aria-labelledby="heading-carousels">
+      <h2 id="heading-carousels">Carousels and Slide Shows</h2>
+
+      <!-- Carousel 1: With its own pause control (WCAG 2.2.2) -->
+      <section id="carousel-with-pause" class="carousel-section" role="region" aria-roledescription="carousel" aria-label="Featured News Carousel">
+        <h3>Featured News Carousel</h3>
+        <div class="carousel-controls">
+          <button id="btn-carousel-pause" type="button" aria-label="Pause slideshow">Pause slideshow</button>
+        </div>
+        <div id="carousel-1-track" class="slides-track">
+          <div class="slide active" id="c1-slide-1" aria-roledescription="slide" aria-label="1 of 2">
+            <h4>Article 1: Accessible Web Applications</h4>
+            <p>Techniques for calming UI motion and reducing cognitive load.</p>
+          </div>
+          <div class="slide" id="c1-slide-2" aria-roledescription="slide" aria-label="2 of 2">
+            <h4>Article 2: User Choice in Motion</h4>
+            <p>Giving users control over automated movement.</p>
           </div>
         </div>
-        <div class="slides-container" id="sky-slides">
-          <div id="sky-slide-1" class="carousel-slide active" role="group" aria-roledescription="slide" aria-label="1 of 3: Andromeda Galaxy">
-            <h3>Andromeda Galaxy (M31)</h3>
-            <p>Visible in constellation Andromeda with clear spiral arm definition.</p>
+      </section>
+
+      <!-- Carousel 2: Script-driven auto-advancing carousel without pause button -->
+      <section id="carousel-auto" class="carousel-section" role="region" aria-roledescription="carousel" aria-label="Community Highlights Slideshow">
+        <h3>Community Highlights Slideshow</h3>
+        <div id="auto-track" class="slides-track">
+          <div class="slide active" id="c2-slide-1" aria-roledescription="slide" aria-label="Highlight 1 of 3">
+            <h4>Highlight 1: Local Library Program</h4>
+            <p>Digital literacy classes for seniors and assistive technology users.</p>
           </div>
-          <div id="sky-slide-2" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="2 of 3: Orion Nebula">
-            <h3>Orion Nebula (M42)</h3>
-            <p>Active star formation nursery illuminated by the central Trapezium cluster.</p>
+          <div class="slide" id="c2-slide-2" aria-roledescription="slide" aria-label="Highlight 2 of 3">
+            <h4>Highlight 2: Community Garden</h4>
+            <p>Raised beds and accessible paths installed in district 4.</p>
           </div>
-          <div id="sky-slide-3" class="carousel-slide" role="group" aria-roledescription="slide" aria-label="3 of 3: Pleiades Cluster">
-            <h3>Pleiades Cluster (M45)</h3>
-            <p>Open star cluster prominent in Taurus surrounded by faint reflection nebulosity.</p>
+          <div class="slide" id="c2-slide-3" aria-roledescription="slide" aria-label="Highlight 3 of 3">
+            <h4>Highlight 3: Public Transport Upgrades</h4>
+            <p>Real-time audio arrivals at 15 central stations.</p>
           </div>
         </div>
+        <div>
+          <button id="btn-next-slide" type="button">Next Slide</button>
+        </div>
+      </section>
+
+      <!-- Marquee Section -->
+      <div>
+        <h3>System Status Marquee</h3>
+        <marquee id="marquee-test">Notice: Routine system maintenance scheduled for Sunday at 02:00 UTC.</marquee>
       </div>
     </section>
 
-    <!-- Static Content to leave alone -->
-    <section id="announcements" aria-labelledby="announcements-heading">
-      <h2 id="announcements-heading">Visitor Information</h2>
-      <p id="prose-visitor">Public observation nights are held every Friday and Saturday evening, weather permitting. Reservations are recommended for groups larger than six visitors.</p>
-      <button id="btn-reserve" type="button">Reserve Observation Pass</button>
+    <!-- Non-carousel widget with Stop/Pause button outside carousel -->
+    <section id="slider-controls-section" aria-labelledby="heading-slider">
+      <h2 id="heading-slider">Audio and Volume Settings</h2>
+      <div id="slider-widget" class="slider-widget">
+        <h3>Volume and Sensitivity Controls</h3>
+        <p>This widget is outside any carousel. Its buttons must never be clicked by the adapter.</p>
+        <button id="btn-outside-stop" type="button">Stop</button>
+        <button id="btn-outside-pause" type="button">Pause</button>
+      </div>
+    </section>
+
+    <!-- Ordinary Content to leave alone -->
+    <section id="policy-section" aria-labelledby="heading-policy">
+      <h2 id="heading-policy">Accessibility Guidelines and Standards</h2>
+      <p id="prose-policy">
+        Motion in interface elements can cause severe physical reactions including vertigo and seizures.
+        Following WCAG 2.2 Success Criterion 2.2.2 (Pause, Stop, Hide) and 2.3.1 (Three Flashes or Below Threshold),
+        our platform respects user autonomy and provides steady, predictable presentations.
+      </p>
+      <button id="btn-standard" type="button">Read Standard Specification</button>
     </section>
   </main>
 
-  <footer>
-    <p>&copy; 2026 Aurora Science &amp; Technology Observatory. Dedicated to public celestial science.</p>
+  <aside aria-label="Related Resources">
+    <h3>Related Resources</h3>
+    <p>Find additional tools and documentation for accessibility conformance testing.</p>
+  </aside>
+
+  <footer role="contentinfo">
+    <p>&copy; 2026 AI for Accessibility Project. All rights reserved.</p>
   </footer>
 
+  <!-- Setup Canvas Stream for Videos (no network) & Carousel Timers -->
   <script>
-    // Canvas streams for headless Chromium media playback without network
-    (function setupMediaStreams() {
-      const c = document.createElement('canvas');
-      c.width = 160;
-      c.height = 90;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#1a365d';
-      ctx.fillRect(0, 0, 160, 90);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText('STREAM', 10, 50);
-
-      if (typeof c.captureStream === 'function') {
-        const stream = c.captureStream(15);
+    // 1. Setup local video streams
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 36;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0969da';
+      ctx.fillRect(0, 0, 64, 36);
+      if (typeof canvas.captureStream === 'function') {
+        const stream = canvas.captureStream(25);
         const vAuto = document.getElementById('video-autoplay');
-        const vLoop = document.getElementById('video-loop');
+        const vLoop = document.getElementById('video-looping');
         const vPaused = document.getElementById('video-paused');
-        const vAuto2 = document.getElementById('autoplay-video');
-        const vLoop2 = document.getElementById('loop-video');
-        if (vAuto) {
-          vAuto.srcObject = stream;
-          vAuto.play().catch(() => {});
-        }
-        if (vLoop) {
-          vLoop.srcObject = stream;
-          vLoop.play().catch(() => {});
-        }
-        if (vAuto2) {
-          vAuto2.srcObject = stream;
-          vAuto2.play().catch(() => {});
-        }
-        if (vLoop2) {
-          vLoop2.srcObject = stream;
-          vLoop2.play().catch(() => {});
-        }
-        if (vPaused) {
-          vPaused.srcObject = stream;
-          vPaused.pause();
-        }
+        if (vAuto) vAuto.srcObject = stream;
+        if (vLoop) vLoop.srcObject = stream;
+        if (vPaused) vPaused.srcObject = stream;
       }
-    })();
+    } catch (e) {}
 
-    // Carousel 1: Auto-advance with Pause button
-    (function setupControlledCarousel() {
-      const slides = Array.from(document.querySelectorAll('#featured-slides .carousel-slide'));
-      const btn = document.getElementById('btn-pause-carousel');
-      let idx = 0;
-      let timer = setInterval(() => {
-        slides[idx].classList.remove('active');
-        idx = (idx + 1) % slides.length;
-        slides[idx].classList.add('active');
-      }, 700);
+    // Button to play paused video
+    const btnPlayPaused = document.getElementById('btn-play-paused');
+    if (btnPlayPaused) {
+      btnPlayPaused.addEventListener('click', () => {
+        const v = document.getElementById('video-paused');
+        if (v) v.play().catch(() => {});
+      });
+    }
 
-      window.__featTimer = timer;
+    // 2. Carousel 1: with pause button
+    let c1Playing = true;
+    const btnC1Pause = document.getElementById('btn-carousel-pause');
+    let c1Timer = null;
+    function startC1() {
+      if (c1Timer) clearInterval(c1Timer);
+      c1Timer = setInterval(() => {
+        const s1 = document.getElementById('c1-slide-1');
+        const s2 = document.getElementById('c1-slide-2');
+        if (!s1 || !s2) return;
+        if (s1.classList.contains('active')) {
+          s1.classList.remove('active');
+          s2.classList.add('active');
+        } else {
+          s2.classList.remove('active');
+          s1.classList.add('active');
+        }
+      }, 1000);
+    }
+    startC1();
 
-      if (btn) {
-        btn.addEventListener('click', function() {
-          if (timer) {
-            clearInterval(timer);
-            timer = null;
-            window.__featTimer = null;
-            this.setAttribute('aria-label', 'Play autoplay');
-            this.textContent = 'Play';
-          } else {
-            timer = setInterval(() => {
-              slides[idx].classList.remove('active');
-              idx = (idx + 1) % slides.length;
-              slides[idx].classList.add('active');
-            }, 700);
-            window.__featTimer = timer;
-            this.setAttribute('aria-label', 'Pause autoplay');
-            this.textContent = 'Pause';
-          }
-        });
-      }
-    })();
+    if (btnC1Pause) {
+      btnC1Pause.addEventListener('click', () => {
+        c1Playing = !c1Playing;
+        if (c1Playing) {
+          btnC1Pause.setAttribute('aria-label', 'Pause slideshow');
+          btnC1Pause.textContent = 'Pause slideshow';
+          btnC1Pause.removeAttribute('aria-pressed');
+          startC1();
+        } else {
+          btnC1Pause.setAttribute('aria-label', 'Play slideshow');
+          btnC1Pause.textContent = 'Play slideshow';
+          btnC1Pause.setAttribute('aria-pressed', 'true');
+          clearInterval(c1Timer);
+          c1Timer = null;
+        }
+      });
+    }
 
-    // Carousel 2: Auto-advance WITHOUT pause button
-    (function setupUncontrolledCarousel() {
-      const slides = Array.from(document.querySelectorAll('#sky-slides .carousel-slide'));
-      const btnPrev = document.getElementById('btn-prev-sky');
-      const btnNext = document.getElementById('btn-next-sky');
-      let idx = 0;
-      let timer = setInterval(() => {
-        slides[idx].classList.remove('active');
-        idx = (idx + 1) % slides.length;
-        slides[idx].classList.add('active');
-      }, 700);
+    // Live time indicator (makes steady = false realistically)
+    const timeEl = document.getElementById('live-time');
+    if (timeEl) {
+      setInterval(() => {
+        timeEl.textContent = new Date().toISOString().slice(11, 23);
+      }, 100);
+    }
 
-      window.__skyTimer = timer;
+    // 3. Carousel 2: auto-advancing without pause button
+    let c2Current = 0;
+    const c2Slides = [
+      document.getElementById('c2-slide-1'),
+      document.getElementById('c2-slide-2'),
+      document.getElementById('c2-slide-3')
+    ].filter(Boolean);
 
-      function goTo(next) {
-        slides[idx].classList.remove('active');
-        idx = (next + slides.length) % slides.length;
-        slides[idx].classList.add('active');
-      }
+    window.c2Timer = setInterval(() => {
+      if (c2Slides.length < 2) return;
+      c2Slides[c2Current].classList.remove('active');
+      c2Current = (c2Current + 1) % c2Slides.length;
+      c2Slides[c2Current].classList.add('active');
+    }, 1500);
 
-      if (btnPrev) btnPrev.addEventListener('click', () => goTo(idx - 1));
-      if (btnNext) btnNext.addEventListener('click', () => goTo(idx + 1));
-    })();
+    const btnNext = document.getElementById('btn-next-slide');
+    if (btnNext) {
+      btnNext.addEventListener('click', () => {
+        c2Slides[c2Current].classList.remove('active');
+        c2Current = (c2Current + 1) % c2Slides.length;
+        c2Slides[c2Current].classList.add('active');
+      });
+    }
+
+    // 4. Outside buttons tracking
+    window.__outsideStopClickedCount = 0;
+    const btnOutsideStop = document.getElementById('btn-outside-stop');
+    const btnOutsidePause = document.getElementById('btn-outside-pause');
+    if (btnOutsideStop) {
+      btnOutsideStop.addEventListener('click', () => {
+        window.__outsideStopClickedCount = (window.__outsideStopClickedCount || 0) + 1;
+      });
+    }
+    if (btnOutsidePause) {
+      btnOutsidePause.addEventListener('click', () => {
+        window.__outsideStopClickedCount = (window.__outsideStopClickedCount || 0) + 1;
+      });
+    }
   </script>
 </body>
 </html>

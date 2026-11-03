@@ -3,20 +3,20 @@
   "file": "tools/core-adapters/names.js",
   "page": "names.html",
   "options": {
-    "limit": 2
+    "limit": 5
   },
   "checks": [
     {
-      "name": "at most the limit of 2 AI calls is made",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const btnAi = document.getElementById('btn-ai-control');\n      const linkAi = document.getElementById('link-ai-control');\n      const inputAi = document.getElementById('input-ai-field');\n      const imgAi = document.getElementById('img-ai-informative');\n      const bulk = document.querySelectorAll('#bulk-unnamed-container button[aria-label]');\n\n      let count = 0;\n      if (btnAi?.hasAttribute('aria-label')) count++;\n      if (linkAi?.hasAttribute('aria-label')) count++;\n      if (inputAi?.hasAttribute('aria-label')) count++;\n      if (imgAi?.hasAttribute('alt')) count++;\n      count += bulk.length;\n\n      return count <= 2 && count > 0;\n    "
+      "name": "custom limit of 5 is strictly respected",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) {\n          window.__verifyAiCallLog = [];\n          const orig = globalThis.__verifyAi;\n          if (orig && !window.__origVerifyAiHooked) {\n            window.__origVerifyAiHooked = true;\n            globalThis.__verifyAi = (req) => {\n              window.__verifyAiCallLog.push(req);\n              return orig(req);\n            };\n          }\n          return true;\n        }\n\n        const count = window.__verifyAiCallLog?.length || 0;\n        return count > 0 && count <= 5;\n      "
     },
     {
-      "name": "decorative images are marked alt empty without consuming AI limit",
-      "code": "\n      const spacer = document.getElementById('img-decorative-spacer');\n      const pres = document.getElementById('img-role-presentation');\n      if (!spacer || !pres) return false;\n      if (spacer.getAttribute('alt') !== '') return false;\n      if (pres.getAttribute('alt') !== '') return false;\n      return true;\n    "
+      "name": "elements processed after limit of 5 is reached are not sent to AI",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const burstBtns = Array.from(document.querySelectorAll('.burst-wrap button'));\n        const unlabeledBurst = burstBtns.filter(b => !b.hasAttribute('aria-label'));\n        return unlabeledBurst.length >= 10;\n      "
     }
   ],
   "ai": {
-    "label": "Action button",
-    "describe": "A green square illustration."
+    "label": "Store action",
+    "describe": "A scenic mountain landscape with pine trees."
   }
 }

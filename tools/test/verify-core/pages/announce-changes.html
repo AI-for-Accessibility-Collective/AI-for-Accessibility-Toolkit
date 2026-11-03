@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Customer Account Portal — Notifications and Services</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community Assistance Portal</title>
   <style>
     :root {
       --bg: #ffffff;
       --text: #1a1a1a;
-      --primary: #004d80;
+      --primary: #005a9c;
       --border: #cccccc;
       --card-bg: #f9f9f9;
     }
@@ -20,40 +20,45 @@
       color: var(--text);
       background: var(--bg);
     }
-    header, nav, main, footer {
-      max-width: 900px;
-      margin: 0 auto;
+    header {
+      background: #003366;
+      color: #ffffff;
       padding: 0.5rem 1rem;
     }
-    header {
-      border-bottom: 2px solid var(--border);
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+    nav {
+      background: #eef2f7;
+      padding: 0.25rem 1rem;
     }
     nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
       display: flex;
       gap: 1rem;
-      list-style: none;
-      padding: 0;
-      margin: 0.25rem 0;
     }
     nav a {
       color: var(--primary);
       text-decoration: underline;
-      padding: 0.5rem 0.75rem;
-      display: inline-block;
-      min-width: 44px;
-      min-height: 44px;
-      box-sizing: border-box;
+      font-weight: 600;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
     }
-    nav a:focus, button:focus, input:focus {
-      outline: 3px solid #000000;
-      outline-offset: 2px;
+    main {
+      max-width: 900px;
+      margin: 0.5rem auto;
+      padding: 0 1rem;
     }
-    .panel {
+    .card {
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 4px;
       padding: 0.75rem 1rem;
       margin-bottom: 0.75rem;
-      background: var(--card-bg);
     }
     button {
       background: var(--primary);
@@ -62,104 +67,112 @@
       border-radius: 4px;
       padding: 0.5rem 1rem;
       font-size: 1rem;
+      cursor: pointer;
       min-width: 44px;
       min-height: 44px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    }
+    button:focus {
+      outline: 3px solid #ffbf47;
+      outline-offset: 2px;
     }
     input[type="text"] {
       border: 1px solid var(--border);
       border-radius: 4px;
-      padding: 0.5rem;
+      padding: 0.35rem;
       font-size: 1rem;
-      min-height: 44px;
+      min-height: 24px;
+      width: 100%;
       box-sizing: border-box;
-    }
-    .sr-only {
-      position: absolute !important;
-      width: 1px !important;
-      height: 1px !important;
-      padding: 0 !important;
-      margin: -1px !important;
-      overflow: hidden !important;
-      clip: rect(0, 0, 0, 0) !important;
-      white-space: nowrap !important;
-      border: 0 !important;
-    }
-    .toast-notification {
-      background: #eef7ee;
-      color: #1b5e20;
-      border: 1px solid #c8e6c9;
-      border-radius: 4px;
-      padding: 0.5rem 0.75rem;
-      margin: 0.25rem 0;
+      max-width: 280px;
     }
     footer {
       border-top: 1px solid var(--border);
-      margin-top: 1rem;
+      padding: 0.75rem;
+      text-align: center;
       font-size: 0.875rem;
-      color: #4a4a4a;
+      color: #555555;
+    }
+    .site-status {
+      padding: 0.35rem 0.5rem;
+      background: #e7f3fe;
+      border-left: 4px solid var(--primary);
+      margin: 0.5rem 0;
+    }
+    #clock-timestamp {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+    .toast-alert {
+      padding: 0.5rem 0.75rem;
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+    }
+    .result-card {
+      padding: 0.5rem 0.75rem;
+      background: #e2e3e5;
+      color: #383d41;
+      border: 1px solid #d6d8db;
+      border-radius: 4px;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Customer Account Portal</h1>
-    <p id="portal-subtitle">Manage preferences, notifications, and review system updates.</p>
+  <header role="banner">
+    <h1 id="heading">Community Assistance Portal</h1>
   </header>
 
-  <nav aria-label="Portal Navigation">
+  <nav aria-label="Main Navigation">
     <ul>
-      <li><a href="#overview" id="nav-overview">Overview</a></li>
-      <li><a href="#settings" id="nav-settings">Settings</a></li>
-      <li><a href="#policy" id="nav-policy">Policy</a></li>
+      <li><a href="#/home">Home</a></li>
+      <li><a href="#/services">Services</a></li>
+      <li><a href="#/contact">Contact</a></li>
     </ul>
   </nav>
 
-  <main id="main-content">
-    <section id="overview" class="panel" aria-labelledby="heading-overview">
-      <h2 id="heading-overview">Account Overview</h2>
-      <p id="prose-welcome">Welcome back. Your services are active and running normally.</p>
-      
-      <div id="clock-container">
-        <p>Current clock: <time id="live-clock" class="timestamp">12:00:00</time></p>
+  <div id="message-container" style="padding: 0 1rem;"></div>
+  <div id="toast-container" style="padding: 0 1rem;"></div>
+
+  <main id="main">
+    <section class="card" aria-labelledby="query-title">
+      <h2 id="query-title" style="margin-top: 0; font-size: 1.1rem;">Check Services</h2>
+      <div style="margin-bottom: 0.5rem;">
+        <label for="search-input" style="display: block; margin-bottom: 0.25rem; font-weight: 600;">Search services</label>
+        <input id="search-input" type="text" placeholder="e.g. Health, Housing">
       </div>
-
-      <div style="margin-top: 0.5rem;">
-        <button id="btn-show-toast" type="button">Trigger Alert Toast</button>
+      <div>
+        <button id="action-button" type="button">Check Eligibility</button>
       </div>
-      <div id="toast-container"></div>
-      <div id="burst-container"></div>
+      <div id="action-results"></div>
     </section>
 
-    <section id="native-region-section" class="panel" aria-labelledby="heading-native">
-      <h2 id="heading-native">Native Live Region Test</h2>
-      <p>This region already uses standard ARIA live semantics for screen readers.</p>
-      <div id="native-live-region" aria-live="polite" class="sr-only"></div>
-      <button id="btn-native-update" type="button">Update Native Region</button>
+    <section class="card" aria-labelledby="intro-title">
+      <h2 id="intro-title" style="margin-top: 0; font-size: 1.1rem;">Overview</h2>
+      <p id="intro-text" style="margin: 0.5rem 0;">
+        Welcome to the online services portal.
+      </p>
+      <div id="existing-live" aria-live="polite" class="site-status">
+        Service desk status: All systems operational.
+      </div>
+      <div>
+        <span>System time: </span>
+        <time id="clock-timestamp">12:00:00</time>
+      </div>
     </section>
 
-    <section id="form-section" class="panel" aria-labelledby="heading-settings">
-      <h2 id="heading-settings">Account Settings</h2>
-      <form id="settings-form" onsubmit="event.preventDefault();">
-        <div style="margin-bottom: 0.5rem;">
-          <label for="display-name" style="display: block; margin-bottom: 0.25rem;">Display Name</label>
-          <input type="text" id="display-name" name="name" value="Jane Doe">
-        </div>
-        <button id="btn-save-settings" type="submit">Save Changes</button>
-      </form>
-    </section>
-
-    <section id="policy" class="panel" aria-labelledby="heading-policy">
-      <h2 id="heading-policy">Service Policy</h2>
-      <p id="prose-policy">All account notifications adhere to our strict accessibility and privacy commitments.</p>
-    </section>
+    <aside aria-label="Sidebar Announcements" class="card">
+      <h2 style="margin-top: 0; font-size: 1.1rem;">Important Notice</h2>
+      <p id="prose-policy" style="margin: 0.5rem 0;">
+        All applications submitted before Friday 5:00 PM will be processed within the current cycle.
+      </p>
+    </aside>
   </main>
 
-  <footer>
-    <p>&copy; 2026 Customer Portal Services. All rights reserved.</p>
+  <footer role="contentinfo">
+    <p style="margin: 0;">&copy; 2026 Community Portal Service. All rights reserved.</p>
   </footer>
 </body>
 </html>

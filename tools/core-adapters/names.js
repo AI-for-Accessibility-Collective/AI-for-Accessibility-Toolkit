@@ -1,369 +1,423 @@
-// names.js — Gives accessible names to nameless controls and informative images.
-// Barrier: People using screen readers cannot identify the purpose of buttons, links,
-// or form inputs that have no accessible name, or understand images that lack alt text.
+// names.js — Gives buttons, links, form fields, and images accessible names or descriptions.
+// Barrier: Interactive elements (buttons, links, form fields) without accessible names
+// and informative images without alternative text are inaccessible to people using screen
+// readers, speech navigation, or braille displays (WCAG 4.1.2, 1.1.1, 2.4.4, 2.5.3).
 //
 // Suggested in onboarding for: vision (a suggestion only, never a gate).
 // The person's settings it reads: none.
 // What the person can adjust: nothing (the shortcut, if given, turns it on and off).
+// Prior work to learn from: tools/adapters/generate-labels.js, tools/adapters/generate-alt.js, tools/adapters/wcag-fixes.js.
 //
 // Options:
-//   limit: Maximum number of AI calls per page (default 10).
+//   limit: Maximum number of AI calls per page (default: 10, option allows up to 20).
 //
 // Decisions:
-//   • Measures first using s.page's accessible-name helper (s.page.nameOf) and
-//     never renames any control or image that already has an accessible name.
-//   • Leaves decorative images alone, or marks clearly decorative ones (tiny <=16px,
-//     spacers, role presentation/none) alt="" without spending an AI call.
-//   • Names elements from the page first without AI: element title, SVG title,
-//     words from an icon's class or image file name, link's last path part, or nearby label.
-//   • AI is used only for what remains nameless, visible ones first, at most the limit per page.
-//   • Images are sent to AI vision only when informative (larger than 48 by 48 pixels and not decorative).
-//   • Never asks AI for content the page hides (display:none, visibility:hidden, hidden attribute, aria-hidden).
-//   • Answers are gated by the building blocks; on null, elements are left unchanged.
-//   • Watches for elements added later (s.watch.added) without reprocessing seen elements.
-//   • All changes go through s.setAttr so disable() cleanly restores original state.
+//   • Measures first with toolkit.page.nameOf(el): never renames any control that already has a name.
+//   • Inspects page-first signals without AI before spending any AI budget:
+//       1) title attributes on the element or child elements;
+//       2) <title> element inside SVG icons;
+//       3) keywords or words extracted from an icon's class name (e.g. btn-search -> "Search");
+//       4) words extracted from an image file name, BUT only for small icons (<= 48 by 48 pixels);
+//       5) the last meaningful path part of a link's destination (e.g. /account/settings -> "Settings");
+//       6) nearby label, placeholder, name attribute, or sibling/parent text for form fields.
+//   • Never names a photo or illustration (> 48x48 pixels) from its file name; on null from AI, it is left as it was.
+//   • Never sends decorative images (tiny <= 1x1, spacers, tracking pixels, role="presentation" or role="none") to AI.
+//     Marks clearly decorative images with alt="" only when certain.
+//   • Only sends images to AI vision (s.ai.vision('describe', img, { purpose: 'alt' })) when informative (> 48x48 pixels and not decorative).
+//   • Never calls AI for hidden content (!toolkit.page.isVisible(el)) or toolkit UI.
+//   • Prioritizes visible nameless elements first, asking AI once per element, up to the configured limit per page.
+//   • On null or unavailable AI answer, leaves the element exactly as it was.
+//   • Applies names via s.setAttr(el, 'aria-label', name) for controls, and s.setAttr(img, 'alt', description) for images.
+//   • Listens for dynamic content with s.watch.added(..., { batch: true }) to name added controls within remaining budget.
+//   • Cleanly restores original attributes on disable() through session cleanup.
+//   • Returns false when nothing on the page was changed.
 //
 // What it cannot do:
-//   • Cannot generate names for controls when AI is unavailable and DOM context lacks signals.
-//   • Does not describe complex charts (use explore-a-chart instead).
+//   • Cannot generate descriptions for complex charts or diagrams without specialized vision models.
+//   • Cannot infer names for custom div controls that lack text, attributes, semantic roles, or visual context.
 
-const SELECTOR = 'button, a[href], input:not([type="hidden"]), select, textarea, img, [role="button"], [role="link"]';
+const JUNK_RE = /^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken|null|undefined|nan|unknown|none|true|false|img|image|icon|button|btn|pic|picture|untitled|default)$/i;
+
+function isJunkName(text) {
+  if (!text || typeof text !== 'string') return true;
+  const t = text.trim();
+  if (t.length < 2 || t.length > 80) return true;
+  if (/^[\d_\-.:;/#?&=+*^%$@!~`]+$/.test(t)) return true;
+  if (/^[a-f0-9]{16,}$/i.test(t)) return true;
+  return JUNK_RE.test(t);
+}
+
+function capitalize(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 const ICON_PATTERNS = {
-  'Close': ['close', 'dismiss', 'x-btn', 'btn-close', 'times', 'cross'],
-  'Menu': ['menu', 'hamburger', 'nav-toggle', 'bars'],
-  'Search': ['search', 'find', 'magnifier', 'magnifying'],
-  'Settings': ['settings', 'config', 'gear', 'cog', 'preferences'],
-  'Home': ['home', 'house'],
-  'User': ['user', 'profile', 'account', 'avatar', 'person'],
-  'Shopping cart': ['shopping-cart', 'cart', 'basket', 'bag'],
-  'Delete': ['delete', 'remove', 'trash', 'trash-can', 'bin'],
-  'Edit': ['edit', 'pencil', 'modify'],
-  'Share': ['share', 'forward'],
-  'Download': ['download'],
-  'Upload': ['upload'],
-  'Filter': ['filter'],
-  'Print': ['print', 'printer'],
-  'Refresh': ['refresh', 'reload', 'sync'],
-  'Favorite': ['favorite', 'star', 'like', 'heart', 'bookmark'],
-  'Play': ['play'],
-  'Pause': ['pause'],
-  'Stop': ['stop'],
-  'Next': ['next', 'arrow-right', 'chevron-right', 'forward'],
-  'Previous': ['prev', 'previous', 'arrow-left', 'chevron-left', 'back'],
-  'Expand': ['expand', 'more', 'dropdown', 'chevron-down'],
-  'Collapse': ['collapse', 'less', 'chevron-up'],
-  'Help': ['help', 'question', 'faq', 'info', 'information'],
-  'Notification': ['notification', 'bell', 'alert'],
-  'Mail': ['mail', 'email', 'envelope'],
-  'Phone': ['phone', 'telephone', 'call'],
-  'Add': ['add', 'plus', 'create', 'new'],
-  'Copy': ['copy', 'clipboard'],
-  'Zoom in': ['zoom-in'],
-  'Zoom out': ['zoom-out'],
+  close: ['close', 'dismiss', 'x-btn', 'btn-close', 'cancel', 'clear-btn'],
+  menu: ['menu', 'hamburger', 'nav-toggle', 'navigation-toggle', 'drawer-toggle'],
+  search: ['search', 'find', 'magnifier', 'lookup'],
+  submit: ['submit', 'send', 'paper-plane'],
+  play: ['play', 'start'],
+  pause: ['pause', 'hold'],
+  next: ['next', 'forward', 'arrow-right', 'chevron-right', 'caret-right'],
+  previous: ['prev', 'previous', 'back', 'arrow-left', 'chevron-left', 'caret-left'],
+  expand: ['expand', 'dropdown', 'chevron-down', 'caret-down', 'angle-down'],
+  collapse: ['collapse', 'chevron-up', 'caret-up', 'angle-up'],
+  settings: ['settings', 'config', 'gear', 'cog', 'preferences'],
+  delete: ['delete', 'remove', 'trash', 'bin'],
+  edit: ['edit', 'pencil', 'modify', 'write'],
+  share: ['share', 'social'],
+  like: ['like', 'heart', 'favorite', 'thumbs-up'],
+  copy: ['copy', 'clipboard', 'duplicate'],
+  home: ['home', 'house'],
+  cart: ['cart', 'shopping-cart', 'basket', 'bag'],
+  user: ['user', 'account', 'profile', 'avatar', 'person'],
+  help: ['help', 'question', 'faq', 'support'],
+  info: ['info', 'information'],
+  mail: ['mail', 'email', 'envelope', 'inbox'],
+  phone: ['phone', 'telephone', 'call'],
+  filter: ['filter', 'funnel'],
+  download: ['download'],
+  upload: ['upload'],
+  print: ['print', 'printer'],
+  refresh: ['refresh', 'reload', 'sync', 'rotate'],
+  notifications: ['bell', 'notification', 'alarm'],
+  star: ['star'],
+  calendar: ['calendar', 'date'],
+  messages: ['chat', 'message', 'comment'],
 };
 
-function squash(str) {
-  return String(str || '').replace(/\s+/g, ' ').trim();
+function wordsFromIconClass(className) {
+  if (!className || typeof className !== 'string') return null;
+  const lower = className.toLowerCase();
+
+  for (const [label, keywords] of Object.entries(ICON_PATTERNS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      return capitalize(label.replace(/[-_]/g, ' '));
+    }
+  }
+
+  const tokens = lower.split(/\s+/);
+  for (const token of tokens) {
+    const stripped = token
+      .replace(/^(fa[srlbd]?|bi|glyphicon|icon|btn|ui-icon|feather|material-icons)[-_:]/i, '')
+      .replace(/[-_](icon|btn|button)$/i, '');
+    if (stripped.length >= 3 && !isJunkName(stripped)) {
+      const words = stripped.replace(/[-_]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
+      if (words && !isJunkName(words)) {
+        return capitalize(words);
+      }
+    }
+  }
+  return null;
 }
 
-function capitalize(str) {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function wordsFromFilename(src) {
+  if (!src || typeof src !== 'string') return null;
+  if (src.startsWith('data:')) return null;
+  try {
+    const url = src.split('?')[0].split('#')[0];
+    const filename = url.substring(url.lastIndexOf('/') + 1);
+    const basename = filename.substring(0, filename.lastIndexOf('.')) || filename;
+    if (!basename || basename.length < 2) return null;
+    if (/^[0-9a-f]{8,}$/i.test(basename)) return null;
+    if (/^\d+$/.test(basename)) return null;
+
+    const parts = basename
+      .replace(/^(icon|btn|img|pic|asset)[-_]/i, '')
+      .replace(/[-_](icon|btn|button|small|tiny|thumb|thumbnail|16x16|24x24|32x32|48x48)$/i, '')
+      .replace(/[-_]+/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .trim();
+
+    if (parts && parts.length >= 3 && !isJunkName(parts)) {
+      return capitalize(parts);
+    }
+  } catch {}
+  return null;
 }
 
-function isClearlyDecorative(img, win) {
+function getImageDimensions(img) {
+  const rect = typeof img.getBoundingClientRect === 'function' ? img.getBoundingClientRect() : { width: 0, height: 0 };
+  const attrW = parseInt(img.getAttribute('width') || '0', 10);
+  const attrH = parseInt(img.getAttribute('height') || '0', 10);
+  const w = rect.width || img.naturalWidth || attrW;
+  const h = rect.height || img.naturalHeight || attrH;
+  return { w, h };
+}
+
+function isSmallIcon(img) {
+  if (!img || img.tagName !== 'IMG') return false;
+  const { w, h } = getImageDimensions(img);
+  return w > 0 && h > 0 && w <= 48 && h <= 48;
+}
+
+function isClearlyDecorative(img) {
+  if (!img || img.tagName !== 'IMG') return false;
   const role = (img.getAttribute('role') || '').toLowerCase();
   if (role === 'presentation' || role === 'none') return true;
   if (img.getAttribute('aria-hidden') === 'true') return true;
 
-  const src = img.getAttribute('src') || '';
-  if (/(\b|_|-)(spacer|blank|pixel|transparent|clear|1x1|dot)(\b|_|-|\.)/i.test(src) || /data:image\/gif;base64,R0lGODlhAQABA/i.test(src)) {
-    return true;
-  }
+  const { w, h } = getImageDimensions(img);
+  if ((w > 0 && w <= 1) || (h > 0 && h <= 1)) return true;
 
-  const cls = (typeof img.className === 'string' ? img.className : '') + ' ' + (img.id || '');
-  if (/(\b|_|-)(spacer|decorative|tracking|separator)(\b|_|-)/i.test(cls)) {
-    return true;
-  }
-
-  const w = img.naturalWidth || img.width || 0;
-  const h = img.naturalHeight || img.height || 0;
-  if ((w > 0 && w <= 16) || (h > 0 && h <= 16)) return true;
-
-  if (img.isConnected && win) {
-    try {
-      const rect = img.getBoundingClientRect();
-      if ((rect.width > 0 && rect.width <= 16) || (rect.height > 0 && rect.height <= 16)) return true;
-    } catch {}
-  }
+  const src = (img.getAttribute('src') || img.src || '').toLowerCase();
+  if (/(?:^|[_\-/])(spacer|blank|pixel|1x1|dot|tracker|transparent|clear)\.(gif|png|jpe?g|webp|svg)/i.test(src)) return true;
+  if (src.startsWith('data:image/gif;base64,R0lGODlhAQAB')) return true;
 
   return false;
 }
 
-function isInformativeImage(img, win) {
-  if (isClearlyDecorative(img, win)) return false;
-
-  let w = img.naturalWidth || img.width || 0;
-  let h = img.naturalHeight || img.height || 0;
-
-  if (img.isConnected && win) {
-    try {
-      const rect = img.getBoundingClientRect();
-      if (rect.width > 0) w = Math.max(w, rect.width);
-      if (rect.height > 0) h = Math.max(h, rect.height);
-    } catch {}
-  }
-
+function isInformativeImage(img) {
+  if (!img || img.tagName !== 'IMG') return false;
+  if (isClearlyDecorative(img)) return false;
+  const { w, h } = getImageDimensions(img);
   return w > 48 && h > 48;
 }
 
-function getTitleFromElement(el) {
-  const direct = (el.getAttribute('title') || '').trim();
-  if (direct) return direct;
+function wordsFromLinkPath(link) {
+  if (!link) return null;
+  const rawHref = link.getAttribute('href');
+  if (!rawHref) return null;
+  const href = rawHref.trim();
+  if (!href || href === '#' || href.startsWith('javascript:')) return null;
+
+  if (href.startsWith('mailto:')) {
+    const email = href.slice(7).split('?')[0].trim();
+    return email ? `Email ${email}` : 'Email';
+  }
+  if (href.startsWith('tel:')) {
+    const phone = href.slice(4).split('?')[0].trim();
+    return phone ? `Call ${phone}` : 'Call';
+  }
+
+  let pathname = '';
+  try {
+    pathname = new URL(href, window.location.href).pathname;
+  } catch {
+    pathname = href.split(/[?#]/)[0];
+  }
+
+  pathname = pathname.replace(/\/+$/, '');
+  const segments = pathname.split('/').filter(Boolean);
+  if (!segments.length) return null;
+
+  let last = segments[segments.length - 1];
+  last = last.replace(/\.[a-zA-Z0-9]+$/, '');
+  if (/^(index|home|default|main)$/i.test(last) && segments.length > 1) {
+    last = segments[segments.length - 2];
+  }
+
+  if (last && !isJunkName(last)) {
+    const words = last.replace(/[-_]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
+    if (words && words.length >= 3 && !isJunkName(words)) {
+      return capitalize(words);
+    }
+  }
+  return null;
+}
+
+function wordsFromNearbyLabel(input, doc) {
+  if (!input) return null;
+
+  if (input.placeholder && !isJunkName(input.placeholder)) {
+    return input.placeholder.trim();
+  }
+
+  if (input.name && !isJunkName(input.name)) {
+    const formatted = input.name
+      .replace(/[-_]+/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .trim();
+    if (formatted && formatted.length >= 3 && !isJunkName(formatted)) {
+      return capitalize(formatted);
+    }
+  }
+
+  if (input.labels && input.labels.length) {
+    const text = input.labels[0].textContent?.trim();
+    if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
+      return text.replace(/:$/, '');
+    }
+  }
+
+  if (input.id) {
+    try {
+      const lbl = doc.querySelector(`label[for="${CSS.escape(input.id)}"]`);
+      const text = lbl?.textContent?.trim();
+      if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
+        return text.replace(/:$/, '');
+      }
+    } catch {}
+  }
+
+  const prev = input.previousElementSibling;
+  if (prev && !/^(SCRIPT|STYLE|TEMPLATE|INPUT|SELECT|TEXTAREA|BUTTON|H[1-6])$/i.test(prev.tagName)) {
+    const text = prev.textContent?.trim().replace(/:$/, '');
+    if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
+      return text;
+    }
+  }
+
+  const next = input.nextElementSibling;
+  if (next && !/^(SCRIPT|STYLE|TEMPLATE|INPUT|SELECT|TEXTAREA|BUTTON|H[1-6])$/i.test(next.tagName)) {
+    const text = next.textContent?.trim().replace(/:$/, '');
+    if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
+      return text;
+    }
+  }
+
+  const parent = input.parentElement;
+  if (parent && !/^(BODY|HTML|MAIN|FORM|SECTION|ARTICLE|NAV|ASIDE|HEADER|FOOTER)$/i.test(parent.tagName)) {
+    if (!parent.querySelector('h1, h2, h3, h4, h5, h6')) {
+      const clone = parent.cloneNode(true);
+      for (const el of clone.querySelectorAll('script, style, template, input, select, textarea, button')) {
+        el.remove();
+      }
+      const text = clone.textContent?.trim().replace(/:$/, '');
+      if (text && text.length >= 2 && text.length <= 60 && !/\n/.test(text) && !isJunkName(text)) {
+        return text;
+      }
+    }
+  }
+
+  return null;
+}
+
+function wordsFromChildTitle(el) {
+  if (!el) return null;
+  const svgTitle = el.querySelector('svg title')?.textContent?.trim();
+  if (svgTitle && !isJunkName(svgTitle)) return svgTitle;
+
   const child = el.querySelector('[title]');
   if (child) {
-    const t = (child.getAttribute('title') || '').trim();
-    if (t) return t;
-  }
-  return null;
-}
-
-function getSvgTitle(el) {
-  const svg = el.tagName?.toLowerCase() === 'svg' ? el : el.querySelector('svg');
-  if (svg) {
-    const titleEl = svg.querySelector('title');
-    if (titleEl) {
-      const t = (titleEl.textContent || '').trim();
-      if (t) return t;
-    }
-  }
-  return null;
-}
-
-function getWordsFromIconClass(el) {
-  // Check child icon elements first (i, span, svg, em)
-  const iconChildren = el.querySelectorAll('i, span, svg, em');
-  for (const node of iconChildren) {
-    const cls = typeof node.className === 'string' ? node.className.toLowerCase() : '';
-    if (!cls) continue;
-
-    for (const [label, keywords] of Object.entries(ICON_PATTERNS)) {
-      if (keywords.some((kw) => new RegExp(`(^|[-_ ])${kw}([-_ ]|$)`, 'i').test(cls))) {
-        return label;
-      }
-    }
-
-    const matches = cls.match(/\b(?:icon|fa|bi|glyph|feather|ti)[-_]([a-z0-9-_]+)\b/i);
-    if (matches && matches[1]) {
-      const rawWords = matches[1].replace(/[-_]+/g, ' ').trim();
-      const filtered = rawWords.split(/\s+/).filter((w) => !/^(icon|fa|bi|glyph|sm|md|lg|xl|2x|3x|solid|regular|outline|btn|button|style|custom)$/i.test(w));
-      if (filtered.length > 0) {
-        return capitalize(filtered.join(' '));
-      }
-    }
-  }
-
-  // Check the element itself for explicit icon patterns
-  const elCls = typeof el.className === 'string' ? el.className.toLowerCase() : '';
-  if (elCls) {
-    for (const [label, keywords] of Object.entries(ICON_PATTERNS)) {
-      if (keywords.some((kw) => new RegExp(`(^|[-_ ])${kw}([-_ ]|$)`, 'i').test(elCls))) {
-        return label;
-      }
-    }
-    const matches = elCls.match(/\b(?:icon|fa|bi|feather)[-_]([a-z0-9-_]+)\b/i);
-    if (matches && matches[1]) {
-      const rawWords = matches[1].replace(/[-_]+/g, ' ').trim();
-      const filtered = rawWords.split(/\s+/).filter((w) => !/^(icon|fa|bi|glyph|sm|md|lg|xl|2x|3x|solid|regular|outline|btn|button|style|custom)$/i.test(w));
-      if (filtered.length > 0) {
-        return capitalize(filtered.join(' '));
-      }
-    }
+    const title = child.getAttribute('title')?.trim();
+    if (title && !isJunkName(title)) return title;
   }
 
   return null;
 }
 
-function getWordsFromImageFileName(el) {
-  const img = el.tagName === 'IMG' ? el : el.querySelector('img');
-  if (!img) return null;
-  const src = img.getAttribute('src') || '';
-  if (!src || src.startsWith('data:')) return null;
+function hasProperName(el, page, doc) {
+  if (!el) return true;
+  const tag = el.tagName;
+  const isField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 
-  try {
-    const pathname = src.split(/[?#]/)[0];
-    const filename = pathname.split('/').filter(Boolean).pop();
-    if (!filename) return null;
-    const nameWithoutExt = filename.replace(/\.[a-zA-Z0-9]+$/, '');
-    if (!nameWithoutExt || nameWithoutExt.length < 2) return null;
-
-    if (/^(img|dsc|photo|picture|image|asset|upload|file)[-_]?[0-9]+$/i.test(nameWithoutExt)) return null;
-    if (/^[0-9]+$/.test(nameWithoutExt)) return null;
-    if (/^[a-f0-9]{16,}$/i.test(nameWithoutExt)) return null;
-
-    const words = nameWithoutExt
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/[-_]+/g, ' ')
-      .trim()
-      .split(/\s+/)
-      .filter((w) => !/^(icon|btn|button|img|image|pic|photo|asset|thumb|thumbnail|small|medium|large|banner|header)$/i.test(w));
-
-    if (words.length > 0) {
-      const text = words.join(' ').toLowerCase();
-      if (text.length >= 2 && !/^(untitled|undefined|null|logo)$/i.test(text)) {
-        return capitalize(text);
-      }
+  if (isField) {
+    const type = (el.getAttribute('type') || '').toLowerCase();
+    if (/^(button|submit|reset)$/.test(type)) {
+      return Boolean(el.getAttribute('value') || el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.getAttribute('title'));
     }
-  } catch {}
-  return null;
+    if (el.getAttribute('aria-label')?.trim()) return true;
+    if (el.getAttribute('aria-labelledby')?.trim()) return true;
+    if (el.getAttribute('title')?.trim()) return true;
+    if (el.labels && el.labels.length > 0) return true;
+    if (el.id && doc.querySelector(`label[for="${CSS.escape(el.id)}"]`)) return true;
+    if (el.closest('label')) return true;
+    return false;
+  }
+
+  const name = page.nameOf(el);
+  return Boolean(name && name.trim());
 }
 
-function getLinkPathPart(el) {
-  if (el.tagName !== 'A' && el.getAttribute('role') !== 'link') return null;
-  const href = el.getAttribute('href');
-  if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+function findPageFirstName(el, page, doc) {
+  const tag = el.tagName;
+  const isButton = tag === 'BUTTON' || el.getAttribute('role') === 'button' || (tag === 'INPUT' && /^(button|submit|reset)$/i.test(el.getAttribute('type') || ''));
+  const isLink = tag === 'A' || el.getAttribute('role') === 'link';
+  const isField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || /^(textbox|searchbox|combobox|listbox|slider|spinbutton|checkbox|radio|switch)$/i.test(el.getAttribute('role') || '');
+  const isImg = tag === 'IMG';
+
+  if (isImg && !isSmallIcon(el)) {
     return null;
   }
 
-  try {
-    const cleanHref = href.split(/[?#]/)[0];
-    const parts = cleanHref.split('/').filter(Boolean);
-    if (!parts.length) {
-      const hash = (href.split('#')[1] || '').trim();
-      if (hash && hash.length > 2) {
-        const hashWords = hash.replace(/[-_]+/g, ' ').trim();
-        if (hashWords && !/^(top|content|main)$/i.test(hashWords)) {
-          return capitalize(hashWords);
-        }
-      }
-      return null;
+  const titleName = wordsFromChildTitle(el);
+  if (titleName) return titleName;
+
+  const classCandidate = [
+    typeof el.className === 'string' ? el.className : '',
+    ...Array.from(el.querySelectorAll('i, span, svg, em')).map((c) => (typeof c.className === 'string' ? c.className : '')),
+  ].filter(Boolean);
+  for (const cls of classCandidate) {
+    const w = wordsFromIconClass(cls);
+    if (w) return w;
+  }
+
+  if (isButton || isLink) {
+    const innerImg = el.querySelector('img');
+    if (innerImg && isSmallIcon(innerImg)) {
+      const w = wordsFromFilename(innerImg.getAttribute('src') || innerImg.src);
+      if (w) return w;
     }
-    const lastPart = parts[parts.length - 1].replace(/\.[a-zA-Z0-9]+$/, '');
-    if (!lastPart || /^(index|default|home|main|view|page)$/i.test(lastPart)) return null;
+  }
 
-    const words = lastPart
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/[-_]+/g, ' ')
-      .trim();
+  if (isImg && isSmallIcon(el)) {
+    const w = wordsFromFilename(el.getAttribute('src') || el.src);
+    if (w) return w;
+  }
 
-    if (words.length >= 2) {
-      return capitalize(words);
-    }
-  } catch {}
-  return null;
-}
+  if (isLink) {
+    const pathName = wordsFromLinkPath(el);
+    if (pathName) return pathName;
+  }
 
-function getNearbyLabel(el) {
-  const isField = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
   if (isField) {
-    if (el.name) {
-      const rawName = el.name.trim();
-      if (!/^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken)$/i.test(rawName)) {
-        const words = rawName
-          .replace(/([a-z])([A-Z])/g, '$1 $2')
-          .replace(/[-_]+/g, ' ')
-          .trim();
-        if (words.length >= 2) {
-          return capitalize(words);
-        }
-      }
-    }
-
-    const prev = el.previousElementSibling;
-    if (prev && /^(label|span|p|div|b|strong)$/i.test(prev.tagName)) {
-      const text = squash(prev.textContent).replace(/[:?]$/, '').trim();
-      if (text && text.length >= 2 && text.length < 60 && !/\n/.test(text)) {
-        return text;
-      }
-    }
-
-    const next = el.nextElementSibling;
-    if (next && /^(label|span|p|div|b|strong)$/i.test(next.tagName)) {
-      const text = squash(next.textContent).replace(/[:?]$/, '').trim();
-      if (text && text.length >= 2 && text.length < 60 && !/\n/.test(text)) {
-        return text;
-      }
-    }
-
-    if (el.previousSibling && el.previousSibling.nodeType === 3) {
-      const text = squash(el.previousSibling.nodeValue).replace(/[:?]$/, '').trim();
-      if (text && text.length >= 2 && text.length < 60 && !/\n/.test(text)) {
-        return text;
-      }
-    }
-  }
-
-  if (el.tagName === 'IMG') {
-    const figure = el.closest('figure');
-    if (figure) {
-      const caption = figure.querySelector('figcaption');
-      if (caption) {
-        const text = squash(caption.textContent);
-        if (text && text.length < 100) return text;
-      }
-    }
+    const nearby = wordsFromNearbyLabel(el, doc);
+    if (nearby) return nearby;
   }
 
   return null;
 }
 
-function inferPageFirstName(el) {
-  const title = getTitleFromElement(el);
-  if (title) return title;
-
-  const svgTitle = getSvgTitle(el);
-  if (svgTitle) return svgTitle;
-
-  const nearby = getNearbyLabel(el);
-  if (nearby) return nearby;
-
-  const iconWords = getWordsFromIconClass(el);
-  if (iconWords) return iconWords;
-
-  const fileWords = getWordsFromImageFileName(el);
-  if (fileWords) return fileWords;
-
-  const linkPath = getLinkPathPart(el);
-  if (linkPath) return linkPath;
-
-  return null;
-}
-
-function getControlContext(el) {
-  const parts = [];
-  if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button') {
-    parts.push('button');
-  } else if (el.tagName === 'A' || el.getAttribute('role') === 'link') {
-    parts.push('link');
-    if (el.getAttribute('href')) parts.push(`destination "${el.getAttribute('href')}"`);
-  } else if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) {
-    const type = el.getAttribute('type') || el.tagName.toLowerCase();
-    parts.push(`${type} field`);
-    if (el.name) parts.push(`name "${el.name}"`);
-    if (el.placeholder) parts.push(`placeholder "${el.placeholder}"`);
-  }
-
-  const container = el.closest('form, section, article, nav, header, footer, dialog, [role="region"], [role="dialog"], [role="form"]');
-  if (container) {
-    const heading = container.querySelector('h1, h2, h3, h4, h5, h6, legend, [role="heading"]');
-    if (heading && heading.textContent) {
-      parts.push(`in section "${squash(heading.textContent).slice(0, 60)}"`);
-    } else if (container.tagName === 'FORM') {
-      parts.push('in form');
-    }
-  }
-
+function getContextForElement(el) {
   const parent = el.parentElement;
-  if (parent) {
-    const clone = parent.cloneNode(true);
-    clone.querySelectorAll('script, style, template, noscript').forEach((n) => n.remove());
-    const nearby = squash(clone.textContent).slice(0, 120);
-    if (nearby) parts.push(`nearby text "${nearby}"`);
+  if (!parent) return '';
+  const clone = parent.cloneNode(true);
+  for (const s of clone.querySelectorAll('script, style, template, noscript')) {
+    s.remove();
   }
-
-  return parts.join(', ');
+  return (clone.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 200);
 }
+
+function findHeadingFor(el, doc) {
+  let prev = el;
+  while (prev) {
+    let sibling = prev.previousElementSibling;
+    while (sibling) {
+      const h = sibling.matches?.('h1, h2, h3, h4, h5, h6, [role="heading"]')
+        ? sibling
+        : sibling.querySelector?.('h1, h2, h3, h4, h5, h6, [role="heading"]');
+      if (h) return (h.textContent || '').replace(/\s+/g, ' ').trim();
+      sibling = sibling.previousElementSibling;
+    }
+    prev = prev.parentElement;
+  }
+  const mainHeading = doc.querySelector('h1, h2, [role="heading"]');
+  return mainHeading?.textContent?.trim() || doc.title || '';
+}
+
+function buildLabelInput(el) {
+  const tag = el.tagName.toLowerCase();
+  const type = el.getAttribute('type') || '';
+  const role = el.getAttribute('role') || '';
+  const kind = role || (tag === 'input' ? `${type} field` : tag);
+  const context = getContextForElement(el);
+  const href = el.getAttribute('href') || '';
+  const name = el.getAttribute('name') || '';
+  const placeholder = el.getAttribute('placeholder') || '';
+  const cls = (typeof el.className === 'string' ? el.className : '') || '';
+
+  const parts = [`Control type: ${kind}`];
+  if (name) parts.push(`name: ${name}`);
+  if (placeholder) parts.push(`placeholder: ${placeholder}`);
+  if (href) parts.push(`href: ${href}`);
+  if (cls) parts.push(`class: ${cls}`);
+  if (context) parts.push(`context: ${context}`);
+  return parts.join('; ').slice(0, 500);
+}
+
+const CONTROL_SELECTOR = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], [role="link"], [role="textbox"], [role="searchbox"], [role="combobox"], [role="listbox"], [role="slider"], [role="spinbutton"], [role="checkbox"], [role="radio"], [role="switch"]';
 
 export default {
   async enable(options = {}, toolkit) {
@@ -371,106 +425,225 @@ export default {
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
+
     const s = (this.s = this.toolkit.session());
-    const win = typeof window !== 'undefined' ? window : null;
-    const doc = typeof document !== 'undefined' ? document : null;
-    if (!doc) return false;
+    const doc = document;
+    const page = this.toolkit.page;
 
-    const limit = typeof this.options.limit === 'number'
-      ? this.options.limit
-      : (typeof this.options.maxAiCalls === 'number' ? this.options.maxAiCalls : 10);
+    const limit = Math.max(0, Math.min(20, Number(this.options.limit ?? this.options.maxAiCalls ?? 10)));
+    let aiCallsCount = 0;
+    let fixesCount = 0;
+    const askedAi = new WeakSet();
 
-    const seen = new WeakSet();
-    let aiCalls = 0;
+    const processElement = async (el) => {
+      if (!el || !el.isConnected || page.isOurs(el) || !page.isVisible(el)) return false;
 
-    const isElementHidden = (el) => {
-      if (!el || !el.isConnected) return true;
-      if (el.closest('[hidden]')) return true;
-      if (el.closest('[aria-hidden="true"]')) return true;
-      if (s.page && typeof s.page.isVisible === 'function') {
-        return !s.page.isVisible(el);
+      const tag = el.tagName;
+      const isImg = tag === 'IMG';
+
+      if (isImg) {
+        if (el.hasAttribute('alt') || el.getAttribute('aria-label') || el.getAttribute('aria-labelledby')) {
+          return false;
+        }
+
+        if (isClearlyDecorative(el)) {
+          const role = (el.getAttribute('role') || '').toLowerCase();
+          if (role !== 'presentation' && role !== 'none') {
+            s.setAttr(el, 'alt', '');
+            fixesCount++;
+            return true;
+          }
+          return false;
+        }
+
+        const parentControl = el.closest('button, a[href], [role="button"], [role="link"]');
+        if (parentControl && (hasProperName(parentControl, page, doc) || parentControl.getAttribute('aria-label'))) {
+          s.setAttr(el, 'alt', '');
+          fixesCount++;
+          return true;
+        }
+
+        if (isSmallIcon(el)) {
+          const pageFirstName = findPageFirstName(el, page, doc);
+          if (pageFirstName) {
+            s.setAttr(el, 'alt', pageFirstName);
+            fixesCount++;
+            return true;
+          }
+          return false;
+        }
+
+        if (isInformativeImage(el)) {
+          if (aiCallsCount >= limit || askedAi.has(el)) return false;
+          askedAi.add(el);
+          aiCallsCount++;
+          try {
+            const alt = await s.ai.vision('describe', el, { purpose: 'alt' });
+            if (!s.alive()) return false;
+            if (alt && typeof alt === 'string' && alt.trim()) {
+              s.setAttr(el, 'alt', alt.trim());
+              fixesCount++;
+              return true;
+            }
+          } catch {}
+        }
+        return false;
       }
+
+      if (hasProperName(el, page, doc)) {
+        const innerImg = el.querySelector('img:not([alt])');
+        if (innerImg) {
+          s.setAttr(innerImg, 'alt', '');
+          fixesCount++;
+        }
+        return false;
+      }
+
+      const pageFirstName = findPageFirstName(el, page, doc);
+      if (pageFirstName) {
+        s.setAttr(el, 'aria-label', pageFirstName);
+        fixesCount++;
+        const innerImg = el.querySelector('img:not([alt])');
+        if (innerImg) {
+          s.setAttr(innerImg, 'alt', '');
+          fixesCount++;
+        }
+        return true;
+      }
+
+      if (aiCallsCount >= limit || askedAi.has(el)) return false;
+      askedAi.add(el);
+      aiCallsCount++;
+
+      try {
+        const context = findHeadingFor(el, doc);
+        const label = await s.ai.text('label', buildLabelInput(el), { context });
+        if (!s.alive()) return false;
+        if (label && typeof label === 'string' && label.trim()) {
+          s.setAttr(el, 'aria-label', label.trim());
+          fixesCount++;
+          const innerImg = el.querySelector('img:not([alt])');
+          if (innerImg) {
+            s.setAttr(innerImg, 'alt', '');
+            fixesCount++;
+          }
+          return true;
+        }
+      } catch {}
+
       return false;
     };
 
-    const processSingleElement = async (el) => {
-      if (!el || el.nodeType !== 1 || seen.has(el) || !s.alive()) return;
-      seen.add(el);
-
-      if (el.tagName === 'IMG') {
-        if (el.hasAttribute('alt')) return;
-        if (s.page?.nameOf && s.page.nameOf(el)) return;
-
-        if (isClearlyDecorative(el, win)) {
-          s.setAttr(el, 'alt', '');
-          return;
-        }
-
-        const pageName = inferPageFirstName(el);
-        if (pageName) {
-          s.setAttr(el, 'alt', pageName);
-          return;
-        }
-
-        if (isElementHidden(el)) return;
-        if (!isInformativeImage(el, win)) return;
-
-        if (aiCalls < limit) {
-          aiCalls++;
-          let alt = null;
-          try {
-            alt = await s.ai.vision('describe', el, { purpose: 'alt' });
-          } catch {
-            alt = null;
-          }
-          if (s.alive() && alt && typeof alt === 'string' && alt.trim()) {
-            s.setAttr(el, 'alt', alt.trim());
-          }
-        }
-        return;
-      }
-
-      if (s.page?.nameOf && s.page.nameOf(el)) return;
-
-      const pageName = inferPageFirstName(el);
-      if (pageName) {
-        s.setAttr(el, 'aria-label', pageName);
-        return;
-      }
-
-      if (isElementHidden(el)) return;
-
-      if (aiCalls < limit) {
-        aiCalls++;
-        const context = getControlContext(el);
-        let label = null;
-        try {
-          label = await s.ai.text('label', context, { context: doc.title || '' });
-        } catch {
-          label = null;
-        }
-        if (s.alive() && label && typeof label === 'string' && label.trim()) {
-          s.setAttr(el, 'aria-label', label.trim());
-        }
-      }
-    };
-
     const root = doc.body || doc.documentElement;
-    if (root) {
-      const initialElements = [...root.querySelectorAll(SELECTOR)];
-      for (const el of initialElements) {
-        if (!s.alive()) break;
-        await processSingleElement(el);
+    if (!root) return false;
+
+    // First collect all controls and images
+    const controls = Array.from(root.querySelectorAll(CONTROL_SELECTOR)).filter((el) => page.isVisible(el) && !page.isOurs(el));
+    const images = Array.from(root.querySelectorAll('img')).filter((el) => page.isVisible(el) && !page.isOurs(el));
+
+    // Page-first pass for all controls and non-AI images
+    const aiCandidates = [];
+
+    for (const ctrl of controls) {
+      if (hasProperName(ctrl, page, doc)) {
+        const innerImg = ctrl.querySelector('img:not([alt])');
+        if (innerImg) {
+          s.setAttr(innerImg, 'alt', '');
+          fixesCount++;
+        }
+        continue;
       }
 
-      s.watch.added(
-        root,
-        async (el) => {
-          if (!s.alive()) return;
-          await processSingleElement(el);
-        },
-        { selector: SELECTOR }
-      );
+      const pageFirstName = findPageFirstName(ctrl, page, doc);
+      if (pageFirstName) {
+        s.setAttr(ctrl, 'aria-label', pageFirstName);
+        fixesCount++;
+        const innerImg = ctrl.querySelector('img:not([alt])');
+        if (innerImg) {
+          s.setAttr(innerImg, 'alt', '');
+          fixesCount++;
+        }
+      } else {
+        aiCandidates.push(ctrl);
+      }
+    }
+
+    for (const img of images) {
+      if (img.hasAttribute('alt') || img.getAttribute('aria-label') || img.getAttribute('aria-labelledby')) {
+        continue;
+      }
+
+      if (isClearlyDecorative(img)) {
+        const role = (img.getAttribute('role') || '').toLowerCase();
+        if (role !== 'presentation' && role !== 'none') {
+          s.setAttr(img, 'alt', '');
+          fixesCount++;
+        }
+        continue;
+      }
+
+      const parentControl = img.closest('button, a[href], [role="button"], [role="link"]');
+      if (parentControl && (hasProperName(parentControl, page, doc) || parentControl.getAttribute('aria-label'))) {
+        s.setAttr(img, 'alt', '');
+        fixesCount++;
+        continue;
+      }
+
+      if (isSmallIcon(img)) {
+        const pageFirstName = findPageFirstName(img, page, doc);
+        if (pageFirstName) {
+          s.setAttr(img, 'alt', pageFirstName);
+          fixesCount++;
+        }
+        continue;
+      }
+
+      if (isInformativeImage(img)) {
+        aiCandidates.push(img);
+      }
+    }
+
+    // Sort AI candidates: in-viewport first
+    aiCandidates.sort((a, b) => {
+      const ra = a.getBoundingClientRect();
+      const rb = b.getBoundingClientRect();
+      const aInView = ra.top >= 0 && ra.top <= window.innerHeight;
+      const bInView = rb.top >= 0 && rb.top <= window.innerHeight;
+      if (aInView && !bInView) return -1;
+      if (!aInView && bInView) return 1;
+      return 0;
+    });
+
+    // Run AI pass up to limit
+    for (const el of aiCandidates) {
+      if (aiCallsCount >= limit || !s.alive()) break;
+      await processElement(el);
+    }
+
+    // Watch for dynamically added nodes
+    s.watch.added(
+      root,
+      async (addedElements) => {
+        if (!s.alive()) return;
+        for (const el of addedElements) {
+          if (!s.alive()) break;
+          if (el.matches?.(CONTROL_SELECTOR) || el.matches?.('img')) {
+            await processElement(el);
+          }
+          if (typeof el.querySelectorAll === 'function') {
+            for (const child of el.querySelectorAll(`${CONTROL_SELECTOR}, img`)) {
+              if (!s.alive()) break;
+              await processElement(child);
+            }
+          }
+        }
+      },
+      { batch: true }
+    );
+
+    if (fixesCount === 0) {
+      this.disable();
+      return false;
     }
   },
 

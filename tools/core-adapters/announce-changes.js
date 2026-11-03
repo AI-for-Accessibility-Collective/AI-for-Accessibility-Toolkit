@@ -1,242 +1,296 @@
-// announce-changes.js — Tells screen reader users about changes the page makes without saying so.
-// Barrier: Blind and low-vision people using screen readers miss dynamic status updates,
-// toast notifications, error messages, content replacements, and single-page app route changes
-// when authors omit ARIA live regions (aria-live, role status or alert).
+// announce-changes.js — Tells screen reader users about changes the page makes
+// without saying so: dynamic status/error messages, regions replaced after user
+// action, and single-page app route navigations.
+//
+// Barrier: Single-page applications and modern web apps frequently update content,
+// display toast notifications, show validation messages, or navigate between views
+// without using ARIA live regions or moving focus. Blind and low-vision screen
+// reader users are not told about these changes, leaving them unaware of status
+// updates, form errors, or view transitions.
 //
 // Suggested in onboarding for: vision (a suggestion only, never a gate).
 // The person's settings it reads: none.
 // What the person can adjust: nothing (the shortcut, if given, turns it on and off).
 //
 // Options:
-//   debounceMs: Time in milliseconds to batch rapid bursts of changes (default: 200).
-//   actionMs: Window in milliseconds after a user click, key, or submit during which
-//             content changes count as an answer to the person's action (default: 3000).
+//   debounceMs: Milliseconds to gather rapid bursts of DOM additions before speaking (default 100).
+//   actionWindowMs: Milliseconds after a person's click, activation key, or submit that changes
+//                   count as an answer to their action (default 3000).
+//   maxChars: Maximum length of an announcement string before truncation (default 140).
 //
 // Decisions:
-//   • Speaks through s.announce and s.announce.batch via the host's shared live region,
-//     never creating competing live regions of its own.
-//   • Never announces changes inside existing aria-live regions, role="status", role="alert",
-//     or role="log", because the screen reader already speaks them natively.
-//   • Excludes the toolkit's own UI and elements (data-ai4a11y-ui, ai4a11y-*, ws-*).
-//   • Only announces what reads as a message: elements whose role, class, id, or name indicates
-//     a message (status, alert, error, notice, message, toast, etc.), or content that appears
-//     or replaces a region within actionMs of the person's deliberate action (click, key, submit).
-//   • Never announces text that changes inside existing content on its own (clocks, tickers,
-//     timers, counters, carousels, lazy-loaded images, ads, or infinite scroll additions).
-//   • Skips typing-induced changes while the person types in input fields or textareas.
-//   • Ignores iframes and elements outside the visible viewport.
-//   • Watches SPA client-side navigations with s.watch.route and announces the new view's heading or title.
-//   • Batches bursts of multiple changes into at most a few concise announcements.
-//   • Automatically tears down all listeners, observers, and timers on disable() via session cleanup.
+//   • Uses s.announce to speak through the toolkit's single shared live region.
+//   • Never announces changes inside existing aria-live regions or nodes with role="status",
+//     role="alert", or role="log" (or regions explicitly silenced with aria-live="off").
+//   • When the page's own live region speaks, suppresses adapter announcements for 2000ms
+//     to prevent repeating or overlapping speech.
+//   • Watches single-page route changes via s.watch.route, announcing the new view's top
+//     heading or document title after a short settle window.
+//   • Distinguishes meaningful messages (matching keywords: status, alert, error, notice,
+//     message, toast, snackbar, warning) from background page updates.
+//   • Announces non-message content only when it appears within actionWindowMs of a trusted
+//     user action (click, Enter/Space keydown, or form submit).
+//   • Skips changes caused by typing (keyboard input in text entry controls).
+//   • Never announces text changing inside existing content on its own (timers, counters, clocks).
+//   • Never announces content outside the viewport or inside iframes.
+//   • Skips the toolkit's own UI using s.page.isOurs(el), never class or id checks.
+//   • Summarizes added elements by extracting readable text, excluding interactive controls
+//     (buttons, links), and truncating to maxChars.
+//   • Batches bursts of changes so rapid updates result in at most a few announcements.
+//   • Does not announce anything on page load.
 //
 // What it cannot do:
-//   • Cannot read changes inside cross-origin iframes.
-//   • Cannot interpret graphical or icon-only status indicators that have no text or accessible name.
+//   • Cannot infer that an element without semantic naming or recent user action is a message.
+//   • Cannot announce content inside cross-origin or sandboxed iframes.
 
-const MESSAGE_HINT = /\b(status|alert|error|warn|warning|notice|message|toast|snackbar|notification)\b/i;
-const NOISE_HINT = /\b(clock|timestamp|time|timer|ticker|countdown|counter|carousel|slider|ad|advert|banner-ad)\b/i;
-const INTERACTIVE = 'a[href], button, input, select, textarea, [role="button"], [role="link"]';
-const MAX_ANNOUNCE_CHARS = 140;
+const MESSAGE_WORD = /\b(error|alert|warning|warn|notice|toast|snackbar|notification|message|status)\b/i;
+
+function normalizeTokens(str) {
+  return String(str || '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[-_.]/g, ' ');
+}
+
+function looksLikeMessage(el) {
+  if (!el || el.nodeType !== 1) return false;
+  const role = el.getAttribute('role') || '';
+  const cls = typeof el.className === 'string' ? el.className : (el.getAttribute('class') || '');
+  const id = el.id || '';
+  const label = el.getAttribute('aria-label') || '';
+  const title = el.getAttribute('title') || '';
+  const tokens = normalizeTokens(`${role} ${cls} ${id} ${label} ${title}`);
+  if (MESSAGE_WORD.test(tokens)) return true;
+
+  let parent = el.parentElement;
+  for (let i = 0; parent && i < 2; i++, parent = parent.parentElement) {
+    const pRole = parent.getAttribute('role') || '';
+    const pCls = typeof parent.className === 'string' ? parent.className : (parent.getAttribute('class') || '');
+    const pId = parent.id || '';
+    if (MESSAGE_WORD.test(normalizeTokens(`${pRole} ${pCls} ${pId}`))) return true;
+  }
+
+  if (el.querySelector) {
+    const child = el.querySelector('[class*="toast" i], [class*="alert" i], [class*="error" i], [class*="notice" i], [class*="message" i], [id*="toast" i], [id*="alert" i], [id*="error" i], [id*="notice" i], [id*="message" i]');
+    if (child) return true;
+  }
+  return false;
+}
+
+function isLive(el) {
+  if (!el || el.nodeType !== 1) return false;
+  const live = el.getAttribute('aria-live')?.toLowerCase().trim();
+  const role = el.getAttribute('role')?.toLowerCase().trim();
+  if (role === 'alert' || role === 'status' || role === 'log') return true;
+  if (live && live !== 'off') return true;
+  if (el.closest?.('[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"]')) return true;
+  if (el.querySelector?.('[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"]')) return true;
+  return false;
+}
+
+function inViewport(el, win) {
+  if (!el || typeof el.getBoundingClientRect !== 'function') return false;
+  const r = el.getBoundingClientRect();
+  const vh = win.innerHeight || 800;
+  const vw = win.innerWidth || 1280;
+  return r.top < vh && r.bottom > 0 && r.left < vw && r.right > 0;
+}
+
+function isTextEntry(el) {
+  if (!el || el.nodeType !== 1) return false;
+  const tag = el.tagName;
+  if (tag === 'TEXTAREA') return true;
+  if (el.isContentEditable) return true;
+  if (tag === 'INPUT') {
+    const type = (el.getAttribute('type') || 'text').toLowerCase();
+    return !['button', 'submit', 'reset', 'checkbox', 'radio', 'range', 'color', 'file', 'image'].includes(type);
+  }
+  return false;
+}
+
+function summarize(el, s, doc, maxChars) {
+  if (!el || el.nodeType !== 1 || !el.isConnected) return '';
+  const tag = el.tagName;
+  if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE'].includes(tag)) return '';
+  if (el.closest('[hidden], [aria-hidden="true"]')) return '';
+
+  const active = doc.activeElement;
+  if (active && active !== doc.body && el.contains(active)) return '';
+
+  let text = s.page.readableText(el, {
+    skip: 'button, a, input, select, textarea, [role="button"], [role="link"], [role="menuitem"]',
+  });
+  if (!text) {
+    text = s.page.readableText(el);
+  }
+  text = text.replace(/\s+/g, ' ').trim();
+  if (text.length < 3 && tag !== 'OUTPUT') return '';
+  if (text.length > maxChars) {
+    text = text.slice(0, maxChars - 1).trim() + '…';
+  }
+  return text;
+}
 
 export default {
+  s: null,
+  options: null,
+  toolkit: null,
+
   enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
 
-    const root = document.body || document.documentElement;
-    if (!root) return false;
+    const doc = document;
+    const win = window;
+    if (!doc || (!doc.body && !doc.documentElement)) return false;
 
     const s = (this.s = this.toolkit.session());
-    const debounceMs = Math.max(50, this.options.debounceMs ?? 200);
-    const actionMs = Math.max(500, this.options.actionMs ?? 3000);
 
-    let lastAction = 0;
+    const debounceMs = Math.max(50, Number(options.debounceMs) || 100);
+    const actionWindowMs = Math.max(500, Number(options.actionWindowMs) || 3000);
+    const maxChars = Math.max(20, Number(options.maxChars) || 140);
+
+    const PAGE_SPOKE_MS = 600;
+
+    let lastActionAt = 0;
     let lastTypingAt = 0;
     let pageSpokeAt = 0;
-    let lastAnnounced = '';
-    let lastAnnouncedAt = 0;
-    let lastRoute = '';
+    let pendingElement = null;
+    let settleTimer = null;
+    let routeTimer = null;
+    let lastSpokenText = '';
+    let lastSpokenAt = 0;
+    let spokenTimestamps = [];
     const tickers = new WeakSet();
-    const updateTimes = new WeakMap();
+    const elementUpdates = new WeakMap();
 
-    // Track deliberate user actions: clicks and form submissions
-    s.listen(document, 'click', (e) => {
-      if (s.page.isOurs(e.target)) return;
-      lastAction = Date.now();
-    }, { capture: true });
-
-    s.listen(document, 'submit', (e) => {
-      if (s.page.isOurs(e.target)) return;
-      lastAction = Date.now();
-    }, { capture: true });
-
-    // Track keyboard interactions: Enter/Space activate; typing is recorded to suppress echo
-    s.listen(document, 'keydown', (e) => {
-      if (s.page.isOurs(e.target)) return;
-      const target = e.target;
-      const isInput = target && /^(INPUT|TEXTAREA|SELECT)$/i.test(target.tagName);
-      const isEditable = Boolean(target?.isContentEditable);
-
-      if (e.key === 'Enter') {
-        lastAction = Date.now();
-      } else if (e.key === ' ' && !isInput && !isEditable) {
-        lastAction = Date.now();
-      } else if (isInput || isEditable) {
+    const onAction = () => { lastActionAt = Date.now(); };
+    s.listen(doc, 'click', onAction, true);
+    s.listen(doc, 'submit', onAction, true);
+    s.listen(doc, 'keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        lastActionAt = Date.now();
+      } else if (isTextEntry(e.target)) {
         lastTypingAt = Date.now();
       }
-    }, { capture: true });
-
-    s.listen(document, 'input', (e) => {
-      if (s.page.isOurs(e.target)) return;
-      lastTypingAt = Date.now();
-    }, { capture: true });
-
-    const isAnswering = () => Date.now() - lastAction < actionMs;
-    const isTyping = () => Date.now() - lastTypingAt < 1000;
-
-    const inViewport = (el) => {
-      if (!el || typeof el.getBoundingClientRect !== 'function') return false;
-      const r = el.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) return false;
-      const vw = window.innerWidth || document.documentElement.clientWidth || 1024;
-      const vh = window.innerHeight || document.documentElement.clientHeight || 768;
-      return r.bottom >= 0 && r.right >= 0 && r.top <= vh && r.left <= vw;
-    };
-
-    const isMessage = (el) => {
-      for (let e = el, i = 0; e && e.nodeType === 1 && i < 3; e = e.parentElement, i++) {
-        const cls = typeof e.className === 'string' ? e.className : (e.className?.baseVal || '');
-        const id = e.id || '';
-        const role = e.getAttribute?.('role') || '';
-        const name = e.getAttribute?.('name') || '';
-        const label = e.getAttribute?.('aria-label') || '';
-        if (MESSAGE_HINT.test(`${role} ${cls} ${id} ${name} ${label}`)) return true;
+    }, true);
+    s.listen(doc, 'input', (e) => {
+      if (isTextEntry(e.target)) {
+        lastTypingAt = Date.now();
       }
-      return false;
-    };
+    }, true);
 
-    const isTickerOrTimestamp = (el) => {
-      if (!el || el.nodeType !== 1) return false;
-      if (el.tagName === 'TIME' || el.closest('time')) return true;
-      if (el.matches?.('[role="timer" i], [role="marquee" i]')) return true;
-
-      const cls = typeof el.className === 'string' ? el.className : (el.className?.baseVal || '');
-      const id = el.id || '';
-      if (NOISE_HINT.test(`${cls} ${id}`) && !isMessage(el)) return true;
-
-      if (tickers.has(el)) return true;
+    function isAnswering() {
       const now = Date.now();
-      const prev = updateTimes.get(el);
-      if (prev && now - prev < 2000 && lastAction <= prev) {
-        tickers.add(el);
-        return true;
-      }
-      updateTimes.set(el, now);
-      return false;
-    };
+      if (lastTypingAt > lastActionAt && now - lastTypingAt < 1200) return false;
+      return now - lastActionAt < actionWindowMs;
+    }
 
-    const summarize = (el) => {
-      if (!el || el.nodeType !== 1 || !el.isConnected) return '';
-      if (el.closest('[hidden], [aria-hidden="true"]')) return '';
-
-      const raw = typeof el.innerText === 'string' ? el.innerText : el.textContent;
-      const lines = (raw || '').split(/\n+/).map((str) => str.replace(/\s+/g, ' ').trim()).filter(Boolean);
-      if (!lines.length) return '';
-
-      const controls = new Set();
-      if (!el.matches(INTERACTIVE)) {
-        el.querySelectorAll(INTERACTIVE).forEach((c) => {
-          const cRaw = typeof c.innerText === 'string' ? c.innerText : c.textContent;
-          (cRaw || '').split(/\n+/).map((str) => str.replace(/\s+/g, ' ').trim()).filter(Boolean).forEach((l) => controls.add(l));
-        });
-      }
-      let kept = lines.filter((l) => !controls.has(l));
-      if (!kept.length) kept = lines;
-
-      let text = '';
-      for (const part of kept.slice(0, 3)) {
-        const next = !text ? part : text + (/[.!?:;,…]$/.test(text) ? ' ' : '. ') + part;
-        if (text && next.length > MAX_ANNOUNCE_CHARS) break;
-        text = next;
-      }
-      if (text.length > MAX_ANNOUNCE_CHARS) text = text.slice(0, MAX_ANNOUNCE_CHARS - 1) + '…';
-      return text.trim();
-    };
-
-    const handleAdded = (el) => {
-      if (!s.alive() || !el || el.nodeType !== 1) return;
-
-      // Skip the toolkit's own elements and other adapters' UI
-      if (s.page.isOurs(el)) return;
-      if (el.closest('[data-ai4a11y-ui], [id^="ai4a11y-"], [class*="ai4a11y-"], [id^="ws-"], [class*="ws-"]')) return;
-
-      // Skip iframes
-      if (el.tagName === 'IFRAME' || el.closest('iframe')) return;
-
-      // Skip non-textual or irrelevant elements
-      const tag = el.tagName;
-      if (/^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OBJECT|EMBED|SVG|CANVAS|AUDIO|VIDEO|IMG|PICTURE|SOURCE)$/i.test(tag)) return;
-
-      // Skip changes inside existing aria-live, status, alert, or log regions
-      if (el.closest('[aria-live]:not([aria-live="off"]), [role="alert" i], [role="status" i], [role="log" i]')) {
-        pageSpokeAt = Date.now();
-        return;
-      }
-      if (el.querySelector?.('[aria-live]:not([aria-live="off"]), [role="alert" i], [role="status" i], [role="log" i]')) {
-        pageSpokeAt = Date.now();
-        return;
-      }
-
-      // Must be visible and in the viewport
-      if (!s.page.isVisible(el)) return;
-      if (!inViewport(el)) return;
-
-      // If focus moved into this element (e.g. an accessible modal dialog), screen reader speaks it
-      const active = document.activeElement;
-      if (active && active !== document.body && el.contains(active)) return;
-
-      // Skip tickers, clocks, and counters that update periodically
-      if (isTickerOrTimestamp(el)) return;
-
-      // Only announce what reads as a message, or content appearing in response to a deliberate action
-      const isMsg = isMessage(el);
-      const isAction = isAnswering() && !isTyping();
-      if (!isMsg && !isAction) return;
-
-      // Skip if page's own live region recently spoke
-      if (Date.now() - pageSpokeAt < 1500) return;
-
-      const text = summarize(el);
-      if (!text || text.length < 2) return;
-
-      const now = Date.now();
-      if (text === lastAnnounced && now - lastAnnouncedAt < 1200) return;
-      lastAnnounced = text;
-      lastAnnouncedAt = now;
-
-      s.announce.batch('changes', text, { windowMs: debounceMs });
-    };
-
-    // Watch for dynamic additions to the document
-    s.watch.added(root, handleAdded);
-
-    // Watch for single-page app route changes
-    s.watch.route(() => {
-      s.timer(() => {
-        if (!s.alive()) return;
-        const h1 = document.querySelector('main h1, h1, [role="heading"][aria-level="1"]');
-        const h1Text = (h1?.textContent || '').replace(/\s+/g, ' ').trim();
-        const heading = s.page.headings ? s.page.headings({ maxLevel: 2 })[0]?.text : null;
-        const title = (document.title || '').replace(/\s+/g, ' ').trim();
-        const name = h1Text || heading || title || 'New page';
-        if (name && name !== lastRoute) {
-          lastRoute = name;
-          s.announce(name);
+    function scheduleAnnouncement(targetEl) {
+      pendingElement = targetEl;
+      if (settleTimer) { settleTimer(); settleTimer = null; }
+      settleTimer = s.timer(() => {
+        settleTimer = null;
+        if (!s.alive() || !pendingElement || !pendingElement.isConnected) return;
+        if (Date.now() - pageSpokeAt < PAGE_SPOKE_MS) {
+          pendingElement = null;
+          return;
         }
-      }, 100);
+
+        const active = doc.activeElement;
+        if (active && active !== doc.body && pendingElement.contains(active)) {
+          pendingElement = null;
+          return;
+        }
+
+        const text = summarize(pendingElement, s, doc, maxChars);
+        pendingElement = null;
+        if (!text) return;
+
+        const now = Date.now();
+        if (text === lastSpokenText && now - lastSpokenAt < 1000) return;
+
+        spokenTimestamps = spokenTimestamps.filter((t) => now - t < 3000);
+        if (spokenTimestamps.length >= 3) return;
+
+        lastSpokenText = text;
+        lastSpokenAt = now;
+        spokenTimestamps.push(now);
+        s.announce(text);
+      }, 50);
+    }
+
+    // Watch SPA route changes
+    let lastRouteAnnouncement = '';
+    s.watch.route(() => {
+      if (routeTimer) { routeTimer(); routeTimer = null; }
+      routeTimer = s.timer(() => {
+        routeTimer = null;
+        if (!s.alive()) return;
+
+        const main = s.page.main();
+        const h1 = doc.querySelector('main h1, h1, [role="heading"][aria-level="1"]');
+        const heading = (h1 && s.page.isVisible(h1)) ? h1 : (main?.querySelector?.('h2, [role="heading"]') || null);
+        const headingText = heading && s.page.isVisible(heading)
+          ? (heading.textContent || '').replace(/\s+/g, ' ').trim()
+          : '';
+        const titleText = (doc.title || '').replace(/\s+/g, ' ').trim();
+
+        const announcement = headingText || titleText;
+        if (announcement && announcement !== lastRouteAnnouncement) {
+          lastRouteAnnouncement = announcement;
+          s.announce(announcement);
+        }
+      }, 80);
     });
+
+    // Watch newly added elements
+    s.watch.added(doc.body || doc.documentElement, (addedElements) => {
+      if (!s.alive() || !addedElements || !addedElements.length) return;
+      if (Date.now() - pageSpokeAt < PAGE_SPOKE_MS) return;
+
+      const candidates = [];
+      for (const el of addedElements) {
+        if (!el || el.nodeType !== 1 || !el.isConnected) continue;
+        if (s.page.isOurs(el)) continue;
+        if (el.closest?.('[aria-live="off"]')) continue;
+        if (isLive(el)) {
+          pageSpokeAt = Date.now();
+          continue;
+        }
+        if (el.tagName === 'IFRAME' || el.closest?.('iframe')) continue;
+        if (!s.page.isVisible(el)) continue;
+        if (!inViewport(el, win)) continue;
+        candidates.push(el);
+      }
+
+      if (!candidates.length) return;
+
+      const answering = isAnswering();
+      const messages = candidates.filter(looksLikeMessage);
+
+      let targetEl = null;
+      if (messages.length > 0) {
+        targetEl = messages[messages.length - 1];
+      } else if (answering) {
+        targetEl = candidates[0];
+      }
+
+      if (!targetEl) return;
+
+      if (tickers.has(targetEl)) return;
+      const lastSeen = elementUpdates.get(targetEl);
+      if (lastSeen && Date.now() - lastSeen < 1500 && !answering) {
+        tickers.add(targetEl);
+        return;
+      }
+      elementUpdates.set(targetEl, Date.now());
+
+      scheduleAnnouncement(targetEl);
+    }, { batch: true, debounceMs });
+
+    return true;
   },
 
   disable() {
