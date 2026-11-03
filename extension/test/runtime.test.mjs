@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { buildUserScript, teardownScript, registrationFor, runnable, scriptId, buildPreviewScript, previewTeardownScript } from '../runtime/scripts.js';
+import { buildUserScript, teardownScript, registrationFor, runnable, scriptId, buildPreviewScript, previewTeardownScript, AXE_TAGS } from '../runtime/scripts.js';
 import { isAllowedServerUrl } from '../runtime/config.js';
 
 let pass = 0, fail = 0;
@@ -198,6 +198,34 @@ await test('a preview runs its checks before and after enable(), and says only w
   // A failed enable() runs no checks after it.
   const failed = await plain(p.run(buildPreviewScript({ code: CODE('x', "throw new Error('no');"), urlPatterns: ['https://shop.example/*'], checks })));
   assert.deepEqual(failed, { status: 'failed', message: 'enable() failed: no' });
+});
+
+await test('with audit, a preview compares axe-core before and after enable(): what the adapter added and fixed', async () => {
+  const p = page('https://shop.example/');
+  const code = `export const F = { enable() { globalThis.marked = true; }, disable() { globalThis.marked = false; } };`;
+  const node = (target, summary = '') => ({ target: [target], failureSummary: summary });
+  const runs = [];
+  p.context.document = {};
+  p.context.axe = { version: '4.12.1', run: async (doc, options) => {
+    runs.push(options);
+    const on = p.context.marked === true;
+    return { violations: [
+      { id: 'target-size', impact: 'serious', help: 'All touch targets must be 24px large', tags: ['wcag22aa', 'wcag258'], nodes: on ? [] : [node('#buy')] },
+      { id: 'color-contrast', impact: 'serious', help: 'Elements must meet minimum color contrast ratio thresholds', tags: ['wcag2aa', 'wcag143'],
+        nodes: on ? [node('#buy', 'Fix any of the following: insufficient contrast of 2.1'), node('#cart'), node('#old')] : [node('#old')] },
+    ] };
+  } };
+  const r = await plain(p.run(buildPreviewScript({ code, urlPatterns: ['https://shop.example/*'], audit: true })));
+  assert.equal(r.status, 'applied');
+  assert.equal(runs.length, 2, 'once before enable() and once after');
+  assert.deepEqual(JSON.parse(JSON.stringify(runs[0].runOnly.values)), AXE_TAGS);
+  assert.deepEqual(r.axe.added, [{ id: 'color-contrast', impact: 'serious', help: 'Elements must meet minimum color contrast ratio thresholds', wcag: ['1.4.3'], count: 2, targets: ['#buy', '#cart'], summary: 'Fix any of the following: insufficient contrast of 2.1' }]);
+  assert.deepEqual(r.axe.fixed, [{ id: 'target-size', help: 'All touch targets must be 24px large', wcag: ['2.5.8'], count: 1 }]);
+  assert.equal(r.axe.remaining, 1, 'the problem that was there before is the site\'s');
+  // Without axe-core in the page, the preview says so; without audit, it does not look.
+  delete p.context.axe;
+  assert.deepEqual((await plain(p.run(buildPreviewScript({ code, urlPatterns: ['https://shop.example/*'], audit: true })))).axe, { error: 'axe-core is not loaded in this page' });
+  assert.equal((await plain(p.run(buildPreviewScript({ code, urlPatterns: ['https://shop.example/*'] })))).axe, undefined);
 });
 
 await test('the runtime sends a token only to https or this computer', () => {

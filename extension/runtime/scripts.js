@@ -141,14 +141,24 @@ export function runnable(adapters) {
 // cannot reach outside its function) that returns true when the page is as it
 // should be. Each runs before enable() and again after it, and only whether it
 // passed comes back, with a short error. `changes` counts what enable() changed
-// in the page (mutation records), where the page has a MutationObserver.
+// in the page (mutation records), where the page has a MutationObserver, and
+// `shift` how far it moved what was on screen (the sum of the layout shifts
+// in that time, as Core Web Vitals scores them: 0 is steady, 0.1 is a lot).
+//
+// With `audit`, axe-core (injected before this script, AXE_FILE) checks the
+// page against WCAG 2.0-2.2 A and AA rules before enable() and again after
+// it; `axe` says which problems the adapter added and which it fixed, by rule
+// and element. The sidebar decides how much of that the agent sees.
 
 export const PREVIEW_KEY = 'preview';
+export const AXE_FILE = 'vendor/axe-core.min.js';
+export const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const CHECK_MS = 5000;
 const SETTLE_MS = 400;
+const AXE_MS = 30000;
 
-/** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[]}} preview */
-export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [] }) {
+/** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[], audit?: boolean}} preview */
+export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [], audit = false }) {
   const factory = moduleFactorySource(code);
   const scope = (urlPatterns || []).map(urlPatternRegExpSource);
   const checkList = (checks || []).map(c => `async function () {\n${c.code}\n}`).join(',\n');
@@ -192,11 +202,60 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
     }
     return out;
   };
+  // axe-core's WCAG A and AA problems in the page, one entry per rule and element.
+  const AUDIT = ${audit ? 'true' : 'false'};
+  const runAxe = async () => {
+    if (!AUDIT) return null;
+    const axe = globalThis.axe;
+    if (!axe || typeof axe.run !== 'function') return { error: 'axe-core is not loaded in this page' };
+    let timer;
+    try {
+      const r = await Promise.race([
+        axe.run(document, { runOnly: { type: 'tag', values: ${JSON.stringify(AXE_TAGS)} }, resultTypes: ['violations'] }),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('took over ${AXE_MS / 1000} seconds')), ${AXE_MS}); })]);
+      const found = new Map();
+      for (const v of r.violations) for (const n of v.nodes) {
+        const target = (n.target || []).map((t) => (Array.isArray(t) ? t.join(' >> ') : String(t))).join(' >> ');
+        found.set(v.id + ' ' + target, { rule: v, target, summary: n.failureSummary || '' });
+      }
+      return { found, version: axe.version };
+    } catch (e) { return { error: errorText(e).slice(0, 160) }; } finally { clearTimeout(timer); }
+  };
+  const wcagOf = (tags) => tags.map((t) => /^wcag([0-9])([0-9])([0-9]+)$/.exec(t)).filter(Boolean).map((m) => m[1] + '.' + m[2] + '.' + m[3]);
+  const byRule = (entries) => {
+    const rules = new Map();
+    for (const e of entries) {
+      const v = e.rule;
+      const r = rules.get(v.id) || { id: v.id, impact: v.impact || null, help: v.help, wcag: wcagOf(v.tags || []), count: 0, targets: [], summary: e.summary.slice(0, 300) };
+      r.count += 1;
+      if (r.targets.length < 3) r.targets.push(e.target.slice(0, 160));
+      rules.set(v.id, r);
+    }
+    return [...rules.values()];
+  };
+  const compare = (before, after) => {
+    if (!before || !after) return undefined;
+    if (before.error || after.error) return { error: before.error || after.error };
+    const added = [...after.found].filter(([k]) => !before.found.has(k)).map(([, e]) => e);
+    const fixed = [...before.found].filter(([k]) => !after.found.has(k)).map(([, e]) => e);
+    return { version: after.version, added: byRule(added), fixed: byRule(fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })), remaining: after.found.size - added.length };
+  };
   // Counted as they arrive: records handed to the callback are gone from takeRecords().
   let records = 0;
   const watch = typeof MutationObserver === 'function' && typeof document === 'object' ? new MutationObserver((list) => { records += list.length; }) : null;
+  let shift = 0;
+  let shifts = null;
+  try {
+    shifts = new PerformanceObserver((list) => { for (const e of list.getEntries()) if (!e.hadRecentInput) shift += e.value; });
+  } catch (e) { shifts = null; }
+  const stopWatching = () => { if (watch) watch.disconnect(); if (shifts) shifts.disconnect(); };
   const report = async (result) => {
-    if (watch) { await new Promise((r) => setTimeout(r, ${SETTLE_MS})); records += watch.takeRecords().length; watch.disconnect(); result.changes = records; }
+    await new Promise((r) => setTimeout(r, ${SETTLE_MS}));
+    if (watch) { records += watch.takeRecords().length; result.changes = records; }
+    if (shifts) { for (const e of shifts.takeRecords()) if (!e.hadRecentInput) shift += e.value; result.shift = Math.round(shift * 1000) / 1000; }
+    stopWatching();
+    const axeAfter = await runAxe();
+    if (axeAfter) result.axe = compare(axeBefore, axeAfter);
     if (CHECKS.length) {
       const after = await runChecks();
       result.checks = after.map((a, i) => ({ before: before[i].ok, after: a.ok, ...(a.error ? { error: a.error } : {}) }));
@@ -204,17 +263,19 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
     return result;
   };
   let before = [];
+  let axeBefore = null;
   rt.adapters[KEY] = { adapter, revision: 0 };
-  return runChecks().then((b) => {
+  return runAxe().then((a) => { axeBefore = a; return runChecks(); }).then((b) => {
     before = b;
     if (watch) watch.observe(document.documentElement || document, { subtree: true, childList: true, attributes: true, characterData: true });
+    if (shifts) { try { shifts.observe({ type: 'layout-shift' }); } catch (e) { shifts = null; } }
     return adapter.enable(${JSON.stringify(parameters)}, TOOLKIT);
   }).then(
     (value) => {
-      if (value === false) { delete rt.adapters[KEY]; if (watch) watch.disconnect(); return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
+      if (value === false) { delete rt.adapters[KEY]; stopWatching(); return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
       return report({ status: 'applied' });
     },
-    (e) => { delete rt.adapters[KEY]; if (watch) watch.disconnect(); return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
+    (e) => { delete rt.adapters[KEY]; stopWatching(); return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
 })()`;
 }
 

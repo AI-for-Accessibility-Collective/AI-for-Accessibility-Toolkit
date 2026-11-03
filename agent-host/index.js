@@ -34,6 +34,8 @@ const host = createHost({
   opencodeBin: env.AGENT_OPENCODE_BIN || 'opencode',
   repoDir,
   modelsJson: env.AGENT_MODELS_JSON || path.join(os.homedir(), '.cache/opencode/models.json'),
+  // Local runner only: more skill directories, comma-separated (the sandbox image has its own).
+  skillDirs: (env.AGENT_SKILL_DIRS || '').split(',').map(s => s.trim()).filter(Boolean).map(d => path.resolve(d)),
   log,
 });
 

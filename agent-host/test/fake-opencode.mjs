@@ -40,7 +40,7 @@ if (/build/.test(message)) {
   const preview = await tool('browser_preview', { file: 'adapters/bigger-buttons.js', name: 'Bigger buttons', runs_on: runsOn, checks });
   const done = await ready();
   const verdict = (r) => (r.isError ? 'refused' : 'allowed');
-  out({ type: 'text', part: { id: 'p4', type: 'text', text: `Done.\n\`\`\`js\nexport const BiggerButtons = {}\n\`\`\`\nEarly: ${verdict(early)}. Outside: ${verdict(outside)}. Everywhere: ${verdict(everywhere)}. Unchecked: ${verdict(unchecked)}. Escape: ${verdict(escape)}. Preview: ${preview.content[0].text.split('\n')[0]} Changed: ${/enable\(\) made \d+ changes/.test(preview.content[0].text) ? 'yes' : 'no'}. Ready: ${done.isError ? 'no' : 'yes'}.` } });
+  out({ type: 'text', part: { id: 'p4', type: 'text', text: `Done.\n\`\`\`js\nexport const BiggerButtons = {}\n\`\`\`\nEarly: ${verdict(early)}. Outside: ${verdict(outside)}. Everywhere: ${verdict(everywhere)}. Unchecked: ${verdict(unchecked)}. Escape: ${verdict(escape)}. Preview: ${preview.content[0].text.split('\n')[0]} Changed: ${/enable\(\) made \d+ changes/.test(preview.content[0].text) ? 'yes' : 'no'}. Axe: ${/added no problems axe-core finds/.test(preview.content[0].text) ? 'clean' : /The adapter added \d+ problems/.test(preview.content[0].text) ? 'problems' : 'none'}. Ready: ${done.isError ? 'no' : 'yes'}.` } });
 } else if (/sketch/.test(message)) {
   // Writes an adapter and stops without previewing it.
   mkdirSync('adapters', { recursive: true });

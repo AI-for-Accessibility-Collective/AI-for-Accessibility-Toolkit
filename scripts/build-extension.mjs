@@ -1,7 +1,8 @@
 // Copy the toolkit modules the adapter runtime extension uses into
 // extension/vendor/, at the same relative paths, so their imports resolve
 // unchanged inside the unpacked extension (Chrome does not follow files
-// outside the extension's folder).
+// outside the extension's folder). Also axe-core, the copy the CLI pins
+// (cli/axe-core.min.js), which the sidebar's previews run in the page.
 //
 //   node scripts/build-extension.mjs           copy
 //   node scripts/build-extension.mjs --check   fail if a copy differs (CI)
@@ -25,11 +26,14 @@ const FILES = [
   'adapter-mcp/registry.js',
 ];
 const VENDOR = path.join(ROOT, 'extension', 'vendor');
+// Other files, as [source under the repository, path under vendor/].
+const OTHER = [['cli/axe-core.min.js', 'axe-core.min.js']];
+const COPIES = [...FILES.map(f => [path.join('toolkit', f), f]), ...OTHER];
 const check = process.argv.includes('--check');
 
 const stale = [];
-for (const file of FILES) {
-  const from = path.join(ROOT, 'toolkit', file);
+for (const [origin, file] of COPIES) {
+  const from = path.join(ROOT, origin);
   const to = path.join(VENDOR, file);
   const source = readFileSync(from);
   if (check) {
@@ -40,7 +44,7 @@ for (const file of FILES) {
   writeFileSync(to, source);
 }
 // Nothing else belongs in vendor/.
-const listed = new Set(FILES.map(f => path.join(VENDOR, f)));
+const listed = new Set(COPIES.map(([, f]) => path.join(VENDOR, f)));
 const walk = (dir) => (existsSync(dir) ? readdirSync(dir, { withFileTypes: true }).flatMap(e => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)])) : []);
 const extra = walk(VENDOR).filter(f => !listed.has(f)).map(f => path.relative(VENDOR, f));
 
@@ -49,8 +53,8 @@ if (check) {
     console.error(`extension/vendor is out of date: ${[...stale, ...extra.map(f => `${f} (not a toolkit file)`)].join(', ')}. Run npm run build:extension and commit the result.`);
     process.exit(1);
   }
-  console.log(`extension/vendor matches the toolkit (${FILES.length} files).`);
+  console.log(`extension/vendor matches the toolkit (${COPIES.length} files).`);
 } else {
   if (extra.length) console.warn(`Left in extension/vendor (not copied by this script): ${extra.join(', ')}`);
-  console.log(`Copied ${FILES.length} toolkit modules into extension/vendor.`);
+  console.log(`Copied ${COPIES.length} files into extension/vendor.`);
 }

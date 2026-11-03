@@ -6,12 +6,15 @@
 //                           one tab per chat), as much as the person agrees
 //                           to share (URL, source, screenshot)
 //   browser_preview         run an adapter file on that page as a preview,
-//                           with the agent's checks before and after
+//                           with the agent's checks and an axe-core WCAG
+//                           check before and after, and how far it moved
+//                           the page (layout shift)
 //   browser_remove_preview  take the preview off again
 //   adapter_ready           offer a finished adapter to the person: they can
 //                           export it or add it to their account. Only once
-//                           its latest preview applied and every check passed,
-//                           on the file as it is now.
+//                           its latest preview applied, passed every check and
+//                           added no problem axe-core finds, on the file as it
+//                           is now.
 //
 // The host, not opencode's event stream, writes the sidebar's line for each,
 // so the person sees "Previewing … on your page" while it waits for them.
@@ -27,8 +30,50 @@ const MAX_OUTLINE = 40_000;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const MAX_CHECKS = 8;
 const MAX_CHECK_CODE = 3000;
+const MAX_AXE_RULES = 20;
 const AsyncFunction = (async () => {}).constructor;
 const hashOf = (code) => createHash('sha256').update(code).digest('hex');
+const problems = (rules) => (rules || []).reduce((n, r) => n + (r.count || 0), 0);
+const cut = (v, n) => String(v ?? '').slice(0, n);
+
+/** The sidebar's axe result, kept to what the agent and the record need. */
+function axeOf(a) {
+  if (!a || typeof a !== 'object') return undefined;
+  if (a.error) return { error: cut(a.error, 160) };
+  const rule = (r) => ({ id: cut(r?.id, 60), impact: r?.impact ? cut(r.impact, 20) : null, help: cut(r?.help, 200),
+    wcag: (Array.isArray(r?.wcag) ? r.wcag : []).slice(0, 6).map(w => cut(w, 10)), count: Math.max(0, Number(r?.count) || 0),
+    ...(Array.isArray(r?.targets) ? { targets: r.targets.slice(0, 3).map(t => cut(t, 160)) } : {}),
+    ...(r?.summary ? { summary: cut(r.summary, 300) } : {}) });
+  const list = (l) => (Array.isArray(l) ? l.slice(0, MAX_AXE_RULES).map(rule) : []);
+  return { version: cut(a.version, 20), added: list(a.added), fixed: list(a.fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })),
+    remaining: Math.max(0, Number(a.remaining) || 0) };
+}
+
+/** What the agent reads about the axe-core check. */
+function axeText(axe) {
+  if (!axe) return 'Accessibility check: axe-core did not run on this preview (the sidebar may be an older version). Ask the person to reload the extension.';
+  if (axe.error) return `Accessibility check: axe-core could not run (${axe.error}).`;
+  const wcag = (r) => (r.wcag.length ? ` (WCAG ${r.wcag.join(', ')})` : '');
+  const lines = [`Accessibility check (axe-core ${axe.version || ''}, WCAG 2.0-2.2 A and AA rules), the page after enable() compared with before:`];
+  if (axe.added.length) {
+    lines.push(`- The adapter added ${problems(axe.added)} problems. Fix every one:`);
+    for (const r of axe.added) {
+      lines.push(`  - ${r.impact ? `[${r.impact}] ` : ''}${r.id}: ${r.help}${wcag(r)}, on ${r.count} element${r.count === 1 ? '' : 's'}${r.targets?.length ? `: ${r.targets.join('; ')}` : ''}`);
+      if (r.summary) lines.push(`    ${r.summary.replace(/\s+/g, ' ')}`);
+    }
+  } else lines.push('- The adapter added no problems axe-core finds.');
+  if (axe.fixed.length) lines.push(`- It fixed: ${axe.fixed.map(r => `${r.id}${wcag(r)} on ${r.count} element${r.count === 1 ? '' : 's'}`).join('; ')}.`);
+  if (axe.remaining) lines.push(`- ${axe.remaining} problems were on the page before and still are: the site's, not the adapter's. Leave them unless the person asked about them.`);
+  lines.push('axe-core finds only some WCAG failures. For what the adapter adds or changes, also check what it cannot: keyboard use and visible focus, name, role and state, target size, and contrast you chose (the intopia-web-accessibility skill).');
+  return lines.join('\n');
+}
+
+/** What the agent reads about how far the page moved. */
+function shiftText(shift) {
+  if (!Number.isFinite(shift)) return '';
+  if (shift < 0.01) return 'Layout shift: 0 (nothing on screen moved).';
+  return `Layout shift: ${shift} (0 is steady; 0.1 or more is a lot). ${shift >= 0.1 ? 'Unless the person asked for things to change size or place, the page moved more than it should: see "Keep the page steady and familiar" in your instructions.' : 'Make sure only what the person asked to change moved.'}`;
+}
 
 const TOOLS = [
   {
@@ -41,7 +86,7 @@ const TOOLS = [
   },
   {
     name: 'browser_preview',
-    description: 'Preview an adapter on the person\'s page: runs the adapter file (a web module under /work) on the page this chat works on, without installing it, with your checks. The person may be asked first. Returns whether enable() applied, failed (with the error) or skipped; how many changes it made in the page; each check before and after enable(); and the page afterwards at the level the person shares. A new preview replaces the last one.',
+    description: 'Preview an adapter on the person\'s page: runs the adapter file (a web module under /work) on the page this chat works on, without installing it, with your checks. The person may be asked first. Returns whether enable() applied, failed (with the error) or skipped; how many changes it made in the page and how far it moved what was on screen (layout shift); each check before and after enable(); the accessibility problems axe-core (WCAG 2.0-2.2 A and AA rules) finds that the adapter added or fixed; and the page afterwards at the level the person shares. A new preview replaces the last one.',
     inputSchema: { type: 'object', properties: {
       file: { type: 'string', description: 'The adapter file, e.g. adapters/bigger-buttons.js (relative to /work).' },
       name: { type: 'string', description: 'The adapter\'s name, as the person will see it.' },
@@ -61,7 +106,7 @@ const TOOLS = [
   },
   {
     name: 'adapter_ready',
-    description: 'Offer a finished adapter to the person. The sidebar then shows it with "Add to my account" and "Export". Refused unless the latest preview of this file, as it is now, applied and passed every check; review it first.',
+    description: 'Offer a finished adapter to the person. The sidebar then shows it with "Add to my account" and "Export". Refused unless the latest preview of this file, as it is now, applied, passed every check and added no accessibility problem axe-core finds; review it first.',
     inputSchema: { type: 'object', properties: {
       file: { type: 'string', description: 'The adapter file under /work, e.g. adapters/bigger-buttons.js' },
       id: { type: 'string', description: 'Short id: lowercase letters, digits and dashes, e.g. bigger-buttons' },
@@ -130,6 +175,10 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     const failed = (rec.checks || []).filter(c => !c.after).length;
     if (!rec.checks?.length) return { ok: false, why: 'was previewed without checks' };
     if (failed) return { ok: false, why: `failed ${failed} of its ${rec.checks.length} checks` };
+    if (!rec.axe) return { ok: false, why: 'was not checked for accessibility problems (axe-core)' };
+    if (rec.axe.error) return { ok: false, why: `could not be checked for accessibility problems (axe-core: ${rec.axe.error})` };
+    const added = problems(rec.axe.added);
+    if (added) return { ok: false, why: `adds ${added} accessibility problem${added === 1 ? '' : 's'} that axe-core finds` };
     return { ok: true };
   }
 
@@ -194,9 +243,13 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       if (a.after) pageData(uid, chatId, 'after-preview', a.after);
       const results = Array.isArray(a.checks) ? checks.map((c, i) => ({ name: c.name, before: !!a.checks[i]?.before, after: !!a.checks[i]?.after, ...(a.checks[i]?.error ? { error: String(a.checks[i].error).slice(0, 160) } : {}) })) : [];
       const changes = Number.isFinite(a.changes) ? a.changes : null;
-      const rec = record({ status: a.status || 'failed', changes, checks: results });
+      const shift = Number.isFinite(a.shift) ? Math.max(0, Math.round(a.shift * 1000) / 1000) : null;
+      const axe = a.status === 'applied' ? axeOf(a.axe) : undefined;
+      const rec = record({ status: a.status || 'failed', changes, shift, checks: results, ...(axe ? { axe } : {}) });
       const passed = results.filter(c => c.after).length;
-      const tally = results.length ? ` · ${passed} of ${results.length} checks pass` : '';
+      const added = problems(axe?.added);
+      const tally = (results.length ? ` · ${passed} of ${results.length} checks pass` : '')
+        + (axe && !axe.error ? (added ? ` · ${added} new accessibility problem${added === 1 ? '' : 's'}` : ' · no new accessibility problems') : '');
       const label = { applied: `“${name}” is previewing on your page${tally}`, skipped: `“${name}” did not apply on this page`, failed: `“${name}” failed on your page` }[a.status] || `Preview of “${name}” finished`;
       const good = verdict(rec, adapter.code).ok;
       chats.addEntry(uid, chatId, { id: step.id, text: label, state: a.status === 'failed' || (a.status === 'applied' && !good) ? 'failed' : 'done' });
@@ -205,10 +258,12 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
         a.status === 'skipped' && /pattern|scope|match/i.test(a.message || '')
           ? `Its runs_on patterns do not match the page this chat works on${a.site ? ` (${a.site})` : ''}. Do not widen them to other sites: if that is not the site the adapter is for, ask the person to choose the right page in the sidebar.` : '',
         a.status === 'applied' && changes !== null ? (changes ? `enable() made ${changes} changes in the page.` : 'enable() changed nothing in the page: what it looks for is probably not there.') : '',
+        a.status === 'applied' ? shiftText(shift) : '',
         results.length ? ['Checks (before enable → after):', ...results.map(c => `- ${c.name}: ${c.before ? 'pass' : 'fail'} → ${c.after ? 'pass' : 'fail'}${c.error ? ` (${c.error})` : ''}`)].join('\n') : '',
+        a.status === 'applied' ? axeText(axe) : '',
         a.status === 'applied' ? (good
-          ? 'Every check passes. Review the page afterwards too, then tell the person what changed and ask them to try it.'
-          : 'It does not work yet: fix the adapter (or a check that is wrong) and preview again. Do not tell the person it works.') : '',
+          ? 'Every check passes and it added no problem axe-core finds. Review the page afterwards too (against WCAG, and that it stays steady and looks like the site), then tell the person what changed and ask them to try it.'
+          : `It is not ready: it ${verdict(rec, adapter.code).why}. Fix the adapter (or a check that is wrong) and preview again. Do not tell the person it works.`) : '',
         a.after ? 'The page with the preview on, as the person shares it:' : 'The person shares less than the page source, so you cannot see the page afterwards: rely on your checks, and ask them how it looks.',
       ].filter(Boolean).join('\n');
       return { content: pageContent(intro, a.after) };

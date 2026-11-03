@@ -109,7 +109,9 @@ await test('the agent sees the page, previews, and offers the adapter; the sideb
     preview: (r) => {
       assert.match(r.code, /BiggerButtons/); assert.deepEqual(r.runsOn, ['https://example.com/*']);
       assert.deepEqual(r.checks, [{ name: 'the page is marked big', code: 'return document.body.dataset.big === "1";' }]);
-      return { status: 'applied', changes: 2, checks: [{ before: false, after: true }], after: { url: 'https://example.com/shop', outline: 'button "Buy" (44px tall)' } };
+      return { status: 'applied', changes: 2, shift: 0.004, checks: [{ before: false, after: true }],
+        axe: { version: '4.12.1', added: [], fixed: [{ id: 'target-size', help: 'All touch targets must be 24px large', wcag: ['2.5.8'], count: 2 }], remaining: 3 },
+        after: { url: 'https://example.com/shop', outline: 'button "Buy" (44px tall)' } };
     },
   });
   await new Promise(r => setTimeout(r, 200));
@@ -120,9 +122,9 @@ await test('the agent sees the page, previews, and offers the adapter; the sideb
   const texts = chat.entries.map(e => e.text);
   assert.ok(texts.includes('Reading the toolkit’s guides and code'));
   assert.ok(texts.includes('Looking at the page'));
-  assert.ok(texts.includes('“Bigger buttons” is previewing on your page · 1 of 1 checks pass'));
+  assert.ok(texts.includes('“Bigger buttons” is previewing on your page · 1 of 1 checks pass · no new accessibility problems'));
   // Not ready before a preview shows it works; no previews on every site, without checks, or with a check that reaches outside itself.
-  assert.match(texts.at(-1), /Early: refused\. Outside: refused\. Everywhere: refused\. Unchecked: refused\. Escape: refused\. Preview: Preview result: applied\. Changed: yes\. Ready: yes\./);
+  assert.match(texts.at(-1), /Early: refused\. Outside: refused\. Everywhere: refused\. Unchecked: refused\. Escape: refused\. Preview: Preview result: applied\. Changed: yes\. Axe: clean\. Ready: yes\./);
   assert.ok(!chat.entries.some(e => e.kind === 'warning'), 'a checked adapter gets no warning');
   assert.deepEqual(chat.consent, { 'https://example.com': 'screenshot' });
   assert.equal(chat.adapters[0].id, 'bigger-buttons');
@@ -157,6 +159,35 @@ await test('an adapter that was not checked, or whose checks fail, is not ready,
   chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.at(-1).kind === 'warning' && c; });
   assert.match(chat.entries.at(-1).text, /Not checked: “sketch” has not been previewed on your page/);
   sb.close();
+});
+
+await test('an adapter that adds accessibility problems, or was not checked with axe-core, is not ready', async () => {
+  const added = { id: 'color-contrast', impact: 'serious', help: 'Elements must meet minimum color contrast ratio thresholds', wcag: ['1.4.3'], count: 2, targets: ['button.buy', 'button.cart'], summary: 'Element has insufficient color contrast of 2.1' };
+  let answer = { status: 'applied', changes: 2, checks: [{ before: false, after: true }], axe: { version: '4.12.1', added: [added], fixed: [], remaining: 0 } };
+  const sb = sidebar('ada', {
+    page: () => ({ level: 'url', origin: 'https://example.com', remember: true, url: 'https://example.com/shop' }),
+    preview: () => answer,
+  });
+  await new Promise(r => setTimeout(r, 200));
+  const other = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'build it' } });
+  let chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
+  assert.match(chat.entries.find(e => e.kind === 'agent').text, /Axe: problems\. Ready: no\./);
+  assert.ok(chat.entries.some(e => e.state === 'failed' && e.text === '“Bigger buttons” is previewing on your page · 1 of 1 checks pass · 2 new accessibility problems'));
+  assert.ok(chat.entries.some(e => e.kind === 'warning' && /Not checked: “Bigger buttons” adds 2 accessibility problems that axe-core finds/.test(e.text)));
+  // A sidebar that sends no axe result (an older extension) does not make it ready either.
+  answer = { status: 'applied', changes: 2, checks: [{ before: false, after: true }] };
+  await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'build it again' } });
+  chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'warning' && /was not checked for accessibility problems/.test(e.text)) && c; });
+  assert.match(chat.entries.findLast(e => e.kind === 'agent').text, /Axe: none\. Ready: no\./);
+  assert.equal(chat.adapters.length, 0);
+  sb.close();
+});
+
+await test('reading the accessibility skill gets its own line', () => {
+  assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'skill', state: { status: 'completed', input: { name: 'intopia-web-accessibility' } } } }).entry.text, 'Opening the accessibility guidance (WCAG)');
+  assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'skill', state: { status: 'completed', input: { name: 'ai4a11y-toolkit' } } } }).entry.text, 'Opening the toolkit skill');
+  assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'read', state: { status: 'completed', input: { filePath: '/opt/agent/skills/intopia-web-accessibility/INDEX.md' } } } }).entry.text, 'Reading accessibility guidance (WCAG)');
 });
 
 await test('one run at a time per account, and stop ends it', async () => {

@@ -132,7 +132,8 @@ try {
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
     const shown = await panel.locator('#transcript').innerText();
     assert.match(shown, /Looking at the page/);
-    assert.match(shown, /“Bigger buttons” is previewing on your page · 1 of 1 checks pass/);
+    assert.match(shown, /“Bigger buttons” is previewing on your page · 1 of 1 checks pass · no new accessibility problems/);
+    assert.match(shown, /Axe: clean\./, 'axe-core ran in the page before and after enable()');
     assert.match(shown, /Reading the toolkit’s guides and code \(2 times\)/, 'a repeated step is one line');
     assert.match(shown, /Changed: yes\./, 'the preview counted what enable() changed in the page');
     assert.ok(!/export const|```/.test(shown), 'no code in the sidebar');
@@ -200,7 +201,7 @@ try {
     await panel.locator('#transcript', { hasText: 'build them again' }).waitFor();
     await panel.reload();
     await panel.locator('#transcript', { hasText: 'build them again' }).waitFor();
-    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history.');
+    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
     // Send, then answer what the agent asks (share everything, preview) until its run ends.

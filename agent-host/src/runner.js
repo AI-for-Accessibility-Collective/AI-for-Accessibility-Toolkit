@@ -15,7 +15,7 @@ import readline from 'node:readline';
 const exec = promisify(execFile);
 export const MODEL = 'google/gemini-3.8-flash';
 
-/** The sandbox's opencode settings: model through the host's proxy, the browser tools, the skill. */
+/** The sandbox's opencode settings: model through the host's proxy, the browser tools, the skills (directories of skill folders). */
 export function opencodeConfig({ token, hostUrl, instructions, skills }) {
   return {
     $schema: 'https://opencode.ai/config.json',
@@ -26,7 +26,7 @@ export function opencodeConfig({ token, hostUrl, instructions, skills }) {
     // The person answers in the sidebar's chat, not in opencode's question form.
     permissions: [{ action: 'question', resource: '*', effect: 'deny' }],
     instructions: [instructions],
-    skills: [skills],
+    skills,
   };
 }
 
@@ -69,7 +69,7 @@ export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'run
     const job = (async () => {
       const { dir, token } = accounts.ensure(uid);
       writeFileSync(path.join(dir, 'config', 'opencode.json'), JSON.stringify(opencodeConfig({
-        token, hostUrl, instructions: '/opt/agent/AGENTS.md', skills: '/toolkit/.claude/skills',
+        token, hostUrl, instructions: '/opt/agent/AGENTS.md', skills: ['/toolkit/.claude/skills', '/opt/agent/skills'],
       }), null, 2));
       writeFileSync(path.join(dir, 'resolv.conf'), dns.map(d => `nameserver ${d}\n`).join(''));
       const settings = [`--runtime=${runtime}`, '--network', network, '-v', `${path.join(dir, 'resolv.conf')}:/etc/resolv.conf:ro`,
@@ -101,12 +101,16 @@ export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'run
   return { ensure, run, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
 }
 
-/** For development and tests: opencode as a plain process, one home per account. Not a sandbox. */
-export function localRunner({ accounts, hostUrl, bin = 'opencode', repoDir, modelsJson }) {
+/**
+ * For development and tests: opencode as a plain process, one home per account. Not a sandbox.
+ * skillDirs: more directories of skills, such as a checkout of Intopia's
+ * accessibility skill in one (the sandbox image has it in /opt/agent/skills).
+ */
+export function localRunner({ accounts, hostUrl, bin = 'opencode', repoDir, modelsJson, skillDirs = [] }) {
   async function ensure(uid) {
     const { dir, token } = accounts.ensure(uid);
     writeFileSync(path.join(dir, 'config', 'opencode.json'), JSON.stringify(opencodeConfig({
-      token, hostUrl, instructions: path.join(repoDir, 'agent-host/sandbox/AGENTS.md'), skills: path.join(repoDir, '.claude/skills'),
+      token, hostUrl, instructions: path.join(repoDir, 'agent-host/sandbox/AGENTS.md'), skills: [path.join(repoDir, '.claude/skills'), ...skillDirs],
     }), null, 2));
     // opencode waits forever without its model catalog; the sandbox cannot download it.
     const cache = path.join(dir, 'home', '.cache', 'opencode');

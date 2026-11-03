@@ -101,10 +101,15 @@ step shows as one line.
 - **Previews.** A preview runs the adapter on the chat's page only, without
   installing it, until you remove it or reload the page. You are asked
   first, unless you tick **Apply previews automatically**. The agent's checks
-  run with it and say whether it works; the agent also sees whether it
-  applied and, at the level you share, the page afterwards, so it can review
-  the change. It can only offer an adapter whose checks all passed, and the
-  sidebar warns you about one that was not checked. A screenshot of a page
+  run with it and say whether it works. axe-core (`vendor/axe-core.min.js`,
+  the copy the CLI pins) checks the page against WCAG A and AA rules before
+  and after, and the preview measures how far the page moved. The agent
+  sees which problems the adapter added or fixed. It sees which elements
+  have them only if you share the page source. It also sees whether the
+  adapter applied and, at the level you share, the page afterwards, so it
+  can review the change. It can only offer an adapter whose checks all
+  passed and that added no axe-core problem. The sidebar warns you about
+  one that was not checked. A screenshot of a page
   that is not on screen is taken only when you choose to share one: the
   sidebar shows that tab for a moment, then goes back.
 - **When it is ready**, **Add to my account** publishes it to your account,

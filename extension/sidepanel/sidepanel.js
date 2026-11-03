@@ -13,7 +13,8 @@
 //   preview         run an adapter on the page without installing it
 //                   (runtime/scripts.js buildPreviewScript), after the person
 //                   says yes, or at once if they chose "Apply previews
-//                   automatically"
+//                   automatically"; with axe-core's WCAG check before and
+//                   after (vendor/axe-core.min.js, injected first)
 //   remove-preview  take it off again
 //
 // Finished adapters can be added to the account (published privately and
@@ -21,7 +22,7 @@
 
 import { readConnection } from '../runtime/config.js';
 import { pageOutline } from '../runtime/page.js';
-import { buildPreviewScript, previewTeardownScript } from '../runtime/scripts.js';
+import { buildPreviewScript, previewTeardownScript, AXE_FILE } from '../runtime/scripts.js';
 import { createRegistryClient } from '../vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP } from '../vendor/protocol/adapter/index.js';
 
@@ -215,8 +216,9 @@ async function runPreview(request) {
   }
   let result;
   try {
+    // axe-core first, in the same world, for the preview's accessibility check.
     const [res] = await chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', injectImmediately: true,
-      js: [{ code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks }) }] });
+      js: [{ file: AXE_FILE }, { code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks, audit: true }) }] });
     result = res?.result || { status: 'failed', message: res?.error || 'the page gave no result' };
   } catch (e) {
     result = { status: 'failed', message: e.message };
@@ -231,6 +233,11 @@ async function runPreview(request) {
   }
   // Which site it ran on, when the person shares at least the address there.
   const site = level && level !== 'none' ? originOf(tab.url) : undefined;
+  // axe names the elements with each problem, and its summary can quote the
+  // page: that much only where the person shares the page source.
+  if (result.axe?.added && level !== 'source' && level !== 'screenshot') {
+    result.axe = { ...result.axe, added: result.axe.added.map(({ targets, summary, ...rule }) => rule) };
+  }
   await answer(request, { ...result, ...(after ? { after } : {}), ...(site ? { site } : {}) });
 }
 

@@ -1,7 +1,7 @@
-# One account's sandbox: opencode 2.0.30 and a read-only copy of the toolkit
-# (its code, docs and the ai4a11y-toolkit skill). The host starts it with
-# gVisor, no capabilities, a read-only root, and a network that reaches only
-# the host's sandbox port. Build context: the repository root.
+# One account's sandbox: opencode 2.0.30, a read-only copy of the toolkit
+# (its code, docs and the ai4a11y-toolkit skill) and Intopia's accessibility
+# skill. The host starts it with gVisor, no capabilities, a read-only root,
+# and a network that reaches only the host's sandbox port. Build context: the repository root.
 #   docker build -f agent-host/sandbox/Dockerfile -t agent-sandbox .
 FROM node:24-slim
 
@@ -19,6 +19,16 @@ RUN curl -fsSL "https://opencode.ai/files/bin/${OPENCODE_VERSION}/opencode-linux
  && opencode --version
 # opencode waits forever without its model catalog, and cannot download it here.
 RUN mkdir -p /opt/agent && curl -fsSL https://models.dev/api.json -o /opt/agent/models.json
+
+# Intopia's web accessibility skill (WCAG 2.2 AA acceptance criteria and code
+# examples per component, and a colour contrast script), at a pinned commit.
+# © Intopia, CC BY-NC-SA 4.0: https://github.com/Intopia/intopia-web-accessibility-skill
+# Fetched here, not kept in this repository.
+ARG INTOPIA_SKILL_COMMIT=74b3944ee3e562c45dd88218afc5f7eb1c1fd060
+RUN mkdir -p /opt/agent/skills/intopia-web-accessibility && cd /opt/agent/skills/intopia-web-accessibility \
+ && git init -q && git remote add origin https://github.com/Intopia/intopia-web-accessibility-skill.git \
+ && git fetch -q --depth 1 origin "${INTOPIA_SKILL_COMMIT}" && git checkout -q FETCH_HEAD && rm -rf .git \
+ && test -f SKILL.md && test -f LICENSE
 
 COPY agent-host/sandbox/AGENTS.md agent-host/sandbox/start.sh /opt/agent/
 COPY README.md CLAUDE.md /toolkit/

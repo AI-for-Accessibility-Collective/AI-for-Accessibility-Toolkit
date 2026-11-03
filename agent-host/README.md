@@ -37,7 +37,11 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   read-only root with a tmpfs `/tmp`, 2 CPUs, 3 GB and 512 processes at most.
   Its only writable folders are its home (opencode's sessions) and `/work`
   (its adapters). `/toolkit` is the toolkit's code, docs and the
-  `ai4a11y-toolkit` skill, read-only in the image.
+  `ai4a11y-toolkit` skill, read-only in the image. `/opt/agent/skills` has
+  Intopia's [web accessibility skill](https://github.com/Intopia/intopia-web-accessibility-skill)
+  (WCAG 2.2 AA acceptance criteria, code examples and a contrast script),
+  which the image build fetches at a pinned commit. It is © Intopia under
+  CC BY-NC-SA 4.0, so it is not kept in this repository.
 - **Its network** reaches the host's sandbox port and nothing else on the
   host, never the metadata server, private addresses or another sandbox, and
   the internet only when the VM's `sandbox-internet` metadata is `on`
@@ -57,11 +61,20 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   agent's checks: function bodies that run in the page before and after
   `enable()` and say only whether the page is as it should be. The host
   compiles each on its own first (so it cannot reach outside its function)
-  and lints it like an adapter. `adapter_ready` is refused unless the latest
-  preview of the file, as it is now, applied and passed every check; at the
-  end of a run, the person is warned about any adapter it wrote or previewed
-  that was not checked that way. Previews on every site (`*`, `https://*/*`)
-  are refused.
+  and lints it like an adapter. The sidebar also runs axe-core (WCAG 2.0 to
+  2.2, A and AA rules) on the page before and after `enable()`, and measures
+  the layout shift `enable()` causes. The agent is told which axe-core
+  problems the adapter added or fixed, and how far the page moved.
+  `adapter_ready` is refused unless the latest preview of the file, as it is
+  now, applied, passed every check and added no axe-core problem. At the end
+  of a run, the person is warned about any adapter the run wrote or
+  previewed that was not checked that way. Previews on every site (`*`,
+  `https://*/*`) are refused.
+- **How it builds**: [sandbox/AGENTS.md](sandbox/AGENTS.md) asks the agent to
+  keep the page steady and familiar (change only what the barrier needs,
+  match the site, no moving or flickering content, nothing that happens on
+  its own) and to review what it adds against WCAG 2.2 AA, with checks for
+  what axe-core cannot test (keyboard, focus, name, role and state).
 - **What the person sees has no code**: replies with code left out, and one
   plain line per step ([src/updates.js](src/updates.js)).
 - **Chats keep their history** on the host (`chats/`), each continuing its
@@ -87,10 +100,15 @@ it only with your own account.
 
 ```bash
 AGENT_HOST_SECRET=$(openssl rand -hex 24) AGENT_RUNNER=local \
+  AGENT_SKILL_DIRS=…/skills \
   GEMINI_API_KEY=… node agent-host/index.js
 # then the toolkit service with the same secret:
 AGENT_HOST_URL=http://127.0.0.1:8791 AGENT_HOST_SECRET=… npm run dev:workshop
 ```
+
+`AGENT_SKILL_DIRS` (optional, comma-separated) names more skill directories.
+Use it for a folder that holds a checkout of Intopia's skill as
+`intopia-web-accessibility/`, the way the sandbox image has it.
 
 Tests: `node agent-host/test/host.test.mjs` (a stand-in for opencode),
 `npm run test:assistant:e2e` (the real extension in Chromium, with the
