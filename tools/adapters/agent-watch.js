@@ -994,5 +994,8 @@ ${surfaceCss(AgentWatch.containerId, base, muted, line, high)}
   display: inline-flex; align-items: center;
   padding: 2px 3px; box-sizing: border-box;
 }
+${'' /* the track can now be wider than the knob's scaled travel: push it to the end instead */}
+#${AgentWatch.containerId} .aw-rules-toggle .aw-rules-knob { transform: none; margin-left: auto; }
+#${AgentWatch.containerId} .aw-rules-toggle[aria-checked="false"] .aw-rules-knob { margin-left: 0; }
 `;
 }

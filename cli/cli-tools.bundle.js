@@ -417,7 +417,8 @@
     // Find boxes that can't grow with their text (see FIXED_BOX_ATTR) and pin
     // their text size and line and letter spacing to the page's own, which the
     // text inside inherits; the font traversal and the spacing rules skip what's
-    // inside.
+    // inside. Pinned without !important so custom stylesheets can still adjust
+    // spacing (WCAG 1.4.12).
     markFixedBoxes(roots = null) {
       if (typeof document === "undefined" || !document.body) return;
       if (!this.fixedBoxes) {
@@ -472,7 +473,7 @@
         }
         this.fixedBoxes.set(el, saved);
         el.setAttribute(FIXED_BOX_ATTR, "");
-        for (const prop of Object.keys(own[k])) el.style.setProperty(prop, own[k][prop], "important");
+        for (const prop of Object.keys(own[k])) el.style.setProperty(prop, own[k][prop]);
       });
     },
     unmarkFixedBoxes() {
@@ -567,14 +568,21 @@
       if (s.contrastMode === "light") {
         css += `
         html { background: #fff !important; }
-        body, main, article, section, p,
-        h1, h2, h3, h4, h5, h6,
-        li, td, th {
+        body, main, article, section, aside, nav, header, footer, form,
+        details, summary, dialog, figure, figcaption, blockquote,
+        div:not([aria-hidden="true"]):not([class*="icon"]),
+        p, h1, h2, h3, h4, h5, h6,
+        li, td, th, dt, dd {
           background-color: #fff !important;
         }
-        body, p, li, td, th,
+        button, input, select, textarea {
+          background-color: #fff !important;
+          color: #000 !important;
+          border: 1px solid #000 !important;
+        }
+        body, p, li, td, th, dt, dd, blockquote, figcaption,
         h1, h2, h3, h4, h5, h6,
-        a, button, input, label,
+        a, button, input, select, textarea, label,
         span:not([aria-hidden="true"]),
         div:not([aria-hidden="true"]) {
           color: #000 !important;
@@ -585,14 +593,21 @@
       } else if (s.contrastMode === "yellow-black") {
         css += `
         html { background: #000 !important; }
-        body, main, article, section, p,
-        h1, h2, h3, h4, h5, h6,
-        li, td, th {
+        body, main, article, section, aside, nav, header, footer, form,
+        details, summary, dialog, figure, figcaption, blockquote,
+        div:not([aria-hidden="true"]):not([class*="icon"]),
+        p, h1, h2, h3, h4, h5, h6,
+        li, td, th, dt, dd {
           background-color: #000 !important;
         }
-        body, p, li, td, th,
+        button, input, select, textarea {
+          background-color: #000 !important;
+          border: 1px solid #ff0 !important;
+          color: #ff0 !important;
+        }
+        body, p, li, td, th, dt, dd, blockquote, figcaption,
         h1, h2, h3, h4, h5, h6,
-        button, input, label,
+        button, input, select, textarea, label,
         span:not([aria-hidden="true"]),
         div:not([aria-hidden="true"]) {
           color: #ff0 !important;
@@ -605,7 +620,7 @@
         css += `input[type="radio"], input[type="checkbox"] { flex-shrink: 0 !important; }
 `;
       }
-      const TEXT = "body, " + ["p", "li", "td", "th", "dd", "dt", "label", "blockquote", "figcaption"].map((t) => `${t}:not([${FIXED_BOX_ATTR}] *)`).join(", ");
+      const TEXT = "body, " + ["p", "li", "td", "th", "dd", "dt", "label", "blockquote", "figcaption"].map((t) => `${t}:not([${FIXED_BOX_ATTR}], [${FIXED_BOX_ATTR}] *)`).join(", ");
       if (s.lineHeight && s.lineHeight !== 1.5) {
         css += `${TEXT} { line-height: ${s.lineHeight} !important; }
 `;
@@ -615,7 +630,7 @@
 `;
       }
       if (s.largeCursor) {
-        css += `* { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="%230066ff" opacity="0.5"/><circle cx="16" cy="16" r="4" fill="%23000"/></svg>'), auto !important; }
+        css += `* { cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14" fill="%230066ff" opacity="0.5"/><circle cx="16" cy="16" r="4" fill="%23000"/></svg>') 16 16, auto !important; }
 `;
       }
       if (s.enhanceFocus) {
@@ -634,7 +649,7 @@
         css += `
         body, p, li, td, th,
         h1, h2, h3, h4, h5, h6,
-        a, button, input, textarea, label,
+        a, button, input, textarea, select, label,
         span:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]),
         div:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]) {
           font-family: 'OpenDyslexic', sans-serif !important;
@@ -643,6 +658,8 @@
       }
       if (s.readingGuide) {
         css += `.ai4a11y-reading-guide { position: fixed; left: 0; right: 0; height: 40px; background: rgba(255, 255, 0, 0.2); pointer-events: none; z-index: 999999; transition: top 0.05s ease-out; }
+`;
+        css += `@media (prefers-reduced-motion: reduce) { .ai4a11y-reading-guide { transition: none !important; } }
 `;
       }
       return css;
@@ -659,7 +676,10 @@
       if (this.readingGuideEl) return;
       this.readingGuideEl = document.createElement("div");
       this.readingGuideEl.className = "ai4a11y-reading-guide";
-      document.body.appendChild(this.readingGuideEl);
+      this.readingGuideEl.setAttribute("aria-hidden", "true");
+      const initialTop = typeof window !== "undefined" ? `${Math.round(window.innerHeight / 2 - 20)}px` : "0px";
+      this.readingGuideEl.style.top = initialTop;
+      (document.body || document.documentElement).appendChild(this.readingGuideEl);
       this.readingGuideMouseHandler = (e) => {
         if (this.readingGuideEl) {
           this.readingGuideEl.style.top = `${e.clientY - 20}px`;
@@ -709,6 +729,7 @@
       grayscale: 0
     },
     enable(options = {}) {
+      if (this.enabled) return;
       this.settings = { ...this.settings, ...options };
       this.enabled = true;
       if (typeof DarkReader !== "undefined") {
@@ -737,9 +758,14 @@
       const BACK = 'img, video, picture, canvas, iframe, [style*="background-image"], [style*="background:"], [style*="background-color"]';
       style.textContent = `
       ${MEDIA_VARS}
+      /* Inverting <html> needs an opaque white root background to invert
+         against. Without one (or with a dark background here, which inverts to
+         light grey), transparent pages and pages without a body background
+         (such as W3C BAD before pages) invert text to white over a light canvas,
+         failing WCAG 1.4.3 color contrast. Inverting #fff produces #1a1a1a. */
       html {
         --ai4a11y-filter-dark: invert(90%) hue-rotate(180deg);
-        background: #111 !important;
+        background: #fff !important;
       }
       ${PAGE_FILTER}
       ${BACK} {
@@ -753,9 +779,10 @@
         --ai4a11y-media-dark: initial;
       }
     `;
-      document.head.appendChild(style);
+      (document.head || document.documentElement).appendChild(style);
     },
     disable() {
+      if (!this.enabled) return;
       if (typeof DarkReader !== "undefined") {
         try {
           DarkReader.disable();
@@ -789,6 +816,12 @@
   if (typeof window !== "undefined") window.__ai4a11yDarkMode = DarkMode;
 
   // tools/adapters/motion-reducer.js
+  var DEFAULT_SETTINGS = {
+    stopAnimations: true,
+    pauseVideos: true,
+    stopGifs: true,
+    disableParallax: true
+  };
   var MotionReducer = {
     styleId: "ai4a11y-motion-reducer-styles",
     enabled: false,
@@ -806,15 +839,10 @@
     // async freezeSingleImage continuations can detect they've been overtaken
     // and abort before mutating the DOM or repopulating frozenImages.
     freezeGen: 0,
-    currentSettings: {
-      stopAnimations: true,
-      pauseVideos: true,
-      stopGifs: true,
-      disableParallax: true
-    },
+    currentSettings: { ...DEFAULT_SETTINGS },
     enable(options = {}) {
       if (this.enabled) return;
-      this.currentSettings = { ...this.currentSettings, ...options };
+      this.currentSettings = { ...DEFAULT_SETTINGS, ...options };
       this.enabled = true;
       const s = this.currentSettings;
       let css = "";
@@ -856,36 +884,38 @@
       }
       if (s.stopGifs) this.freezeImages();
       this.pauseWaapiAnimations();
-      const pauseAnimations = (deadline) => {
-        const elements = document.querySelectorAll("*");
-        let i = 0;
-        const processChunk = () => {
-          while (i < elements.length && (typeof deadline === "undefined" || deadline.timeRemaining() > 0)) {
-            const el = elements[i];
-            if (el.id && el.id.startsWith("ai4a11y-") || el.className && typeof el.className === "string" && el.className.startsWith("ai4a11y-")) {
-              i++;
-              continue;
-            }
-            try {
-              const computedStyle = getComputedStyle(el);
-              if (computedStyle.animationName !== "none") {
-                el.style.animationPlayState = "paused";
-                this.pausedPlayState.add(el);
-              }
-            } catch (e) {
-            }
+      const elements = document.querySelectorAll("*");
+      let i = 0;
+      const processChunk = (deadline) => {
+        if (!this.enabled) return;
+        while (i < elements.length && (!deadline || deadline.timeRemaining() > 0)) {
+          const el = elements[i];
+          if (el.id && el.id.startsWith("ai4a11y-") || el.className && typeof el.className === "string" && el.className.startsWith("ai4a11y-")) {
             i++;
+            continue;
           }
-          if (i < elements.length) {
-            requestIdleCallback ? requestIdleCallback(processChunk) : setTimeout(processChunk, 0);
+          try {
+            const computedStyle = getComputedStyle(el);
+            if (computedStyle.animationName !== "none") {
+              el.style.animationPlayState = "paused";
+              this.pausedPlayState.add(el);
+            }
+          } catch (e) {
           }
-        };
-        processChunk();
+          i++;
+        }
+        if (i < elements.length && this.enabled) {
+          if (typeof requestIdleCallback !== "undefined") {
+            requestIdleCallback(processChunk);
+          } else {
+            setTimeout(processChunk, 0);
+          }
+        }
       };
       if (typeof requestIdleCallback !== "undefined") {
-        requestIdleCallback(pauseAnimations);
+        requestIdleCallback(processChunk);
       } else {
-        pauseAnimations();
+        processChunk();
       }
       this.unregisterSweep = registerSweep("motion-reducer", () => {
         if (!this.enabled) return;
@@ -933,7 +963,7 @@
       for (const iframe of this.pausedIframes) {
         const src = iframe.src || "";
         try {
-          if (src.includes("youtube.com")) {
+          if (src.includes("youtube.com") || src.includes("youtube-nocookie.com")) {
             iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', "*");
           } else if (src.includes("vimeo.com")) {
             iframe.contentWindow?.postMessage('{"method":"play"}', "*");
@@ -950,9 +980,11 @@
         video.controls = false;
         delete video.dataset.ai4a11yMrControls;
       });
-      document.querySelectorAll('video[data-ai4a11y-was-paused="false"]').forEach((video) => {
-        video.play().catch(() => {
-        });
+      document.querySelectorAll("video[data-ai4a11y-was-paused]").forEach((video) => {
+        if (video.dataset.ai4a11yWasPaused === "false") {
+          video.play().catch(() => {
+          });
+        }
         delete video.dataset.ai4a11yWasPaused;
       });
       console.log("[AI4A11y] Motion Reducer disabled");
@@ -974,17 +1006,18 @@
     // still photo for a canvas only risks breaking the page's layout. So the start of the
     // file is read first, and only animated ones are frozen.
     freezeImages() {
+      const promises = [];
       document.querySelectorAll("img").forEach((img) => {
         const url = img.currentSrc || img.src || "";
         if (this.stillImages.get(img) === url || img.dataset.ai4a11yMrFrozen) return;
-        const mightAnimate = /\.(gif|webp|apng)(\?|$)/i.test(url) || url.startsWith("data:image/gif") || url.startsWith("data:image/webp");
+        const mightAnimate = /\.(gif|webp|apng)(\?|$)/i.test(url) || url.startsWith("data:image/gif") || url.startsWith("data:image/webp") || url.startsWith("data:image/apng");
         if (!mightAnimate) {
           this.stillImages.set(img, url);
           return;
         }
         img.dataset.ai4a11yMrFrozen = "checking";
         const gen = this.freezeGen;
-        isAnimated(url).then((animated) => {
+        const p = isAnimated(url).then((animated) => {
           if (this.freezeGen !== gen) {
             delete img.dataset.ai4a11yMrFrozen;
             return;
@@ -995,10 +1028,12 @@
             return;
           }
           delete img.dataset.ai4a11yMrFrozen;
-          this.freezeSingleImage(img).catch(() => {
+          return this.freezeSingleImage(img).catch(() => {
           });
         });
+        promises.push(p);
       });
+      return Promise.all(promises);
     },
     async freezeSingleImage(img) {
       if (!img.src || img.dataset.ai4a11yMrFrozen) return;
@@ -1006,12 +1041,16 @@
       const capturedGen = this.freezeGen;
       const w = img.naturalWidth || img.width || 100;
       const h = img.naturalHeight || img.height || 100;
-      const altText = img.getAttribute("alt") || "";
+      const hasAlt = img.hasAttribute("alt");
+      const altText = img.getAttribute("alt");
+      const ariaLabel = img.getAttribute("aria-label");
+      const ariaLabelledBy = img.getAttribute("aria-labelledby");
+      const title = img.getAttribute("title");
       const origId = img.id;
       const origClass = img.className;
       const srcAriaHidden = img.getAttribute("aria-hidden");
       const srcRole = img.getAttribute("role") || "";
-      const decorative = altText === "" || srcAriaHidden === "true" || srcRole === "presentation" || srcRole === "none";
+      const decorative = hasAlt && altText === "" || srcAriaHidden === "true" || srcRole === "presentation" || srcRole === "none";
       const canvas = document.createElement("canvas");
       canvas.width = w;
       canvas.height = h;
@@ -1021,7 +1060,10 @@
         canvas.setAttribute("aria-hidden", "true");
       } else {
         canvas.setAttribute("role", "img");
-        canvas.setAttribute("aria-label", altText);
+        const label = hasAlt && altText || ariaLabel || title;
+        if (label) canvas.setAttribute("aria-label", label);
+        if (ariaLabelledBy) canvas.setAttribute("aria-labelledby", ariaLabelledBy);
+        if (title && !canvas.hasAttribute("title")) canvas.setAttribute("title", title);
         if (srcAriaHidden !== null) canvas.setAttribute("aria-hidden", srcAriaHidden);
       }
       canvas.setAttribute("width", w);
@@ -1030,9 +1072,9 @@
       if (img.getClientRects().length) {
         canvas.style.width = box.width;
         canvas.style.height = box.height;
-      } else {
-        canvas.style.maxWidth = "100%";
       }
+      canvas.style.maxWidth = box.maxWidth !== "none" ? box.maxWidth : "100%";
+      canvas.style.verticalAlign = box.verticalAlign;
       canvas.style.objectFit = box.objectFit;
       canvas.style.objectPosition = box.objectPosition;
       canvas.style.borderRadius = box.borderRadius;
@@ -1071,7 +1113,8 @@
           if (taintedDraw) {
             drawn = true;
           } else {
-            img.dataset.ai4a11yMrFrozen = "failed";
+            if (this.freezeGen !== capturedGen) delete img.dataset.ai4a11yMrFrozen;
+            else img.dataset.ai4a11yMrFrozen = "failed";
             return;
           }
         }
@@ -1091,11 +1134,11 @@
       document.querySelectorAll("video").forEach((video) => {
         if (this.seenVideos.has(video)) return;
         this.seenVideos.add(video);
-        if (!video.paused) this.pauseVideo(video);
+        if (!video.paused || video.autoplay) this.pauseVideo(video);
       });
       document.querySelectorAll("iframe").forEach((iframe) => {
         const src = iframe.src || "";
-        if (src.includes("youtube.com") && src.includes("enablejsapi=1")) {
+        if ((src.includes("youtube.com") || src.includes("youtube-nocookie.com")) && src.includes("enablejsapi=1")) {
           iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', "*");
           this.pausedIframes.add(iframe);
         } else if (src.includes("vimeo.com")) {
@@ -1140,9 +1183,12 @@
     if (url.startsWith("data:")) {
       const b64 = url.slice(url.indexOf(",") + 1, url.indexOf(",") + 1 + Math.ceil(HEAD_BYTES / 3) * 4);
       const bin = atob(b64.slice(0, b64.length - b64.length % 4));
-      return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+      const bytes2 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes2[i] = bin.charCodeAt(i);
+      return bytes2;
     }
-    const res = await fetch(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` }, credentials: "omit" });
+    const signal = typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(2e3) : void 0;
+    const res = await fetch(url, { headers: { Range: `bytes=0-${HEAD_BYTES - 1}` }, credentials: "omit", signal });
     if (!res.ok || !res.body) throw new Error("unreadable");
     const reader = res.body.getReader();
     const chunks = [];
@@ -1184,28 +1230,56 @@
 
   // tools/adapters/focus-mode.js
   var HIGHLIGHT = "ai4a11y-focus-mode-highlight";
-  function hasDarkText(el) {
-    const m = (getComputedStyle(el).color || "").match(/[\d.]+/g);
-    if (!m) return false;
-    const [r, g, b] = m.map(Number);
-    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+  var DEFAULT_SETTINGS2 = {
+    hideDistractions: false,
+    dimBackground: false,
+    dimOpacity: 0.5,
+    highlightColor: "#fff3cd",
+    showProgress: true
+  };
+  function parseColor(str) {
+    if (!str) return null;
+    if (str.startsWith("#")) {
+      let hex = str.slice(1);
+      if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+      if (hex.length === 6) {
+        const num = parseInt(hex, 16);
+        return [num >> 16 & 255, num >> 8 & 255, num & 255];
+      }
+    }
+    const m = str.match(/[\d.]+/g);
+    return m && m.length >= 3 ? m.slice(0, 3).map(Number) : null;
+  }
+  function relativeLuminance([r, g, b]) {
+    const [rs, gs, bs] = [r, g, b].map((v) => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  }
+  function hasDarkText(el, highlightColor = "#fff3cd") {
+    const fg = parseColor(getComputedStyle(el).color);
+    const bg = parseColor(highlightColor) || [255, 243, 205];
+    if (!fg) return false;
+    const l1 = relativeLuminance(fg);
+    const l2 = relativeLuminance(bg);
+    const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    return ratio >= 4.5;
   }
   var FocusMode = {
     styleId: "ai4a11y-focus-mode-styles",
     enabled: false,
     progressEl: null,
     progressHandler: null,
+    progressObserver: null,
+    navHandler: null,
     hoverHandler: null,
     leaveHandler: null,
+    focusHandler: null,
+    blurHandler: null,
     hovered: null,
-    // the element carrying the hover highlight
-    currentSettings: {
-      hideDistractions: false,
-      dimBackground: false,
-      dimOpacity: 0.5,
-      highlightColor: "#fff3cd",
-      showProgress: true
-    },
+    // the element carrying the highlight
+    currentSettings: { ...DEFAULT_SETTINGS2 },
     distractionSelectors: [
       "ins.adsbygoogle",
       "[data-ad]",
@@ -1235,12 +1309,12 @@
       document.getElementById(this.styleId)?.remove();
       this.disableProgressIndicator();
       this.disableHoverHighlight();
-      this.currentSettings = { ...this.currentSettings, ...options };
+      this.currentSettings = { ...DEFAULT_SETTINGS2, ...options };
       this.enabled = true;
       const s = this.currentSettings;
+      const all = this.distractionSelectors.join(", ");
       let css = "";
       if (s.hideDistractions) {
-        const all = this.distractionSelectors.join(", ");
         css += `
         :is(${all}) {
           opacity: ${s.dimOpacity} !important;
@@ -1255,7 +1329,7 @@
       if (s.dimBackground) {
         css += `
         body > *:not(main):not(article):not([role="main"]):not(#ai4a11y-focus-mode-styles):not(#ai4a11y-progress) {
-          opacity: ${s.dimOpacity + 0.3} !important;
+          opacity: ${Math.min(1, Number(s.dimOpacity) + 0.3)} !important;
         }
         main, article, [role="main"], .article, .post, .content, .entry-content {
           opacity: 1 !important;
@@ -1268,6 +1342,11 @@
       .${HIGHLIGHT} {
         background-color: ${s.highlightColor} !important;
         transition: background-color 0.2s ease !important;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        :is(${all}), .${HIGHLIGHT}, #ai4a11y-progress {
+          transition: none !important;
+        }
       }
     `;
       this.enableHoverHighlight();
@@ -1286,6 +1365,7 @@
       document.getElementById(this.styleId)?.remove();
       this.disableProgressIndicator();
       this.disableHoverHighlight();
+      document.querySelectorAll("." + HIGHLIGHT).forEach((el) => el.classList.remove(HIGHLIGHT));
       console.log("[AI4A11y] Focus Mode disabled");
       announce("Focus mode disabled");
     },
@@ -1293,6 +1373,7 @@
       this.disableProgressIndicator();
       this.progressEl = document.createElement("div");
       this.progressEl.id = "ai4a11y-progress";
+      this.progressEl.setAttribute("aria-hidden", "true");
       this.progressEl.style.cssText = `
       position: fixed;
       top: 0;
@@ -1302,6 +1383,7 @@
       z-index: 100000;
       transition: width 0.1s ease;
       width: 0%;
+      pointer-events: none;
     `;
       document.body.appendChild(this.progressEl);
       this.progressRafPending = false;
@@ -1310,9 +1392,9 @@
         this.progressRafPending = true;
         requestAnimationFrame(() => {
           this.progressRafPending = false;
-          const scrollTop = window.scrollY;
-          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-          const progress = docHeight > 0 ? scrollTop / docHeight * 100 : 0;
+          const scrollTop = window.scrollY || window.pageYOffset || 0;
+          const docHeight = (document.documentElement ? document.documentElement.scrollHeight : 0) - window.innerHeight;
+          const progress = docHeight > 0 ? Math.min(100, Math.max(0, scrollTop / docHeight * 100)) : 0;
           if (this.progressEl) {
             this.progressEl.style.width = `${progress}%`;
           }
@@ -1320,8 +1402,36 @@
       };
       document.addEventListener("scroll", this.progressHandler, { passive: true });
       this.progressHandler();
+      this.navHandler = () => {
+        if (!this.enabled || !this.currentSettings.showProgress) return;
+        if (this.progressEl && !this.progressEl.isConnected && document.body) {
+          document.body.appendChild(this.progressEl);
+        }
+        this.progressHandler?.();
+      };
+      window.addEventListener("popstate", this.navHandler);
+      window.addEventListener("hashchange", this.navHandler);
+      if (typeof MutationObserver !== "undefined" && document.body) {
+        this.progressObserver = new MutationObserver(() => {
+          if (!this.enabled || !this.currentSettings.showProgress) return;
+          if (this.progressEl && !this.progressEl.isConnected && document.body) {
+            document.body.appendChild(this.progressEl);
+            this.progressHandler?.();
+          }
+        });
+        this.progressObserver.observe(document.body, { childList: true });
+      }
     },
     disableProgressIndicator() {
+      if (this.progressObserver) {
+        this.progressObserver.disconnect();
+        this.progressObserver = null;
+      }
+      if (this.navHandler) {
+        window.removeEventListener("popstate", this.navHandler);
+        window.removeEventListener("hashchange", this.navHandler);
+        this.navHandler = null;
+      }
       if (this.progressEl) {
         this.progressEl.remove();
         this.progressEl = null;
@@ -1331,28 +1441,45 @@
         this.progressHandler = null;
       }
     },
-    // Highlight the paragraph, list item or table cell under the pointer. Light
-    // text (white words on a banner photo, a dark footer's links) would all
-    // but vanish on the light highlight, so only dark text gets it.
+    // Highlight the paragraph, list item or table cell under the pointer or focus.
+    // Light text (white words on a banner photo, a dark footer's links) would all
+    // but vanish on the light highlight, so only text with contrast >= 4.5:1 gets it.
     enableHoverHighlight() {
       this.hoverHandler = (e) => {
         const el = e.target && e.target.closest ? e.target.closest("p, li, td") : null;
         if (el === this.hovered) return;
         this.hovered?.classList.remove(HIGHLIGHT);
-        this.hovered = el && hasDarkText(el) ? el : null;
+        this.hovered = el && hasDarkText(el, this.currentSettings.highlightColor) ? el : null;
         this.hovered?.classList.add(HIGHLIGHT);
       };
       this.leaveHandler = () => {
         this.hovered?.classList.remove(HIGHLIGHT);
         this.hovered = null;
       };
+      this.focusHandler = (e) => {
+        const el = e.target && e.target.closest ? e.target.closest("p, li, td") : null;
+        if (el === this.hovered) return;
+        this.hovered?.classList.remove(HIGHLIGHT);
+        this.hovered = el && hasDarkText(el, this.currentSettings.highlightColor) ? el : null;
+        this.hovered?.classList.add(HIGHLIGHT);
+      };
+      this.blurHandler = (e) => {
+        if (this.hovered && (!e.relatedTarget || !this.hovered.contains(e.relatedTarget))) {
+          this.hovered.classList.remove(HIGHLIGHT);
+          this.hovered = null;
+        }
+      };
       document.addEventListener("mouseover", this.hoverHandler, true);
       document.documentElement.addEventListener("mouseleave", this.leaveHandler);
+      document.addEventListener("focusin", this.focusHandler, true);
+      document.addEventListener("focusout", this.blurHandler, true);
     },
     disableHoverHighlight() {
       if (this.hoverHandler) document.removeEventListener("mouseover", this.hoverHandler, true);
       if (this.leaveHandler) document.documentElement.removeEventListener("mouseleave", this.leaveHandler);
-      this.hoverHandler = this.leaveHandler = null;
+      if (this.focusHandler) document.removeEventListener("focusin", this.focusHandler, true);
+      if (this.blurHandler) document.removeEventListener("focusout", this.blurHandler, true);
+      this.hoverHandler = this.leaveHandler = this.focusHandler = this.blurHandler = null;
       this.hovered?.classList.remove(HIGHLIGHT);
       this.hovered = null;
     },
@@ -1414,18 +1541,25 @@
       highlightColor: "#ffeb3b"
     },
     getVoices() {
-      return typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : [];
+      try {
+        return typeof speechSynthesis !== "undefined" ? speechSynthesis.getVoices() : [];
+      } catch {
+        return [];
+      }
     },
     setVoice(voiceName) {
       const voices = this.getVoices();
       this.settings.voice = voices.find((v) => v.name === voiceName) || null;
     },
     setRate(rate) {
-      this.settings.rate = Math.max(0.5, Math.min(2, rate));
+      const num = Number(rate);
+      if (!Number.isNaN(num) && Number.isFinite(num)) {
+        this.settings.rate = Math.max(0.5, Math.min(2, num));
+      }
     },
     speakSelection() {
-      const selection = window.getSelection();
-      const text = selection.toString().trim();
+      const selection = typeof window !== "undefined" && window.getSelection ? window.getSelection() : null;
+      const text = selection ? selection.toString().trim() : "";
       if (text) {
         this.speak(text);
       } else {
@@ -1433,9 +1567,10 @@
       }
     },
     speakPage(options = {}) {
-      if (options.rate) this.settings.rate = options.rate;
-      const main = document.querySelector('main, article, [role="main"], #main, .content, #content');
-      const target = main || document.body;
+      if (options.rate !== void 0) this.setRate(options.rate);
+      if (options.voice !== void 0) this.setVoice(options.voice);
+      const main = typeof document !== "undefined" ? document.querySelector('main, article, [role="main"], #main, .content, #content') : null;
+      const target = typeof options.target === "string" && typeof document !== "undefined" ? document.querySelector(options.target) : options.target || main || (typeof document !== "undefined" ? document.body : null);
       const text = this.extractReadableText(target);
       if (text) {
         this.speak(text);
@@ -1448,11 +1583,21 @@
     // is left out; visually hidden text meant for listeners is kept.
     extractReadableText(element) {
       if (!element) return "";
+      const visible2 = (el) => {
+        try {
+          return typeof el.checkVisibility !== "function" || el.checkVisibility({ visibilityProperty: true });
+        } catch {
+          return true;
+        }
+      };
+      if (element.nodeType === 1 && (element.matches && element.matches(SKIP_SEL) || !visible2(element))) return "";
       const parts = [];
       let lastBlock = null;
-      const visible2 = (el) => typeof el.checkVisibility !== "function" || el.checkVisibility({ visibilityProperty: true });
+      let lastChar = "";
       const blockOf = (el) => {
-        for (let e = el; e && e !== element; e = e.parentElement) if (BLOCK_TAGS.has(e.tagName)) return e;
+        for (let e = el; e && e !== element; e = e.parentElement) {
+          if (BLOCK_TAGS.has(e.tagName?.toUpperCase())) return e;
+        }
         return element;
       };
       const walk = (el) => {
@@ -1465,11 +1610,14 @@
             }
             const block = blockOf(el);
             if (block !== lastBlock && parts.length) {
-              const prev = parts.join("").trimEnd();
-              parts.push(/[.!?:;,]$/.test(prev) ? " " : ". ");
+              const addPeriod = !/[.!?:;,]$/.test(lastChar);
+              parts.push(addPeriod ? ". " : " ");
+              if (addPeriod) lastChar = ".";
             }
             lastBlock = block;
             parts.push(t);
+            const trimmed = t.trim();
+            if (trimmed) lastChar = trimmed[trimmed.length - 1];
           } else if (n.nodeType === 1 && !(n.matches && n.matches(SKIP_SEL)) && visible2(n)) {
             walk(n);
           }
@@ -1483,6 +1631,7 @@
     },
     // Sentence-sized pieces, none longer than CHUNK_CHARS where a space allows.
     chunk(text) {
+      if (!text || typeof text !== "string") return [];
       const sentences = text.match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [text];
       const out = [];
       let cur = "";
@@ -1510,7 +1659,7 @@
     // on the page. When reading was switched on as the page loaded (a saved
     // setting, a profile), wait for that first click or key, then start.
     waitForGesture(text, run) {
-      if (this.gestureHandler) return;
+      if (this.gestureHandler || typeof document === "undefined") return;
       this.speaking = false;
       if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
       announce("Read aloud is ready: click anywhere on the page or press a key to start");
@@ -1524,8 +1673,10 @@
     },
     clearGesture() {
       if (!this.gestureHandler) return;
-      document.removeEventListener("pointerdown", this.gestureHandler, true);
-      document.removeEventListener("keydown", this.gestureHandler, true);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("pointerdown", this.gestureHandler, true);
+        document.removeEventListener("keydown", this.gestureHandler, true);
+      }
       this.gestureHandler = null;
     },
     async speak(text) {
@@ -1582,6 +1733,11 @@
       }
       const run = this.run;
       const chunks = this.chunk(text);
+      if (!chunks.length) {
+        announce("Read aloud: no text to read on this page");
+        this.speaking = false;
+        return;
+      }
       let started = false, offset = 0;
       chunks.forEach((part, i) => {
         const u = new SpeechSynthesisUtterance(part);
@@ -1599,7 +1755,9 @@
           }
         };
         u.onstart = () => {
-          if (run !== this.run || started) return;
+          if (run !== this.run) return;
+          this.utterance = u;
+          if (started) return;
           started = true;
           console.log("[AI4A11y] Read Aloud started");
           announce("Reading started");
@@ -1607,6 +1765,7 @@
         u.onend = () => {
           if (run !== this.run || i !== chunks.length - 1) return;
           this.speaking = false;
+          this.utterance = null;
           announce("Finished reading");
         };
         u.onerror = (event) => {
@@ -1617,22 +1776,40 @@
             return;
           }
           console.warn("[AI4A11y] Speech error:", event.error);
+          if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
           this.speaking = false;
+          this.utterance = null;
         };
         this.utterance = u;
         speechSynthesis.speak(u);
       });
     },
     pause() {
-      if (this.speaking && !this.paused && typeof speechSynthesis !== "undefined") {
-        speechSynthesis.pause();
+      if (this.speaking && !this.paused) {
+        if (typeof EasySpeech !== "undefined" && EasySpeech.pause) {
+          try {
+            EasySpeech.pause();
+          } catch (e) {
+          }
+        }
+        if (typeof speechSynthesis !== "undefined") {
+          speechSynthesis.pause();
+        }
         this.paused = true;
         announce("Reading paused");
       }
     },
     resume() {
-      if (this.paused && typeof speechSynthesis !== "undefined") {
-        speechSynthesis.resume();
+      if (this.paused) {
+        if (typeof EasySpeech !== "undefined" && EasySpeech.resume) {
+          try {
+            EasySpeech.resume();
+          } catch (e) {
+          }
+        }
+        if (typeof speechSynthesis !== "undefined") {
+          speechSynthesis.resume();
+        }
         this.paused = false;
         announce("Reading resumed");
       }
@@ -1649,6 +1826,9 @@
       if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
       this.speaking = false;
       this.paused = false;
+      this.currentWord = 0;
+      this.words = [];
+      this.utterance = null;
     },
     toggle() {
       if (this.speaking) {
@@ -1738,8 +1918,9 @@
       container.className = "ai4a11y-reader-container";
       const closeBtn = document.createElement("button");
       closeBtn.className = "ai4a11y-reader-close";
+      closeBtn.type = "button";
       closeBtn.setAttribute("aria-label", "Exit reader mode");
-      closeBtn.textContent = "\u2715 Exit Reader Mode";
+      closeBtn.innerHTML = '<span aria-hidden="true">\u2715 </span>Exit reader mode';
       container.appendChild(closeBtn);
       const title = document.createElement("h1");
       title.className = "ai4a11y-reader-title";
@@ -1809,6 +1990,13 @@
         el.removeAttribute("autoplay");
         el.setAttribute("controls", "");
       });
+      tempDiv.querySelectorAll("main").forEach((el) => {
+        const div = document.createElement("div");
+        while (el.firstChild) div.appendChild(el.firstChild);
+        for (const attr of el.attributes) div.setAttribute(attr.name, attr.value);
+        el.replaceWith(div);
+      });
+      tempDiv.querySelectorAll('[role="main"]').forEach((el) => el.removeAttribute("role"));
       const dangerousUrlAttrs = ["href", "src", "srcset", "action", "formaction", "srcdoc", "poster", "xlink:href"];
       const dangerousPrefixes = ["javascript:", "vbscript:", "data:text/html", "data:application", "data:image/svg+xml"];
       tempDiv.querySelectorAll("*").forEach((el) => {
@@ -1892,12 +2080,15 @@
         display: block;
         margin: 0 0 12px auto;
         padding: 10px 20px;
+        min-height: 44px;
+        min-width: 44px;
         background: #333;
         color: #fff;
         border: none;
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
+        line-height: 24px;
         z-index: 1;
       `;
       }
@@ -1917,7 +2108,22 @@
       #ai4a11y-reader-mode td > p, #ai4a11y-reader-mode th > p { margin: 0; }
       #ai4a11y-reader-mode pre { max-width: 100%; overflow-x: auto; white-space: pre-wrap; }
       #ai4a11y-reader-mode .ai4a11y-reader-content { overflow-wrap: anywhere; }
-      #ai4a11y-reader-mode a { color: #0b57d0; }
+      #ai4a11y-reader-mode .ai4a11y-reader-content :not(a, button) {
+        color: inherit !important;
+        background-color: transparent !important;
+      }
+      #ai4a11y-reader-mode header, #ai4a11y-reader-mode footer,
+      #ai4a11y-reader-mode section, #ai4a11y-reader-mode article,
+      #ai4a11y-reader-mode main, #ai4a11y-reader-mode aside,
+      #ai4a11y-reader-mode div, #ai4a11y-reader-mode p,
+      #ai4a11y-reader-mode h1, #ai4a11y-reader-mode h2,
+      #ai4a11y-reader-mode h3, #ai4a11y-reader-mode h4,
+      #ai4a11y-reader-mode h5, #ai4a11y-reader-mode h6,
+      #ai4a11y-reader-mode figcaption {
+        background-color: transparent !important;
+        background-image: none !important;
+      }
+      #ai4a11y-reader-mode a { color: #0b57d0 !important; text-decoration: underline !important; }
       #ai4a11y-reader-mode :focus-visible { outline: 3px solid #0b57d0 !important; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
       #ai4a11y-reader-mode .ai4a11y-reader-title:focus { outline: none !important; box-shadow: none; }
     `;
@@ -1946,6 +2152,7 @@
         document.removeEventListener("keydown", this.escapeHandler);
         this.escapeHandler = null;
       }
+      this.originalContent = null;
       this.enabled = false;
       console.log("[AI4A11y] Reader Mode disabled");
       announce("Reader mode disabled");
@@ -1964,12 +2171,21 @@
   var FATAL = ["not-allowed", "service-not-allowed", "audio-capture"];
   var MAX_FAILURES = 4;
   var NOTICE_MS = 6e3;
-  var CLICKABLE = 'a[href], button, input[type="submit"], input[type="button"], input[type="checkbox"], input[type="radio"], summary, label, select, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [onclick], [tabindex]:not([tabindex="-1"])';
+  var CLICKABLE = 'a[href], button, input, textarea, select, summary, label, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="checkbox"], [role="radio"], [onclick], [tabindex]:not([tabindex="-1"])';
   function squash(s) {
     return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
   function nameOf(el) {
-    return squash(el.getAttribute("aria-label") || el.textContent || el.value || el.getAttribute("title") || el.querySelector?.("img[alt]")?.getAttribute("alt") || "");
+    let label = el.getAttribute("aria-label");
+    if (!label && el.getAttribute("aria-labelledby")) {
+      label = el.getAttribute("aria-labelledby").split(/\s+/).map((id) => document.getElementById(id)?.textContent || "").filter(Boolean).join(" ");
+    }
+    if (!label && el.labels?.length) {
+      label = Array.from(el.labels).map((l) => l.textContent).join(" ");
+    }
+    const text = el.getAttribute("title") && /^[\s\p{P}\p{S}]+$/u.test(el.textContent) ? "" : el.textContent;
+    const val = el.type !== "checkbox" && el.type !== "radio" && el.type !== "file" ? el.value : "";
+    return squash(label || text || val || el.getAttribute("placeholder") || el.getAttribute("title") || el.querySelector?.("img[alt]")?.getAttribute("alt") || "");
   }
   function visible(el) {
     if (!el.getClientRects().length) return false;
@@ -2001,8 +2217,11 @@
       "refresh": () => location.reload(),
       "click": () => {
         const focused = document.activeElement;
-        if (focused && focused !== document.body) {
+        if (focused && focused !== document.body && focused !== document.documentElement) {
           focused.click();
+          announce(`Clicked ${nameOf(focused).slice(0, 60) || "focused item"}`);
+        } else {
+          announce("Nothing focused to click");
         }
       },
       "next link": () => {
@@ -2020,11 +2239,18 @@
         else if (links.length > 0) links[links.length - 1].focus();
       },
       "next button": () => {
-        const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]')).filter(visible);
+        const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]')).filter(visible);
         const current = document.activeElement;
         const idx = buttons.indexOf(current);
         if (idx < buttons.length - 1) buttons[idx + 1].focus();
         else if (buttons.length > 0) buttons[0].focus();
+      },
+      "previous button": () => {
+        const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]')).filter(visible);
+        const current = document.activeElement;
+        const idx = buttons.indexOf(current);
+        if (idx > 0) buttons[idx - 1].focus();
+        else if (buttons.length > 0) buttons[buttons.length - 1].focus();
       },
       "read page": () => window.__ai4a11yReadAloud?.speakPage(),
       "stop reading": () => window.__ai4a11yReadAloud?.stop()
@@ -2151,6 +2377,7 @@
       align-items: center;
       gap: 10px;
       pointer-events: none;
+      overflow-wrap: anywhere;
     `;
       const indicator = document.createElement("span");
       indicator.className = "ai4a11y-voice-dot";
@@ -2158,6 +2385,7 @@
       this.feedbackElement.appendChild(indicator);
       const textSpan = document.createElement("span");
       textSpan.className = "ai4a11y-voice-text";
+      textSpan.style.cssText = "min-width:0;overflow-wrap:anywhere;";
       textSpan.textContent = "Listening...";
       this.feedbackElement.appendChild(textSpan);
       const pulseStyle = document.createElement("style");
@@ -2196,7 +2424,7 @@
       const typeMatch = transcript.match(/^type (.+)/);
       if (typeMatch) {
         const field = document.activeElement;
-        if (field && field.matches("input, textarea")) {
+        if (field && (field.matches("textarea") || field.matches("input") && !/^(button|submit|reset|checkbox|radio|file|image|range|color)$/i.test(field.type))) {
           field.value += typeMatch[1];
           field.dispatchEvent(new Event("input", { bubbles: true }));
           return true;
@@ -2219,19 +2447,24 @@
     findElementByText(text) {
       const want = squash(text);
       if (!want) return null;
+      const stripped = want.replace(/^(the|a|an)\s+/, "").replace(/\s+(button|link|input|field)$/, "").trim();
       const seen = new Set(document.querySelectorAll(CLICKABLE));
       for (const el of document.querySelectorAll("div, span, li, img")) {
         if (!seen.has(el) && getComputedStyle(el).cursor === "pointer" && !el.parentElement?.closest(CLICKABLE)) seen.add(el);
       }
-      const tiers = [[], [], []];
+      const tiers = [[], [], [], []];
       for (const el of seen) {
         if (el.closest("#ws-root, #ai4a11y-voice-feedback")) continue;
         const name = nameOf(el);
         if (!name) continue;
-        const tier = name === want ? 0 : name.startsWith(want) ? 1 : name.includes(want) ? 2 : -1;
+        let tier = -1;
+        if (name === want) tier = 0;
+        else if (stripped && name === stripped) tier = 1;
+        else if (name.startsWith(want) || stripped && name.startsWith(stripped)) tier = 2;
+        else if (name.includes(want) || stripped && stripped.length >= 3 && name.includes(stripped)) tier = 3;
         if (tier >= 0 && visible(el)) tiers[tier].push(el);
       }
-      return tiers[0][0] || tiers[1][0] || tiers[2][0] || null;
+      return tiers[0][0] || tiers[1][0] || tiers[2][0] || tiers[3][0] || null;
     },
     addCommand(phrase, action) {
       this.commands[phrase.toLowerCase()] = action;
@@ -2244,12 +2477,15 @@
   if (typeof window !== "undefined") window.__ai4a11yVoiceCommands = VoiceCommands;
 
   // tools/adapters/keyboard-nav.js
+  function prefersReducedMotion() {
+    return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  }
   function getFocusable(root) {
     return Array.from(root.querySelectorAll(
       'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )).filter((el) => {
       const style = getComputedStyle(el);
-      return style.display !== "none" && style.visibility !== "hidden" && el.offsetParent !== null;
+      return style.display !== "none" && style.visibility !== "hidden" && (el.offsetParent !== null || typeof el.getClientRects === "function" && el.getClientRects().length > 0);
     });
   }
   var KeyboardNavigator = {
@@ -2363,9 +2599,14 @@
         border-radius: 4px;
         transition: top 0.2s;
       }
+      @media (prefers-reduced-motion: reduce) {
+        .ai4a11y-skip-link {
+          transition: none !important;
+        }
+      }
       .ai4a11y-skip-link:focus {
         top: 10px;
-        outline: 3px solid #fff;
+        outline: 3px solid #0066ff;
         outline-offset: 2px;
       }
       .ai4a11y-tab-badge {
@@ -2394,9 +2635,11 @@
         return rect.top < 300;
       });
       if (hasExistingSkip) return;
+      const main = document.querySelector('main, [role="main"], #main, #content, article');
+      const nav = this.findNav();
+      if (!main && !nav) return;
       const container = document.createElement("div");
       container.id = "ai4a11y-skip-links";
-      const main = document.querySelector('main, [role="main"], #main, #content, article');
       if (main) {
         if (!main.id) {
           main.id = "ai4a11y-main-content";
@@ -2410,12 +2653,11 @@
           e.preventDefault();
           this.setTabindex(main, "-1");
           main.focus();
-          main.scrollIntoView({ behavior: "smooth" });
+          main.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth" });
         });
         container.appendChild(skipToMain);
       }
-      const nav = this.findNav();
-      if (nav) {
+      if (nav && nav !== main) {
         if (!nav.id) {
           nav.id = "ai4a11y-nav";
           this.injectedIdEls.push({ el: nav, syntheticId: "ai4a11y-nav" });
@@ -2424,11 +2666,11 @@
         skipToNav.href = "#" + nav.id;
         skipToNav.className = "ai4a11y-skip-link";
         skipToNav.textContent = "Skip to navigation";
-        skipToNav.style.left = "200px";
         skipToNav.addEventListener("click", (e) => {
           e.preventDefault();
           this.setTabindex(nav, "-1");
           nav.focus();
+          nav.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth" });
         });
         container.appendChild(skipToNav);
       }
@@ -2437,9 +2679,9 @@
     },
     // The navigation landmark with the most links: on a page whose only <nav>
     // is a three-link breadcrumb trail next to a real menu, "navigation"
-    // should still mean the menu when there is one.
+    // should still mean the menu when there is one. Ignores hidden navs and workshop roots.
     findNav() {
-      const navs = [...document.querySelectorAll('nav, [role="navigation"]')];
+      const navs = [...document.querySelectorAll('nav, [role="navigation"]')].filter((n) => !n.closest("#ws-root, [hidden]") && (typeof getComputedStyle === "undefined" || getComputedStyle(n).display !== "none"));
       navs.sort((a, b) => b.querySelectorAll("a[href]").length - a.querySelectorAll("a[href]").length);
       return navs[0] || null;
     },
@@ -2529,15 +2771,16 @@
         const tag = target?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
         if (target?.isContentEditable) return;
-        if (/^(textbox|searchbox|combobox)$/.test(target?.getAttribute?.("role") || "")) return;
+        if (target?.closest?.('[role="textbox"], [role="searchbox"], [role="combobox"]')) return;
         const code = e.code || "";
         const key = /^(Key|Digit)/.test(code) ? code.replace(/^(Key|Digit)/, "").toLowerCase() : (e.key || "").toLowerCase();
         if (key === "1") {
           e.preventDefault();
-          const main = document.querySelector('main, [role="main"], #main, #content');
+          const main = document.querySelector('main, [role="main"], #main, #content, article');
           if (main) {
             this.setTabindex(main, "-1");
             main.focus();
+            main.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth" });
           } else announce("This page has no main content area marked");
         }
         if (key === "2") {
@@ -2546,6 +2789,7 @@
           if (nav) {
             this.setTabindex(nav, "-1");
             nav.focus();
+            nav.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth" });
           } else announce("This page has no navigation marked");
         }
         if (key === "h") {
@@ -2555,13 +2799,13 @@
             announce("This page has no headings marked");
             return;
           }
-          const currentIdx = this.lastHeading ? headings.indexOf(this.lastHeading) : -1;
+          const currentIdx = this.lastHeading ? headings.indexOf(this.lastHeading) : document.activeElement && headings.includes(document.activeElement) ? headings.indexOf(document.activeElement) : -1;
           const idx = e.shiftKey ? currentIdx <= 0 ? headings.length - 1 : currentIdx - 1 : (currentIdx + 1) % headings.length;
           const h = headings[idx];
           this.lastHeading = h;
           this.setTabindex(h, "-1");
           h.focus();
-          h.scrollIntoView({ behavior: "smooth", block: "center" });
+          h.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
         }
         if (key === "o") {
           e.preventDefault();
@@ -2611,9 +2855,17 @@
       deuteranopia: "url(#ai4a11y-deuteranopia-filter)",
       tritanopia: "url(#ai4a11y-tritanopia-filter)"
     },
-    enable(mode = "protanopia") {
+    enable(options = "protanopia") {
+      const mode = typeof options === "string" ? options : options?.mode || options?.colorBlindMode || options?.colorFilter || options?.type || "protanopia";
+      if (mode === "none") {
+        this.disable();
+        return;
+      }
       if (!this.filters[mode]) {
         console.warn("[AI4A11y] Invalid color blind mode:", mode);
+        return;
+      }
+      if (this.enabled && this.currentMode === mode && document.getElementById(this.styleId)) {
         return;
       }
       this.currentMode = mode;
@@ -2628,11 +2880,14 @@
       }
       ${PAGE_FILTER2}
     `;
-      document.head.appendChild(style);
+      (document.head || document.documentElement).appendChild(style);
       console.log("[AI4A11y] Color Blind Mode enabled:", mode);
       announce(`Color blind correction applied: ${mode}`);
     },
     disable() {
+      if (!this.enabled && this.currentMode === "none" && !document.getElementById(this.styleId) && !document.getElementById(this.filterId)) {
+        return;
+      }
       this.enabled = false;
       this.currentMode = "none";
       document.getElementById(this.styleId)?.remove();
@@ -2644,7 +2899,8 @@
       if (document.getElementById(this.filterId)) return;
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.id = this.filterId;
-      svg.setAttribute("style", "position:absolute;width:0;height:0");
+      svg.setAttribute("aria-hidden", "true");
+      svg.setAttribute("style", "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none");
       svg.innerHTML = `
       <defs>
         ${Object.keys(SEES).map((mode) => `
@@ -2655,7 +2911,7 @@
         </filter>`).join("")}
       </defs>
     `;
-      document.body.appendChild(svg);
+      (document.body || document.documentElement).appendChild(svg);
     },
     setMode(mode) {
       if (mode === "none") {
@@ -2694,7 +2950,9 @@
     lastInput: 0,
     // when the person last clicked or pressed a key
     prevBodyOverflow: null,
+    prevBodyOverflowY: null,
     prevHtmlOverflow: null,
+    prevHtmlOverflowY: null,
     enable() {
       if (this.enabled) return;
       this.enabled = true;
@@ -2704,9 +2962,10 @@
       style.textContent = `.${this.hiddenClass} { display: none !important; }`;
       (document.head || document.documentElement).appendChild(style);
       this.prevBodyOverflow = document.body ? document.body.style.overflow : null;
+      this.prevBodyOverflowY = document.body ? document.body.style.overflowY : null;
       this.prevHtmlOverflow = document.documentElement ? document.documentElement.style.overflow : null;
-      if (document.body && document.body.style.overflow === "hidden") document.body.style.overflow = "";
-      if (document.documentElement && document.documentElement.style.overflow === "hidden") document.documentElement.style.overflow = "";
+      this.prevHtmlOverflowY = document.documentElement ? document.documentElement.style.overflowY : null;
+      this.unlockScroll();
       const count = this.sweep(document);
       this.lastInput = 0;
       this.inputHandler = (e) => {
@@ -2719,7 +2978,9 @@
           if (Date.now() - this.lastInput < 1e3) return;
           for (const m of mutations) {
             for (const node of m.addedNodes) {
-              if (node.nodeType === 1) this.consider(node);
+              if (node.nodeType === 1) {
+                if (this.consider(node)) this.unlockScroll();
+              }
             }
           }
         });
@@ -2728,43 +2989,54 @@
       console.log(`[AI4A11y] Dismiss Overlays enabled (${count} hidden)`);
       announce(count ? `Hid ${count} popup${count === 1 ? "" : "s"}` : "Watching for popups to hide");
     },
+    unlockScroll() {
+      if (document.body) {
+        if (document.body.style.overflow === "hidden" || document.body.style.overflow === "clip") document.body.style.overflow = "";
+        if (document.body.style.overflowY === "hidden" || document.body.style.overflowY === "clip") document.body.style.overflowY = "";
+      }
+      if (document.documentElement) {
+        if (document.documentElement.style.overflow === "hidden" || document.documentElement.style.overflow === "clip") document.documentElement.style.overflow = "";
+        if (document.documentElement.style.overflowY === "hidden" || document.documentElement.style.overflowY === "clip") document.documentElement.style.overflowY = "";
+      }
+    },
     // Scan a root for overlays and hide them; returns how many were hidden.
     sweep(root) {
       let n = 0;
       let candidates;
       try {
-        candidates = root.querySelectorAll('div, section, aside, dialog, [role="dialog"], [aria-modal="true"]');
+        candidates = root.querySelectorAll('div, section, aside, dialog, footer, form, [role="dialog"], [role="alertdialog"], [aria-modal="true"]');
       } catch {
         return 0;
       }
-      for (const el of candidates) if (this.consider(el)) n++;
+      for (const el of candidates) if (this.hide(el)) n++;
       return n;
     },
-    // Hide one element if it looks like a blocking overlay. Returns true if hidden.
+    // Check a node the page just added. It may not be the overlay itself, but may contain it.
     consider(el) {
+      if (this.hide(el)) return true;
+      return !!(el && el.querySelector) && this.sweep(el) > 0;
+    },
+    // Hide this one element if it looks like a blocking overlay. Returns true if hidden. It doesn't
+    // look inside: sweep() already reaches every element, and looking inside from here too doubles
+    // the work at each level of the page, which freezes the tab on a deep one.
+    hide(el) {
       if (!el || el.nodeType !== 1 || this.hidden.has(el)) return false;
       if (el.classList && el.classList.contains(this.hiddenClass)) return false;
-      if (!this.isOverlay(el)) {
-        if (el.querySelector) {
-          const inner = this.sweep(el);
-          if (inner) return true;
-        }
-        return false;
-      }
+      if (!this.isOverlay(el)) return false;
       el.classList.add(this.hiddenClass);
       this.hidden.add(el);
       return true;
     },
     isOverlay(el) {
       if (el.getAttribute && el.getAttribute("aria-modal") === "true") return true;
-      const nameHit = OVERLAY_NAME_RE.test(el.id || "") || OVERLAY_NAME_RE.test(classNameOf(el)) || OVERLAY_NAME_RE.test(el.getAttribute && el.getAttribute("aria-label") || "");
+      const nameHit = OVERLAY_NAME_RE.test(el.id || "") || OVERLAY_NAME_RE.test(classNameOf(el)) || OVERLAY_NAME_RE.test(el.getAttribute && el.getAttribute("aria-label") || "") || OVERLAY_NAME_RE.test(el.getAttribute && el.getAttribute("aria-labelledby") || "");
       if (!nameHit) return false;
       let pos = "";
       try {
         pos = (getComputedStyle(el).position || "").toLowerCase();
       } catch {
       }
-      const blocking = pos === "fixed" || pos === "sticky" || el.getAttribute && el.getAttribute("role") === "dialog";
+      const blocking = pos === "fixed" || pos === "sticky" || el.getAttribute && /^(dialog|alertdialog)$/i.test(el.getAttribute("role") || "");
       return blocking;
     },
     disable() {
@@ -2780,13 +3052,29 @@
       }
       document.getElementById(this.styleId)?.remove();
       if (this.hidden) {
-        for (const el of this.hidden) el.classList?.remove(this.hiddenClass);
+        for (const el of this.hidden) {
+          el.classList?.remove(this.hiddenClass);
+          if (el.classList && !el.classList.length) el.removeAttribute("class");
+        }
         this.hidden.clear();
         this.hidden = null;
       }
-      if (document.body && this.prevBodyOverflow !== null) document.body.style.overflow = this.prevBodyOverflow;
-      if (document.documentElement && this.prevHtmlOverflow !== null) document.documentElement.style.overflow = this.prevHtmlOverflow;
-      this.prevBodyOverflow = this.prevHtmlOverflow = null;
+      if (document.body) {
+        if (this.prevBodyOverflow) document.body.style.overflow = this.prevBodyOverflow;
+        else if (this.prevBodyOverflow !== null && document.body.style.overflow) document.body.style.overflow = "";
+        if (this.prevBodyOverflowY) document.body.style.overflowY = this.prevBodyOverflowY;
+        else if (this.prevBodyOverflowY !== null && document.body.style.overflowY) document.body.style.overflowY = "";
+        if (!document.body.getAttribute("style")) document.body.removeAttribute("style");
+      }
+      if (document.documentElement) {
+        if (this.prevHtmlOverflow) document.documentElement.style.overflow = this.prevHtmlOverflow;
+        else if (this.prevHtmlOverflow !== null && document.documentElement.style.overflow) document.documentElement.style.overflow = "";
+        if (this.prevHtmlOverflowY) document.documentElement.style.overflowY = this.prevHtmlOverflowY;
+        else if (this.prevHtmlOverflowY !== null && document.documentElement.style.overflowY) document.documentElement.style.overflowY = "";
+        if (!document.documentElement.getAttribute("style")) document.documentElement.removeAttribute("style");
+      }
+      this.prevBodyOverflow = this.prevBodyOverflowY = null;
+      this.prevHtmlOverflow = this.prevHtmlOverflowY = null;
       console.log("[AI4A11y] Dismiss Overlays disabled");
       announce("Popups restored");
     },
@@ -3080,7 +3368,7 @@ ${perElement}`;
   if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
 
   // tools/utils/color.js
-  function parseColor(color) {
+  function parseColor2(color) {
     if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
       return null;
     }
@@ -3107,7 +3395,7 @@ ${perElement}`;
     return null;
   }
   function getLuminance(color) {
-    const rgb = parseColor(color);
+    const rgb = parseColor2(color);
     if (!rgb) return null;
     const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
       c = c / 255;
@@ -3129,7 +3417,7 @@ ${perElement}`;
     return ratio >= (isLarge ? 3 : 4.5);
   }
   function nearestAccessibleColor(foreground, background, { target = 4.5 } = {}) {
-    const fg = parseColor(foreground);
+    const fg = parseColor2(foreground);
     if (!fg) return null;
     if (getLuminance(background) === null) return null;
     const STEPS = 50;
@@ -3160,7 +3448,7 @@ ${perElement}`;
     if (!color) return null;
     const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
     if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== void 0 ? parseFloat(m[4]) : 1 };
-    const rgb = parseColor(color);
+    const rgb = parseColor2(color);
     return rgb ? { ...rgb, a: 1 } : null;
   }
   function getEffectiveBackground(element) {
@@ -3214,7 +3502,6 @@ ${perElement}`;
         text-decoration: underline !important;
         text-decoration-thickness: 2px !important;
         text-underline-offset: 2px !important;
-        font-weight: 600 !important;
       }
       .${this.bodyClass} a[href]:not([${this.ownColorAttr}]) {
         color: ${color} !important;
@@ -3223,6 +3510,10 @@ ${perElement}`;
       .${this.bodyClass} a[href]:focus-visible {
         outline: 3px solid ${color} !important;
         outline-offset: 2px !important;
+      }
+      .${this.bodyClass} a[href][${this.ownColorAttr}]:focus,
+      .${this.bodyClass} a[href][${this.ownColorAttr}]:focus-visible {
+        outline-color: currentColor !important;
       }
     `;
       (document.head || document.documentElement).appendChild(style);
@@ -3260,8 +3551,9 @@ ${perElement}`;
     },
     // The link color is dark: on a dark header or a colored button it made
     // links unreadable (dark blue on dark red). Those keep the page's own
-    // color, which the page already made readable there; the underline and
-    // weight still mark them as links.
+    // color, which the page already made readable there; the underline
+    // still marks them as links, and their focus outline uses
+    // currentColor to remain contrasting and visible.
     keepOwnColor(a) {
       if (!a || a.nodeType !== 1 || this.ownColor.has(a)) return;
       try {
@@ -3290,7 +3582,9 @@ ${perElement}`;
     reveal(a) {
       if (!a || a.nodeType !== 1 || this.titled.has(a)) return false;
       if (a.hasAttribute("title")) return false;
-      const href = a.getAttribute("href");
+      const rawHref = a.getAttribute("href");
+      if (!rawHref) return false;
+      const href = rawHref.trim();
       if (!href || href.startsWith("#")) return false;
       let host = "";
       try {
@@ -3433,10 +3727,10 @@ ${perElement}`;
   // tools/adapters/page-outline.js
   var STYLED_HEADINGS = '[role="heading"], .h1, .h2, .h3, .h4, .h5, .h6';
   function levelOf(el) {
-    const tag = /^H([1-6])$/.exec(el.tagName);
-    if (tag) return Number(tag[1]);
     const aria = Number(el.getAttribute("aria-level"));
     if (aria >= 1) return aria;
+    const tag = /^H([1-6])$/.exec(el.tagName);
+    if (tag) return Number(tag[1]);
     const cls = el.classList && [...el.classList].map((c) => /^h([1-6])$/.exec(c)).find(Boolean);
     if (cls) return Number(cls[1]);
     return 2;
@@ -3470,8 +3764,8 @@ ${perElement}`;
 #${this.containerId} a:link,
 #${this.containerId} a:visited,
 #${this.containerId} a:hover,
-#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; }
-#${this.containerId} button { all: unset; box-sizing: border-box; display: block; cursor: pointer; padding: 8px 14px; font: 600 14px/1.4 system-ui, sans-serif !important; color: #111111 !important; }
+#${this.containerId} a:focus { color: #0b3d91 !important; background: transparent !important; text-decoration: underline !important; display: block !important; min-height: 24px !important; box-sizing: border-box !important; padding: 4px 0 !important; line-height: 1.4 !important; }
+#${this.containerId} button { all: unset; box-sizing: border-box; display: block; cursor: pointer; padding: 8px 14px; min-height: 24px !important; min-width: 24px !important; font: 600 14px/1.4 system-ui, sans-serif !important; color: #111111 !important; }
 #${this.containerId} :focus { outline: 3px solid #1a5fb4 !important; outline-offset: 2px !important; }
 #${this.containerId} [hidden] { display: none !important; }`);
       const nav = document.createElement("nav");
@@ -3518,7 +3812,7 @@ ${perElement}`;
         found = [...document.querySelectorAll(`${this.selector}, ${STYLED_HEADINGS}`)];
       } catch {
       }
-      return found.filter((h) => !(this.nav && this.nav.contains(h)) && levelOf(h) <= this.maxLevel && h.textContent.trim() && !h.closest('[hidden], [aria-hidden="true"]') && (typeof h.checkVisibility !== "function" || h.checkVisibility()));
+      return found.filter((h) => !(this.nav && this.nav.contains(h)) && levelOf(h) <= this.maxLevel && h.textContent.trim() && h.getAttribute("role") !== "presentation" && h.getAttribute("role") !== "none" && !h.closest('[hidden], [aria-hidden="true"]') && (typeof h.checkVisibility !== "function" || h.checkVisibility()));
     },
     // (Re)build the list from the page as it is now, so headings the page adds
     // after load show up the next time the outline is opened.
@@ -3533,6 +3827,7 @@ ${perElement}`;
         box.appendChild(note);
       } else {
         const list = document.createElement("ul");
+        list.setAttribute("role", "list");
         list.style.cssText = "list-style: none; margin: 0; padding: 0;";
         let n = 0;
         for (const heading of headings) {
@@ -3621,8 +3916,29 @@ ${perElement}`;
   // tools/adapters/bionic-reading.js
   var MAX_TEXT_NODES = 2e3;
   var LIVE_SEL = '[aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  var SKIP_SEL2 = [
+    LIVE_SEL,
+    "button",
+    '[role="button"]',
+    "nav",
+    '[role="navigation"]',
+    "menu",
+    '[role="menu"]',
+    '[role="menubar"]',
+    '[role="menuitem"]',
+    '[role="tablist"]',
+    '[role="tab"]',
+    "dialog",
+    '[role="dialog"]',
+    '[role="alertdialog"]',
+    "sup",
+    "sub",
+    '[role="doc-noteref"]',
+    '[role="doc-backlink"]',
+    '[role="doc-biblioentry"]'
+  ].join(", ");
   var RESET = "all: unset;";
-  var SR_ONLY = RESET + "position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;user-select:none;-webkit-user-select:none;";
+  var SR_ONLY = RESET + "display:inline-block;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;user-select:none;-webkit-user-select:none;";
   var RESCAN_MS = 400;
   var BionicReading = {
     markerClass: "ai4a11y-bionic",
@@ -3637,10 +3953,14 @@ ${perElement}`;
       if (this.enabled) return;
       this.enabled = true;
       const ratio = typeof options.boldRatio === "number" && options.boldRatio > 0 && options.boldRatio <= 1 ? options.boldRatio : 0.4;
-      const root = mainRoot();
+      let root = mainRoot();
       if (!root) {
         announce("Bionic reading: no readable text found");
         return;
+      }
+      if (root.matches && (root.matches("#content, .content, body") || root.tagName === "BODY")) {
+        const specific = root.querySelector('main, [role="main"], #main');
+        if (specific) root = specific;
       }
       this.handles = [];
       this.handle = this.pass(root, ratio, MAX_TEXT_NODES);
@@ -3651,11 +3971,12 @@ ${perElement}`;
       this.watch(root, ratio);
     },
     // One walk over root. Skips our own wrappers (the primitive skips code/pre/etc.
-    // by default) and live regions.
+    // by default), non-word text nodes, live regions, controls, navigation, and dialogs.
     pass(root, ratio, cap) {
       return transformTextNodes(root, (text, node) => {
+        if (!/[a-zA-Z\p{L}]/u.test(text)) return null;
         const parent = node.parentElement;
-        if (parent && parent.closest && parent.closest(LIVE_SEL)) return null;
+        if (parent && parent.closest && parent.closest(SKIP_SEL2)) return null;
         return this.buildSpan(text, ratio);
       }, { skipClass: this.markerClass, cap });
     },
@@ -3699,7 +4020,7 @@ ${perElement}`;
       shown.setAttribute("aria-hidden", "true");
       for (const part of text.split(/(\s+)/)) {
         if (!part) continue;
-        if (/\s/.test(part)) shown.appendChild(document.createTextNode(part));
+        if (/\s/.test(part) || !/[a-zA-Z\p{L}]/u.test(part)) shown.appendChild(document.createTextNode(part));
         else this.boldWord(shown, part, ratio);
       }
       const spoken = document.createElement("span");
@@ -3795,7 +4116,11 @@ ${perElement}`;
     // true if unpinned. Never touches our own injected nodes.
     consider(el) {
       if (!el || el.nodeType !== 1 || this.unpinned.has(el)) return false;
-      if (el.id && el.id.startsWith("ai4a11y-")) return false;
+      try {
+        if (el.closest('[id^="ai4a11y-"]')) return false;
+      } catch {
+        if (el.id && el.id.startsWith("ai4a11y-")) return false;
+      }
       if (el.classList && el.classList.contains(this.unpinnedClass)) return false;
       let pos = "";
       try {
@@ -3804,13 +4129,13 @@ ${perElement}`;
         return false;
       }
       if (pos !== "fixed" && pos !== "sticky") return false;
-      if (pos === "fixed") {
-        try {
-          if (el.matches('dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"]')) return false;
+      try {
+        if (el.closest('dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"], [role="tooltip"], [popover]')) return false;
+        if (pos === "fixed") {
           const vh = window.innerHeight || 0;
           if (vh && el.getBoundingClientRect().height >= vh * 0.5) return false;
-        } catch {
         }
+      } catch {
       }
       el.classList.add(this.unpinnedClass);
       this.unpinned.add(el);
@@ -3825,7 +4150,10 @@ ${perElement}`;
       }
       document.getElementById(this.styleId)?.remove();
       if (this.unpinned) {
-        for (const el of this.unpinned) el.classList?.remove(this.unpinnedClass);
+        for (const el of this.unpinned) {
+          el.classList?.remove(this.unpinnedClass);
+          if (el.classList && !el.classList.length) el.removeAttribute("class");
+        }
         this.unpinned.clear();
         this.unpinned = null;
       }
@@ -3932,7 +4260,7 @@ ${perElement}`;
 
   // tools/adapters/translate-page.js
   var SKIP_TAGS = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "CODE", "PRE", "TEXTAREA", "KBD", "SAMP"]);
-  var SKIP_SEL2 = '[translate="no"], .notranslate, [contenteditable]:not([contenteditable="false"]), [aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  var SKIP_SEL3 = '[translate="no"], .notranslate, [contenteditable]:not([contenteditable="false"]), [aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"], [role="marquee"], [role="timer"]';
   var HTML_NS2 = "http://www.w3.org/1999/xhtml";
   var MAX_PIECES = 1500;
   var MAX_CALLS = 40;
@@ -3969,8 +4297,23 @@ ${perElement}`;
     hebrew: "he",
     greek: "el",
     thai: "th",
-    indonesian: "id"
+    indonesian: "id",
+    swedish: "sv",
+    norwegian: "no",
+    danish: "da",
+    finnish: "fi",
+    czech: "cs",
+    romanian: "ro",
+    hungarian: "hu",
+    bengali: "bn"
   };
+  function toLangCode(lang) {
+    if (!lang || typeof lang !== "string") return null;
+    const key = lang.trim().toLowerCase();
+    if (LANG_CODES[key]) return LANG_CODES[key];
+    if (/^[a-z]{2,3}(-[a-z0-9]+)*$/i.test(key)) return key;
+    return null;
+  }
   var memory = /* @__PURE__ */ new Map();
   var MEMORY_MAX = 5e3;
   function remember(key, value) {
@@ -4005,6 +4348,7 @@ ${perElement}`;
       this.targetLang = options.targetLang || options.lang || "English";
       const root = document.body;
       if (!root) {
+        this.enabled = false;
         announce("Nothing to translate");
         return;
       }
@@ -4018,6 +4362,9 @@ ${perElement}`;
     // Every text piece under root worth translating: it has letters, and it is
     // not code, a script, a live region, or text marked not to translate.
     collect(root) {
+      if (root.matches?.(SKIP_SEL3) || root.closest?.(SKIP_SEL3) || document.documentElement?.matches?.(SKIP_SEL3)) {
+        return [];
+      }
       const out = [];
       const walk = (el) => {
         for (let n = el.firstChild; n && out.length < MAX_PIECES; n = n.nextSibling) {
@@ -4026,7 +4373,7 @@ ${perElement}`;
           } else if (n.nodeType === 1) {
             if (SKIP_TAGS.has(n.tagName)) continue;
             if (n.namespaceURI && n.namespaceURI !== HTML_NS2) continue;
-            if (n.matches && n.matches(SKIP_SEL2)) continue;
+            if (n.matches && n.matches(SKIP_SEL3)) continue;
             walk(n);
           }
         }
@@ -4093,9 +4440,13 @@ ${perElement}`;
         }
       };
       await Promise.all(Array.from({ length: Math.min(CONCURRENCY, batches.length) }, worker));
-      if (done && this.langBefore === void 0 && LANG_CODES[lang.toLowerCase()]) {
-        this.langBefore = document.documentElement.getAttribute("lang");
-        document.documentElement.setAttribute("lang", LANG_CODES[lang.toLowerCase()]);
+      if (!this.enabled || session !== this.session) return done;
+      if (done && this.langBefore === void 0) {
+        const code = toLangCode(lang);
+        if (code) {
+          this.langBefore = document.documentElement.getAttribute("lang");
+          document.documentElement.setAttribute("lang", code);
+        }
       }
       return done;
     },
@@ -4179,6 +4530,7 @@ ${perElement}`;
       if (!this.enabled) return;
       this.enabled = false;
       this.session++;
+      this.calls = 0;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
@@ -4197,6 +4549,9 @@ ${perElement}`;
         this.translated.clear();
         this.translated = null;
       }
+      if (this.values) {
+        this.values = null;
+      }
       if (this.langBefore !== void 0) {
         if (this.langBefore === null) document.documentElement.removeAttribute("lang");
         else document.documentElement.setAttribute("lang", this.langBefore);
@@ -4204,9 +4559,9 @@ ${perElement}`;
       }
       announce("Original text restored");
     },
-    toggle() {
+    toggle(options) {
       if (this.enabled) this.disable();
-      else this.enable();
+      else this.enable(options);
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yTranslatePage = TranslatePage;
@@ -4361,7 +4716,7 @@ ${perElement}`;
     "NOSCRIPT",
     "TEMPLATE"
   ]);
-  var SKIP_SEL3 = '[role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="radio"], [role="switch"], [contenteditable], [aria-hidden="true"], [hidden], [aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
+  var SKIP_SEL4 = '[role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="radio"], [role="switch"], [contenteditable], [aria-hidden="true"], [hidden], [aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
   var MAX_WORDS = 500;
   var MAX_TAB_STOPS = 60;
   var MAX_LOOKUPS = 40;
@@ -4384,6 +4739,7 @@ ${perElement}`;
     // Map lowercased word -> Promise of a definition or null (null cached too, so a dead provider isn't re-asked)
     showHandler: null,
     hideHandler: null,
+    clickHandler: null,
     keyHandler: null,
     current: null,
     // the word span the reader is on right now
@@ -4424,13 +4780,35 @@ ${perElement}`;
       if (this.count >= MAX_WORDS) console.log(`[AI4A11y] Define Words: capped at ${MAX_WORDS} words`);
       this.showHandler = (e) => this.handleShow(e);
       this.hideHandler = (e) => this.handleHide(e);
+      this.clickHandler = (e) => this.handleClick(e);
       this.keyHandler = (e) => {
-        if (e.key === "Escape") this.hideTooltip();
+        if (e.key === "Escape") {
+          clearTimeout(this.hoverTimer);
+          this.hoverTimer = null;
+          this.hideTooltip();
+          return;
+        }
+        if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+          const target = e.target;
+          const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
+          if (span && span.hasAttribute("tabindex")) {
+            if (e.key === " " || e.key === "Spacebar") e.preventDefault();
+            const tip = document.getElementById(TOOLTIP_ID);
+            if (tip && tip.style.display === "block" && this.current === span) {
+              this.hideTooltip();
+            } else {
+              this.current = span;
+              this.showDefinition(span, true).catch(() => {
+              });
+            }
+          }
+        }
       };
       document.addEventListener("mouseover", this.showHandler);
       document.addEventListener("focusin", this.showHandler);
       document.addEventListener("mouseout", this.hideHandler);
       document.addEventListener("focusout", this.hideHandler);
+      document.addEventListener("click", this.clickHandler);
       document.addEventListener("keydown", this.keyHandler);
       this.watch(root, minLength);
       console.log(`[AI4A11y] Define Words enabled (${this.count} words)`);
@@ -4467,7 +4845,7 @@ ${perElement}`;
       for (const node of el.childNodes) {
         if (node.nodeType === 3) {
           if (/\S/.test(node.nodeValue) && this.isVisible(el)) out.push(node);
-        } else if (node.nodeType === 1 && !SKIP_TAGS2.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass)) && !(node.matches && node.matches(SKIP_SEL3))) {
+        } else if (node.nodeType === 1 && !SKIP_TAGS2.has(node.tagName) && !(node.classList && node.classList.contains(this.wrapperClass)) && !(node.matches && node.matches(SKIP_SEL4))) {
           this.collect(node, out);
         }
       }
@@ -4555,7 +4933,14 @@ ${perElement}`;
             font: 14px/1.4 system-ui, sans-serif;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-            pointer-events: none;
+          }
+          #${TOOLTIP_ID}::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: 0;
+            right: 0;
+            height: 8px;
           }`;
           (document.head || document.documentElement).appendChild(style);
         }
@@ -4595,12 +4980,34 @@ ${perElement}`;
       try {
         const target = event.target;
         const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
-        if (!span) return;
-        if (event.type === "mouseout" && event.relatedTarget && span.contains(event.relatedTarget)) return;
+        const tip = document.getElementById(TOOLTIP_ID);
+        const onTip = target && tip && (target === tip || tip.contains(target));
+        if (!span && !onTip) return;
+        const rel = event.relatedTarget;
+        if (span && rel && span.contains(rel)) return;
+        if (span && tip && rel && (rel === tip || tip.contains(rel))) return;
+        if (onTip && rel && (rel === tip || tip.contains(rel))) return;
+        if (onTip && this.current && rel && (rel === this.current || this.current.contains(rel))) return;
         if (this.current === span) this.current = null;
         clearTimeout(this.hoverTimer);
         this.hoverTimer = null;
         this.hideTooltip();
+      } catch {
+      }
+    },
+    handleClick(event) {
+      try {
+        const target = event.target;
+        const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
+        if (!span) return;
+        const tip = document.getElementById(TOOLTIP_ID);
+        if (tip && tip.style.display === "block" && this.current === span) {
+          this.hideTooltip();
+        } else {
+          this.current = span;
+          this.showDefinition(span, false).catch(() => {
+          });
+        }
       } catch {
       }
     },
@@ -4692,6 +5099,10 @@ ${perElement}`;
         document.removeEventListener("mouseout", this.hideHandler);
         document.removeEventListener("focusout", this.hideHandler);
         this.hideHandler = null;
+      }
+      if (this.clickHandler) {
+        document.removeEventListener("click", this.clickHandler);
+        this.clickHandler = null;
       }
       if (this.keyHandler) {
         document.removeEventListener("keydown", this.keyHandler);
@@ -4797,6 +5208,8 @@ ${perElement}`;
     // Set of <marquee> elements we stopped
     addedControls: null,
     // Set of paused videos we showed controls on
+    heldAutoplay: null,
+    // Set of media we took autoplay off before it started
     observer: null,
     slideObserver: null,
     // watches slides' classes, see onClassChange
@@ -4822,6 +5235,7 @@ ${perElement}`;
       this.pausedMedia = /* @__PURE__ */ new Set();
       this.stoppedMarquees = /* @__PURE__ */ new Set();
       this.addedControls = /* @__PURE__ */ new Set();
+      this.heldAutoplay = /* @__PURE__ */ new Set();
       let metas = [];
       try {
         metas = Array.from(document.querySelectorAll("meta[http-equiv]"));
@@ -4851,7 +5265,7 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
             }
           }
         });
-        this.observer.observe(document.body || document.documentElement, { childList: true, subtree: true });
+        this.observer.observe(document.documentElement, { childList: true, subtree: true });
       }
       this.holdScriptedCarousels();
       const total = this.removedMetas.length + stilled;
@@ -4882,9 +5296,15 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
     // paused it (and will therefore resume it on disable).
     considerMedia(el) {
       try {
-        if (!el || el.paused !== false || this.pausedMedia.has(el)) return false;
-        if (typeof el.pause === "function") pauseQuietly(el, () => this.enabled);
-        this.pausedMedia.add(el);
+        if (!el || this.pausedMedia.has(el) || this.heldAutoplay.has(el)) return false;
+        if (el.paused !== false) {
+          if (!el.autoplay || el.ended || el.currentTime > 0) return false;
+          el.autoplay = false;
+          this.heldAutoplay.add(el);
+        } else {
+          if (typeof el.pause === "function") pauseQuietly(el, () => this.enabled);
+          this.pausedMedia.add(el);
+        }
         if (el.tagName === "VIDEO" && !el.controls) {
           el.controls = true;
           this.addedControls.add(el);
@@ -4904,10 +5324,20 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
         return false;
       }
     },
-    // A node added after enable: still it if it is itself media/marquee,
+    // A node added after enable: still it if it is itself media/marquee/meta,
     // otherwise sweep whatever it contains.
     considerLate(el) {
       const tag = (el.tagName || "").toLowerCase();
+      if (tag === "meta") {
+        try {
+          if ((el.getAttribute("http-equiv") || "").trim().toLowerCase() === "refresh") {
+            this.removedMetas.push({ node: el, parent: el.parentNode, nextSibling: el.nextSibling });
+            el.remove();
+            return;
+          }
+        } catch {
+        }
+      }
       if (tag === "video" || tag === "audio") {
         this.considerMedia(el);
         return;
@@ -4917,6 +5347,16 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
         return;
       }
       if (el.querySelectorAll) {
+        try {
+          const metas = el.querySelectorAll("meta[http-equiv]");
+          for (const meta of metas) {
+            if ((meta.getAttribute("http-equiv") || "").trim().toLowerCase() === "refresh") {
+              this.removedMetas.push({ node: meta, parent: meta.parentNode, nextSibling: meta.nextSibling });
+              meta.remove();
+            }
+          }
+        } catch {
+        }
         this.sweep(el);
         this.pinScrollers(el);
       }
@@ -4965,6 +5405,7 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
     },
     // Did the person just click, press a key, touch, scroll or focus inside this carousel?
     byUser(box, hoverToo) {
+      if (!box || !box.contains) return false;
       const near = (rec, ms) => !!rec && Date.now() - rec.at < ms && rec.target && rec.target.nodeType === 1 && box.contains(rec.target);
       return near(this.lastInput, USER_MS) || near(this.lastFocus, USER_MS) || hoverToo && near(this.lastHover, 50);
     },
@@ -5007,6 +5448,7 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
       }
       for (const c of changes) {
         const parent = c.el.parentElement;
+        if (!parent) continue;
         for (const t of c.gained) {
           if (/^ai4a11y-/.test(t) || (this.rotating.get(parent) || /* @__PURE__ */ new Set()).has(t)) continue;
           if (changes.some((d) => d !== c && d.el.parentElement === parent && d.lost.includes(t)) && this.isSlide(c.el)) {
@@ -5059,7 +5501,8 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
       } catch {
       }
       if (this.removedMetas) {
-        for (const { node, parent, nextSibling } of this.removedMetas) {
+        for (let i = this.removedMetas.length - 1; i >= 0; i--) {
+          const { node, parent, nextSibling } = this.removedMetas[i];
           if (!parent) continue;
           try {
             parent.insertBefore(node, nextSibling);
@@ -5092,6 +5535,15 @@ ${CAROUSEL_SELECTOR} { scroll-behavior: auto !important; }`;
         }
         this.stoppedMarquees.clear();
         this.stoppedMarquees = null;
+      }
+      if (this.heldAutoplay) {
+        for (const el of this.heldAutoplay) {
+          try {
+            el.autoplay = true;
+          } catch {
+          }
+        }
+        this.heldAutoplay = null;
       }
       if (this.addedControls) {
         for (const el of this.addedControls) {
@@ -5318,6 +5770,7 @@ ${PAGE_FILTER3}`;
   var PAGE_SPOKE_MS = 2e3;
   var LIVE = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"]';
   var OTHER_UI = '[id^="ai4a11y-"], [class*="ai4a11y-"], [id^="ws-"], [class^="ws-"], [class*=" ws-"]';
+  var SILENT = '[aria-live="off"]';
   var MESSAGE_HINT = /\b(error|alert|warning|notice|toast|snackbar|notification|message|status)/i;
   var INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
   var LiveRegionAnnouncer = {
@@ -5371,7 +5824,7 @@ ${PAGE_FILTER3}`;
       const answering = Date.now() - this.lastAction < ACTION_MS;
       for (const m of mutations) {
         const parent = m.target && m.target.nodeType === 1 ? m.target : null;
-        if (!parent || parent.closest(OTHER_UI)) continue;
+        if (!parent || parent.closest(OTHER_UI) || parent.closest(SILENT)) continue;
         if (parent.closest(LIVE)) {
           this.pageSpokeAt = Date.now();
           continue;
@@ -5385,7 +5838,9 @@ ${PAGE_FILTER3}`;
         if (elements.length >= LIST_REDRAW) continue;
         for (const node of elements) {
           if (this.ignored(node)) continue;
-          if (node.getAttribute("role") === "alert") {
+          const role = typeof node.getAttribute === "function" ? node.getAttribute("role")?.toLowerCase().trim() : null;
+          const live = typeof node.getAttribute === "function" ? node.getAttribute("aria-live")?.toLowerCase().trim() : null;
+          if (role === "alert" || live === "assertive" || node.querySelector && node.querySelector('[role="alert"], [aria-live="assertive"]')) {
             this.pageSpokeAt = Date.now();
             continue;
           }
@@ -5400,10 +5855,10 @@ ${PAGE_FILTER3}`;
       }
     },
     // Other adapters' panels and notes, and anything added inside a live region
-    // the screen reader already reads by itself.
+    // the screen reader already reads by itself, or explicitly silenced regions.
     ignored(el) {
       if (!el.closest) return false;
-      if (el.closest(OTHER_UI)) return true;
+      if (el.closest(OTHER_UI) || el.closest(SILENT)) return true;
       return !!(el.parentElement && el.parentElement.closest(LIVE));
     },
     // The page calls it an error, alert, notice, toast... (itself or the box it is in).
@@ -5466,8 +5921,9 @@ ${PAGE_FILTER3}`;
     // The page already marked this node as an announcement — speak it now.
     isUrgent(el) {
       if (!el.getAttribute) return false;
-      const role = el.getAttribute("role");
-      return role === "alert" || role === "status" || el.hasAttribute("aria-live");
+      const role = el.getAttribute("role")?.toLowerCase().trim();
+      const live = el.getAttribute("aria-live")?.toLowerCase().trim();
+      return role === "alert" || role === "status" || Boolean(live) && live !== "off";
     },
     speak(text) {
       if (this.debounceTimer) {
@@ -5498,11 +5954,15 @@ ${PAGE_FILTER3}`;
         clearTimeout(this.debounceTimer);
         this.debounceTimer = null;
       }
-      for (const t of this.textTimers.values()) clearTimeout(t);
-      this.textTimers = null;
+      if (this.textTimers) {
+        for (const t of this.textTimers.values()) clearTimeout(t);
+        this.textTimers = null;
+      }
       this.textChangedAt = null;
       this.tickers = null;
       this.pending = null;
+      this.lastAction = 0;
+      this.pageSpokeAt = 0;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
@@ -5528,9 +5988,13 @@ ${PAGE_FILTER3}`;
     moveHandler: null,
     // ref kept so disable() can remove the exact listener
     leaveHandler: null,
+    keyHandler: null,
+    focusHandler: null,
     rafId: null,
     lastEvent: null,
     lastUpdate: 0,
+    dismissedEl: null,
+    currentEl: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
@@ -5541,7 +6005,10 @@ ${PAGE_FILTER3}`;
       lens.style.cssText = `
       display: none;
       position: fixed;
-      max-width: min(60vw, 640px);
+      box-sizing: border-box;
+      max-width: min(calc(100vw - 16px), 640px);
+      max-height: min(45vh, 360px);
+      overflow: auto;
       padding: 12px 18px;
       font-size: ${fontSize}px;
       line-height: 1.35;
@@ -5552,15 +6019,28 @@ ${PAGE_FILTER3}`;
       border-radius: 12px;
       box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
       overflow-wrap: break-word;
+      word-break: break-word;
       pointer-events: none;
       z-index: 2147483646;
     `;
       (document.body || document.documentElement).appendChild(lens);
       this.lens = lens;
       this.moveHandler = (e) => this.onMove(e);
-      this.leaveHandler = () => this.hide();
+      this.leaveHandler = () => {
+        this.dismissedEl = null;
+        this.hide();
+      };
+      this.keyHandler = (e) => {
+        if (e.key === "Escape") {
+          this.dismissedEl = this.currentEl || (this.lastEvent && typeof document.elementFromPoint === "function" ? document.elementFromPoint(this.lastEvent.clientX, this.lastEvent.clientY) : null);
+          this.hide();
+        }
+      };
+      this.focusHandler = () => this.hide();
       document.addEventListener("mousemove", this.moveHandler, { passive: true });
       document.addEventListener("mouseleave", this.leaveHandler);
+      document.addEventListener("keydown", this.keyHandler);
+      document.addEventListener("focusin", this.focusHandler);
       console.log("[AI4A11y] Magnifier enabled");
       announce("Magnifier on. Move the pointer over text to enlarge it");
     },
@@ -5590,11 +6070,14 @@ ${PAGE_FILTER3}`;
         if (typeof document.elementFromPoint !== "function") return;
         const el = document.elementFromPoint(e.clientX, e.clientY);
         if (!el || el === lens || lens.contains(el)) return;
+        if (this.dismissedEl && (el === this.dismissedEl || this.dismissedEl.contains(el))) return;
+        this.dismissedEl = null;
         const text = this.textAt(e.clientX, e.clientY);
         if (!text) {
           this.hide();
           return;
         }
+        this.currentEl = el;
         lens.textContent = text;
         lens.style.display = "block";
         this.position(e.clientX, e.clientY);
@@ -5621,10 +6104,17 @@ ${PAGE_FILTER3}`;
           offset = r.startOffset;
         }
       }
+      if (node && node.nodeType === 1 && node.childNodes.length > 0) {
+        const child = node.childNodes[offset] || node.childNodes[offset - 1];
+        if (child && child.nodeType === 3) node = child;
+      }
       if (!node || node.nodeType !== 3 || !node.parentElement) return "";
       const range = document.createRange();
       range.selectNodeContents(node);
-      const on = Array.from(range.getClientRects()).some((r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+      const lineGap = 8;
+      const on = Array.from(range.getClientRects()).some(
+        (r) => x >= r.left - 2 && x <= r.right + 2 && y >= r.top - lineGap && y <= r.bottom + lineGap
+      );
       if (!on) return "";
       const el = node.parentElement;
       const whole = String(el.innerText ?? el.textContent ?? "").replace(/\s+/g, " ").trim();
@@ -5636,7 +6126,7 @@ ${PAGE_FILTER3}`;
       return part ? `${start > 0 ? "\u2026" : ""}${part}${end < t.length ? "\u2026" : ""}` : "";
     },
     // Offset the lens from the cursor, flipping to the other side rather than
-    // running off the viewport edge.
+    // running off the viewport edge, and ensuring it never covers the pointer (WCAG 2.4.11).
     position(x, y) {
       const lens = this.lens;
       if (!lens) return;
@@ -5649,15 +6139,31 @@ ${PAGE_FILTER3}`;
         h = r.height || 0;
       } catch {
       }
-      let left = x + 24;
-      let top = y + 24;
-      if (left + w > vw) left = Math.max(8, x - w - 24);
-      if (top + h > vh) top = Math.max(8, y - h - 24);
+      const gap = 24;
+      let top;
+      if (y + gap + h <= vh - 8) {
+        top = y + gap;
+      } else if (y - gap - h >= 8) {
+        top = y - gap - h;
+      } else if (y >= vh / 2) {
+        top = Math.max(8, y - h - 8);
+      } else {
+        top = Math.min(vh - h - 8, y + 8);
+      }
+      let left;
+      if (x + gap + w <= vw - 8) {
+        left = x + gap;
+      } else if (x - gap - w >= 8) {
+        left = x - gap - w;
+      } else {
+        left = Math.max(8, Math.min(vw - w - 8, x - Math.round(w / 2)));
+      }
       lens.style.left = `${left}px`;
       lens.style.top = `${top}px`;
     },
     hide() {
       if (this.lens) this.lens.style.display = "none";
+      this.currentEl = null;
     },
     disable() {
       if (!this.enabled) return;
@@ -5670,10 +6176,20 @@ ${PAGE_FILTER3}`;
         document.removeEventListener("mouseleave", this.leaveHandler);
         this.leaveHandler = null;
       }
+      if (this.keyHandler) {
+        document.removeEventListener("keydown", this.keyHandler);
+        this.keyHandler = null;
+      }
+      if (this.focusHandler) {
+        document.removeEventListener("focusin", this.focusHandler);
+        this.focusHandler = null;
+      }
       if (this.rafId !== null && typeof cancelAnimationFrame === "function") cancelAnimationFrame(this.rafId);
       this.rafId = null;
       this.lastEvent = null;
       this.lastUpdate = 0;
+      this.dismissedEl = null;
+      this.currentEl = null;
       document.getElementById(this.lensId)?.remove();
       this.lens = null;
       console.log("[AI4A11y] Magnifier disabled");
@@ -5693,7 +6209,7 @@ ${PAGE_FILTER3}`;
     styleId: "ai4a11y-flash-guard-styles",
     enabled: false,
     tracked: null,
-    // Set of { video, hadAutoplay, wasPlaying, hadControls } for exact restore
+    // Set of { video, hadAutoplay, wasPlaying, hadControls, cleanupListener } for exact restore
     observer: null,
     enable(options = {}) {
       if (this.enabled) return;
@@ -5704,7 +6220,7 @@ ${PAGE_FILTER3}`;
       style.id = this.styleId;
       style.textContent = `
       ${MEDIA_VARS2}
-      video, canvas, img[src*=".gif"], img[src$=".gif"], [class*="gif"] {
+      video, canvas, img[src*=".gif" i], img[src*="image/gif"], [class*="gif"] {
         --ai4a11y-media-dim: brightness(0.8) contrast(0.85);
         ${MEDIA_FILTER2}
       }
@@ -5733,11 +6249,18 @@ ${PAGE_FILTER3}`;
       if (!video || !this.tracked) return;
       for (const t of this.tracked) if (t.video === video) return;
       try {
+        let cleanupListener = null;
+        const hadAutoplay = video.hasAttribute("autoplay");
+        const wasPlaying = !video.paused;
+        const hadControls = video.controls;
         this.tracked.add({
           video,
-          hadAutoplay: video.hasAttribute("autoplay"),
-          wasPlaying: !video.paused,
-          hadControls: video.controls
+          hadAutoplay,
+          wasPlaying,
+          hadControls,
+          cleanupListener: () => {
+            if (cleanupListener) cleanupListener();
+          }
         });
         if (!video.paused && video.readyState < 3 && video.currentSrc) {
           const done = () => {
@@ -5750,6 +6273,7 @@ ${PAGE_FILTER3}`;
           };
           video.addEventListener("playing", onPlaying);
           video.addEventListener("pause", done);
+          cleanupListener = done;
         } else {
           video.pause();
         }
@@ -5768,8 +6292,9 @@ ${PAGE_FILTER3}`;
       }
       document.getElementById(this.styleId)?.remove();
       if (this.tracked) {
-        for (const { video, hadAutoplay, wasPlaying, hadControls } of this.tracked) {
+        for (const { video, hadAutoplay, wasPlaying, hadControls, cleanupListener } of this.tracked) {
           try {
+            if (cleanupListener) cleanupListener();
             video.controls = hadControls;
             if (hadAutoplay) {
               video.setAttribute("autoplay", "");
@@ -5851,6 +6376,7 @@ ${PAGE_FILTER3}`;
     panel: null,
     live: null,
     lastHover: null,
+    _lastTarget: null,
     _reqSeq: 0,
     _liveTimer: null,
     _keyHandler: null,
@@ -5861,15 +6387,25 @@ ${PAGE_FILTER3}`;
       this.enabled = true;
       injectStyle(this.styleId, `
       #ai4a11y-describe-panel {
-        position: fixed; bottom: 16px; right: 16px; max-width: 360px; z-index: 2147483647;
+        position: fixed; bottom: 16px; right: 16px; max-width: min(360px, calc(100vw - 32px)); z-index: 2147483647;
+        box-sizing: border-box;
         background: #10141a; color: #f2f5f9; border: 2px solid #1a73e8; border-radius: 10px;
         padding: 12px 14px; font: 15px/1.5 system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.4);
+        word-break: break-word; overflow-wrap: break-word;
       }
-      #ai4a11y-describe-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
-      #ai4a11y-describe-panel .ai4a11y-describe-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+      #ai4a11y-describe-panel h2 { font-size: 13px; margin: 0 0 6px; padding-right: 28px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
+      #ai4a11y-describe-panel .ai4a11y-describe-close {
+        position: absolute; top: 6px; right: 8px;
+        width: 28px; height: 28px; min-width: 24px; min-height: 24px;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: none; border: none; color: #f2f5f9;
+        font-size: 18px; line-height: 1; cursor: pointer; padding: 0;
+        border-radius: 4px;
+      }
       /* Our own focus ring: a page that turns outlines off everywhere (with
          !important) would otherwise hide the keyboard on the close button. */
       #ai4a11y-describe-panel .ai4a11y-describe-close:focus { outline: 3px solid #8ab4f8 !important; outline-offset: 2px !important; }
+      #ai4a11y-describe-panel .ai4a11y-describe-close:focus-visible { outline: 3px solid #8ab4f8 !important; outline-offset: 2px !important; }
     `);
       this.live = document.createElement("div");
       this.live.id = "ai4a11y-describe-live";
@@ -5894,6 +6430,7 @@ ${PAGE_FILTER3}`;
       };
       document.addEventListener("click", this._clickHandler, true);
       this._moveHandler = (e) => {
+        if (this.panel && this.panel.contains(e.target)) return;
         this.lastHover = e.target;
       };
       document.addEventListener("mouseover", this._moveHandler, true);
@@ -5901,16 +6438,18 @@ ${PAGE_FILTER3}`;
     },
     target() {
       const a = document.activeElement;
-      if (a && a !== document.body && a !== document.documentElement) return a;
+      if (a && a !== document.body && a !== document.documentElement && (!this.panel || !this.panel.contains(a))) return a;
       return this.lastHover;
     },
     async describe(el) {
+      if (!this.enabled) return;
       if (!el || el === document.body || el === document.documentElement) {
-        this.show("Focus or point at an element first, then press Alt+D.");
+        this.show("Focus or point at an element first, then press Alt+D.", el);
         return;
       }
+      this._lastTarget = el;
       const token = ++this._reqSeq;
-      this.show("Describing\u2026");
+      this.show("Describing\u2026", el);
       let desc = null, failed = false;
       try {
         if (el.tagName === "IMG" && (el.currentSrc || el.src)) {
@@ -5935,20 +6474,23 @@ ${PAGE_FILTER3}`;
         desc = null;
         failed = true;
       }
-      if (token !== this._reqSeq) return;
-      this.show(desc || (failed ? this.PROVIDER_ERROR_TEXT : "No description is available for that element."));
+      if (token !== this._reqSeq || !this.enabled) return;
+      this.show(desc || (failed ? this.PROVIDER_ERROR_TEXT : "No description is available for that element."), el);
     },
-    show(text) {
+    show(text, targetEl) {
       if (!this.panel) {
         this.panel = document.createElement("div");
         this.panel.id = "ai4a11y-describe-panel";
         this.panel.setAttribute("role", "dialog");
-        this.panel.setAttribute("aria-label", "Element description");
+        this.panel.setAttribute("aria-labelledby", "ai4a11y-describe-heading");
         const h = document.createElement("h2");
+        h.id = "ai4a11y-describe-heading";
         h.textContent = "Description";
         const close = document.createElement("button");
+        close.type = "button";
         close.className = "ai4a11y-describe-close";
         close.setAttribute("aria-label", "Close description");
+        close.setAttribute("title", "Close description");
         close.textContent = "\u2715";
         close.addEventListener("click", () => this.hide());
         const body = document.createElement("p");
@@ -5956,6 +6498,22 @@ ${PAGE_FILTER3}`;
         body.style.margin = "0";
         this.panel.append(close, h, body);
         (document.body || document.documentElement).appendChild(this.panel);
+      }
+      const target = targetEl || this._lastTarget || this.target();
+      if (target && typeof target.getBoundingClientRect === "function") {
+        try {
+          const r = target.getBoundingClientRect();
+          const vh = typeof window !== "undefined" && window.innerHeight || document.documentElement.clientHeight || 800;
+          const vw = typeof window !== "undefined" && window.innerWidth || document.documentElement.clientWidth || 1280;
+          if (r.bottom >= vh - 220 && r.top <= vh && r.right >= vw - 380 && r.left <= vw) {
+            this.panel.style.bottom = "auto";
+            this.panel.style.top = "16px";
+          } else {
+            this.panel.style.top = "auto";
+            this.panel.style.bottom = "16px";
+          }
+        } catch {
+        }
       }
       this.panel.querySelector(".ai4a11y-describe-body").textContent = text;
       this.panel.style.display = "block";
@@ -5969,11 +6527,22 @@ ${PAGE_FILTER3}`;
       }
     },
     hide() {
-      if (this.panel) this.panel.style.display = "none";
+      this._reqSeq++;
+      if (this.panel) {
+        const hadFocus = this.panel.contains(document.activeElement);
+        this.panel.style.display = "none";
+        if (hadFocus && this._lastTarget && typeof this._lastTarget.focus === "function") {
+          try {
+            this._lastTarget.focus();
+          } catch {
+          }
+        }
+      }
     },
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
+      this._reqSeq++;
       if (this._keyHandler) document.removeEventListener("keydown", this._keyHandler, true);
       if (this._clickHandler) document.removeEventListener("click", this._clickHandler, true);
       if (this._moveHandler) document.removeEventListener("mouseover", this._moveHandler, true);
@@ -5984,11 +6553,20 @@ ${PAGE_FILTER3}`;
         document.getElementById(this.styleId)?.remove();
       } catch {
       }
+      try {
+        document.getElementById("ai4a11y-describe-panel")?.remove();
+      } catch {
+      }
       this.panel?.remove();
       this.panel = null;
+      try {
+        document.getElementById("ai4a11y-describe-live")?.remove();
+      } catch {
+      }
       this.live?.remove();
       this.live = null;
       this.lastHover = null;
+      this._lastTarget = null;
       announce("Describe on demand off");
     },
     toggle() {
@@ -6215,9 +6793,9 @@ ${scope} table {
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
-      const color = options && options.color || "#ffbf00";
+      const color = options && options.color || "#c67d00";
       this.styleHandle = injectStyle(this.styleId, `
-      *:focus:not(#${this.ringId}), *:focus-visible:not(#${this.ringId}) {
+      *:focus:not(html):not(body):not(#${this.ringId}), *:focus-visible:not(html):not(body):not(#${this.ringId}) {
         outline: 4px solid ${color} !important;
         outline-offset: 3px !important;
         box-shadow: 0 0 0 7px color-mix(in srgb, ${color} 40%, transparent) !important;
@@ -6234,7 +6812,8 @@ ${scope} table {
         "border-radius: 4px",
         "background: none",
         "z-index: 2147483646",
-        "box-sizing: border-box"
+        "box-sizing: border-box",
+        "transition: none"
       ].join("; ");
       (document.body || document.documentElement).appendChild(ring);
       this.ring = ring;
@@ -6242,7 +6821,11 @@ ${scope} table {
         if (!this.enabled) return;
         let el = event.target;
         while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement;
-        if (!el || el.nodeType !== 1 || !el.getBoundingClientRect) return;
+        if (!el || el.nodeType !== 1 || !el.getBoundingClientRect || el === document.body || el === document.documentElement) {
+          this.tracked = null;
+          if (this.ring) this.ring.style.display = "none";
+          return;
+        }
         this.tracked = el;
         this.position();
       };
@@ -6252,6 +6835,12 @@ ${scope} table {
       };
       document.addEventListener("focusin", this.focusInHandler, true);
       document.addEventListener("focusout", this.focusOutHandler, true);
+      let active = document.activeElement;
+      while (active && active.shadowRoot && active.shadowRoot.activeElement) active = active.shadowRoot.activeElement;
+      if (active && active !== document.body && active !== document.documentElement && active.nodeType === 1 && typeof active.getBoundingClientRect === "function") {
+        this.tracked = active;
+        this.position();
+      }
       const schedule = () => {
         if (!this.tracked || this.rafId !== null) return;
         if (typeof requestAnimationFrame !== "function") {
@@ -6275,6 +6864,11 @@ ${scope} table {
     position() {
       if (!this.enabled || !this.ring || !this.tracked) return;
       if (this.tracked.isConnected === false) {
+        this.ring.style.display = "none";
+        this.tracked = null;
+        return;
+      }
+      if (this.tracked === document.body || this.tracked === document.documentElement) {
         this.ring.style.display = "none";
         return;
       }
@@ -6386,9 +6980,14 @@ ${scope} table {
     // selector list of elements whose :hover reveals a pop-up
     opened: null,
     // the one element holding OPEN_ATTR
+    dismissed: null,
+    // element dismissed with Escape, until pointer/focus leaves
     onMouseOver: null,
     // stored listener refs (for exact removal)
     onKeyDown: null,
+    onFocusIn: null,
+    onFocusOut: null,
+    onScroll: null,
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
@@ -6400,7 +6999,9 @@ ${scope} table {
       #${this.tipId} {
         position: fixed;
         z-index: 2147483647;
-        max-width: 320px;
+        max-width: min(320px, calc(100vw - 16px));
+        box-sizing: border-box;
+        overflow-wrap: break-word;
         padding: 8px 12px;
         border-radius: 6px;
         background: ${background};
@@ -6422,41 +7023,139 @@ ${scope} table {
         const target = e.target;
         if (!target || target.nodeType !== 1) return;
         if (this.tip && (target === this.tip || this.tip.contains(target))) return;
-        this.keepOpen(target);
+        if (this.dismissed && (!this.dismissed.contains || !this.dismissed.contains(target))) {
+          this.dismissed = null;
+        }
         const el = target.closest ? target.closest("[title]") : null;
+        const host = this.triggers && target.closest ? target.closest(this.triggers) : null;
+        if (this.dismissed && (el === this.dismissed || host === this.dismissed)) return;
+        this.keepOpen(target);
         if (!el) return;
         const text = (el.getAttribute("title") || "").trim();
         if (!text || el === this.current) return;
         this.show(el, text);
       };
       document.addEventListener("mouseover", this.onMouseOver, true);
+      this.onFocusIn = (e) => {
+        if (!this.enabled) return;
+        const target = e.target;
+        if (!target || target.nodeType !== 1) return;
+        if (this.tip && (target === this.tip || this.tip.contains(target))) return;
+        if (this.dismissed && (!this.dismissed.contains || !this.dismissed.contains(target))) {
+          this.dismissed = null;
+        }
+        const el = target.closest ? target.closest("[title]") : null;
+        const host = this.triggers && target.closest ? target.closest(this.triggers) : null;
+        if (this.dismissed && (el === this.dismissed || host === this.dismissed)) return;
+        this.keepOpen(target);
+        if (el) {
+          const text = (el.getAttribute("title") || "").trim();
+          if (text && el !== this.current) {
+            this.show(el, text);
+            return;
+          }
+        }
+        if (this.current && this.current !== el) {
+          try {
+            if (!this.current.matches(":hover")) this.hide();
+          } catch {
+            this.hide();
+          }
+        }
+        if (this.opened && (!target.closest || !target.closest(this.triggers))) {
+          try {
+            if (!this.opened.matches(":hover")) this.close();
+          } catch {
+            this.close();
+          }
+        }
+      };
+      document.addEventListener("focusin", this.onFocusIn, true);
+      this.onFocusOut = () => {
+        if (!this.enabled) return;
+        setTimeout(() => {
+          if (!this.enabled) return;
+          const active = typeof document !== "undefined" ? document.activeElement : null;
+          if (!active || active === document.body || active === document.documentElement) {
+            if (this.current) {
+              try {
+                if (!this.current.matches(":hover")) this.hide();
+              } catch {
+                this.hide();
+              }
+            }
+            if (this.opened) {
+              try {
+                if (!this.opened.matches(":hover")) this.close();
+              } catch {
+                this.close();
+              }
+            }
+          }
+        }, 10);
+      };
+      document.addEventListener("focusout", this.onFocusOut, true);
       this.onKeyDown = (e) => {
         if (!this.enabled) return;
         if (e.key === "Escape") {
+          this.dismissed = this.current || this.opened;
           this.hide();
           this.close();
         }
       };
       document.addEventListener("keydown", this.onKeyDown, true);
+      this.onScroll = () => {
+        if (!this.enabled || !this.current || !this.tip) return;
+        this.position(this.current);
+      };
+      if (typeof window !== "undefined") {
+        window.addEventListener("scroll", this.onScroll, { passive: true, capture: true });
+        window.addEventListener("resize", this.onScroll, { passive: true });
+      }
       console.log("[AI4A11y] Persistent Hover enabled");
       announce("Hover tooltips now stay on screen. Press Escape to dismiss one");
     },
     // Fill the tooltip with the element's title text (textContent, never
-    // innerHTML) and place it just below the element.
+    // innerHTML) and position it safely within the viewport.
     show(el, text) {
       if (!this.tip) return;
       this.current = el;
       this.tip.textContent = text;
+      this.position(el);
+    },
+    position(el) {
+      if (!this.tip || !el) return;
       let rect = null;
       try {
         rect = el.getBoundingClientRect();
       } catch {
+        return;
       }
-      const x = rect ? rect.left : 0;
-      const y = (rect ? rect.bottom : 0) + 6;
-      this.tip.style.left = `${Math.max(0, x)}px`;
-      this.tip.style.top = `${Math.max(0, y)}px`;
+      if (!rect) return;
+      const winW = typeof window !== "undefined" && window.innerWidth || 1280;
+      const winH = typeof window !== "undefined" && window.innerHeight || 800;
+      if (rect.bottom < 0 || rect.top > winH || rect.right < 0 || rect.left > winW) {
+        this.tip.hidden = true;
+        return;
+      }
       this.tip.hidden = false;
+      let tipRect = null;
+      try {
+        tipRect = this.tip.getBoundingClientRect();
+      } catch {
+      }
+      const tipW = tipRect && tipRect.width || this.tip.offsetWidth || 160;
+      const tipH = tipRect && tipRect.height || this.tip.offsetHeight || 36;
+      let y = rect.bottom + 6;
+      if (y + tipH > winH - 6 && rect.top >= tipH + 6) {
+        y = rect.top - tipH - 6;
+      }
+      const maxTop = Math.max(6, winH - tipH - 6);
+      const top = Math.max(6, Math.min(y, maxTop));
+      const maxLeft = Math.max(6, winW - tipW - 6);
+      const left = Math.max(6, Math.min(rect.left, maxLeft));
+      this.tip.style.left = `${Math.round(left)}px`;
+      this.tip.style.top = `${Math.round(top)}px`;
     },
     hide() {
       if (this.tip) this.tip.hidden = true;
@@ -6544,6 +7243,19 @@ ${scope} table {
         document.removeEventListener("keydown", this.onKeyDown, true);
         this.onKeyDown = null;
       }
+      if (this.onFocusIn) {
+        document.removeEventListener("focusin", this.onFocusIn, true);
+        this.onFocusIn = null;
+      }
+      if (this.onFocusOut) {
+        document.removeEventListener("focusout", this.onFocusOut, true);
+        this.onFocusOut = null;
+      }
+      if (this.onScroll && typeof window !== "undefined") {
+        window.removeEventListener("scroll", this.onScroll, { passive: true, capture: true });
+        window.removeEventListener("resize", this.onScroll, { passive: true });
+        this.onScroll = null;
+      }
       if (this.style) {
         this.style.remove();
         this.style = null;
@@ -6553,6 +7265,7 @@ ${scope} table {
         this.tip = null;
       }
       this.current = null;
+      this.dismissed = null;
       this.close();
       this.triggers = "";
       console.log("[AI4A11y] Persistent Hover disabled");
@@ -6583,7 +7296,8 @@ ${scope} table {
     enable(options = {}) {
       if (this.enabled) return;
       this.enabled = true;
-      this.height = options.height || 40;
+      const h = Number(options.height);
+      this.height = Number.isFinite(h) && h > 0 ? h : 40;
       const band = document.createElement("div");
       band.id = this.bandId;
       band.setAttribute("aria-hidden", "true");
@@ -6652,9 +7366,9 @@ ${scope} table {
       console.log("[AI4A11y] Reading Ruler disabled");
       announce("Reading ruler off");
     },
-    toggle() {
+    toggle(options) {
       if (this.enabled) this.disable();
-      else this.enable();
+      else this.enable(options);
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yReadingRuler = ReadingRuler;
@@ -6670,6 +7384,8 @@ ${scope} table {
     enabled: false,
     clickHandler: null,
     // stored ref so disable() removes this exact listener
+    keydownHandler: null,
+    // stored ref for Escape dismissal
     prompt: null,
     // the injected "Click again to confirm" element
     promptTimer: null,
@@ -6686,8 +7402,19 @@ ${scope} table {
       this.windowMs = typeof options.windowMs === "number" ? options.windowMs : 4e3;
       this.clickHandler = (e) => this.onClick(e);
       document.addEventListener("click", this.clickHandler, true);
+      this.keydownHandler = (e) => this.onKeyDown(e);
+      document.addEventListener("keydown", this.keydownHandler, true);
       console.log("[AI4A11y] Confirm Actions enabled");
       announce("Confirm actions on: risky buttons need a second click");
+    },
+    // Escape cancels the armed control, and still reaches the page's own Escape
+    // handling (closing its dialog or menu).
+    onKeyDown(e) {
+      if (!this.enabled) return;
+      if (e.key === "Escape" && (this.armed?.size || this.prompt)) {
+        this.clearArmed();
+        announce("Confirmation cancelled");
+      }
     },
     onClick(e) {
       if (!this.enabled) return;
@@ -6695,7 +7422,10 @@ ${scope} table {
       const t = e.target;
       if (!t || t.nodeType !== 1) return;
       if (this.prompt && (t === this.prompt || this.prompt.contains(t))) return;
-      const el = t.closest ? t.closest('button, [type="submit"], a') : null;
+      const el = t.closest ? t.closest('button, [type="submit"], [type="button"], [type="reset"], [role="button"], a') : null;
+      if (this.armed?.size && (!el || !this.armed.has(el))) {
+        this.clearArmed();
+      }
       if (!el || !this.looksDestructive(el)) return;
       if (el.hasAttribute(this.armedAttr)) {
         const gap = typeof e.timeStamp === "number" && this.armedAt != null ? e.timeStamp - this.armedAt : Infinity;
@@ -6718,7 +7448,20 @@ ${scope} table {
     },
     // The control's accessible name, as matched and as said back to the person.
     nameOf(el) {
-      return (el.getAttribute && el.getAttribute("aria-label") || el.value || el.textContent || "").replace(/\s+/g, " ").trim();
+      if (!el) return "";
+      let name = el.getAttribute && el.getAttribute("aria-label") || "";
+      if (!name && el.getAttribute && el.getAttribute("aria-labelledby") && typeof document !== "undefined") {
+        const ids = el.getAttribute("aria-labelledby").split(/\s+/);
+        name = ids.map((id) => document.getElementById(id)?.textContent || "").join(" ").trim();
+      }
+      if (!name && el.value && el.value.trim()) name = el.value.trim();
+      if (!name && el.textContent && el.textContent.trim()) name = el.textContent.trim();
+      if (!name && el.getAttribute && el.getAttribute("title")) name = el.getAttribute("title").trim();
+      if (!name && el.querySelector) {
+        const img = el.querySelector("img[alt]");
+        if (img) name = (img.getAttribute("alt") || "").trim();
+      }
+      return (name || "").replace(/\s+/g, " ").trim();
     },
     looksDestructive(el) {
       const name = this.nameOf(el);
@@ -6734,15 +7477,34 @@ ${scope} table {
       let name = this.nameOf(el);
       if (name.length > 60) name = name.slice(0, 59) + "\u2026";
       announce(`${name}: ${byKeyboard ? "press" : "click"} again to confirm`);
-      prompt.style.cssText = "position:fixed;z-index:2147483647;margin:0;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;pointer-events:none;";
+      prompt.style.cssText = "position:fixed;z-index:2147483647;margin:0;padding:2px 8px;border-radius:4px;background:#b91c1c;color:#fff;font:600 12px/1.6 system-ui,sans-serif;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 8px);box-sizing:border-box;";
       (document.body || document.documentElement).appendChild(prompt);
+      const promptRect = prompt.getBoundingClientRect();
+      const promptHeight = promptRect.height || 24;
+      const promptWidth = promptRect.width || 140;
       let rect = null;
       try {
         rect = el.getBoundingClientRect();
       } catch {
       }
-      prompt.style.left = `${rect ? Math.max(4, rect.left) : 4}px`;
-      prompt.style.top = `${rect ? Math.max(4, rect.top - 24) : 4}px`;
+      const winWidth = typeof window !== "undefined" && window.innerWidth || 1280;
+      const winHeight = typeof window !== "undefined" && window.innerHeight || 800;
+      let top = 4;
+      let left = 4;
+      if (rect) {
+        if (rect.top >= promptHeight + 6) {
+          top = rect.top - promptHeight - 4;
+        } else {
+          top = rect.bottom + 4;
+        }
+        left = rect.left;
+      }
+      const maxLeft = Math.max(4, winWidth - promptWidth - 4);
+      left = Math.max(4, Math.min(left, maxLeft));
+      const maxTop = Math.max(4, winHeight - promptHeight - 4);
+      top = Math.max(4, Math.min(top, maxTop));
+      prompt.style.left = `${Math.round(left)}px`;
+      prompt.style.top = `${Math.round(top)}px`;
       this.prompt = prompt;
     },
     // Drop any pending confirmation: timer, prompt, and armed flags.
@@ -6755,10 +7517,16 @@ ${scope} table {
         this.prompt.remove();
         this.prompt = null;
       }
+      const stray = typeof document !== "undefined" ? document.getElementById(this.promptId) : null;
+      if (stray) stray.remove();
       this.armedAt = null;
       if (this.armed) {
         for (const el of this.armed) el.removeAttribute?.(this.armedAttr);
         this.armed.clear();
+      }
+      if (typeof document !== "undefined") {
+        const remaining = document.querySelectorAll(`[${this.armedAttr}]`);
+        for (const el of remaining) el.removeAttribute(this.armedAttr);
       }
     },
     disable() {
@@ -6767,6 +7535,10 @@ ${scope} table {
       if (this.clickHandler) {
         document.removeEventListener("click", this.clickHandler, true);
         this.clickHandler = null;
+      }
+      if (this.keydownHandler) {
+        document.removeEventListener("keydown", this.keydownHandler, true);
+        this.keydownHandler = null;
       }
       this.clearArmed();
       this.armed = null;
@@ -6796,6 +7568,8 @@ ${scope} table {
     // stored ref so disable() can removeEventListener
     saveTimer: null,
     // debounce timeout, cleared on disable
+    focusedEl: null,
+    // element given tabindex="-1" by focusAtSpot, cleaned on blur or disable
     // localStorage can throw on ANY access in private mode or a sandboxed
     // frame, so every touch goes through these two guarded helpers. Access is
     // via `window.localStorage` (never the bare global) so tests can stub it.
@@ -6829,20 +7603,24 @@ ${scope} table {
         btn.id = this.buttonId;
         btn.type = "button";
         btn.textContent = "Jump back to where you were";
-        btn.style.cssText = "position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;padding: 10px 16px; font-size: 16px; border-radius: 8px;border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;";
+        btn.style.cssText = "position: fixed; bottom: 16px; right: 16px; z-index: 2147483647;box-sizing: border-box; max-width: calc(100vw - 32px);padding: 10px 16px; font-size: 16px; line-height: 1.4; font-family: inherit; border-radius: 8px;border: 2px solid #1a5fb4; background: #ffffff; color: #1a5fb4; cursor: pointer;";
         btn.addEventListener("click", () => {
           const fromKeyboard = document.activeElement === btn;
           window.scrollTo(0, savedY);
           this.restorePending = false;
           btn.remove();
+          document.getElementById(STYLE_ID3)?.remove();
           if (fromKeyboard) this.focusAtSpot();
           announce("Back where you were");
         });
-        if (!document.getElementById(STYLE_ID3) && document.head) {
-          const style = document.createElement("style");
-          style.id = STYLE_ID3;
-          style.textContent = `#${this.buttonId}:focus-visible{outline:3px solid #1a5fb4 !important;outline-offset:2px;box-shadow:0 0 0 3px #fff,0 0 0 6px #1a5fb4}`;
-          document.head.appendChild(style);
+        if (!document.getElementById(STYLE_ID3)) {
+          const head = document.head || document.documentElement;
+          if (head) {
+            const style = document.createElement("style");
+            style.id = STYLE_ID3;
+            style.textContent = `#${this.buttonId}:focus,#${this.buttonId}:focus-visible{outline:3px solid #1a5fb4 !important;outline-offset:2px;box-shadow:0 0 0 3px #fff,0 0 0 6px #1a5fb4 !important}#${this.buttonId}:hover{background:#f0f4f9 !important}`;
+            head.appendChild(style);
+          }
         }
         const body = document.body || document.documentElement;
         body.insertBefore(btn, body.firstChild);
@@ -6855,7 +7633,10 @@ ${scope} table {
           if (!this.enabled) return;
           const y = window.scrollY;
           if (this.restorePending && this.savedY != null && y <= this.savedY) return;
-          if (this.restorePending) document.getElementById(this.buttonId)?.remove();
+          if (this.restorePending) {
+            document.getElementById(this.buttonId)?.remove();
+            document.getElementById(STYLE_ID3)?.remove();
+          }
           this.restorePending = false;
           this.saveSpot(y);
         }, SAVE_DELAY_MS);
@@ -6873,7 +7654,13 @@ ${scope} table {
         if (!el || el === document.body) return;
         if (!el.hasAttribute("tabindex")) {
           el.setAttribute("tabindex", "-1");
-          el.addEventListener("blur", () => el.removeAttribute("tabindex"), { once: true });
+          this.focusedEl = el;
+          el.addEventListener("blur", () => {
+            if (this.focusedEl === el) {
+              el.removeAttribute("tabindex");
+              this.focusedEl = null;
+            }
+          }, { once: true });
         }
         el.focus({ preventScroll: true });
       } catch {
@@ -6892,6 +7679,12 @@ ${scope} table {
       }
       this.restorePending = false;
       this.savedY = null;
+      if (this.focusedEl) {
+        if (this.focusedEl.getAttribute("tabindex") === "-1") {
+          this.focusedEl.removeAttribute("tabindex");
+        }
+        this.focusedEl = null;
+      }
       document.getElementById(this.buttonId)?.remove();
       document.getElementById(STYLE_ID3)?.remove();
       console.log("[AI4A11y] Save Reading Spot disabled");
@@ -7226,7 +8019,19 @@ ${scope} table {
     }
     return null;
   }
-  var SAMPLE_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "NOSCRIPT", "SELECT", "OPTION"]);
+  var SAMPLE_SKIP = /* @__PURE__ */ new Set(["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT", "NOSCRIPT", "SELECT", "OPTION"]);
+  function effectiveLang(node, fallback) {
+    let el = node ? node.parentElement : null;
+    while (el) {
+      const raw = el.getAttribute && el.getAttribute("lang");
+      if (raw) {
+        const tag = raw.trim().toLowerCase().split("-")[0];
+        if (tag && tag !== "und") return tag;
+      }
+      el = el.parentElement;
+    }
+    return (fallback || "en").toLowerCase().split("-")[0];
+  }
   function detectMainLang(root) {
     const counts = /* @__PURE__ */ new Map();
     let budget = SAMPLE_CHAR_BUDGET;
@@ -7274,6 +8079,7 @@ ${scope} table {
       this.handles = [];
       const root = mainRoot();
       if (!root) {
+        this.enabled = false;
         announce("Language tags: no readable text found");
         return;
       }
@@ -7297,7 +8103,7 @@ ${scope} table {
     // disable()'s restore and logging each newly-tagged run. Returns the count
     // of text nodes tagged in THIS pass (0 on a re-sweep with nothing new).
     sweepRoot(root, reason = "enable") {
-      const handle = transformTextNodes(root, (text) => this.buildWrapper(text), {
+      const handle = transformTextNodes(root, (text, node) => this.buildWrapper(text, node), {
         skipClass: this.markerClass,
         cap: MAX_TEXT_NODES3
       });
@@ -7312,11 +8118,12 @@ ${scope} table {
     // script become <span lang="xx"> children, everything else stays plain text
     // nodes. Returns null (skip) when the node has no foreign-script run, so
     // same-script text is left untouched.
-    buildWrapper(text) {
+    buildWrapper(text, node) {
       const hasKana = KANA_RE.test(text);
+      const context = effectiveLang(node, this.mainLang);
       const runs = [];
       for (const ch of text) {
-        const lang = this.langOfChar(ch.codePointAt(0), hasKana);
+        const lang = this.langOfChar(ch.codePointAt(0), hasKana, context);
         const last = runs[runs.length - 1];
         if (last && last.lang === lang) last.text += ch;
         else runs.push({ lang, text: ch });
@@ -7337,23 +8144,31 @@ ${scope} table {
       return span;
     },
     // Language a character should be announced in, or null when it needs no tag
-    // (neutral chars, Latin, or the page's own language).
-    langOfChar(cp, hasKana) {
+    // (neutral chars, Latin, or the surrounding context language).
+    langOfChar(cp, hasKana, contextLang = this.mainLang) {
       const script = scriptOf(cp);
       if (!script || script === "Latin") return null;
       let lang = SCRIPT_LANG[script];
-      if (script === "Han" && (hasKana || this.mainLang === "ja")) lang = "ja";
-      return lang === this.mainLang ? null : lang;
+      const base = (contextLang || this.mainLang || "en").toLowerCase().split("-")[0];
+      if (script === "Han" && (hasKana || base === "ja")) lang = "ja";
+      return lang === base ? null : lang;
     },
     disable() {
       if (!this.enabled) return;
       this.enabled = false;
       if (this.unregisterSweep) {
-        this.unregisterSweep();
+        try {
+          this.unregisterSweep();
+        } catch {
+        }
         this.unregisterSweep = null;
       }
-      for (const handle of this.handles) handle.restore();
-      this.handles = [];
+      while (this.handles.length) {
+        try {
+          this.handles.pop().restore();
+        } catch {
+        }
+      }
       if (this.htmlLangAdded) {
         try {
           document.documentElement.removeAttribute("lang");
@@ -7375,7 +8190,7 @@ ${scope} table {
   // tools/adapters/explore-a-chart.js
   var logFix3 = globalThis.ai4a11yLogFix || (() => {
   });
-  var CHART_HINT = /chart|graph|plot|diagram/i;
+  var CHART_HINT = /chart|(?<!photo)graph(?!ic)|plot|diagram/i;
   var HTML_NS3 = "http://www.w3.org/1999/xhtml";
   var MAX_CHARTS = 20;
   var MAX_ROWS = 200;
@@ -7387,6 +8202,7 @@ ${scope} table {
     charts: [],
     buttons: [],
     lastHover: null,
+    _trigger: null,
     _reqSeq: 0,
     _keyHandler: null,
     _moveHandler: null,
@@ -7397,28 +8213,41 @@ ${scope} table {
       injectStyle(this.styleId, `
       .ai4a11y-chart-btn {
         display: inline-block; margin: 4px 0; padding: 4px 10px;
+        min-height: 24px; min-width: 24px; box-sizing: border-box;
         background: #1a73e8; color: #fff; border: none; border-radius: 6px;
         font: 13px/1.4 system-ui, sans-serif; cursor: pointer;
       }
-      .ai4a11y-chart-btn:focus-visible { outline: 3px solid #8ab4f8; outline-offset: 2px; }
+      .ai4a11y-chart-btn:focus-visible {
+        outline: 2px solid #1a73e8; outline-offset: 2px;
+        box-shadow: 0 0 0 2px #fff, 0 0 0 5px #1a73e8;
+      }
       #ai4a11y-chart-panel {
-        position: fixed; bottom: 16px; right: 16px; max-width: 480px; max-height: 70vh;
-        overflow: auto; z-index: 2147483647;
+        position: fixed; bottom: 16px; right: 16px;
+        max-width: min(480px, calc(100vw - 32px)); max-height: 70vh;
+        box-sizing: border-box; overflow: auto; z-index: 2147483647;
         background: #10141a; color: #f2f5f9; border: 2px solid #1a73e8; border-radius: 10px;
         padding: 12px 14px; font: 15px/1.5 system-ui, sans-serif; box-shadow: 0 6px 24px rgba(0,0,0,.4);
       }
+      #ai4a11y-chart-panel:focus { outline: none; }
       #ai4a11y-chart-panel h2 { font-size: 13px; margin: 0 0 6px; color: #8ab4f8; text-transform: uppercase; letter-spacing: .04em; }
-      #ai4a11y-chart-panel .ai4a11y-chart-close { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #f2f5f9; font-size: 18px; cursor: pointer; }
+      #ai4a11y-chart-panel .ai4a11y-chart-close {
+        position: absolute; top: 6px; right: 8px;
+        width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+        background: none; border: none; border-radius: 4px; color: #f2f5f9; font-size: 18px; cursor: pointer;
+      }
+      #ai4a11y-chart-panel .ai4a11y-chart-close:focus-visible {
+        outline: 2px solid #8ab4f8 !important; outline-offset: 2px !important;
+      }
       #ai4a11y-chart-panel table { border-collapse: collapse; width: 100%; margin-top: 4px; }
       #ai4a11y-chart-panel caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
-      #ai4a11y-chart-panel th, #ai4a11y-chart-panel td { border: 1px solid #3c4043; padding: 4px 8px; text-align: left; }
+      #ai4a11y-chart-panel th, #ai4a11y-chart-panel td { border: 1px solid #5f6368; padding: 4px 8px; text-align: left; }
       #ai4a11y-chart-panel thead th { color: #8ab4f8; }
     `);
       this.live = document.createElement("div");
       this.live.id = "ai4a11y-chart-live";
       this.live.setAttribute("aria-live", "polite");
       this.live.setAttribute("aria-atomic", "true");
-      this.live.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
+      this.live.style.cssText = "position:fixed;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;";
       (document.body || document.documentElement).appendChild(this.live);
       this.charts = [];
       this.buttons = [];
@@ -7476,7 +8305,7 @@ ${scope} table {
       document.querySelectorAll('[role="img"]').forEach((el) => {
         if (el.querySelector("canvas, svg, img")) push(el);
       });
-      return out;
+      return out.filter((el) => !out.some((other) => other !== el && other.contains(el)));
     },
     attachButton(chart) {
       const parent = chart.parentElement;
@@ -7501,6 +8330,9 @@ ${scope} table {
     },
     // The tracked chart that el is (or is inside of), walking up the tree.
     chartFor(el) {
+      if (el && el.classList?.contains("ai4a11y-chart-btn") && this.charts.includes(el.previousElementSibling)) {
+        return el.previousElementSibling;
+      }
       while (el && el.nodeType === 1) {
         if (this.charts.includes(el)) return el;
         el = el.parentElement;
@@ -7508,6 +8340,7 @@ ${scope} table {
       return null;
     },
     async open(chart) {
+      this._trigger = document.activeElement && document.activeElement !== document.body ? document.activeElement : chart?.nextElementSibling?.classList?.contains("ai4a11y-chart-btn") ? chart.nextElementSibling : chart;
       if (!chart) {
         this.showMessage('No chart selected. Tab to a "View data table" button, or hover a chart and press Alt+T.');
         return;
@@ -7559,6 +8392,8 @@ ${scope} table {
       if (attr("aria-label")) bits.push(attr("aria-label"));
       if (attr("alt")) bits.push(attr("alt"));
       if (attr("title")) bits.push(attr("title"));
+      const svgTitle = el.querySelector && el.querySelector("title")?.textContent?.trim();
+      if (svgTitle && !bits.includes(svgTitle)) bits.push(svgTitle);
       const cap = el.closest && el.closest("figure")?.querySelector("figcaption");
       if (cap && cap.textContent.trim()) bits.push(cap.textContent.replace(/\s+/g, " ").trim());
       return bits.join(" \u2014 ").slice(0, 300);
@@ -7569,7 +8404,9 @@ ${scope} table {
       this.panel.id = "ai4a11y-chart-panel";
       this.panel.setAttribute("role", "dialog");
       this.panel.setAttribute("aria-label", "Chart data table");
+      this.panel.setAttribute("tabindex", "-1");
       const close = document.createElement("button");
+      close.type = "button";
       close.className = "ai4a11y-chart-close";
       close.setAttribute("aria-label", "Close chart data table");
       close.textContent = "\u2715";
@@ -7589,6 +8426,13 @@ ${scope} table {
       this.panel.querySelector(".ai4a11y-chart-body").replaceChildren(p);
       this.panel.style.display = "block";
       if (this.live) this.live.textContent = text;
+      this.focusPanel();
+    },
+    // Moves focus into the panel only from its trigger or from inside the panel:
+    // a slow answer must not pull focus away from wherever the person went since.
+    focusPanel() {
+      const active = document.activeElement;
+      if (active && active === this._trigger || this.panel.contains(active)) this.panel.focus();
     },
     // Model output goes in via textContent ONLY — never innerHTML.
     showTable(data) {
@@ -7625,9 +8469,20 @@ ${scope} table {
       this.panel.querySelector(".ai4a11y-chart-body").replaceChildren(table);
       this.panel.style.display = "block";
       if (this.live) this.live.textContent = `${caption}. Table with ${rows.length} rows and ${data.headers.length} columns.`;
+      this.focusPanel();
     },
     hide() {
-      if (this.panel) this.panel.style.display = "none";
+      this._reqSeq++;
+      if (!this.panel || this.panel.style.display === "none") return;
+      const hadFocus = this.panel.contains(document.activeElement);
+      this.panel.style.display = "none";
+      if (hadFocus && this._trigger && typeof this._trigger.focus === "function") {
+        try {
+          this._trigger.focus();
+        } catch {
+        }
+      }
+      this._trigger = null;
     },
     disable() {
       if (!this.enabled) return;
@@ -7656,6 +8511,7 @@ ${scope} table {
       this.live?.remove();
       this.live = null;
       this.lastHover = null;
+      this._trigger = null;
       announce("Explore a chart off");
     },
     toggle() {
@@ -8075,7 +8931,10 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
   function hasAccessibleName2(el) {
     const label = el.getAttribute("aria-label");
     if (label && label.trim()) return true;
-    return !!getLabelledByText(el);
+    if (getLabelledByText(el)) return true;
+    const title = el.getAttribute("title");
+    if (title && title.trim()) return true;
+    return false;
   }
   function serializeMath(el, depth = 0) {
     if (depth > MAX_DEPTH) return "";
@@ -8132,11 +8991,20 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     if (!MATH_HINT_RE.test(url.hostname + url.pathname)) return null;
     const query = url.search.slice(1);
     if (query) {
+      let hasNamedParam = false;
       for (const part of query.split("&")) {
         const eq = part.indexOf("=");
-        if (eq > 0 && TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+        if (eq > 0) {
+          hasNamedParam = true;
+          if (TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+        }
       }
-      return safeDecode(query);
+      if (hasNamedParam && !/codecogs/i.test(url.hostname)) return null;
+      const decoded2 = safeDecode(query);
+      if (/codecogs/i.test(url.hostname) || decoded2 && /[\\^_{}]/.test(decoded2)) {
+        return decoded2;
+      }
+      return null;
     }
     const seg = (url.pathname.split("/").pop() || "").replace(/\.(png|svg|gif|jpe?g)$/i, "");
     const decoded = seg ? safeDecode(seg) : null;
@@ -8183,6 +9051,8 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       for (const math of document.querySelectorAll("math")) {
         if (this.records.length >= this.cap) break;
         if (math.getAttribute("aria-hidden") === "true") continue;
+        const role = math.getAttribute("role");
+        if (role === "presentation" || role === "none") continue;
         if (hasAccessibleName2(math)) continue;
         const attrs = [];
         this.setTracked(math, "aria-label", deriveLabel(math), attrs);
@@ -8193,8 +9063,11 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       for (const img of document.querySelectorAll("img")) {
         if (this.records.length >= this.cap) break;
         if (img.getAttribute("aria-hidden") === "true") continue;
+        const role = img.getAttribute("role");
+        if (role === "presentation" || role === "none") continue;
         const alt = img.getAttribute("alt");
         if (alt && alt.trim()) continue;
+        if (hasAccessibleName2(img)) continue;
         const src = img.getAttribute("src") || "";
         const address = /^data:/i.test(src) ? "" : src;
         if (!MATH_HINT_RE.test(`${img.className} ${alt || ""} ${address}`)) continue;
@@ -8255,6 +9128,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     enabled: false,
     observer: null,
     videoStates: /* @__PURE__ */ new Map(),
+    iframeStates: /* @__PURE__ */ new Map(),
     styleId: "ai4a11y-caption-helper-styles",
     _enableTimer: null,
     _pagehideHandler: null,
@@ -8286,12 +9160,17 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       this.observer?.disconnect();
       this.observer = null;
       for (const video of [...this.videoStates.keys()]) this.cleanupVideo(video);
+      for (const iframe of [...this.iframeStates.keys()]) this.cleanupIframe(iframe);
       document.querySelectorAll(".ai4a11y-audio-btn, .ai4a11y-caption-box").forEach((el) => el.remove());
       document.getElementById(this.styleId)?.remove();
       document.querySelectorAll("video[data-ai4a11y-setup]").forEach((v) => {
         delete v.dataset.ai4a11ySetup;
       });
+      document.querySelectorAll("iframe[data-ai4a11y-captions-enabled]").forEach((f) => {
+        delete f.dataset.ai4a11yCaptionsEnabled;
+      });
       this.videoStates.clear();
+      this.iframeStates.clear();
       console.log("[AI4A11y] Auto Transcriber disabled");
       announce("Caption buttons removed");
     },
@@ -8318,6 +9197,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       }
       .ai4a11y-audio-btn:hover { background: #000; }
       .ai4a11y-audio-btn[aria-pressed="true"] { background: #fff; color: #000; border-color: #000; }
+      .ai4a11y-audio-btn:focus,
       .ai4a11y-audio-btn:focus-visible { outline: 3px solid #fff !important; outline-offset: 2px; box-shadow: 0 0 0 6px #1a73e8 !important; }
       .ai4a11y-caption-box {
         position: absolute;
@@ -8327,6 +9207,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
         max-width: 80%;
         max-height: 45%;
         overflow: hidden;
+        overflow-wrap: break-word;
         padding: 5px 12px;
         background: rgba(0, 0, 0, 0.85);
         color: #fff;
@@ -8345,16 +9226,19 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
               if (node.tagName === "VIDEO") this.setupVideo(node);
-              if (node.tagName === "IFRAME" && node.src?.includes("youtube")) {
+              if (node.tagName === "IFRAME" && (node.src?.includes("youtube") || node.getAttribute?.("src")?.includes("youtube"))) {
                 this.enableYouTubeCaptions(node);
               }
               node.querySelectorAll?.("video")?.forEach((v) => this.setupVideo(v));
+              node.querySelectorAll?.('iframe[src*="youtube"]')?.forEach((f) => this.enableYouTubeCaptions(f));
             }
           }
           for (const node of mutation.removedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
               if (node.tagName === "VIDEO") this.cleanupVideo(node);
+              if (node.tagName === "IFRAME") this.cleanupIframe(node, { restoreSrc: false });
               node.querySelectorAll?.("video")?.forEach((v) => this.cleanupVideo(v));
+              node.querySelectorAll?.("iframe")?.forEach((f) => this.cleanupIframe(f, { restoreSrc: false }));
             }
           }
         }
@@ -8371,7 +9255,14 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       state.btn?.remove();
       state.captionBox?.remove();
       clearTimeout(state.messageTimer);
-      if (state.wrapper && state.prevPosition !== null) state.wrapper.style.position = state.prevPosition;
+      if (state.wrapper && state.prevPosition !== null) {
+        if (state.prevPosition) {
+          state.wrapper.style.position = state.prevPosition;
+        } else {
+          state.wrapper.style.removeProperty("position");
+          if (!state.wrapper.getAttribute("style")) state.wrapper.removeAttribute("style");
+        }
+      }
       for (const { track, prevMode } of state.trackModes) {
         try {
           track.mode = prevMode;
@@ -8380,6 +9271,19 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       }
       this.videoStates.delete(video);
       delete video.dataset.ai4a11ySetup;
+    },
+    // Restores a YouTube iframe's src attribute (unless restoreSrc is false) and
+    // cleans up its dataset marker.
+    cleanupIframe(iframe, { restoreSrc = true } = {}) {
+      const state = this.iframeStates.get(iframe);
+      if (state) {
+        if (restoreSrc && state.changed) {
+          if (state.prevSrc !== null) iframe.setAttribute("src", state.prevSrc);
+          else iframe.removeAttribute("src");
+        }
+        this.iframeStates.delete(iframe);
+      }
+      delete iframe.dataset.ai4a11yCaptionsEnabled;
     },
     enableCaptionsOnAllVideos() {
       document.querySelectorAll("video").forEach((v) => this.setupVideo(v));
@@ -8402,7 +9306,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       btn.type = "button";
       btn.className = "ai4a11y-audio-btn";
       btn.textContent = "CC";
-      btn.setAttribute("aria-label", "Captions");
+      btn.setAttribute("aria-label", "CC Captions");
       const showing = captionTracks(video).some((t) => t.mode === "showing");
       btn.setAttribute("aria-pressed", showing ? "true" : "false");
       btn.title = showing ? "Hide captions" : "Show captions";
@@ -8452,6 +9356,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       }
       state.captionBox.style.display = "block";
       state.captionBox.textContent = "Getting captions\u2026";
+      announce("Getting captions\u2026");
       await this.transcribeVideo(video, state);
     },
     async transcribeVideo(video, state) {
@@ -8482,13 +9387,17 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       }, MESSAGE_MS);
     },
     enableYouTubeCaptions(iframe) {
-      if (iframe.dataset.ai4a11yCaptionsEnabled) return;
-      iframe.dataset.ai4a11yCaptionsEnabled = "true";
-      const src = iframe.src;
+      if (this.iframeStates.has(iframe) || iframe.dataset.ai4a11yCaptionsEnabled) return;
+      const prevSrc = iframe.getAttribute("src");
+      const src = iframe.src || prevSrc || "";
+      let changed = false;
       if (!src.includes("cc_load_policy=1")) {
         const sep = src.includes("?") ? "&" : "?";
         iframe.src = src + sep + "cc_load_policy=1&cc_lang_pref=en";
+        changed = true;
       }
+      iframe.dataset.ai4a11yCaptionsEnabled = "true";
+      this.iframeStates.set(iframe, { prevSrc, changed });
     },
     enableYouTubePageCaptions() {
       const btn = document.querySelector(".ytp-subtitles-button");
@@ -8529,6 +9438,8 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     enabled: false,
     _restore: [],
     // [{ track, prevMode }] for native tracks we switched on
+    _playerRestore: [],
+    // [{ player, button, cleanup }] for player buttons we clicked on
     _clicked: null,
     // Set of "player|url" we've already turned on (once per URL)
     _unregister: null,
@@ -8541,13 +9452,18 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
         const list = v.textTracks ? [...v.textTracks] : [];
         const tracks = list.filter((t) => t && (t.kind === "captions" || t.kind === "subtitles"));
         if (!tracks.length) continue;
-        const want = tracks.find((t) => (t.language || "").toLowerCase().startsWith(lang)) || tracks[0];
+        const matchLang = tracks.filter((t) => (t.language || "").toLowerCase().startsWith(lang));
+        const want = matchLang.find((t) => t.kind === "captions") || matchLang[0] || tracks.find((t) => t.kind === "captions") || tracks[0];
         this._restore.push({ track: want, prevMode: want.mode });
-        if (want.mode !== "showing") turnedOn++;
-        try {
-          want.mode = "showing";
-        } catch {
+        let changed = false;
+        if (want.mode !== "showing") {
+          try {
+            want.mode = "showing";
+            if (want.mode === "showing") changed = true;
+          } catch {
+          }
         }
+        if (changed) turnedOn++;
         v.dataset[DATA] = "on";
         logFix7("showCaptions", v, "(off)", "showing");
       }
@@ -8557,6 +9473,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     // the user turning them back off isn't overridden by the next mutation.
     _enablePlayerCaptions() {
       const url = typeof location !== "undefined" ? location.href : "";
+      let turnedOn = 0;
       for (const p of PLAYERS) {
         let btn;
         try {
@@ -8568,29 +9485,54 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
         const key = p.name + "|" + url;
         if (this._clicked.has(key)) continue;
         this._clicked.add(key);
-        if (!p.isOn(btn)) {
+        let on = false;
+        try {
+          on = p.isOn(btn);
+        } catch {
+          on = false;
+        }
+        if (!on) {
           try {
             btn.click();
+            turnedOn++;
+            const entry = { player: p, button: btn, cleanup: null };
+            const onUserClick = () => {
+              const idx = this._playerRestore.indexOf(entry);
+              if (idx !== -1) this._playerRestore.splice(idx, 1);
+              btn.removeEventListener("click", onUserClick);
+            };
+            btn.addEventListener("click", onUserClick);
+            entry.cleanup = () => btn.removeEventListener("click", onUserClick);
+            this._playerRestore.push(entry);
+            logFix7("showCaptions", btn, "(off)", "on");
           } catch {
           }
-          logFix7("showCaptions", btn, "(off)", "on");
         }
       }
+      return turnedOn;
     },
     _sweep() {
       if (!this.enabled) return 0;
       const n = this._enableNativeTracks();
-      this._enablePlayerCaptions();
-      return n;
+      const p = this._enablePlayerCaptions();
+      return n + p;
     },
     // Say what happened, so switching it on is never silent: a video with no
     // caption track (the store's product video) can't be helped by this one.
     _report(n) {
       const videos = document.querySelectorAll("video");
-      if (!videos.length) return;
+      const playerOn = PLAYERS.some((p) => {
+        try {
+          const btn = p.button();
+          return btn && p.isOn(btn);
+        } catch {
+          return false;
+        }
+      });
+      if (!videos.length && !playerOn && n === 0) return;
       const withTracks = [...videos].filter((v) => v.dataset[DATA]).length;
       if (n) announce(`Captions turned on for ${n === 1 ? "the video" : n + " videos"}`);
-      else if (withTracks) announce("Captions are on");
+      else if (withTracks || playerOn) announce("Captions are on");
       else announce(videos.length === 1 ? "This video has no captions to turn on" : "These videos have no captions to turn on");
     },
     enable() {
@@ -8600,6 +9542,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       }
       this.enabled = true;
       this._restore = [];
+      this._playerRestore = [];
       this._clicked = /* @__PURE__ */ new Set();
       this._report(this._sweep());
       this._unregister = registerSweep("show-captions", () => this._sweep(), { debounceMs: 400 });
@@ -8619,7 +9562,18 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
         }
       }
       this._restore = [];
-      for (const v of document.querySelectorAll("video[data-ai4a11y-captions]")) delete v.dataset[DATA];
+      for (const { player, button, cleanup } of this._playerRestore) {
+        if (cleanup) cleanup();
+        try {
+          if (player.isOn(button)) button.click();
+        } catch {
+        }
+      }
+      this._playerRestore = [];
+      for (const v of document.querySelectorAll("video[data-ai4a11y-captions]")) {
+        delete v.dataset[DATA];
+        v.removeAttribute("data-ai4a11y-captions");
+      }
       this._clicked = null;
       console.log("[AI4A11y] Show Captions disabled");
     },
@@ -8635,6 +9589,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
   });
   var incrementStat = globalThis.ai4a11yIncrementStat || (() => {
   });
+  var cleanups = [];
   var LANDMARK_SELECTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
   var SHELL_SELECTOR = 'header, footer, main, [role="banner"], [role="contentinfo"], [role="main"]';
   var MAIN_ID = /^(main|content|main-?content|primary)$/i;
@@ -8646,12 +9601,13 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       if (el.getAttribute("role")) return false;
       if ((el.textContent?.trim().length || 0) <= 100) return false;
       if (el.querySelector(SHELL_SELECTOR)) return false;
+      if (el.closest(LANDMARK_SELECTOR)) return false;
       return true;
     };
-    let level = Array.from(document.body.children);
+    let level = document.body ? Array.from(document.body.children) : [];
     let candidates = level.filter(isCandidate);
     if (candidates.length === 0) {
-      const shell = level.find((el) => (el.textContent?.trim().length || 0) > 100 && el.querySelector(LANDMARK_SELECTOR));
+      const shell = level.find((el) => !el.closest(LANDMARK_SELECTOR) && (el.textContent?.trim().length || 0) > 100 && el.querySelector(LANDMARK_SELECTOR));
       if (shell) candidates = Array.from(shell.children).filter(isCandidate);
     }
     if (candidates.length === 0) return false;
@@ -8659,6 +9615,10 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     const main = (named.length ? named : candidates).reduce((a, b) => (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b);
     main.setAttribute("role", "main");
     markProcessed(main, "done");
+    cleanups.push(() => {
+      main.removeAttribute("role");
+      main.removeAttribute("data-ai4a11y-processed");
+    });
     incrementStat("wcag");
     logFix8("landmark", main, "(no main landmark)", 'role="main"');
     console.log('[AI4A11y] Added role="main" landmark');
@@ -8671,19 +9631,25 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
   var hint = (re, el) => re.test(el.className || "") || re.test(el.id || "");
   function ensureBanner() {
     if (document.querySelector('header, [role="banner"]')) return false;
-    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e) && !hint(NOT_HEADER, e)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => (e.textContent?.trim().length || 0) < 2e3)[0];
+    const el = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role") && hint(HEADER_HINT, e) && !hint(NOT_HEADER, e)).filter((e) => !e.closest(LANDMARK_SELECTOR)).filter((e) => !e.querySelector('main, [role="main"]')).filter((e) => (e.textContent?.trim().length || 0) < 2e3)[0];
     if (!el) return false;
     el.setAttribute("role", "banner");
+    cleanups.push(() => {
+      el.removeAttribute("role");
+    });
     incrementStat("wcag");
     logFix8("landmark", el, "(unmarked header)", 'role="banner"');
     return true;
   }
   function ensureContentinfo() {
     if (document.querySelector('footer, [role="contentinfo"]')) return false;
-    const cands = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role")).filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || "").slice(-400))).filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')).filter((e) => (e.textContent?.trim().length || 0) < 1500);
+    const cands = Array.from(document.querySelectorAll("div, section, td, aside")).filter((e) => !e.getAttribute("role")).filter((e) => !e.closest(LANDMARK_SELECTOR)).filter((e) => hint(FOOTER_HINT, e) || COPYRIGHT_RE.test((e.textContent || "").slice(-400))).filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')).filter((e) => (e.textContent?.trim().length || 0) < 1500);
     const el = cands[cands.length - 1];
     if (!el) return false;
     el.setAttribute("role", "contentinfo");
+    cleanups.push(() => {
+      el.removeAttribute("role");
+    });
     incrementStat("wcag");
     logFix8("landmark", el, "(unmarked footer)", 'role="contentinfo"');
     return true;
@@ -8697,6 +9663,9 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       const textLength = el.textContent?.trim().length || 1;
       if (links >= 3 && links * 15 / textLength > 0.5) {
         el.setAttribute("role", "navigation");
+        cleanups.push(() => {
+          el.removeAttribute("role");
+        });
         incrementStat("wcag");
         logFix8("landmark", el, "(unmarked nav)", 'role="navigation"');
         fixed++;
@@ -8708,8 +9677,8 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
   }
   function fixLandmarks() {
     let count = 0;
-    if (ensureMainLandmark()) count++;
     count += ensureStructuralLandmarks();
+    if (ensureMainLandmark()) count++;
     return count;
   }
   var axeHandlers = {
@@ -8727,7 +9696,14 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       }
     },
     disable() {
+      if (!this.enabled) return;
       this.enabled = false;
+      while (cleanups.length > 0) {
+        try {
+          cleanups.pop()();
+        } catch {
+        }
+      }
     },
     toggle() {
       this.enabled ? this.disable() : this.enable();
@@ -9085,29 +10061,27 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     if (hasAccessibleName(iframe)) return null;
     markProcessed(iframe, "pending");
     const src = iframe.src || "";
-    for (const [pattern, title] of Object.entries(IFRAME_PATTERNS)) {
+    for (const [pattern, title2] of Object.entries(IFRAME_PATTERNS)) {
       if (src.includes(pattern)) {
-        iframe.setAttribute("title", title);
+        iframe.setAttribute("title", title2);
         markProcessed(iframe, "done");
         incrementStat3("labels");
-        logFix10("iframe title", iframe, "(empty)", title);
-        return title;
+        logFix10("iframe title", iframe, "(empty)", title2);
+        return title2;
       }
     }
+    let title;
     try {
       const url = new URL(src);
-      const title = `Embedded content from ${url.hostname}`;
-      iframe.setAttribute("title", title);
-      markProcessed(iframe, "done");
-      incrementStat3("labels");
-      logFix10("iframe title", iframe, "(empty)", title);
-      return title;
+      title = url.hostname ? `Embedded content from ${url.hostname}` : "Embedded content";
     } catch {
-      const title = "Embedded content";
-      iframe.setAttribute("title", title);
-      markProcessed(iframe, "done");
-      return title;
+      title = "Embedded content";
     }
+    iframe.setAttribute("title", title);
+    markProcessed(iframe, "done");
+    incrementStat3("labels");
+    logFix10("iframe title", iframe, "(empty)", title);
+    return title;
   }
   async function generateFormLabel(input) {
     if (input.dataset.ai4a11yProcessed) return null;
@@ -9144,8 +10118,8 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     return null;
   }
   function inferButtonLabel(button) {
-    const className = button.className?.toLowerCase() || "";
-    const svgPaths = button.querySelector("svg path")?.getAttribute("d") || "";
+    const className = (typeof button.className === "string" ? button.className : button.getAttribute?.("class") || "").toLowerCase();
+    const svgPaths = button.querySelector?.("svg path")?.getAttribute("d") || "";
     const patterns = {
       close: ["close", "dismiss", "x-btn", "btn-close"],
       menu: ["menu", "hamburger", "nav-toggle"],
@@ -9178,21 +10152,29 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     clone.querySelectorAll("script, style").forEach((s) => s.remove());
     return clone.textContent?.trim().substring(0, 200) || "";
   }
+  function getValidSiblingText(el) {
+    if (!el) return null;
+    const tag = el.tagName?.toLowerCase();
+    if (["script", "style", "template", "noscript", "input", "select", "textarea", "button"].includes(tag)) {
+      return null;
+    }
+    const text = el.textContent?.trim().replace(/:$/, "");
+    if (text && text.length < 60 && !/\n/.test(text)) {
+      return text;
+    }
+    return null;
+  }
   function getNearbyText(input) {
-    const prev = input.previousElementSibling;
-    const next = input.nextElementSibling;
+    const prevText = getValidSiblingText(input.previousElementSibling);
+    if (prevText) return prevText;
+    const nextText = getValidSiblingText(input.nextElementSibling);
+    if (nextText) return nextText;
     const parent = input.parentElement;
-    if (prev?.textContent?.trim()) {
-      return prev.textContent.trim().replace(/:$/, "");
-    }
-    if (next?.textContent?.trim()) {
-      return next.textContent.trim().replace(/:$/, "");
-    }
     if (parent) {
       const clone = parent.cloneNode(true);
-      clone.querySelectorAll("input, select, textarea, button").forEach((e) => e.remove());
-      const text = clone.textContent?.trim();
-      if (text && text.length < 50) return text.replace(/:$/, "");
+      clone.querySelectorAll("script, style, template, noscript, input, select, textarea, button").forEach((e) => e.remove());
+      const text = clone.textContent?.trim().replace(/:$/, "");
+      if (text && text.length < 60 && !/\n/.test(text)) return text;
     }
     return null;
   }
@@ -9209,18 +10191,62 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
   });
   var incrementStat4 = globalThis.ai4a11yIncrementStat || (() => {
   });
+  var STYLE_ID5 = "ai4a11y-generate-captions-styles";
+  function ensureStyles() {
+    if (typeof document === "undefined" || document.getElementById(STYLE_ID5)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID5;
+    style.textContent = `
+    .ai4a11y-transcript {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+    .ai4a11y-transcript summary {
+      display: list-item;
+      min-height: 24px;
+      min-width: 24px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+      line-height: 1.5;
+      box-sizing: border-box;
+    }
+    .ai4a11y-transcript summary:focus {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+    .ai4a11y-transcript-content {
+      padding: 8px;
+      margin-top: 4px;
+      white-space: pre-wrap;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: 1.5;
+      border-left: 2px solid currentColor;
+    }
+  `;
+    (document.head || document.documentElement).appendChild(style);
+  }
   async function generateVideoCaptions(video) {
-    if (video.dataset.ai4a11yCaptioned) return null;
+    if (!video || video.dataset.ai4a11yCaptioned) return null;
+    const hasCaptions = video.querySelector('track[kind="captions" i], track[kind="subtitles" i]') || Array.from(video.textTracks || []).some((t) => t.kind === "captions" || t.kind === "subtitles");
+    if (hasCaptions) return null;
     video.dataset.ai4a11yCaptioned = "pending";
-    const src = video.src || video.querySelector("source")?.src;
-    if (!src) {
+    const src = video.currentSrc || video.src || video.querySelector("source")?.src;
+    if (!src || !src.trim()) {
       video.dataset.ai4a11yCaptioned = "failed";
       return null;
     }
     try {
       const result = await transcribeVideo(src);
-      if (result?.text) {
-        const text = result.text;
+      if (video.dataset.ai4a11yCaptioned !== "pending") return null;
+      if (result?.text && result.text.trim()) {
+        const text = result.text.trim();
         addCaptionTrack(video, text);
         video.dataset.ai4a11yCaptioned = "done";
         incrementStat4("captions");
@@ -9232,22 +10258,23 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       return null;
     } catch (e) {
       console.warn("[AI4A11y] Failed to caption video:", e);
-      video.dataset.ai4a11yCaptioned = "failed";
+      if (video.dataset.ai4a11yCaptioned === "pending") video.dataset.ai4a11yCaptioned = "failed";
       return null;
     }
   }
   async function generateAudioCaptions(audio) {
-    if (audio.dataset.ai4a11yCaptioned) return null;
+    if (!audio || audio.dataset.ai4a11yCaptioned) return null;
     audio.dataset.ai4a11yCaptioned = "pending";
-    const src = audio.src || audio.querySelector("source")?.src;
-    if (!src) {
+    const src = audio.currentSrc || audio.src || audio.querySelector("source")?.src;
+    if (!src || !src.trim()) {
       audio.dataset.ai4a11yCaptioned = "failed";
       return null;
     }
     try {
       const result = await transcribeAudio(src);
-      if (result?.text) {
-        const text = result.text;
+      if (audio.dataset.ai4a11yCaptioned !== "pending") return null;
+      if (result?.text && result.text.trim()) {
+        const text = result.text.trim();
         addTranscriptBlock(audio, text);
         audio.dataset.ai4a11yCaptioned = "done";
         incrementStat4("captions");
@@ -9259,7 +10286,7 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       return null;
     } catch (e) {
       console.warn("[AI4A11y] Failed to transcribe audio:", e);
-      audio.dataset.ai4a11yCaptioned = "failed";
+      if (audio.dataset.ai4a11yCaptioned === "pending") audio.dataset.ai4a11yCaptioned = "failed";
       return null;
     }
   }
@@ -9267,15 +10294,25 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     const track = document.createElement("track");
     track.kind = "captions";
     track.label = "Auto-generated";
-    track.srclang = "en";
+    const lang = typeof document !== "undefined" && document.documentElement?.lang?.slice(0, 2).toLowerCase() || "en";
+    track.srclang = lang;
     track.default = true;
+    track.dataset.ai4a11yTrack = "true";
     const vtt = createSimpleVTT(text);
     track.src = "data:text/vtt;charset=utf-8," + encodeURIComponent(vtt);
     video.appendChild(track);
+    try {
+      if (track.track) {
+        track.track.mode = "showing";
+      }
+    } catch (e) {
+    }
   }
   function addTranscriptBlock(audio, text) {
+    ensureStyles();
     const container = document.createElement("details");
     container.className = "ai4a11y-transcript";
+    container.dataset.ai4a11yTranscript = "true";
     const summary = document.createElement("summary");
     summary.textContent = "Transcript";
     container.appendChild(summary);
@@ -9286,7 +10323,8 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
     audio.parentElement?.insertBefore(container, audio.nextSibling);
   }
   function createSimpleVTT(text) {
-    const words = text.split(/\s+/);
+    const words = (text || "").trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return "WEBVTT\n\n";
     const chunks = [];
     for (let i = 0; i < words.length; i += 10) {
       chunks.push(words.slice(i, i + 10).join(" "));
@@ -9343,12 +10381,12 @@ ${chunk}
     if (m.done.size >= MEMORY_MAX2) m.done.delete(m.done.keys().next().value);
     m.done.set(text, simplified);
   }
-  var STYLE_ID5 = "ai4a11y-simplify-styles";
+  var STYLE_ID6 = "ai4a11y-simplify-styles";
   function addStyles() {
-    if (typeof document === "undefined" || document.getElementById(STYLE_ID5)) return;
+    if (typeof document === "undefined" || document.getElementById(STYLE_ID6)) return;
     const style = document.createElement("style");
-    style.id = STYLE_ID5;
-    style.textContent = ".ai4a11y-toggle-original{margin-left:.5em;font-size:.85em;cursor:pointer}.ai4a11y-toggle-original:focus-visible{outline:2px solid #1a5fb4;outline-offset:2px;box-shadow:0 0 0 2px #fff,0 0 0 4px #1a5fb4}";
+    style.id = STYLE_ID6;
+    style.textContent = ".ai4a11y-toggle-original{margin-left:.5em;font-size:.85em;cursor:pointer;min-height:24px;min-width:24px;padding:2px 8px;box-sizing:border-box;vertical-align:middle;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit}.ai4a11y-toggle-original:focus-visible{outline:2px solid #1a5fb4;outline-offset:2px;box-shadow:0 0 0 2px #fff,0 0 0 4px #1a5fb4}.ai4a11y-summary-box{margin:1em 0;padding:.75em 1em;border:1px solid currentColor;border-left:4px solid currentColor;border-radius:4px;box-sizing:border-box}.ai4a11y-summary-header{display:flex;align-items:center;gap:.5em;font-weight:600;margin-bottom:.5em;font-size:.95em}.ai4a11y-summary-icon{display:inline-flex;align-items:center}.ai4a11y-summary-icon svg{display:block}.ai4a11y-summary-content{font-size:.95em;line-height:1.5}";
     (document.head || document.documentElement).appendChild(style);
   }
   var rewritten = 0;
@@ -9369,6 +10407,7 @@ ${chunk}
     return clone.textContent?.trim() || "";
   }
   async function simplifyText2(element) {
+    if (!element || !element.dataset) return null;
     if (element.dataset.ai4a11ySimplified) return null;
     element.dataset.ai4a11ySimplified = "pending";
     if (element.tagName === "TABLE" || element.querySelector("table")) {
@@ -9438,6 +10477,7 @@ ${chunk}
     }
   }
   async function summarizeContent(element) {
+    if (!element || !element.dataset) return null;
     if (element.dataset.ai4a11ySummarize) return null;
     element.dataset.ai4a11ySummarize = "pending";
     if (element.tagName === "TABLE") {
@@ -9457,6 +10497,7 @@ ${chunk}
         console.warn(`[AI4A11y] summarizeContent: rejected model output (${rejected})`);
       }
       if (summary && !rejected) {
+        addStyles();
         const summaryBox = document.createElement("div");
         summaryBox.className = "ai4a11y-summary-box";
         summaryBox.setAttribute("role", "region");
@@ -9465,7 +10506,8 @@ ${chunk}
         header.className = "ai4a11y-summary-header";
         const icon = document.createElement("span");
         icon.className = "ai4a11y-summary-icon";
-        icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+        icon.setAttribute("aria-hidden", "true");
+        icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
         const headerText = document.createElement("span");
         headerText.textContent = "Summary";
         header.appendChild(icon);
@@ -9498,13 +10540,20 @@ ${chunk}
   function isLargeText(element) {
     const style = getComputedStyle(element);
     const fontSize = parseFloat(style.fontSize) || 16;
-    const fontWeight = parseInt(style.fontWeight, 10) || 400;
-    const bold = fontWeight >= 700;
+    const weight = style.fontWeight;
+    const bold = weight === "bold" || weight === "bolder" || (parseInt(weight, 10) || 400) >= 700;
     return fontSize >= 24 || bold && fontSize >= 18.67;
   }
   function hasBackgroundImage(element) {
-    const bgImg = getComputedStyle(element).backgroundImage;
-    return !!bgImg && bgImg !== "none";
+    let el = element;
+    while (el && el !== document.documentElement) {
+      const style = getComputedStyle(el);
+      const bgImg = style.backgroundImage;
+      if (bgImg && bgImg !== "none") return true;
+      if (isOpaque(style.backgroundColor)) break;
+      el = el.parentElement;
+    }
+    return false;
   }
   function isOpaque(color) {
     if (!color) return false;
@@ -9517,15 +10566,20 @@ ${chunk}
     const white = getContrastRatio("rgb(255, 255, 255)", background) ?? 0;
     return black >= white ? "#000000" : "#ffffff";
   }
+  var marked = /* @__PURE__ */ new Set();
   async function fixLowContrast(element, color, background) {
     if (wasProcessed(element)) return null;
     markProcessed(element, "pending");
+    marked.add(element);
     if (hasBackgroundImage(element)) {
       markProcessed(element, "done");
       return null;
     }
     if (!isOpaque(background)) {
       background = getEffectiveBackground(element);
+    }
+    if (!color) {
+      color = getComputedStyle(element).color;
     }
     const large = isLargeText(element);
     if (color && meetsContrastAA(color, background, large)) {
@@ -9546,6 +10600,9 @@ ${chunk}
     if (color) {
       element.dataset.ai4a11yOriginalColor = color;
     }
+    if (element.style.color) {
+      element.dataset.ai4a11yOriginalInlineColor = element.style.color;
+    }
     element.style.color = fixedColor;
     element.classList.add("ai4a11y-contrast-fixed");
     markProcessed(element, "done");
@@ -9557,7 +10614,12 @@ ${chunk}
   function fixIndistinguishableLink(link) {
     if (wasProcessed(link)) return;
     markProcessed(link, "done");
+    marked.add(link);
+    if (link.style.textDecoration) {
+      link.dataset.ai4a11yOriginalTextDecoration = link.style.textDecoration;
+    }
     link.style.textDecoration = "underline";
+    link.classList.add("ai4a11y-link-underlined");
     incrementStat6("wcag");
     logFix13("link-underline", link, "(none)", "underline");
     console.log("[AI4A11y] Added underline to link");
@@ -9608,25 +10670,60 @@ ${chunk}
   }
   function fixDuplicateId(element) {
     const originalId = element.id;
+    if (!originalId) return;
+    const doc = element.ownerDocument || document;
+    const duplicates = Array.from(doc.querySelectorAll("[id]")).filter((el) => el.id === originalId);
+    if (duplicates.length <= 1) return;
+    if (duplicates[0] === element) {
+      for (let i = 1; i < duplicates.length; i++) {
+        renameDuplicate(duplicates[i], originalId);
+      }
+    } else {
+      renameDuplicate(element, originalId);
+    }
+  }
+  function renameDuplicate(el, originalId) {
     const newId = `${originalId}_${randomSuffix()}`;
-    element.id = newId;
-    markProcessed(element, "done");
+    el.id = newId;
+    markProcessed(el, "done");
     incrementStat7("wcag");
-    logFix14("duplicate-id", element, originalId, newId);
+    logFix14("duplicate-id", el, originalId, newId);
     console.log("[AI4A11y] Renamed duplicate ID:", originalId, "->", newId);
   }
+  var ABSTRACT_ROLES = /* @__PURE__ */ new Set([
+    "command",
+    "composite",
+    "input",
+    "landmark",
+    "range",
+    "roletype",
+    "section",
+    "sectionhead",
+    "select",
+    "structure",
+    "widget",
+    "window"
+  ]);
   function fixHeadingOrder(element) {
     const match = element.tagName.match(/^H([1-6])$/);
     if (!match) return;
     const currentLevel = parseInt(match[1]);
-    const allHeadings = Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6"));
+    const doc = element.ownerDocument || document;
+    const allHeadings = Array.from(doc.querySelectorAll("h1,h2,h3,h4,h5,h6")).filter((h) => {
+      try {
+        const s = getComputedStyle(h);
+        return s.display !== "none" && s.visibility !== "hidden";
+      } catch {
+        return true;
+      }
+    });
     const idx = allHeadings.indexOf(element);
     if (idx === -1 || idx === 0) return;
     const prevHeading = allHeadings[idx - 1];
     const prevLevel = parseInt(prevHeading.tagName[1]);
     if (currentLevel > prevLevel + 1) {
       const newLevel = prevLevel + 1;
-      const newHeading = document.createElement(`h${newLevel}`);
+      const newHeading = doc.createElement(`h${newLevel}`);
       while (element.firstChild) {
         newHeading.appendChild(element.firstChild);
       }
@@ -9664,6 +10761,7 @@ ${chunk}
       if (attr.name.startsWith("aria-") && !VALID_ARIA_ATTRS.has(attr.name)) {
         element.removeAttribute(attr.name);
         fixed = true;
+        logFix14("aria-valid-attr", element, attr.name, "(removed)");
         console.log("[AI4A11y] Removed invalid ARIA attr:", attr.name);
       }
     }
@@ -9671,7 +10769,16 @@ ${chunk}
   }
   function fixInvalidAriaRole(element) {
     const role = element.getAttribute("role");
-    if (role && !VALID_ARIA_ROLES.has(role)) {
+    if (!role) return;
+    const tokens = role.trim().split(/\s+/);
+    const validTokens = tokens.filter((t) => VALID_ARIA_ROLES.has(t) && !ABSTRACT_ROLES.has(t));
+    if (validTokens.length === tokens.length) return;
+    if (validTokens.length > 0) {
+      element.setAttribute("role", validTokens.join(" "));
+      incrementStat7("wcag");
+      logFix14("aria-role", element, role, validTokens.join(" "));
+      console.log("[AI4A11y] Cleaned invalid role tokens:", role, "->", validTokens.join(" "));
+    } else {
       element.removeAttribute("role");
       incrementStat7("wcag");
       logFix14("aria-role", element, role, "(removed)");
@@ -9691,23 +10798,33 @@ ${chunk}
     console.info("[AI4A11y] fixMissingAriaAttrs: no-op (backfilling ARIA state would lie to screen readers)");
   }
   function fixNestedInteractive(element) {
-    const parent = element.closest("a, button");
-    if (!parent || element === parent) return;
-    if (element.tagName === "BUTTON") {
-      const span = document.createElement("span");
-      while (element.firstChild) {
-        span.appendChild(element.firstChild);
+    const parent = element.parentElement?.closest('a, button, [role="button"]');
+    if (parent) {
+      repairNested(element);
+      return;
+    }
+    const nested = element.querySelectorAll("button, a[href]");
+    for (const child of nested) {
+      repairNested(child);
+    }
+  }
+  function repairNested(child) {
+    const doc = child.ownerDocument || document;
+    if (child.tagName === "BUTTON") {
+      const span = doc.createElement("span");
+      while (child.firstChild) {
+        span.appendChild(child.firstChild);
       }
-      span.className = element.className;
-      element.replaceWith(span);
+      span.className = child.className;
+      child.replaceWith(span);
       incrementStat7("wcag");
       logFix14("nested-interactive", span, "button", "span");
       console.log("[AI4A11y] Replaced nested button with span");
-    } else if (element.tagName === "A") {
-      element.removeAttribute("href");
-      element.setAttribute("role", "presentation");
+    } else if (child.tagName === "A") {
+      child.removeAttribute("href");
+      child.setAttribute("role", "presentation");
       incrementStat7("wcag");
-      logFix14("nested-interactive", element, "a[href]", "a[role=presentation]");
+      logFix14("nested-interactive", child, "a[href]", "a[role=presentation]");
       console.log("[AI4A11y] Made nested link non-interactive");
     }
   }
@@ -9824,12 +10941,13 @@ ${chunk}
   });
   var MAX_LINKS_PER_PAGE = 10;
   async function improveAmbiguousLink(link) {
-    if (link.dataset.ai4a11yProcessed) return null;
+    if (!link || !link.dataset || link.dataset.ai4a11yProcessed) return null;
     markProcessed(link, "pending");
-    const text = getAccessibleName(link);
-    const context = link.closest("p, li, td, article, section")?.textContent?.trim().substring(0, 200) || "";
+    const text = getAccessibleName(link) || "";
+    const context = link.closest?.("p, li, td, article, section, dd, dt, figcaption, blockquote")?.textContent?.trim().substring(0, 200) || "";
+    const href = typeof link.href === "string" ? link.href : link.href?.baseVal || link.getAttribute?.("href") || "";
     try {
-      const answer = await improveLinkText(text, link.href, context);
+      const answer = await improveLinkText(text, href, context);
       const rejected = answer == null ? null : rejectShortText(answer);
       const improved = rejected || answer == null ? null : cleanShortText(answer);
       if (rejected) {
@@ -9849,7 +10967,7 @@ ${chunk}
     return null;
   }
   async function improveAmbiguousLinks(links) {
-    const batch = Array.from(links).slice(0, MAX_LINKS_PER_PAGE);
+    const batch = Array.from(links || []).slice(0, MAX_LINKS_PER_PAGE);
     const results = [];
     for (const link of batch) {
       results.push(await improveAmbiguousLink(link));
@@ -9866,26 +10984,34 @@ ${chunk}
   var MAX_AI_COLUMNS = 12;
   async function fixTableHeaders(table) {
     if (table.dataset.ai4a11yProcessed) return false;
-    if (table.querySelector("th")) return false;
-    const rows = Array.from(table.querySelectorAll("tr"));
+    const rows = Array.from(table.rows);
     if (rows.length < 2) return false;
+    if (rows.some((r) => Array.from(r.cells).some((c) => c.tagName === "TH"))) return false;
     markProcessed(table, "pending");
-    const firstRowCells = Array.from(rows[0].querySelectorAll("td"));
+    const firstRowCells = Array.from(rows[0].cells).filter((c) => c.tagName === "TD");
     if (firstRowCells.length === 0) {
       markProcessed(table, "skipped");
       return false;
     }
-    const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*%?$/.test(t) || /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t);
+    if (firstRowCells.some((c) => c.colSpan > 1 || c.rowSpan > 1)) {
+      markProcessed(table, "skipped");
+      return false;
+    }
+    const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*(?:%|[$€£]|kg|g|km|m|cm|mm|ms|s|h|min|mph|°[CF]?|px|GB|MB|KB)?$/i.test(t) || /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t) || /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}$/i.test(t) || /^\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4}$/i.test(t);
     const dataLikeCount = firstRowCells.filter((c) => isDataLike(c.textContent?.trim() || "")).length;
-    const looksLikeHeader = dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
+    const keyValue = firstRowCells.length === 2 && /^[\s$€£¥+\-]*\d/.test(firstRowCells[1].textContent?.trim() || "");
+    const looksLikeHeader = !keyValue && dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
       const text = cell.textContent?.trim() || "";
       if (!text || text.length > 40) return false;
-      const below = rows.slice(1, 4).map((r) => r.querySelectorAll("td")[i]?.textContent?.trim());
+      const below = rows.slice(1, 4).map((r) => r.cells[i]?.textContent?.trim());
       return !below.includes(text);
     });
     if (looksLikeHeader) {
       firstRowCells.forEach((cell) => {
         const th = document.createElement("th");
+        for (const attr of cell.attributes) {
+          th.setAttribute(attr.name, attr.value);
+        }
         th.setAttribute("scope", "col");
         while (cell.firstChild) th.appendChild(cell.firstChild);
         cell.replaceWith(th);
@@ -9899,11 +11025,17 @@ ${chunk}
       markProcessed(table, "skipped");
       return false;
     }
+    const columnCount = firstRowCells.length;
+    const hasSpans = rows.some((r) => Array.from(r.cells).some((c) => c.colSpan > 1 || c.rowSpan > 1));
+    const isUniform = rows.every((r) => r.cells.length === columnCount);
+    if (hasSpans || !isUniform || table.tHead) {
+      markProcessed(table, "skipped");
+      return false;
+    }
     try {
-      const columnCount = firstRowCells.length;
       const headers = [];
       for (let col = 0; col < columnCount; col++) {
-        const samples = rows.slice(0, 5).map((r) => r.querySelectorAll("td")[col]?.textContent?.trim()).filter(Boolean);
+        const samples = rows.slice(0, 5).map((r) => r.cells[col]?.textContent?.trim()).filter(Boolean);
         const answer = col < MAX_AI_COLUMNS && samples.length >= 2 ? await inferColumnHeader(samples) : null;
         const rejected = answer == null ? null : rejectShortText(answer);
         if (rejected) {
@@ -9922,7 +11054,12 @@ ${chunk}
         headerRow.appendChild(th);
       }
       thead.appendChild(headerRow);
-      table.prepend(thead);
+      const firstRowOrBody = table.querySelector("tbody, tr");
+      if (firstRowOrBody) {
+        firstRowOrBody.before(thead);
+      } else {
+        table.appendChild(thead);
+      }
       markProcessed(table, "done");
       incrementStat9("wcag");
       logFix16("table headers", table, "(no headers)", headers.join(", "));
@@ -9934,7 +11071,7 @@ ${chunk}
     }
   }
   async function fixAllTables() {
-    const candidates = Array.from(document.querySelectorAll("table")).filter((t) => !t.dataset.ai4a11yProcessed && !t.querySelector("th") && t.querySelectorAll("tr").length >= 2).filter((t) => !t.getAttribute("role") || t.getAttribute("role") === "table");
+    const candidates = Array.from(document.querySelectorAll("table")).filter((t) => !t.dataset.ai4a11yProcessed && !Array.from(t.rows).some((r) => Array.from(r.cells).some((c) => c.tagName === "TH")) && t.rows.length >= 2).filter((t) => !t.getAttribute("role") || t.getAttribute("role") === "table");
     const tables = candidates.slice(0, MAX_AI_TABLES_PER_PAGE);
     if (candidates.length > tables.length) {
       console.log(`[AI4A11y] fix-tables: fixing ${tables.length} of ${candidates.length} headerless tables this pass (cost cap)`);

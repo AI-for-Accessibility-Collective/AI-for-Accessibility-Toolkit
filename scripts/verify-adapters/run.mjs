@@ -52,34 +52,40 @@ async function replay() {
   const specs = readdirSync(SPECS).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5))
     .filter(n => !names.length || names.some(x => n === x || n.startsWith(`${x}-`)));
   const v = await openVerifier();
-  let failed = 0;
+  let failed = 0, skipped = 0;
   const runs = [];
   for (const name of specs) {
     const spec = JSON.parse(readFileSync(path.join(SPECS, `${name}.json`), 'utf8'));
-    if (spec.sites) for (const site of SITES) runs.push([`${name} @ ${site.name}`, { ...spec, page: site.url, checks: spec.checks || [] }, true]);
+    if (spec.sites) for (const site of SITES) runs.push([`${name} @ ${site.name}`, { ...spec, page: site.url, checks: spec.checks || [] }, true, spec.known?.[site.name]]);
     else runs.push([name, spec, false]);
   }
-  for (const [name, spec, live] of runs) {
+  let known = 0;
+  for (const [name, spec, live, knownWhy] of runs) {
     let r;
     try { r = await v.verify(spec); } catch (e) { r = { status: live ? 'unreachable' : 'failed', message: e.message.slice(0, 200) }; }
     const problems = [];
     // On a live page, skipping (nothing to do there) is fine, and a page that does not load is reported, not failed.
     const fine = live ? ['applied', 'skipped', 'unreachable'] : ['applied'];
     if (!fine.includes(r.status)) problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
-    else if (r.status === 'unreachable') console.log(`SKIP: ${name} (${r.message})`);
+    else if (r.status === 'unreachable') { skipped++; console.log(`SKIP: ${name} (${r.message})`); }
     if (r.leftovers?.length && spec.restores !== false) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
     const bad = (r.checks || []).map((c, i) => (!c.after ? spec.checks[i]?.name : null)).filter(Boolean);
     if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
     if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
     for (const rule of r.axe?.added || []) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);
-    if (r.status === 'applied' && r.restored === false && spec.restores !== false) problems.push('disable() does not restore the page');
+    // A live page changes by itself (Mars's carousel), so an inexact restore there is a warning; leftover marks are not.
+    if (r.status === 'applied' && r.restored === false && spec.restores !== false) {
+      if (live) console.log(`WARN: ${name}: the page is not exactly as before after disable() (it may have changed by itself)`);
+      else problems.push('disable() does not restore the page');
+    }
     if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
+    if (problems.length && knownWhy) { known++; console.log(`KNOWN: ${name}: ${problems.join('; ')}\n  why: ${knownWhy}`); continue; }
     if (problems.length) failed++;
     if (r.status === 'unreachable') continue;
     console.log(`${problems.length ? 'FAIL' : 'PASS'}: ${name}${r.status === 'applied' ? ` (shift ${r.shift ?? '-'})` : ''}${problems.length ? `\n  ${problems.join('\n  ')}` : ''}`);
   }
   await v.close();
-  console.log(`\n${runs.length - failed} passed, ${failed} failed`);
+  console.log(`\n${runs.length - failed - skipped - known} passed, ${failed} failed, ${known} known, ${skipped} skipped (site unreachable)`);
   process.exit(failed ? 1 : 0);
 }
 

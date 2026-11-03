@@ -25,11 +25,13 @@ const SKIP_SEL = [
   'sup', 'sub', '[role="doc-noteref"]', '[role="doc-backlink"]', '[role="doc-biblioentry"]',
 ].join(', ');
 // Visually hidden, but read by screen readers. Not selectable, so copying the
-// bolded text does not copy every word twice.
+// bolded text does not copy every word twice. Inline, not absolutely
+// positioned: an absolute 1px box inside a link counts as a separate, tiny
+// target (axe-core's target-size, WCAG 2.5.8, on Wikipedia's links).
 // Pages style their own spans too (".thumb span { position: absolute }"), so
 // every span we add starts from a clean slate.
 const RESET = 'all: unset;';
-const SR_ONLY = RESET + 'position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;' +
+const SR_ONLY = RESET + 'display:inline-block;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;' +
   'clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;user-select:none;-webkit-user-select:none;';
 const RESCAN_MS = 400;
 

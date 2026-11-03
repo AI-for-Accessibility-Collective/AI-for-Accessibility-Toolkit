@@ -4,5 +4,6 @@
     "enable": "await m.fixAllTables();",
     "disable": ""
   },
-  "sites": "all"
+  "sites": "all",
+  "restores": false
 }

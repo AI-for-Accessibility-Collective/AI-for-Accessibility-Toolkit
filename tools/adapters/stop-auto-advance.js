@@ -7,8 +7,9 @@
 //
 // Reversible by construction: meta refreshes are removed but their exact
 // position is recorded for re-insertion; carousel animations are paused via
-// one injected rule; only media WE paused is resumed, and only marquees WE
-// stopped are restarted. A MutationObserver catches media that starts
+// one injected rule; only media WE paused is resumed (media still loading
+// with autoplay gets autoplay back, which does not start it), and only
+// marquees WE stopped are restarted. A MutationObserver catches media that starts
 // playing, and meta refreshes added, after enable, and is disconnected on
 // disable.
 import { announce } from '../utils/ai.js';
@@ -60,6 +61,7 @@ export const StopAutoAdvance = {
   pausedMedia: null,     // Set of media elements we paused (resume exactly these)
   stoppedMarquees: null, // Set of <marquee> elements we stopped
   addedControls: null,   // Set of paused videos we showed controls on
+  heldAutoplay: null,    // Set of media we took autoplay off before it started
   observer: null,
   slideObserver: null,   // watches slides' classes, see onClassChange
   rotating: null,        // WeakMap slides' parent -> the classes that move between them
@@ -80,6 +82,7 @@ export const StopAutoAdvance = {
     this.pausedMedia = new Set();
     this.stoppedMarquees = new Set();
     this.addedControls = new Set();
+    this.heldAutoplay = new Set();
 
     // Remove <meta http-equiv="refresh"> so the page won't reload or
     // redirect out from under the reader. Recorded for exact re-insertion.
@@ -147,11 +150,20 @@ export const StopAutoAdvance = {
   // paused it (and will therefore resume it on disable).
   considerMedia(el) {
     try {
-      if (!el || el.paused !== false || this.pausedMedia.has(el)) return false;
-      if (typeof el.pause === 'function') pauseQuietly(el, () => this.enabled);
-      this.pausedMedia.add(el);
-      // A video that played by itself often has no controls, so once paused
-      // there is no way to start it. Show them; disable() takes them off.
+      if (!el || this.pausedMedia.has(el) || this.heldAutoplay.has(el)) return false;
+      if (el.paused !== false) {
+        // Set to autoplay but still loading: take autoplay off so it never
+        // starts. disable() puts the attribute back, which does not start a
+        // video that has already loaded, so nothing plays by surprise.
+        if (!el.autoplay || el.ended || el.currentTime > 0) return false;
+        el.autoplay = false;
+        this.heldAutoplay.add(el);
+      } else {
+        if (typeof el.pause === 'function') pauseQuietly(el, () => this.enabled);
+        this.pausedMedia.add(el);
+      }
+      // A video that played (or would have played) by itself often has no
+      // controls, so there is no way to start it. Show them; disable() takes them off.
       if (el.tagName === 'VIDEO' && !el.controls) { el.controls = true; this.addedControls.add(el); }
       return true;
     } catch { return false; }
@@ -370,6 +382,10 @@ export const StopAutoAdvance = {
       this.stoppedMarquees = null;
     }
 
+    if (this.heldAutoplay) {
+      for (const el of this.heldAutoplay) { try { el.autoplay = true; } catch { /* skip */ } }
+      this.heldAutoplay = null;
+    }
     if (this.addedControls) {
       for (const el of this.addedControls) { try { el.controls = false; } catch { /* skip */ } }
       this.addedControls = null;

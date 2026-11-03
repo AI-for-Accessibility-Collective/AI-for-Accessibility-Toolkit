@@ -20,13 +20,16 @@
 //                                         // bodies, with `m` its exports
 //     checks: [{ name, code }],           // as in browser_preview
 //     viewport: { width, height }, reducedMotion: 'reduce' | 'no-preference',
-//     restores: false }                    // a fix module with nothing to undo
+//     restores: false,                    // a fix module with nothing to undo
 //                                         // (fix-tables): leftovers expected
+//     known: { '<site>': 'why' } }        // a live site's known, explained
+//                                         // problem: reported, not failed
 
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
 import { buildPreviewScript, previewTeardownScript } from '../../extension/runtime/scripts.js';
@@ -34,6 +37,10 @@ import { buildPreviewScript, previewTeardownScript } from '../../extension/runti
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const PAGES = path.join(ROOT, 'tools/test/verify/pages');
 const AXE = path.join(ROOT, 'cli/axe-core.min.js');
+// Libraries an adapter expects the page (the extension) to have loaded, for
+// test pages to load from /_vendor/ (reader-mode uses Mozilla's Readability).
+const VENDOR = { 'readability.js': createRequire(import.meta.url).resolve('@mozilla/readability/Readability.js') };
+const ADAPTER_URL = 'ai4a11y-adapter.js';
 const SHIM = `export const Verified = {
   enable(options, toolkit) { return globalThis.__verify.enable(options, toolkit); },
   disable() { return globalThis.__verify.disable(); },
@@ -50,13 +57,15 @@ async function bundle(file) {
     },
     bundle: true, format: 'iife', write: false, logLevel: 'silent', platform: 'browser',
   });
-  return out.outputFiles[0].text;
+  // Named, so an error from the adapter's code can be told from the site's.
+  return `${out.outputFiles[0].text}\n//# sourceURL=${ADAPTER_URL}`;
 }
 
-/** Serves tools/test/verify/pages/ on 127.0.0.1. */
+/** Serves tools/test/verify/pages/ on 127.0.0.1, and VENDOR under /_vendor/. */
 function pageServer() {
   const server = http.createServer((req, res) => {
     const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '');
+    if (rel.startsWith('_vendor/') && VENDOR[rel.slice(8)]) { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' }).end(readFileSync(VENDOR[rel.slice(8)])); return; }
     const file = path.resolve(PAGES, rel);
     if (!file.startsWith(PAGES + path.sep) || !existsSync(file)) { res.writeHead(404).end('not found'); return; }
     const type = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json' }[path.extname(file)] || 'application/octet-stream';
@@ -97,6 +106,7 @@ function snapshot() {
   const copy = document.documentElement.cloneNode(true);
   for (const el of [copy, ...copy.querySelectorAll('*')]) {
     for (const name of ['class', 'style']) if (el.hasAttribute(name) && !el.getAttribute(name).trim()) el.removeAttribute(name);
+    if (el.hasAttribute('class')) el.setAttribute('class', el.getAttribute('class').trim().split(/\s+/).join(' '));
     const attrs = [...el.attributes].map((a) => [a.name, a.value]).sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0));
     for (const [name] of attrs) el.removeAttribute(name);
     for (const [name, value] of attrs) el.setAttribute(name, value);
@@ -142,10 +152,17 @@ export async function openVerifier({ headless = true } = {}) {
     // A live site's Content-Security-Policy would block the injected scripts, as the extension's user scripts are not.
     const context = await browser.newContext({ viewport: spec.viewport || { width: 1280, height: 800 }, reducedMotion: spec.reducedMotion || 'no-preference', bypassCSP: live });
     const page = await context.newPage();
+    // On a live site, only errors from the adapter's code count; the site's
+    // own scripts throw too (Deque's Mars demo, from its Facebook widget).
+    // A resource the site fails to load (a 403, a blocked tracker) is the site's.
     const errors = [];
-    page.on('pageerror', (e) => errors.push(`page error: ${e.message}`));
-    // A resource the site fails to load (a 403, a blocked tracker) is the site's, not the adapter's.
-    page.on('console', (msg) => { if (msg.type() === 'error' && !/^Failed to load resource/.test(msg.text())) errors.push(`console error: ${msg.text()}`); });
+    let siteErrors = 0;
+    const ours = (where) => !live || where.includes(ADAPTER_URL) || where.includes('__playwright_evaluation_script__');
+    page.on('pageerror', (e) => { if (ours(e.stack || '')) errors.push(`page error: ${e.message}`); else siteErrors++; });
+    page.on('console', (msg) => {
+      if (msg.type() !== 'error' || /^Failed to load resource/.test(msg.text())) return;
+      if (ours(`${msg.location()?.url || ''} ${msg.text()}`)) errors.push(`console error: ${msg.text()}`); else siteErrors++;
+    });
     try {
       if (live) {
         const response = await page.goto(spec.page, { waitUntil: 'load', timeout: 45_000 });
@@ -182,6 +199,7 @@ export async function openVerifier({ headless = true } = {}) {
         } else result.restored = result.leftovers.length ? false : 'unknown';
       }
       result.errors = errors.slice(0, 10);
+      if (siteErrors) result.siteErrors = siteErrors;
       return result;
     } finally {
       await context.close();

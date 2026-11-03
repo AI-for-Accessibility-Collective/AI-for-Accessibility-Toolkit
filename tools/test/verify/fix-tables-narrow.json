@@ -38,5 +38,6 @@
   "viewport": {
     "width": 320,
     "height": 640
-  }
+  },
+  "restores": false
 }

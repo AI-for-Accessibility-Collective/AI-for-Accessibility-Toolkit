@@ -130,7 +130,13 @@ skill for the full surface.
 
 Pure ES modules, no build step for the core. Browser suites (Playwright):
 `npm run test:developer:e2e`, `test:adapters:e2e`, `test:console:e2e`,
-`test:redbird:e2e` (skips without `../redbird`). The one generated file is
+`test:redbird:e2e` (skips without `../redbird`). `npm run verify:adapters`
+replays the built-in adapters' verification specs (`tools/test/verify/`) in
+headless Chromium: the sidebar's preview checks (axe-core, layout shift, the
+specs' checks) plus a `disable()` restore check, on test pages and on live
+robustness sites (`scripts/verify-adapters/sites.json`). The specs were
+written by opencode agents run with `scripts/verify-adapters/run.mjs --agent`
+in a gVisor container on the agent host VM (see its Dockerfile). The one generated file is
 `cli/cli-tools.bundle.js` (`npm run build:cli`). Run `npm ci` once first —
 the demos need nothing installed, but the tools suites need jsdom. Run the
 suites:

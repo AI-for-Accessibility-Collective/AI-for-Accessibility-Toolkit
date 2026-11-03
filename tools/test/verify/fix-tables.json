@@ -14,5 +14,6 @@
   "harness": {
     "enable": "await m.fixAllTables();",
     "disable": ""
-  }
+  },
+  "restores": false
 }
