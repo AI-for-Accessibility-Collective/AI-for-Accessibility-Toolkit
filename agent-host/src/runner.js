@@ -75,6 +75,8 @@ export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'run
       const settings = [`--runtime=${runtime}`, '--network', network, '-v', `${path.join(dir, 'resolv.conf')}:/etc/resolv.conf:ro`,
         '--user', '1000:1000', '--read-only', '--tmpfs', '/tmp:rw,size=512m', '--cap-drop', 'ALL',
         '--security-opt', 'no-new-privileges', `--cpus=${cpus}`, `--memory=${memory}`, `--pids-limit=${pids}`,
+        // Chromium (Playwright) uses shared memory; Docker's default is 64 MB.
+        '--shm-size=512m',
         '--restart', 'unless-stopped', '--label', 'ai4a11y.sandbox=1', '--label', `ai4a11y.uid=${uid}`,
         '-v', `${path.join(dir, 'home')}:/home/agent`, '-v', `${path.join(dir, 'work')}:/work`,
         '-v', `${path.join(dir, 'config')}:/etc/agent:ro`,
