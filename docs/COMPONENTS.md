@@ -56,7 +56,6 @@ The catalog builds on established libraries rather than reimplementing them ("Bu
 | WCAG detection | [axe-core](https://github.com/dequelabs/axe-core) |
 | Dark mode | [darkreader](https://github.com/darkreader/darkreader) |
 | AI descriptions | [Gemini API](https://ai.google.dev/) / [Claude API](https://docs.anthropic.com/) |
-| Dyslexia-friendly font | [OpenDyslexic](https://opendyslexic.org/) |
 | Focus management | [focus-trap](https://github.com/focus-trap/focus-trap) |
 | Readability | [Mozilla Readability](https://github.com/mozilla/readability) |
 | Browser automation | [browser-harness](https://github.com/browser-use/browser-harness) / [Playwright](https://playwright.dev/) |

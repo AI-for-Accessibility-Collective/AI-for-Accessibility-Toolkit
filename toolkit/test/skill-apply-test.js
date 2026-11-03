@@ -23,7 +23,7 @@ function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('F
 const APPLY_KEYS = new Set([
   'enabled', 'autoWcagFix', 'autoFixLabels', 'autoDescribe', 'autoVideoDescribe',
   'autoCaptions', 'autoSimplify', 'autoSummarize', 'fixContrast', 'darkMode',
-  'contrastMode', 'colorBlindMode', 'dyslexiaFont', 'fontScale', 'lineHeight',
+  'contrastMode', 'colorBlindMode', 'fontScale', 'lineHeight',
   'letterSpacing', 'largeCursor', 'enhanceFocus', 'readingGuide', 'focusMode',
   'hideDistractions', 'showProgress', 'readerMode', 'motionReducer', 'keyboardNav',
   'voiceCommands',

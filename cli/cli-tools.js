@@ -379,7 +379,6 @@ function applyProfileByName(profileId) {
   if (profileTools.letterSpacing) visualOpts.letterSpacing = profileTools.letterSpacing;
   if (profileTools.largeCursor) visualOpts.largeCursor = true;
   if (profileTools.enhanceFocus) visualOpts.enhanceFocus = true;
-  if (profileTools.dyslexiaFont) visualOpts.dyslexiaFont = true;
   if (profileTools.readingGuide) visualOpts.readingGuide = true;
 
   if (Object.keys(visualOpts).length > 0) {

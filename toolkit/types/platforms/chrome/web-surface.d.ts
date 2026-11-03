@@ -75,9 +75,6 @@ export namespace WEB_DERIVATION {
     function contrast(v: any): {
         contrastMode: any;
     };
-    function dyslexiaFont(v: any): {
-        dyslexiaFont: boolean;
-    };
     function readAloudRate(v: any): {
         speechRate: number;
     };

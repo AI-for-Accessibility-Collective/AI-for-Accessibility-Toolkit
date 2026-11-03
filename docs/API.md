@@ -154,8 +154,7 @@ VisualAssist.enable({
   fontScale: 1.5,
   lineHeight: 1.8,
   largeCursor: true,
-  enhanceFocus: true,
-  dyslexiaFont: true
+  enhanceFocus: true
 });
 
 DarkMode.enable();

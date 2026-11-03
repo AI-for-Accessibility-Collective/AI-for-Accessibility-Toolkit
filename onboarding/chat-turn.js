@@ -14,20 +14,18 @@
 //      someone tells us about themselves is durable, and outranks reading the
 //      same words as a one-off command — unless the utterance opens with an
 //      imperative verb, which makes it an instruction rather than a disclosure
-//      ("turn off my dyslexia font"). See IMPERATIVE_LEAD.
+//      ("turn off my reading guide"). See IMPERATIVE_LEAD.
 //   3. otherwise a deterministic controller command ("bigger text", "read
 //      this") — an action, not a profile edit.
 //   4. otherwise hand it to the controller, which may answer, run a task, or
 //      report that it recognized nothing.
 //
 // Steps 2 and 3 used to be the other way round, which meant a disclosure whose
-// condition is ALSO a settings keyword never reached the profile: "I have
-// dyslexia" parsed as a dyslexia-font command and changed the page for the
-// session only, while "I'm blind" and "I have ADHD" (no matching keyword)
-// onboarded normally. "I am deaf and I have dyslexia" lost the hearing half
-// entirely. Nobody loses the adaptation by onboarding instead: the reading area
-// derives dyslexiaFont along with lineSpacing and simplify, so the person gets
-// the same font, two more adaptations, and a profile that outlives the tab.
+// condition was ALSO a settings keyword never reached the profile: "I have
+// dyslexia" parsed as a (since removed) dyslexia-font command and changed the
+// page for the session only, while "I'm blind" and "I have ADHD" onboarded
+// normally. Onboarding first keeps a disclosure a disclosure: the reading area
+// derives lineSpacing and simplify, in a profile that outlives the tab.
 //
 // Putting onboarding first is safe because detectOnboarding is deliberately
 // conservative, and that is where the protection belongs: its keywords are
@@ -35,11 +33,12 @@
 // "reading") excluded on purpose, and it additionally requires first-person
 // phrasing or a bare condition. So "bigger text", "hide distractions" and even
 // "I need bigger text" never reach it. Across the 599 distinct utterances in
-// this repo's controller and chat test corpora, exactly four are claimed by
-// both matchers, and all four are dyslexia disclosures.
+// this repo's controller and chat test corpora, four were claimed by both
+// matchers, all of them dyslexia disclosures, before the dyslexia-font
+// command was removed (2026-11-03).
 
 // An utterance that OPENS with an imperative verb is an instruction, not a
-// disclosure: "turn off my dyslexia font", "read this to me in plain language",
+// disclosure: "turn off my reading guide", "read this to me in plain language",
 // "stop the flashing for me". Each of those carries a condition word AND a
 // first-person word ("my", "me"), which is all detectOnboarding asks for, so
 // without this guard the ladder above would record them as self-descriptions

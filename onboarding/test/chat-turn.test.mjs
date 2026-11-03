@@ -12,8 +12,8 @@ import { routeTurn, classifyControllerResult, fallbackHelp, generalAnswerPrompt 
 import { detectOnboarding, isResetToProfile } from '../chat-routing.js';
 import { parse } from '../../controller/grammar.js';
 
-// routeTurn does not consult the grammar; `parse` is imported to prove the
-// keyword collision that makes the precedence matter is genuinely there.
+// routeTurn does not consult the grammar; `parse` is imported to record that
+// the keyword collision behind the precedence is gone.
 const REAL = { isResetToProfile, detectOnboarding };
 
 let pass = 0, fail = 0;
@@ -46,9 +46,9 @@ const kindOf = (text, deps = REAL) => routeTurn(text, deps).kind;
 }
 
 // ── a disclosure reaches the profile even when it parses as a command ────────
-// "dyslexia" is also a settings keyword. While the grammar was consulted first,
-// these turned into a font change for the session and never reached the
-// profile, unlike every disclosure with no keyword collision.
+// "dyslexia" was also a settings keyword (the dyslexia font, removed
+// 2026-11-03). While the grammar was consulted first, these turned into a font
+// change for the session and never reached the profile.
 {
   check('“I have dyslexia” onboards, it is not just a font command', kindOf('I have dyslexia') === 'onboard');
   check('“I’m dyslexic” onboards', kindOf("I'm dyslexic") === 'onboard');
@@ -88,10 +88,10 @@ const kindOf = (text, deps = REAL) => routeTurn(text, deps).kind;
 // These carry a condition word AND a first-person word ("my", "me"), which is
 // everything detectOnboarding asks for. Routing them to onboarding would record
 // a need the person never claimed and, worse, APPLY the setting they just asked
-// to remove: "turn off my dyslexia font" would turn the dyslexia font on.
+// to remove: "turn off my reading guide" would turn the reading guide on.
 {
   for (const cmd of [
-    'turn off my dyslexia font', 'disable the dyslexia font for me',
+    'turn off my reading guide', 'disable the reading guide for me',
     'turn on my screen reader', 'read this to me in plain language',
     'stop the flashing for me', 'use plain language for me',
     'switch to my keyboard only mode',
@@ -124,13 +124,14 @@ const kindOf = (text, deps = REAL) => routeTurn(text, deps).kind;
   check('null is inert', kindOf(null) === 'controller');
 }
 
-// ── the collision the precedence exists to resolve is real ───────────────────
-// If the grammar ever stopped claiming these, the ordering above would be
-// untested by accident rather than by design.
+// ── the collision the precedence was written for is gone ─────────────────────
+// The dyslexia font was removed (its benefit is not shown), so the grammar no
+// longer claims these. The precedence stays: routeTurn checks a disclosure
+// before any command, whatever the grammar comes to claim.
 {
-  check('the grammar really does claim “I have dyslexia”', !!parse('I have dyslexia'));
-  check('…and a bare “dyslexia”', !!parse('dyslexia'));
-  check('…while it claims neither “I’m blind”', !parse("I'm blind"));
+  check('the grammar no longer claims “I have dyslexia”', !parse('I have dyslexia'));
+  check('…nor a bare “dyslexia”', !parse('dyslexia'));
+  check('…nor “I’m blind”', !parse("I'm blind"));
   check('…nor “I have ADHD”', !parse('I have ADHD'));
 }
 

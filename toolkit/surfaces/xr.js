@@ -54,7 +54,6 @@ function needsToMagnitudes(model) {
   return {
     textSize: typeof w.textSize === 'number' ? w.textSize : 1.0,
     lineSpacing: typeof w.lineSpacing === 'number' ? w.lineSpacing : 1.0,
-    dyslexiaFont: !!w.dyslexiaFont,
     contrast: w.contrast ?? false,        // false | true | a variant string ('light' | 'yellow-black' | …)
     darkTheme: !!w.darkTheme,
     reduceMotion: !!w.reduceMotion,
@@ -92,7 +91,6 @@ export function renderXRSettings(model, sensors = {}) {
       angularSizeDeg: round3(textAngularSizeDeg),
       worldHeightM: round3(textWorldHeightM),
       lineSpacing: mags.lineSpacing,
-      font: mags.dyslexiaFont ? 'dyslexia-friendly' : 'standard',
     },
     // Keep primary UI inside the comfortable central cone; narrower FOV or
     // low-vision users get UI pulled further toward the gaze center.

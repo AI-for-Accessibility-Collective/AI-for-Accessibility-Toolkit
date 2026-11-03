@@ -65,7 +65,6 @@ check spelling against this table.
 | `captions` | boolean | `showCaptions` + `liveCaptions` + `autoCaptions` |
 | `simplify` | boolean | `autoSimplify` |
 | `contrast` | `true` or a mode string | `contrastMode` |
-| `dyslexiaFont` | boolean | `dyslexiaFont` |
 | `readAloud` | boolean | `readAloud` |
 | `readAloudRate` | number | `speechRate` |
 | `describeImages` | boolean | `autoDescribe` |

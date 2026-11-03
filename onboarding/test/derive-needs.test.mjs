@@ -30,7 +30,7 @@ check('no kind + "bigger text" → falls back to low vision', isLowVisionBaselin
 check('no kind + no text → low-vision default', isLowVisionBaseline(deriveDefaultNeeds(['vision'], '', undefined)));
 
 // ── Non-vision areas unaffected by visionKind ──────────────────────────────
-check('reading area unaffected', dims(deriveDefaultNeeds(['reading'], '', 'blind')).join(',') === 'dyslexiaFont,lineSpacing,simplify');
+check('reading area unaffected', dims(deriveDefaultNeeds(['reading'], '', 'blind')).join(',') === 'lineSpacing,simplify');
 
 // ── isBlindText heuristic sanity (still the fallback) ──────────────────────
 check('isBlindText: "I am blind" true', isBlindText('I am blind') === true);

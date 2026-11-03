@@ -43,7 +43,6 @@ const settingsMeta = {
   autoCaptions: { type: 'boolean' },
   autoSimplify: { type: 'boolean' },
   contrastMode: { type: 'string' },
-  dyslexiaFont: { type: 'boolean' },
   speechRate: { type: 'number', range: [0.5, 2.0] },
 };
 

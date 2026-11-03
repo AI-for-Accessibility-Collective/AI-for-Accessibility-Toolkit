@@ -675,7 +675,7 @@ function initSettings() {
 // should also change the UI they're actually using, so we mirror the receiver's
 // applied classes/vars from #demo-app onto #surface (the chat window). Driven by
 // a MutationObserver, so it tracks apply AND undo, however the change was made.
-const AA_CLASSES = ['aa-dark', 'aa-dyslexia', 'aa-reduce-motion', 'aa-hide-distractions', 'aa-focus-mode'];
+const AA_CLASSES = ['aa-dark', 'aa-reduce-motion', 'aa-hide-distractions', 'aa-focus-mode'];
 const AA_VARS = ['--aa-font-scale', '--aa-line-height', '--aa-letter-spacing'];
 function syncSurface() {
   const src = $('demo-app'), dst = $('surface');

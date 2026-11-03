@@ -23,7 +23,7 @@ function check(name, cond) {
 
 // A stand-in for the AA_TOOLS registry, matching the real adapter ids.
 const REGISTRY_IDS = ['auto-alt-text', 'captions', 'color-filter', 'dark-mode',
-  'dyslexia-font', 'fix-contrast', 'focus-mode', 'generate-captions', 'generate-labels',
+  'fix-contrast', 'focus-mode', 'generate-captions', 'generate-labels',
   'keyboard-nav', 'large-cursor', 'motion-reducer', 'read-aloud', 'reader-mode',
   'simplify-text', 'visual-assist', 'voice-commands', 'wcag-fixes'];
 const SETTINGS_META = {
@@ -34,7 +34,7 @@ const SETTINGS_META = {
   enhanceFocus: { type: 'boolean' }, readingGuide: { type: 'boolean' }, autoDescribe: { type: 'boolean' },
   autoFixLabels: { type: 'boolean' }, autoWcagFix: { type: 'boolean' }, autoCaptions: { type: 'boolean' },
   autoSimplify: { type: 'boolean' }, voiceCommands: { type: 'boolean' }, largeCursor: { type: 'boolean' },
-  dyslexiaFont: { type: 'boolean' }, colorBlindMode: { type: 'enum', options: ['none', 'protanopia'] },
+  colorBlindMode: { type: 'enum', options: ['none', 'protanopia'] },
 };
 const tools = {
   settingsMeta: SETTINGS_META,

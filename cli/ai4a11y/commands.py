@@ -1929,7 +1929,7 @@ def session_enable(tool_name, options=None):
 
     Options (key=value pairs, JSON string, or dict):
       visualAssist: fontScale, lineHeight, letterSpacing, largeCursor,
-                    enhanceFocus, dyslexiaFont, readingGuide, contrastMode
+                    enhanceFocus, readingGuide, contrastMode
       colorBlindMode: mode (protanopia, deuteranopia, tritanopia, achromatopsia)
 
     Example:

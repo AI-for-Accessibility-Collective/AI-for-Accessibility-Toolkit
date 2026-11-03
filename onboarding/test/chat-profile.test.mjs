@@ -95,8 +95,8 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
   check('two changes read as a pair',
     appliedSummary({ fontScale: 150, contrastMode: 'yellow-black' }) === 'larger text and higher contrast');
   check('three changes read as a list',
-    appliedSummary({ lineHeight: 1.8, dyslexiaFont: true, autoSimplify: true })
-      === 'more line spacing, a dyslexia-friendly font and simpler wording');
+    appliedSummary({ lineHeight: 1.8, motionReducer: true, autoSimplify: true })
+      === 'more line spacing, no animations and simpler wording');
 
   // A blind profile applies six at once; a wall of them is not an answer.
   const many = appliedSummary({ autoDescribe: true, autoFixLabels: true, fixLandmarks: true, skipLinks: true, announceUpdates: true });
@@ -117,9 +117,9 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
   check('a labelled key ignores the registry wording', appliedSummary({ autoDescribe: true }, meta) === 'image descriptions');
   check('with no label and no registry, the key itself is used', appliedSummary({ mysterySetting: true }) === 'mysterySetting');
 
-  const reply = onboardingReply({ supportAreas: ['reading'] }, 'a dyslexia-friendly font');
+  const reply = onboardingReply({ supportAreas: ['reading'] }, 'more line spacing');
   check('the reply says the page changed', /changed this page to match/.test(reply));
-  check('…and names the change', /a dyslexia-friendly font/.test(reply));
+  check('…and names the change', /more line spacing/.test(reply));
   check('…and still reports the profile', /Support areas: reading/.test(reply));
 
   // A motor-only profile derives nothing today, so it must not claim otherwise.
@@ -157,7 +157,7 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
 {
   const meta = {
     darkMode:     { type: 'boolean' },
-    dyslexiaFont: { type: 'boolean' },
+    motionReducer: { type: 'boolean' },
     fontScale:    { type: 'number', range: [50, 200] },
     contrastMode: { type: 'enum', options: ['none', 'light', 'yellow-black'] },
     translateTo:  { type: 'string' },
@@ -174,16 +174,16 @@ const merge = (prev, next) => mergeOnboarding(prev, next, visionKindOf);
   check('an enum clears to its first option', types.clear.contrastMode === 'none');
   check('a string clears to null', types.clear.translateTo === null);
 
-  const governed = plan({ forgotten: [{ key: 'dyslexiaFont' }], active: { dyslexiaFont: false }, profile: { dyslexiaFont: true } });
-  check('a key the profile governs is left to the profile', !('dyslexiaFont' in governed.clear));
+  const governed = plan({ forgotten: [{ key: 'motionReducer' }], active: { motionReducer: false }, profile: { motionReducer: true } });
+  check('a key the profile governs is left to the profile', !('motionReducer' in governed.clear));
   check('…and is not reported as cleared either', governed.showing.length === 0);
 
   // The chat surface stores nothing, so in a chat-only session the server
   // forgets nothing and the receiver is the only record of a manual change.
-  const session = plan({ forgotten: [], active: { darkMode: true, fontScale: 120, dyslexiaFont: true }, profile: { dyslexiaFont: true } });
+  const session = plan({ forgotten: [], active: { darkMode: true, fontScale: 120, motionReducer: true }, profile: { motionReducer: true } });
   check('a key active on the page is cleared even when nothing was stored', session.clear.darkMode === false && session.clear.fontScale === null);
   check('…and reported as showing', session.showing.join() === 'darkMode,fontScale');
-  check('…while the profile’s own key is left alone', !('dyslexiaFont' in session.clear));
+  check('…while the profile’s own key is left alone', !('motionReducer' in session.clear));
 
   const quiet = plan({ forgotten: [], active: { darkMode: false, fontScale: null, contrastMode: 'none' }, profile: {} });
   check('a key already at its not-set value is not showing', quiet.showing.length === 0);

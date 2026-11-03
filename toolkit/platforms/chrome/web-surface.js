@@ -72,7 +72,6 @@ export const WEB_DERIVATION = {
   captions:      (v) => ({ showCaptions: !!v, liveCaptions: !!v, autoCaptions: !!v }),
   simplify:      (v) => ({ autoSimplify: !!v }),
   contrast:      (v) => ({ contrastMode: v === true ? 'light' : v }),
-  dyslexiaFont:  (v) => ({ dyslexiaFont: !!v }),
   readAloudRate: (v) => ({ speechRate: Number(v) }),
   readAloud:     (v) => ({ readAloud: !!v }),
   // Screen-reader (non-visual) dimensions — how a page is STRUCTURED and

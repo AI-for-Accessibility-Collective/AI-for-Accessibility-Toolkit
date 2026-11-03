@@ -195,7 +195,7 @@ function genUid() {
 // ability.js) — so without this, every onboarded profile contributes NO
 // baseline settings. We seed `fields.needs` with sensible defaults keyed to the
 // neutral dimensions the surfaces understand (toolkit WEB_DERIVATION: textSize,
-// contrast, lineSpacing, dyslexiaFont, simplify, reduceMotion, captions, …).
+// contrast, lineSpacing, simplify, reduceMotion, captions, …).
 // Strength is 'preference' (a soft baseline a later explicit user edit —
 // 'floor' — overrides). Motor has no neutral web dimension in the current
 // vocabulary, so it seeds nothing.
@@ -205,7 +205,7 @@ function genUid() {
 // screen-reader structure, and for whom magnification is the WRONG modality) —
 // so it cannot be one static row; we disambiguate from the free text.
 const DEFAULT_NEEDS_BY_AREA = {
-  reading:   [{ dimension: 'lineSpacing', value: 1.8 }, { dimension: 'dyslexiaFont', value: true }, { dimension: 'simplify', value: true }],
+  reading:   [{ dimension: 'lineSpacing', value: 1.8 }, { dimension: 'simplify', value: true }],
   cognitive: [{ dimension: 'simplify', value: true }, { dimension: 'reduceMotion', value: true }],
   hearing:   [{ dimension: 'captions', value: true }],
   sensory:   [{ dimension: 'reduceMotion', value: true }],

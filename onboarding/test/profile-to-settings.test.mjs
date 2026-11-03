@@ -38,8 +38,8 @@ const settingsFor = (areas, freeText = '', visionKind) =>
 // ── the case that started this: a dyslexia disclosure ────────────────────────
 {
   const s = settingsFor(['reading'], 'I have dyslexia');
-  check('a reading profile turns the dyslexia font on', s.dyslexiaFont === true);
-  check('…and opens up the line height', typeof s.lineHeight === 'number' && s.lineHeight > 1);
+  check('a reading profile does not switch fonts (no dyslexia font)', !('dyslexiaFont' in s));
+  check('it opens up the line height', typeof s.lineHeight === 'number' && s.lineHeight > 1);
   check('…and asks for simplified text', s.autoSimplify === true);
 }
 
@@ -77,7 +77,7 @@ const settingsFor = (areas, freeText = '', visionKind) =>
 {
   const s = settingsFor(['hearing', 'reading'], 'I am deaf and I have dyslexia');
   check('a merged profile keeps the captions', s.showCaptions === true);
-  check('…and the dyslexia font', s.dyslexiaFont === true);
+  check('…and the reading half', s.autoSimplify === true);
 }
 
 // ── nothing to say means nothing applied ─────────────────────────────────────

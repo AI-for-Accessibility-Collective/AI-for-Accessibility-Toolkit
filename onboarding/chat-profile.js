@@ -65,7 +65,6 @@ export const CHANGE_LABELS = {
   fontScale:       'larger text',
   contrastMode:    'higher contrast',
   lineHeight:      'more line spacing',
-  dyslexiaFont:    'a dyslexia-friendly font',
   autoSimplify:    'simpler wording',
   motionReducer:   'no animations',
   showCaptions:    'captions',

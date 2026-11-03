@@ -18,7 +18,7 @@ function check(name, cond) { if (cond) { pass++; } else { fail++; console.log('F
 const RECOGNIZED = new Set([
   'showCaptions', 'liveCaptions', 'autoCaptions', 'autoDescribe', 'autoFixLabels', 'autoSimplify', 'autoSummarize',
   'announceUpdates', 'autoVideoDescribe', 'autoWcagFix', 'bigTargets', 'bionicReading', 'colorBlindMode', 'confirmActions', 'contrastMode', 'darkMode',
-  'defineWords', 'describeOnDemand', 'dismissOverlays', 'dyslexiaFont', 'enhanceFocus', 'flashGuard', 'focusLocator', 'focusMode', 'fontScale', 'hideDistractions',
+  'defineWords', 'describeOnDemand', 'dismissOverlays', 'enhanceFocus', 'flashGuard', 'focusLocator', 'focusMode', 'fontScale', 'hideDistractions',
   'colorFilter', 'highlightLinks', 'keyboardNav', 'largeCursor', 'letterSpacing', 'lineHeight', 'magnifier', 'motionReducer', 'muteSounds',
   'pageOutline', 'persistentHover', 'readerMode', 'readingRuler', 'reduceBrightness', 'reflowColumn', 'rememberSpot', 'expandAbbreviations', 'languageTag', 'exploreChart', 'spaFocus', 'skipLinks', 'fixLandmarks', 'readAloud', 'mathAccessible', 'translatePage', 'translateTo', 'unpinSticky', 'readingGuide', 'showProgress', 'soundVisualizer', 'speechRate', 'stopAutoAdvance', 'voiceCommands',
   'fixContrast',

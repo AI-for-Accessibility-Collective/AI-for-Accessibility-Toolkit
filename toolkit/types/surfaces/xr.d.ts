@@ -13,7 +13,6 @@ export function renderXRSettings(model: import("../core/ability.js").AbilityMode
         angularSizeDeg: number;
         worldHeightM: number;
         lineSpacing: number;
-        font: string;
     };
     ui: {
         maxEccentricityDeg: number;

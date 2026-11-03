@@ -46,7 +46,7 @@ const SETTINGS_META = {
   autoCaptions: { type: 'boolean' }, autoSimplify: { type: 'boolean' }, largeCursor: { type: 'boolean' },
   colorBlindMode: { type: 'enum', options: ['none', 'protanopia', 'deuteranopia', 'tritanopia'] },
 };
-const REGISTRY_IDS = ['auto-alt-text', 'auto-captions', 'color-filter', 'dark-mode', 'dyslexia-font',
+const REGISTRY_IDS = ['auto-alt-text', 'auto-captions', 'color-filter', 'dark-mode',
   'fix-contrast', 'focus-mode', 'generate-captions', 'generate-labels', 'keyboard-nav', 'large-cursor',
   'motion-reducer', 'read-aloud', 'reader-mode', 'simplify-text', 'visual-assist', 'voice-commands', 'wcag-fixes'];
 const TOOLS = {

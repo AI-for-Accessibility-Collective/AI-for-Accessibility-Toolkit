@@ -17,7 +17,7 @@ const stories = [
   ['deafblindness', ['vision', 'hearing'], 'Combine magnified text with readable captions and transcripts.',
     { textSize: 2, lineSpacing: 1.6, captions: true, labelControls: true }, { visionKind: 'lowVision', transcripts: true }],
   ['ADHD and dyslexia', ['reading', 'cognitive'], 'Reduce distractions and support comfortable reading.',
-    { reduceMotion: true, simplify: true, dyslexiaFont: true, lineSpacing: 1.6 }, { readingLevel: 'plain' }],
+    { reduceMotion: true, simplify: true, lineSpacing: 1.6 }, { readingLevel: 'plain' }],
   ['low vision, tremor, and memory support', ['vision', 'motor', 'cognitive'], 'Offer larger text, easy controls, and consistent navigation.',
     { textSize: 1.5, lineSpacing: 1.5, keyboardAccess: true, labelControls: true, pageStructure: true }, { visionKind: 'lowVision', largeTargets: true, consistentNavigation: true }],
 ];

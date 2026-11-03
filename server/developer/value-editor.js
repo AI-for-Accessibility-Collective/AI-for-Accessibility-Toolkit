@@ -8,7 +8,7 @@ const ENUMS = {
   'fields.visionKind': ['blind', 'lowVision', 'colorBlind'],
 };
 const AREAS = ['vision', 'hearing', 'motor', 'cognitive', 'reading', 'sensory'];
-const DIMENSIONS = ['textSize', 'lineSpacing', 'letterSpacing', 'reduceMotion', 'darkTheme', 'captions', 'simplify', 'contrast', 'dyslexiaFont', 'readAloudRate', 'readAloud', 'describeImages', 'labelControls', 'repairLandmarks', 'announceUpdates', 'spaAnnounce', 'skipLinks', 'pageStructure', 'keyboardAccess'];
+const DIMENSIONS = ['textSize', 'lineSpacing', 'letterSpacing', 'reduceMotion', 'darkTheme', 'captions', 'simplify', 'contrast', 'readAloudRate', 'readAloud', 'describeImages', 'labelControls', 'repairLandmarks', 'announceUpdates', 'spaAnnounce', 'skipLinks', 'pageStructure', 'keyboardAccess'];
 export const VALUE_DEFAULTS = { string: '', number: 0, boolean: true, array: [], object: {}, null: null };
 const typeOf = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
 function node(tag, className, text) {

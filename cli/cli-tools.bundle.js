@@ -246,7 +246,6 @@
       letterSpacing: 0,
       largeCursor: false,
       enhanceFocus: false,
-      dyslexiaFont: false,
       readingGuide: false
     },
     // Track the scale currently committed to the DOM.
@@ -639,20 +638,6 @@
           outline: 4px solid #0066ff !important;
           outline-offset: 3px !important;
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;
-        }
-      `;
-      }
-      if (s.dyslexiaFont) {
-        const fontUrl = typeof chrome !== "undefined" && chrome.runtime?.getURL ? chrome.runtime.getURL("lib/OpenDyslexic-Regular.woff2") : "https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Regular.woff2";
-        css += `@font-face { font-family: 'OpenDyslexic'; src: url('${fontUrl}'); }
-`;
-        css += `
-        body, p, li, td, th,
-        h1, h2, h3, h4, h5, h6,
-        a, button, input, textarea, select, label,
-        span:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]),
-        div:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]) {
-          font-family: 'OpenDyslexic', sans-serif !important;
         }
       `;
       }
@@ -11521,7 +11506,6 @@ ${chunk}
       autoCaptions: false,
       fixContrast: true,
       darkMode: false,
-      dyslexiaFont: false,
       largeCursor: false,
       enhanceFocus: false,
       readingGuide: false,
@@ -11848,7 +11832,6 @@ ${chunk}
     if (profileTools.letterSpacing) visualOpts.letterSpacing = profileTools.letterSpacing;
     if (profileTools.largeCursor) visualOpts.largeCursor = true;
     if (profileTools.enhanceFocus) visualOpts.enhanceFocus = true;
-    if (profileTools.dyslexiaFont) visualOpts.dyslexiaFont = true;
     if (profileTools.readingGuide) visualOpts.readingGuide = true;
     if (Object.keys(visualOpts).length > 0) {
       VisualAssist.enable(visualOpts);

@@ -81,7 +81,6 @@ const RULES = [
   // still fall through to the positive rule and reduce motion, as intended.
   offRule('dark(?: mode| theme)?', { darkMode: false }, 'Turning dark mode off', '\\blight mode\\b'),
   offRule('focus mode', { focusMode: false }, 'Turning focus mode off'),
-  offRule('dyslexi[ac](?: friendly)?(?: font)?', { dyslexiaFont: false }, 'Back to the standard font'),
   offRule('reading (?:guide|ruler)', { readingGuide: false }, 'Turning the reading guide off'),
   offRule('(?:large|big|bigger) cursor', { largeCursor: false }, 'Back to the normal cursor', '\\bnormal cursor\\b'),
   offRule('(?:big|large|bigger) (?:targets|buttons|controls)', { bigTargets: false }, 'Back to normal-size controls'),
@@ -118,7 +117,6 @@ const RULES = [
   { re: /\b(hide|remove|dim) (distraction|distractions|ads|clutter)\b/, build: (_m, u) => adapt(u, { changes: { hideDistractions: true }, say: 'Hiding distractions' }) },
 
   // — reading aids —
-  { re: /\bdyslexi[ac]( font)?\b/, build: (_m, u) => adapt(u, { changes: { dyslexiaFont: true }, say: 'Switching to a dyslexia-friendly font' }) },
   { re: /\breading (guide|ruler)\b/, build: (_m, u) => adapt(u, { changes: { readingGuide: true }, say: 'Turning on the reading guide' }) },
 
   // — motor —
@@ -234,7 +232,7 @@ export { STEP };
 export function vocabularyKeys() {
   const keys = new Set();
   for (const k of Object.keys(STEP)) if (settingsMeta[k]) keys.add(k);
-  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'dyslexiaFont', 'readingGuide', 'largeCursor', 'bigTargets', 'showCaptions', 'liveCaptions']) {
+  for (const k of ['darkMode', 'contrastMode', 'motionReducer', 'focusMode', 'hideDistractions', 'readingGuide', 'largeCursor', 'bigTargets', 'showCaptions', 'liveCaptions']) {
     if (settingsMeta[k]) keys.add(k);
   }
   return [...keys];

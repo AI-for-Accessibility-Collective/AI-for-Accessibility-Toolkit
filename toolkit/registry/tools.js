@@ -53,7 +53,7 @@ export const skillRegistry = [
   {
     id: 'visual-assist',
     name: 'Visual Assist',
-    description: 'Adjustable font size, line height, letter spacing, large cursor, reading guide, enhanced focus indicators, dyslexia font, and high-contrast modes.',
+    description: 'Adjustable font size, line height, letter spacing, large cursor, reading guide, enhanced focus indicators, and high-contrast modes.',
     supportAreas: ['vision', 'reading'],
     siteRelevance: ['all'],
     requiresAI: false,
@@ -522,9 +522,10 @@ export const skillRegistry = [
   // system-wide larger cursor (System Preferences / Settings → Accessibility
   // → Display → Cursor size). The largeCursor VA sub-setting remains active
   // for existing users via visual-assist; settingsMeta and PROMPT_GROUPS intact.
-  // dyslexia-font retired in Phase 3: letter spacing and line height are
-  // available under Visual Assist. The dyslexiaFont VA sub-setting remains
-  // active for existing users; settingsMeta and PROMPT_GROUPS intact.
+  // dyslexia-font retired in Phase 3, and its Visual Assist sub-setting
+  // removed 2026-11-03: the evidence that special fonts help readers with
+  // dyslexia is weak (docs/design/adapter-overlap.md), so the toolkit does not
+  // offer one. Letter spacing and line height are under Visual Assist.
   {
     id: 'fix-landmarks',
     name: 'Fix Landmarks',
@@ -598,7 +599,6 @@ export const settingsMeta = {
   fontScale:       { type: 'number', range: [50, 200], description: 'Font size percentage' },
   lineHeight:      { type: 'number', range: [1.0, 3.0], description: 'Line spacing' },
   letterSpacing:   { type: 'number', range: [0, 0.5], description: 'Letter spacing in em' },
-  dyslexiaFont:    { type: 'boolean', description: 'OpenDyslexic font' },
   largeCursor:     { type: 'boolean', description: 'Larger mouse cursor' },
   enhanceFocus:    { type: 'boolean', description: 'Stronger focus indicators' },
   readingGuide:    { type: 'boolean', description: 'Horizontal reading guide' },
@@ -665,7 +665,7 @@ export const settingsMeta = {
 /** @type {Array<[string, string[]]>} */
 const PROMPT_GROUPS = [
   ['Vision & color', ['darkMode', 'contrastMode', 'colorBlindMode', 'largeCursor', 'fixContrast', 'autoWcagFix', 'wcagRiskyFixes']],
-  ['Text & reading', ['fontScale', 'lineHeight', 'letterSpacing', 'dyslexiaFont', 'readingGuide', 'readerMode', 'speechRate']],
+  ['Text & reading', ['fontScale', 'lineHeight', 'letterSpacing', 'readingGuide', 'readerMode', 'speechRate']],
   ['Focus & motion', ['focusMode', 'hideDistractions', 'showProgress', 'motionReducer', 'enhanceFocus']],
   ['Motor & input', ['keyboardNav', 'voiceCommands']],
   ["AI-powered (need the user's API key)", ['autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify', 'autoSummarize']],

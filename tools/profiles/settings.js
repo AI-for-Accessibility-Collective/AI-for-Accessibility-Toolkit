@@ -153,7 +153,6 @@ export function adaptersForTools(tools) {
   if (tools.autoCaptions) enabled.push('generate-captions'); // transcribe media that has none (AI)
   if (tools.fixContrast) enabled.push('fix-contrast');
   if (tools.darkMode) enabled.push('dark-mode');
-  if (tools.dyslexiaFont) enabled.push('visual-assist');
   if (tools.largeCursor) enabled.push('visual-assist');
   if (tools.enhanceFocus) enabled.push('visual-assist');
   if (tools.readingGuide) enabled.push('visual-assist');

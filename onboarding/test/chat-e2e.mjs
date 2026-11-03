@@ -102,7 +102,8 @@ await page.routeWebSocket(/^ws:\/\/127\.0\.0\.1:9333\/?$/, (ws) => {
   routes.push(ws);
 });
 const latest = () => receivers[receivers.length - 1];
-const remoteHas = (key) => until(() => !!latest() && latest().settings[key] === true);
+// A key is in effect when it is on (a boolean) or set (a number).
+const remoteHas = (key) => until(() => !!latest() && !!latest().settings[key]);
 
 try {
   // ── the front door ─────────────────────────────────────────────────────────
@@ -145,9 +146,9 @@ try {
   }
 
   // ── a disclosure whose condition is also a settings keyword ───────────────
-  // "dyslexia" parses as a dyslexia-font command too, and used to be handled as
-  // one, so it never reached the profile. It now onboards like any other
-  // disclosure.
+  // "dyslexia" used to parse as a dyslexia-font command too (since removed),
+  // and was handled as one, so it never reached the profile. It onboards like
+  // any other disclosure.
   {
     await say('I have dyslexia');
     const pill = await profileText();
@@ -157,10 +158,10 @@ try {
 
   // ── a disclosure adapts the page, not just the profile ────────────────────
   // Telling the surface about yourself has to DO something. The reading area
-  // derives dyslexiaFont, so the disclosure above should have rendered.
+  // derives more line spacing, so the disclosure above should have rendered.
   {
     check('a disclosure applies its derived settings', await page.evaluate(
-      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+      () => !!document.getElementById('demo-app').style.getPropertyValue('--aa-line-height'),
     ));
 
     // …and says so. The page changing under someone with no explanation is
@@ -168,7 +169,7 @@ try {
     // written for the person rather than the registry's developer wording.
     const reply = await lastReply();
     check('the answer says the page was changed', /changed this page to match/i.test(reply));
-    check('…and names it in plain words', /a dyslexia-friendly font/.test(reply));
+    check('…and names it in plain words', /more line spacing/.test(reply));
     check('…not in registry/developer wording', !/OpenDyslexic|settingsMeta|ARIA landmarks/.test(reply));
   }
 
@@ -178,12 +179,12 @@ try {
   {
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForFunction(
-      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+      () => !!document.getElementById('demo-app').style.getPropertyValue('--aa-line-height'),
       null,
       { timeout: 10000 },
     ).catch(() => {});
     check('the adaptation is back after a reload, unasked', await page.evaluate(
-      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+      () => !!document.getElementById('demo-app').style.getPropertyValue('--aa-line-height'),
     ));
   }
 
@@ -211,14 +212,14 @@ try {
     const darkBefore = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
     check('a manual change applies', darkBefore === true);
 
-    await page.evaluate(() => document.getElementById('demo-app').classList.remove('aa-dyslexia'));
+    await page.evaluate(() => document.getElementById('demo-app').style.removeProperty('--aa-line-height'));
 
     await say('back to my profile');
     const reply = await lastReply();
     check('a reset phrase is answered', reply.trim().length > 0);
     check('the profile itself is not deleted by a reset', /^You:/.test((await profileText()).trim()));
     check('a reset re-renders what the profile governs', await page.evaluate(
-      () => document.getElementById('demo-app').classList.contains('aa-dyslexia'),
+      () => !!document.getElementById('demo-app').style.getPropertyValue('--aa-line-height'),
     ));
 
     const darkAfter = await page.evaluate(() => document.getElementById('demo-app').classList.contains('aa-dark'));
@@ -241,12 +242,12 @@ try {
 
   // ── the profile follows the person onto a receiver connected after boot ───
   // A connected app is where a profile matters most: someone with a reading
-  // profile who connects browser-harness should get the dyslexia font there
+  // profile who connects browser-harness should get more line spacing there
   // without asking. The stand-in harness registered above answers.
   {
     await openSettings();
     await page.click('#use-local-harness');
-    check('the remote app gets the profile once its socket opens', await remoteHas('dyslexiaFont'));
+    check('the remote app gets the profile once its socket opens', await remoteHas('lineHeight'));
     check('…and the page shows the connection', /connected/.test(
       await page.evaluate(() => document.getElementById('conn-status').className),
     ));
@@ -284,11 +285,11 @@ try {
     await openSettings();
     await page.click('#use-local-harness');
     check('reconnecting gets a fresh receiver', await until(() => receivers.length === 2));
-    check('…and the fresh receiver gets the profile as well', await remoteHas('dyslexiaFont'));
+    check('…and the fresh receiver gets the profile as well', await remoteHas('lineHeight'));
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     check('the reload reconnects to the saved receiver', await until(() => receivers.length === 3));
-    check('the reconnected app gets the profile, unasked', await remoteHas('dyslexiaFont'));
+    check('the reconnected app gets the profile, unasked', await remoteHas('lineHeight'));
   }
 } finally {
   await browser.close();

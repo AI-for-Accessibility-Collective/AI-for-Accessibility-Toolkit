@@ -409,7 +409,6 @@ export const CONTROLLER_CSS = `
 [style*="--aa-line-height"] { line-height: var(--aa-line-height, 1.5); }
 [style*="--aa-letter-spacing"] { letter-spacing: var(--aa-letter-spacing, 0); }
 .aa-dark { filter: invert(1) hue-rotate(180deg); background: #111; }
-.aa-dyslexia { font-family: "Comic Sans MS", "OpenDyslexic", sans-serif; }
 .aa-big-targets a, .aa-big-targets button { padding: .5em .8em; display: inline-block; }
 .aa-reduce-motion * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 .aa-hide-distractions .ad, .aa-hide-distractions [data-ad], .aa-hide-distractions aside { display: none !important; }

@@ -130,7 +130,6 @@ export const VisualAssist = {
     letterSpacing: 0,
     largeCursor: false,
     enhanceFocus: false,
-    dyslexiaFont: false,
     readingGuide: false
   },
 
@@ -587,25 +586,6 @@ export const VisualAssist = {
           outline: 4px solid #0066ff !important;
           outline-offset: 3px !important;
           box-shadow: 0 0 0 6px rgba(0, 102, 255, 0.3) !important;
-        }
-      `;
-    }
-
-    if (s.dyslexiaFont) {
-      // chrome.runtime.getURL only available in extension context
-      const fontUrl = typeof chrome !== 'undefined' && chrome.runtime?.getURL
-        ? chrome.runtime.getURL('lib/OpenDyslexic-Regular.woff2')
-        : 'https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/woff/OpenDyslexic-Regular.woff2';
-      css += `@font-face { font-family: 'OpenDyslexic'; src: url('${fontUrl}'); }\n`;
-      // Apply to broad text elements; exclude icon font patterns via :not() chains
-      // rather than forcing font-family on everything (which broke icon glyphs).
-      css += `
-        body, p, li, td, th,
-        h1, h2, h3, h4, h5, h6,
-        a, button, input, textarea, select, label,
-        span:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]),
-        div:not(.material-icons):not(.material-symbols-outlined):not([class*="icon"]):not([class*="fa-"]):not([aria-hidden="true"]) {
-          font-family: 'OpenDyslexic', sans-serif !important;
         }
       `;
     }

@@ -126,12 +126,12 @@ async function run() {
     const c = createController({ control: recv });
 
     await recv.applySettings({ darkMode: true, contrastMode: 'yellow-black' });
-    await recv.applySettings({ darkMode: false, contrastMode: 'none', dyslexiaFont: true });
+    await recv.applySettings({ darkMode: false, contrastMode: 'none', focusMode: true });
     check('web clear: an off boolean and a none enum are rendered off', !classes.has('aa-dark') && dataset.aaContrast === undefined);
     const active = (await recv.getContext()).activeSettings;
     check('web clear: neither is reported as active', !('darkMode' in active) && !('contrastMode' in active));
-    check('web clear: a key that IS in effect still is', active.dyslexiaFont === true);
-    check('web clear: "what is set" names only what is in effect', (await c.handle('what is set')).say === 'Currently set: dyslexiaFont true.');
+    check('web clear: a key that IS in effect still is', active.focusMode === true);
+    check('web clear: "what is set" names only what is in effect', (await c.handle('what is set')).say === 'Currently set: focusMode true.');
   }
 
   console.log(`\nController M2 (web): ${pass} passed, ${fail} failed`);
