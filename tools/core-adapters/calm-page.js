@@ -1,212 +1,346 @@
-// Calm page: stops unexpected motion, animations, transitions, autoplaying media,
-// and auto-advancing carousels, for people with sensory and cognitive barriers.
+// calm-page.js — Stops motion that starts on its own: CSS animations, transitions,
+// smooth scrolling, autoplaying video, GIF-like animated images, and auto-advancing carousels.
+// Barrier: People with vestibular disorders, motion sensitivity, ADHD, or cognitive barriers
+// can experience dizziness, nausea, distraction, or lose their reading position when content
+// moves, animates, autoplays, or advances automatically (WCAG 2.2.2 Pause, Stop, Hide; 2.3.1).
 //
 // Suggested in onboarding for: sensory, cognitive (a suggestion only, never a gate).
 // The person's settings it reads: motionReducer.
-// What the person can adjust: nothing (on or off).
-// Options: none required.
+// What the person can adjust: nothing (the shortcut, if given, turns it on and off).
+//
+// Options:
+//   stopAnimations: Whether to stop CSS animations and transitions (default: true).
+//   pauseMedia:     Whether to pause autoplaying videos and animated media (default: true).
+//   stopCarousels:  Whether to pause auto-advancing carousels and marquees (default: true).
+//
 // Decisions:
-// - Uses s.media and one stylesheet (s.css), making all changes reversible.
-// - Sets animation and transition durations to 0s, with animation-fill-mode: both,
-//   so content that animates into view stays visible in its final state rather than
-//   getting stuck hidden.
-// - Neutralizes smooth scrolling to auto so page jumps and anchor navigation do not
-//   cause scrolling sickness.
-// - Pauses autoplaying video and GIF-like muted looping media via s.media, showing
-//   standard controls so the person can choose to play them.
-// - Pauses auto-advancing carousels while keeping their interactive controls intact.
-// - Marquees are stopped cleanly and resume only on disable() if they were running.
-// - On disable(), s.media and s.end() restore only what was originally running before
-//   enable(), leaving anything the person played or paused untouched.
+//   • Injects one reversible stylesheet via s.css that sets animation and transition durations
+//     and delays to 0s, iteration count to 1, fill mode to forwards, and scroll behavior to auto.
+//     Content stays visible in its final state.
+//   • Pauses autoplaying video and looping muted media (GIF-like animated images) through s.media.pause,
+//     showing controls so the person has a visible way to play them.
+//   • Captures late play events: if initiated by the person (s.watch.byPerson), playback continues;
+//     if started by the page, pauses with controls.
+//   • Pauses running Web Animations API (WAAPI) animations via getAnimations(), resuming on disable.
+//   • Stops auto-advancing carousels (WCAG 2.2.2):
+//     - When the carousel has its own pause/stop control, uses it to stop advancement and keeps controls.
+//     - Otherwise holds the active slide shown by observing class/attribute mutations and scroll events.
+//     - If the page attempts to auto-advance more than 4 times, stops holding rather than fight the page.
+//     - Measures once per carousel and never reads the scroll width of every element on the page.
+//   • Stops <marquee> elements with .stop(), restarting only what was running on disable().
+//   • Reversible by construction: disable() ends the session (s.end()), which restores original styles,
+//     resumes only media that was playing before enable(), and leaves user-started playback playing.
+//   • Announces "Page calmed: animations, autoplay and auto-advancing paused."
+//
 // What it cannot do:
-// - Cannot stop animations rendered within canvas contexts without replacing canvas
-//   elements, and cannot control third-party cross-origin iframes lacking API control.
+//   • Cannot freeze GIF animations embedded within Canvas 2D or WebGL surfaces without redrawing.
+//   • Cannot prevent external plugin video players (Flash/Silverlight) from executing internal scripts.
+
+const CAROUSEL_SELECTOR = [
+  '[aria-roledescription="carousel"]',
+  '[class*="carousel" i]',
+  '[class*="slider" i]',
+  '[class*="rotat" i]',
+  '[class*="slideshow" i]',
+  '[data-carousel]',
+  '[data-slider]',
+].join(', ');
 
 export default {
   enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
-    const s = (this.s = toolkit.session());
+    this.options = options || {};
+    this.toolkit = toolkit || this.toolkit;
+    if (!this.toolkit) return false;
 
-    // 1. One stylesheet for CSS animations, transitions, scrolling, and marquee
-    const css = `
-      *:not([id^="ai4a11y-"]):not([class^="ai4a11y-"]):not([data-ai4a11y-ui]),
-      *:not([id^="ai4a11y-"]):not([class^="ai4a11y-"]):not([data-ai4a11y-ui])::before,
-      *:not([id^="ai4a11y-"]):not([class^="ai4a11y-"]):not([data-ai4a11y-ui])::after {
-        animation-duration: 0s !important;
-        animation-delay: 0s !important;
-        animation-iteration-count: 1 !important;
-        animation-fill-mode: both !important;
-        animation-play-state: paused !important;
-        transition-duration: 0s !important;
-        transition-delay: 0s !important;
-        scroll-behavior: auto !important;
-      }
-      html, body {
-        scroll-behavior: auto !important;
-      }
-      [class*="parallax"], [style*="background-attachment: fixed"] {
-        background-attachment: scroll !important;
-      }
-      marquee {
-        overflow-x: hidden !important;
-      }
-    `;
-    s.css('calm-page', css);
+    const s = (this.s = this.toolkit.session());
+    const root = document.body || document.documentElement;
+    if (!root) return false;
 
-    // 2. Pause autoplaying videos and animated GIF-like video loops, showing controls
-    const seenMedia = new WeakSet();
-    const pauseMedia = (el) => {
-      if (!el || seenMedia.has(el)) return;
-      seenMedia.add(el);
-      s.media.pause(el, { showControls: true });
-    };
+    const stopAnimations = this.options.stopAnimations !== false;
+    const pauseMediaOpt = this.options.pauseMedia !== false;
+    const stopCarouselsOpt = this.options.stopCarousels !== false;
 
-    for (const v of document.querySelectorAll('video, audio')) {
-      pauseMedia(v);
-    }
-
-    // 3. Stop running marquees
-    const seenMarquees = new WeakSet();
-    const stopMarquee = (el) => {
-      if (!el || seenMarquees.has(el)) return;
-      seenMarquees.add(el);
-      try {
-        if (typeof el.stop === 'function') {
-          el.stop();
-          s.onEnd(() => {
-            try { if (typeof el.start === 'function') el.start(); } catch {}
-          });
+    // 1. One stylesheet that halts CSS animations, transitions and smooth scrolling.
+    // Content stays visible in its final state (fill-mode: forwards).
+    if (stopAnimations) {
+      const cssRules = `
+        *, *::before, *::after {
+          animation-duration: 0s !important;
+          animation-delay: 0s !important;
+          animation-iteration-count: 1 !important;
+          animation-fill-mode: forwards !important;
+          transition-duration: 0s !important;
+          transition-delay: 0s !important;
+          scroll-behavior: auto !important;
         }
-      } catch {}
-    };
+        html {
+          scroll-behavior: auto !important;
+        }
+        [aria-roledescription="carousel"], [aria-roledescription="carousel"] *,
+        [class*="carousel" i], [class*="carousel" i] *,
+        [class*="slider" i], [class*="slider" i] *,
+        [class*="slideshow" i], [class*="slideshow" i] *,
+        [class*="rotat" i], [class*="rotat" i] *,
+        [class*="ticker" i], [class*="ticker" i] *,
+        [class*="marquee" i], [class*="marquee" i] * {
+          animation-play-state: paused !important;
+        }
+      `;
+      s.css('calm-page-styles', cssRules);
 
-    for (const m of document.querySelectorAll('marquee')) {
-      stopMarquee(m);
+      // Web Animations API (WAAPI): pause running animations not driven by CSS
+      if (typeof document !== 'undefined' && typeof document.getAnimations === 'function') {
+        try {
+          const runningWaapi = [];
+          for (const anim of document.getAnimations()) {
+            if (anim.playState === 'running' && anim.constructor && anim.constructor.name !== 'CSSAnimation') {
+              try {
+                anim.pause();
+                runningWaapi.push(anim);
+              } catch {}
+            }
+          }
+          if (runningWaapi.length) {
+            s.onEnd(() => {
+              for (const anim of runningWaapi) {
+                try {
+                  if (anim.playState === 'paused') anim.play();
+                } catch {}
+              }
+            });
+          }
+        } catch {}
+      }
     }
 
-    // 4. Hold scripted carousels (tickers, sliders, rotators)
-    const ROTATOR_RE = /carousel|slide|swiper|slick|rotat|hero|banner|ticker|marquee/i;
-    let lastUserAction = 0;
-    let lastUserTarget = null;
-    const noteUser = (e) => {
-      if (e.isTrusted) {
-        lastUserAction = Date.now();
-        lastUserTarget = e.target;
+    // 2. Media handling via s.media
+    const seenMedia = new WeakSet();
+
+    const handleMediaElement = (el) => {
+      if (!el || (el.tagName !== 'VIDEO' && el.tagName !== 'AUDIO')) return;
+      if (seenMedia.has(el)) return;
+      seenMedia.add(el);
+
+      const isLoopingMuted = el.hasAttribute('loop') && el.muted;
+      const isAuto = el.autoplay || el.hasAttribute('autoplay');
+      const isPlaying = !el.paused;
+
+      if (isPlaying || isAuto || isLoopingMuted) {
+        s.media.pause(el, { showControls: true });
       }
     };
-    for (const type of ['pointerdown', 'keydown', 'touchstart', 'wheel']) {
-      s.listen(document, type, noteUser, { capture: true, passive: true });
-    }
-    s.listen(document, 'focusin', noteUser, true);
 
-    const carouselOf = (node) => {
-      for (let n = node, i = 0; n && n.nodeType === 1 && n !== document.body && i < 4; n = n.parentElement, i++) {
-        const cls = typeof n.className === 'string' ? n.className : (n.className?.baseVal || '');
-        const role = n.getAttribute('aria-roledescription') || '';
-        if (ROTATOR_RE.test(cls) || /carousel|slide/i.test(role)) return n;
+    if (pauseMediaOpt) {
+      for (const m of root.querySelectorAll('video, audio')) {
+        handleMediaElement(m);
+      }
+
+      // Late play events: if initiated by the person, leave it playing; otherwise pause with controls
+      s.listen(
+        document,
+        'play',
+        (e) => {
+          const v = e.target;
+          if (!v || (v.tagName !== 'VIDEO' && v.tagName !== 'AUDIO')) return;
+          if (s.watch.byPerson(v, { withinMs: 1500 })) return;
+          if (typeof navigator !== 'undefined' && navigator.userActivation && navigator.userActivation.isActive) return;
+          s.media.pause(v, { showControls: true });
+        },
+        true
+      );
+    }
+
+    // 3. Marquee elements
+    for (const m of root.querySelectorAll('marquee')) {
+      try {
+        m.stop();
+        s.onEnd(() => {
+          try { m.start(); } catch {}
+        });
+      } catch {}
+    }
+
+    // 4. Carousels
+    const handledCarousels = new WeakSet();
+
+    const findPauseControl = (carousel) => {
+      const candidates = [carousel];
+      if (carousel.parentElement && carousel.parentElement !== document.body && carousel.parentElement !== document.documentElement) {
+        candidates.push(carousel.parentElement);
+      }
+      const buttons = [];
+      for (const c of candidates) {
+        buttons.push(...c.querySelectorAll('button, [role="button"], input[type="button"]'));
+      }
+      for (const btn of buttons) {
+        const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+        const title = (btn.getAttribute('title') || '').toLowerCase();
+        const text = (btn.textContent || '').trim().toLowerCase();
+        const cls = (typeof btn.className === 'string' ? btn.className : '').toLowerCase();
+        const isPause = (str) => /\b(pause|stop)\b/i.test(str);
+        if (isPause(label) || isPause(title) || isPause(text) || isPause(cls)) {
+          return btn;
+        }
+        if (btn.hasAttribute('aria-pressed') && btn.getAttribute('aria-pressed') === 'false' && /play|auto|rotat|slide/i.test(label + ' ' + title + ' ' + text)) {
+          return btn;
+        }
       }
       return null;
     };
 
-    const byUser = (box) => {
-      if (!box) return false;
-      if (s.watch.byPerson(box, { withinMs: 1500 })) return true;
-      if (Date.now() - lastUserAction < 1500 && lastUserTarget && box.contains(lastUserTarget)) return true;
-      return false;
-    };
+    const handleCarousel = (carousel) => {
+      if (!carousel || handledCarousels.has(carousel)) return;
+      handledCarousels.add(carousel);
 
-    const scrollPins = new WeakMap();
-    const pinScrollers = (root) => {
-      if (!root || !root.querySelectorAll) return;
-      for (const el of [root, ...root.querySelectorAll('*')]) {
-        if (el.scrollWidth > el.clientWidth + 1 && !scrollPins.has(el) && carouselOf(el)) {
-          scrollPins.set(el, el.scrollLeft);
-        }
-      }
-    };
-    pinScrollers(document.body);
+      // Check if carousel has its own pause/stop control
+      const pauseBtn = findPauseControl(carousel);
+      if (pauseBtn) {
+        let userInteracted = false;
+        s.listen(carousel, 'pointerdown', () => { userInteracted = true; });
+        s.listen(carousel, 'keydown', () => { userInteracted = true; });
+        try {
+          pauseBtn.click();
+        } catch {}
 
-    s.listen(document, 'scroll', (e) => {
-      const el = e.target;
-      if (!s.alive() || !el || el.nodeType !== 1) return;
-      const box = carouselOf(el);
-      if (!box) return;
-      const pin = scrollPins.get(el);
-      if (pin === undefined || byUser(box)) {
-        scrollPins.set(el, el.scrollLeft);
+        s.onEnd(() => {
+          if (!userInteracted) {
+            const label = (pauseBtn.getAttribute('aria-label') || '').toLowerCase();
+            const title = (pauseBtn.getAttribute('title') || '').toLowerCase();
+            const text = (pauseBtn.textContent || '').trim().toLowerCase();
+            const isPlay = (str) => /\b(play|start|resume)\b/i.test(str);
+            if (isPlay(label) || isPlay(title) || isPlay(text) || pauseBtn.getAttribute('aria-pressed') === 'true') {
+              try { pauseBtn.click(); } catch {}
+            }
+          }
+        });
         return;
       }
-      if (Math.abs(el.scrollLeft - pin) < 0.5) return;
-      try { el.scrollTo({ left: pin, behavior: 'instant' }); } catch { el.scrollLeft = pin; }
-    }, { capture: true, passive: true });
 
-    const rotating = new WeakMap();
+      // Otherwise hold the slide shown
+      const slideSelector = '[aria-roledescription="slide"], [class*="slide" i], [class*="item" i]';
+      let slides = Array.from(carousel.querySelectorAll(slideSelector));
+      if (!slides.length && carousel.children.length > 1) {
+        slides = Array.from(carousel.children);
+      }
+      if (!slides.length) return;
 
-    const isSlide = (el) => {
-      const parent = el.parentElement;
-      if (!parent || el === document.body || parent === document.documentElement || !carouselOf(el)) return false;
-      const cls = typeof el.className === 'string' ? el.className : (el.className?.baseVal || '');
-      const tokens = cls.split(/\s+/).filter(Boolean);
-      return Array.from(parent.children).some((s) => s !== el && s.tagName === el.tagName &&
-        (typeof s.className === 'string' ? s.className : (s.className?.baseVal || '')).split(/\s+/).filter(Boolean).some((t) => tokens.includes(t)));
-    };
+      const isActive = (el) => {
+        const cls = typeof el.className === 'string' ? el.className.toLowerCase() : '';
+        return /\b(active|current|is-active|selected|visible)\b/.test(cls) ||
+               el.getAttribute('aria-hidden') === 'false' ||
+               el.getAttribute('aria-selected') === 'true';
+      };
 
-    if (typeof MutationObserver !== 'undefined' && document.body) {
-      const slideObserver = new MutationObserver((records) => {
-        if (!s.alive()) return;
-        const before = new Map();
-        for (const r of records) if (r.target.nodeType === 1 && !before.has(r.target)) before.set(r.target, r.oldValue);
-        const changes = [];
-        for (const [el, was] of before) {
-          const now = el.getAttribute('class') || '';
-          const a = (was || '').split(/\s+/).filter(Boolean);
-          const b = now.split(/\s+/).filter(Boolean);
-          changes.push({ el, now, gained: b.filter((t) => !a.includes(t)), lost: a.filter((t) => !b.includes(t)) });
+      let activeSlide = slides.find(isActive) || slides[0];
+      let activeClasses = new Set(activeSlide.classList);
+      let scrollPos = carousel.scrollLeft; // Measure once per carousel
+      let fightCount = 0;
+      let givenUp = false;
+      let reverting = false;
+
+      s.listen(carousel, 'scroll', () => {
+        if (givenUp || reverting) return;
+        if (s.watch.byPerson(carousel, { withinMs: 1500 })) {
+          scrollPos = carousel.scrollLeft;
+          fightCount = 0;
+          return;
         }
-        for (const c of changes) {
-          const parent = c.el.parentElement;
-          if (!parent) continue;
-          for (const t of c.gained) {
-            if (/^ai4a11y-/.test(t) || (rotating.get(parent) || new Set()).has(t)) continue;
-            if (changes.some((d) => d !== c && d.el.parentElement === parent && d.lost.includes(t)) && isSlide(c.el)) {
-              if (!rotating.has(parent)) rotating.set(parent, new Set());
-              rotating.get(parent).add(t);
+        fightCount++;
+        if (fightCount > 4) {
+          givenUp = true;
+          return;
+        }
+        reverting = true;
+        try {
+          carousel.scrollLeft = scrollPos;
+        } catch {}
+        reverting = false;
+      });
+
+      const observer = new MutationObserver(() => {
+        if (givenUp || reverting) return;
+
+        if (s.watch.byPerson(carousel, { withinMs: 1500 })) {
+          const nowActive = slides.find(isActive);
+          if (nowActive) {
+            activeSlide = nowActive;
+            activeClasses = new Set(nowActive.classList);
+          }
+          fightCount = 0;
+          return;
+        }
+
+        fightCount++;
+        if (fightCount > 4) {
+          givenUp = true;
+          observer.disconnect();
+          return;
+        }
+
+        reverting = true;
+        for (const slide of slides) {
+          if (slide === activeSlide) {
+            if (!slide.classList.contains('active') && activeClasses.has('active')) slide.classList.add('active');
+            if (!slide.classList.contains('is-active') && activeClasses.has('is-active')) slide.classList.add('is-active');
+            if (!slide.classList.contains('current') && activeClasses.has('current')) slide.classList.add('current');
+            if (slide.hasAttribute('aria-hidden') && slide.getAttribute('aria-hidden') === 'true') {
+              slide.setAttribute('aria-hidden', 'false');
+            }
+          } else {
+            slide.classList.remove('active', 'is-active', 'current');
+            if (slide.hasAttribute('aria-hidden') && slide.getAttribute('aria-hidden') === 'false') {
+              slide.setAttribute('aria-hidden', 'true');
             }
           }
         }
-        let wrote = false;
-        for (const c of changes) {
-          const moving = c.el.parentElement && rotating.get(c.el.parentElement);
-          if (!moving) continue;
-          if (!c.gained.concat(c.lost).some((t) => moving.has(t))) continue;
-          const box = carouselOf(c.el) || c.el.parentElement;
-          if (!byUser(box)) {
-            for (const t of c.gained) if (moving.has(t)) c.el.classList.remove(t);
-            for (const t of c.lost) if (moving.has(t)) c.el.classList.add(t);
-            wrote = true;
-          }
-        }
-        if (wrote) slideObserver.takeRecords();
+        observer.takeRecords();
+        reverting = false;
       });
-      slideObserver.observe(document.body, { attributes: true, attributeFilter: ['class'], attributeOldValue: true, subtree: true });
-      s.onEnd(() => {
-        slideObserver.disconnect();
+
+      observer.observe(carousel, {
+        attributes: true,
+        attributeFilter: ['class', 'aria-hidden', 'aria-selected', 'hidden'],
+        subtree: true,
       });
+
+      s.onEnd(() => observer.disconnect());
+    };
+
+    if (stopCarouselsOpt) {
+      for (const c of root.querySelectorAll(CAROUSEL_SELECTOR)) {
+        handleCarousel(c);
+      }
     }
 
-    // 5. Watch for dynamic elements added after enable
-    s.watch.added(document, (el) => {
-      if (el.tagName === 'VIDEO' || el.tagName === 'AUDIO') {
-        pauseMedia(el);
-      } else if (el.tagName === 'MARQUEE') {
-        stopMarquee(el);
-      } else if (el.querySelectorAll) {
-        for (const v of el.querySelectorAll('video, audio')) pauseMedia(v);
-        for (const m of el.querySelectorAll('marquee')) stopMarquee(m);
-        pinScrollers(el);
-      }
-    });
+    // 5. Watch for dynamically added media and carousels
+    s.watch.added(
+      root,
+      (el) => {
+        if (!el || el.nodeType !== 1) return;
+        if (pauseMediaOpt) {
+          if (el.tagName === 'VIDEO' || el.tagName === 'AUDIO') {
+            handleMediaElement(el);
+          } else if (el.querySelectorAll) {
+            for (const m of el.querySelectorAll('video, audio')) {
+              handleMediaElement(m);
+            }
+          }
+        }
+        if (stopCarouselsOpt) {
+          if (el.matches && el.matches(CAROUSEL_SELECTOR)) {
+            handleCarousel(el);
+          } else if (el.querySelectorAll) {
+            for (const c of el.querySelectorAll(CAROUSEL_SELECTOR)) {
+              handleCarousel(c);
+            }
+          }
+        }
+      },
+      { selector: `video, audio, ${CAROUSEL_SELECTOR}` }
+    );
 
+    s.announce('Page calmed: animations, autoplay and auto-advancing paused.');
     return true;
   },
 

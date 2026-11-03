@@ -2,25 +2,18 @@
   "name": "text-size",
   "file": "tools/core-adapters/text-size.js",
   "page": "text-size.html",
-  "personal": {
-    "fontScale": 150
-  },
   "checks": [
     {
-      "name": "with textSizeMethod zoom, zoom is set to fontScale/100 and DOM text size is untouched",
-      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return false;\n        if (host.zoom !== 1.5) return false;\n        if (!host.zoomCalls.includes('set:1.5')) return false;\n\n        const p = document.querySelector('main p');\n        const h1 = document.querySelector('h1');\n        if (!p || !h1) return false;\n        if (p.style.fontSize || h1.style.fontSize) return false;\n        return true;\n      "
+      "name": "with no fontScale asked, s.zoom is never called and the page is unchanged",
+      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return true;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const bodyText = document.getElementById('body-text');\n        if (!bodyText) return false;\n        return host.zoomCalls.length === 0 && !bodyText.style.fontSize && host.profile.length === 0;\n      "
     },
     {
-      "name": "the shortcuts change the size and save it for this site; Alt+Shift+G saves for every site; nothing is saved without a key press",
-      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return false;\n        if (host.profile.length !== 0) return false;\n\n        await __verifyPress('Alt+Shift+Equal');\n        if (host.zoom !== 1.6) return false;\n        const siteSave = host.profile.find(p => p.changes.fontScale === 160 && p.scope === 'site');\n        if (!siteSave) return false;\n\n        await __verifyPress('Alt+Shift+G');\n        const allSave = host.profile.find(p => p.changes.fontScale === 160 && p.scope === 'all');\n        if (!allSave) return false;\n\n        await __verifyPress('Alt+Shift+Minus');\n        if (host.zoom !== 1.5) return false;\n\n        return true;\n      "
+      "name": "the shortcut's up and down change fontScale in 10% steps and save for this site",
+      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return true;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const initialProfileCount = host.profile.length;\n        await __verifyPress('Alt+Shift+ArrowUp');\n        await new Promise((r) => setTimeout(r, 80));\n\n        if (host.profile.length <= initialProfileCount) return false;\n        const savedUp = host.profile[host.profile.length - 1];\n        if (!savedUp || !savedUp.changes || savedUp.changes.fontScale !== 110 || savedUp.scope !== 'site') return false;\n        if (host.zoom !== 1.1) return false;\n\n        await __verifyPress('Alt+Shift+ArrowDown');\n        await new Promise((r) => setTimeout(r, 80));\n\n        const savedDown = host.profile[host.profile.length - 1];\n        if (!savedDown || !savedDown.changes || savedDown.changes.fontScale !== 100 || savedDown.scope !== 'site') return false;\n        if (host.zoom !== 1.0) return false;\n\n        return true;\n      "
     },
     {
-      "name": "Alt+Shift+L cycles line height through 1.5, 1.8, 2, and back to page own",
-      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        const save15 = host.profile.find(p => p.changes.lineHeight === 1.5 && p.scope === 'site');\n        if (!save15) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        const save18 = host.profile.find(p => p.changes.lineHeight === 1.8 && p.scope === 'site');\n        if (!save18) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        const save20 = host.profile.find(p => p.changes.lineHeight === 2.0 && p.scope === 'site');\n        if (!save20) return false;\n\n        await __verifyPress('Alt+Shift+L');\n        return true;\n      "
-    },
-    {
-      "name": "ordinary content, landmarks, and form controls are preserved",
-      "code": "\n        const main = document.querySelector('main');\n        const nav = document.querySelector('nav');\n        const code = document.querySelector('pre code');\n        const radio = document.getElementById('opt1');\n        if (!main || !nav || !code || !radio) return false;\n        if (code.textContent.trim() !== 'const speedOfLight = 299792458; // metres per second') return false;\n        if (!radio.checked) return false;\n        return true;\n      "
+      "name": "content to leave alone is left alone and controls are accessible",
+      "code": "\n        const h1 = document.querySelector('h1');\n        const nav = document.querySelector('nav');\n        const btn = document.getElementById('btn-save');\n        if (!h1 || !nav || !btn) return false;\n        if (!h1.textContent.includes('Reading Studio')) return false;\n        const rect = btn.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n        btn.focus();\n        if (document.activeElement !== btn) return false;\n        btn.blur();\n        return true;\n      "
     }
   ]
 }

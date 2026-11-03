@@ -1,325 +1,346 @@
-// Read aloud: reads the main content or selected text aloud with word-by-word
-// highlighting, helping people who experience reading or vision barriers.
+// read-aloud.js — Reads main content or selected text aloud with word highlighting.
+// Barrier: Blind people, people with low vision, learning disabilities, or reading
+// difficulties need spoken text with visible word tracking to follow along.
 //
 // Suggested in onboarding for: reading, vision (a suggestion only, never a gate).
-//
-// The person's settings it reads:
-//   - speechRate (0.5 to 2.0, default 1.0)
-//
-// What the person can adjust:
-//   - speechRate: adjusted with Slower and Faster buttons in steps of 0.1
-//     (range 0.5 to 2.0), saved for this site via s.profile.set({ speechRate }).
-//   - 'Use on every site' button: saves the current speechRate for every site
-//     via s.profile.set({ speechRate }, { scope: 'all' }).
+// The person's settings it reads: speechRate (speaking rate, 0.5 to 2.0).
+// What the person can adjust: speechRate with Slower and Faster buttons in its
+// control bar (steps of 0.1, 0.5 to 2), and with the person's shortcut (s.keys.adjust,
+// label 'Speech rate', settings ['speechRate']): up faster, down slower. Saved for
+// this site and announced.
 //
 // Options:
-//   - speechRate: default speaking rate if not set in person's profile (default 1.0).
+//   speechRate: Default speaking rate (0.5 to 2.0). Default: 1.0. Profile overrides.
+//   pitch: Speaking pitch (0.0 to 2.0). Default: 1.0.
+//   lang: BCP-47 language tag (e.g. 'en-US'). Default: undefined (uses page language).
+//   voice: Preferred voice name. Default: null.
+//   target: Selector string or element to read. Default: undefined (uses s.page.main()).
 //
-// Decisions it makes:
-//   - Starts speech only from its own Play button or keyboard shortcut Alt+Shift+R;
-//     never speaks automatically on page load.
-//   - Escape stops speech immediately and clears highlighting.
-//   - Controls are in a compact control bar placed directly before the main
-//     content in normal layout flow so it covers nothing the person is reading.
-//   - Words are highlighted as spoken using the CSS Custom Highlight API via
-//     s.highlight.range, keeping the page's text nodes untouched.
-//   - Skips navigation, the toolkit's own UI, form controls, code, and hidden text.
-//   - Slower and Faster adjust speed by 0.1 within the [0.5, 2.0] range.
-//   - Pausing and resuming preserves the speech session.
+// Decisions:
+//   • Starts speech only from its own Play button, never on load.
+//   • Escape stops speech immediately.
+//   • Control bar provides Play/Pause, Stop, Slower, Faster controls.
+//   • Controls are sized at least 24x24 px (WCAG 2.5.8) with discernible names and 3:1 focus outlines.
+//   • Placed fixed at bottom-right with bottom padding on the body so it covers no content (WCAG 2.4.11).
+//   • Skips navigation, the toolkit's UI, and hidden text (display:none, aria-hidden, hidden attribute).
+//   • Highlighting uses CSS Custom Highlight API via s.highlight.range, clearing on stop.
+//   • Speech rate changes while speaking seamlessly continue from the current word at the new rate.
+//   • Rate changes are saved for this site (s.profile.set) and announced via s.announce.
+//   • Registers s.keys.adjust so the person's shortcut adjusts speech rate.
 //
 // What it cannot do:
-//   - Cannot speak if the browser or runtime does not support text-to-speech.
-//   - Cannot highlight individual words if the CSS Custom Highlight API is
-//     unsupported in the browser.
-//   - Cannot speak images without accessible names or alt text.
+//   • Cannot read content inaccessible to the browser's text walker or inside cross-origin iframes.
+//   • Does not provide synthetic voice generation beyond what the browser / OS TTS provides.
 
 export default {
-  enable(options, toolkit) {
+  enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
-    const s = (this.s = toolkit.session());
-
+    this.options = options || {};
+    this.toolkit = toolkit || this.toolkit;
+    if (!this.toolkit) return false;
+    const s = (this.s = this.toolkit.session());
     const doc = document;
     const win = window;
 
-    const main = s.page.main();
-    if (!main || !s.page.readableText(main)) return false;
-
-    const getRate = () => {
-      const p = s.profile.get('speechRate');
-      const r = p !== undefined && p !== null ? Number(p) : (options?.speechRate !== undefined ? Number(options.speechRate) : 1.0);
-      return Math.max(0.5, Math.min(2.0, Math.round(r * 10) / 10));
-    };
-
-    s.css(
-      'read-aloud',
-      `#ai4a11y-read-aloud-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 6px;
-  padding: 4px 8px;
-  margin: 0 0 8px 0;
-  background: #1e293b;
-  color: #ffffff;
-  border: 2px solid #334155;
-  border-radius: 6px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 13px;
-  line-height: 1.3;
-  box-sizing: border-box;
-  max-width: 100%;
-}
-#ai4a11y-read-aloud-bar button {
-  min-width: 28px;
-  min-height: 26px;
-  padding: 2px 8px;
-  background: #334155;
-  color: #ffffff;
-  border: 1px solid #64748b;
-  border-radius: 4px;
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-#ai4a11y-read-aloud-bar button:hover {
-  background: #475569;
-}
-#ai4a11y-read-aloud-bar button:focus-visible {
-  outline: 3px solid #38bdf8 !important;
-  outline-offset: 2px !important;
-}
-#ai4a11y-read-aloud-bar .ai4a11y-rate-label {
-  font-weight: 600;
-  padding: 0 2px;
-  min-width: 32px;
-  text-align: center;
-  color: #ffffff;
-}`
-    );
-
-    const bar = s.el('div', {
-      attrs: {
-        role: 'group',
-        'aria-label': 'Read aloud',
-        id: 'ai4a11y-read-aloud-bar',
-      },
-    });
-
-    const playBtn = s.el('button', {
-      text: 'Play',
-      attrs: {
-        type: 'button',
-        id: 'ai4a11y-read-aloud-play',
-        'aria-label': 'Play reading',
-      },
-    });
-
-    const stopBtn = s.el('button', {
-      text: 'Stop',
-      attrs: {
-        type: 'button',
-        id: 'ai4a11y-read-aloud-stop',
-        'aria-label': 'Stop reading',
-      },
-    });
-
-    const slowerBtn = s.el('button', {
-      text: 'Slower',
-      attrs: {
-        type: 'button',
-        id: 'ai4a11y-read-aloud-slower',
-        'aria-label': 'Read slower',
-      },
-    });
-
-    const rateLabel = s.el('span', {
-      text: `${getRate().toFixed(1)}x`,
-      attrs: {
-        id: 'ai4a11y-read-aloud-rate',
-        class: 'ai4a11y-rate-label',
-        'aria-hidden': 'true',
-      },
-    });
-
-    const fasterBtn = s.el('button', {
-      text: 'Faster',
-      attrs: {
-        type: 'button',
-        id: 'ai4a11y-read-aloud-faster',
-        'aria-label': 'Read faster',
-      },
-    });
-
-    const useAllBtn = s.el('button', {
-      text: 'Use on every site',
-      attrs: {
-        type: 'button',
-        id: 'ai4a11y-read-aloud-all',
-        'aria-label': 'Use speed on every site',
-      },
-    });
-
-    bar.append(playBtn, stopBtn, slowerBtn, rateLabel, fasterBtn, useAllBtn);
-
-    if (main && main !== doc.body && main !== doc.documentElement) {
-      s.insert(main, bar, main.firstChild);
-    } else if (doc.body) {
-      s.insert(doc.body, bar, doc.body.firstChild);
-    }
+    let currentHandle = null;
+    let isPlaying = false;
+    let isPaused = false;
+    let fullText = '';
+    let textMap = [];
+    let currentOffsetInFull = 0;
+    let currentAbsInUtterance = 0;
+    let lastSpokenRate = 1.0;
 
     const hl = s.highlight.range(null);
-    let state = 'stopped'; // 'stopped' | 'speaking' | 'paused'
-    let currentSpeech = null;
 
-    function updateUi() {
-      const rate = getRate();
-      rateLabel.textContent = `${rate.toFixed(1)}x`;
-      if (state === 'speaking') {
-        playBtn.textContent = 'Pause';
-        playBtn.setAttribute('aria-label', 'Pause reading');
-      } else if (state === 'paused') {
-        playBtn.textContent = 'Play';
-        playBtn.setAttribute('aria-label', 'Resume reading');
-      } else {
-        playBtn.textContent = 'Play';
-        playBtn.setAttribute('aria-label', 'Play reading');
+    function getRate() {
+      const profileRate = s.profile.get('speechRate');
+      if (profileRate !== undefined && profileRate !== null && Number.isFinite(Number(profileRate))) {
+        return Math.max(0.5, Math.min(2.0, Number(profileRate)));
       }
+      const optRate = Number(options.speechRate);
+      if (Number.isFinite(optRate)) {
+        return Math.max(0.5, Math.min(2.0, optRate));
+      }
+      return 1.0;
     }
 
-    function speak() {
-      if (state === 'paused' && currentSpeech) {
-        currentSpeech.resume();
-        state = 'speaking';
-        updateUi();
-        return;
+    function buildMap(el) {
+      let text = '';
+      const map = [];
+      for (const node of s.page.textNodes(el)) {
+        if (text && !/\s$/.test(text)) text += ' ';
+        map.push({ node, start: text.length, end: text.length + node.nodeValue.length });
+        text += node.nodeValue;
       }
+      return { text, map };
+    }
 
-      if (currentSpeech) {
-        currentSpeech.stop();
-        currentSpeech = null;
+    function findRangeAt(abs) {
+      if (!textMap || !textMap.length) return null;
+      const entry = textMap.find((m) => abs >= m.start && abs < m.end);
+      if (!entry) return null;
+      const m = /^[\p{L}\p{N}'’-]+/u.exec(fullText.slice(abs));
+      const len = m ? m[0].length : 1;
+      const r = doc.createRange();
+      const from = abs - entry.start;
+      r.setStart(entry.node, from);
+      r.setEnd(entry.node, Math.min(entry.node.nodeValue.length, from + Math.max(1, len)));
+      return r;
+    }
+
+    const stop = () => {
+      if (currentHandle) {
+        currentHandle.stop();
+        currentHandle = null;
       }
+      isPlaying = false;
+      isPaused = false;
+      currentOffsetInFull = 0;
+      currentAbsInUtterance = 0;
+      hl.clear();
+      updateButtons();
+    };
 
-      const sel = win.getSelection ? win.getSelection() : null;
-      const selectedText = sel && !sel.isCollapsed ? sel.toString().trim() : '';
-      const target = selectedText || s.page.main() || doc.body;
-
+    function startSpeaking(inputToSay, offsetInFull) {
+      currentOffsetInFull = offsetInFull;
+      currentAbsInUtterance = 0;
       const rate = getRate();
-      state = 'speaking';
-      updateUi();
+      lastSpokenRate = rate;
 
-      const handle = s.speech.say(target, {
+      const handle = s.speech.say(inputToSay, {
         speechRate: rate,
-        onWord: (range) => {
-          if (state === 'done' || state === 'stopped') return;
+        pitch: options.pitch,
+        lang: options.lang,
+        voice: options.voice,
+        waitForGesture: false,
+        onWord: (range, abs) => {
+          if (abs < 0) {
+            hl.clear();
+            return;
+          }
+          currentAbsInUtterance = abs;
           if (range) {
             hl.move(range);
-          } else {
-            hl.clear();
+          } else if (textMap.length) {
+            const r = findRangeAt(currentOffsetInFull + abs);
+            if (r) hl.move(r);
           }
         },
       });
 
-      currentSpeech = handle;
-      handle.done.then((completed) => {
-        if (currentSpeech === handle) {
-          currentSpeech = null;
-          state = 'stopped';
+      currentHandle = handle;
+      isPlaying = true;
+      isPaused = false;
+      updateButtons();
+
+      handle.done.then(() => {
+        if (currentHandle === handle) {
+          isPlaying = false;
+          isPaused = false;
+          currentHandle = null;
           hl.clear();
-          updateUi();
-          if (completed) {
-            s.announce('Finished reading.');
-          }
+          updateButtons();
         }
       });
     }
 
-    function pause() {
-      if (state === 'speaking' && currentSpeech) {
-        currentSpeech.pause();
-        state = 'paused';
-        updateUi();
+    function playOrPause() {
+      // If currently paused, resume
+      if (currentHandle && isPaused) {
+        currentHandle.resume();
+        isPaused = false;
+        updateButtons();
+        return;
+      }
+
+      // If currently speaking, pause
+      if (currentHandle && isPlaying) {
+        currentHandle.pause();
+        isPaused = true;
+        updateButtons();
+        return;
+      }
+
+      // Start speaking: check selection first
+      const sel = win.getSelection ? win.getSelection() : null;
+      const selText = sel && !sel.isCollapsed ? sel.toString().trim() : '';
+
+      if (selText) {
+        fullText = selText;
+        textMap = [];
+        startSpeaking(selText, 0);
+        return;
+      }
+
+      // Target main content
+      const mainTarget = (typeof options.target === 'string'
+        ? doc.querySelector(options.target)
+        : options.target) || s.page.main();
+
+      if (!mainTarget) return;
+
+      const mapped = buildMap(mainTarget);
+      fullText = mapped.text;
+      textMap = mapped.map;
+      if (!fullText.trim()) return;
+
+      startSpeaking(mainTarget, 0);
+    }
+
+    function restartFromCurrentWord(newRate) {
+      if (!currentHandle || !isPlaying || isPaused) return;
+      const currentPos = currentOffsetInFull + currentAbsInUtterance;
+      const remaining = fullText.slice(currentPos);
+      if (!remaining.trim()) {
+        stop();
+        return;
+      }
+      currentHandle.stop();
+      startSpeaking(remaining, currentPos);
+    }
+
+    async function changeRate(delta) {
+      const cur = getRate();
+      const next = Math.max(0.5, Math.min(2.0, Math.round((cur + delta) * 10) / 10));
+      const res = await s.profile.set({ speechRate: next });
+      if (res && res.applied) {
+        const appliedRate = s.profile.get('speechRate') ?? next;
+        s.announce(`Speech rate ${appliedRate} on this site.`);
+        if (isPlaying && !isPaused) {
+          restartFromCurrentWord(appliedRate);
+        }
       }
     }
 
-    function stop() {
-      if (currentSpeech) {
-        const h = currentSpeech;
-        currentSpeech = null;
-        h.stop();
-      }
-      state = 'stopped';
-      hl.clear();
-      updateUi();
-    }
-
-    function togglePlay() {
-      if (state === 'speaking') {
-        pause();
-      } else {
-        speak();
-      }
-    }
-
-    s.listen(playBtn, 'click', () => {
-      togglePlay();
-    });
-
-    s.listen(stopBtn, 'click', () => {
-      stop();
-    });
-
-    s.listen(slowerBtn, 'click', async () => {
-      const cur = getRate();
-      const next = Math.max(0.5, Math.min(2.0, Math.round((cur - 0.1) * 10) / 10));
-      await s.profile.set({ speechRate: next });
-      updateUi();
-      s.announce(`Speaking speed ${next.toFixed(1)} on this site.`);
-    });
-
-    s.listen(fasterBtn, 'click', async () => {
-      const cur = getRate();
-      const next = Math.max(0.5, Math.min(2.0, Math.round((cur + 0.1) * 10) / 10));
-      await s.profile.set({ speechRate: next });
-      updateUi();
-      s.announce(`Speaking speed ${next.toFixed(1)} on this site.`);
-    });
-
-    s.listen(useAllBtn, 'click', async () => {
-      const cur = getRate();
-      await s.profile.set({ speechRate: cur }, { scope: 'all' });
-      s.announce(`Speaking speed ${cur.toFixed(1)} for every site.`);
-    });
-
-    s.keys.shortcut({ code: 'KeyR', alt: true, shift: true }, () => {
-      togglePlay();
+    s.keys.adjust({
+      label: 'Speech rate',
+      settings: ['speechRate'],
+      up: () => changeRate(0.1),
+      down: () => changeRate(-0.1),
     });
 
     s.listen(doc, 'keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (state !== 'stopped') {
-          stop();
-        }
+      if (e.key === 'Escape' && isPlaying) {
+        stop();
       }
     }, true);
 
     s.profile.onChange((personal, changed) => {
       if (changed && 'speechRate' in changed) {
-        updateUi();
+        const newRate = personal.speechRate;
+        if (isPlaying && !isPaused && newRate !== lastSpokenRate) {
+          restartFromCurrentWord(newRate);
+        }
       }
     });
 
-    s.onEnd(() => {
-      stop();
+    s.css('read-aloud-style', `
+      .ai4a11y-read-aloud-bar {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 2147483645;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        padding: 6px 8px;
+        background: #ffffff;
+        color: #000000;
+        border: 2px solid #333333;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        font: 14px/1.4 system-ui, -apple-system, sans-serif;
+        max-width: calc(100vw - 24px);
+        box-sizing: border-box;
+      }
+      .ai4a11y-read-aloud-bar button {
+        min-width: 44px;
+        min-height: 28px;
+        line-height: 20px;
+        padding: 4px 8px;
+        font: inherit;
+        font-weight: 500;
+        color: #000000;
+        background: #ffffff;
+        border: 1px solid #767676;
+        border-radius: 4px;
+        cursor: pointer;
+        box-sizing: border-box;
+      }
+      .ai4a11y-read-aloud-bar button:hover {
+        background: #f0f0f0;
+      }
+      .ai4a11y-read-aloud-bar button:focus-visible {
+        outline: 2px solid #005fcc;
+        outline-offset: 2px;
+      }
+    `);
+
+    s.setStyle(doc.body, 'paddingBottom', '64px');
+    s.focus.keepVisible();
+
+    const bar = s.el('div', {
+      attrs: {
+        role: 'region',
+        'aria-label': 'Read aloud controls',
+        class: 'ai4a11y-read-aloud-bar',
+      },
     });
 
-    return true;
+    const btnPlay = s.el('button', {
+      text: 'Play',
+      attrs: { type: 'button', 'aria-label': 'Play', 'data-action': 'play' },
+    });
+
+    const btnStop = s.el('button', {
+      text: 'Stop',
+      attrs: { type: 'button', 'aria-label': 'Stop', 'data-action': 'stop' },
+    });
+
+    const btnSlower = s.el('button', {
+      text: 'Slower',
+      attrs: { type: 'button', 'aria-label': 'Slower', 'data-action': 'slower' },
+    });
+
+    const btnFaster = s.el('button', {
+      text: 'Faster',
+      attrs: { type: 'button', 'aria-label': 'Faster', 'data-action': 'faster' },
+    });
+
+    function updateButtons() {
+      if (isPlaying && !isPaused) {
+        btnPlay.textContent = 'Pause';
+        btnPlay.setAttribute('aria-label', 'Pause');
+      } else if (isPaused) {
+        btnPlay.textContent = 'Play';
+        btnPlay.setAttribute('aria-label', 'Play');
+      } else {
+        btnPlay.textContent = 'Play';
+        btnPlay.setAttribute('aria-label', 'Play');
+      }
+    }
+
+    s.listen(btnPlay, 'click', () => playOrPause());
+    s.listen(btnStop, 'click', () => stop());
+    s.listen(btnSlower, 'click', () => changeRate(-0.1));
+    s.listen(btnFaster, 'click', () => changeRate(0.1));
+
+    bar.append(btnPlay, btnStop, btnSlower, btnFaster);
+    s.append(doc.body, bar);
+
+    this.play = playOrPause;
+    this.stop = stop;
+    this.changeRate = changeRate;
+    this.getRate = getRate;
+    Object.defineProperty(this, 'speaking', { get: () => isPlaying && !isPaused, configurable: true });
+    Object.defineProperty(this, 'paused', { get: () => isPaused, configurable: true });
+    Object.defineProperty(this, 'currentHandle', { get: () => currentHandle, configurable: true });
   },
 
   disable() {
+    this.stop?.();
     this.s?.end();
+    this.s = null;
   },
 };

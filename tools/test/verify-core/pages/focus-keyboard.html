@@ -2,186 +2,198 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Focus and Keyboard Navigation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Directory &amp; Support Portal</title>
   <style>
-    * {
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --header-bg: #1e293b;
+      --header-text: #ffffff;
+      --primary: #1d4ed8;
+      --primary-text: #ffffff;
+      --card-bg: #f8fafc;
+      --border: #cbd5e1;
+    }
+    *, *::before, *::after {
       box-sizing: border-box;
     }
     body {
       margin: 0;
-      padding-top: 70px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #1f2328;
-      background-color: #ffffff;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
       line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 2200px;
     }
-    header {
+    header.fixed-header {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      height: 70px;
-      background-color: #1f2328;
-      color: #ffffff;
+      height: 60px;
+      background: var(--header-bg);
+      color: var(--header-text);
+      z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
-      z-index: 1000;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      padding: 0 1.25rem;
     }
-    header h2 {
+    header .brand {
+      font-size: 1.125rem;
+      font-weight: 700;
       margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #ffffff;
+    }
+    header a.header-link {
+      color: var(--header-text);
+      text-decoration: underline;
+      padding: 0.5rem;
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .page-wrapper {
+      padding-top: 72px;
+      max-width: 800px;
+      margin: 0 auto;
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
     nav ul {
-      list-style: none;
-      display: flex;
-      gap: 16px;
-      margin: 0;
-      padding: 0;
-    }
-    nav a {
-      color: #ffffff;
-      text-decoration: underline;
-      font-weight: 500;
-      padding: 8px 12px;
-      border-radius: 4px;
-      display: inline-block;
-    }
-    main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 32px 24px;
-    }
-    h1 {
-      font-size: 2rem;
-      margin-top: 0;
-      margin-bottom: 16px;
-      color: #1f2328;
-    }
-    .lead {
-      font-size: 1.125rem;
-      color: #59636e;
-      margin-bottom: 24px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-    input[type="text"] {
-      width: 100%;
-      max-width: 360px;
-      padding: 8px 12px;
-      border: 1px solid #d1d9e0;
-      border-radius: 6px;
-      font-size: 1rem;
-      color: #1f2328;
-      background: #ffffff;
-    }
-    .btn-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin: 24px 0;
+      gap: 0.75rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0 1.5rem 0;
+    }
+    nav a {
+      color: var(--primary);
+      text-decoration: underline;
+      padding: 0.5rem 0.75rem;
+      display: inline-block;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    button, input[type="text"], select {
+      font-size: 1rem;
+      font-family: inherit;
+      padding: 0.625rem 1rem;
+      min-height: 44px;
+      border-radius: 4px;
     }
     button {
-      padding: 10px 18px;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: 6px;
+      background: var(--primary);
+      color: var(--primary-text);
+      border: 2px solid transparent;
       cursor: pointer;
-      border: 1px solid #d1d9e0;
-      background-color: #f6f8fa;
-      color: #1f2328;
+      font-weight: 600;
     }
-    #btn-suppressed {
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    input[type="text"], select {
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 360px;
+      display: block;
+      margin-top: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .no-outline, .no-outline:focus, .no-outline:focus-visible {
       outline: none !important;
     }
-    #search-input {
-      outline: 0;
+    .spacer-mid {
+      height: 180px;
     }
-    .spacer {
-      height: 450px;
-      background: #f6f8fa;
-      border: 1px dashed #d1d9e0;
-      border-radius: 8px;
-      margin: 24px 0;
-      padding: 24px;
-      color: #59636e;
-    }
-    .deep-spacer {
-      height: 1200px;
-      margin-top: 24px;
-      background: #fafafa;
-      border: 1px solid #e1e4e8;
-      border-radius: 8px;
-      padding: 24px;
+    .spacer-tall {
+      height: 900px;
     }
     footer {
-      border-top: 1px solid #d1d9e0;
-      padding: 24px;
-      text-align: center;
-      color: #59636e;
-      background: #f6f8fa;
-    }
-    footer a {
-      color: #0969da;
-      text-decoration: underline;
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 0;
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: #475569;
     }
   </style>
 </head>
 <body>
-  <header role="banner">
-    <h2>Portal Console</h2>
-    <nav aria-label="Main Navigation">
-      <ul>
-        <li><a href="#dashboard" id="nav-dash">Dashboard</a></li>
-        <li><a href="#reports" id="nav-reports">Reports</a></li>
-      </ul>
-    </nav>
+  <header class="fixed-header">
+    <p class="brand">Support Portal</p>
+    <a href="#help" id="header-link" class="header-link">Portal Help</a>
   </header>
 
-  <main id="main-content">
-    <h1>Focus and Keyboard Accessibility</h1>
-    <p class="lead" id="lead-text">
-      This test environment provides focusable controls, suppressed outlines,
-      and elements subject to fixed header obstruction.
-    </p>
+  <div class="page-wrapper">
+    <nav aria-label="Main Navigation">
+      <ul>
+        <li><a href="#services" id="nav-services">Services</a></li>
+        <li><a href="#account" id="nav-account">Account Settings</a></li>
+        <li><a href="#contact" id="nav-contact">Contact Center</a></li>
+      </ul>
+    </nav>
 
-    <div class="form-group">
-      <label for="search-input">Search items</label>
-      <input id="search-input" type="text" placeholder="Type a keyword...">
-    </div>
+    <main id="main-content">
+      <h1>Service Directory &amp; Account Portal</h1>
+      <p id="prose-intro">Access self-service account options, view system status, and submit support inquiries.</p>
 
-    <div class="btn-row">
-      <button id="btn-default" type="button">Default Button</button>
-      <button id="btn-suppressed" type="button">Suppressed Outline Button</button>
-      <a href="#details" id="link-standard" style="padding: 10px 18px; color: #0969da; text-decoration: underline;">Standard Link</a>
-    </div>
+      <section id="services" aria-labelledby="heading-services" class="card">
+        <h2 id="heading-services">Active Services</h2>
+        <p>Manage your enrolled products and cloud compute subscriptions.</p>
+        <button type="button" id="btn-submit">Submit Request</button>
+        <a href="#details" id="link-details">View Service Details</a>
+        <button type="button" id="btn-outline-none" class="no-outline">Outline Suppressed Button</button>
+      </section>
 
-    <div class="spacer" id="spacer-block">
-      <p>Content spacer block to permit scrolling test items beneath the sticky header.</p>
-    </div>
+      <section id="account" aria-labelledby="heading-account" class="card">
+        <h2 id="heading-account">Account Verification</h2>
+        <form id="form-account" onsubmit="return false;">
+          <label for="input-username">Registered Username</label>
+          <input type="text" id="input-username" name="username">
 
-    <div id="under-header-container" style="padding: 12px 0;">
-      <button id="btn-under-header" type="button">Element Subject to Header Overlap</button>
-    </div>
+          <label for="select-category">Inquiry Category</label>
+          <select id="select-category" name="category">
+            <option value="billing">Billing &amp; Invoices</option>
+            <option value="technical">Technical Support</option>
+            <option value="general">General Questions</option>
+          </select>
 
-    <div class="deep-spacer">
-      <p>Scrollable document section ensuring ample scroll height for reflow and clearance testing.</p>
-    </div>
-  </main>
+          <button type="button" id="btn-disabled" disabled>Disabled Action</button>
+        </form>
+      </section>
 
-  <footer role="contentinfo">
-    <p>&copy; 2026 AI for Accessibility. <a href="#privacy" id="footer-privacy">Privacy Statement</a></p>
-  </footer>
+      <div class="spacer-mid" id="spacer-pre-covered"></div>
+
+      <section id="covered-section" aria-labelledby="heading-covered" class="card">
+        <h2 id="heading-covered">Target Control Section</h2>
+        <p>This control can be placed under the fixed header when scrolled.</p>
+        <button type="button" id="btn-covered">Under Header Action</button>
+      </section>
+
+      <div class="spacer-tall"></div>
+
+      <section id="help" aria-labelledby="heading-help" class="card">
+        <h2 id="heading-help">Help &amp; FAQ</h2>
+        <p id="prose-help">All system inquiries are processed within standard business hours.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2026 Support Portal. All rights reserved.</p>
+    </footer>
+  </div>
 </body>
 </html>

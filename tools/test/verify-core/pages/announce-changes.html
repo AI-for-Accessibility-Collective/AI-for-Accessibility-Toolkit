@@ -2,139 +2,164 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Announce Changes Test Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Account Portal — Notifications and Services</title>
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --primary: #004d80;
+      --border: #cccccc;
+      --card-bg: #f9f9f9;
     }
     body {
       margin: 0;
       padding: 0;
       font-family: system-ui, -apple-system, sans-serif;
-      line-height: 1.5;
-      color: #111827;
-      background: #ffffff;
+      line-height: 1.4;
+      color: var(--text);
+      background: var(--bg);
     }
     header, nav, main, footer {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 12px;
-      width: 100%;
+      padding: 0.5rem 1rem;
     }
     header {
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: 2px solid var(--border);
     }
     nav ul {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      gap: 1rem;
       list-style: none;
       padding: 0;
-      margin: 8px 0 0 0;
+      margin: 0.25rem 0;
     }
-    nav a, button {
+    nav a {
+      color: var(--primary);
+      text-decoration: underline;
+      padding: 0.5rem 0.75rem;
+      display: inline-block;
       min-width: 44px;
       min-height: 44px;
+      box-sizing: border-box;
+    }
+    nav a:focus, button:focus, input:focus {
+      outline: 3px solid #000000;
+      outline-offset: 2px;
+    }
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      background: var(--card-bg);
+    }
+    button {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      min-width: 44px;
+      min-height: 44px;
+      cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 8px 12px;
-      color: #1e40af;
-      background: #eff6ff;
-      border: 1px solid #93c5fd;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    nav a:focus-visible, button:focus-visible, input:focus-visible {
-      outline: 3px solid #1d4ed8;
-      outline-offset: 2px;
     }
     input[type="text"] {
-      max-width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.5rem;
+      font-size: 1rem;
       min-height: 44px;
-      padding: 8px 12px;
-      border: 1px solid #4b5563;
-      border-radius: 6px;
-      font-size: 16px;
-      color: #111827;
-      background: #ffffff;
+      box-sizing: border-box;
     }
-    .card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      margin: 16px 0;
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
     }
-    .status-box, .status-item {
-      padding: 12px;
-      background: #ecfdf5;
-      border: 1px solid #6ee7b7;
-      border-radius: 6px;
-      color: #065f46;
-      margin: 8px 0;
+    .toast-notification {
+      background: #eef7ee;
+      color: #1b5e20;
+      border: 1px solid #c8e6c9;
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      margin: 0.25rem 0;
     }
     footer {
-      border-top: 1px solid #e5e7eb;
-      font-size: 14px;
-      color: #4b5563;
-      margin-top: 32px;
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #4a4a4a;
     }
   </style>
 </head>
 <body>
-  <header role="banner">
-    <nav aria-label="Main navigation">
-      <ul>
-        <li><a href="#/overview" id="nav-overview">Overview</a></li>
-        <li><a href="#/profile" id="nav-profile">Profile</a></li>
-        <li><a href="#/settings" id="nav-settings">Settings</a></li>
-      </ul>
-    </nav>
+  <header>
+    <h1>Customer Account Portal</h1>
+    <p id="portal-subtitle">Manage preferences, notifications, and review system updates.</p>
   </header>
 
-  <main id="main">
-    <h1 id="page-title">Account Dashboard</h1>
+  <nav aria-label="Portal Navigation">
+    <ul>
+      <li><a href="#overview" id="nav-overview">Overview</a></li>
+      <li><a href="#settings" id="nav-settings">Settings</a></li>
+      <li><a href="#policy" id="nav-policy">Policy</a></li>
+    </ul>
+  </nav>
 
-    <div class="card">
-      <label for="search-input">Search records</label><br>
-      <input id="search-input" type="text" placeholder="Type here...">
-      <button type="button" id="search-button">Search</button>
-    </div>
+  <main id="main-content">
+    <section id="overview" class="panel" aria-labelledby="heading-overview">
+      <h2 id="heading-overview">Account Overview</h2>
+      <p id="prose-welcome">Welcome back. Your services are active and running normally.</p>
+      
+      <div id="clock-container">
+        <p>Current clock: <time id="live-clock" class="timestamp">12:00:00</time></p>
+      </div>
 
-    <!-- Container where dynamic status messages appear -->
-    <div id="message-container" class="card">
-      <p id="message-placeholder">No active status messages.</p>
-    </div>
+      <div style="margin-top: 0.5rem;">
+        <button id="btn-show-toast" type="button">Trigger Alert Toast</button>
+      </div>
+      <div id="toast-container"></div>
+      <div id="burst-container"></div>
+    </section>
 
-    <!-- Container that already has aria-live (page-handled) -->
-    <div id="existing-live" aria-live="polite" class="card">
-      <p id="existing-placeholder">Existing live region ready.</p>
-    </div>
+    <section id="native-region-section" class="panel" aria-labelledby="heading-native">
+      <h2 id="heading-native">Native Live Region Test</h2>
+      <p>This region already uses standard ARIA live semantics for screen readers.</p>
+      <div id="native-live-region" aria-live="polite" class="sr-only"></div>
+      <button id="btn-native-update" type="button">Update Native Region</button>
+    </section>
 
-    <!-- SPA view container for client-side route changes -->
-    <div id="spa-view" class="card">
-      <h2 id="view-heading">Overview View</h2>
-      <p id="view-desc">Welcome to your dashboard overview.</p>
-    </div>
+    <section id="form-section" class="panel" aria-labelledby="heading-settings">
+      <h2 id="heading-settings">Account Settings</h2>
+      <form id="settings-form" onsubmit="event.preventDefault();">
+        <div style="margin-bottom: 0.5rem;">
+          <label for="display-name" style="display: block; margin-bottom: 0.25rem;">Display Name</label>
+          <input type="text" id="display-name" name="name" value="Jane Doe">
+        </div>
+        <button id="btn-save-settings" type="submit">Save Changes</button>
+      </form>
+    </section>
 
-    <!-- Container for testing rapid burst of additions -->
-    <div id="burst-container" class="card">
-      <p id="burst-placeholder">Notification feed area.</p>
-    </div>
-
-    <!-- Ordinary page content to leave undisturbed -->
-    <article id="ordinary-content" class="card">
-      <h2>Profile Overview</h2>
-      <p>Your subscription is active and in good standing.</p>
-    </article>
+    <section id="policy" class="panel" aria-labelledby="heading-policy">
+      <h2 id="heading-policy">Service Policy</h2>
+      <p id="prose-policy">All account notifications adhere to our strict accessibility and privacy commitments.</p>
+    </section>
   </main>
 
-  <footer role="contentinfo">
-    <p>&copy; 2026 AI for Accessibility. All rights reserved.</p>
+  <footer>
+    <p>&copy; 2026 Customer Portal Services. All rights reserved.</p>
   </footer>
 </body>
 </html>

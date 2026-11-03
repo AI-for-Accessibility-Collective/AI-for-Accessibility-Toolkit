@@ -1,131 +1,365 @@
-// Names for controls and images: gives buttons, links, form fields, and
-// informative images an accessible name or alt text when they have none.
-//
-// Barrier: interactive elements without an accessible name (preventing screen
-// reader users and voice control users from identifying or activating them)
-// and informative images without alternative text.
+// names.js — Gives accessible names to nameless controls and informative images.
+// Barrier: People using screen readers cannot identify the purpose of buttons, links,
+// or form inputs that have no accessible name, or understand images that lack alt text.
 //
 // Suggested in onboarding for: vision (a suggestion only, never a gate).
 // The person's settings it reads: none.
-// What the person can adjust: nothing (on or off).
+// What the person can adjust: nothing (the shortcut, if given, turns it on and off).
 //
 // Options:
-//   limit: number of AI calls allowed per page (default 20).
+//   limit: Maximum number of AI calls per page (default 10).
 //
 // Decisions:
-//   - Measures first with s.page.nameOf(): never renames any control or
-//     image that already has an accessible name.
-//   - Never describes decorative images: tiny/spacer images (<= 2px or
-//     matching spacer patterns), images with role="presentation" or "none",
-//     and images with alt="" are left alone or marked alt="" only when certain.
-//   - Never queries AI for content the page hides (hidden attribute,
-//     aria-hidden="true", display:none, visibility:hidden, or zero size).
-//   - Gathers contextual hints (type, role, placeholder, id, name, class,
-//     and surrounding text) to guide s.ai.text('label', ...).
-//   - Uses s.ai.vision('describe', img, { purpose: 'alt' }) for informative images.
-//   - Asks the AI once per element, up to the configured limit.
-//   - Leaves elements unchanged when the AI returns null or unavailable.
-//   - Undoes all changes on disable() through the session.
+//   • Measures first using s.page's accessible-name helper (s.page.nameOf) and
+//     never renames any control or image that already has an accessible name.
+//   • Leaves decorative images alone, or marks clearly decorative ones (tiny <=16px,
+//     spacers, role presentation/none) alt="" without spending an AI call.
+//   • Names elements from the page first without AI: element title, SVG title,
+//     words from an icon's class or image file name, link's last path part, or nearby label.
+//   • AI is used only for what remains nameless, visible ones first, at most the limit per page.
+//   • Images are sent to AI vision only when informative (larger than 48 by 48 pixels and not decorative).
+//   • Never asks AI for content the page hides (display:none, visibility:hidden, hidden attribute, aria-hidden).
+//   • Answers are gated by the building blocks; on null, elements are left unchanged.
+//   • Watches for elements added later (s.watch.added) without reprocessing seen elements.
+//   • All changes go through s.setAttr so disable() cleanly restores original state.
 //
 // What it cannot do:
-//   - It cannot invent meaning for ambiguous controls where no context exists.
-//   - It cannot describe images without visual content or when AI is unavailable.
+//   • Cannot generate names for controls when AI is unavailable and DOM context lacks signals.
+//   • Does not describe complex charts (use explore-a-chart instead).
 
-const SELECTOR = [
-  'img',
-  'input[type="image"]',
-  'button',
-  '[role="button"]',
-  'input[type="button"]',
-  'input[type="submit"]',
-  'input[type="reset"]',
-  'a[href]',
-  '[role="link"]',
-  'area[href]',
-  'input:not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"])',
-  'textarea',
-  'select',
-  '[role="textbox"]',
-  '[role="searchbox"]',
-  '[role="combobox"]',
-  '[role="listbox"]',
-  '[role="spinbutton"]',
-  '[role="slider"]',
-  '[role="checkbox"]',
-  '[role="radio"]',
-  '[role="switch"]',
-].join(', ');
+const SELECTOR = 'button, a[href], input:not([type="hidden"]), select, textarea, img, [role="button"], [role="link"]';
 
-function hasAccessibleName(el, page) {
-  try {
-    const name = page.nameOf(el);
-    return typeof name === 'string' && name.trim().length > 0;
-  } catch {
-    return false;
-  }
+const ICON_PATTERNS = {
+  'Close': ['close', 'dismiss', 'x-btn', 'btn-close', 'times', 'cross'],
+  'Menu': ['menu', 'hamburger', 'nav-toggle', 'bars'],
+  'Search': ['search', 'find', 'magnifier', 'magnifying'],
+  'Settings': ['settings', 'config', 'gear', 'cog', 'preferences'],
+  'Home': ['home', 'house'],
+  'User': ['user', 'profile', 'account', 'avatar', 'person'],
+  'Shopping cart': ['shopping-cart', 'cart', 'basket', 'bag'],
+  'Delete': ['delete', 'remove', 'trash', 'trash-can', 'bin'],
+  'Edit': ['edit', 'pencil', 'modify'],
+  'Share': ['share', 'forward'],
+  'Download': ['download'],
+  'Upload': ['upload'],
+  'Filter': ['filter'],
+  'Print': ['print', 'printer'],
+  'Refresh': ['refresh', 'reload', 'sync'],
+  'Favorite': ['favorite', 'star', 'like', 'heart', 'bookmark'],
+  'Play': ['play'],
+  'Pause': ['pause'],
+  'Stop': ['stop'],
+  'Next': ['next', 'arrow-right', 'chevron-right', 'forward'],
+  'Previous': ['prev', 'previous', 'arrow-left', 'chevron-left', 'back'],
+  'Expand': ['expand', 'more', 'dropdown', 'chevron-down'],
+  'Collapse': ['collapse', 'less', 'chevron-up'],
+  'Help': ['help', 'question', 'faq', 'info', 'information'],
+  'Notification': ['notification', 'bell', 'alert'],
+  'Mail': ['mail', 'email', 'envelope'],
+  'Phone': ['phone', 'telephone', 'call'],
+  'Add': ['add', 'plus', 'create', 'new'],
+  'Copy': ['copy', 'clipboard'],
+  'Zoom in': ['zoom-in'],
+  'Zoom out': ['zoom-out'],
+};
+
+function squash(str) {
+  return String(str || '').replace(/\s+/g, ' ').trim();
 }
 
-function isDecorativeImage(img) {
-  const role = (img.getAttribute('role') || '').toLowerCase().trim();
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function isClearlyDecorative(img, win) {
+  const role = (img.getAttribute('role') || '').toLowerCase();
   if (role === 'presentation' || role === 'none') return true;
   if (img.getAttribute('aria-hidden') === 'true') return true;
 
-  const wAttr = img.getAttribute('width');
-  const hAttr = img.getAttribute('height');
-  if ((wAttr === '0' || wAttr === '1') && (hAttr === '0' || hAttr === '1')) return true;
+  const src = img.getAttribute('src') || '';
+  if (/(\b|_|-)(spacer|blank|pixel|transparent|clear|1x1|dot)(\b|_|-|\.)/i.test(src) || /data:image\/gif;base64,R0lGODlhAQABA/i.test(src)) {
+    return true;
+  }
 
-  const rect = img.getBoundingClientRect();
-  if (rect.width > 0 && rect.height > 0 && rect.width <= 2 && rect.height <= 2) return true;
+  const cls = (typeof img.className === 'string' ? img.className : '') + ' ' + (img.id || '');
+  if (/(\b|_|-)(spacer|decorative|tracking|separator)(\b|_|-)/i.test(cls)) {
+    return true;
+  }
 
-  if (img.naturalWidth > 0 && img.naturalHeight > 0 && img.naturalWidth <= 2 && img.naturalHeight <= 2) return true;
+  const w = img.naturalWidth || img.width || 0;
+  const h = img.naturalHeight || img.height || 0;
+  if ((w > 0 && w <= 16) || (h > 0 && h <= 16)) return true;
 
-  const src = (img.getAttribute('src') || '').toLowerCase();
-  if (/(spacer|blank|clear|pixel|dot|1x1|transparent|shim)\.(gif|png|webp|jpe?g)/i.test(src)) return true;
-  if (src.includes('/spacer') || src.includes('/pixel.') || src.includes('cleardot')) return true;
-
-  const cls = (typeof img.className === 'string' ? img.className : '').toLowerCase();
-  if (/(spacer|tracking-pixel)/i.test(cls)) return true;
+  if (img.isConnected && win) {
+    try {
+      const rect = img.getBoundingClientRect();
+      if ((rect.width > 0 && rect.width <= 16) || (rect.height > 0 && rect.height <= 16)) return true;
+    } catch {}
+  }
 
   return false;
 }
 
+function isInformativeImage(img, win) {
+  if (isClearlyDecorative(img, win)) return false;
+
+  let w = img.naturalWidth || img.width || 0;
+  let h = img.naturalHeight || img.height || 0;
+
+  if (img.isConnected && win) {
+    try {
+      const rect = img.getBoundingClientRect();
+      if (rect.width > 0) w = Math.max(w, rect.width);
+      if (rect.height > 0) h = Math.max(h, rect.height);
+    } catch {}
+  }
+
+  return w > 48 && h > 48;
+}
+
+function getTitleFromElement(el) {
+  const direct = (el.getAttribute('title') || '').trim();
+  if (direct) return direct;
+  const child = el.querySelector('[title]');
+  if (child) {
+    const t = (child.getAttribute('title') || '').trim();
+    if (t) return t;
+  }
+  return null;
+}
+
+function getSvgTitle(el) {
+  const svg = el.tagName?.toLowerCase() === 'svg' ? el : el.querySelector('svg');
+  if (svg) {
+    const titleEl = svg.querySelector('title');
+    if (titleEl) {
+      const t = (titleEl.textContent || '').trim();
+      if (t) return t;
+    }
+  }
+  return null;
+}
+
+function getWordsFromIconClass(el) {
+  // Check child icon elements first (i, span, svg, em)
+  const iconChildren = el.querySelectorAll('i, span, svg, em');
+  for (const node of iconChildren) {
+    const cls = typeof node.className === 'string' ? node.className.toLowerCase() : '';
+    if (!cls) continue;
+
+    for (const [label, keywords] of Object.entries(ICON_PATTERNS)) {
+      if (keywords.some((kw) => new RegExp(`(^|[-_ ])${kw}([-_ ]|$)`, 'i').test(cls))) {
+        return label;
+      }
+    }
+
+    const matches = cls.match(/\b(?:icon|fa|bi|glyph|feather|ti)[-_]([a-z0-9-_]+)\b/i);
+    if (matches && matches[1]) {
+      const rawWords = matches[1].replace(/[-_]+/g, ' ').trim();
+      const filtered = rawWords.split(/\s+/).filter((w) => !/^(icon|fa|bi|glyph|sm|md|lg|xl|2x|3x|solid|regular|outline|btn|button|style|custom)$/i.test(w));
+      if (filtered.length > 0) {
+        return capitalize(filtered.join(' '));
+      }
+    }
+  }
+
+  // Check the element itself for explicit icon patterns
+  const elCls = typeof el.className === 'string' ? el.className.toLowerCase() : '';
+  if (elCls) {
+    for (const [label, keywords] of Object.entries(ICON_PATTERNS)) {
+      if (keywords.some((kw) => new RegExp(`(^|[-_ ])${kw}([-_ ]|$)`, 'i').test(elCls))) {
+        return label;
+      }
+    }
+    const matches = elCls.match(/\b(?:icon|fa|bi|feather)[-_]([a-z0-9-_]+)\b/i);
+    if (matches && matches[1]) {
+      const rawWords = matches[1].replace(/[-_]+/g, ' ').trim();
+      const filtered = rawWords.split(/\s+/).filter((w) => !/^(icon|fa|bi|glyph|sm|md|lg|xl|2x|3x|solid|regular|outline|btn|button|style|custom)$/i.test(w));
+      if (filtered.length > 0) {
+        return capitalize(filtered.join(' '));
+      }
+    }
+  }
+
+  return null;
+}
+
+function getWordsFromImageFileName(el) {
+  const img = el.tagName === 'IMG' ? el : el.querySelector('img');
+  if (!img) return null;
+  const src = img.getAttribute('src') || '';
+  if (!src || src.startsWith('data:')) return null;
+
+  try {
+    const pathname = src.split(/[?#]/)[0];
+    const filename = pathname.split('/').filter(Boolean).pop();
+    if (!filename) return null;
+    const nameWithoutExt = filename.replace(/\.[a-zA-Z0-9]+$/, '');
+    if (!nameWithoutExt || nameWithoutExt.length < 2) return null;
+
+    if (/^(img|dsc|photo|picture|image|asset|upload|file)[-_]?[0-9]+$/i.test(nameWithoutExt)) return null;
+    if (/^[0-9]+$/.test(nameWithoutExt)) return null;
+    if (/^[a-f0-9]{16,}$/i.test(nameWithoutExt)) return null;
+
+    const words = nameWithoutExt
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[-_]+/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter((w) => !/^(icon|btn|button|img|image|pic|photo|asset|thumb|thumbnail|small|medium|large|banner|header)$/i.test(w));
+
+    if (words.length > 0) {
+      const text = words.join(' ').toLowerCase();
+      if (text.length >= 2 && !/^(untitled|undefined|null|logo)$/i.test(text)) {
+        return capitalize(text);
+      }
+    }
+  } catch {}
+  return null;
+}
+
+function getLinkPathPart(el) {
+  if (el.tagName !== 'A' && el.getAttribute('role') !== 'link') return null;
+  const href = el.getAttribute('href');
+  if (!href || href === '#' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+    return null;
+  }
+
+  try {
+    const cleanHref = href.split(/[?#]/)[0];
+    const parts = cleanHref.split('/').filter(Boolean);
+    if (!parts.length) {
+      const hash = (href.split('#')[1] || '').trim();
+      if (hash && hash.length > 2) {
+        const hashWords = hash.replace(/[-_]+/g, ' ').trim();
+        if (hashWords && !/^(top|content|main)$/i.test(hashWords)) {
+          return capitalize(hashWords);
+        }
+      }
+      return null;
+    }
+    const lastPart = parts[parts.length - 1].replace(/\.[a-zA-Z0-9]+$/, '');
+    if (!lastPart || /^(index|default|home|main|view|page)$/i.test(lastPart)) return null;
+
+    const words = lastPart
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[-_]+/g, ' ')
+      .trim();
+
+    if (words.length >= 2) {
+      return capitalize(words);
+    }
+  } catch {}
+  return null;
+}
+
+function getNearbyLabel(el) {
+  const isField = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+  if (isField) {
+    if (el.name) {
+      const rawName = el.name.trim();
+      if (!/^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken)$/i.test(rawName)) {
+        const words = rawName
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/[-_]+/g, ' ')
+          .trim();
+        if (words.length >= 2) {
+          return capitalize(words);
+        }
+      }
+    }
+
+    const prev = el.previousElementSibling;
+    if (prev && /^(label|span|p|div|b|strong)$/i.test(prev.tagName)) {
+      const text = squash(prev.textContent).replace(/[:?]$/, '').trim();
+      if (text && text.length >= 2 && text.length < 60 && !/\n/.test(text)) {
+        return text;
+      }
+    }
+
+    const next = el.nextElementSibling;
+    if (next && /^(label|span|p|div|b|strong)$/i.test(next.tagName)) {
+      const text = squash(next.textContent).replace(/[:?]$/, '').trim();
+      if (text && text.length >= 2 && text.length < 60 && !/\n/.test(text)) {
+        return text;
+      }
+    }
+
+    if (el.previousSibling && el.previousSibling.nodeType === 3) {
+      const text = squash(el.previousSibling.nodeValue).replace(/[:?]$/, '').trim();
+      if (text && text.length >= 2 && text.length < 60 && !/\n/.test(text)) {
+        return text;
+      }
+    }
+  }
+
+  if (el.tagName === 'IMG') {
+    const figure = el.closest('figure');
+    if (figure) {
+      const caption = figure.querySelector('figcaption');
+      if (caption) {
+        const text = squash(caption.textContent);
+        if (text && text.length < 100) return text;
+      }
+    }
+  }
+
+  return null;
+}
+
+function inferPageFirstName(el) {
+  const title = getTitleFromElement(el);
+  if (title) return title;
+
+  const svgTitle = getSvgTitle(el);
+  if (svgTitle) return svgTitle;
+
+  const nearby = getNearbyLabel(el);
+  if (nearby) return nearby;
+
+  const iconWords = getWordsFromIconClass(el);
+  if (iconWords) return iconWords;
+
+  const fileWords = getWordsFromImageFileName(el);
+  if (fileWords) return fileWords;
+
+  const linkPath = getLinkPathPart(el);
+  if (linkPath) return linkPath;
+
+  return null;
+}
+
 function getControlContext(el) {
   const parts = [];
-  const tag = el.tagName.toLowerCase();
-  const role = (el.getAttribute('role') || '').toLowerCase().trim();
-  const type = (el.getAttribute('type') || '').toLowerCase().trim();
+  if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button') {
+    parts.push('button');
+  } else if (el.tagName === 'A' || el.getAttribute('role') === 'link') {
+    parts.push('link');
+    if (el.getAttribute('href')) parts.push(`destination "${el.getAttribute('href')}"`);
+  } else if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) {
+    const type = el.getAttribute('type') || el.tagName.toLowerCase();
+    parts.push(`${type} field`);
+    if (el.name) parts.push(`name "${el.name}"`);
+    if (el.placeholder) parts.push(`placeholder "${el.placeholder}"`);
+  }
 
-  let desc = tag;
-  if (role) desc += ` role=${role}`;
-  if (type) desc += ` type=${type}`;
-  parts.push(`Control: ${desc}`);
-
-  if (el.id) parts.push(`id: ${el.id}`);
-  if (el.name) parts.push(`name: ${el.name}`);
-  if (tag === 'a' && el.href) parts.push(`href: ${el.href}`);
-  if (el.title) parts.push(`title: ${el.title}`);
-
-  const cls = (typeof el.className === 'string' ? el.className : '').trim();
-  if (cls) parts.push(`class: ${cls.slice(0, 100)}`);
-
-  const icon = el.querySelector('svg, img, i, span');
-  if (icon) {
-    const iconCls = (typeof icon.className === 'string' ? icon.className : '').trim();
-    if (iconCls) parts.push(`icon: ${iconCls.slice(0, 80)}`);
-    const dataIcon = icon.getAttribute('data-icon') || icon.getAttribute('aria-roledescription');
-    if (dataIcon) parts.push(`icon name: ${dataIcon}`);
+  const container = el.closest('form, section, article, nav, header, footer, dialog, [role="region"], [role="dialog"], [role="form"]');
+  if (container) {
+    const heading = container.querySelector('h1, h2, h3, h4, h5, h6, legend, [role="heading"]');
+    if (heading && heading.textContent) {
+      parts.push(`in section "${squash(heading.textContent).slice(0, 60)}"`);
+    } else if (container.tagName === 'FORM') {
+      parts.push('in form');
+    }
   }
 
   const parent = el.parentElement;
   if (parent) {
-    try {
-      const clone = parent.cloneNode(true);
-      clone.querySelectorAll('script, style, noscript, template, input, select, textarea').forEach((n) => n.remove());
-      const nearby = (clone.textContent || '').replace(/\s+/g, ' ').trim();
-      if (nearby) parts.push(`nearby text: ${nearby.slice(0, 200)}`);
-    } catch {
-      // ignore
-    }
+    const clone = parent.cloneNode(true);
+    clone.querySelectorAll('script, style, template, noscript').forEach((n) => n.remove());
+    const nearby = squash(clone.textContent).slice(0, 120);
+    if (nearby) parts.push(`nearby text "${nearby}"`);
   }
 
   return parts.join(', ');
@@ -133,136 +367,115 @@ function getControlContext(el) {
 
 export default {
   async enable(options = {}, toolkit) {
-    if (this.running || (this.s && !this.s.ended)) return;
-    this.running = true;
+    if (this.s && !this.s.ended) return;
+    this.options = options || {};
+    this.toolkit = toolkit || this.toolkit;
+    if (!this.toolkit) return false;
+    const s = (this.s = this.toolkit.session());
+    const win = typeof window !== 'undefined' ? window : null;
+    const doc = typeof document !== 'undefined' ? document : null;
+    if (!doc) return false;
 
-    try {
-      const s = (this.s = toolkit.session());
-      const page = toolkit.page;
-      const doc = document;
-      const limit = typeof options?.limit === 'number' && options.limit >= 0 ? options.limit : 20;
+    const limit = typeof this.options.limit === 'number'
+      ? this.options.limit
+      : (typeof this.options.maxAiCalls === 'number' ? this.options.maxAiCalls : 10);
 
-      const asked = new WeakSet();
-      let aiCalls = 0;
+    const seen = new WeakSet();
+    let aiCalls = 0;
 
-      const elements = [...doc.querySelectorAll(SELECTOR)];
-      const candidates = [];
-
-      for (const el of elements) {
-        if (!page.isVisible(el) || el.closest('[aria-hidden="true"]') || el.closest('[hidden]')) continue;
-        if (page.isOurs(el)) continue;
-
-        const tag = el.tagName;
-        const isImg = tag === 'IMG' || (tag === 'INPUT' && el.type === 'image');
-
-        if (isImg) {
-          if (el.hasAttribute('alt')) continue;
-          if (hasAccessibleName(el, page)) continue;
-          candidates.push(el);
-        } else {
-          if (hasAccessibleName(el, page)) continue;
-          candidates.push(el);
-        }
+    const isElementHidden = (el) => {
+      if (!el || !el.isConnected) return true;
+      if (el.closest('[hidden]')) return true;
+      if (el.closest('[aria-hidden="true"]')) return true;
+      if (s.page && typeof s.page.isVisible === 'function') {
+        return !s.page.isVisible(el);
       }
+      return false;
+    };
 
-      if (candidates.length === 0) {
-        this.s.end();
-        return false;
-      }
+    const processSingleElement = async (el) => {
+      if (!el || el.nodeType !== 1 || seen.has(el) || !s.alive()) return;
+      seen.add(el);
 
-      async function process(el) {
-        if (!el || el.nodeType !== 1 || !s.alive()) return;
-        if (asked.has(el)) return;
-        if (!page.isVisible(el) || el.closest('[aria-hidden="true"]') || el.closest('[hidden]')) return;
-        if (page.isOurs(el)) return;
+      if (el.tagName === 'IMG') {
+        if (el.hasAttribute('alt')) return;
+        if (s.page?.nameOf && s.page.nameOf(el)) return;
 
-        const tag = el.tagName;
-        const isImg = tag === 'IMG' || (tag === 'INPUT' && el.type === 'image');
-
-        if (isImg) {
-          if (el.hasAttribute('alt')) return;
-          if (hasAccessibleName(el, page)) return;
-
-          if (isDecorativeImage(el)) {
-            s.setAttr(el, 'alt', '');
-            return;
-          }
-
-          if (aiCalls >= limit) return;
-          asked.add(el);
-          aiCalls++;
-
-          let desc = null;
-          try {
-            desc = await s.ai.vision('describe', el, { purpose: 'alt' });
-          } catch {
-            desc = null;
-          }
-
-          if (desc && typeof desc === 'string' && desc.trim() && s.alive()) {
-            s.setAttr(el, 'alt', desc.trim());
-          }
+        if (isClearlyDecorative(el, win)) {
+          s.setAttr(el, 'alt', '');
           return;
         }
 
-        // Interactive control
-        if (hasAccessibleName(el, page)) return;
+        const pageName = inferPageFirstName(el);
+        if (pageName) {
+          s.setAttr(el, 'alt', pageName);
+          return;
+        }
 
-        if (aiCalls >= limit) return;
-        asked.add(el);
+        if (isElementHidden(el)) return;
+        if (!isInformativeImage(el, win)) return;
+
+        if (aiCalls < limit) {
+          aiCalls++;
+          let alt = null;
+          try {
+            alt = await s.ai.vision('describe', el, { purpose: 'alt' });
+          } catch {
+            alt = null;
+          }
+          if (s.alive() && alt && typeof alt === 'string' && alt.trim()) {
+            s.setAttr(el, 'alt', alt.trim());
+          }
+        }
+        return;
+      }
+
+      if (s.page?.nameOf && s.page.nameOf(el)) return;
+
+      const pageName = inferPageFirstName(el);
+      if (pageName) {
+        s.setAttr(el, 'aria-label', pageName);
+        return;
+      }
+
+      if (isElementHidden(el)) return;
+
+      if (aiCalls < limit) {
         aiCalls++;
-
         const context = getControlContext(el);
         let label = null;
         try {
-          label = await s.ai.text('label', context);
+          label = await s.ai.text('label', context, { context: doc.title || '' });
         } catch {
           label = null;
         }
-
-        if (label && typeof label === 'string' && label.trim() && s.alive()) {
-          const clean = label.trim().replace(/^["'`]|["'`]$/g, '').trim();
-          if (clean) {
-            s.setAttr(el, 'aria-label', clean);
-            for (const img of el.querySelectorAll('img')) {
-              if (!img.hasAttribute('alt') && !img.hasAttribute('aria-label')) {
-                s.setAttr(img, 'alt', '');
-              }
-            }
-          }
+        if (s.alive() && label && typeof label === 'string' && label.trim()) {
+          s.setAttr(el, 'aria-label', label.trim());
         }
       }
+    };
 
-      const imgCandidates = candidates.filter((el) => el.tagName === 'IMG' || (el.tagName === 'INPUT' && el.type === 'image'));
-      const controlCandidates = candidates.filter((el) => !(el.tagName === 'IMG' || (el.tagName === 'INPUT' && el.type === 'image')));
-
-      for (const img of imgCandidates) {
+    const root = doc.body || doc.documentElement;
+    if (root) {
+      const initialElements = [...root.querySelectorAll(SELECTOR)];
+      for (const el of initialElements) {
         if (!s.alive()) break;
-        await process(img);
+        await processSingleElement(el);
       }
 
-      for (const ctrl of controlCandidates) {
-        if (!s.alive()) break;
-        await process(ctrl);
-      }
-
-      s.watch.added(doc.body, async (node) => {
-        if (aiCalls >= limit || !s.alive()) return;
-        const addedList = node.matches?.(SELECTOR) ? [node] : [];
-        if (node.querySelectorAll) addedList.push(...node.querySelectorAll(SELECTOR));
-        for (const el of addedList) {
-          if (aiCalls >= limit || !s.alive()) break;
-          await process(el);
-        }
-      });
-
-      return true;
-    } finally {
-      this.running = false;
+      s.watch.added(
+        root,
+        async (el) => {
+          if (!s.alive()) return;
+          await processSingleElement(el);
+        },
+        { selector: SELECTOR }
+      );
     }
   },
 
   disable() {
     this.s?.end();
+    this.s = null;
   },
 };

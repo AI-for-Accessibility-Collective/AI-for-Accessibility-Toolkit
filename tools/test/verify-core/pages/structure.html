@@ -2,191 +2,210 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Civic Services and Public Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civic Services and Community Directory</title>
   <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --primary: #004d80;
+      --border: #767676;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
       font-family: system-ui, -apple-system, sans-serif;
-      line-height: 1.5;
-      color: #1a1a1a;
-      background: #fbfbfb;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .page-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
     }
     .site-header {
-      background: #0f2d59;
-      color: #ffffff;
-      padding: 16px 24px;
+      border-bottom: 2px solid var(--border);
+      padding: 1.5rem 0 1rem;
     }
-    .site-header a {
-      color: #ffffff;
+    .site-header .tagline {
+      font-size: 1.1rem;
+      color: #333333;
+      margin: 0.5rem 0 0;
     }
-    .cookie-notice {
-      background: #fff3cd;
-      color: #533f03;
-      padding: 10px 24px;
-      font-size: 14px;
-      border-bottom: 1px solid #ffeeba;
-    }
-    .site-navigation {
-      background: #1b4b8a;
-      padding: 8px 24px;
-    }
-    .site-navigation ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .site-navigation a {
-      color: #ffffff;
-      text-decoration: underline;
-      display: inline-block;
-      min-width: 24px;
-      min-height: 24px;
-      line-height: 24px;
-    }
-    .site-navigation a:focus-visible {
-      outline: 3px solid #ffdd00;
-      outline-offset: 2px;
-    }
-    .layout-container {
-      max-width: 960px;
-      margin: 24px auto;
-      padding: 0 16px;
-      display: flex;
-      gap: 24px;
-    }
-    .content {
-      flex: 1;
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .sidebar {
-      width: 240px;
+    .notice.cookie-banner {
       background: #f0f4f8;
-      padding: 16px;
+      border: 1px solid #b0c4de;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    .navbar.main-nav {
+      margin: 1rem 0;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .navbar.main-nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .navbar.main-nav a {
+      color: var(--primary);
+      text-decoration: underline;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      display: inline-block;
+      min-width: 44px;
+      min-height: 44px;
+      line-height: 1.5;
+    }
+    .main.content {
+      padding: 1.5rem 0;
+    }
+    .section-card {
+      border: 1px solid #e0e0e0;
       border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      background: #fafafa;
+    }
+    h1 {
+      font-size: 2rem;
+      margin: 0 0 0.5rem;
+      color: #111111;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 1.5rem 0 0.75rem;
+      color: #222222;
+    }
+    h3 {
+      font-size: 1.2rem;
+      margin: 1rem 0 0.5rem;
+      color: #333333;
+    }
+    .sidebar-widget {
+      background: #f7f9fa;
+      border-left: 4px solid var(--primary);
+      padding: 1rem;
+      margin: 1.5rem 0;
+    }
+    .prose {
+      margin: 1rem 0;
+    }
+    .prose a {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+    button, input[type="submit"] {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      min-width: 44px;
+      min-height: 44px;
+      cursor: pointer;
+    }
+    a:focus-visible, button:focus-visible, [tabindex="-1"]:focus-visible {
+      outline: 3px solid #000000 !important;
+      outline-offset: 2px !important;
     }
     .site-footer {
-      background: #222222;
-      color: #eeeeee;
-      padding: 24px;
-      margin-top: 48px;
-      text-align: center;
-      font-size: 14px;
-    }
-    button {
-      min-height: 32px;
-      min-width: 32px;
-      padding: 6px 14px;
-      font: inherit;
-      cursor: pointer;
-      background: #0f2d59;
-      color: #ffffff;
-      border: 2px solid transparent;
-      border-radius: 4px;
-    }
-    button:focus-visible {
-      outline: 3px solid #0f2d59;
-      outline-offset: 2px;
-    }
-    a:focus-visible {
-      outline: 3px solid #0f2d59;
-      outline-offset: 2px;
+      border-top: 2px solid var(--border);
+      padding: 2rem 0 3rem;
+      margin-top: 2rem;
+      font-size: 0.95rem;
+      color: #444444;
     }
   </style>
 </head>
 <body>
-  <!-- Cookie banner: must not become landmark or main -->
-  <div id="cookie-notice" class="cookie-notice">
-    Cookie notice: We use essential cookies to maintain service continuity and accessibility.
-  </div>
+  <div class="page-container">
+    <div id="masthead" class="site-header">
+      <h1>Civic Services and Community Directory</h1>
+      <p class="tagline">Official directory of regional support services, health initiatives, and municipal assistance.</p>
+    </div>
 
-  <!-- Unmarked masthead/header -->
-  <div id="masthead" class="site-header">
-    <div class="logo">Civic Services Portal</div>
-  </div>
+    <div id="cookie-notice" class="notice cookie-banner">
+      <p>This service uses essential local cookies to remember session preferences.</p>
+    </div>
 
-  <!-- Unmarked navigation -->
-  <div id="primary-nav" class="site-navigation">
-    <ul>
-      <li><a href="#h-overview">Overview</a></li>
-      <li><a href="#h-eligibility">Eligibility</a></li>
-      <li><a href="#h-application">Applications</a></li>
-      <li><a href="#h-resources">Resources</a></li>
-      <li><a href="#h-contact">Contact</a></li>
-    </ul>
-  </div>
+    <div id="primary-nav" class="navbar main-nav">
+      <ul>
+        <li><a href="#health-services" id="link-nav-health">Health Support</a></li>
+        <li><a href="#housing-support" id="link-nav-housing">Housing Guidance</a></li>
+        <li><a href="#transit-accessibility" id="link-nav-transit">Public Transit</a></li>
+        <li><a href="#contact-information" id="link-nav-contact">Contact Directory</a></li>
+      </ul>
+    </div>
 
-  <div class="layout-container">
-    <!-- Unmarked main content block -->
-    <div id="main-content" class="content">
-      <h1 id="h-title">Civic Services and Public Guide</h1>
-      <p>
-        Welcome to the public accessibility and civic services guide. This comprehensive directory provides official
-        information regarding municipal programs, public initiatives, documentation standards, and community support
-        frameworks available throughout the upcoming calendar year.
-      </p>
-
-      <h2 id="h-overview">Overview of Community Programs</h2>
-      <p>
-        The civic programs administered by the city provide direct grants, assistive technology allocations, and
-        transportation accommodations to qualifying households and nonprofit organizations across every district.
-      </p>
-
-      <h3 id="h-eligibility">Eligibility Requirements</h3>
-      <p>
-        Residents seeking access to grant opportunities must demonstrate local residency for at least twelve consecutive
-        months, submit standard income verification, and present verified identification documents.
-      </p>
-
-      <h3 id="h-application">Application Process</h3>
-      <p>
-        Applications may be completed online or submitted through neighborhood service centers. All submissions are
-        reviewed by an intake officer within five business days from receipt.
-      </p>
-
-      <p id="prose-links">
-        For step-by-step instructions, read our <a href="#h-eligibility">guidelines document</a>, review our
-        <a href="#h-application">process outline</a>, or consult the municipal charter.
-      </p>
-
-      <h2 id="h-resources">Support Resources</h2>
-      <p>
-        Multiple advocacy teams and regional partners operate dedicated advisory desks to assist community members
-        in drafting documentation and scheduling accessibility evaluations.
-      </p>
-
-      <h3 id="h-contact">Direct Contacts</h3>
-      <p>
-        Contact our civic help desk via telephone, video relay, or secure online ticket system.
-      </p>
-
-      <div style="margin-top: 16px;">
-        <button id="btn-action" type="button">Submit Feedback</button>
+    <div id="main-content" class="main content">
+      <div id="section-intro">
+        <p>Welcome to the community assistance portal. Find direct links and guidance for civic resources across the municipal region.</p>
       </div>
 
-      <!-- Hidden and presentational headings to verify filtering -->
-      <h2 hidden>Archived Information</h2>
-      <h2 aria-hidden="true">Ignored Screen Reader Information</h2>
-      <h2 role="presentation">Decorative Heading</h2>
+      <div id="health-services" class="section-card">
+        <h2 id="heading-health">Health and Well-being Services</h2>
+        <p>Comprehensive information on medical facilities, primary healthcare providers, and community welfare programs.</p>
+
+        <h3 id="heading-clinics">Local Clinics and Medical Centers</h3>
+        <p>Walk-in clinics operate daily across northern and southern districts offering general medical consultations.</p>
+
+        <h3 id="heading-mental-health">Mental Health Support</h3>
+        <p>Confidential counseling services and youth counseling resources available twenty-four hours a day.</p>
+      </div>
+
+      <div id="housing-support" class="section-card">
+        <h2 id="heading-housing">Housing and Tenancy Assistance</h2>
+        <p>Grants, emergency shelter allocation, and tenancy legal rights advisory services for residents.</p>
+
+        <h3 id="heading-emergency-housing">Emergency Housing Grants</h3>
+        <p>Short-term accommodation grants provided through the city housing trust for families in transition.</p>
+      </div>
+
+      <div id="transit-accessibility" class="section-card">
+        <h2 id="heading-transit">Public Transport and Accessibility</h2>
+        <p>Transit maps, wheelchair-accessible vehicle routes, and subsidized municipal travel card registration.</p>
+
+        <h3 id="heading-accessible-passes">Accessible Transit Passes</h3>
+        <p>Reduced fare cards and door-to-door shuttle reservations for older adults and individuals with mobility impairments.</p>
+      </div>
+
+      <div id="sidebar-widget" class="sidebar-widget" role="complementary" aria-label="Quick Advisory">
+        <p><strong>Notice:</strong> Customer service helplines remain open on public holidays from 8:00 AM to 6:00 PM.</p>
+      </div>
+
+      <div id="prose-links" class="prose">
+        <p>For additional reading, consult our <a href="#guide-rules">guidelines</a>, review <a href="#privacy-terms">privacy notices</a>, or read the <a href="#annual-report">annual community report</a>.</p>
+      </div>
+
+      <div id="contact-information">
+        <h2 id="heading-contact">Contact Directory</h2>
+        <p>Reach municipal department representatives by phone, digital correspondence, or postal dispatch.</p>
+        <button type="button" id="btn-inquiry">Submit an Inquiry</button>
+      </div>
+
+      <!-- Headings to leave out of outline -->
+      <h2 hidden id="heading-hidden">Archived Guidelines</h2>
+      <h2 role="presentation" id="heading-presentation">Decorative Section Separator</h2>
+      <h3 aria-hidden="true" id="heading-aria-hidden">Internal Tracking Notes</h3>
     </div>
 
-    <!-- Existing landmark: complementary sidebar -->
-    <div id="sidebar-widget" class="sidebar" role="complementary" aria-label="Quick links">
-      <h2>Quick Reference</h2>
-      <p>Office hours: Monday through Friday, 8:30 AM to 5:00 PM.</p>
+    <div id="colophon" class="site-footer">
+      <p>Published by the Regional Council Department of Public Affairs.</p>
+      <p>© 2026 Municipal Civic Services. All rights reserved.</p>
     </div>
-  </div>
-
-  <!-- Unmarked footer / contentinfo -->
-  <div id="site-footer" class="site-footer">
-    <p>Municipal Civic Center &bull; 100 Civic Way, Suite 400</p>
-    <p>&copy; 2026 Civic Accessibility Services. All rights reserved.</p>
   </div>
 </body>
 </html>

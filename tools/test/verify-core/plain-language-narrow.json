@@ -4,19 +4,19 @@
   "page": "plain-language.html",
   "checks": [
     {
-      "name": "buttons fit and work at 320px width without horizontal scroll",
-      "code": "\n        const btn = document.querySelector('.ai4a11y-plain-btn');\n        if (!btn) return true; // before enable\n        const rect = btn.getBoundingClientRect();\n        if (rect.width < 24 || rect.height < 24) return false;\n        // Verify button fits within viewport\n        if (rect.right > 320) return false;\n        // Verify document does not have horizontal overflow\n        return document.documentElement.scrollWidth <= 320;\n      "
+      "name": "buttons appear and fit reflow at 320px viewport without overflow",
+      "code": "\n        const btns = document.querySelectorAll('.ai4a11y-plain-btn');\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) {\n          return btns.length === 0;\n        }\n        if (btns.length !== 3) return false;\n        for (const btn of btns) {\n          const rect = btn.getBoundingClientRect();\n          if (rect.width < 24 || rect.height < 24) return false;\n          if (rect.right > window.innerWidth) return false;\n        }\n        return document.documentElement.scrollWidth <= window.innerWidth + 2;\n      "
     },
     {
-      "name": "clicking button works at 320px and toggles back",
-      "code": "\n        const complex = document.getElementById('complex-para');\n        if (!complex) return false;\n        const btn = complex.nextElementSibling;\n        if (!btn || !btn.classList.contains('ai4a11y-plain-btn')) return true;\n\n        await window.__verifyClick('#complex-para + .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n\n        const replaced = document.querySelector('[data-ai4a11y-replaced]');\n        if (!replaced || !complex.hasAttribute('hidden')) return false;\n\n        // Toggle back to original\n        await window.__verifyClick('#complex-para ~ .ai4a11y-plain-btn');\n        await new Promise((r) => setTimeout(r, 60));\n        return !complex.hasAttribute('hidden');\n      "
+      "name": "button toggles and reflows content properly at 320px width",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const p1 = document.getElementById('para-long-1');\n        const btn1 = p1.nextElementSibling;\n        if (!btn1) return false;\n\n        btn1.click();\n        await new Promise(r => setTimeout(r, 60));\n\n        const repBox = p1.parentElement.querySelector('[data-ai4a11y-replaced]');\n        const replacedVisible = repBox && !repBox.hasAttribute('hidden');\n        const btnShowsOriginal = btn1.textContent.trim() === 'Show original';\n\n        // Toggle back to original\n        btn1.click();\n        await new Promise(r => setTimeout(r, 60));\n\n        const p1Visible = !p1.hasAttribute('hidden');\n        const btnShowsPlain = btn1.textContent.trim() === 'Plain language';\n\n        return replacedVisible && btnShowsOriginal && p1Visible && btnShowsPlain;\n      "
     }
   ],
   "ai": {
-    "simplify": "On November 15, 2026, the Welfare Department announced you can appeal within 45 days using Form 1040-A or the online claims portal."
+    "simplify": "Our clinic provides medical checkups under health rules starting January 15, 2024. Patients can visit Dr. Robert Miller at reception before 4:30 PM with photo ID proving they live in district 42. Read our registration guidelines for more details."
   },
   "viewport": {
     "width": 320,
-    "height": 600
+    "height": 800
   }
 }

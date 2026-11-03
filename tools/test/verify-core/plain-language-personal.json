@@ -3,15 +3,19 @@
   "file": "tools/core-adapters/plain-language.js",
   "page": "plain-language.html",
   "personal": {
-    "readingLevel": 5
+    "readingLevel": "easy-read"
   },
   "checks": [
     {
-      "name": "the persons readingLevel and keep terms reach the AI request",
-      "code": "\n        const complex = document.getElementById('complex-para');\n        if (!complex) return false;\n        const btn = complex.nextElementSibling;\n        if (!btn || !btn.classList.contains('ai4a11y-plain-btn')) return true;\n\n        let capturedRequest = null;\n        const originalSend = chrome.runtime.sendMessage;\n        chrome.runtime.sendMessage = async function(msg) {\n          if (msg?.type === 'ai4a11y:ai') {\n            capturedRequest = msg.request;\n          }\n          return originalSend.apply(this, arguments);\n        };\n\n        try {\n          await window.__verifyClick('#complex-para + .ai4a11y-plain-btn');\n          await new Promise((r) => setTimeout(r, 60));\n\n          if (!capturedRequest) return false;\n          if (capturedRequest.options?.readingLevel !== 5) return false;\n\n          const keep = capturedRequest.options?.keep || [];\n          if (!keep.includes('online claims portal')) return false;\n\n          // Put page back to original\n          await window.__verifyClick('#complex-para ~ .ai4a11y-plain-btn');\n          await new Promise((r) => setTimeout(r, 60));\n          return true;\n        } finally {\n          chrome.runtime.sendMessage = originalSend;\n        }\n      "
+      "name": "personal readingLevel easy-read reaches the AI simplify request",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const p1 = document.getElementById('para-long-1');\n        const btn1 = p1.nextElementSibling;\n        if (!btn1) return false;\n\n        let captured = null;\n        const origAi = globalThis.__verifyAi;\n        globalThis.__verifyAi = async (req) => {\n          captured = req;\n          return origAi(req);\n        };\n\n        btn1.click();\n        await new Promise(r => setTimeout(r, 60));\n        globalThis.__verifyAi = origAi;\n\n        const correctReadingLevel = captured?.options?.readingLevel === 'easy-read';\n\n        if (btn1.textContent.trim() === 'Show original') {\n          btn1.click();\n          await new Promise(r => setTimeout(r, 60));\n        }\n\n        return correctReadingLevel;\n      "
+    },
+    {
+      "name": "clicking one replaces paragraph with answer and toggles back",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const p2 = document.getElementById('para-long-2');\n        const btn2 = p2.nextElementSibling;\n        if (!btn2) return false;\n\n        btn2.click();\n        await new Promise(r => setTimeout(r, 60));\n\n        const p2Hidden = p2.hasAttribute('hidden');\n        const repBox = p2.parentElement.querySelector('[data-ai4a11y-replaced]');\n        const replacedVisible = repBox && !repBox.hasAttribute('hidden');\n        const btnShowsOriginal = btn2.textContent.trim() === 'Show original';\n\n        btn2.click();\n        await new Promise(r => setTimeout(r, 60));\n\n        const p2Visible = !p2.hasAttribute('hidden');\n        const btnShowsPlain = btn2.textContent.trim() === 'Plain language';\n\n        return p2Hidden && replacedVisible && btnShowsOriginal && p2Visible && btnShowsPlain;\n      "
     }
   ],
   "ai": {
-    "simplify": "On November 15, 2026, the Welfare Department announced you can appeal within 45 days using Form 1040-A or the online claims portal."
+    "simplify": "Our clinic provides medical checkups under health rules starting January 15, 2024. Patients can visit Dr. Robert Miller at reception before 4:30 PM with photo ID proving they live in district 42. Read our registration guidelines for more details."
   }
 }

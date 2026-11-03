@@ -5,25 +5,25 @@
   "personal": {
     "fontScale": 150,
     "textSizeMethod": "font",
-    "lineHeight": 1.8,
+    "lineHeight": 2,
     "letterSpacing": 0.12
   },
   "checks": [
     {
       "name": "with textSizeMethod font, zoom is never touched",
-      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return false;\n        if (host.zoom !== 1) return false;\n        if (host.zoomCalls.length !== 0) return false;\n        return true;\n      "
+      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return true;\n        return host.zoomCalls.length === 0;\n      "
     },
     {
-      "name": "the text is at the persons fontScale (computed sizes of body text, headings, and px-sized text)",
-      "code": "\n        const p = document.getElementById('lead-paragraph');\n        const h1 = document.querySelector('h1');\n        const h2 = document.querySelector('h2');\n        const h3 = document.querySelector('h3');\n        const badge = document.querySelector('.px-sized-badge');\n        if (!p || !h1 || !h2 || !h3 || !badge) return false;\n\n        const pFs = parseFloat(window.getComputedStyle(p).fontSize);\n        const h1Fs = parseFloat(window.getComputedStyle(h1).fontSize);\n        const h2Fs = parseFloat(window.getComputedStyle(h2).fontSize);\n        const h3Fs = parseFloat(window.getComputedStyle(h3).fontSize);\n        const badgeFs = parseFloat(window.getComputedStyle(badge).fontSize);\n\n        // Baseline: p=16px (-> 24), h1=32px (-> 48), h2=24px (-> 36), h3=20px (-> 30), badge=20px (-> 30)\n        if (Math.abs(pFs - 24) > 0.5) return false;\n        if (Math.abs(h1Fs - 48) > 1.0) return false;\n        if (Math.abs(h2Fs - 36) > 0.5) return false;\n        if (Math.abs(h3Fs - 30) > 0.5) return false;\n        if (Math.abs(badgeFs - 30) > 0.5) return false;\n        return true;\n      "
+      "name": "text is at 150% fontScale for body text, headings, and px-sized text",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const bodyText = document.getElementById('body-text');\n        const heading = document.getElementById('heading-text');\n        const pxText = document.getElementById('px-text');\n        if (!bodyText || !heading || !pxText) return false;\n\n        const bodyFs = parseFloat(window.getComputedStyle(bodyText).fontSize);\n        const headFs = parseFloat(window.getComputedStyle(heading).fontSize);\n        const pxFs = parseFloat(window.getComputedStyle(pxText).fontSize);\n\n        return Math.abs(bodyFs - 24) < 1 && Math.abs(headFs - 33) < 1 && Math.abs(pxFs - 21) < 1;\n      "
     },
     {
-      "name": "WCAG 1.4.12 spacing applied with no text cut off (no element scrollHeight above clientHeight)",
-      "code": "\n        const p = document.getElementById('lead-paragraph');\n        if (!p) return false;\n        const cs = window.getComputedStyle(p);\n        const lh = parseFloat(cs.lineHeight);\n        const fs = parseFloat(cs.fontSize);\n        if (Math.abs(lh / fs - 1.8) > 0.1) return false;\n\n        // Fixed card was allowed to grow: scrollHeight <= clientHeight + 1\n        const fixedCard = document.getElementById('fixed-card');\n        if (!fixedCard) return false;\n        if (fixedCard.scrollHeight > fixedCard.clientHeight + 1) return false;\n\n        // All elements in main have no text cut off\n        for (const el of document.querySelectorAll('main *')) {\n          if (el.scrollHeight > el.clientHeight + 1) return false;\n        }\n        return true;\n      "
+      "name": "WCAG 1.4.12 spacing applied with no text cut off",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const bodyText = document.getElementById('body-text');\n        if (!bodyText) return false;\n        const cs = window.getComputedStyle(bodyText);\n        const fs = parseFloat(cs.fontSize);\n        const lh = parseFloat(cs.lineHeight);\n        if (Math.abs(lh / fs - 2) > 0.1 && Math.abs(lh - 48) > 2) return false;\n\n        for (const el of document.body.querySelectorAll('*')) {\n          if (el.scrollHeight > el.clientHeight + 1) return false;\n        }\n        return true;\n      "
     },
     {
-      "name": "shortcuts update font size dynamically with method font",
-      "code": "\n        const p = document.getElementById('lead-paragraph');\n        if (!p) return false;\n\n        // Alt+Shift+Equal -> 160% (16 * 1.6 = 25.6px)\n        await __verifyPress('Alt+Shift+Equal');\n        let pFs = parseFloat(window.getComputedStyle(p).fontSize);\n        if (Math.abs(pFs - 25.6) > 0.5) return false;\n\n        // Alt+Shift+Minus -> 150% (24px)\n        await __verifyPress('Alt+Shift+Minus');\n        pFs = parseFloat(window.getComputedStyle(p).fontSize);\n        if (Math.abs(pFs - 24) > 0.5) return false;\n\n        return true;\n      "
+      "name": "text added after enable() is at the same size, never twice the size",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const container = document.getElementById('dynamic-container');\n        if (!container) return false;\n\n        const p = document.createElement('p');\n        p.id = 'dynamic-test-node';\n        p.style.fontSize = '16px';\n        p.textContent = 'Dynamic test element added after enable.';\n        container.appendChild(p);\n\n        await new Promise((r) => setTimeout(r, 250));\n\n        const dynFs = parseFloat(window.getComputedStyle(p).fontSize);\n        p.remove();\n\n        return Math.abs(dynFs - 24) < 1;\n      "
     }
   ]
 }

@@ -2,99 +2,191 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Community Garden Equipment Catalog</title>
+  <title>Names and Labels Test Dashboard</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       margin: 0;
-      padding: 1rem;
-      color: #111;
-      background: #fff;
+      padding: 1.5rem;
+      background: #f8fafc;
+      color: #1e293b;
       line-height: 1.5;
     }
-    header, nav, main, footer {
+    header, main, footer {
+      max-width: 900px;
+      margin: 0 auto 1.5rem auto;
+      background: #ffffff;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    section {
       margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e2e8f0;
     }
-    button, a, input {
+    h1 {
+      font-size: 1.5rem;
+      margin: 0 0 0.5rem 0;
+    }
+    h2 {
+      font-size: 1.2rem;
+      margin: 0 0 0.75rem 0;
+      color: #334155;
+    }
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    button, a[role="button"], a {
+      min-width: 24px;
       min-height: 24px;
-      margin: 0.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
-    .catalog-item {
-      border: 1px solid #ccc;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
+    .btn-style {
+      padding: 0.5rem 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #0f172a;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-style:focus-visible {
+      outline: 2px solid #2563eb;
+      outline-offset: 2px;
+    }
+    input[type="text"], input[type="email"] {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+    .bulk-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <header role="banner">
-    <h1>Community Garden Equipment</h1>
+  <header>
+    <h1>Names and Labels Test Dashboard</h1>
+    <p id="prose-intro">This dashboard verifies accessible naming for controls, forms, and images.</p>
   </header>
 
-  <nav aria-label="Main Navigation">
-    <!-- Unnamed link -->
-    <a id="link-unnamed" href="#cart" class="cart-link">
-      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 1h3l2 8h8l2-6H4"/></svg>
-    </a>
-    <!-- Named link -->
-    <a id="link-named" href="#details">View volunteer details</a>
-  </nav>
-
-  <main id="main-content">
-    <section aria-labelledby="sec-search">
-      <h2 id="sec-search">Search Catalog</h2>
-      <!-- Unnamed button -->
-      <button id="btn-unnamed" class="btn-search" type="button">
-        <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="7" cy="7" r="5"/><line x1="11" y1="11" x2="15" y2="15"/></svg>
-      </button>
-      <!-- Unnamed input -->
-      <input id="input-unnamed" type="text" name="query">
-
-      <!-- Named button -->
-      <button id="btn-named" type="button">Subscribe to Newsletter</button>
-      <!-- Named input -->
-      <label for="input-named">Your Email</label>
-      <input id="input-named" type="email">
+  <main>
+    <!-- Section 1: Pre-existing properly named elements -->
+    <section aria-labelledby="sec-named-title">
+      <h2 id="sec-named-title">Already Named Elements</h2>
+      <div class="control-row">
+        <button id="btn-already-named" type="button" class="btn-style">Save Preferences</button>
+        <a id="link-already-named" href="/overview" class="btn-style">Overview</a>
+        <div>
+          <label for="input-already-named">User Handle</label>
+          <input id="input-already-named" type="text" value="alice">
+        </div>
+        <img id="img-already-named" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%236366f1'/%3E%3C/svg%3E" width="60" height="60" alt="User Avatar">
+        <img id="img-already-decorative" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%2394a3b8'/%3E%3C/svg%3E" width="60" height="60" alt="">
+      </div>
     </section>
 
-    <section aria-labelledby="sec-catalog">
-      <h2 id="sec-catalog">Featured Items</h2>
-
-      <div class="catalog-item">
-        <h3>Plot Seedling Starter Kit</h3>
-        <!-- Informative image without alt -->
-        <img id="img-informative" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAALElEQVR42u3BAQEAAACCIP+vbkhAAQAAAAAAAAAAAAAAAAAAAAAAAAAA4GEDegABAWRgSgAAAABJRU5ErkJggg==" width="50" height="50">
-        <p>Complete starter kit with seeds, peat pots, and organic soil blend.</p>
+    <!-- Section 2: Page-first naming without AI -->
+    <section aria-labelledby="sec-page-first-title">
+      <h2 id="sec-page-first-title">Page-First Naming (No AI Needed)</h2>
+      <div class="control-row">
+        <!-- Title attribute on child -->
+        <button id="btn-page-title" type="button" class="btn-style"><span title="Account Settings"></span></button>
+        <!-- SVG title element -->
+        <button id="btn-svg-title" type="button" class="btn-style">
+          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><title>Close Window</title><rect width="24" height="24" fill="#64748b"/></svg>
+        </button>
+        <!-- Icon class -->
+        <button id="btn-icon-class" type="button" class="btn-style"><i class="fa fa-search"></i></button>
+        <!-- Link with icon class -->
+        <a id="link-icon-class" href="/cart" class="btn-style"><span class="icon-shopping-cart"></span></a>
+        <!-- Image file name -->
+        <img id="img-file-name" src="assets/download-report.png" width="64" height="64">
+        <!-- Link last path segment -->
+        <a id="link-path-part" href="/customer-support" class="btn-style"></a>
+        <!-- Form field with nearby sibling text -->
+        <div>
+          <span id="label-email-text">Email Address:</span>
+          <input id="input-nearby-sibling" type="email">
+        </div>
+        <!-- Form field with name attribute -->
+        <div>
+          <input id="input-by-name" type="text" name="postal_code">
+        </div>
+        <!-- Image with figcaption -->
+        <figure>
+          <img id="img-by-figcaption" src="assets/sunset-harbor.jpg" width="64" height="64">
+          <figcaption>Harbor at dawn</figcaption>
+        </figure>
       </div>
+    </section>
 
-      <div class="catalog-item">
-        <h3>Garden Overview Map</h3>
-        <!-- Named image -->
-        <img id="img-named" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAALElEQVR42u3BAQEAAACCIP+vbkhAAQAAAAAAAAAAAAAAAAAAAAAAAAAA4GEDegABAWRgSgAAAABJRU5ErkJggg==" width="50" height="50" alt="Garden plot map showing vegetable beds">
+    <!-- Section 3: Decorative images -->
+    <section aria-labelledby="sec-decorative-title">
+      <h2 id="sec-decorative-title">Decorative and Sub-Threshold Images</h2>
+      <div class="control-row">
+        <!-- Presentation role (unlabeled) -->
+        <img id="img-role-presentation" role="presentation" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23cbd5e1'/%3E%3C/svg%3E" width="80" height="80">
+        <!-- Tiny spacer (unlabeled) -->
+        <img id="img-decorative-spacer" src="images/spacer.gif" width="10" height="10">
+        <!-- Tiny 12x12 image (unlabeled) -->
+        <img id="img-tiny-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Crect width='12' height='12' fill='%23cbd5e1'/%3E%3C/svg%3E" width="12" height="12">
+        <!-- 32x32 image: <= 48px, non-decorative, but below informative threshold (no alt) -->
+        <img id="img-small-nondecorative" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%2364748b'/%3E%3C/svg%3E" width="32" height="32">
       </div>
+    </section>
 
-      <div class="catalog-item">
-        <h3>Decorative &amp; Layout Elements</h3>
-        <!-- Spacer image (tiny 1x1) -->
-        <img id="img-spacer" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAA" width="1" height="1">
-        <!-- Presentation role image -->
-        <img id="img-presentation" role="presentation" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9QzwAEjDAGYzMGAP4dB/EAmZ0XAAAAAElFTkSuQmCC" width="10" height="10">
-        <!-- Explicit alt="" image -->
-        <img id="img-decorative-alt" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9QzwAEjDAGYzMGAP4dB/EAmZ0XAAAAAElFTkSuQmCC" width="10" height="10" alt="">
+    <!-- Section 4: AI-dependent controls and informative images -->
+    <section aria-labelledby="sec-ai-title">
+      <h2 id="sec-ai-title">AI Dependent Elements</h2>
+      <div class="control-row">
+        <button id="btn-ai-control" type="button" class="btn-custom-x"></button>
+        <a id="link-ai-control" href="#" class="nav-custom-y"></a>
+        <input id="input-ai-field" type="text" class="field-custom-z">
+        <!-- Informative image > 48x48 (no alt) -->
+        <img id="img-ai-informative" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%2310b981'/%3E%3C/svg%3E" width="80" height="80">
       </div>
+    </section>
 
-      <div class="catalog-item">
-        <h3>Hidden Elements (must remain untouched)</h3>
-        <!-- Hidden button -->
-        <button id="btn-hidden" type="button" hidden></button>
-        <!-- Hidden image -->
-        <img id="img-hidden" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mNk+M9QzwAEjDAGYzMGAP4dB/EAmZ0XAAAAAElFTkSuQmCC" style="display:none">
+    <!-- Section 5: Hidden controls (must never receive AI calls) -->
+    <section aria-labelledby="sec-hidden-title" style="margin-bottom: 0;">
+      <h2 id="sec-hidden-title">Hidden Elements</h2>
+      <button id="btn-hidden-display" type="button" style="display: none;"></button>
+      <a id="link-hidden-attr" href="#" hidden></a>
+      <input id="input-hidden-aria" type="text" aria-hidden="true">
+    </section>
+
+    <!-- Section 6: Bulk unnamed controls for budget/limit verification -->
+    <section aria-labelledby="sec-bulk-title">
+      <h2 id="sec-bulk-title">Bulk Unnamed Controls</h2>
+      <div id="bulk-unnamed-container" class="bulk-grid">
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
+        <button class="bulk-btn-x" type="button"></button>
       </div>
     </section>
   </main>
 
-  <footer role="contentinfo">
-    <p>&copy; 2026 Community Garden Project.</p>
+  <footer>
+    <p id="prose-footer">Dashboard footer with legal notes and accessibility policy.</p>
   </footer>
 </body>
 </html>

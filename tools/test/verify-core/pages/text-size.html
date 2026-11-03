@@ -3,194 +3,156 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exploring Astronomy - Science Daily</title>
+  <title>Typography and Layout — Reading Studio</title>
   <style>
-    * {
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --primary: #004d80;
+      --border: #cccccc;
+    }
+    *, *::before, *::after {
       box-sizing: border-box;
     }
     body {
       margin: 0;
-      padding: 16px;
+      padding: 0;
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 16px;
       line-height: 1.5;
-      color: #111111;
-      background-color: #ffffff;
+      color: var(--text);
+      background: var(--bg);
+    }
+    header, nav, main, footer {
       max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
     }
     header {
-      margin-bottom: 24px;
-      border-bottom: 1px solid #cccccc;
-      padding-bottom: 12px;
-    }
-    nav ul {
-      list-style: none;
-      padding: 0;
-      margin: 8px 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    nav a {
-      color: #0033aa;
-      text-decoration: underline;
-      display: inline-block;
-      min-height: 24px;
-      line-height: 24px;
+      border-bottom: 2px solid var(--border);
     }
     h1 {
-      font-size: 32px;
-      margin: 0 0 12px 0;
-      line-height: 1.25;
+      font-size: 28px;
+      margin: 0.5rem 0;
     }
     h2 {
-      font-size: 24px;
-      margin: 20px 0 10px 0;
-      line-height: 1.3;
-    }
-    h3 {
-      font-size: 20px;
-      margin: 16px 0 8px 0;
-      line-height: 1.35;
+      font-size: 22px;
+      margin: 1rem 0 0.5rem;
     }
     p {
-      margin: 0 0 16px 0;
+      margin: 0 0 1rem;
     }
-    .px-sized-badge {
-      font-size: 20px;
-      font-weight: bold;
-      color: #0033aa;
-      display: inline-block;
-      margin-bottom: 8px;
-    }
-    .card {
-      background: #f7f7f7;
-      border: 1px solid #cccccc;
-      border-radius: 4px;
-      padding: 8px 12px;
-      margin: 16px 0;
-    }
-    #fixed-card {
-      height: 100px;
-      overflow: hidden;
-    }
-    fieldset {
-      border: 1px solid #cccccc;
-      border-radius: 4px;
-      padding: 12px;
-      margin: 16px 0;
-    }
-    legend {
-      font-weight: bold;
-      padding: 0 4px;
-    }
-    .form-row {
+    nav ul {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0;
     }
-    button {
-      background-color: #0033aa;
-      color: #ffffff;
-      border: none;
-      border-radius: 4px;
-      padding: 10px 18px;
-      font-size: 16px;
-      cursor: pointer;
+    nav a {
+      color: var(--primary);
+      text-decoration: underline;
+      padding: 0.5rem;
+      display: inline-block;
       min-width: 44px;
       min-height: 44px;
     }
-    button:focus-visible, a:focus-visible, input:focus-visible {
-      outline: 3px solid #0055ff;
+    nav a:focus, button:focus, input:focus {
+      outline: 3px solid #000000;
       outline-offset: 2px;
     }
-    pre {
-      background: #eeeeee;
-      padding: 12px;
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background: #fafafa;
+    }
+    #fixed-box {
+      height: 80px;
+      overflow: hidden;
+      border: 1px solid var(--border);
       border-radius: 4px;
-      overflow-x: auto;
+      padding: 8px;
+      background: #f5f5f5;
     }
-    code {
-      font-family: monospace;
+    #px-text {
       font-size: 14px;
     }
-    footer {
-      margin-top: 32px;
-      border-top: 1px solid #cccccc;
-      padding-top: 16px;
-      font-size: 14px;
-      color: #333333;
+    .form-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    button {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      min-height: 44px;
+      min-width: 44px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <header role="banner">
-    <nav aria-label="Main navigation">
+  <header>
+    <h1>Reading Studio</h1>
+    <nav aria-label="Main Navigation">
       <ul>
-        <li><a href="#main">Skip to main content</a></li>
-        <li><a href="#discoveries">Discoveries</a></li>
-        <li><a href="#observatories">Observatories</a></li>
+        <li><a href="#article">Article</a></li>
+        <li><a href="#settings">Settings</a></li>
+        <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
-    <h1>Exploring Modern Astronomy and Deep Space</h1>
   </header>
 
   <main id="main">
-    <article>
-      <span class="px-sized-badge">Featured Topic</span>
-      <p id="lead-paragraph">Astronomers observe the universe through diverse wavelengths of light, capturing distant galaxies and celestial phenomena that occurred billions of years ago.</p>
+    <article id="article">
+      <h2 id="heading-text">Accessible Typography in Digital Publishing</h2>
+      <p id="body-text">
+        Clear typography improves comprehension and reduces visual fatigue for readers of all abilities.
+        When text can be enlarged and given generous line and letter spacing, readers with low vision
+        or reading challenges can read comfortably without losing their place.
+      </p>
 
-      <section id="discoveries">
-        <h2>Latest Cosmic Discoveries</h2>
-        <p>New spectroscopic data reveals molecular compounds in exoplanet atmospheres, indicating complex chemical processes throughout distant star systems.</p>
+      <p id="px-text">
+        Captions and auxiliary notes are frequently styled with explicit pixel font sizes in production layouts.
+      </p>
 
-        <div id="fixed-card" class="card">
-          <p id="fixed-card-text" style="margin: 0;">Observational astronomy studies stellar evolution and distant galaxies.</p>
+      <div class="card">
+        <h3>Fixed-Height Container</h3>
+        <div id="fixed-box">
+          <p id="fixed-box-p">
+            Short fixed container note.
+          </p>
         </div>
-      </section>
+      </div>
 
-      <section id="observatories">
-        <h3>Ground and Space Observatories</h3>
-        <p>Next-generation telescopes combine adaptive optics with infrared sensors to penetrate cosmic dust clouds and observe young star clusters forming.</p>
-
-        <pre tabindex="0" aria-label="Code sample"><code>const speedOfLight = 299792458; // metres per second</code></pre>
-      </section>
-
-      <section id="preferences" aria-label="Reader preferences">
-        <h2>Reader Options</h2>
-        <form action="#" method="get" onsubmit="return false;">
-          <fieldset>
-            <legend>Display Settings</legend>
-            <div class="form-row">
-              <input type="radio" id="opt1" name="pref" value="standard" checked>
-              <label for="opt1">Standard solar system updates</label>
-            </div>
-            <div class="form-row">
-              <input type="radio" id="opt2" name="pref" value="detailed">
-              <label for="opt2">Detailed astronomical observatory feed</label>
-            </div>
-            <div class="form-row">
-              <input type="checkbox" id="chk1" name="alerts">
-              <label for="chk1">Receive notifications for meteor showers</label>
-            </div>
-          </fieldset>
-          <button type="submit" id="btn-save">Save preferences</button>
+      <div class="card" id="form-card">
+        <h3>Reader Preferences</h3>
+        <form id="settings">
+          <div class="form-group">
+            <input type="checkbox" id="pref-reading-guide">
+            <label for="pref-reading-guide">Enable reading guide line</label>
+          </div>
+          <button type="button" id="btn-save">Save Preferences</button>
         </form>
-      </section>
+      </div>
+
+      <div id="dynamic-container" class="card">
+        <h3>Dynamic Content Area</h3>
+        <p>New content can be appended here to test late-arriving elements.</p>
+      </div>
     </article>
   </main>
 
-  <aside aria-label="Related Topics">
-    <h2>Related Information</h2>
-    <p>Read about gravitational wave detectors and multi-messenger astronomy.</p>
-    <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" fill="#222222"/>
-    </svg>
-  </aside>
-
-  <footer role="contentinfo">
-    <p>&copy; 2026 Science Daily. All rights reserved.</p>
+  <footer id="contact">
+    <p>Reading Studio Accessibility Lab — Open Research Project</p>
   </footer>
 </body>
 </html>

@@ -1,313 +1,253 @@
-// Text size and spacing: makes text bigger and gives it more room, as the person's settings say.
-// For vision and reading barriers: text too small to read, crowded lines, cramped letters.
+// text-size.js — Text size and spacing.
+// Barrier: Low vision and reading difficulties (such as dyslexia) make standard
+// text sizes, tight line heights, and compact letter spacing difficult or
+// fatiguing to read, and small text hard to discern.
+//
 // Suggested in onboarding for: vision, reading (a suggestion only, never a gate).
-//
-// The person's settings it reads:
-//   fontScale: text size in percent, 100 to 200 (default 100).
-//   textSizeMethod: 'zoom' (browser zoom) or 'font' (text size alone).
-//   lineHeight: line spacing multiplier, 1.0 to 3.0 (up to 2.0 via shortcut).
-//   letterSpacing: letter spacing in em, 0 to 0.5 (up to 0.12 em for WCAG 1.4.12).
-//
+// The person's settings it reads: fontScale, textSizeMethod, lineHeight, letterSpacing.
 // What the person can adjust:
-//   Alt+Shift+Equal: increases fontScale by 10% (up to 200%).
-//   Alt+Shift+Minus: decreases fontScale by 10% (down to 100%).
-//   Alt+Shift+L: cycles lineHeight through 1.5, 1.8, 2.0, and back to the page's own.
-//   Alt+Shift+G: saves the current text size and spacing values for every site.
-//   Each adjustment is saved for this site and announced to screen readers.
+//   With the person's shortcut (s.keys.adjust, label 'Text size', settings fontScale):
+//   up and down change fontScale in steps of 10 percent, 100 to 200, saved for this site
+//   and announced. Line and letter spacing follow the person's settings (lineHeight, letterSpacing);
+//   they adjust those in their profile.
 //
-// Developer options (passed to enable()):
-//   method: 'zoom' | 'font' (default 'zoom') - builder default when person has no preference.
-//   fontScale: number (100-200) - builder default text size percentage.
-//   lineHeight: number (1.0-3.0) - builder default line spacing ratio.
-//   letterSpacing: number (0-0.5) - builder default letter spacing in em.
-//   wordSpacing: number (e.g. 0.16) - builder default word spacing in em.
-//   paragraphSpacing: number (e.g. 2.0) - builder default paragraph margin-bottom in em.
-//   wcagSpacing: boolean - when true, sets WCAG 1.4.12 defaults (lineHeight 1.5, letterSpacing 0.12em, wordSpacing 0.16em, paragraphSpacing 2em).
+// Options:
+//   method: 'zoom' (browser zoom) or 'font' (text size alone). Default 'zoom'.
+//   lineHeight: Number, line height multiplier up to 2 (WCAG 1.4.12).
+//   letterSpacing: Number, letter spacing in em up to 0.12 (WCAG 1.4.12).
+//   wordSpacing: Number, word spacing in em up to 0.16 (WCAG 1.4.12).
+//   paragraphSpacing: Number, paragraph spacing margin-bottom in em up to 2 (WCAG 1.4.12).
+//   wcagSpacing: Boolean, apply full WCAG 1.4.12 spacing defaults when true.
 //
-// Key decisions:
-//   - Zoom or text size alone, as s.zoom.method() says, never both.
-//   - With 'zoom', adjusts the browser's native zoom via s.zoom.set(), which reflows the page
-//     naturally and is restored on disable().
-//   - With 'font', snapshots baseline computed font sizes across text elements synchronously
-//     in Pass 1 before changing any inline styles, preventing cascade amplification (where nested
-//     elements compound parent multipliers). Pass 2 applies explicit pixel sizes.
-//   - Leaves banner text pinned at both top and bottom (fixed-inset boxes) untouched so absolute
-//     layouts do not break.
-//   - Detects boxes with fixed height or max-height where enlarged text causes vertical overflow
-//     (scrollHeight > clientHeight + 1) and lets them grow (height: auto !important, min-height: original),
-//     preventing text cut off.
-//   - Line and letter spacing follow WCAG 1.4.12 on text-bearing elements without breaking icon glyphs.
-//   - Radio buttons and checkboxes are protected from squishing in flex containers (flex-shrink: 0).
-//   - Word-wrapping rules prevent horizontal overflow and sideways scrolling at 320px wide.
-//   - Applies once synchronously in enable(); does nothing (returns false) when no setting asks for it
-//     unless the person adjusts it via keyboard shortcuts.
+// Decisions:
+//   • Uses s.zoom.method() to arbitrate between browser zoom and text size alone; never both.
+//   • With 'zoom', sets browser zoom (s.zoom.set) to fontScale/100 and restores on disable().
+//   • With 'font', scales text sizes using s.text.scale, preserving proportions and px sizes without compounding.
+//   • When no fontScale is asked (<= 100 or unset), s.zoom is never called and the page is unchanged.
+//   • Shortcut adjuster (s.keys.adjust) steps fontScale by 10% (100–200%), saves for this site (s.profile.set),
+//     and announces the applied size.
+//   • Spacing is injected as one scoped stylesheet (s.css), targeting text elements without breaking icon fonts.
+//   • Detects boxes whose text would be cut off by fixed heights and allows them to grow (height: auto, min-height).
+//   • Watches for content added dynamically (s.watch.added) to ensure proper sizing without double-scaling.
+//   • Uses overflow-wrap: break-word to prevent sideways scrolling at 320px.
 //
 // What it cannot do:
-//   - Cannot scale text inside cross-origin iframes or closed shadow DOM roots.
-//   - Cannot enlarge text embedded inside raster images (PNG, JPEG) or canvas drawings.
-
-const TEXT_ELEMENT_SELECTOR =
-  'p, h1, h2, h3, h4, h5, h6, li, td, th, div, span, a, button, ' +
-  'input, select, textarea, label, blockquote, pre, figcaption, caption, dt, dd, ' +
-  'summary, article, section, header, footer, nav, main, aside, ' +
-  'small, b, strong, em, legend';
-
-const SPACING_TEXT_SELECTOR =
-  'body, p, h1, h2, h3, h4, h5, h6, li, td, th, dd, dt, label, blockquote, figcaption';
-
-function isFixedInsetBox(el) {
-  try {
-    if (typeof el.computedStyleMap !== 'function') return false;
-    const map = el.computedStyleMap();
-    const top = map.get('top');
-    const bottom = map.get('bottom');
-    if (top && bottom && String(top) !== 'auto' && String(bottom) !== 'auto') {
-      const cs = window.getComputedStyle(el);
-      if (cs.position === 'absolute' || cs.position === 'fixed') return true;
-    }
-  } catch (_) {}
-  return false;
-}
+//   • Cannot scale text rendered inside bitmap images or canvas elements.
+//   • Cannot resize browser UI outside the web page content.
 
 export default {
-  s: null,
-  baselineMap: null,
-  overflowingBefore: null,
-  currentFontScale: 100,
-  currentLineHeight: null,
-  currentLetterSpacing: null,
-  currentWordSpacing: null,
-  currentParagraphSpacing: null,
-  currentMethod: 'zoom',
-
-  enable(options = {}, toolkit) {
+  async enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
-    const s = (this.s = toolkit.session());
-    this.baselineMap = new WeakMap();
-    this.overflowingBefore = new WeakSet();
+    this.options = options || {};
+    this.toolkit = toolkit || this.toolkit;
+    if (!this.toolkit) return false;
+    const s = (this.s = this.toolkit.session());
 
-    // Snapshot pre-existing overflowing elements before touching anything
-    if (typeof document !== 'undefined') {
-      for (const el of document.querySelectorAll('*')) {
+    const doc = document;
+    const win = window;
+    const body = doc.body;
+
+    // Snapshot pre-existing overflowing boxes before any styles or scales are applied
+    const wasOverflowing = new WeakSet();
+    if (body) {
+      for (const el of body.querySelectorAll('*')) {
         if (el.scrollHeight > el.clientHeight + 1) {
-          this.overflowingBefore.add(el);
+          wasOverflowing.add(el);
         }
       }
     }
 
-    // Determine initial settings from profile and options
-    const p = s.profile.get() || {};
-    const method = s.zoom.method(options.method || 'zoom');
-    this.currentMethod = method;
+    const personal = s.profile.get() || {};
+    const method = s.zoom.method(this.options.method || 'zoom');
 
-    const initialFontScale = p.fontScale !== undefined ? p.fontScale : (options.fontScale !== undefined ? options.fontScale : 100);
-    this.currentFontScale = typeof initialFontScale === 'number' ? Math.max(100, Math.min(200, Math.round(initialFontScale))) : 100;
+    let currentAppliedScale = null;
+    let hasZoomed = false;
 
-    const wcag = !!options.wcagSpacing;
-    this.currentLineHeight = p.lineHeight !== undefined ? p.lineHeight : (options.lineHeight !== undefined ? options.lineHeight : (wcag ? 1.5 : null));
-    this.currentLetterSpacing = p.letterSpacing !== undefined ? p.letterSpacing : (options.letterSpacing !== undefined ? options.letterSpacing : (wcag ? 0.12 : null));
-    this.currentWordSpacing = options.wordSpacing !== undefined ? options.wordSpacing : (p.wordSpacing !== undefined ? p.wordSpacing : (wcag ? 0.16 : null));
-    this.currentParagraphSpacing = options.paragraphSpacing !== undefined ? options.paragraphSpacing : (p.paragraphSpacing !== undefined ? p.paragraphSpacing : (wcag ? 2 : null));
-
-    // Register keyboard shortcuts
-    s.keys.shortcut({ code: 'Equal', alt: true, shift: true }, async () => {
-      const nextScale = Math.min(200, this.currentFontScale + 10);
-      this.currentFontScale = nextScale;
-      await s.profile.set({ fontScale: nextScale });
-      await this.applyChanges(s, toolkit);
-      s.announce(`Text size ${nextScale}% on this site. Use Alt+Shift+G to use on every site.`);
-    });
-
-    s.keys.shortcut({ code: 'Minus', alt: true, shift: true }, async () => {
-      const nextScale = Math.max(100, this.currentFontScale - 10);
-      this.currentFontScale = nextScale;
-      await s.profile.set({ fontScale: nextScale });
-      await this.applyChanges(s, toolkit);
-      s.announce(`Text size ${nextScale}% on this site. Use Alt+Shift+G to use on every site.`);
-    });
-
-    s.keys.shortcut({ code: 'KeyL', alt: true, shift: true }, async () => {
-      const lh = this.currentLineHeight;
-      let nextLh;
-      if (lh === 1.5) nextLh = 1.8;
-      else if (lh === 1.8) nextLh = 2.0;
-      else if (lh === 2.0) nextLh = null; // back to page's own
-      else nextLh = 1.5;
-
-      this.currentLineHeight = nextLh;
-      if (nextLh !== null) {
-        await s.profile.set({ lineHeight: nextLh });
-        s.announce(`Line height ${nextLh} on this site. Use Alt+Shift+G to use on every site.`);
-      } else {
-        s.announce("Line height: page's own.");
+    // Expand boxes with fixed height or max-height that now cut off text
+    const fixClippedBoxes = () => {
+      if (!body || !s.alive()) return;
+      for (const el of body.querySelectorAll('*')) {
+        if (wasOverflowing.has(el)) continue;
+        if (el.scrollHeight > el.clientHeight + 1) {
+          const cs = win.getComputedStyle(el);
+          if (cs.display === 'inline' || /^(auto|scroll)$/.test(cs.overflowY)) continue;
+          if (cs.height !== 'auto') {
+            s.setStyle(el, 'min-height', cs.height);
+            s.setStyle(el, 'height', 'auto', 'important');
+          }
+          if (cs.maxHeight !== 'none') {
+            s.setStyle(el, 'max-height', 'none', 'important');
+          }
+        }
       }
-      await this.applyChanges(s, toolkit);
-    });
+    };
 
-    s.keys.shortcut({ code: 'KeyG', alt: true, shift: true }, async () => {
-      const changes = {};
-      if (this.currentFontScale !== undefined) changes.fontScale = this.currentFontScale;
-      if (this.currentLineHeight !== null && this.currentLineHeight !== undefined) changes.lineHeight = this.currentLineHeight;
-      if (this.currentLetterSpacing !== null && this.currentLetterSpacing !== undefined) changes.letterSpacing = this.currentLetterSpacing;
-      if (this.currentMethod) changes.textSizeMethod = this.currentMethod;
-
-      if (Object.keys(changes).length > 0) {
-        await s.profile.set(changes, { scope: 'all' });
-        s.announce(`Text size ${this.currentFontScale}% saved for every site.`);
-      }
-    });
-
-    // Follow profile changes made elsewhere
-    s.profile.onChange(async (personal, changed) => {
+    // Apply or update text scaling via zoom or s.text.scale
+    const applyFontScale = async (scale) => {
       if (!s.alive()) return;
-      if (changed.fontScale !== undefined) this.currentFontScale = changed.fontScale;
-      if (changed.lineHeight !== undefined) this.currentLineHeight = changed.lineHeight;
-      if (changed.letterSpacing !== undefined) this.currentLetterSpacing = changed.letterSpacing;
-      if (changed.textSizeMethod !== undefined) this.currentMethod = s.zoom.method(options.method || 'zoom');
-      await this.applyChanges(s, toolkit);
+      let raw = scale !== undefined && scale !== null ? Number(scale) : null;
+      if (raw !== null && Number.isFinite(raw)) {
+        if (raw > 0 && raw <= 2) raw = Math.round(raw * 100);
+        raw = Math.max(100, Math.min(200, Math.round(raw)));
+      } else {
+        raw = 100;
+      }
+
+      if (raw === currentAppliedScale) return;
+      currentAppliedScale = raw;
+
+      if (method === 'zoom') {
+        if (raw > 100) {
+          hasZoomed = true;
+          await s.zoom.set(raw / 100);
+        } else if (hasZoomed) {
+          await s.zoom.set(1.0);
+        }
+      } else {
+        // Text size alone (method === 'font')
+        if (raw > 100) {
+          s.text.scale(raw / 100);
+        } else if (currentAppliedScale !== null) {
+          s.text.scale(1.0);
+        }
+      }
+    };
+
+    // Apply WCAG 1.4.12 text spacing via one stylesheet
+    const applySpacing = (p = {}) => {
+      if (!s.alive()) return;
+      const opts = this.options;
+      const wcag = opts.wcagSpacing;
+
+      const rawLh = p.lineHeight ?? opts.lineHeight ?? (wcag ? 2 : undefined);
+      const rawLs = p.letterSpacing ?? opts.letterSpacing ?? (wcag ? 0.12 : undefined);
+      const rawWs = opts.wordSpacing ?? (wcag ? 0.16 : undefined);
+      const rawPs = opts.paragraphSpacing ?? (wcag ? 2 : undefined);
+
+      const lh = rawLh !== undefined && rawLh !== null ? Math.min(2, Math.max(1, Number(rawLh))) : null;
+      const ls = rawLs !== undefined && rawLs !== null ? Math.min(0.12, Math.max(0, Number(rawLs))) : null;
+      const ws = rawWs !== undefined && rawWs !== null
+        ? (rawWs === true ? 0.16 : Math.min(0.16, Math.max(0, Number(rawWs))))
+        : (ls !== null && ls > 0 ? 0.16 : null);
+      const ps = rawPs !== undefined && rawPs !== null
+        ? (rawPs === true ? 2 : Math.min(2, Math.max(0, Number(rawPs))))
+        : null;
+
+      if (!lh && !ls && !ws && !ps) return;
+
+      const textProps = [];
+      if (lh) textProps.push(`line-height: ${lh} !important;`);
+      if (ls) textProps.push(`letter-spacing: ${ls}em !important;`);
+      if (ws) textProps.push(`word-spacing: ${ws}em !important;`);
+      textProps.push(`overflow-wrap: break-word !important;`);
+
+      const rules = [];
+      if (textProps.length) {
+        rules.push(`
+body {
+  ${textProps.join('\n  ')}
+}
+p, li, dd, dt, label, blockquote, figcaption, h1, h2, h3, h4, h5, h6 {
+  ${textProps.join('\n  ')}
+}
+`);
+      }
+
+      if (ps) {
+        rules.push(`
+p, [role="paragraph"] {
+  margin-block-end: ${ps}em !important;
+  margin-bottom: ${ps}em !important;
+}
+`);
+      }
+
+      // Preserve icon fonts from ligature breakdown and prevent radio/checkbox deformation
+      rules.push(`
+[aria-hidden="true"], [class*="icon"], [class*="material-"], [class*="fa-"], i, svg {
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+}
+input[type="radio"], input[type="checkbox"] {
+  flex-shrink: 0 !important;
+}
+`);
+
+      s.css('text-spacing', rules.join('\n'));
+    };
+
+    // Apply initial settings if present
+    applySpacing(personal);
+    await applyFontScale(personal.fontScale);
+    fixClippedBoxes();
+
+    // Register shortcut adjuster for Text size (fontScale 100-200 in 10% steps)
+    s.keys.adjust({
+      label: 'Text size',
+      settings: ['fontScale'],
+      up: async () => {
+        const cur = s.profile.get('fontScale') || 100;
+        const next = Math.min(200, Math.round(cur / 10) * 10 + 10);
+        const res = await s.profile.set({ fontScale: next });
+        if (res && res.applied) {
+          s.announce(`Text size ${next}% on this site.`);
+          await applyFontScale(next);
+          fixClippedBoxes();
+        }
+      },
+      down: async () => {
+        const cur = s.profile.get('fontScale') || 100;
+        const next = Math.max(100, Math.round(cur / 10) * 10 - 10);
+        const res = await s.profile.set({ fontScale: next });
+        if (res && res.applied) {
+          s.announce(`Text size ${next}% on this site.`);
+          await applyFontScale(next);
+          fixClippedBoxes();
+        }
+      },
     });
 
-    // Check if any setting or option asks for enlargement or spacing
-    const hasFontScale = this.currentFontScale > 100;
-    const hasLineHeight = typeof this.currentLineHeight === 'number' && this.currentLineHeight > 0;
-    const hasLetterSpacing = typeof this.currentLetterSpacing === 'number' && this.currentLetterSpacing > 0;
-    const hasWordSpacing = typeof this.currentWordSpacing === 'number' && this.currentWordSpacing > 0;
-    const hasParagraphSpacing = typeof this.currentParagraphSpacing === 'number' && this.currentParagraphSpacing > 0;
+    // Follow profile changes dynamically
+    s.profile.onChange((updated, changed) => {
+      if (changed && 'fontScale' in changed) {
+        applyFontScale(changed.fontScale);
+        fixClippedBoxes();
+      }
+      if (changed && ('lineHeight' in changed || 'letterSpacing' in changed)) {
+        applySpacing(updated);
+        fixClippedBoxes();
+      }
+    });
 
-    const asked = hasFontScale || hasLineHeight || hasLetterSpacing || hasWordSpacing || hasParagraphSpacing;
-
-    if (!asked) {
-      return false;
+    // Watch for dynamically added elements to prevent text cut-off
+    if (body) {
+      s.watch.added(
+        body,
+        (el) => {
+          for (let p = el; p && p !== body; p = p.parentElement) {
+            if (wasOverflowing.has(p)) continue;
+            if (p.scrollHeight > p.clientHeight + 1) {
+              const cs = win.getComputedStyle(p);
+              if (cs.display === 'inline' || /^(auto|scroll)$/.test(cs.overflowY)) continue;
+              if (cs.height !== 'auto') {
+                s.setStyle(p, 'min-height', cs.height);
+                s.setStyle(p, 'height', 'auto', 'important');
+              }
+              if (cs.maxHeight !== 'none') {
+                s.setStyle(p, 'max-height', 'none', 'important');
+              }
+            }
+          }
+        },
+        { debounceMs: 150 }
+      );
     }
 
-    return this.applyChanges(s, toolkit);
+    return true;
   },
 
   disable() {
     this.s?.end();
     this.s = null;
-    this.baselineMap = null;
-    this.overflowingBefore = null;
-    this.currentFontScale = 100;
-    this.currentLineHeight = null;
-    this.currentLetterSpacing = null;
-    this.currentWordSpacing = null;
-    this.currentParagraphSpacing = null;
-    this.currentMethod = 'zoom';
-  },
-
-  async applyChanges(s, toolkit) {
-    if (!s.alive()) return;
-
-    // 1. Spacing Stylesheet
-    this.updateSpacingCSS(s);
-
-    // 2. Text Sizing (Zoom or Font, never both)
-    if (this.currentMethod === 'zoom') {
-      const factor = (this.currentFontScale || 100) / 100;
-      await s.zoom.set(factor);
-    } else {
-      // Font method: scale font-size in DOM
-      const scale = (this.currentFontScale || 100) / 100;
-      this.applyFontScale(scale, s, toolkit);
-    }
-
-    // 3. Let fixed-height boxes grow if text wraps and overflows
-    this.growFixedBoxes(s, toolkit);
-  },
-
-  updateSpacingCSS(s) {
-    let css = '';
-    // Prevent radio buttons and checkboxes from squishing into ovals in flex rows
-    css += 'input[type="radio"], input[type="checkbox"] { flex-shrink: 0 !important; }\n';
-    // Ensure text wraps cleanly to prevent horizontal overflow and sideways scrolling at 320px
-    css += 'body, p, li, td, th { overflow-wrap: break-word; }\n';
-
-    if (this.currentLineHeight) {
-      css += `${SPACING_TEXT_SELECTOR} { line-height: ${this.currentLineHeight} !important; }\n`;
-    }
-    if (this.currentLetterSpacing) {
-      css += `${SPACING_TEXT_SELECTOR} { letter-spacing: ${this.currentLetterSpacing}em !important; }\n`;
-    }
-    if (this.currentWordSpacing) {
-      const ws = typeof this.currentWordSpacing === 'number' ? this.currentWordSpacing : 0.16;
-      css += `${SPACING_TEXT_SELECTOR} { word-spacing: ${ws}em !important; }\n`;
-    }
-    if (this.currentParagraphSpacing) {
-      const ps = typeof this.currentParagraphSpacing === 'number' ? this.currentParagraphSpacing : 2;
-      css += `p { margin-bottom: ${ps}em !important; }\n`;
-    }
-
-    s.css('text-size-spacing', css);
-  },
-
-  applyFontScale(scale, s, toolkit) {
-    if (typeof document === 'undefined' || !document.body) return;
-
-    const candidates = [];
-    const elements = [document.body, ...document.body.querySelectorAll(TEXT_ELEMENT_SELECTOR)];
-
-    for (const el of elements) {
-      if (!el || !el.tagName) continue;
-      if (toolkit.page.isOurs(el)) continue;
-      const tag = el.tagName.toUpperCase();
-      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'SVG' || tag === 'MATH') continue;
-
-      const cls = typeof el.className === 'string' ? el.className : '';
-      if (cls.includes('material-icons') || cls.includes('material-symbols') || cls.includes('fa-') || (tag === 'I' && el.textContent.length < 4)) continue;
-      if (el.getAttribute('aria-hidden') === 'true' && !el.textContent.trim()) continue;
-      if (isFixedInsetBox(el)) continue;
-
-      candidates.push(el);
-    }
-
-    // PASS 1: snapshot baseline computed font sizes before writing any styles
-    const plan = [];
-    for (const el of candidates) {
-      let baselinePx = this.baselineMap.get(el);
-      if (baselinePx === undefined) {
-        try {
-          const cs = window.getComputedStyle(el);
-          baselinePx = parseFloat(cs.fontSize);
-          if (baselinePx && baselinePx > 0) {
-            this.baselineMap.set(el, baselinePx);
-          }
-        } catch (_) {}
-      }
-      if (baselinePx && baselinePx > 0) {
-        plan.push({ el, baselinePx });
-      }
-    }
-
-    // PASS 2: apply scaled pixel sizes
-    for (const { el, baselinePx } of plan) {
-      if (scale === 1.0) {
-        s.setStyle(el, 'font-size', '');
-      } else {
-        const targetPx = Math.round(baselinePx * scale * 100) / 100;
-        s.setStyle(el, 'font-size', `${targetPx}px`);
-      }
-    }
-  },
-
-  growFixedBoxes(s, toolkit) {
-    if (typeof document === 'undefined') return;
-
-    for (const el of document.querySelectorAll('*')) {
-      if (toolkit.page.isOurs(el)) continue;
-      if (el.scrollHeight > el.clientHeight + 1 && (!this.overflowingBefore || !this.overflowingBefore.has(el))) {
-        let cs;
-        try { cs = window.getComputedStyle(el); } catch (_) { continue; }
-        if (cs.display === 'inline') continue;
-
-        if (cs.height !== 'auto' && cs.height !== '0px') {
-          s.setStyle(el, 'min-height', cs.height, 'important');
-          s.setStyle(el, 'height', 'auto', 'important');
-        }
-        if (cs.maxHeight !== 'none') {
-          s.setStyle(el, 'max-height', 'none', 'important');
-        }
-      }
-    }
   },
 };

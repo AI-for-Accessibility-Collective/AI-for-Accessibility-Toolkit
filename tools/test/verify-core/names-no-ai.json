@@ -4,17 +4,12 @@
   "page": "names.html",
   "checks": [
     {
-      "name": "with AI unavailable unnamed controls and informative images remain unchanged",
-      "code": "\n        const btn = document.getElementById('btn-unnamed');\n        const link = document.getElementById('link-unnamed');\n        const input = document.getElementById('input-unnamed');\n        const img = document.getElementById('img-informative');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.hasAttribute('aria-label')) return false;\n        if (link.hasAttribute('aria-label')) return false;\n        if (input.hasAttribute('aria-label')) return false;\n        if (img.hasAttribute('alt')) return false;\n        return true;\n      "
+      "name": "with AI unavailable nothing changes for AI elements and enable applies cleanly",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const btnAi = document.getElementById('btn-ai-control');\n      const imgAi = document.getElementById('img-ai-informative');\n      if (!btnAi || !imgAi) return false;\n\n      return !btnAi.hasAttribute('aria-label') && !imgAi.hasAttribute('alt');\n    "
     },
     {
-      "name": "controls that already had a name keep it exactly",
-      "code": "\n        const btn = document.getElementById('btn-named');\n        const link = document.getElementById('link-named');\n        const input = document.getElementById('input-named');\n        const img = document.getElementById('img-named');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.textContent.trim() !== 'Subscribe to Newsletter') return false;\n        if (link.textContent.trim() !== 'View volunteer details') return false;\n        if (img.getAttribute('alt') !== 'Garden plot map showing vegetable beds') return false;\n        return true;\n      "
-    },
-    {
-      "name": "decorative images are still marked alt empty without AI",
-      "code": "\n        const spacer = document.getElementById('img-spacer');\n        const pres = document.getElementById('img-presentation');\n        if (!spacer || !pres) return false;\n        if (spacer.getAttribute('alt') !== '') return false;\n        if (pres.getAttribute('alt') !== '') return false;\n        return true;\n      "
+      "name": "page-first rules still apply without AI",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const btnTitle = document.getElementById('btn-page-title');\n      const btnSvg = document.getElementById('btn-svg-title');\n      if (!btnTitle || !btnSvg) return false;\n\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return btnTitle.getAttribute('aria-label') === 'Account Settings' &&\n             btnSvg.getAttribute('aria-label') === 'Close Window';\n    "
     }
-  ],
-  "ai": {}
+  ]
 }

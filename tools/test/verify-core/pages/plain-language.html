@@ -2,129 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Public Assistance and Support Services</title>
+  <title>Metropolitan Community Health Care Center</title>
   <style>
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       line-height: 1.6;
-      color: #212121;
-      background: #fafafa;
+      color: #212529;
+      background-color: #ffffff;
       margin: 0;
       padding: 0;
     }
-    header, main, footer {
-      max-width: 800px;
-      margin: 0 auto;
+    header, nav, main, aside, footer {
+      box-sizing: border-box;
       padding: 1rem 1.5rem;
     }
     header {
-      border-bottom: 1px solid #e0e0e0;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
     }
     nav ul {
       list-style: none;
       padding: 0;
       display: flex;
-      gap: 1.5rem;
+      gap: 1rem;
+      margin: 0.5rem 0 0;
     }
     nav a {
-      color: #0d47a1;
+      color: #0b5ed7;
       text-decoration: underline;
     }
-    h1 {
-      font-size: 1.75rem;
-      margin-top: 0.5rem;
+    .layout {
+      display: flex;
+      flex-direction: row;
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem;
     }
-    h2 {
-      font-size: 1.3rem;
-      margin-top: 1.5rem;
+    main {
+      flex: 3;
+      padding: 0;
     }
-    p {
-      margin: 0.75rem 0;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1.5rem 0;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    th {
-      background: #f5f5f5;
+    aside {
+      flex: 1;
+      background: #f1f3f5;
+      border-radius: 6px;
+      padding: 1rem;
+      height: fit-content;
     }
     footer {
-      border-top: 1px solid #e0e0e0;
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
       margin-top: 2rem;
-      font-size: 0.875rem;
-      color: #616161;
+      font-size: 0.9rem;
     }
+    h1 { font-size: 1.8rem; margin: 0 0 0.5rem; color: #111827; }
+    h2 { font-size: 1.4rem; margin: 1.5rem 0 0.75rem; color: #1f2937; }
+    p { margin: 0 0 1rem; }
+    .short-intro { font-weight: 500; color: #495057; }
     a:focus-visible, button:focus-visible {
-      outline: 2px solid #0d47a1;
+      outline: 2px solid #0056b3;
       outline-offset: 2px;
     }
   </style>
 </head>
 <body>
   <header>
-    <nav aria-label="Main menu">
+    <h1>Metropolitan Community Health Care Center</h1>
+    <nav aria-label="Main Navigation">
       <ul>
-        <li><a href="#provisions">Provisions</a></li>
-        <li><a href="#schedule">Schedule</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="#about">About Our Services</a></li>
+        <li><a href="#eligibility">Eligibility Guidelines</a></li>
+        <li><a href="#contact">Contact Department</a></li>
       </ul>
     </nav>
-    <h1>Public Assistance Program Guidelines</h1>
   </header>
 
-  <main id="main-content">
-    <section id="provisions" aria-labelledby="provisions-title">
-      <h2 id="provisions-title">Administrative Provisions and Appeals</h2>
+  <div class="layout">
+    <main id="main-content">
+      <section id="about">
+        <h2>About Our Medical Services</h2>
+        <p class="short-intro" id="para-short">Welcome to the clinic.</p>
+        <p id="para-long-1">The Metropolitan Community Health Service establishes comprehensive diagnostic procedures pursuant to statutory wellness directives enacted on January 15, 2024. Patients seeking routine ambulatory consultations or therapeutic interventions may register with Dr. Robert Miller at the reception counter before 4:30 PM, provided they furnish primary identification documentation verifying continuous residency within municipal district 42. Explore our <a href="#guidelines">published registration guidelines</a> for additional procedural specifications and schedule revisions.</p>
+      </section>
 
-      <!-- Long paragraph candidate 1: complex text with dates, names, numbers, and a link -->
-      <p id="complex-para">
-        On November 15, 2026, the Department of Public Welfare established that eligible beneficiaries may appeal determinations within 45 calendar days by submitting Form 1040-A to the Central Review Office or through the official <a href="#provisions">online claims portal</a>.
-      </p>
+      <section id="eligibility">
+        <h2>Eligibility Guidelines</h2>
+        <p id="para-long-2">Subsidized clinical remuneration requires complete submission of fiscal declarations indicating gross domestic compensation beneath 250% of federal threshold standards during calendar year 2025. Failure to transmit certified verification through our automated digital portal prior to November 30, 2026 will necessitate standard retrospective fee assessment and potential temporary suspension of non-emergency pharmaceuticals under Medicare Part B regulations.</p>
+        <p id="para-long-3">Patients requiring specialized pharmaceutical dispensation must present formal therapeutic authorizations countersigned by licensed practitioners before December 15, 2026. The clinic dispensary operating under regional formulary standards cannot release controlled substances without electronic authentication from the state prescription monitoring registry.</p>
+      </section>
+    </main>
 
-      <!-- Long paragraph candidate 2 -->
-      <p id="second-para">
-        Notwithstanding prior stipulations, participants receiving supplemental nutritional allowances under subsection 12 must report any variance in aggregate household revenue exceeding $250 within ten business days to maintain continuous eligibility under state guidelines.
-      </p>
+    <aside aria-label="Supplementary Information">
+      <h2>Notice Board</h2>
+      <p id="para-aside">Municipal oversight committee members convenes biweekly on Wednesdays at municipal annex 4 to review clinical protocols and budgetary disbursements exceeding $50,000.</p>
+    </aside>
+  </div>
 
-      <!-- Short paragraph to leave untouched -->
-      <p id="short-para">
-        Please call our support center if you need help with your application.
-      </p>
-
-      <!-- Table to leave untouched -->
-      <table id="schedule" aria-label="Benefit payment schedule">
-        <thead>
-          <tr>
-            <th scope="col">Group</th>
-            <th scope="col">Processing Period</th>
-            <th scope="col">Disbursement</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Group A</td>
-            <td>1st - 5th</td>
-            <td>Direct deposit</td>
-          </tr>
-          <tr>
-            <td>Group B</td>
-            <td>6th - 10th</td>
-            <td>Check mail</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-  </main>
-
-  <footer id="contact">
-    <p id="footer-para">&copy; 2026 Department of Public Welfare. All rights reserved.</p>
+  <footer>
+    <p id="para-footer">Published by Metropolitan Health Care Authority. Registered medical facility 2026.</p>
   </footer>
 </body>
 </html>

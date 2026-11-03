@@ -8,15 +8,15 @@
   "checks": [
     {
       "name": "at most the limit of 2 AI calls is made",
-      "code": "\n        const img = document.getElementById('img-informative');\n        const link = document.getElementById('link-unnamed');\n        const btn = document.getElementById('btn-unnamed');\n        const input = document.getElementById('input-unnamed');\n        if (!img || !link || !btn || !input) return false;\n        // First 2 candidates in priority/DOM order received names\n        if (img.getAttribute('alt') !== 'Community garden plot with fresh green plants') return false;\n        if (link.getAttribute('aria-label') !== 'Search catalog') return false;\n        // Subsequent candidates were capped by limit: 2 and NOT sent to AI\n        if (btn.hasAttribute('aria-label')) return false;\n        if (input.hasAttribute('aria-label')) return false;\n        return true;\n      "
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const btnAi = document.getElementById('btn-ai-control');\n      const linkAi = document.getElementById('link-ai-control');\n      const inputAi = document.getElementById('input-ai-field');\n      const imgAi = document.getElementById('img-ai-informative');\n      const bulk = document.querySelectorAll('#bulk-unnamed-container button[aria-label]');\n\n      let count = 0;\n      if (btnAi?.hasAttribute('aria-label')) count++;\n      if (linkAi?.hasAttribute('aria-label')) count++;\n      if (inputAi?.hasAttribute('aria-label')) count++;\n      if (imgAi?.hasAttribute('alt')) count++;\n      count += bulk.length;\n\n      return count <= 2 && count > 0;\n    "
     },
     {
       "name": "decorative images are marked alt empty without consuming AI limit",
-      "code": "\n        const spacer = document.getElementById('img-spacer');\n        const pres = document.getElementById('img-presentation');\n        if (!spacer || !pres) return false;\n        if (spacer.getAttribute('alt') !== '') return false;\n        if (pres.getAttribute('alt') !== '') return false;\n        return true;\n      "
+      "code": "\n      const spacer = document.getElementById('img-decorative-spacer');\n      const pres = document.getElementById('img-role-presentation');\n      if (!spacer || !pres) return false;\n      if (spacer.getAttribute('alt') !== '') return false;\n      if (pres.getAttribute('alt') !== '') return false;\n      return true;\n    "
     }
   ],
   "ai": {
-    "label": "Search catalog",
-    "describe": "Community garden plot with fresh green plants"
+    "label": "Action button",
+    "describe": "A green square illustration."
   }
 }

@@ -2,71 +2,176 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Contrast Adapter Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessible Library — Reading & Research Portal</title>
   <style>
+    :root {
+      --bg: #ffffff;
+      --text-dark: #111111;
+      --text-passing: #004080;
+      --border: #cccccc;
+    }
     body {
-      font-family: sans-serif;
       margin: 0;
-      padding: 16px;
-      background-color: #ffffff;
-      color: #111111;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
       line-height: 1.5;
+      color: var(--text-dark);
+      background: var(--bg);
     }
-    header, nav, main, footer, section, article {
-      display: block;
-      margin-bottom: 16px;
+    header, nav, main, footer {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1rem;
     }
-    button, a {
+    header {
+      border-bottom: 2px solid var(--border);
+    }
+    nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0.5rem 0;
+    }
+    nav a {
+      color: #0044bb;
+      text-decoration: underline;
+      padding: 0.5rem 0.75rem;
       display: inline-block;
-      margin: 4px 0;
-      min-height: 24px;
-      min-width: 24px;
+      min-width: 44px;
+      min-height: 44px;
+      box-sizing: border-box;
+    }
+    nav a:focus, button:focus {
+      outline: 3px solid #000000;
+      outline-offset: 2px;
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background: #ffffff;
+    }
+    .low-contrast-text {
+      color: #888888;
+      font-size: 16px;
+    }
+    .low-contrast-blue {
+      color: #5c93d8;
+      font-size: 16px;
+    }
+    .low-contrast-large {
+      font-size: 26px;
+      font-weight: bold;
+      color: #aaaaaa;
+    }
+    .high-contrast-text {
+      color: #004080;
+      font-size: 16px;
+    }
+    .pass-large-text {
+      font-size: 24px;
+      color: #777777;
+    }
+    .image-background-card {
+      background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #eeeeee;
+      padding: 1.5rem;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      background: #004080;
+      color: #ffffff;
+      border: 1px solid #002b55;
+      border-radius: 4px;
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      min-width: 44px;
+      min-height: 44px;
+      cursor: pointer;
+    }
+    canvas, video, img {
+      display: block;
+      max-width: 100%;
+      margin: 1rem 0;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: #222222;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1 id="high-contrast-large" style="font-size: 26px; color: #003366; background-color: #ffffff;">Contrast Test Page</h1>
-    <nav aria-label="Main Navigation">
-      <a id="high-contrast-link" href="#main" style="color: #002244; background-color: #ffffff;">Main content</a>
-      <a id="low-contrast-link" href="#article" style="color: #999999; background-color: #ffffff;">Article link</a>
-    </nav>
+    <h1>Accessible Library Portal</h1>
+    <p id="portal-subtitle">Digital reading archive and accessible catalog.</p>
   </header>
 
-  <main id="main">
-    <section aria-labelledby="sec-heading">
-      <h2 id="sec-heading" style="color: #111111; background-color: #ffffff;">Articles and Tests</h2>
-      <article id="article">
-        <h2 id="low-contrast-large" style="font-size: 24px; color: #aaaaaa; background-color: #ffffff;">Low Contrast Large Heading</h2>
-        <p id="high-contrast-text" style="color: #111111; background-color: #ffffff;">This is high contrast text that already passes WCAG AA contrast requirements.</p>
-        <p id="low-contrast-gray" style="color: #888888; background-color: #ffffff;">This is normal text with low contrast gray color that fails WCAG AA.</p>
-        <p id="low-contrast-blue" style="color: #6699ff; background-color: #ffffff;">This is normal text with low contrast blue color that fails WCAG AA.</p>
-        <div style="background-color: #111111; padding: 8px;">
-          <p id="low-contrast-dark" style="color: #555555; background-color: #111111;">This is text on a dark container with insufficient contrast.</p>
-        </div>
-      </article>
+  <nav aria-label="Main Navigation">
+    <ul>
+      <li><a href="#articles" id="nav-articles">Articles</a></li>
+      <li><a href="#media" id="nav-media">Media</a></li>
+      <li><a href="#about" id="nav-about">About</a></li>
+    </ul>
+  </nav>
 
-      <section aria-labelledby="controls-heading">
-        <h3 id="controls-heading" style="color: #222222; background-color: #ffffff;">Controls</h3>
-        <button id="high-contrast-button" type="button" style="color: #000000; background-color: #eeeeee; border: 1px solid #333;">Accessible Button</button>
-        <button id="low-contrast-button" type="button" style="color: #888888; background-color: #ffffff; border: 1px solid #888;">Low Contrast Button</button>
-      </section>
+  <main id="main-content">
+    <section id="articles" aria-labelledby="heading-articles">
+      <h2 id="heading-articles">Featured Collections</h2>
 
-      <section aria-labelledby="media-heading">
-        <h3 id="media-heading" style="color: #222222; background-color: #ffffff;">Media Elements</h3>
-        <img id="test-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%2300aa00'/%3E%3C/svg%3E" alt="Green test square" width="40" height="40">
-        <canvas id="test-canvas" width="40" height="40" aria-label="Test canvas"></canvas>
-        <video id="test-video" width="40" height="40" aria-label="Test video"></video>
-        <div id="bg-image-box" style="background-image: linear-gradient(to right, #000000, #333333); padding: 8px;">
-          <p id="bg-image-text" style="color: #ffffff;">Text over gradient background should be left alone</p>
+      <div class="card" id="card-low-contrast">
+        <h3>Low-Contrast Demonstration</h3>
+        <p class="low-contrast-text" id="low-contrast-text">
+          This paragraph is styled with faint grey text on a white background and fails WCAG AA contrast.
+        </p>
+        <p class="low-contrast-blue" id="low-contrast-blue">
+          This text has a specific blue hue with insufficient contrast on white.
+        </p>
+        <div class="low-contrast-large" id="low-contrast-large">
+          Large Heading Below AA Ratio
         </div>
-      </section>
+      </div>
+
+      <div class="card" id="card-passing-contrast">
+        <h3>Accessible Text Demonstration</h3>
+        <p class="high-contrast-text" id="high-contrast-text">
+          This text has high contrast (exceeding 8:1) and must keep its exact colour.
+        </p>
+        <div class="pass-large-text" id="pass-large-text">
+          Large Text Passing 3:1 Ratio
+        </div>
+      </div>
+
+      <div class="image-background-card" id="card-over-image">
+        <h3 id="heading-over-image">Content Over Image Background</h3>
+        <p id="over-image-text">
+          Text layered over an image or gradient background cannot have its pixel contrast measured reliably and must be left untouched.
+        </p>
+      </div>
+
+      <div id="dynamic-container"></div>
+
+      <div>
+        <button type="button" id="btn-action">Interactive Action</button>
+      </div>
+    </section>
+
+    <section id="media" aria-labelledby="heading-media">
+      <h2 id="heading-media">Media and Canvases</h2>
+      <p id="media-description">Images, video and canvas elements must remain untouched.</p>
+      <img id="sample-image" alt="Sample geometric diagram" width="200" height="100" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='%23e0e0e0'/%3E%3Ccircle cx='100' cy='50' r='30' fill='%23ff5500'/%3E%3C/svg%3E">
+      <video id="sample-video" width="240" height="140" controls></video>
+      <canvas id="sample-canvas" width="200" height="80"></canvas>
     </section>
   </main>
 
   <footer>
-    <p id="footer-text" style="color: #222222; background-color: #ffffff;">Footer content for verification.</p>
+    <p id="footer-text">Library portal open access archive. All rights reserved.</p>
   </footer>
 </body>
 </html>

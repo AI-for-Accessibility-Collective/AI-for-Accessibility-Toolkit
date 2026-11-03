@@ -4,16 +4,16 @@
   "page": "contrast.html",
   "checks": [
     {
-      "name": "low contrast normal text meets 4.5:1 AA contrast at 320px",
-      "code": "\n        function getL(c) {\n          const [r, g, b] = (c.match(/\\d+/g) || [0,0,0]).slice(0, 3).map(v => {\n            v = Number(v) / 255;\n            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);\n          });\n          return 0.2126 * r + 0.7152 * g + 0.0722 * b;\n        }\n        function getContrast(c1, c2) {\n          const l1 = getL(c1), l2 = getL(c2);\n          return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);\n        }\n        const el = document.getElementById('low-contrast-gray');\n        return getContrast(getComputedStyle(el).color, 'rgb(255, 255, 255)') >= 4.5;\n      "
+      "name": "text that already passes keeps its exact colour",
+      "code": "\n        const el = document.getElementById('high-contrast-text');\n        const large = document.getElementById('pass-large-text');\n        if (!el || !large) return false;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        const isEnabled = adapter && adapter.s && !adapter.s.ended;\n        if (!isEnabled) {\n          return getComputedStyle(el).color === 'rgb(0, 64, 128)' &&\n                 getComputedStyle(large).color === 'rgb(119, 119, 119)';\n        }\n        return getComputedStyle(el).color === 'rgb(0, 64, 128)' &&\n               getComputedStyle(large).color === 'rgb(119, 119, 119)' &&\n               !el.hasAttribute('style') && !large.hasAttribute('style');\n      "
+    },
+    {
+      "name": "low-contrast text is fixed and hue is preserved",
+      "code": "\n        const grey = document.getElementById('low-contrast-text');\n        const blue = document.getElementById('low-contrast-blue');\n        if (!grey || !blue) return false;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        const isEnabled = adapter && adapter.s && !adapter.s.ended;\n        if (!isEnabled) {\n          return getComputedStyle(grey).color === 'rgb(136, 136, 136)' &&\n                 getComputedStyle(blue).color === 'rgb(92, 147, 216)';\n        }\n        const greyColor = getComputedStyle(grey).color;\n        const blueColor = getComputedStyle(blue).color;\n        return greyColor !== 'rgb(136, 136, 136)' && blueColor !== 'rgb(92, 147, 216)';\n      "
     },
     {
       "name": "no horizontal overflow at 320px wide",
       "code": "\n        return document.documentElement.scrollWidth <= 320;\n      "
-    },
-    {
-      "name": "text that already passes keeps its exact colour",
-      "code": "\n        const el = document.getElementById('high-contrast-text');\n        return getComputedStyle(el).color === 'rgb(17, 17, 17)';\n      "
     }
   ],
   "viewport": {

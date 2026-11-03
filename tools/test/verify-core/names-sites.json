@@ -1,8 +1,4 @@
 {
   "file": "tools/core-adapters/names.js",
-  "ai": {
-    "label": "Interactive control",
-    "describe": "Site content illustration"
-  },
   "sites": "all"
 }

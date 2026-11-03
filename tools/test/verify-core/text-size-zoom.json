@@ -1,0 +1,19 @@
+{
+  "name": "text-size-zoom",
+  "file": "tools/core-adapters/text-size.js",
+  "page": "text-size.html",
+  "personal": {
+    "fontScale": 150,
+    "textSizeMethod": "zoom"
+  },
+  "checks": [
+    {
+      "name": "with textSizeMethod zoom, zoom is set to fontScale/100 and restored on disable",
+      "code": "\n        const host = globalThis.__verifyHost;\n        if (!host) return true;\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        return host.zoom === 1.5 && host.zoomCalls.includes('set:1.5');\n      "
+    },
+    {
+      "name": "text size alone is never applied when zoom is active",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const bodyText = document.getElementById('body-text');\n        return !bodyText || !bodyText.style.fontSize;\n      "
+    }
+  ]
+}

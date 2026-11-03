@@ -2,27 +2,44 @@
   "name": "names-personal",
   "file": "tools/core-adapters/names.js",
   "page": "names.html",
-  "personal": {},
+  "personal": {
+    "fontScale": 150
+  },
+  "options": {
+    "limit": 6
+  },
   "checks": [
     {
-      "name": "unnamed controls and informative image receive accessible names",
-      "code": "\n        const btn = document.getElementById('btn-unnamed');\n        const link = document.getElementById('link-unnamed');\n        const input = document.getElementById('input-unnamed');\n        const img = document.getElementById('img-informative');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.getAttribute('aria-label') !== 'Search catalog') return false;\n        if (link.getAttribute('aria-label') !== 'Search catalog') return false;\n        if (input.getAttribute('aria-label') !== 'Search catalog') return false;\n        if (img.getAttribute('alt') !== 'Community garden plot with fresh green plants') return false;\n        return true;\n      "
+      "name": "controls that already had a name keep it exactly",
+      "code": "\n      const btn = document.getElementById('btn-already-named');\n      const link = document.getElementById('link-already-named');\n      const input = document.getElementById('input-already-named');\n      const img = document.getElementById('img-already-named');\n      const imgDeco = document.getElementById('img-already-decorative');\n\n      if (!btn || !link || !input || !img || !imgDeco) return false;\n      if (btn.textContent.trim() !== 'Save Preferences') return false;\n      if (btn.hasAttribute('aria-label')) return false;\n      if (link.textContent.trim() !== 'Overview') return false;\n      if (link.hasAttribute('aria-label')) return false;\n      if (img.getAttribute('alt') !== 'User Avatar') return false;\n      if (imgDeco.getAttribute('alt') !== '') return false;\n      return true;\n    "
     },
     {
-      "name": "controls and images that already had a name keep it exactly",
-      "code": "\n        const btn = document.getElementById('btn-named');\n        const link = document.getElementById('link-named');\n        const input = document.getElementById('input-named');\n        const img = document.getElementById('img-named');\n        if (!btn || !link || !input || !img) return false;\n        if (btn.textContent.trim() !== 'Subscribe to Newsletter') return false;\n        if (btn.hasAttribute('aria-label')) return false;\n        if (link.textContent.trim() !== 'View volunteer details') return false;\n        if (link.hasAttribute('aria-label')) return false;\n        const label = document.querySelector('label[for=\"input-named\"]');\n        if (!label || label.textContent.trim() !== 'Your Email') return false;\n        if (input.hasAttribute('aria-label')) return false;\n        if (img.getAttribute('alt') !== 'Garden plot map showing vegetable beds') return false;\n        return true;\n      "
+      "name": "on a real page, no AI call for a control the page names in some way the page-first rules find",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const btnTitle = document.getElementById('btn-page-title');\n      const btnSvg = document.getElementById('btn-svg-title');\n      const btnIcon = document.getElementById('btn-icon-class');\n      const linkIcon = document.getElementById('link-icon-class');\n      const imgFile = document.getElementById('img-file-name');\n      const linkPath = document.getElementById('link-path-part');\n      const inputNearby = document.getElementById('input-nearby-sibling');\n      const inputName = document.getElementById('input-by-name');\n      const imgFig = document.getElementById('img-by-figcaption');\n\n      if (!btnTitle || !btnSvg || !btnIcon || !linkIcon || !imgFile || !linkPath || !inputNearby || !inputName || !imgFig) return false;\n\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        return !btnTitle.hasAttribute('aria-label') && !imgFile.hasAttribute('alt');\n      }\n\n      return btnTitle.getAttribute('aria-label') === 'Account Settings' &&\n             btnSvg.getAttribute('aria-label') === 'Close Window' &&\n             btnIcon.getAttribute('aria-label') === 'Search' &&\n             linkIcon.getAttribute('aria-label') === 'Shopping cart' &&\n             imgFile.getAttribute('alt') === 'Download report' &&\n             linkPath.getAttribute('aria-label') === 'Customer support' &&\n             inputNearby.getAttribute('aria-label') === 'Email Address' &&\n             inputName.getAttribute('aria-label') === 'Postal code' &&\n             imgFig.getAttribute('alt') === 'Harbor at dawn';\n    "
     },
     {
-      "name": "decorative images are marked with empty alt and not sent to AI",
-      "code": "\n        const spacer = document.getElementById('img-spacer');\n        const pres = document.getElementById('img-presentation');\n        const decor = document.getElementById('img-decorative-alt');\n        if (!spacer || !pres || !decor) return false;\n        if (spacer.getAttribute('alt') !== '') return false;\n        if (pres.getAttribute('alt') !== '') return false;\n        if (decor.getAttribute('alt') !== '') return false;\n        return true;\n      "
+      "name": "decorative images are not sent to the AI and clearly decorative ones get alt=''",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const imgPres = document.getElementById('img-role-presentation');\n      const imgSpacer = document.getElementById('img-decorative-spacer');\n      const imgTiny = document.getElementById('img-tiny-icon');\n      const imgSmall = document.getElementById('img-small-nondecorative');\n\n      if (!imgPres || !imgSpacer || !imgTiny || !imgSmall) return false;\n\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        return !imgPres.hasAttribute('alt') && !imgSpacer.hasAttribute('alt') && !imgTiny.hasAttribute('alt');\n      }\n\n      const presOk = imgPres.getAttribute('alt') === '';\n      const spacerOk = imgSpacer.getAttribute('alt') === '';\n      const tinyOk = imgTiny.getAttribute('alt') === '';\n      const smallOk = !imgSmall.hasAttribute('alt');\n      return presOk && spacerOk && tinyOk && smallOk;\n    "
     },
     {
-      "name": "hidden elements are left untouched",
-      "code": "\n        const btnHidden = document.getElementById('btn-hidden');\n        const imgHidden = document.getElementById('img-hidden');\n        if (!btnHidden || !imgHidden) return false;\n        if (btnHidden.hasAttribute('aria-label')) return false;\n        if (imgHidden.hasAttribute('alt')) return false;\n        return true;\n      "
+      "name": "with fixed answers, the names are set as aria-label or alt",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const btnAi = document.getElementById('btn-ai-control');\n      const linkAi = document.getElementById('link-ai-control');\n      const inputAi = document.getElementById('input-ai-field');\n      const imgAi = document.getElementById('img-ai-informative');\n\n      if (!btnAi || !linkAi || !inputAi || !imgAi) return false;\n\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        return !btnAi.hasAttribute('aria-label') && !imgAi.hasAttribute('alt');\n      }\n\n      return btnAi.getAttribute('aria-label') === 'Action button' &&\n             linkAi.getAttribute('aria-label') === 'Action button' &&\n             inputAi.getAttribute('aria-label') === 'Action button' &&\n             imgAi.getAttribute('alt') === 'A green square illustration.';\n    "
+    },
+    {
+      "name": "at most the limit of AI calls on a page with many unnamed controls",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      const aiNamedButtons = document.querySelectorAll('#bulk-unnamed-container button[aria-label]');\n      const btnAi = document.getElementById('btn-ai-control');\n      const linkAi = document.getElementById('link-ai-control');\n      const inputAi = document.getElementById('input-ai-field');\n      const imgAi = document.getElementById('img-ai-informative');\n\n      let count = 0;\n      if (btnAi?.hasAttribute('aria-label')) count++;\n      if (linkAi?.hasAttribute('aria-label')) count++;\n      if (inputAi?.hasAttribute('aria-label')) count++;\n      if (imgAi?.hasAttribute('alt')) count++;\n      count += aiNamedButtons.length;\n\n      return count <= 6 && count > 0;\n    "
+    },
+    {
+      "name": "hidden controls are not sent to AI",
+      "code": "\n      const btnHidden = document.getElementById('btn-hidden-display');\n      const linkHidden = document.getElementById('link-hidden-attr');\n      const inputHidden = document.getElementById('input-hidden-aria');\n      if (!btnHidden || !linkHidden || !inputHidden) return false;\n\n      return !btnHidden.hasAttribute('aria-label') &&\n             !linkHidden.hasAttribute('aria-label') &&\n             !inputHidden.hasAttribute('aria-label');\n    "
+    },
+    {
+      "name": "content to leave alone is left alone and controls are accessible",
+      "code": "\n      const h1 = document.querySelector('header h1');\n      const proseIntro = document.getElementById('prose-intro');\n      const proseFooter = document.getElementById('prose-footer');\n      if (!h1 || !proseIntro || !proseFooter) return false;\n\n      if (h1.textContent.trim() !== 'Names and Labels Test Dashboard') return false;\n      if (!proseIntro.textContent.includes('This dashboard verifies accessible naming')) return false;\n      if (!proseFooter.textContent.includes('Dashboard footer with legal notes')) return false;\n      return true;\n    "
     }
   ],
   "ai": {
-    "label": "Search catalog",
-    "describe": "Community garden plot with fresh green plants"
+    "label": "Action button",
+    "describe": "A green square illustration."
   }
 }

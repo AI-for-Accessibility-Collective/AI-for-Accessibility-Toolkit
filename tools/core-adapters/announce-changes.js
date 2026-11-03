@@ -1,149 +1,246 @@
-// Announce changes — tells screen reader users about dynamic page updates.
-//
-// Dynamic pages frequently swap in status notices, error boxes, replaced
-// container regions, and client-side view navigations without adding ARIA
-// live regions. Screen reader users hear nothing and the page appears
-// unchanged. This adapter watches for dynamic additions and route changes,
-// speaking one plain, concise announcement through the host's shared live
-// region (s.announce).
+// announce-changes.js — Tells screen reader users about changes the page makes without saying so.
+// Barrier: Blind and low-vision people using screen readers miss dynamic status updates,
+// toast notifications, error messages, content replacements, and single-page app route changes
+// when authors omit ARIA live regions (aria-live, role status or alert).
 //
 // Suggested in onboarding for: vision (a suggestion only, never a gate).
-// Settings read: none.
-// Adjusts: nothing (on or off).
-// Options:
-//   - windowMs (number, default 250): debounce window in milliseconds to
-//     batch rapid additions into one announcement.
-//   - maxChars (number, default 160): maximum length of an announcement.
+// The person's settings it reads: none.
+// What the person can adjust: nothing (the shortcut, if given, turns it on and off).
 //
-// Decisions it makes:
-// - All announcements go through s.announce and s.announce.batch, using the
-//   toolkit's one shared live region rather than adding redundant regions.
-// - Existing live regions ([aria-live]:not([aria-live="off"]), [role="alert"],
-//   [role="status"], [role="log"]) are already announced by screen readers,
-//   so changes inside or to them are skipped to prevent duplicate speech.
-// - Regions explicitly silenced with aria-live="off" are respected and skipped.
-// - Changes caused by the person typing in text fields (<input>, <textarea>,
-//   [contenteditable]) are skipped via s.watch.byPerson and active editable checks,
-//   preserving screen reader typing echo.
-// - Rapid additions (e.g. 20 items in a burst) are batched via s.announce.batch
-//   so they produce at most a few concise announcements rather than flooding.
-// - Client-side view navigations are detected with s.watch.route and spoken with
-//   the new view's heading or document title; additions during navigation are
-//   quieted to avoid reading raw fragments over the new page name.
-// - The adapter's own and the toolkit's UI (data-ai4a11y-ui, s.page.isOurs) are
-//   never announced.
-// - Elements that already hold user focus (such as an opened dialog) are left to
-//   the screen reader's focus announcement.
+// Options:
+//   debounceMs: Time in milliseconds to batch rapid bursts of changes (default: 200).
+//   actionMs: Window in milliseconds after a user click, key, or submit during which
+//             content changes count as an answer to the person's action (default: 3000).
+//
+// Decisions:
+//   • Speaks through s.announce and s.announce.batch via the host's shared live region,
+//     never creating competing live regions of its own.
+//   • Never announces changes inside existing aria-live regions, role="status", role="alert",
+//     or role="log", because the screen reader already speaks them natively.
+//   • Excludes the toolkit's own UI and elements (data-ai4a11y-ui, ai4a11y-*, ws-*).
+//   • Only announces what reads as a message: elements whose role, class, id, or name indicates
+//     a message (status, alert, error, notice, message, toast, etc.), or content that appears
+//     or replaces a region within actionMs of the person's deliberate action (click, key, submit).
+//   • Never announces text that changes inside existing content on its own (clocks, tickers,
+//     timers, counters, carousels, lazy-loaded images, ads, or infinite scroll additions).
+//   • Skips typing-induced changes while the person types in input fields or textareas.
+//   • Ignores iframes and elements outside the visible viewport.
+//   • Watches SPA client-side navigations with s.watch.route and announces the new view's heading or title.
+//   • Batches bursts of multiple changes into at most a few concise announcements.
+//   • Automatically tears down all listeners, observers, and timers on disable() via session cleanup.
 //
 // What it cannot do:
-// - Cannot read changes inside closed Shadow DOMs or cross-origin iframes.
-// - Cannot infer meaning from visual-only icon changes without accessible text.
+//   • Cannot read changes inside cross-origin iframes.
+//   • Cannot interpret graphical or icon-only status indicators that have no text or accessible name.
 
-const LIVE_SELECTOR = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"]';
-const SILENT_SELECTOR = '[aria-live="off"]';
-const OTHER_UI = '[data-ai4a11y-ui], [id^="ai4a11y-"], [class*="ai4a11y-"], [id^="ws-"], [class^="ws-"], [class*=" ws-"]';
-const SKIP_TAGS = /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|IFRAME|OBJECT|SVG|CANVAS)$/i;
+const MESSAGE_HINT = /\b(status|alert|error|warn|warning|notice|message|toast|snackbar|notification)\b/i;
+const NOISE_HINT = /\b(clock|timestamp|time|timer|ticker|countdown|counter|carousel|slider|ad|advert|banner-ad)\b/i;
+const INTERACTIVE = 'a[href], button, input, select, textarea, [role="button"], [role="link"]';
+const MAX_ANNOUNCE_CHARS = 140;
 
 export default {
-  s: null,
-
   enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
-    const s = (this.s = toolkit.session());
+    this.options = options || {};
+    this.toolkit = toolkit || this.toolkit;
+    if (!this.toolkit) return false;
 
-    const doc = document;
-    const windowMs = Number(options?.windowMs) || 250;
-    const maxChars = Number(options?.maxChars) || 160;
+    const root = document.body || document.documentElement;
+    if (!root) return false;
 
-    globalThis.__announceChangesActive = true;
+    const s = (this.s = this.toolkit.session());
+    const debounceMs = Math.max(50, this.options.debounceMs ?? 200);
+    const actionMs = Math.max(500, this.options.actionMs ?? 3000);
 
-    let lastRouteAt = 0;
+    let lastAction = 0;
+    let lastTypingAt = 0;
+    let pageSpokeAt = 0;
+    let lastAnnounced = '';
+    let lastAnnouncedAt = 0;
+    let lastRoute = '';
+    const tickers = new WeakSet();
+    const updateTimes = new WeakMap();
 
-    function isCausedByTyping(el) {
-      if (el.closest?.('input, textarea, [contenteditable]')) return true;
-      if (s.watch.byPerson(el, { withinMs: 1000 })) return true;
-      const active = doc.activeElement;
-      if (active && (/^(input|textarea)$/i.test(active.tagName) || active.isContentEditable)) {
-        if (s.watch.byPerson(active, { withinMs: 1000 })) return true;
+    // Track deliberate user actions: clicks and form submissions
+    s.listen(document, 'click', (e) => {
+      if (s.page.isOurs(e.target)) return;
+      lastAction = Date.now();
+    }, { capture: true });
+
+    s.listen(document, 'submit', (e) => {
+      if (s.page.isOurs(e.target)) return;
+      lastAction = Date.now();
+    }, { capture: true });
+
+    // Track keyboard interactions: Enter/Space activate; typing is recorded to suppress echo
+    s.listen(document, 'keydown', (e) => {
+      if (s.page.isOurs(e.target)) return;
+      const target = e.target;
+      const isInput = target && /^(INPUT|TEXTAREA|SELECT)$/i.test(target.tagName);
+      const isEditable = Boolean(target?.isContentEditable);
+
+      if (e.key === 'Enter') {
+        lastAction = Date.now();
+      } else if (e.key === ' ' && !isInput && !isEditable) {
+        lastAction = Date.now();
+      } else if (isInput || isEditable) {
+        lastTypingAt = Date.now();
+      }
+    }, { capture: true });
+
+    s.listen(document, 'input', (e) => {
+      if (s.page.isOurs(e.target)) return;
+      lastTypingAt = Date.now();
+    }, { capture: true });
+
+    const isAnswering = () => Date.now() - lastAction < actionMs;
+    const isTyping = () => Date.now() - lastTypingAt < 1000;
+
+    const inViewport = (el) => {
+      if (!el || typeof el.getBoundingClientRect !== 'function') return false;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      const vw = window.innerWidth || document.documentElement.clientWidth || 1024;
+      const vh = window.innerHeight || document.documentElement.clientHeight || 768;
+      return r.bottom >= 0 && r.right >= 0 && r.top <= vh && r.left <= vw;
+    };
+
+    const isMessage = (el) => {
+      for (let e = el, i = 0; e && e.nodeType === 1 && i < 3; e = e.parentElement, i++) {
+        const cls = typeof e.className === 'string' ? e.className : (e.className?.baseVal || '');
+        const id = e.id || '';
+        const role = e.getAttribute?.('role') || '';
+        const name = e.getAttribute?.('name') || '';
+        const label = e.getAttribute?.('aria-label') || '';
+        if (MESSAGE_HINT.test(`${role} ${cls} ${id} ${name} ${label}`)) return true;
       }
       return false;
-    }
+    };
 
-    function summarize(el) {
-      let text = s.page.readableText(el, { skip: 'button, a[href], [role="button"], [role="link"]' });
-      if (!text) {
-        text = s.page.readableText(el);
+    const isTickerOrTimestamp = (el) => {
+      if (!el || el.nodeType !== 1) return false;
+      if (el.tagName === 'TIME' || el.closest('time')) return true;
+      if (el.matches?.('[role="timer" i], [role="marquee" i]')) return true;
+
+      const cls = typeof el.className === 'string' ? el.className : (el.className?.baseVal || '');
+      const id = el.id || '';
+      if (NOISE_HINT.test(`${cls} ${id}`) && !isMessage(el)) return true;
+
+      if (tickers.has(el)) return true;
+      const now = Date.now();
+      const prev = updateTimes.get(el);
+      if (prev && now - prev < 2000 && lastAction <= prev) {
+        tickers.add(el);
+        return true;
       }
-      if (!text) {
-        const raw = typeof el.innerText === 'string' ? el.innerText : el.textContent;
-        text = (raw || '').replace(/\s+/g, ' ').trim();
+      updateTimes.set(el, now);
+      return false;
+    };
+
+    const summarize = (el) => {
+      if (!el || el.nodeType !== 1 || !el.isConnected) return '';
+      if (el.closest('[hidden], [aria-hidden="true"]')) return '';
+
+      const raw = typeof el.innerText === 'string' ? el.innerText : el.textContent;
+      const lines = (raw || '').split(/\n+/).map((str) => str.replace(/\s+/g, ' ').trim()).filter(Boolean);
+      if (!lines.length) return '';
+
+      const controls = new Set();
+      if (!el.matches(INTERACTIVE)) {
+        el.querySelectorAll(INTERACTIVE).forEach((c) => {
+          const cRaw = typeof c.innerText === 'string' ? c.innerText : c.textContent;
+          (cRaw || '').split(/\n+/).map((str) => str.replace(/\s+/g, ' ').trim()).filter(Boolean).forEach((l) => controls.add(l));
+        });
       }
-      text = text.replace(/\s+/g, ' ').trim();
-      if (text.length < 2 && el.tagName !== 'OUTPUT') return '';
-      if (text.length > maxChars) {
-        text = text.slice(0, maxChars - 1).trim() + '…';
+      let kept = lines.filter((l) => !controls.has(l));
+      if (!kept.length) kept = lines;
+
+      let text = '';
+      for (const part of kept.slice(0, 3)) {
+        const next = !text ? part : text + (/[.!?:;,…]$/.test(text) ? ' ' : '. ') + part;
+        if (text && next.length > MAX_ANNOUNCE_CHARS) break;
+        text = next;
       }
-      return text;
-    }
+      if (text.length > MAX_ANNOUNCE_CHARS) text = text.slice(0, MAX_ANNOUNCE_CHARS - 1) + '…';
+      return text.trim();
+    };
 
-    function onAdded(el) {
-      if (!el || el.nodeType !== 1 || !el.isConnected) return;
-      if (SKIP_TAGS.test(el.tagName)) return;
-      if (s.page.isOurs(el) || el.closest(OTHER_UI)) return;
+    const handleAdded = (el) => {
+      if (!s.alive() || !el || el.nodeType !== 1) return;
 
-      // Skip elements that are inside or contain active live regions or are silenced
-      if (el.closest(SILENT_SELECTOR)) return;
-      if (el.closest(LIVE_SELECTOR)) return;
-      if (el.matches(LIVE_SELECTOR)) return;
-      if (el.querySelector?.(LIVE_SELECTOR)) return;
+      // Skip the toolkit's own elements and other adapters' UI
+      if (s.page.isOurs(el)) return;
+      if (el.closest('[data-ai4a11y-ui], [id^="ai4a11y-"], [class*="ai4a11y-"], [id^="ws-"], [class*="ws-"]')) return;
 
-      // Skip hidden content
-      if (el.closest('[hidden], [aria-hidden="true"]')) return;
+      // Skip iframes
+      if (el.tagName === 'IFRAME' || el.closest('iframe')) return;
+
+      // Skip non-textual or irrelevant elements
+      const tag = el.tagName;
+      if (/^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OBJECT|EMBED|SVG|CANVAS|AUDIO|VIDEO|IMG|PICTURE|SOURCE)$/i.test(tag)) return;
+
+      // Skip changes inside existing aria-live, status, alert, or log regions
+      if (el.closest('[aria-live]:not([aria-live="off"]), [role="alert" i], [role="status" i], [role="log" i]')) {
+        pageSpokeAt = Date.now();
+        return;
+      }
+      if (el.querySelector?.('[aria-live]:not([aria-live="off"]), [role="alert" i], [role="status" i], [role="log" i]')) {
+        pageSpokeAt = Date.now();
+        return;
+      }
+
+      // Must be visible and in the viewport
       if (!s.page.isVisible(el)) return;
+      if (!inViewport(el)) return;
 
-      // Skip elements that already have keyboard focus (screen reader speaks focus)
-      const active = doc.activeElement;
-      if (active && active !== doc.body && el.contains(active)) return;
+      // If focus moved into this element (e.g. an accessible modal dialog), screen reader speaks it
+      const active = document.activeElement;
+      if (active && active !== document.body && el.contains(active)) return;
 
-      // Skip changes caused by user typing
-      if (isCausedByTyping(el)) return;
+      // Skip tickers, clocks, and counters that update periodically
+      if (isTickerOrTimestamp(el)) return;
 
-      // Skip additions immediately following client-side route navigation
-      if (Date.now() - lastRouteAt < 500) return;
+      // Only announce what reads as a message, or content appearing in response to a deliberate action
+      const isMsg = isMessage(el);
+      const isAction = isAnswering() && !isTyping();
+      if (!isMsg && !isAction) return;
+
+      // Skip if page's own live region recently spoke
+      if (Date.now() - pageSpokeAt < 1500) return;
 
       const text = summarize(el);
-      if (!text) return;
+      if (!text || text.length < 2) return;
 
-      const parent = el.parentElement;
-      const key = parent ? (parent.id || parent.className || parent.tagName) : 'change';
-      s.announce.batch(key, text, { windowMs });
-    }
+      const now = Date.now();
+      if (text === lastAnnounced && now - lastAnnouncedAt < 1200) return;
+      lastAnnounced = text;
+      lastAnnouncedAt = now;
 
-    // Watch for new elements added to the page
-    s.watch.added(null, onAdded, { types: ['childList', 'characterData'] });
+      s.announce.batch('changes', text, { windowMs: debounceMs });
+    };
 
-    // Watch client-side single-page app route navigations
+    // Watch for dynamic additions to the document
+    s.watch.added(root, handleAdded);
+
+    // Watch for single-page app route changes
     s.watch.route(() => {
-      lastRouteAt = Date.now();
       s.timer(() => {
         if (!s.alive()) return;
-        const title = (doc.title || '').replace(/\s+/g, ' ').trim();
-        const main = s.page.main?.() || doc.querySelector('main, [role="main"]');
-        const view = doc.querySelector('#spa-view, .view, [role="region"]') || main;
-        const heading = (view && view.querySelector('h1, h2, h3, [role="heading"]')) ||
-                        (main && main.querySelector('h1, h2, h3, [role="heading"]')) ||
-                        doc.querySelector('h1, h2, [role="heading"]');
-        const hText = heading ? (s.page.nameOf?.(heading) || heading.textContent || '').replace(/\s+/g, ' ').trim() : '';
-        const viewName = title || hText || 'New view';
-        s.announce(viewName);
-      }, 60);
+        const h1 = document.querySelector('main h1, h1, [role="heading"][aria-level="1"]');
+        const h1Text = (h1?.textContent || '').replace(/\s+/g, ' ').trim();
+        const heading = s.page.headings ? s.page.headings({ maxLevel: 2 })[0]?.text : null;
+        const title = (document.title || '').replace(/\s+/g, ' ').trim();
+        const name = h1Text || heading || title || 'New page';
+        if (name && name !== lastRoute) {
+          lastRoute = name;
+          s.announce(name);
+        }
+      }, 100);
     });
   },
 
   disable() {
-    if (!this.s) return;
-    this.s.end();
+    this.s?.end();
     this.s = null;
-    delete globalThis.__announceChangesActive;
   },
 };
