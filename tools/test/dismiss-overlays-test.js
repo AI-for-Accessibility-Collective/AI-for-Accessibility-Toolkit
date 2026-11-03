@@ -66,6 +66,27 @@ async function run() {
     check('counts it once', DismissOverlays.hidden.size === 1);
     DismissOverlays.disable();
   }
+  // disable() puts back only the scroll locks it took off, and leaves the
+  // page's own overflow alone (from the independent review).
+  {
+    const doc = mount('<main><p>The article</p></main>');
+    doc.body.style.overflowX = 'hidden';
+    doc.documentElement.style.overflowY = 'hidden';
+    DismissOverlays.enable();
+    check('unlocks a scroll lock on <html>', doc.documentElement.style.overflowY === '');
+    doc.body.style.overflowY = 'auto';  // the page, meanwhile
+    DismissOverlays.disable();
+    check("leaves the page's own overflow on <body>", doc.body.style.overflowX === 'hidden' && doc.body.style.overflowY === 'auto');
+    check('puts the lock it took off back', doc.documentElement.style.overflowY === 'hidden');
+  }
+  {
+    const doc = mount('<main><p>The article</p></main>');
+    doc.body.style.overflow = 'hidden';
+    DismissOverlays.enable();
+    doc.body.style.overflow = 'scroll';  // the page, meanwhile
+    DismissOverlays.disable();
+    check("does not put a lock back over the page's own later value", doc.body.style.overflow === 'scroll');
+  }
 
   console.log(`dismiss-overlays: ${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);

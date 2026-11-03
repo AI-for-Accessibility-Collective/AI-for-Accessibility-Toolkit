@@ -78,6 +78,22 @@ function run() {
   let threw = false;
   try { MathA11y.disable(); } catch { threw = true; }
   check('math: double disable is safe', !threw && MathA11y.enabled === false);
+
+  // ── RENDER URLS: an equation with "=" is still an equation (from the
+  // independent review); a page's own parameters are not.
+  {
+    const d = mount(`
+      <img id="y" class="math" src="https://example.com/math-eq.svg?y=x%5E2" alt="">
+      <img id="frac2" class="math" src="https://example.com/mathtex.cgi?\\frac{1}{2}=0.5" alt="">
+      <img id="plot" class="math" src="https://example.com/math/plot.png?width=400&height=300" alt="">
+      <img id="cache" class="math" src="https://example.com/math/eq.png?id=a_b" alt="">`).document;
+    MathA11y.enable();
+    check('math: a bare-query equation with "=" keeps its TeX', d.getElementById('y').getAttribute('alt') === 'Equation: y=x^2');
+    check('math: a TeX fraction with "=" keeps its TeX', d.getElementById('frac2').getAttribute('alt') === 'Equation: \\frac{1}{2}=0.5');
+    check('math: width and height are not an equation', !/Equation:/.test(d.getElementById('plot').getAttribute('alt')));
+    check('math: a named parameter with "_" in it is not an equation', !/Equation:/.test(d.getElementById('cache').getAttribute('alt')));
+    MathA11y.disable();
+  }
 }
 
 run();

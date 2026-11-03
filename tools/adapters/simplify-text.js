@@ -82,7 +82,7 @@ function tell() {
 // from a stylesheet or a class) is still counted, because reading it back
 // needs getComputedStyle on every node, which is a layout cost on a pass
 // that runs over every candidate on the page.
-const NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"]';
+const NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"], .ai4a11y-summary-box';
 
 // The visible prose of an element: its text with the children above removed,
 // trimmed. Computed on a clone so the page is untouched. This is what is
@@ -211,6 +211,8 @@ export async function summarizeContent(element) {
   try {
     const excerpt = text.substring(0, 3000);
     const summary = await aiSummarizeText(excerpt);
+    // Switched off while the answer was on its way.
+    if (element.dataset.ai4a11ySummarize !== 'pending') return null;
 
     // A summary is short, so the shared refusal prefixes ("Sorry", "N/A",
     // "Unknown") are checked too; for a passage that short they are far
@@ -260,7 +262,7 @@ export async function summarizeContent(element) {
     return null;
   } catch (e) {
     console.warn('[AI4A11y] Failed to summarize:', e);
-    element.dataset.ai4a11ySummarize = 'failed';
+    if (element.dataset.ai4a11ySummarize === 'pending') element.dataset.ai4a11ySummarize = 'failed';
     return null;
   }
 }
@@ -278,15 +280,14 @@ export function restoreOriginal(element) {
   }
 
   if (element.classList?.contains('ai4a11y-summary-box')) {
+    const parent = element.parentElement;
     element.remove();
+    if (parent) delete parent.dataset.ai4a11ySummarize;
+    if (!document.querySelector('.ai4a11y-simplified, .ai4a11y-summary-box')) {
+      document.getElementById(STYLE_ID)?.remove();
+    }
     return;
   }
-
-  const summaryBox = element.querySelector(':scope > .ai4a11y-summary-box');
-  if (summaryBox) {
-    summaryBox.remove();
-  }
-  delete element.dataset.ai4a11ySummarize;
 
   const originalWrapper = element.querySelector(':scope > .ai4a11y-original-content');
   if (originalWrapper) {
@@ -304,6 +305,9 @@ export function restoreOriginal(element) {
     }
     originalWrapper.remove();
   }
+  // After the unwrap: a summary made before simplifying was inside it.
+  element.querySelector(':scope > .ai4a11y-summary-box')?.remove();
+  delete element.dataset.ai4a11ySummarize;
   delete element.dataset.ai4a11yOriginal;
   delete element.dataset.ai4a11ySimplified;
   delete element.dataset.ai4a11yShowOriginal;

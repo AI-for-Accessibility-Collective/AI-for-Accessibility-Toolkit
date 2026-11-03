@@ -218,6 +218,12 @@
           </video>
         </div>
         <div class="media-card">
+          <h3>Autoplay Video (Watched, Then Paused)</h3>
+          <video id="watched-video" width="280" height="160" autoplay muted playsinline aria-label="Lab tour, paused by the visitor">
+            <track kind="captions" src="data:text/vtt,WEBVTT%0A%0A00:00:00.000%20--%3E%2000:00:10.000%0ALab%20tour" srclang="en" label="English" default>
+          </video>
+        </div>
+        <div class="media-card">
           <h3>YouTube Embed</h3>
           <iframe id="yt-iframe" width="280" height="160" src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1" title="YouTube video player" allow="encrypted-media"></iframe>
         </div>
@@ -245,6 +251,14 @@
           <img id="aria-labeled-gif" width="80" height="60" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQBAAAAACwAAAAAAQABAAACAkQBADs=" aria-label="Spinning loading indicator">
         </div>
         <div class="media-card">
+          <h3>Animated GIF (no name)</h3>
+          <img id="unnamed-gif" width="60" height="40" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQBAAAAACwAAAAAAQABAAACAkQBADs=">
+        </div>
+        <div class="media-card">
+          <h3>Animated GIF (title only)</h3>
+          <img id="title-gif" width="60" height="40" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQBAAAAACwAAAAAAQABAAACAkQBADs=" title="Orbit diagram">
+        </div>
+        <div class="media-card">
           <h3>Static SVG Image</h3>
           <img id="still-image" width="120" height="80" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80' viewBox='0 0 120 80'%3E%3Crect width='120' height='80' fill='%230284c7'/%3E%3Ctext x='60' y='45' font-size='12' text-anchor='middle' fill='%23ffffff'%3EStatic%3C/text%3E%3C/svg%3E" alt="Static laboratory microscope illustration">
         </div>
@@ -263,6 +277,10 @@
   </footer>
 
   <script>
+    // The visitor watched the lab tour for a few seconds and paused it.
+    const watched = document.getElementById('watched-video');
+    Object.defineProperty(watched, 'played', { value: { length: 1 } });
+    Object.defineProperty(watched, 'currentTime', { value: 4, writable: true });
     const waapiBox = document.getElementById('waapi-box');
     if (waapiBox && waapiBox.animate) {
       waapiBox.animate(

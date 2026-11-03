@@ -104,9 +104,7 @@ export const DefineWords = {
     this.clickHandler = (e) => this.handleClick(e);
     this.keyHandler = (e) => {
       if (e.key === 'Escape') {
-        clearTimeout(this.hoverTimer);
-        this.hoverTimer = null;
-        this.hideTooltip();
+        this.dismiss();
         return;
       }
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
@@ -116,8 +114,10 @@ export const DefineWords = {
           if (e.key === ' ' || e.key === 'Spacebar') e.preventDefault();
           const tip = document.getElementById(TOOLTIP_ID);
           if (tip && tip.style.display === 'block' && this.current === span) {
-            this.hideTooltip();
+            this.dismiss();
           } else {
+            clearTimeout(this.hoverTimer);
+            this.hoverTimer = null;
             this.current = span;
             this.showDefinition(span, true).catch(() => {});
           }
@@ -328,27 +328,39 @@ export const DefineWords = {
       if (onTip && rel && (rel === tip || tip.contains(rel))) return;
       // Moving from tooltip back to the active word is not leaving it.
       if (onTip && this.current && rel && (rel === this.current || this.current.contains(rel))) return;
+      // The pointer leaving does not hide the definition of the word that has
+      // the keyboard focus: it stays until focus moves (WCAG 1.4.13).
+      if (event.type === 'mouseout' && this.current && this.current === document.activeElement) return;
 
-      if (this.current === span) this.current = null;
+      if (this.current === span || onTip) this.current = null;
       clearTimeout(this.hoverTimer);
       this.hoverTimer = null;
       this.hideTooltip();
     } catch { /* nothing to hide */ }
   },
 
+  // A click only opens. The hover and focus of that same click may already
+  // have opened it, so a toggle would close it again; moving away, focus
+  // leaving, or Escape closes it.
   handleClick(event) {
     try {
       const target = event.target;
       const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
       if (!span) return;
-      const tip = document.getElementById(TOOLTIP_ID);
-      if (tip && tip.style.display === 'block' && this.current === span) {
-        this.hideTooltip();
-      } else {
-        this.current = span;
-        this.showDefinition(span, false).catch(() => {});
-      }
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+      this.current = span;
+      this.showDefinition(span, false).catch(() => {});
     } catch { /* click error */ }
+  },
+
+  // The person closed it: nothing pending may reopen it (the hover timer, or
+  // a lookup still on its way).
+  dismiss() {
+    clearTimeout(this.hoverTimer);
+    this.hoverTimer = null;
+    this.current = null;
+    this.hideTooltip();
   },
 
   // One lookup per word, shared by every hover and focus that asks while it

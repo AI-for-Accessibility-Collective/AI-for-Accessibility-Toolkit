@@ -14,6 +14,8 @@ import {
   fixTiers,
   isRiskyFix,
   fixHeadingOrder,
+  fixInvalidAriaRole,
+  fixNestedInteractive,
   TARGET_SIZE_PX,
 } from '../adapters/wcag-fixes.js';
 
@@ -144,6 +146,35 @@ async function run() {
 
   // ── The threshold is the size big-targets.js aims for ───────────────────
   check('TARGET_SIZE_PX is 44 (WCAG 2.5.5 enhanced size)', TARGET_SIZE_PX === 44);
+
+  // ── From the independent review ─────────────────────────────────────────
+  {
+    // A heading nobody can see or hear does not set the level of the next.
+    const doc = mount(`<h1>Main</h1><div hidden><h4>Hidden</h4></div><h4 aria-hidden="true">Muted</h4><h4 id="target">Section</h4>`);
+    fixHeadingOrder(doc.getElementById('target'));
+    check('heading order: hidden headings are skipped when finding the previous level', doc.getElementById('target')?.tagName === 'H2');
+  }
+  {
+    // Role tokens are case-insensitive.
+    const doc = mount(`<div id="a" role="BUTTON">x</div><div id="b" role="bogus Link">y</div>`);
+    fixInvalidAriaRole(doc.getElementById('a'));
+    fixInvalidAriaRole(doc.getElementById('b'));
+    check('aria role: an upper-case valid role is kept', doc.getElementById('a').getAttribute('role') === 'BUTTON');
+    check('aria role: a mixed-case fallback token is kept', doc.getElementById('b').getAttribute('role') === 'Link');
+  }
+  {
+    // Nested controls inside a button lose their own control role, and a
+    // nested button keeps its id, style and title on the span it becomes.
+    const doc = mount(`<button id="outer">Action <div id="inner" role="button" tabindex="0">Inner</div></button>
+      <a id="link" href="/y">Read <button id="nb" class="c" style="color: red" title="More">More</button></a>`);
+    fixNestedInteractive(doc.getElementById('outer'));
+    fixNestedInteractive(doc.getElementById('link'));
+    const inner = doc.getElementById('inner');
+    check('nested: a role="button" inside a button is no longer a control', !inner.hasAttribute('role') && !inner.hasAttribute('tabindex'));
+    const nb = doc.getElementById('nb');
+    check('nested: the button became a span that keeps id, class, style and title',
+      nb?.tagName === 'SPAN' && nb.className === 'c' && nb.getAttribute('style') === 'color: red' && nb.getAttribute('title') === 'More');
+  }
 }
 
 run().then(() => {

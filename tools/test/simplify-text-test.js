@@ -9,7 +9,7 @@
 // Run: node tools/test/simplify-text-test.js
 import { JSDOM } from 'jsdom';
 import { setAIProvider } from '../utils/ai.js';
-import { simplifyText, summarizeContent, proseText } from '../adapters/simplify-text.js';
+import { simplifyText, summarizeContent, proseText, restoreOriginal } from '../adapters/simplify-text.js';
 
 // console.log is stubbed while the adapter runs (below), so failures are
 // printed through the real one or they would be swallowed.
@@ -192,6 +192,39 @@ async function run() {
     setAIProvider({ summarizeText: async (text) => { sent.push(text); return SUMMARY; } });
     await summarizeContent(doc.querySelector('#t'));
     check('summarize: the model is sent the visible prose only', sent.length === 1 && sent[0] === LONG);
+  }
+
+  // ── restoreOriginal, from the independent review ────────────────────────────
+  {
+    // Turned off while the summary was on its way: the page stays restored.
+    const doc = mount(`<article id="t"><p>${LONG}</p></article>`);
+    let answer;
+    setAIProvider({ summarizeText: () => new Promise(r => { answer = r; }) });
+    const el = doc.querySelector('#t');
+    const pending = summarizeContent(el);
+    restoreOriginal();
+    answer(SUMMARY);
+    await pending;
+    check('restore: a summary arriving after restore adds nothing',
+      !doc.querySelector('.ai4a11y-summary-box') && !el.hasAttribute('data-ai4a11y-summarize') && !doc.getElementById('ai4a11y-simplify-styles'));
+  }
+  {
+    // Removing just the summary box clears its element's mark and the styles.
+    const { el } = await summarizeWith(SUMMARY);
+    restoreOriginal(el.querySelector('.ai4a11y-summary-box'));
+    check('restore: removing the summary box lets the element be summarized again',
+      !el.hasAttribute('data-ai4a11y-summarize') && !document.getElementById('ai4a11y-simplify-styles'));
+  }
+  {
+    // Summarized, then simplified: restore takes out both.
+    const doc = mount(`<p id="t">${LONG}</p>`);
+    setAIProvider({ summarizeText: async () => SUMMARY, simplifyText: async () => PLAIN + ' ' + PLAIN });
+    const el = doc.querySelector('#t');
+    await summarizeContent(el);
+    await simplifyText(el);
+    restoreOriginal(el);
+    check('restore: a summary made before simplifying is removed too',
+      !el.querySelector('.ai4a11y-summary-box') && el.textContent === LONG);
   }
 }
 

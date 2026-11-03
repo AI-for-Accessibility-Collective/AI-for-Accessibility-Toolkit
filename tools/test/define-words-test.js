@@ -128,6 +128,69 @@ async function run() {
     check('a thrown provider error is logged', warnings.some(w => w.includes('provider down')));
     DefineWords.disable();
   }
+
+  // Click, Enter and Escape against hover and focus (from the independent
+  // review): the tooltip a person dismissed stays dismissed, and the one
+  // they asked for stays open.
+  {
+    let release;
+    const slow = new Map();
+    setAIProvider({
+      defineWord: (w) => w === 'remarkable' ? new Promise(r => { release = () => r('worth noticing'); })
+        : Promise.resolve(slow.get(w) || 'a simple meaning'),
+      announce() {},
+    });
+    const doc3 = mount('<main><p>An extraordinary and remarkable and wonderful tale.</p><p id="away">Away.</p></main>');
+    DefineWords.enable();
+    const [extra, remark, wonder] = doc3.querySelectorAll('.ai4a11y-define');
+    const tipOf = () => doc3.getElementById('ai4a11y-define-tooltip');
+    const shown = () => tipOf()?.style.display === 'block';
+    const key = (el, k) => el.dispatchEvent(new window.KeyboardEvent('keydown', { key: k, bubbles: true }));
+
+    // A word already looked up: a real click is mouseover, focus, then click.
+    // The click must not close what the hover and focus just opened.
+    extra.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }));
+    await wait(450);
+    extra.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true }));
+    extra.dispatchEvent(new window.MouseEvent('mouseover', { bubbles: true }));
+    extra.focus();
+    await tick();
+    extra.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    await tick();
+    check('clicking a looked-up word leaves its definition open', shown());
+
+    // Focused word: the pointer leaving the word, or the tooltip, does not
+    // hide the definition of the word that has the keyboard focus.
+    extra.dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, relatedTarget: doc3.body }));
+    check('pointer leaving a focused word keeps its definition', shown());
+    tipOf().dispatchEvent(new window.MouseEvent('mouseout', { bubbles: true, relatedTarget: doc3.body }));
+    check('pointer leaving the tooltip of a focused word keeps it', shown());
+    extra.blur();
+    check('moving focus away hides it', !shown());
+
+    // Enter to open and Enter again to close, faster than the hover delay:
+    // the pending focus timer must not reopen it.
+    wonder.focus();
+    key(wonder, 'Enter');
+    await tick();
+    check('Enter opens the definition', shown());
+    key(wonder, 'Enter');
+    await wait(450);
+    check('Enter again closes it, and it stays closed', !shown());
+    wonder.blur();
+
+    // Escape while the lookup is still on its way: the late answer must not
+    // pop up after the person dismissed it.
+    remark.focus();
+    key(remark, 'Enter');
+    await tick();
+    key(remark, 'Escape');
+    release();
+    await wait(450);
+    check('Escape during a lookup keeps the late answer hidden', !shown());
+    remark.blur();
+    DefineWords.disable();
+  }
 }
 
 run().then(() => {

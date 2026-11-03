@@ -4,6 +4,10 @@
   "page": "read-aloud.html",
   "checks": [
     {
+      "name": "enable() starts reading the page, or waits for the first click or key to start",
+      "code": "\n        // First, before the other checks call stop(): what enable() did.\n        const ra = window.__ai4a11yReadAloud;\n        if (!ra) return false;\n        return (ra.speaking || !!ra.gestureHandler) && ra.words.length > 0;\n      "
+    },
+    {
       "name": "targeted article elements and landmarks exist on the page",
       "code": "\n        const article = document.getElementById('article');\n        const p1 = document.getElementById('lead-paragraph');\n        const p2 = document.getElementById('second-paragraph');\n        const nav = document.querySelector('nav');\n        const aside = document.getElementById('sidebar');\n        const footer = document.querySelector('footer');\n        return !!article && !!p1 && !!p2 && !!nav && !!aside && !!footer;\n      "
     },

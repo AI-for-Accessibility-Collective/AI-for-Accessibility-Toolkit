@@ -3,5 +3,14 @@
   "file": "tools/adapters/page-outline.js",
   "export": "PageOutline",
   "page": "page-outline.html",
-  "checks": []
+  "checks": [
+    {
+      "name": "lists the seven visible level 1 to 3 headings, in order, and links each to its heading",
+      "code": "\n        const nav = document.getElementById('ai4a11y-page-outline');\n        if (!nav) return false;\n        const links = [...nav.querySelectorAll('#ai4a11y-page-outline-list a')];\n        const names = links.map(a => a.textContent.replace(/\\s+/g, ' ').trim());\n        const want = ['Community Support Grant Guide', 'Eligibility Criteria', 'Required Documentation',\n          'Proof of Identity', 'Proof of Address and Income', 'How to Apply', 'Appeals and Reviews'];\n        if (JSON.stringify(names) !== JSON.stringify(want)) return false;\n        // Each link leads to an element on the page with that heading's text.\n        return links.every((a, i) => {\n          const id = (a.getAttribute('href') || '').replace(/^#/, '');\n          const target = id && document.getElementById(id);\n          return !!target && target.textContent.replace(/\\s+/g, ' ').trim() === want[i];\n        });\n      "
+    },
+    {
+      "name": "leaves out level 4, presentational and hidden headings",
+      "code": "\n        const nav = document.getElementById('ai4a11y-page-outline');\n        if (!nav) return false;\n        const text = nav.textContent;\n        return !['Accepted Document Formats', 'Presentational Heading', 'None Role Heading',\n          'Archived Grant Regulations', 'Screen Reader Ignored Information', 'Inactive Draft Guidelines']\n          .some(t => text.includes(t));\n      "
+    }
+  ]
 }

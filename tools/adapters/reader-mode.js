@@ -1,5 +1,6 @@
 // Reader Mode - distraction-free reading using Mozilla Readability
 import { announce } from '../utils/ai.js';
+import { getContrastRatio } from '../utils/color.js';
 
 const STYLE_ID = 'ai4a11y-reader-styles';
 // Ads Readability would otherwise keep: anything a page marks as sponsored
@@ -176,7 +177,7 @@ export const ReaderMode = {
       for (const attr of el.attributes) div.setAttribute(attr.name, attr.value);
       el.replaceWith(div);
     });
-    tempDiv.querySelectorAll('[role="main"]').forEach(el => el.removeAttribute('role'));
+    tempDiv.querySelectorAll('[role="main" i]').forEach(el => el.removeAttribute('role'));
     const dangerousUrlAttrs = ['href', 'src', 'srcset', 'action', 'formaction', 'srcdoc', 'poster', 'xlink:href'];
     const dangerousPrefixes = ['javascript:', 'vbscript:', 'data:text/html', 'data:application', 'data:image/svg+xml'];
     tempDiv.querySelectorAll('*').forEach(el => {
@@ -292,6 +293,10 @@ export const ReaderMode = {
       style.id = STYLE_ID;
       (document.head || document.documentElement).appendChild(style);
     }
+    // Links and the focus ring in a blue that reads on the reader's own
+    // background (a caller may pass a dark one), else in its text color.
+    const reads = (c) => (getContrastRatio(c, s.backgroundColor) ?? 0) >= 4.5;
+    const linkColor = ['#0b57d0', '#8ab4f8'].find(reads) || s.textColor;
     style.textContent = `
       #ai4a11y-reader-mode img, #ai4a11y-reader-mode video, #ai4a11y-reader-mode picture {
         max-width: 100% !important; height: auto !important; max-height: 70vh; object-fit: contain;
@@ -302,10 +307,12 @@ export const ReaderMode = {
       #ai4a11y-reader-mode td > p, #ai4a11y-reader-mode th > p { margin: 0; }
       #ai4a11y-reader-mode pre { max-width: 100%; overflow-x: auto; white-space: pre-wrap; }
       #ai4a11y-reader-mode .ai4a11y-reader-content { overflow-wrap: anywhere; }
-      #ai4a11y-reader-mode .ai4a11y-reader-content :not(a, button) {
+      #ai4a11y-reader-mode .ai4a11y-reader-content :not(a) {
         color: inherit !important;
         background-color: transparent !important;
+        background-image: none !important;
       }
+      #ai4a11y-reader-mode .ai4a11y-reader-content button { border: 1px solid currentColor !important; }
       #ai4a11y-reader-mode header, #ai4a11y-reader-mode footer,
       #ai4a11y-reader-mode section, #ai4a11y-reader-mode article,
       #ai4a11y-reader-mode main, #ai4a11y-reader-mode aside,
@@ -317,8 +324,8 @@ export const ReaderMode = {
         background-color: transparent !important;
         background-image: none !important;
       }
-      #ai4a11y-reader-mode a { color: #0b57d0 !important; text-decoration: underline !important; }
-      #ai4a11y-reader-mode :focus-visible { outline: 3px solid #0b57d0 !important; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
+      #ai4a11y-reader-mode a { color: ${linkColor} !important; text-decoration: underline !important; }
+      #ai4a11y-reader-mode :focus-visible { outline: 3px solid ${linkColor} !important; outline-offset: 2px; box-shadow: 0 0 0 5px ${s.backgroundColor}; }
       #ai4a11y-reader-mode .ai4a11y-reader-title:focus { outline: none !important; box-shadow: none; }
     `;
   },

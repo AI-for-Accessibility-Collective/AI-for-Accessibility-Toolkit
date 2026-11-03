@@ -118,7 +118,12 @@ export function fixHeadingOrder(element) {
 
   const currentLevel = parseInt(match[1]);
   const doc = element.ownerDocument || document;
+  // Only headings a person can see or hear set the level of the next one.
+  const hasLayout = doc.documentElement.getClientRects().length > 0;
   const allHeadings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(h => {
+    if (h === element) return true;
+    if (h.closest('[hidden], [aria-hidden="true"]')) return false;
+    if (hasLayout && !h.getClientRects().length) return false;  // display: none on it or an ancestor
     try {
       const s = getComputedStyle(h);
       return s.display !== 'none' && s.visibility !== 'hidden';
@@ -202,7 +207,8 @@ export function fixInvalidAriaRole(element) {
   if (!role) return;
 
   const tokens = role.trim().split(/\s+/);
-  const validTokens = tokens.filter(t => VALID_ARIA_ROLES.has(t) && !ABSTRACT_ROLES.has(t));
+  // Role tokens are case-insensitive; the author's spelling is kept.
+  const validTokens = tokens.filter(t => VALID_ARIA_ROLES.has(t.toLowerCase()) && !ABSTRACT_ROLES.has(t.toLowerCase()));
   if (validTokens.length === tokens.length) return;
 
   if (validTokens.length > 0) {
@@ -243,18 +249,21 @@ export function fixMissingAriaAttrs(_element) {
 // Fix nested interactive elements
 export function fixNestedInteractive(element) {
   // If element is nested inside an interactive parent
-  const parent = element.parentElement?.closest('a, button, [role="button"]');
+  const parent = element.parentElement?.closest('a, button, [role="button"], [role="link"]');
   if (parent) {
     repairNested(element);
     return;
   }
 
   // If element is the outer container with nested interactive elements
-  const nested = element.querySelectorAll('button, a[href]');
+  const nested = element.querySelectorAll(NESTED_SEL);
   for (const child of nested) {
     repairNested(child);
   }
 }
+
+const NESTED_SEL = 'button, a[href], [role="button"], [role="link"], [role="checkbox"], [role="menuitem"], [role="tab"], [tabindex]:not([tabindex="-1"])';
+const CONTROL_ROLES = new Set(['button', 'link', 'checkbox', 'menuitem', 'tab']);
 
 function repairNested(child) {
   const doc = child.ownerDocument || document;
@@ -263,7 +272,10 @@ function repairNested(child) {
     while (child.firstChild) {
       span.appendChild(child.firstChild);
     }
-    span.className = child.className;
+    // What other markup and styles refer to stays: id, class, style, title.
+    for (const name of ['id', 'class', 'style', 'title']) {
+      if (child.hasAttribute(name)) span.setAttribute(name, child.getAttribute(name));
+    }
     child.replaceWith(span);
     incrementStat('wcag');
     logFix('nested-interactive', span, 'button', 'span');
@@ -274,6 +286,14 @@ function repairNested(child) {
     incrementStat('wcag');
     logFix('nested-interactive', child, 'a[href]', 'a[role=presentation]');
     console.log('[AI4A11y] Made nested link non-interactive');
+  } else {
+    // A control built from a div or span: no longer a control or a Tab stop.
+    const role = (child.getAttribute('role') || '').toLowerCase();
+    if (CONTROL_ROLES.has(role)) child.removeAttribute('role');
+    child.removeAttribute('tabindex');
+    incrementStat('wcag');
+    logFix('nested-interactive', child, role ? `[role=${role}]` : '[tabindex]', '(plain)');
+    console.log('[AI4A11y] Made nested control non-interactive');
   }
 }
 

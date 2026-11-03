@@ -21,12 +21,12 @@ function isLargeText(element) {
 // skip rather than guess. Check the element and any transparent ancestor.
 function hasBackgroundImage(element) {
   let el = element;
-  while (el && el !== document.documentElement) {
+  while (el) {
     const style = getComputedStyle(el);
     const bgImg = style.backgroundImage;
     if (bgImg && bgImg !== 'none') return true;
     if (isOpaque(style.backgroundColor)) break;
-    el = el.parentElement;
+    el = el.parentElement;  // up to and including <html>
   }
   return false;
 }
@@ -96,6 +96,8 @@ export async function fixLowContrast(element, color, background) {
     console.warn('[AI4A11y] Contrast fix failed, using fallback:', e);
     fixedColor = null;
   }
+  // Turned off (restoreOriginal) while the AI answered: leave the page alone.
+  if (element.dataset.ai4a11yProcessed !== 'pending') return null;
   // Whatever the AI said, the color applied must pass. Deterministic
   // fallback: step toward black/white preserving direction, rather than
   // jumping straight to pure black or white; then whichever of those reads.
@@ -175,6 +177,7 @@ export function restoreOriginal(element) {
   if (!changed && !marked.has(element)) return;
   marked.delete(element);
   delete element.dataset.ai4a11yProcessed;
+  if (!changed) return;  // only checked: its own attributes are as they were
 
   if (element.hasAttribute('style') && !element.getAttribute('style').trim()) {
     element.removeAttribute('style');

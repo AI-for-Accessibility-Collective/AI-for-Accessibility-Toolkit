@@ -104,8 +104,11 @@ function texFromUrl(src) {
     for (const part of query.split('&')) {
       const eq = part.indexOf('=');
       if (eq > 0) {
-        hasNamedParam = true;
-        if (TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+        const key = part.slice(0, eq);
+        if (TEX_PARAM_RE.test(key)) return safeDecode(part.slice(eq + 1));
+        // A word (id, width) names a parameter. One letter (y=x^2, E=mc^2)
+        // or TeX (\frac{1}{2}=0.5) is the start of an equation.
+        if (/^[A-Za-z][\w-]+$/.test(key)) hasNamedParam = true;
       }
     }
     // If it had key=value query params and none matched a TeX parameter, it's not TeX.

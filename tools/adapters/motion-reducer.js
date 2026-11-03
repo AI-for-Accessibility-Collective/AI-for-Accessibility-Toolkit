@@ -269,7 +269,11 @@ export const MotionReducer = {
     //   - role="presentation" or role="none" -> author marked as presentational
     const srcAriaHidden = img.getAttribute('aria-hidden');
     const srcRole = img.getAttribute('role') || '';
+    const label = (hasAlt && altText) || ariaLabel || title;
+    // No name at all is treated as decorative, as before: a role="img" with
+    // no name is a new barrier (axe role-img-alt).
     const decorative = (hasAlt && altText === '') ||
+                       (!label && !ariaLabelledBy) ||
                        srcAriaHidden === 'true' ||
                        srcRole === 'presentation' ||
                        srcRole === 'none';
@@ -286,10 +290,10 @@ export const MotionReducer = {
     } else {
       // Expose as img with the same accessible name.
       canvas.setAttribute('role', 'img');
-      const label = (hasAlt && altText) || ariaLabel || title;
       if (label) canvas.setAttribute('aria-label', label);
       if (ariaLabelledBy) canvas.setAttribute('aria-labelledby', ariaLabelledBy);
-      if (title && !canvas.hasAttribute('title')) canvas.setAttribute('title', title);
+      // The tooltip, unless it is already the name (it would be read twice).
+      if (title && title !== label) canvas.setAttribute('title', title);
       if (srcAriaHidden !== null) canvas.setAttribute('aria-hidden', srcAriaHidden);
     }
 
@@ -394,7 +398,10 @@ export const MotionReducer = {
   },
 
   pauseVideo(video) {
-    video.dataset.ai4a11yWasPaused = 'false';
+    // disable() starts again only what was playing, or about to autoplay. An
+    // autoplay video the person paused (it has played) stays paused.
+    const playing = !video.paused || (video.autoplay && !video.played?.length && !video.currentTime);
+    video.dataset.ai4a11yWasPaused = playing ? 'false' : 'true';
     // While a play() the page started is still loading, pausing rejects the
     // page's promise and it logs "The play() request was interrupted by a call
     // to pause()". Wait until the video is playing, then pause it.

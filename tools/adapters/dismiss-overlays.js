@@ -34,10 +34,7 @@ export const DismissOverlays = {
   observer: null,
   inputHandler: null,
   lastInput: 0,          // when the person last clicked or pressed a key
-  prevBodyOverflow: null,
-  prevBodyOverflowY: null,
-  prevHtmlOverflow: null,
-  prevHtmlOverflowY: null,
+  unlocked: null,        // the scroll locks we took off: [element, property, value]
 
   enable() {
     if (this.enabled) return;
@@ -51,10 +48,7 @@ export const DismissOverlays = {
 
     // Restore scrolling that a modal may have locked (best-effort: many
     // libraries set overflow:hidden or overflow-y:hidden inline on <body>/<html>).
-    this.prevBodyOverflow = document.body ? document.body.style.overflow : null;
-    this.prevBodyOverflowY = document.body ? document.body.style.overflowY : null;
-    this.prevHtmlOverflow = document.documentElement ? document.documentElement.style.overflow : null;
-    this.prevHtmlOverflowY = document.documentElement ? document.documentElement.style.overflowY : null;
+    this.unlocked = [];
     this.unlockScroll();
 
     const count = this.sweep(document);
@@ -89,13 +83,14 @@ export const DismissOverlays = {
   },
 
   unlockScroll() {
-    if (document.body) {
-      if (document.body.style.overflow === 'hidden' || document.body.style.overflow === 'clip') document.body.style.overflow = '';
-      if (document.body.style.overflowY === 'hidden' || document.body.style.overflowY === 'clip') document.body.style.overflowY = '';
-    }
-    if (document.documentElement) {
-      if (document.documentElement.style.overflow === 'hidden' || document.documentElement.style.overflow === 'clip') document.documentElement.style.overflow = '';
-      if (document.documentElement.style.overflowY === 'hidden' || document.documentElement.style.overflowY === 'clip') document.documentElement.style.overflowY = '';
+    for (const el of [document.body, document.documentElement]) {
+      if (!el) continue;
+      for (const prop of ['overflow', 'overflowY']) {
+        const value = el.style[prop];
+        if (value !== 'hidden' && value !== 'clip') continue;
+        this.unlocked?.push([el, prop, value]);
+        el.style[prop] = '';
+      }
     }
   },
 
@@ -165,23 +160,12 @@ export const DismissOverlays = {
       this.hidden.clear();
       this.hidden = null;
     }
-    // Restore the scroll locks exactly as we found them.
-    if (document.body) {
-      if (this.prevBodyOverflow) document.body.style.overflow = this.prevBodyOverflow;
-      else if (this.prevBodyOverflow !== null && document.body.style.overflow) document.body.style.overflow = '';
-      if (this.prevBodyOverflowY) document.body.style.overflowY = this.prevBodyOverflowY;
-      else if (this.prevBodyOverflowY !== null && document.body.style.overflowY) document.body.style.overflowY = '';
-      if (!document.body.getAttribute('style')) document.body.removeAttribute('style');
+    // Put back the scroll locks we took off, unless the page has set that
+    // property itself since. Its other overflow values are its own.
+    for (const [el, prop, value] of this.unlocked || []) {
+      if (!el.style[prop]) el.style[prop] = value;
     }
-    if (document.documentElement) {
-      if (this.prevHtmlOverflow) document.documentElement.style.overflow = this.prevHtmlOverflow;
-      else if (this.prevHtmlOverflow !== null && document.documentElement.style.overflow) document.documentElement.style.overflow = '';
-      if (this.prevHtmlOverflowY) document.documentElement.style.overflowY = this.prevHtmlOverflowY;
-      else if (this.prevHtmlOverflowY !== null && document.documentElement.style.overflowY) document.documentElement.style.overflowY = '';
-      if (!document.documentElement.getAttribute('style')) document.documentElement.removeAttribute('style');
-    }
-    this.prevBodyOverflow = this.prevBodyOverflowY = null;
-    this.prevHtmlOverflow = this.prevHtmlOverflowY = null;
+    this.unlocked = null;
     console.log('[AI4A11y] Dismiss Overlays disabled');
     announce('Popups restored');
   },

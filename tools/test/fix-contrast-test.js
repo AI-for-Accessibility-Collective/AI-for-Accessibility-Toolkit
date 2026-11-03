@@ -7,8 +7,9 @@
 //
 // Run: node tools/test/fix-contrast-test.js
 import { JSDOM } from 'jsdom';
-import { fixLowContrast } from '../adapters/fix-contrast.js';
+import { fixLowContrast, restoreOriginal } from '../adapters/fix-contrast.js';
 import { getContrastRatio } from '../utils/color.js';
+import { setAIProvider } from '../utils/ai.js';
 
 let pass = 0, fail = 0;
 function check(name, cond, extra) { if (cond) { pass++; } else { fail++; console.log('FAIL:', name, extra === undefined ? '' : extra); } }
@@ -47,6 +48,43 @@ async function run() {
     const el = doc.getElementById('t');
     await fixLowContrast(el, 'rgb(200, 200, 200)', undefined);
     check('contrast: with no background anywhere the text passes against white', getContrastRatio(el.style.color, 'rgb(255, 255, 255)') >= 4.5, el.style.color);
+  }
+
+  // From the independent review. A fix whose AI answer arrives after
+  // restoreOriginal() (the adapter was turned off) leaves the page alone.
+  {
+    const doc = mount('<p id="t" style="color: rgb(200, 200, 200)">fine print</p>');
+    let answer;
+    setAIProvider({ fixContrast: () => new Promise(r => { answer = r; }) });
+    const el = doc.getElementById('t');
+    const pending = fixLowContrast(el, 'rgb(200, 200, 200)', 'rgb(255, 255, 255)');
+    restoreOriginal();
+    answer('#333333');
+    await pending;
+    setAIProvider(null);
+    check('contrast: an answer after restore changes nothing',
+      el.getAttribute('style') === 'color: rgb(200, 200, 200)' && !el.hasAttribute('class') &&
+      !Object.keys(el.dataset).length, el.outerHTML);
+  }
+
+  // Text that already passes is only checked: restore leaves its own empty
+  // attributes as they were.
+  {
+    const doc = mount('<p id="t" class="" style="">dark text</p>');
+    const el = doc.getElementById('t');
+    await fixLowContrast(el, 'rgb(0, 0, 0)', 'rgb(255, 255, 255)');
+    restoreOriginal();
+    check('contrast: restore keeps the attributes of text it only checked', el.hasAttribute('class') && el.hasAttribute('style'), el.outerHTML);
+  }
+
+  // A background image on <html> is behind the text too: skip, as on any ancestor.
+  {
+    const doc = mount('<p id="t" style="color: rgb(200, 200, 200)">over a photo</p>');
+    doc.documentElement.style.backgroundImage = 'url(data:image/png;base64,iVBORw0KGgo=)';
+    const el = doc.getElementById('t');
+    await fixLowContrast(el, 'rgb(200, 200, 200)', 'rgba(0, 0, 0, 0)');
+    check('contrast: text over a background image on <html> is left alone', el.style.color === 'rgb(200, 200, 200)', el.style.color);
+    restoreOriginal();
   }
 }
 

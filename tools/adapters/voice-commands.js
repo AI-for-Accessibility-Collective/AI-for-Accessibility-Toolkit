@@ -23,19 +23,20 @@ const CLICKABLE = 'a[href], button, input, textarea, select, ' +
 function squash(s) { return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
 // What a person would call the control: its label, else its words.
 function nameOf(el) {
-  let label = el.getAttribute('aria-label');
+  let label = squash(el.getAttribute('aria-label'));
   if (!label && el.getAttribute('aria-labelledby')) {
-    label = el.getAttribute('aria-labelledby').split(/\s+/)
-      .map(id => document.getElementById(id)?.textContent || '')
-      .filter(Boolean).join(' ');
+    label = squash(el.getAttribute('aria-labelledby').split(/\s+/)
+      .map(id => document.getElementById(id)?.textContent || '').join(' '));
   }
   if (!label && el.labels?.length) {
-    label = Array.from(el.labels).map(l => l.textContent).join(' ');
+    label = squash(Array.from(el.labels).map(l => l.textContent).join(' '));
   }
   const text = (el.getAttribute('title') && /^[\s\p{P}\p{S}]+$/u.test(el.textContent)) ? '' : el.textContent;
-  const val = (el.type !== 'checkbox' && el.type !== 'radio' && el.type !== 'file') ? el.value : '';
-  return squash(label || text || val || el.getAttribute('placeholder') || el.getAttribute('title') ||
-    el.querySelector?.('img[alt]')?.getAttribute('alt') || '');
+  // A button's value is its name; a field's value is what was typed in it.
+  const val = el.tagName === 'INPUT' && /^(button|submit|reset)$/i.test(el.type) ? el.value : '';
+  // The first that has words in it (white space alone is not a name).
+  return [label, text, val, el.getAttribute('placeholder'), el.getAttribute('title'),
+    el.querySelector?.('img[alt]')?.getAttribute('alt')].map(squash).find(Boolean) || '';
 }
 function visible(el) {
   if (!el.getClientRects().length) return false;

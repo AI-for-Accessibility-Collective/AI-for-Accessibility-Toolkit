@@ -1050,7 +1050,8 @@
       const origClass = img.className;
       const srcAriaHidden = img.getAttribute("aria-hidden");
       const srcRole = img.getAttribute("role") || "";
-      const decorative = hasAlt && altText === "" || srcAriaHidden === "true" || srcRole === "presentation" || srcRole === "none";
+      const label = hasAlt && altText || ariaLabel || title;
+      const decorative = hasAlt && altText === "" || !label && !ariaLabelledBy || srcAriaHidden === "true" || srcRole === "presentation" || srcRole === "none";
       const canvas = document.createElement("canvas");
       canvas.width = w;
       canvas.height = h;
@@ -1060,10 +1061,9 @@
         canvas.setAttribute("aria-hidden", "true");
       } else {
         canvas.setAttribute("role", "img");
-        const label = hasAlt && altText || ariaLabel || title;
         if (label) canvas.setAttribute("aria-label", label);
         if (ariaLabelledBy) canvas.setAttribute("aria-labelledby", ariaLabelledBy);
-        if (title && !canvas.hasAttribute("title")) canvas.setAttribute("title", title);
+        if (title && title !== label) canvas.setAttribute("title", title);
         if (srcAriaHidden !== null) canvas.setAttribute("aria-hidden", srcAriaHidden);
       }
       canvas.setAttribute("width", w);
@@ -1148,7 +1148,8 @@
       });
     },
     pauseVideo(video) {
-      video.dataset.ai4a11yWasPaused = "false";
+      const playing = !video.paused || video.autoplay && !video.played?.length && !video.currentTime;
+      video.dataset.ai4a11yWasPaused = playing ? "false" : "true";
       if (!video.paused && video.readyState < 3 && video.currentSrc) {
         const done = () => {
           video.removeEventListener("playing", onPlaying);
@@ -1855,6 +1856,114 @@
   };
   if (typeof window !== "undefined") window.__ai4a11yReadAloud = ReadAloud;
 
+  // tools/utils/color.js
+  function parseColor2(color) {
+    if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
+      return null;
+    }
+    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+      return {
+        r: parseInt(rgbMatch[1]),
+        g: parseInt(rgbMatch[2]),
+        b: parseInt(rgbMatch[3])
+      };
+    }
+    const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hexMatch) {
+      let hex = hexMatch[1];
+      if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+      }
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16)
+      };
+    }
+    return null;
+  }
+  function getLuminance(color) {
+    const rgb = parseColor2(color);
+    if (!rgb) return null;
+    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function getContrastRatio(color1, color2) {
+    const l1 = getLuminance(color1);
+    const l2 = getLuminance(color2);
+    if (l1 === null || l2 === null) return null;
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+  function meetsContrastAA(foreground, background, isLarge = false) {
+    const ratio = getContrastRatio(foreground, background);
+    if (ratio === null) return false;
+    return ratio >= (isLarge ? 3 : 4.5);
+  }
+  function nearestAccessibleColor(foreground, background, { target = 4.5 } = {}) {
+    const fg = parseColor2(foreground);
+    if (!fg) return null;
+    if (getLuminance(background) === null) return null;
+    const STEPS = 50;
+    function stepToward(endpoint) {
+      for (let i = 1; i <= STEPS; i++) {
+        const t = i / STEPS;
+        const r = Math.round(fg.r + (endpoint.r - fg.r) * t);
+        const g = Math.round(fg.g + (endpoint.g - fg.g) * t);
+        const b = Math.round(fg.b + (endpoint.b - fg.b) * t);
+        const candidate = `rgb(${r}, ${g}, ${b})`;
+        const ratio = getContrastRatio(candidate, background);
+        if (ratio !== null && ratio >= target) return { color: candidate, steps: i };
+      }
+      return null;
+    }
+    const dark = stepToward({ r: 0, g: 0, b: 0 });
+    const light = stepToward({ r: 255, g: 255, b: 255 });
+    if (!dark && !light) {
+      const blackRatio = getContrastRatio("rgb(0, 0, 0)", background) ?? 0;
+      const whiteRatio = getContrastRatio("rgb(255, 255, 255)", background) ?? 0;
+      return blackRatio >= whiteRatio ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)";
+    }
+    if (!dark) return light.color;
+    if (!light) return dark.color;
+    return dark.steps <= light.steps ? dark.color : light.color;
+  }
+  function parseRgba(color) {
+    if (!color) return null;
+    const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== void 0 ? parseFloat(m[4]) : 1 };
+    const rgb = parseColor2(color);
+    return rgb ? { ...rgb, a: 1 } : null;
+  }
+  function getEffectiveBackground(element) {
+    const layers = [];
+    let el = element;
+    while (el) {
+      const parsed = parseRgba(getComputedStyle(el).backgroundColor);
+      if (parsed && parsed.a > 0) {
+        layers.push(parsed);
+        if (parsed.a >= 1) break;
+      }
+      if (el === document.documentElement) break;
+      el = el.parentElement;
+    }
+    let base = { r: 255, g: 255, b: 255 };
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const top = layers[i];
+      base = {
+        r: Math.round(top.r * top.a + base.r * (1 - top.a)),
+        g: Math.round(top.g * top.a + base.g * (1 - top.a)),
+        b: Math.round(top.b * top.a + base.b * (1 - top.a))
+      };
+    }
+    return `rgb(${base.r}, ${base.g}, ${base.b})`;
+  }
+
   // tools/adapters/reader-mode.js
   var STYLE_ID = "ai4a11y-reader-styles";
   var AD_SEL = '[class*="sponsor" i], [id*="sponsor" i], [aria-label*="sponsor" i], [alt*="sponsor" i], [class*="advert" i], [id*="advert" i]';
@@ -1996,7 +2105,7 @@
         for (const attr of el.attributes) div.setAttribute(attr.name, attr.value);
         el.replaceWith(div);
       });
-      tempDiv.querySelectorAll('[role="main"]').forEach((el) => el.removeAttribute("role"));
+      tempDiv.querySelectorAll('[role="main" i]').forEach((el) => el.removeAttribute("role"));
       const dangerousUrlAttrs = ["href", "src", "srcset", "action", "formaction", "srcdoc", "poster", "xlink:href"];
       const dangerousPrefixes = ["javascript:", "vbscript:", "data:text/html", "data:application", "data:image/svg+xml"];
       tempDiv.querySelectorAll("*").forEach((el) => {
@@ -2098,6 +2207,8 @@
         style.id = STYLE_ID;
         (document.head || document.documentElement).appendChild(style);
       }
+      const reads = (c) => (getContrastRatio(c, s.backgroundColor) ?? 0) >= 4.5;
+      const linkColor = ["#0b57d0", "#8ab4f8"].find(reads) || s.textColor;
       style.textContent = `
       #ai4a11y-reader-mode img, #ai4a11y-reader-mode video, #ai4a11y-reader-mode picture {
         max-width: 100% !important; height: auto !important; max-height: 70vh; object-fit: contain;
@@ -2108,10 +2219,12 @@
       #ai4a11y-reader-mode td > p, #ai4a11y-reader-mode th > p { margin: 0; }
       #ai4a11y-reader-mode pre { max-width: 100%; overflow-x: auto; white-space: pre-wrap; }
       #ai4a11y-reader-mode .ai4a11y-reader-content { overflow-wrap: anywhere; }
-      #ai4a11y-reader-mode .ai4a11y-reader-content :not(a, button) {
+      #ai4a11y-reader-mode .ai4a11y-reader-content :not(a) {
         color: inherit !important;
         background-color: transparent !important;
+        background-image: none !important;
       }
+      #ai4a11y-reader-mode .ai4a11y-reader-content button { border: 1px solid currentColor !important; }
       #ai4a11y-reader-mode header, #ai4a11y-reader-mode footer,
       #ai4a11y-reader-mode section, #ai4a11y-reader-mode article,
       #ai4a11y-reader-mode main, #ai4a11y-reader-mode aside,
@@ -2123,8 +2236,8 @@
         background-color: transparent !important;
         background-image: none !important;
       }
-      #ai4a11y-reader-mode a { color: #0b57d0 !important; text-decoration: underline !important; }
-      #ai4a11y-reader-mode :focus-visible { outline: 3px solid #0b57d0 !important; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
+      #ai4a11y-reader-mode a { color: ${linkColor} !important; text-decoration: underline !important; }
+      #ai4a11y-reader-mode :focus-visible { outline: 3px solid ${linkColor} !important; outline-offset: 2px; box-shadow: 0 0 0 5px ${s.backgroundColor}; }
       #ai4a11y-reader-mode .ai4a11y-reader-title:focus { outline: none !important; box-shadow: none; }
     `;
     },
@@ -2176,16 +2289,23 @@
     return String(s || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
   function nameOf(el) {
-    let label = el.getAttribute("aria-label");
+    let label = squash(el.getAttribute("aria-label"));
     if (!label && el.getAttribute("aria-labelledby")) {
-      label = el.getAttribute("aria-labelledby").split(/\s+/).map((id) => document.getElementById(id)?.textContent || "").filter(Boolean).join(" ");
+      label = squash(el.getAttribute("aria-labelledby").split(/\s+/).map((id) => document.getElementById(id)?.textContent || "").join(" "));
     }
     if (!label && el.labels?.length) {
-      label = Array.from(el.labels).map((l) => l.textContent).join(" ");
+      label = squash(Array.from(el.labels).map((l) => l.textContent).join(" "));
     }
     const text = el.getAttribute("title") && /^[\s\p{P}\p{S}]+$/u.test(el.textContent) ? "" : el.textContent;
-    const val = el.type !== "checkbox" && el.type !== "radio" && el.type !== "file" ? el.value : "";
-    return squash(label || text || val || el.getAttribute("placeholder") || el.getAttribute("title") || el.querySelector?.("img[alt]")?.getAttribute("alt") || "");
+    const val = el.tagName === "INPUT" && /^(button|submit|reset)$/i.test(el.type) ? el.value : "";
+    return [
+      label,
+      text,
+      val,
+      el.getAttribute("placeholder"),
+      el.getAttribute("title"),
+      el.querySelector?.("img[alt]")?.getAttribute("alt")
+    ].map(squash).find(Boolean) || "";
   }
   function visible(el) {
     if (!el.getClientRects().length) return false;
@@ -2949,10 +3069,8 @@
     inputHandler: null,
     lastInput: 0,
     // when the person last clicked or pressed a key
-    prevBodyOverflow: null,
-    prevBodyOverflowY: null,
-    prevHtmlOverflow: null,
-    prevHtmlOverflowY: null,
+    unlocked: null,
+    // the scroll locks we took off: [element, property, value]
     enable() {
       if (this.enabled) return;
       this.enabled = true;
@@ -2961,10 +3079,7 @@
       style.id = this.styleId;
       style.textContent = `.${this.hiddenClass} { display: none !important; }`;
       (document.head || document.documentElement).appendChild(style);
-      this.prevBodyOverflow = document.body ? document.body.style.overflow : null;
-      this.prevBodyOverflowY = document.body ? document.body.style.overflowY : null;
-      this.prevHtmlOverflow = document.documentElement ? document.documentElement.style.overflow : null;
-      this.prevHtmlOverflowY = document.documentElement ? document.documentElement.style.overflowY : null;
+      this.unlocked = [];
       this.unlockScroll();
       const count = this.sweep(document);
       this.lastInput = 0;
@@ -2990,13 +3105,14 @@
       announce(count ? `Hid ${count} popup${count === 1 ? "" : "s"}` : "Watching for popups to hide");
     },
     unlockScroll() {
-      if (document.body) {
-        if (document.body.style.overflow === "hidden" || document.body.style.overflow === "clip") document.body.style.overflow = "";
-        if (document.body.style.overflowY === "hidden" || document.body.style.overflowY === "clip") document.body.style.overflowY = "";
-      }
-      if (document.documentElement) {
-        if (document.documentElement.style.overflow === "hidden" || document.documentElement.style.overflow === "clip") document.documentElement.style.overflow = "";
-        if (document.documentElement.style.overflowY === "hidden" || document.documentElement.style.overflowY === "clip") document.documentElement.style.overflowY = "";
+      for (const el of [document.body, document.documentElement]) {
+        if (!el) continue;
+        for (const prop of ["overflow", "overflowY"]) {
+          const value = el.style[prop];
+          if (value !== "hidden" && value !== "clip") continue;
+          this.unlocked?.push([el, prop, value]);
+          el.style[prop] = "";
+        }
       }
     },
     // Scan a root for overlays and hide them; returns how many were hidden.
@@ -3059,22 +3175,10 @@
         this.hidden.clear();
         this.hidden = null;
       }
-      if (document.body) {
-        if (this.prevBodyOverflow) document.body.style.overflow = this.prevBodyOverflow;
-        else if (this.prevBodyOverflow !== null && document.body.style.overflow) document.body.style.overflow = "";
-        if (this.prevBodyOverflowY) document.body.style.overflowY = this.prevBodyOverflowY;
-        else if (this.prevBodyOverflowY !== null && document.body.style.overflowY) document.body.style.overflowY = "";
-        if (!document.body.getAttribute("style")) document.body.removeAttribute("style");
+      for (const [el, prop, value] of this.unlocked || []) {
+        if (!el.style[prop]) el.style[prop] = value;
       }
-      if (document.documentElement) {
-        if (this.prevHtmlOverflow) document.documentElement.style.overflow = this.prevHtmlOverflow;
-        else if (this.prevHtmlOverflow !== null && document.documentElement.style.overflow) document.documentElement.style.overflow = "";
-        if (this.prevHtmlOverflowY) document.documentElement.style.overflowY = this.prevHtmlOverflowY;
-        else if (this.prevHtmlOverflowY !== null && document.documentElement.style.overflowY) document.documentElement.style.overflowY = "";
-        if (!document.documentElement.getAttribute("style")) document.documentElement.removeAttribute("style");
-      }
-      this.prevBodyOverflow = this.prevBodyOverflowY = null;
-      this.prevHtmlOverflow = this.prevHtmlOverflowY = null;
+      this.unlocked = null;
       console.log("[AI4A11y] Dismiss Overlays disabled");
       announce("Popups restored");
     },
@@ -3366,114 +3470,6 @@ ${perElement}`;
     }
   };
   if (typeof window !== "undefined") window.__ai4a11yBigTargets = BigTargets;
-
-  // tools/utils/color.js
-  function parseColor2(color) {
-    if (!color || color === "transparent" || color === "rgba(0, 0, 0, 0)") {
-      return null;
-    }
-    const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (rgbMatch) {
-      return {
-        r: parseInt(rgbMatch[1]),
-        g: parseInt(rgbMatch[2]),
-        b: parseInt(rgbMatch[3])
-      };
-    }
-    const hexMatch = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-    if (hexMatch) {
-      let hex = hexMatch[1];
-      if (hex.length === 3) {
-        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-      }
-      return {
-        r: parseInt(hex.slice(0, 2), 16),
-        g: parseInt(hex.slice(2, 4), 16),
-        b: parseInt(hex.slice(4, 6), 16)
-      };
-    }
-    return null;
-  }
-  function getLuminance(color) {
-    const rgb = parseColor2(color);
-    if (!rgb) return null;
-    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
-      c = c / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  }
-  function getContrastRatio(color1, color2) {
-    const l1 = getLuminance(color1);
-    const l2 = getLuminance(color2);
-    if (l1 === null || l2 === null) return null;
-    const lighter = Math.max(l1, l2);
-    const darker = Math.min(l1, l2);
-    return (lighter + 0.05) / (darker + 0.05);
-  }
-  function meetsContrastAA(foreground, background, isLarge = false) {
-    const ratio = getContrastRatio(foreground, background);
-    if (ratio === null) return false;
-    return ratio >= (isLarge ? 3 : 4.5);
-  }
-  function nearestAccessibleColor(foreground, background, { target = 4.5 } = {}) {
-    const fg = parseColor2(foreground);
-    if (!fg) return null;
-    if (getLuminance(background) === null) return null;
-    const STEPS = 50;
-    function stepToward(endpoint) {
-      for (let i = 1; i <= STEPS; i++) {
-        const t = i / STEPS;
-        const r = Math.round(fg.r + (endpoint.r - fg.r) * t);
-        const g = Math.round(fg.g + (endpoint.g - fg.g) * t);
-        const b = Math.round(fg.b + (endpoint.b - fg.b) * t);
-        const candidate = `rgb(${r}, ${g}, ${b})`;
-        const ratio = getContrastRatio(candidate, background);
-        if (ratio !== null && ratio >= target) return { color: candidate, steps: i };
-      }
-      return null;
-    }
-    const dark = stepToward({ r: 0, g: 0, b: 0 });
-    const light = stepToward({ r: 255, g: 255, b: 255 });
-    if (!dark && !light) {
-      const blackRatio = getContrastRatio("rgb(0, 0, 0)", background) ?? 0;
-      const whiteRatio = getContrastRatio("rgb(255, 255, 255)", background) ?? 0;
-      return blackRatio >= whiteRatio ? "rgb(0, 0, 0)" : "rgb(255, 255, 255)";
-    }
-    if (!dark) return light.color;
-    if (!light) return dark.color;
-    return dark.steps <= light.steps ? dark.color : light.color;
-  }
-  function parseRgba(color) {
-    if (!color) return null;
-    const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== void 0 ? parseFloat(m[4]) : 1 };
-    const rgb = parseColor2(color);
-    return rgb ? { ...rgb, a: 1 } : null;
-  }
-  function getEffectiveBackground(element) {
-    const layers = [];
-    let el = element;
-    while (el) {
-      const parsed = parseRgba(getComputedStyle(el).backgroundColor);
-      if (parsed && parsed.a > 0) {
-        layers.push(parsed);
-        if (parsed.a >= 1) break;
-      }
-      if (el === document.documentElement) break;
-      el = el.parentElement;
-    }
-    let base = { r: 255, g: 255, b: 255 };
-    for (let i = layers.length - 1; i >= 0; i--) {
-      const top = layers[i];
-      base = {
-        r: Math.round(top.r * top.a + base.r * (1 - top.a)),
-        g: Math.round(top.g * top.a + base.g * (1 - top.a)),
-        b: Math.round(top.b * top.a + base.b * (1 - top.a))
-      };
-    }
-    return `rgb(${base.r}, ${base.g}, ${base.b})`;
-  }
 
   // tools/adapters/link-highlighter.js
   var LinkHighlighter = {
@@ -4783,9 +4779,7 @@ ${perElement}`;
       this.clickHandler = (e) => this.handleClick(e);
       this.keyHandler = (e) => {
         if (e.key === "Escape") {
-          clearTimeout(this.hoverTimer);
-          this.hoverTimer = null;
-          this.hideTooltip();
+          this.dismiss();
           return;
         }
         if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
@@ -4795,8 +4789,10 @@ ${perElement}`;
             if (e.key === " " || e.key === "Spacebar") e.preventDefault();
             const tip = document.getElementById(TOOLTIP_ID);
             if (tip && tip.style.display === "block" && this.current === span) {
-              this.hideTooltip();
+              this.dismiss();
             } else {
+              clearTimeout(this.hoverTimer);
+              this.hoverTimer = null;
               this.current = span;
               this.showDefinition(span, true).catch(() => {
               });
@@ -4988,28 +4984,37 @@ ${perElement}`;
         if (span && tip && rel && (rel === tip || tip.contains(rel))) return;
         if (onTip && rel && (rel === tip || tip.contains(rel))) return;
         if (onTip && this.current && rel && (rel === this.current || this.current.contains(rel))) return;
-        if (this.current === span) this.current = null;
+        if (event.type === "mouseout" && this.current && this.current === document.activeElement) return;
+        if (this.current === span || onTip) this.current = null;
         clearTimeout(this.hoverTimer);
         this.hoverTimer = null;
         this.hideTooltip();
       } catch {
       }
     },
+    // A click only opens. The hover and focus of that same click may already
+    // have opened it, so a toggle would close it again; moving away, focus
+    // leaving, or Escape closes it.
     handleClick(event) {
       try {
         const target = event.target;
         const span = target && target.closest ? target.closest(`.${this.markerClass}`) : null;
         if (!span) return;
-        const tip = document.getElementById(TOOLTIP_ID);
-        if (tip && tip.style.display === "block" && this.current === span) {
-          this.hideTooltip();
-        } else {
-          this.current = span;
-          this.showDefinition(span, false).catch(() => {
-          });
-        }
+        clearTimeout(this.hoverTimer);
+        this.hoverTimer = null;
+        this.current = span;
+        this.showDefinition(span, false).catch(() => {
+        });
       } catch {
       }
+    },
+    // The person closed it: nothing pending may reopen it (the hover timer, or
+    // a lookup still on its way).
+    dismiss() {
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+      this.current = null;
+      this.hideTooltip();
     },
     // One lookup per word, shared by every hover and focus that asks while it
     // is on its way. Returns null once the lookup budget is spent.
@@ -6980,10 +6985,14 @@ ${scope} table {
     // selector list of elements whose :hover reveals a pop-up
     opened: null,
     // the one element holding OPEN_ATTR
-    dismissed: null,
-    // element dismissed with Escape, until pointer/focus leaves
+    dismissed: [],
+    // elements dismissed with Escape, until pointer/focus leaves them
+    pointerAt: null,
+    // the element the pointer last moved onto (null: off the page)
+    focusTimer: null,
     onMouseOver: null,
     // stored listener refs (for exact removal)
+    onMouseOut: null,
     onKeyDown: null,
     onFocusIn: null,
     onFocusOut: null,
@@ -7022,75 +7031,47 @@ ${scope} table {
         if (!this.enabled) return;
         const target = e.target;
         if (!target || target.nodeType !== 1) return;
+        this.pointerAt = target;
         if (this.tip && (target === this.tip || this.tip.contains(target))) return;
-        if (this.dismissed && (!this.dismissed.contains || !this.dismissed.contains(target))) {
-          this.dismissed = null;
-        }
-        const el = target.closest ? target.closest("[title]") : null;
-        const host = this.triggers && target.closest ? target.closest(this.triggers) : null;
-        if (this.dismissed && (el === this.dismissed || host === this.dismissed)) return;
+        if (this.isDismissed(target)) return;
         this.keepOpen(target);
+        const el = target.closest ? target.closest("[title]") : null;
         if (!el) return;
         const text = (el.getAttribute("title") || "").trim();
         if (!text || el === this.current) return;
         this.show(el, text);
       };
       document.addEventListener("mouseover", this.onMouseOver, true);
+      this.onMouseOut = (e) => {
+        if (!e.relatedTarget) this.pointerAt = null;
+      };
+      document.addEventListener("mouseout", this.onMouseOut, true);
       this.onFocusIn = (e) => {
         if (!this.enabled) return;
         const target = e.target;
         if (!target || target.nodeType !== 1) return;
         if (this.tip && (target === this.tip || this.tip.contains(target))) return;
-        if (this.dismissed && (!this.dismissed.contains || !this.dismissed.contains(target))) {
-          this.dismissed = null;
-        }
-        const el = target.closest ? target.closest("[title]") : null;
-        const host = this.triggers && target.closest ? target.closest(this.triggers) : null;
-        if (this.dismissed && (el === this.dismissed || host === this.dismissed)) return;
+        if (this.isDismissed(target)) return;
         this.keepOpen(target);
-        if (el) {
-          const text = (el.getAttribute("title") || "").trim();
-          if (text && el !== this.current) {
-            this.show(el, text);
-            return;
-          }
-        }
-        if (this.current && this.current !== el) {
-          try {
-            if (!this.current.matches(":hover")) this.hide();
-          } catch {
-            this.hide();
-          }
-        }
-        if (this.opened && (!target.closest || !target.closest(this.triggers))) {
-          try {
-            if (!this.opened.matches(":hover")) this.close();
-          } catch {
-            this.close();
-          }
-        }
+        const el = target.closest ? target.closest("[title]") : null;
+        const text = el ? (el.getAttribute("title") || "").trim() : "";
+        if (text && el !== this.current) this.show(el, text);
+        else if (this.current && this.current !== el && !this.hovered(this.current) && !this.hovered(this.tip)) this.hide();
+        if (this.opened && (!target.closest || !target.closest(this.triggers)) && !this.hovered(this.opened)) this.close();
       };
       document.addEventListener("focusin", this.onFocusIn, true);
-      this.onFocusOut = () => {
+      this.onFocusOut = (e) => {
         if (!this.enabled) return;
-        setTimeout(() => {
+        const next = e.relatedTarget;
+        this.dismissed = this.dismissed.filter((d) => this.hovered(d) || next && d.contains(next));
+        clearTimeout(this.focusTimer);
+        this.focusTimer = setTimeout(() => {
+          this.focusTimer = null;
           if (!this.enabled) return;
           const active = typeof document !== "undefined" ? document.activeElement : null;
           if (!active || active === document.body || active === document.documentElement) {
-            if (this.current) {
-              try {
-                if (!this.current.matches(":hover")) this.hide();
-              } catch {
-                this.hide();
-              }
-            }
-            if (this.opened) {
-              try {
-                if (!this.opened.matches(":hover")) this.close();
-              } catch {
-                this.close();
-              }
-            }
+            if (this.current && !this.hovered(this.current) && !this.hovered(this.tip)) this.hide();
+            if (this.opened && !this.hovered(this.opened)) this.close();
           }
         }, 10);
       };
@@ -7098,7 +7079,8 @@ ${scope} table {
       this.onKeyDown = (e) => {
         if (!this.enabled) return;
         if (e.key === "Escape") {
-          this.dismissed = this.current || this.opened;
+          const active = document.activeElement;
+          this.dismissed = [this.current, this.opened].filter((d) => d && (this.hovered(d) || active && d.contains(active)));
           this.hide();
           this.close();
         }
@@ -7114,6 +7096,25 @@ ${scope} table {
       }
       console.log("[AI4A11y] Persistent Hover enabled");
       announce("Hover tooltips now stay on screen. Press Escape to dismiss one");
+    },
+    // Under the pointer: where it last moved, or :hover.
+    hovered(el) {
+      if (!el) return false;
+      if (this.pointerAt && el.contains(this.pointerAt)) return true;
+      try {
+        return el.matches(":hover");
+      } catch {
+        return false;
+      }
+    },
+    // Moving onto (or focusing) target leaves every dismissed element that does
+    // not contain it; a dismissed element that does stays closed.
+    isDismissed(target) {
+      this.dismissed = this.dismissed.filter((d) => d.contains(target));
+      if (!this.dismissed.length) return false;
+      const el = target.closest ? target.closest("[title]") : null;
+      const host = this.triggers && target.closest ? target.closest(this.triggers) : null;
+      return this.dismissed.some((d) => d === el || d === host);
     },
     // Fill the tooltip with the element's title text (textContent, never
     // innerHTML) and position it safely within the viewport.
@@ -7139,6 +7140,8 @@ ${scope} table {
         return;
       }
       this.tip.hidden = false;
+      this.tip.style.left = "0px";
+      this.tip.style.top = "0px";
       let tipRect = null;
       try {
         tipRect = this.tip.getBoundingClientRect();
@@ -7239,6 +7242,12 @@ ${scope} table {
         document.removeEventListener("mouseover", this.onMouseOver, true);
         this.onMouseOver = null;
       }
+      if (this.onMouseOut) {
+        document.removeEventListener("mouseout", this.onMouseOut, true);
+        this.onMouseOut = null;
+      }
+      clearTimeout(this.focusTimer);
+      this.focusTimer = null;
       if (this.onKeyDown) {
         document.removeEventListener("keydown", this.onKeyDown, true);
         this.onKeyDown = null;
@@ -7265,7 +7274,8 @@ ${scope} table {
         this.tip = null;
       }
       this.current = null;
-      this.dismissed = null;
+      this.dismissed = [];
+      this.pointerAt = null;
       this.close();
       this.triggers = "";
       console.log("[AI4A11y] Persistent Hover disabled");
@@ -8996,8 +9006,9 @@ ${h1 ? h1.textContent.replace(/\s+/g, " ").trim() : ""}`;
       for (const part of query.split("&")) {
         const eq = part.indexOf("=");
         if (eq > 0) {
-          hasNamedParam = true;
-          if (TEX_PARAM_RE.test(part.slice(0, eq))) return safeDecode(part.slice(eq + 1));
+          const key = part.slice(0, eq);
+          if (TEX_PARAM_RE.test(key)) return safeDecode(part.slice(eq + 1));
+          if (/^[A-Za-z][\w-]+$/.test(key)) hasNamedParam = true;
         }
       }
       if (hasNamedParam && !/codecogs/i.test(url.hostname)) return null;
@@ -10400,7 +10411,7 @@ ${chunk}
       rewritten = 0;
     }, 400);
   }
-  var NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"]';
+  var NOT_PROSE_SEL = 'style, script, noscript, template, [hidden], [aria-hidden="true"], .ai4a11y-summary-box';
   function proseText(element) {
     if (!element || typeof element.cloneNode !== "function") return "";
     const clone = element.cloneNode(true);
@@ -10493,6 +10504,7 @@ ${chunk}
     try {
       const excerpt = text.substring(0, 3e3);
       const summary = await summarizeText(excerpt);
+      if (element.dataset.ai4a11ySummarize !== "pending") return null;
       const rejected = summary == null ? null : startsWithRefusal(summary) ? "reads as a refusal" : rejectRewrite(summary, excerpt, { maxRatio: MAX_SUMMARY_RATIO, minChars: MIN_SUMMARY_CHARS });
       if (rejected) {
         console.warn(`[AI4A11y] summarizeContent: rejected model output (${rejected})`);
@@ -10528,7 +10540,7 @@ ${chunk}
       return null;
     } catch (e) {
       console.warn("[AI4A11y] Failed to summarize:", e);
-      element.dataset.ai4a11ySummarize = "failed";
+      if (element.dataset.ai4a11ySummarize === "pending") element.dataset.ai4a11ySummarize = "failed";
       return null;
     }
   }
@@ -10547,7 +10559,7 @@ ${chunk}
   }
   function hasBackgroundImage(element) {
     let el = element;
-    while (el && el !== document.documentElement) {
+    while (el) {
       const style = getComputedStyle(el);
       const bgImg = style.backgroundImage;
       if (bgImg && bgImg !== "none") return true;
@@ -10595,6 +10607,7 @@ ${chunk}
       console.warn("[AI4A11y] Contrast fix failed, using fallback:", e);
       fixedColor = null;
     }
+    if (element.dataset.ai4a11yProcessed !== "pending") return null;
     const passes = (c) => (getContrastRatio(c, background) ?? 0) >= target;
     if (!fixedColor || !passes(fixedColor)) fixedColor = nearestAccessibleColor(color, background, { target });
     if (!fixedColor || !passes(fixedColor)) fixedColor = blackOrWhite(background);
@@ -10710,7 +10723,11 @@ ${chunk}
     if (!match) return;
     const currentLevel = parseInt(match[1]);
     const doc = element.ownerDocument || document;
+    const hasLayout = doc.documentElement.getClientRects().length > 0;
     const allHeadings = Array.from(doc.querySelectorAll("h1,h2,h3,h4,h5,h6")).filter((h) => {
+      if (h === element) return true;
+      if (h.closest('[hidden], [aria-hidden="true"]')) return false;
+      if (hasLayout && !h.getClientRects().length) return false;
       try {
         const s = getComputedStyle(h);
         return s.display !== "none" && s.visibility !== "hidden";
@@ -10772,7 +10789,7 @@ ${chunk}
     const role = element.getAttribute("role");
     if (!role) return;
     const tokens = role.trim().split(/\s+/);
-    const validTokens = tokens.filter((t) => VALID_ARIA_ROLES.has(t) && !ABSTRACT_ROLES.has(t));
+    const validTokens = tokens.filter((t) => VALID_ARIA_ROLES.has(t.toLowerCase()) && !ABSTRACT_ROLES.has(t.toLowerCase()));
     if (validTokens.length === tokens.length) return;
     if (validTokens.length > 0) {
       element.setAttribute("role", validTokens.join(" "));
@@ -10799,16 +10816,18 @@ ${chunk}
     console.info("[AI4A11y] fixMissingAriaAttrs: no-op (backfilling ARIA state would lie to screen readers)");
   }
   function fixNestedInteractive(element) {
-    const parent = element.parentElement?.closest('a, button, [role="button"]');
+    const parent = element.parentElement?.closest('a, button, [role="button"], [role="link"]');
     if (parent) {
       repairNested(element);
       return;
     }
-    const nested = element.querySelectorAll("button, a[href]");
+    const nested = element.querySelectorAll(NESTED_SEL);
     for (const child of nested) {
       repairNested(child);
     }
   }
+  var NESTED_SEL = 'button, a[href], [role="button"], [role="link"], [role="checkbox"], [role="menuitem"], [role="tab"], [tabindex]:not([tabindex="-1"])';
+  var CONTROL_ROLES = /* @__PURE__ */ new Set(["button", "link", "checkbox", "menuitem", "tab"]);
   function repairNested(child) {
     const doc = child.ownerDocument || document;
     if (child.tagName === "BUTTON") {
@@ -10816,7 +10835,9 @@ ${chunk}
       while (child.firstChild) {
         span.appendChild(child.firstChild);
       }
-      span.className = child.className;
+      for (const name of ["id", "class", "style", "title"]) {
+        if (child.hasAttribute(name)) span.setAttribute(name, child.getAttribute(name));
+      }
       child.replaceWith(span);
       incrementStat7("wcag");
       logFix14("nested-interactive", span, "button", "span");
@@ -10827,6 +10848,13 @@ ${chunk}
       incrementStat7("wcag");
       logFix14("nested-interactive", child, "a[href]", "a[role=presentation]");
       console.log("[AI4A11y] Made nested link non-interactive");
+    } else {
+      const role = (child.getAttribute("role") || "").toLowerCase();
+      if (CONTROL_ROLES.has(role)) child.removeAttribute("role");
+      child.removeAttribute("tabindex");
+      incrementStat7("wcag");
+      logFix14("nested-interactive", child, role ? `[role=${role}]` : "[tabindex]", "(plain)");
+      console.log("[AI4A11y] Made nested control non-interactive");
     }
   }
   var TARGET_SIZE_PX = 44;
