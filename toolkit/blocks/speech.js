@@ -10,8 +10,9 @@
 // speaks with that; otherwise with the page's speechSynthesis. Either way it
 // waits for the person's first click or key in the page, and Escape always
 // stops it. Long text is spoken in chunks
-// (browsers cut long utterances off). Given an element, onWord gets a DOM
-// Range of each word as it is spoken, for highlight.range().
+// (browsers cut long utterances off). Given an element, a Range or the
+// person's Selection, onWord gets a DOM Range of each word as it is
+// spoken, for highlight.range().
 // The speaking rate comes from the person's profile when it has one.
 //
 // listen(): a visible indicator with a Stop button shows while the
@@ -25,16 +26,30 @@ export const LISTEN_DEFAULTS = { lang: null, feedback: 'announce', maxErrors: 3 
 export function speechBlock(s, env) {
   const { win, doc, shared } = env;
 
+  // The text to speak, and where each piece of it is in the page: an
+  // element, a Range (or the person's Selection) or a string (no map).
   function source(input) {
     if (typeof input === 'string') return { text: input, map: null };
-    if (!input || input.nodeType !== 1) return { text: String(input ?? ''), map: null };
+    if (input && typeof input.getRangeAt === 'function') input = input.rangeCount ? input.getRangeAt(0) : null;
+    const range = input && input.startContainer && typeof input.intersectsNode === 'function' ? input : null;
+    let root = range ? range.commonAncestorContainer : input;
+    if (root && root.nodeType === 3) root = root.parentElement;
+    if (!root || root.nodeType !== 1) return { text: String(input ?? ''), map: null };
     let text = '';
     const map = [];
-    for (const node of env.page.textNodes(input)) {
+    for (const node of env.page.textNodes(root)) {
+      let base = 0, stop = node.nodeValue.length;
+      if (range) {
+        if (!range.intersectsNode(node)) continue;
+        if (node === range.startContainer) base = range.startOffset;
+        if (node === range.endContainer) stop = range.endOffset;
+        if (stop <= base) continue;
+      }
       if (text && !/\s$/.test(text)) text += ' ';
-      map.push({ node, start: text.length, end: text.length + node.nodeValue.length });
-      text += node.nodeValue;
+      map.push({ node, base, start: text.length, end: text.length + stop - base });
+      text += node.nodeValue.slice(base, stop);
     }
+    if (range && !map.length) return { text: String(range), map: null };
     return { text, map };
   }
 
@@ -85,9 +100,9 @@ export function speechBlock(s, env) {
       const entry = map.find((m) => abs >= m.start && abs < m.end);
       if (!entry) return null;
       const r = doc.createRange();
-      const from = abs - entry.start;
+      const from = entry.base + abs - entry.start;
       r.setStart(entry.node, from);
-      r.setEnd(entry.node, Math.min(entry.node.nodeValue.length, from + Math.max(1, len)));
+      r.setEnd(entry.node, Math.min(entry.base + entry.end - entry.start, from + Math.max(1, len)));
       return r;
     };
     const wordLength = (abs) => { const m = /^[\p{L}\p{N}'’-]+/u.exec(text.slice(abs)); return m ? m[0].length : 1; };

@@ -57,7 +57,7 @@ s.addClass(el, ...names)
 s.insert(parent, node, before) / s.append(parent, node)
 s.replace(oldNode, newNode) / s.remove(node) / s.setText(textNode, text)
 s.listen(target, type, fn, options)   // returns a function that removes it
-s.timer(fn, ms) / s.every(fn, ms) / s.frame(fn)
+const cancel = s.timer(fn, ms) / s.every(fn, ms) / s.frame(fn)   // each returns a function that cancels it
 s.el(tag, { text, attrs })            // a new element marked as the toolkit's own
 await s.guard(promise)                // throws Ended if the session ended meanwhile
 s.onEnd(fn) / s.alive() / s.ended / s.end()
@@ -380,6 +380,7 @@ Read text aloud, with word-by-word events for highlighting. In the browser runti
 
 ```javascript
 const r = s.speech.say(elementOrText, { speechRate, voice, lang, onWord: (range) => h.move(range), onChunk })
+s.speech.say(win.getSelection())      // or a Range: what the person selected, with onWord ranges in the page
 r.pause(); r.resume(); r.stop(); await r.done; r.speaking
 s.speech.say(el, { from })            // start at an offset onWord gave (onWord(range, offset)): a new rate goes on from that word
 ```
@@ -442,6 +443,7 @@ Always, whatever the config:
 - end() never starts what the person paused or played themselves.
 - It never re-mutes what the person unmuted.
 - It never touches the page's own play() promise.
+- captions() never changes a track the page or the person turned on. Call it again when a track is added: it moves its own choice to one in the person's language.
 
 ### The person's settings (`profile`)
 
@@ -473,6 +475,7 @@ From the person's profile, over your value:
 Always, whatever the config:
 
 - Only the person changes their profile: set() works only right after their own click, tap or key on the toolkit's UI in this page or their shortcut (keys.adjust); otherwise it returns { applied: false, reason: 'not-by-person' }.
+- set() calls every onChange listener, your own included, before it returns: apply the change in onChange, and do not apply it again after set().
 - Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, lineHeight, letterSpacing, targetSize, motionReducer, contrastMode, darkMode.
 - The change applies in this page at once, for every adapter, and is saved to the profile where the host can ({ saved }).
 - What the person set for a site wins over what they set for every site, which wins over what the toolkit derived from their needs.

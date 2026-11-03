@@ -1,12 +1,14 @@
 # InterA11y, vendored for the verifier
 
-These files are copied unchanged from InterA11y, the replication materials
+These files are copied from InterA11y, the replication materials
 for *InterA11y: Interactive Web Accessibility Error Detection with LLM
 Agents* (commit `8dcf06e258df88a8f39a3e37ebfce060c45a1cdd`, directory
 `runtime/intera11y/`). The verifier (`../harness.mjs`, `../mcp.mjs`) gives
 their tools, rubrics and judge prompt to the agents that build and review
-the core adapters. Do not edit them here. To update them, copy them again
-from a newer InterA11y and note its commit above.
+the core adapters. They are unchanged except for one thing: the rules
+adapted from GenA11y are left blank (below). Do not edit them here. To
+update them, copy them again from a newer InterA11y, blank those rules,
+and note its commit above and in `../intera11y.mjs`.
 
 | Here | What it is |
 |---|---|
@@ -20,8 +22,14 @@ from a newer InterA11y and note its commit above.
 | `src/core/config.js` | **Not InterA11y's**: the two settings `prompt.js` reads, in place of InterA11y's own config. |
 
 Rules in the rubrics marked `from: 'gena11y'` are adapted from GenA11y
-(<https://github.com/seal-hub/GenA11y>, GPL-3.0-only); rules marked
-`from: 'added'` are InterA11y's. The tools run in Puppeteer
+(<https://github.com/seal-hub/GenA11y>, GPL-3.0-only), so their `text` and
+`rubric` are empty here; rules marked `from: 'added'` are InterA11y's.
+When an agent asks for a rubric that has such rules (1.1.1, 1.4.1, 2.4.4,
+3.3.1), `../intera11y.mjs` reads their text from InterA11y at the commit
+above: from a checkout (`INTERA11Y_DIR`, else `../InterA11y` beside this
+repository), else from GitHub. The file must match the SHA-256 recorded
+there. If it cannot be read, the rubric is given without those rules, and
+says so. The tools run in Puppeteer
 (`puppeteer-core`, driving the Chromium Playwright installs) and need
 `@guidepup/virtual-screen-reader`; both are this repository's dev
 dependencies.

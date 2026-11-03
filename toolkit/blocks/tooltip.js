@@ -80,8 +80,8 @@ export function tooltipBlock(s, env) {
 
     function hide() {
       token++;
-      win.clearTimeout(showTimer);
-      win.clearTimeout(hideTimer);
+      if (showTimer) showTimer();
+      if (hideTimer) hideTimer();
       if (current) describe(current, false);
       current = null;
       tip.hidden = true;
@@ -113,7 +113,7 @@ export function tooltipBlock(s, env) {
 
     async function open(t) {
       if (!s.alive() || dismissed.has(t)) return;
-      win.clearTimeout(hideTimer);
+      if (hideTimer) hideTimer();
       if (current === t && !tip.hidden) return;
       if (current && current !== t) describe(current, false);
       current = t;
@@ -143,7 +143,7 @@ export function tooltipBlock(s, env) {
     }
 
     function scheduleHide() {
-      win.clearTimeout(hideTimer);
+      if (hideTimer) hideTimer();
       hideTimer = s.timer(() => {
         if (!current) return;
         if (overTip() || has(current, pointerAt) || focused(current)) return;
@@ -154,10 +154,10 @@ export function tooltipBlock(s, env) {
     s.listen(doc, 'mouseover', (e) => {
       pointerAt = e.target;
       forgetDismissed();
-      if (has(tip, e.target)) { win.clearTimeout(hideTimer); return; }
+      if (has(tip, e.target)) { if (hideTimer) hideTimer(); return; }
       const t = triggerOf(e.target);
-      if (t && t === current) { win.clearTimeout(hideTimer); return; }
-      win.clearTimeout(showTimer);
+      if (t && t === current) { if (hideTimer) hideTimer(); return; }
+      if (showTimer) showTimer();
       if (t) showTimer = s.timer(() => { if (has(t, pointerAt)) open(t); }, Number(c.delayMs) || 0);
       if (current) scheduleHide();
     }, true);
@@ -169,7 +169,7 @@ export function tooltipBlock(s, env) {
     s.listen(doc, 'focusin', (e) => {
       forgetDismissed();
       const t = triggerOf(e.target);
-      if (t) { win.clearTimeout(showTimer); open(t); } else if (current && !has(tip, e.target)) scheduleHide();
+      if (t) { if (showTimer) showTimer(); open(t); } else if (current && !has(tip, e.target)) scheduleHide();
     }, true);
     s.listen(doc, 'focusout', (e) => {
       if (current && has(current, e.target) && !has(current, e.relatedTarget)) scheduleHide();

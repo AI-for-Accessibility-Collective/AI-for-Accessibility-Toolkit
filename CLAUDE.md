@@ -148,9 +148,10 @@ robustness sites (`scripts/verify-adapters/sites.json`). The specs were
 written by opencode agents run with `scripts/verify-adapters/run.mjs --agent`
 in a gVisor container on the agent host VM (see its Dockerfile). The
 verifier also gives agents InterA11y's tools, rubrics and judge prompt
-(vendored, unchanged, in `scripts/verify-adapters/intera11y/`; run in
-puppeteer-core on Playwright's Chromium), limited to what the adapter
-created, changed or styled. The one generated file is
+(vendored in `scripts/verify-adapters/intera11y/`; run in puppeteer-core on
+Playwright's Chromium), limited to what the adapter created, changed or
+styled. The rubric rules adapted from GenA11y (GPL-3.0) are blank there and
+read from InterA11y when an agent asks for them. The one generated file is
 `cli/cli-tools.bundle.js` (`npm run build:cli`). Run `npm ci` once first —
 the demos need nothing installed, but the tools suites need jsdom. Run the
 suites:

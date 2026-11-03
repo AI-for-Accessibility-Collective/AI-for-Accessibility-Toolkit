@@ -496,7 +496,7 @@ function adapterScope() {
     const html = !e.namespaceURI || e.namespaceURI === 'http://www.w3.org/1999/xhtml';
     return xpathOf(e.parentElement) + (html ? `/${e.tagName.toLowerCase()}[${i}]` : `/*[local-name()='${e.tagName}'][${i}]`);
   };
-  const STATE = /::?(before|after|marker|placeholder|selection|first-line|first-letter|backdrop|file-selector-button)|:(hover|focus|focus-visible|focus-within|active|visited|target|checked|disabled|enabled|placeholder-shown|invalid|valid|open)\b/g;
+  const STATE = /::?(before|after|marker|placeholder|selection|first-line|first-letter|backdrop|file-selector-button)|:(hover|focus-visible|focus-within|focus|active|visited|target|checked|disabled|enabled|placeholder-shown|invalid|valid|open)\b/g;
   const selectors = () => {
     const out = [];
     for (const st of document.querySelectorAll('style[data-ai4a11y-ui]')) {
@@ -504,8 +504,12 @@ function adapterScope() {
       const walk = (rules) => { for (const r of rules || []) { if (r.selectorText) out.push(r.selectorText); else if (r.cssRules) walk(r.cssRules); } };
       try { walk(st.sheet && st.sheet.cssRules); } catch (e) { /* a sheet that cannot be read */ }
     }
-    return out.flatMap((sel) => sel.split(',')).map((x) => x.replace(STATE, '').trim() || '*')
-      .filter((x) => x && !/^(html|:root|body)$/.test(x) && !/\[data-ai4a11y/.test(x));
+    // Split at the top level only (not inside :not(a, b)); a selector is the
+    // toolkit's own when it names our elements outside a :not().
+    const split = (sel) => { const parts = []; let depth = 0, cur = ''; for (const ch of sel) { if (ch === '(') depth++; else if (ch === ')') depth--; if (ch === ',' && !depth) { parts.push(cur); cur = ''; } else cur += ch; } parts.push(cur); return parts; };
+    const ours = (x) => /\[data-ai4a11y/.test(x.replace(/:not\((?:[^()]|\([^()]*\))*\)/g, ''));
+    return out.flatMap(split).map((x) => x.replace(STATE, '').trim() || '*')
+      .filter((x) => x && !/^(html|:root|body)$/.test(x) && !ours(x));
   };
   const created = () => {
     const sh = shared();
@@ -537,6 +541,15 @@ function adapterScope() {
     };
     return step(el);
   });
+  // The focused element (through open shadow roots), for the tab-stop walk.
+  globalThis.__verifyActive = () => {
+    let a = document.activeElement;
+    while (a && a.shadowRoot && a.shadowRoot.activeElement) a = a.shadowRoot.activeElement;
+    if (!a || a === document.body || a === document.documentElement) return null;
+    const xpath = xpathOf(a);
+    return { xpath, stable: globalThis.__verifyStable([xpath])[0], tag: a.tagName.toLowerCase(), role: a.getAttribute('role') || null,
+      label: (a.getAttribute('aria-label') || a.getAttribute('title') || a.innerText || a.value || '').replace(/\s+/g, ' ').trim().slice(0, 60) };
+  };
   globalThis.__verifyScope = (target) => {
     const c = created(), ch = changed(), sel = selectors();
     if (target) {

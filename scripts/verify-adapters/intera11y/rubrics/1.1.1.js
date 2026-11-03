@@ -5,33 +5,33 @@ module.exports = {
   rules: [
     {
       from: 'gena11y',
-      text: 'Image buttons must have a non-empty accessible name.',
+      text: '',
       tools: [],
-      rubric: `An <input type="image"> (or a button whose only content is an image) exposed to assistive technology with an empty computed name fails (ACT 59796f; F65). Evidence: the computed name and its source.`,
+      rubric: '',
     },
     {
       from: 'gena11y',
-      text: 'Images must have non-empty accessible names unless decorative (alt="", role="presentation", aria-hidden="true").',
+      text: '',
       tools: ['request_hi_res_crop', 'query_ax_node'],
-      rubric: `An <img>, role="img" element or image-map <area> that is exposed to assistive technology and has an empty computed name fails (ACT 23a2a8; F65). An image inside a link or button that is marked decorative (alt="", role="presentation" or "none") passes when the control's own accessible name conveys the purpose (H2); an image with no alt attribute is not marked decorative — it is still exposed, with no name, and fails even inside a named control (ACT 23a2a8). Evidence: alt attribute, computed name and source, whether it is hidden from assistive technology, and the enclosing control's computed name and state. query_ax_node resolves those accessibility facts when the supplied control evidence is incomplete.`,
+      rubric: '',
     },
     {
       from: 'gena11y',
-      text: 'Accessible names must be meaningful, not just filenames or "image".',
+      text: '',
       tools: ['request_hi_res_crop'],
-      rubric: `A text alternative that is a file name or meaningless placeholder ("image", "photo", "graphic") fails (ACT qt1vmo; F30). Judge its equivalent purpose in the local content: a short contextual identifier may be meaningful when nearby accessible text supplies the specific identity or information. Do not require that the image alternative repeat that text or describe every visual detail. Generic text unrelated to the image does not establish equivalence. Compare the crop, alternative, and local text context.`,
+      rubric: '',
     },
     {
       from: 'gena11y',
-      text: 'Object elements must have accessible names.',
+      text: '',
       tools: ['request_hi_res_crop'],
-      rubric: `An <object> that renders non-text content (an image, a plug-in) fails when it exposes no name and no fallback content that serves as its alternative (ACT 8fc3b6).`,
+      rubric: '',
     },
     {
       from: 'gena11y',
-      text: 'SVG elements with explicit roles must have accessible names.',
+      text: '',
       tools: [],
-      rubric: `An <svg> (or an element inside one) with an explicitly authored role="img", "graphics-document" or "graphics-symbol" fails when its computed name is empty (ACT 7d6734). A browser-computed image role does not establish an explicit author role. For an SVG without an explicit role, determine whether it conveys information in context; a simple ornamental shape with no informational function is decorative, and visibility or an empty name alone does not establish failure.`,
+      rubric: '',
     },
     {
       from: 'added',

@@ -18,6 +18,7 @@ export const PAUSE_DEFAULTS = { showControls: false };
 
 export function mediaBlock(s, env) {
   const isMedia = (el) => !!el && (el.tagName === 'VIDEO' || el.tagName === 'AUDIO');
+  const chosen = new WeakMap(); // video → { track } this session turned on
 
   function pause(el, opts = {}) {
     if (!s.alive() || !isMedia(el)) return false;
@@ -65,12 +66,24 @@ export function mediaBlock(s, env) {
     const want = String(lang || env.personal.language || env.doc.documentElement.lang || (env.win.navigator && env.win.navigator.language) || '').toLowerCase().split('-')[0];
     const tracks = [...video.textTracks].filter((t) => t.kind === 'captions' || t.kind === 'subtitles');
     if (!tracks.length) return null;
-    if (tracks.some((t) => t.mode === 'showing')) return tracks.find((t) => t.mode === 'showing');
-    const choice = (want && tracks.find((t) => (t.language || '').toLowerCase().split('-')[0] === want))
-      || tracks.find((t) => t.kind === 'captions') || tracks[0];
+    const inLang = want && tracks.find((t) => (t.language || '').toLowerCase().split('-')[0] === want);
+    const showing = tracks.find((t) => t.mode === 'showing');
+    const ours = chosen.get(video);
+    // One the page or the person turned on stays. One this block turned on
+    // gives way to a track in the person's language added since.
+    if (showing && !(ours && ours.track === showing && inLang && inLang !== showing)) return showing;
+    const choice = inLang || tracks.find((t) => t.kind === 'captions') || tracks[0];
+    if (ours) { ours.track.mode = 'disabled'; ours.track = choice; choice.mode = 'showing'; return choice; }
     const before = tracks.map((t) => [t, t.mode]);
+    const rec = { track: choice };
+    chosen.set(video, rec);
     choice.mode = 'showing';
-    s.onEnd(() => { if (choice.mode === 'showing') for (const [t, mode] of before) t.mode = mode; });
+    s.onEnd(() => {
+      chosen.delete(video);
+      if (rec.track.mode !== 'showing') return;
+      rec.track.mode = 'disabled';
+      for (const [t, mode] of before) t.mode = mode;
+    });
     return choice;
   }
 

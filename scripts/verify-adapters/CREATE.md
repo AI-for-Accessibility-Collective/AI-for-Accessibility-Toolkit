@@ -19,11 +19,16 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   change to the page through it; `disable()` is `this.s?.end()`, which puts
   the page back exactly as it was. `enable()` may be called again after
   `disable()`, and must not stack a second copy.
-- `enable()` returns `false` when there is nothing to do on the page; the
-  runtime then calls `disable()`, so nothing it started stays. An adapter
+- `enable()` returns `false` when there is nothing to do on the page (or
+  everything it does is turned off); the runtime then calls `disable()`.
+  Other hosts may not, so end the session yourself first
+  (`this.disable(); return false;`) and check before you make anything,
+  or the next `enable()` sees a live session and does nothing. An adapter
   that adjusts something (`s.keys.adjust`) keeps running instead, even
   where nothing is asked for yet, so the person's keys have something to
   adjust on that page.
+- `s.timer`, `s.every` and `s.frame` return a function that cancels them
+  (as `s.listen` returns one that removes the listener), not an id.
 - `options` are the developer's defaults (document each one in the header
   comment); the person's own settings (`s.profile.get()`) win over them.
 - The building blocks are listed, with every call, its config and what it
@@ -60,7 +65,9 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   `s.profile.set(changes)`: it applies to this site. The person chooses
   **every site** in the extension's popup, not in your adapter: no "every
   site" button or key of your own. Announce what `set()` says happened
-  (`applied`), not what you asked for. `set()`
+  (`applied`), not what you asked for. `set()` calls every
+  `s.profile.onChange` listener, yours included, before it returns: apply
+  the change there, once, and not again after `set()`. `set()`
   only works right after the person's own click or key on your UI or their
   shortcut; never call it on load.
 - **No shortcuts of your own.** The toolkit has one pair of keys, which the

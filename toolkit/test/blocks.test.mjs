@@ -125,6 +125,21 @@ await test('session: after end(), every change, listener and timer is a no-op, a
   assert.equal(s.ended, true);
 });
 
+await test('session: timers return a function that cancels them', async () => {
+  const { tk } = page('');
+  const s = tk.session();
+  let n = 0;
+  const cancel = s.timer(() => n++, 5);
+  const stopEvery = s.every(() => n++, 2);
+  const noFrame = s.frame(() => n++);
+  assert.equal(typeof cancel, 'function');
+  cancel(); stopEvery(); noFrame();
+  await tick(30);
+  assert.equal(n, 0);
+  s.end();
+  assert.equal(typeof s.timer(() => {}, 1), 'function', 'a no-op cancel after end()');
+});
+
 // ── styles ──────────────────────────────────────────────────────────────────
 
 await test('styles: one <style> per name, a scope class while open, and filters from two adapters compose', async () => {
@@ -497,6 +512,21 @@ await test('speech.say: from starts at an offset onWord gave, and the words stil
   s.end();
 });
 
+await test('speech.say: a Range (what the person selected) is spoken with words that map to the page', async () => {
+  const { tk, $, win, doc } = page('<p id="p">Alpha <b>beta gamma</b> delta.</p>');
+  const spoken = fakeSpeech(win);
+  const s = tk.session();
+  const r0 = doc.createRange();
+  r0.setStart($('#p').firstChild, 2);
+  r0.setEnd($('b').firstChild, 4);
+  const words = [];
+  const r = s.speech.say(r0, { onWord: (range, at) => { if (range) words.push(range.toString()); } });
+  await r.done;
+  assert.equal(spoken[0].text.trim(), 'pha beta');
+  assert.ok(words.length && words.every((w) => w.length), 'each word is a range in the page');
+  s.end();
+});
+
 await test('speech.say: waits for the person to use the page first', async () => {
   const { tk, win, doc } = page('<p>x</p>');
   const spoken = fakeSpeech(win, { active: false });
@@ -862,6 +892,28 @@ await test('page.textContrast: the ratio against blended backgrounds, AA for its
   assert.equal(big.large, true); assert.equal(big.min, 3);
   const img = tk.page.textContrast($('#img'));
   assert.equal(img.overImage, true); assert.equal(img.fix, null);
+});
+
+await test('page.textContrast: an element with both a colour and a background image is over an image', async () => {
+  const { tk, $ } = page('<p id="p" style="background: rgb(255, 255, 255) url(x.png); color: #999">Over an image</p>');
+  const r = tk.page.textContrast($('#p'));
+  assert.equal(r.overImage, true); assert.equal(r.fix, null);
+});
+
+await test('media.captions: moves its own choice to the person\'s language when that track is added; never one the page turned on', async () => {
+  const { tk } = page('', { personal: { language: 'es' } });
+  const s = tk.session();
+  const track = (language, mode = 'disabled') => ({ kind: 'captions', language, mode });
+  const en = track('en'); const video = { textTracks: [en] };
+  assert.equal(s.media.captions(video), en);
+  assert.equal(en.mode, 'showing');
+  const es = track('es'); video.textTracks.push(es);
+  assert.equal(s.media.captions(video), es);
+  assert.equal(es.mode, 'showing'); assert.equal(en.mode, 'disabled');
+  const pageOwn = { textTracks: [track('en', 'showing'), track('es')] };
+  assert.equal(s.media.captions(pageOwn).language, 'en', 'the page\'s choice stays');
+  s.end();
+  assert.equal(es.mode, 'disabled'); assert.equal(en.mode, 'disabled');
 });
 
 await test('page.headings leaves out a heading whose role is taken away (presentation, none)', async () => {

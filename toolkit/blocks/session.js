@@ -37,6 +37,7 @@ export class Ended extends Error {
 export function createSession(env, config = {}) {
   const always = config.restore === 'always';
   const undo = [];
+  const timers = new Set();
   let open = true;
   const { shared } = env;
   const id = `${slug(env.adapter)}-${shared.nextId++}`;
@@ -193,22 +194,30 @@ export function createSession(env, config = {}) {
       return off;
     },
 
+    // Each returns a function that cancels it. Timers are kept apart from
+    // the undo list, so one that fired or was cancelled is not kept.
     timer(fn, ms = 0) {
-      if (!open) return 0;
-      const t = env.win.setTimeout(() => { if (open) fn(); }, ms);
-      undo.push(() => env.win.clearTimeout(t));
-      return t;
+      if (!open) return () => {};
+      const t = env.win.setTimeout(() => { timers.delete(cancel); if (open) fn(); }, ms);
+      const cancel = () => { env.win.clearTimeout(t); timers.delete(cancel); };
+      timers.add(cancel);
+      return cancel;
     },
     every(fn, ms) {
-      if (!open) return 0;
+      if (!open) return () => {};
       const t = env.win.setInterval(() => { if (open) fn(); }, ms);
-      undo.push(() => env.win.clearInterval(t));
-      return t;
+      const cancel = () => { env.win.clearInterval(t); timers.delete(cancel); };
+      timers.add(cancel);
+      return cancel;
     },
     frame(fn) {
-      if (!open) return;
+      if (!open) return () => {};
+      let live = true;
       const raf = env.win.requestAnimationFrame ? env.win.requestAnimationFrame.bind(env.win) : (f) => env.win.setTimeout(f, 16);
-      raf(() => { if (open) fn(); });
+      const cancel = () => { live = false; timers.delete(cancel); };
+      timers.add(cancel);
+      raf(() => { timers.delete(cancel); if (open && live) fn(); });
+      return cancel;
     },
 
     /** Await a promise of your own; throws Ended if the session ended meanwhile. */
@@ -240,6 +249,7 @@ export function createSession(env, config = {}) {
     end() {
       if (!open) return false;
       open = false;
+      for (const cancel of [...timers]) cancel();
       for (let i = undo.length - 1; i >= 0; i--) {
         try { undo[i](); } catch { /* one failed undo must not stop the rest */ }
       }

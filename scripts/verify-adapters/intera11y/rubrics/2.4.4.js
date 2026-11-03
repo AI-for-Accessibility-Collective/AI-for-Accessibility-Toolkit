@@ -6,21 +6,21 @@ module.exports = {
   rules: [
     {
       from: 'gena11y',
-      text: 'The link must have a non-empty accessible name.',
+      text: '',
       tools: [],
-      rubric: `A link exposed to assistive technology with an empty computed name fails (ACT c487ae; F89 for an image link whose image has no alternative). Evidence: the computed name and its source.`,
+      rubric: '',
     },
     {
       from: 'gena11y',
-      text: 'The link in context must be descriptive (not just "click here", "read more", etc. unless context clarifies the destination).',
+      text: '',
       tools: ['resolve_destination'],
-      rubric: `A link fails when neither its name nor its programmatically determined context — the enclosing sentence, paragraph, list item, or table cell with its headers, or text referenced by aria-describedby — tells the user its purpose (ACT 5effbb). Text that is only nearby (a preceding heading or block that is not the link's programmatic context) does not count (F63). In a table, other td cells in the same row are not automatically context for this link: only the enclosing cell and its associated row/column headers, or an explicit programmatic text association, count. Do not promote an unassociated data cell to a header. A destination fingerprint tells the tester where the link lands; it does not make an otherwise generic name descriptive to the user. A name that describes something other than where the link goes also leaves the purpose undeterminable. It passes when the name, or the name with that context, identifies the purpose, and when the purpose would be ambiguous to all users (2.4.4's exception). Evidence: name, visible text, destination, the programmatic context and, separately, nearby text that is not programmatically related.`,
+      rubric: '',
     },
     {
       from: 'gena11y',
-      text: 'Links with identical names in the same context must serve an equivalent purpose.',
+      text: '',
       tools: ['resolve_destination'],
-      rubric: `Links with the same accessible name and the same context fail when they lead to different resources or do different things (ACT fd3a94). Same-named links to the same destination, or to equivalent content, pass. resolve_destination (pass the whole set) reads where each link actually lands.`,
+      rubric: '',
     },
     {
       from: 'added',

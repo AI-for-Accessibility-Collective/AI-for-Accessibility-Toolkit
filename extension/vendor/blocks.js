@@ -585,8 +585,8 @@
       };
       function hide() {
         token++;
-        win.clearTimeout(showTimer);
-        win.clearTimeout(hideTimer);
+        if (showTimer) showTimer();
+        if (hideTimer) hideTimer();
         if (current) describe(current, false);
         current = null;
         tip.hidden = true;
@@ -614,7 +614,7 @@
       }
       async function open(t) {
         if (!s.alive() || dismissed.has(t)) return;
-        win.clearTimeout(hideTimer);
+        if (hideTimer) hideTimer();
         if (current === t && !tip.hidden) return;
         if (current && current !== t) describe(current, false);
         current = t;
@@ -647,7 +647,7 @@
         place(t);
       }
       function scheduleHide() {
-        win.clearTimeout(hideTimer);
+        if (hideTimer) hideTimer();
         hideTimer = s.timer(() => {
           if (!current) return;
           if (overTip() || has(current, pointerAt) || focused(current)) return;
@@ -658,15 +658,15 @@
         pointerAt = e.target;
         forgetDismissed();
         if (has(tip, e.target)) {
-          win.clearTimeout(hideTimer);
+          if (hideTimer) hideTimer();
           return;
         }
         const t = triggerOf(e.target);
         if (t && t === current) {
-          win.clearTimeout(hideTimer);
+          if (hideTimer) hideTimer();
           return;
         }
-        win.clearTimeout(showTimer);
+        if (showTimer) showTimer();
         if (t) showTimer = s.timer(() => {
           if (has(t, pointerAt)) open(t);
         }, Number(c.delayMs) || 0);
@@ -681,7 +681,7 @@
         forgetDismissed();
         const t = triggerOf(e.target);
         if (t) {
-          win.clearTimeout(showTimer);
+          if (showTimer) showTimer();
           open(t);
         } else if (current && !has(tip, e.target)) scheduleHide();
       }, true);
@@ -1337,14 +1337,26 @@
     const { win, doc, shared } = env;
     function source(input) {
       if (typeof input === "string") return { text: input, map: null };
-      if (!input || input.nodeType !== 1) return { text: String(input ?? ""), map: null };
+      if (input && typeof input.getRangeAt === "function") input = input.rangeCount ? input.getRangeAt(0) : null;
+      const range = input && input.startContainer && typeof input.intersectsNode === "function" ? input : null;
+      let root = range ? range.commonAncestorContainer : input;
+      if (root && root.nodeType === 3) root = root.parentElement;
+      if (!root || root.nodeType !== 1) return { text: String(input ?? ""), map: null };
       let text = "";
       const map = [];
-      for (const node of env.page.textNodes(input)) {
+      for (const node of env.page.textNodes(root)) {
+        let base = 0, stop = node.nodeValue.length;
+        if (range) {
+          if (!range.intersectsNode(node)) continue;
+          if (node === range.startContainer) base = range.startOffset;
+          if (node === range.endContainer) stop = range.endOffset;
+          if (stop <= base) continue;
+        }
         if (text && !/\s$/.test(text)) text += " ";
-        map.push({ node, start: text.length, end: text.length + node.nodeValue.length });
-        text += node.nodeValue;
+        map.push({ node, base, start: text.length, end: text.length + stop - base });
+        text += node.nodeValue.slice(base, stop);
       }
+      if (range && !map.length) return { text: String(range), map: null };
       return { text, map };
     }
     function chunks(text, max) {
@@ -1417,9 +1429,9 @@
         const entry = map.find((m) => abs >= m.start && abs < m.end);
         if (!entry) return null;
         const r = doc.createRange();
-        const from2 = abs - entry.start;
+        const from2 = entry.base + abs - entry.start;
         r.setStart(entry.node, from2);
-        r.setEnd(entry.node, Math.min(entry.node.nodeValue.length, from2 + Math.max(1, len)));
+        r.setEnd(entry.node, Math.min(entry.base + entry.end - entry.start, from2 + Math.max(1, len)));
         return r;
       };
       const wordLength = (abs) => {
@@ -1629,6 +1641,7 @@
   var PAUSE_DEFAULTS = { showControls: false };
   function mediaBlock(s, env) {
     const isMedia = (el) => !!el && (el.tagName === "VIDEO" || el.tagName === "AUDIO");
+    const chosen = /* @__PURE__ */ new WeakMap();
     function pause(el, opts = {}) {
       if (!s.alive() || !isMedia(el)) return false;
       const c = resolveConfig(PAUSE_DEFAULTS, opts, env.personal, {});
@@ -1676,12 +1689,26 @@
       const want = String(lang || env.personal.language || env.doc.documentElement.lang || env.win.navigator && env.win.navigator.language || "").toLowerCase().split("-")[0];
       const tracks = [...video.textTracks].filter((t) => t.kind === "captions" || t.kind === "subtitles");
       if (!tracks.length) return null;
-      if (tracks.some((t) => t.mode === "showing")) return tracks.find((t) => t.mode === "showing");
-      const choice = want && tracks.find((t) => (t.language || "").toLowerCase().split("-")[0] === want) || tracks.find((t) => t.kind === "captions") || tracks[0];
+      const inLang = want && tracks.find((t) => (t.language || "").toLowerCase().split("-")[0] === want);
+      const showing = tracks.find((t) => t.mode === "showing");
+      const ours = chosen.get(video);
+      if (showing && !(ours && ours.track === showing && inLang && inLang !== showing)) return showing;
+      const choice = inLang || tracks.find((t) => t.kind === "captions") || tracks[0];
+      if (ours) {
+        ours.track.mode = "disabled";
+        ours.track = choice;
+        choice.mode = "showing";
+        return choice;
+      }
       const before = tracks.map((t) => [t, t.mode]);
+      const rec = { track: choice };
+      chosen.set(video, rec);
       choice.mode = "showing";
       s.onEnd(() => {
-        if (choice.mode === "showing") for (const [t, mode] of before) t.mode = mode;
+        chosen.delete(video);
+        if (rec.track.mode !== "showing") return;
+        rec.track.mode = "disabled";
+        for (const [t, mode] of before) t.mode = mode;
       });
       return choice;
     }
@@ -1838,6 +1865,7 @@
   function createSession(env, config = {}) {
     const always = config.restore === "always";
     const undo = [];
+    const timers = /* @__PURE__ */ new Set();
     let open = true;
     const { shared } = env;
     const id = `${slug(env.adapter)}-${shared.nextId++}`;
@@ -2002,28 +2030,50 @@
         undo.push(off);
         return off;
       },
+      // Each returns a function that cancels it. Timers are kept apart from
+      // the undo list, so one that fired or was cancelled is not kept.
       timer(fn, ms = 0) {
-        if (!open) return 0;
+        if (!open) return () => {
+        };
         const t = env.win.setTimeout(() => {
+          timers.delete(cancel);
           if (open) fn();
         }, ms);
-        undo.push(() => env.win.clearTimeout(t));
-        return t;
+        const cancel = () => {
+          env.win.clearTimeout(t);
+          timers.delete(cancel);
+        };
+        timers.add(cancel);
+        return cancel;
       },
       every(fn, ms) {
-        if (!open) return 0;
+        if (!open) return () => {
+        };
         const t = env.win.setInterval(() => {
           if (open) fn();
         }, ms);
-        undo.push(() => env.win.clearInterval(t));
-        return t;
+        const cancel = () => {
+          env.win.clearInterval(t);
+          timers.delete(cancel);
+        };
+        timers.add(cancel);
+        return cancel;
       },
       frame(fn) {
-        if (!open) return;
+        if (!open) return () => {
+        };
+        let live = true;
         const raf = env.win.requestAnimationFrame ? env.win.requestAnimationFrame.bind(env.win) : (f) => env.win.setTimeout(f, 16);
+        const cancel = () => {
+          live = false;
+          timers.delete(cancel);
+        };
+        timers.add(cancel);
         raf(() => {
-          if (open) fn();
+          timers.delete(cancel);
+          if (open && live) fn();
         });
+        return cancel;
       },
       /** Await a promise of your own; throws Ended if the session ended meanwhile. */
       guard(promise) {
@@ -2063,6 +2113,7 @@
       end() {
         if (!open) return false;
         open = false;
+        for (const cancel of [...timers]) cancel();
         for (let i = undo.length - 1; i >= 0; i--) {
           try {
             undo[i]();
@@ -2288,12 +2339,12 @@
         if (!under(n)) continue;
         const ns = n === el ? cs : win.getComputedStyle(n);
         const c2 = parseColor(ns.backgroundColor);
-        if (c2 && c2[3] > 0) layers.push(c2);
-        if (c2 && c2[3] >= 0.999) break;
         if (ns.backgroundImage && ns.backgroundImage !== "none") {
           overImage = true;
           break;
         }
+        if (c2 && c2[3] > 0) layers.push(c2);
+        if (c2 && c2[3] >= 0.999) break;
       }
       let bg = [255, 255, 255];
       for (const [r, g, b, a] of layers.reverse()) bg = [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)];

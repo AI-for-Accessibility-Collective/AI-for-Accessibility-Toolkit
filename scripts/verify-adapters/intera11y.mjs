@@ -13,6 +13,11 @@
 // adapter's elements count. keyboard_audit compares the page without and
 // with the adapter and reports only what the adapter brought.
 
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 import { interA11y } from './harness.mjs';
 
 // The tools InterA11y's own runtime offers its judge (src/lib/v3.js).
@@ -104,13 +109,66 @@ function reply(value, extra = '') {
 }
 const fail = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
 
+// The rules InterA11y adapted from GenA11y (GPL-3.0-only; marked
+// from: 'gena11y') are left blank in intera11y/rubrics/. When a rubric
+// that has them is asked for, their text is read from InterA11y itself, at
+// the vendored commit: a checkout (INTERA11Y_DIR, else ../InterA11y beside
+// this repository), else GitHub. The file must hash as recorded here, and it
+// is evaluated with nothing but a module object.
+const IA_COMMIT = '8dcf06e258df88a8f39a3e37ebfce060c45a1cdd';
+const IA_RUBRIC_SHA256 = {
+  '1.1.1': '391612c491e0b673c4a5e8762ad5bec9a12a8821e77182175a216feda3283d7d',
+  '1.4.1': '9654df19dbfe459cfcb657ad012300b870ed6b5ed3b9e17cedda8ed7a5d9f980',
+  '2.4.4': 'a70a23a82c708a8a1732b4b4e9c6b89571eea403281f490fe8335b0596116563',
+  '3.3.1': 'fa94100d81182f11bd46e8f4dfe1078068c2357e9294ee46d75d7401df995fd7',
+};
+const blankRule = (r) => r.from === 'gena11y' && !r.text;
+
+async function upstreamRubricSource(sc) {
+  const want = IA_RUBRIC_SHA256[sc];
+  const ok = (src) => src != null && createHash('sha256').update(src).digest('hex') === want;
+  const dir = process.env.INTERA11Y_DIR || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'InterA11y');
+  const local = await readFile(path.join(dir, 'runtime', 'intera11y', 'rubrics', `${sc}.js`), 'utf8').catch(() => null);
+  if (ok(local)) return local;
+  const res = await fetch(`https://raw.githubusercontent.com/jszh/InterA11y/${IA_COMMIT}/runtime/intera11y/rubrics/${sc}.js`, { signal: AbortSignal.timeout(15_000) });
+  const remote = res.ok ? await res.text() : null;
+  if (ok(remote)) return remote;
+  throw new Error(res.ok ? 'the file from GitHub does not match the vendored commit' : `GitHub answered ${res.status}`);
+}
+
+/** Fill a rubric's blank GenA11y rules from InterA11y; a note when they could not be read (they are then left out). */
+async function fillGenA11yRules(r) {
+  const blank = r.rules.filter(blankRule);
+  if (!blank.length) return null;
+  try {
+    const mod = { exports: {} };
+    vm.runInNewContext(await upstreamRubricSource(r.sc), { module: mod, exports: mod.exports }, { timeout: 1000 });
+    const up = mod.exports;
+    r.rules.forEach((rule, i) => {
+      if (!blankRule(rule)) return;
+      const o = up.rules && up.rules[i];
+      if (!o || o.from !== 'gena11y' || JSON.stringify(o.tools) !== JSON.stringify(rule.tools)) throw new Error(`rule ${i + 1} does not match InterA11y's`);
+      rule.text = o.text; if (o.rubric) rule.rubric = o.rubric;
+    });
+    return null;
+  } catch (e) {
+    return `(${blank.length} of these rules, adapted from GenA11y, could not be read from InterA11y: ${String(e.message || e).slice(0, 160)}. They are left out.)`;
+  }
+}
+
 /** Run one of the InterA11y tools, adapter_elements, keyboard_audit or wcag_rubric. */
 export async function runInterA11yTool(verifier, name, args = {}) {
   const ia = interA11y();
   if (name === 'wcag_rubric') {
     if (!RUBRIC_SCS.includes(String(args.sc))) return fail(`sc must be one of ${RUBRIC_SCS.join(', ')}.`);
+    const r = ia.rubric.load(String(args.sc));
+    const missing = await fillGenA11yRules(r);
+    const all = r.rules;
+    let rendered;
+    try { r.rules = all.filter((x) => !blankRule(x)); rendered = ia.rubric.render(String(args.sc), 'v2', { tools: true }); } finally { r.rules = all; }
     return { content: [{ type: 'text', text: [
-      ia.rubric.render(String(args.sc), 'v2', { tools: true }),
+      rendered,
+      ...(missing ? [missing] : []),
       '',
       '# How to judge (InterA11y\'s evidence standard)',
       'Your candidates are what adapter_elements lists for your adapter on the page; a failure elsewhere is the page\'s and is not yours to report. Gather the evidence with the tools each rule names, then give each candidate one verdict with the observation it rests on. InterA11y\'s judge instructions follow; where they ask for a JSON answer, put the same verdicts and evidence in your report instead.',
@@ -155,6 +213,25 @@ export async function runInterA11yTool(verifier, name, args = {}) {
   }
 }
 
+// The page's tab stops, one per element. InterA11y's walk ends at the first
+// element focused twice, so a native control that takes several presses
+// (a <video controls>) ends it; here a run of presses on one element is one
+// stop, and the walk ends when an earlier element comes back.
+async function tabStopsOf(p, cap) {
+  const order = []; const seen = new Set(); let last = null; let same = 0; let empty = 0; let wrapped = false;
+  for (let i = 0; i < cap * 2 && order.length < cap; i++) {
+    await p.keyboard.press('Tab');
+    const a = await p.evaluate(() => globalThis.__verifyActive()).catch(() => null);
+    if (!a) { if (order.length && ++empty >= 2) { wrapped = true; break; } continue; }
+    empty = 0;
+    if (a.xpath === last) { if (++same > 12) break; continue; }
+    same = 0; last = a.xpath;
+    if (seen.has(a.xpath)) { wrapped = true; break; }
+    seen.add(a.xpath); order.push({ index: order.length, ...a });
+  }
+  return { order, count: order.length, wrapped };
+}
+
 /** The keyboard measurements without and with the adapter: what is new with it on ({ error } when it could not run). */
 export async function keyboardAudit(verifier, args) {
   const { kbd } = interA11y();
@@ -178,8 +255,10 @@ export async function keyboardAudit(verifier, args) {
         } catch (e) { return { error: String(e.message || e).slice(0, 200) }; } finally { await p.close().catch(() => {}); }
       };
       const tab = await run('tab order', (p) => kbd.collectTabOrder(p, { safetyCap: cap }));
+      const stopsWalk = await run('tab stops', (p) => tabStopsOf(p, cap));
       const out = {
         tab,
+        stopsWalk,
         orderFindings: tab.error ? [] : kbd.tabOrderFindings(tab).findings || [],
         traps: await run('keyboard traps', (p) => kbd.detectKeyboardTraps(p)),
         retention: await run('focus kept', (p) => kbd.detectFocusRetentionTraps(p)),
@@ -200,13 +279,18 @@ export async function keyboardAudit(verifier, args) {
     const listOf = (r, k) => (r && Array.isArray(r[k]) ? r[k] : []);
     const fresh = (a, b) => { const seen = new Set(b.map(keyOf)); return a.filter((x) => !seen.has(keyOf(x))); };
     const mark = async (items) => Promise.all(items.slice(0, 30).map(async (x) => { const { stable, ...rest } = x; return { ...rest, ...(await after.scopeOf(x.xpath)) }; }));
-    const stops = (r) => (r.tab.order || []).map((o) => o.stable || o.xpath);
+    const walkOf = (r) => (r.stopsWalk && !r.stopsWalk.error ? r.stopsWalk : { order: [], count: 0 });
+    const stops = (r) => walkOf(r).order.map((o) => o.stable || o.xpath);
     const beforeStops = new Set(stops(before));
-    const newStops = (after.tab.order || []).filter((o) => !beforeStops.has(o.stable || o.xpath));
+    const newStops = walkOf(after).order.filter((o) => !beforeStops.has(o.stable || o.xpath));
     const afterStops = new Set(stops(after));
-    const goneStops = (before.tab.order || []).filter((o) => !afterStops.has(o.stable || o.xpath));
+    const goneStops = walkOf(before).order.filter((o) => !afterStops.has(o.stable || o.xpath));
+    // Where InterA11y's own walk stopped short of ours (its order findings
+    // then cover only the stops before that).
+    const cut = (r) => (r.tab.count < walkOf(r).count ? `InterA11y's Tab walk stopped after ${r.tab.count} of ${walkOf(r).count} stops (an element that takes several presses, such as a video's controls)` : null);
     const result = {
-      tabStops: { before: before.tab.count, after: after.tab.count, wrappedBefore: before.tab.wrapped, wrappedAfter: after.tab.wrapped,
+      tabStops: { before: walkOf(before).count, after: walkOf(after).count,
+        ...(cut(before) || cut(after) ? { interA11yWalk: { before: cut(before), after: cut(after) } } : {}),
         newWithAdapter: await mark(newStops.map((o) => ({ index: o.index, xpath: o.xpath, tag: o.tag, role: o.role, label: o.label }))),
         goneWithAdapter: goneStops.slice(0, 30).map((o) => ({ index: o.index, xpath: o.stable || o.xpath, tag: o.tag, label: o.label })),
         orderChanged: JSON.stringify(stops(before)) !== JSON.stringify(stops(after).filter((x) => !String(x).startsWith('toolkit:'))) },

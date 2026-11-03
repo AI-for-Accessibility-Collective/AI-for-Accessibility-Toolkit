@@ -96,13 +96,15 @@ async function replay() {
     if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
     let added = r.axe?.added || [];
     if (live && added.length) {
-      // The same page with a do-nothing adapter: what it adds by itself (NPR
-      // fills in its own content) is the site's.
+      // The same page with a do-nothing adapter: a rule it adds by itself
+      // (NPR fills in its own content, a different amount each load) is the
+      // site's, whatever the count; it is shown as a warning.
       let c = null;
       try { c = await v.verify({ ...spec, control: true, checks: [] }); } catch { c = null; }
       const own = new Map((c?.axe?.added || []).map((x) => [x.id, x.count]));
-      const kept = added.filter((x) => !(own.get(x.id) >= x.count));
-      if (kept.length < added.length) console.log(`  (${name}: ${added.length - kept.length} rule${added.length - kept.length === 1 ? '' : 's'} the page also adds with no adapter: ${added.filter((x) => !kept.includes(x)).map((x) => x.id).join(', ')})`);
+      const kept = added.filter((x) => !own.has(x.id));
+      const site = added.filter((x) => own.has(x.id));
+      if (site.length) console.log(`WARN: ${name}: the page also adds with no adapter: ${site.map((x) => `${x.id} (${x.count} with the adapter, ${own.get(x.id)} without)`).join(', ')}`);
       added = kept;
     }
     for (const rule of added) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);

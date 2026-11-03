@@ -5,15 +5,15 @@ module.exports = {
   rules: [
     {
       from: 'gena11y',
-      text: 'Links distinguished only by color must also have another visual indicator (underline, bold, different lightness, etc.).',
+      text: '',
       tools: ['compute_contrast_ratio', 'render_with_overrides'],
-      rubric: `A link inside running text fails when it differs from the surrounding text only by hue: no underline or other non-colour cue, and less than 3:1 lightness contrast with the text (F73). A link with at least 3:1 contrast against the text also needs a non-colour cue on hover and on focus (G183); without one it fails. It passes with any visible non-colour cue at rest (underline, weight, border, icon). Links set apart by position rather than text (navigation bars, lists of links, buttons) are not "in text" and are not tested here. Evidence: link and text colours with their ratio, and the non-colour cues found at rest, on hover and on focus. compute_contrast_ratio measures the lightness difference; render_with_overrides (grayscale) shows whether the link still stands out without hue.`,
+      rubric: '',
     },
     {
       from: 'gena11y',
-      text: 'Required or error form fields identified only by color must have an additional non-color indicator (asterisk, label text, icon, etc.).',
+      text: '',
       tools: ['render_with_overrides', 'set_state_and_capture'],
-      rubric: `A field whose required or error state is shown only by a colour change (a red border, a red label) fails (F81). It passes when text (an error message, "required", an asterisk explained on the page), an icon, or a change of border width or style also marks it. The state must exist to be tested: for errors, use the forms probe's submission crops, or set_state_and_capture after an invalid submission.`,
+      rubric: '',
     },
     {
       from: 'added',

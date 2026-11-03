@@ -82,7 +82,10 @@ condition from what they ask for.
    "Keep the page steady and familiar" and "Accessible to WCAG 2.2 AA"
    below.
    - **Build on the blocks.** In `enable()`, `const s = toolkit.session()`
-     and make every change through it; `disable()` is `s.end()`. Use a
+     and make every change through it; `disable()` is `s.end()`. When
+     `enable()` finds nothing to do, end the session before it returns
+     `false`. `s.timer`, `s.every` and `s.frame` return a function that
+     cancels them, not an id. Use a
      block wherever one does what you need (a tooltip, a panel, a
      highlight, speech, an announcement) rather than writing your own: each
      already meets the rules below that are easy to get wrong.
@@ -101,7 +104,8 @@ condition from what they ask for.
      adjust something that is one of their settings (text size, speech
      rate), save it with `s.profile.set(...)` from that control: it applies
      to this site; the person can use it on every site from the
-     extension. Bigger text is the browser's zoom or the text
+     extension. `set()` calls every `s.profile.onChange` listener, yours
+     included, before it returns: apply the change there, once. Bigger text is the browser's zoom or the text
      size (`s.text.scale`), as `s.zoom.method()` says, never both.
    - **No shortcuts of your own.** The person has one pair of keys, which
      they give to one adapter in the extension. If yours adjusts something,

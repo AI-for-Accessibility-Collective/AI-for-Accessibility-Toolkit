@@ -198,9 +198,10 @@ export function pageBlock(env) {
       if (!under(n)) continue;
       const ns = n === el ? cs : win.getComputedStyle(n);
       const c = parseColor(ns.backgroundColor);
+      // A background image is drawn over the element's own colour.
+      if (ns.backgroundImage && ns.backgroundImage !== 'none') { overImage = true; break; }
       if (c && c[3] > 0) layers.push(c);
       if (c && c[3] >= 0.999) break;
-      if (ns.backgroundImage && ns.backgroundImage !== 'none') { overImage = true; break; }
     }
     let bg = [255, 255, 255];
     for (const [r, g, b, a] of layers.reverse()) bg = [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)];
