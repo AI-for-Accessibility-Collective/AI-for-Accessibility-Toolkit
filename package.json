@@ -21,7 +21,9 @@
     "test:e2e": "node onboarding/test/chat-e2e.mjs",
     "build:cli": "esbuild cli/cli-tools.js --bundle --format=iife --outfile=cli/cli-tools.bundle.js",
     "build:extension": "node scripts/build-extension.mjs",
-    "build:types": "tsc -p toolkit/tsconfig.json"
+    "build:types": "tsc -p toolkit/tsconfig.json",
+    "captionflow:serve": "node examples/captionflow/serve.mjs",
+    "captionflow:transcribe": "node examples/captionflow/transcribe.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
+  <title>CaptionFlow</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Crect x='5' y='19' width='22' height='4' rx='2' fill='%23ffd23f'/%3E%3Crect x='9' y='25' width='14' height='3' rx='1.5' fill='%23fff'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg: #111111;
+      --panel: #1c1c1c;
+      --panel-2: #262626;
+      --line: #3a3a3a;
+      --text: #f4f4f4;
+      --muted: #b5b5b5;
+      --accent: #ffd23f;      /* high-visibility yellow: focus, active state */
+      --accent-ink: #111111;
+      --ok: #7ad694;
+      --slow: #ffd23f;
+      --hold: #ff9f5a;
+      --cap-bg: #000000;
+      --cap-fg: #ffffff;
+      --cap-size: 1.75rem;
+      --radius: 12px;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); }
+    body {
+      font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+      padding: env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom));
+      max-width: 1180px; margin: 0 auto;
+    }
+    header { display: flex; align-items: baseline; gap: 12px; padding: 14px 0 10px; flex-wrap: wrap; }
+    h1 { font-size: 1.35rem; margin: 0; letter-spacing: 0.01em; }
+    h1 span { color: var(--accent); }
+    .tagline { color: var(--muted); margin: 0; font-size: 0.95rem; }
+    h2 { font-size: 1.05rem; margin: 0 0 10px; }
+    button, select, input { font: inherit; color: inherit; }
+    button {
+      background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 14px; min-height: 44px; cursor: pointer;
+    }
+    button:hover { border-color: #5a5a5a; }
+    button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .hidden { display: none !important; }
+
+    /* layout: stacked on phones, video + side panel on laptops */
+    main { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 900px) { main.watching { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; } }
+
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+
+    /* picker */
+    .media-list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+    .media-list button { width: 100%; text-align: left; display: flex; justify-content: space-between; gap: 10px; }
+    .media-list .tag { color: var(--muted); font-size: 0.85rem; }
+    .files { display: grid; gap: 10px; grid-template-columns: 1fr; }
+    @media (min-width: 600px) { .files { grid-template-columns: 1fr 1fr; } }
+    .file { display: grid; gap: 6px; }
+    .file label { font-weight: 600; }
+    .file input { background: var(--panel-2); border: 1px dashed var(--line); border-radius: 10px; padding: 10px; width: 100%; min-height: 44px; }
+    .hint { color: var(--muted); font-size: 0.9rem; margin: 8px 0 0; }
+
+    /* stage */
+    .stage { display: grid; gap: 0; }
+    .video-wrap { background: #000; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; }
+    video { display: block; width: 100%; max-height: 62vh; background: #000; }
+    .caption {
+      background: var(--cap-bg); color: var(--cap-fg);
+      font-size: var(--cap-size); line-height: 1.35; font-weight: 560;
+      min-height: calc(var(--cap-size) * 1.35 * 2 + 28px);
+      padding: 14px 18px; text-align: center;
+      display: flex; align-items: center; justify-content: center;
+      border-top: 1px solid #222;
+      overflow-wrap: anywhere;
+    }
+    .caption.empty { color: #777; font-size: 1rem; font-weight: 400; }
+    .caption .unsure { text-decoration: underline dotted 2px; text-underline-offset: 5px; }
+    .status {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      background: var(--panel); border: 1px solid var(--line); border-top: 0;
+      border-radius: 0 0 var(--radius) var(--radius); padding: 10px 14px; min-height: 48px;
+    }
+    .pill { border-radius: 999px; padding: 3px 12px; font-weight: 650; font-size: 0.92rem; background: var(--panel-2); border: 1px solid var(--line); }
+    .pill.normal { color: var(--ok); }
+    .pill.slow { color: var(--accent-ink); background: var(--slow); border-color: var(--slow); }
+    .pill.hold { color: var(--accent-ink); background: var(--hold); border-color: var(--hold); }
+    .status-text { color: var(--muted); font-size: 0.92rem; }
+    .holdbar { flex-basis: 100%; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
+    .holdbar > div { height: 100%; width: 0; background: var(--hold); }
+
+    /* controls */
+    .controls { display: grid; gap: 18px; }
+    .row { display: grid; gap: 8px; }
+    .row-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .row-head strong { font-size: 1rem; }
+    .value { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+    input[type=range] { width: 100%; accent-color: var(--accent); min-height: 32px; }
+    .scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.82rem; }
+    .switch { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .switch input { width: 24px; height: 24px; accent-color: var(--accent); }
+    .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btns button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 650; }
+    .summary { color: var(--muted); font-size: 0.92rem; margin: 0; }
+
+    /* transcript */
+    details summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+    .transcript { list-style: none; margin: 10px 0 0; padding: 0; max-height: 40vh; overflow: auto; display: grid; gap: 4px; }
+    .transcript button { width: 100%; text-align: left; display: grid; grid-template-columns: 56px 1fr; gap: 8px; padding: 8px 10px; min-height: 40px; background: transparent; border-color: transparent; }
+    .transcript button.current { background: var(--panel-2); border-color: var(--accent); }
+    .transcript time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.88rem; padding-top: 2px; }
+
+    /* reading check dialog */
+    dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; width: min(560px, calc(100vw - 32px)); }
+    dialog::backdrop { background: rgba(0,0,0,0.7); }
+    .check-text { font-size: 1.35rem; line-height: 1.5; background: #000; padding: 16px; border-radius: 10px; margin: 12px 0; }
+    .error { color: #ff8a8a; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Caption<span>Flow</span></h1>
+    <p class="tagline">Captions that wait for you: the video slows down so you can read every line.</p>
+  </header>
+
+  <main id="main">
+    <!-- 1. choose a video -->
+    <section id="picker" class="card" aria-labelledby="picker-h">
+      <h2 id="picker-h">Choose a video</h2>
+      <ul id="media-list" class="media-list" aria-label="Videos ready to watch"></ul>
+      <p id="media-empty" class="hint hidden">No ready videos on this server yet. Pick files from this device below.</p>
+      <div class="files">
+        <div class="file">
+          <label for="video-file">Video</label>
+          <input id="video-file" type="file" accept="video/*,audio/*">
+        </div>
+        <div class="file">
+          <label for="captions-file">Captions (.transcript.json, .vtt or .srt)</label>
+          <input id="captions-file" type="file" accept=".json,.vtt,.srt,application/json,text/vtt">
+        </div>
+      </div>
+      <p class="hint">Make captions for a new video with <code>node examples/captionflow/transcribe.mjs your-video.mp4</code>.</p>
+      <p id="picker-error" class="error" role="alert"></p>
+    </section>
+
+    <!-- 2. watch -->
+    <section id="stage" class="stage hidden" aria-label="Video with captions">
+      <div class="video-wrap">
+        <video id="video" controls playsinline preload="auto"></video>
+      </div>
+      <div id="caption" class="caption empty" lang="">Captions appear here</div>
+      <div class="status">
+        <span id="pill" class="pill normal">Normal speed</span>
+        <span id="status-text" class="status-text"></span>
+        <div id="holdbar" class="holdbar hidden" aria-hidden="true"><div></div></div>
+      </div>
+    </section>
+
+    <!-- 3. settings -->
+    <aside id="panel" class="card controls hidden" aria-label="Caption settings">
+      <div class="row">
+        <div class="row-head"><strong><label for="wpm">My reading speed</label></strong><span class="value"><span id="wpm-value">130</span> words/min</span></div>
+        <input id="wpm" type="range" min="50" max="240" step="5" value="130" aria-describedby="wpm-scale">
+        <div id="wpm-scale" class="scale"><span>Slower</span><span>Faster</span></div>
+        <button id="check-open" type="button">Check my reading speed</button>
+      </div>
+
+      <label class="switch"><input id="pacing" type="checkbox" checked> <span>Slow the video so I can read</span></label>
+
+      <div class="row">
+        <div class="row-head"><strong><label for="min-rate">Slowest the video may go</label></strong><span class="value" id="min-rate-value">50%</span></div>
+        <input id="min-rate" type="range" min="30" max="90" step="5" value="50">
+        <label class="switch"><input id="hold" type="checkbox" checked> <span>Pause briefly if that is still too fast</span></label>
+      </div>
+
+      <div class="row">
+        <strong id="size-h">Caption size</strong>
+        <div class="btns" role="group" aria-labelledby="size-h">
+          <button type="button" data-size="1.35rem">Small</button>
+          <button type="button" data-size="1.75rem">Medium</button>
+          <button type="button" data-size="2.3rem">Large</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <strong id="color-h">Caption colours</strong>
+        <div class="btns" role="group" aria-labelledby="color-h">
+          <button type="button" data-colors="#000000,#ffffff">White on black</button>
+          <button type="button" data-colors="#000000,#ffd23f">Yellow on black</button>
+          <button type="button" data-colors="#ffffff,#000000">Black on white</button>
+        </div>
+      </div>
+
+      <p id="summary" class="summary"></p>
+
+      <details>
+        <summary>Full transcript</summary>
+        <ol id="transcript" class="transcript"></ol>
+      </details>
+
+      <button id="change" type="button">Choose another video</button>
+    </aside>
+  </main>
+
+  <dialog id="check" aria-labelledby="check-h">
+    <h2 id="check-h">Check my reading speed</h2>
+    <div id="check-step-1">
+      <p>Press <strong>Start</strong>, read the text at your normal pace, then press <strong>Done</strong>.</p>
+      <div class="btns" role="group" aria-label="Language">
+        <button type="button" data-check-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-check-lang="sw" aria-pressed="false">Kiswahili</button>
+      </div>
+      <p></p>
+      <div class="btns"><button id="check-start" class="primary" type="button">Start</button><button id="check-cancel" type="button">Cancel</button></div>
+    </div>
+    <div id="check-step-2" class="hidden">
+      <p id="check-text" class="check-text"></p>
+      <button id="check-done" class="primary" type="button">Done</button>
+    </div>
+    <div id="check-step-3" class="hidden">
+      <p id="check-result"></p>
+      <div class="btns"><button id="check-use" class="primary" type="button">Use this speed</button><button id="check-again" type="button">Try again</button></div>
+    </div>
+  </dialog>
+
+  <script type="module" src="./player.js"></script>
+</body>
+</html>

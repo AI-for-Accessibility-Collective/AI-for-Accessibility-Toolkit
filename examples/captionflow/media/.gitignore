@@ -1,0 +1,4 @@
+# Videos and their generated captions stay on your machine.
+*
+!.gitignore
+!README.md
