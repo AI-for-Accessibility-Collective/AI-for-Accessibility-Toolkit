@@ -19,7 +19,9 @@
 //                                         // functions, not an adapter: the
 //                                         // bodies, with `m` its exports
 //     checks: [{ name, code }],           // as in browser_preview
-//     viewport: { width, height }, reducedMotion: 'reduce' | 'no-preference' }
+//     viewport: { width, height }, reducedMotion: 'reduce' | 'no-preference',
+//     restores: false }                    // a fix module with nothing to undo
+//                                         // (fix-tables): leftovers expected
 
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
@@ -146,7 +148,9 @@ export async function openVerifier({ headless = true } = {}) {
     page.on('console', (msg) => { if (msg.type() === 'error' && !/^Failed to load resource/.test(msg.text())) errors.push(`console error: ${msg.text()}`); });
     try {
       if (live) {
-        await page.goto(spec.page, { waitUntil: 'load', timeout: 45_000 });
+        const response = await page.goto(spec.page, { waitUntil: 'load', timeout: 45_000 });
+        // A refusal or a bot challenge (Cloudflare answers 403 to some networks) is not the page.
+        if (response && response.status() >= 400) throw new Error(`the site answered ${response.status()}`);
         await page.waitForTimeout(1500);
       } else await page.goto(`${base}/${spec.page}`, { waitUntil: 'load' });
       // Run, then taken out again: the page's HTML is compared before and after.
