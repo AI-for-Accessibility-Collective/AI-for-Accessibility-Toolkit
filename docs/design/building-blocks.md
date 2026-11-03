@@ -618,19 +618,36 @@ Choices made while building it (mine, open to change):
 
 Decided by the project lead, 2026-11-03:
 
-- **Zoom is set through the Chrome DevTools Protocol.** CDP has no command
-  for Chrome's own page zoom, and `Emulation.setPageScaleFactor` is pinch
-  zoom (no reflow). `Emulation.setDeviceMetricsOverride` with the viewport
-  divided by the zoom factor and the device scale factor multiplied by it
-  is what browser zoom does to a page (checked: at 200% a 1280-pixel window
-  gives `innerWidth` 640, `devicePixelRatio` 2, and the page's narrow-screen
-  layout). The verifier and the CLI already drive pages over CDP.
+- **As little of the Chrome DevTools Protocol as possible.** (This replaces
+  an earlier decision the same day to set zoom through CDP.) In the browser
+  runtime, zoom is the browser's own: `chrome.tabs.setZoom` through the
+  service worker, which reflows the page the way the person's own zoom
+  does, and which Chrome keeps per site. Chrome gives extensions no way to
+  set the default zoom, so "every site" means the runtime sets each site's
+  zoom as the person visits it. In the verifier, a zoomed page is a
+  Playwright context with a narrower viewport and a larger
+  `deviceScaleFactor`, set when the context is made, not CDP calls. (For
+  the record, what was checked: `Emulation.setDeviceMetricsOverride` with
+  the viewport divided by the zoom and the scale factor multiplied by it
+  reproduces browser zoom, giving `innerWidth` 640, `devicePixelRatio` 2
+  and the narrow-screen layout at 200% in a 1280-pixel window;
+  `Emulation.setPageScaleFactor` is pinch zoom, with no reflow.)
 - **No dyslexia font.** Its benefit is not shown, so no block offers it and
-  the core set of adapters does not include it.
+  the core set of adapters does not include it. The `dyslexiaFont` setting
+  was removed from the settings vocabulary, Visual Assist, the web and XR
+  surfaces, the controller and onboarding (commit 6901ce8c).
 - **Zoom or text size is the person's or the developer's choice**, never
   both at once: changing both together does not work well, and the toolkit
   does not prescribe one. The developer sets a default method, the person's
   setting overrides it, and the block applies only the chosen one.
+- **What the person changes in an adapter is recorded, and applies to the
+  site they changed it on**, with an option to apply it to every site.
+  Proposed mechanism (mine, not built yet): a profile block whose `set`
+  records an explicit setting with the Librarian's `recordScopedSettings`
+  (scope `origin:<host>`, or `general` for every site), only after the
+  person's own input in the adapter's UI; `personal` then comes from the
+  effective preferences for that site, so the change follows the person to
+  other devices and wins over what the profile's needs derive.
 
 ## What exists now
 
