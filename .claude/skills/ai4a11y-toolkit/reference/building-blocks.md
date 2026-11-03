@@ -35,6 +35,9 @@ export default {
 | `speechRate` | Speaking rate, 0.5-2. speech.say({ speechRate }) uses the profile's over yours. |
 | `fontScale` | Text size in percent, 100-200. Tooltips and panels scale their text by it (their `fontScale`). |
 | `textSizeMethod` | 'zoom' (the browser's zoom) or 'font' (the text size only): how the person wants text made bigger. Unset: your default. |
+| `lineHeight` | Line spacing, 1-3 (times the font size). |
+| `letterSpacing` | Letter spacing in em, 0-0.5. |
+| `targetSize` | Smallest size of a clickable control, in CSS pixels, 24-64. |
 | `motionReducer` | true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting. |
 | `contrastMode` | 'light' or 'yellow-black' when the profile asks for more contrast. |
 | `darkMode` | true when the profile asks for a dark theme. |
@@ -444,6 +447,9 @@ From the person's profile, over your value:
 - `speechRate`: Settable.
 - `fontScale`: Settable.
 - `textSizeMethod`: Settable.
+- `lineHeight`: Settable.
+- `letterSpacing`: Settable.
+- `targetSize`: Settable.
 - `motionReducer`: Settable.
 - `contrastMode`: Settable.
 - `darkMode`: Settable.
@@ -451,7 +457,7 @@ From the person's profile, over your value:
 Always, whatever the config:
 
 - Only the person changes their profile: set() works only right after their own click, tap or key on the toolkit's UI in this page or on an adapter's shortcut; otherwise it returns { applied: false, reason: 'not-by-person' }.
-- Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, motionReducer, contrastMode, darkMode.
+- Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, lineHeight, letterSpacing, targetSize, motionReducer, contrastMode, darkMode.
 - The change applies in this page at once, for every adapter, and is saved to the profile where the host can ({ saved }).
 - What the person set for a site wins over what they set for every site, which wins over what the toolkit derived from their needs.
 

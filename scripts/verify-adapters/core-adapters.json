@@ -1,0 +1,115 @@
+{
+  "about": "The toolkit's core set of adapters: one per major barrier, each built only on the building blocks (tools/core-adapters/<id>.js), each verifiable. Briefs for the agents run with run.mjs --create (CREATE.md). suggestedFor is only which people onboarding suggests the adapter to first; it never limits who can use it. Shortcuts are Alt+Shift+<key>, assigned here so the adapters never clash with each other (and avoid Chrome's own Alt+Shift+A, B, I and T).",
+  "adapters": [
+    {
+      "id": "text-size",
+      "name": "Text size and spacing",
+      "suggestedFor": ["vision", "reading"],
+      "reads": ["fontScale", "textSizeMethod", "lineHeight", "letterSpacing"],
+      "adjusts": "fontScale with Alt+Shift+Equal (bigger) and Alt+Shift+Minus (smaller), in steps of 10 percent, 100 to 200; lineHeight with Alt+Shift+L (cycles 1.5, 1.8, 2, and back to the page's own); Alt+Shift+G saves the current values for every site. Each change is saved for this site and announced.",
+      "priorWork": ["visual-assist.js"],
+      "brief": "Makes text bigger and gives it more room, as the person's settings say. Text size is the browser's zoom or the text size alone, as s.zoom.method() says (the person's textSizeMethod, else the option `method`, default 'zoom'), never both. With the text size alone, scale the page's text (including text sized in px) without breaking layouts: no text cut off, no overlap, no sideways scrolling at 320 pixels. Line and letter spacing follow WCAG 1.4.12 (line height up to 2, letter spacing up to 0.12 em, word spacing 0.16 em, paragraph spacing 2 em when asked) with nothing cut off or overlapping. Applies once, in enable(); does nothing on a page when no setting asks for it (returns false) unless the person adjusts it there.",
+      "verify": ["the text is at the person's fontScale (computed sizes of body text, headings and px-sized text), by zoom or by text size, never both", "with textSizeMethod 'zoom', zoom is set to fontScale/100 and put back on disable(); with 'font', zoom is never touched", "WCAG 1.4.12 spacing applied with no text cut off (no element's scrollHeight above its clientHeight where it was not before)", "no sideways scrolling at 320 pixels wide", "the shortcuts change the size and save it for this site; Alt+Shift+G saves for every site; nothing is saved without a key press", "layout shift happens only at enable(), never later"]
+    },
+    {
+      "id": "contrast",
+      "name": "Contrast",
+      "suggestedFor": ["vision"],
+      "reads": ["contrastMode", "darkMode"],
+      "adjusts": "contrastMode with Alt+Shift+C (cycles: more contrast in the page's own colours, yellow on black, and off); Alt+Shift+V saves the current mode for every site.",
+      "priorWork": ["fix-contrast.js", "dark-mode.js"],
+      "brief": "Raises text contrast to at least WCAG AA (4.5:1, 3:1 for large text) where the page falls short, computing colours without AI: measure each text element's colour against its real background (s.page and the colour helpers), and darken or lighten the text colour only as much as needed, keeping its hue. contrastMode 'yellow-black' instead gives every text yellow on black through one stylesheet. Leaves text that already meets the ratio alone, and images, video and canvas untouched. Handles text added later. With no contrastMode asked for, still fixes text below AA (that is its purpose).",
+      "verify": ["axe-core color-contrast problems go down and none are added", "text that already passes keeps its exact colour", "the hue of a fixed colour is kept", "yellow-black mode: computed colours of text and backgrounds", "new text added after enable() is fixed once, without flicker", "the shortcut changes the mode and saves it"]
+    },
+    {
+      "id": "focus-keyboard",
+      "name": "Focus and keyboard",
+      "suggestedFor": ["motor", "vision"],
+      "reads": ["motionReducer"],
+      "adjusts": "nothing (on or off).",
+      "priorWork": ["focus-locator.js", "skip-links.js", "keyboard-nav.js"],
+      "brief": "Makes keyboard use visible and possible: a strong focus indicator on every focusable element (s.highlight focus ring: at least 3:1 against what is around it, never covering the focused element or hiding it under sticky headers), a 'Skip to main content' link that is the first thing Tab reaches and moves focus to the main content, and scroll-into-view of the focused element when the page hides it under a fixed header (WCAG 2.4.11). Never changes the page's tab order or adds tabindex above 0.",
+      "verify": ["every focusable element shows a visible indicator of at least 3:1 when focused (sample several, including ones with outline: none)", "the skip link is first in tab order, visible when focused, and moves focus to main", "a focused element under a fixed header is scrolled into view", "no tabindex above 0; tab order unchanged", "nothing added covers the focused element"]
+    },
+    {
+      "id": "bigger-targets",
+      "name": "Bigger targets",
+      "suggestedFor": ["motor"],
+      "reads": ["targetSize", "bigTargets"],
+      "adjusts": "targetSize with Alt+Shift+P (cycles 24, 32, 44 pixels); Alt+Shift+K saves it for every site.",
+      "priorWork": ["big-targets.js"],
+      "brief": "Makes small links, buttons and form controls at least targetSize CSS pixels (default option 24, WCAG 2.5.8; 44 is WCAG 2.5.5) to hit, measuring first and changing only what is too small. Prefer growing the hit area without moving anything (padding with negative margin, or a larger hit area on a pseudo-element), so the page reflows at most once at enable(); inline links in running text get spacing that keeps lines readable. Never shrinks anything, never covers a neighbouring target.",
+      "verify": ["each interactive element measures at least targetSize in both dimensions (getBoundingClientRect, or its hit area)", "axe-core target-size problems go down", "layout shift under 0.1", "no two targets overlap after the change", "inline links in a paragraph stay readable (line height not doubled)", "the shortcut cycles the size and saves it"]
+    },
+    {
+      "id": "structure",
+      "name": "Page structure",
+      "suggestedFor": ["vision", "motor"],
+      "reads": [],
+      "adjusts": "nothing. Alt+Shift+O opens the outline.",
+      "priorWork": ["fix-landmarks.js", "page-outline.js", "skip-links.js"],
+      "brief": "Gives the page a structure people can navigate by: adds missing landmarks (main, navigation, banner, contentinfo) with ARIA roles only where the page has none and the region is unambiguous, and an outline of the page's headings in a panel (s.panel) opened with Alt+Shift+O, where choosing a heading moves focus to it and closing gives focus back. Never changes headings' levels or text.",
+      "verify": ["landmarks added only where missing; axe-core region and landmark problems go down, none added", "the outline lists the headings in order, with levels", "choosing one moves focus to that heading; Escape closes the panel and focus returns", "the panel never covers the content it points to; it has a name and a Close button"]
+    },
+    {
+      "id": "announce-changes",
+      "name": "Announce changes",
+      "suggestedFor": ["vision"],
+      "reads": [],
+      "adjusts": "nothing (on or off).",
+      "priorWork": ["live-region-announcer.js", "spa-focus.js"],
+      "brief": "Tells screen reader users about changes the page makes without saying so: a status or error message that appears, content that replaces a region, and a single-page app moving to a new view (s.watch.route), when the page does not already announce them (aria-live, role status or alert). One short, plain announcement per change, through s.announce, never for the adapter's own changes or the toolkit's UI, and never a flood (batch, and skip changes the person caused by typing).",
+      "verify": ["a message added to the page is announced once (the shared live region's text)", "a change inside an existing aria-live region is not announced twice", "a route change is announced with the new view's heading or title", "the adapter's own and the toolkit's changes are not announced", "a burst of 20 changes gives at most a few announcements"]
+    },
+    {
+      "id": "calm-page",
+      "name": "Calm page",
+      "suggestedFor": ["sensory", "cognitive"],
+      "reads": ["motionReducer"],
+      "adjusts": "nothing (on or off).",
+      "priorWork": ["motion-reducer.js", "flash-guard.js", "stop-auto-advance.js"],
+      "brief": "Stops what moves on its own: CSS animations and transitions, smooth scrolling, autoplaying video and GIF-like animated images (paused with a visible way to play), auto-advancing carousels (paused, and their controls kept), and marquee-like scrolling. Through s.media and one stylesheet. Content stays visible in its final state. Nothing it paused starts again on disable() unless it was playing before; anything the person plays or starts themselves stays as they left it.",
+      "verify": ["computed animation and transition durations are none or 0 after enable()", "an autoplaying video is paused, with controls; a muted looping one too", "a carousel stops advancing (its slide stays the same for several seconds)", "content hidden by an animation start state is visible", "disable() restarts only what was playing", "a video the person plays after enable() keeps playing"]
+    },
+    {
+      "id": "captions-on",
+      "name": "Captions on",
+      "suggestedFor": ["hearing"],
+      "reads": [],
+      "adjusts": "nothing (on or off).",
+      "priorWork": ["show-captions.js"],
+      "brief": "Turns on the captions that videos and audio already have: for each media element with a captions or subtitles track, shows the one in the page's (or the person's browser's) language, else the first, through s.media.captions; including media added later. Leaves media with no track alone and says nothing about it. Never starts playback. The earlier track states come back on disable().",
+      "verify": ["a video with a captions track in the page's language has that track showing", "with two tracks, the matching language is chosen", "media added later gets its captions on", "a video without tracks is untouched", "track modes return to what they were after disable()", "nothing starts playing"]
+    },
+    {
+      "id": "names",
+      "name": "Names for controls and images",
+      "suggestedFor": ["vision"],
+      "reads": [],
+      "adjusts": "nothing (on or off).",
+      "priorWork": ["generate-labels.js", "generate-alt.js", "wcag-fixes.js"],
+      "brief": "Gives buttons, links and form fields that have no accessible name a short one, and informative images that have no alt text a description, with s.ai.text('label', …) from the control's context and s.ai.vision('describe', img, { purpose: 'alt' }). Measures first (s.page's accessible-name helper): never renames anything that has a name, never describes decorative images (tiny, spacer, role presentation) — leaves those alone or marks clearly decorative ones alt=\"\" only when certain. Asks the AI once per element, at most a limited number per page (an option, default 20), never for content the page hides. Answers are checked by the blocks; on null, leaves the element as it was.",
+      "verify": ["axe-core button-name, link-name, label and image-alt problems go down, none added", "controls that already had a name keep it exactly", "with AI unavailable (no answers) nothing changes and enable() still applies cleanly", "with fixed answers, the names are set as aria-label or alt", "decorative images are not sent to the AI", "at most the limit of AI calls on a page with many unnamed controls"]
+    },
+    {
+      "id": "plain-language",
+      "name": "Plain language",
+      "suggestedFor": ["cognitive", "reading"],
+      "reads": ["readingLevel"],
+      "adjusts": "nothing in the profile (reading level is a profile field, not a setting); the person chooses which parts to simplify.",
+      "priorWork": ["simplify-text.js"],
+      "brief": "Lets the person read a long or hard paragraph in plain language at their reading level, on request: a small 'Plain language' button after each long paragraph in the main content (or one button for the section they are in), which replaces that paragraph with the simplified text (s.ai.text('simplify', …), s.text.replaceBlock) and becomes 'Show original', one click back. Never simplifies on load and never sends more than the paragraph asked for. Keeps names, numbers, dates and links' meaning (the prompt's `keep`); on null leaves the paragraph and says it could not.",
+      "verify": ["buttons appear only after long paragraphs in the main content, as real buttons with names", "clicking one replaces that paragraph with the answer and the button toggles the original back, with aria-pressed or a changed name", "no AI call happens on load", "with AI unavailable, clicking says it could not and leaves the paragraph", "the person's readingLevel reaches the request", "layout shift on enable() under 0.1"]
+    },
+    {
+      "id": "read-aloud",
+      "name": "Read aloud",
+      "suggestedFor": ["reading", "vision"],
+      "reads": ["speechRate"],
+      "adjusts": "speechRate with Slower and Faster buttons in its control bar (steps of 0.1, 0.5 to 2), saved for this site, with a 'Use on every site' button that saves it for every site.",
+      "priorWork": ["read-aloud.js"],
+      "brief": "Reads the main content (or the text the person selected) aloud on request, highlighting each word as it is spoken (s.speech.say with onWord and s.highlight). Starts only from its own Play button or Alt+Shift+R, never on load; Escape stops it; a small control bar (Play/Pause, Stop, Slower, Faster) placed so it covers nothing the person is reading. Speech is the browser's own in the runtime. Skips navigation, the toolkit's UI and hidden text.",
+      "verify": ["nothing is spoken on load", "Play (a trusted click) speaks the main content's text, not the navigation", "the person's speechRate is used", "words are highlighted as they are spoken and the highlight goes on stop", "Escape stops it; Pause and Play resume", "Slower/Faster change the rate and save it for this site; 'Use on every site' saves it for every site", "the control bar's buttons have names, are 24 pixels or more, and cover no content"]
+    }
+  ]
+}

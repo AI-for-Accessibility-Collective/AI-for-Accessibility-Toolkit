@@ -29,12 +29,18 @@ import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openVerifier, ROOT } from './harness.mjs';
+import { openVerifier, ROOT, isCore, coreModule } from './harness.mjs';
 import { axeText, shiftText } from '../../agent-host/src/browser-tools.js';
 import { getContrastRatio, parseColor } from '../../tools/utils/color.js';
 
 const SPECS = path.join(ROOT, 'tools/test/verify');
-export const SITES = JSON.parse(readFileSync(path.join(ROOT, 'scripts/verify-adapters/sites.json'), 'utf8')).sites;
+const CORE_SPECS = path.join(ROOT, 'tools/test/verify-core');
+const SITES_FILE = JSON.parse(readFileSync(path.join(ROOT, 'scripts/verify-adapters/sites.json'), 'utf8'));
+export const SITES = SITES_FILE.sites;
+/** Popular real sites, for the core adapters as well. */
+export const REAL_SITES = SITES_FILE.realWorld || [];
+export const sitesFor = (file) => (isCore(file) ? [...SITES, ...REAL_SITES] : SITES);
+export const specsFor = (file) => (isCore(file) ? CORE_SPECS : SPECS);
 const NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
 let verifier = null;
 
@@ -46,12 +52,13 @@ const TOOLS = [
       type: 'object', required: ['name', 'file', 'page', 'checks'],
       properties: {
         name: { type: 'string', description: 'The adapter file\'s name without .js, such as big-targets (or big-targets-zoom for a second spec).' },
-        file: { type: 'string', description: 'The adapter file, such as tools/adapters/big-targets.js.' },
+        file: { type: 'string', description: 'The adapter file, such as tools/adapters/big-targets.js, or a core adapter built on the building blocks, such as tools/core-adapters/text-size.js.' },
         export: { type: 'string', description: 'The exported adapter object, when the file exports more than one, such as BigTargets.' },
-        page: { type: 'string', description: 'The test page, a file you wrote in tools/test/verify/pages/, such as big-targets.html.' },
+        page: { type: 'string', description: 'The test page, a file you wrote in tools/test/verify/pages/ (tools/test/verify-core/pages/ for a core adapter), such as big-targets.html.' },
+        personal: { type: 'object', description: 'Core adapters: the person\'s settings the blocks see (toolkit.personal), such as {"fontScale": 150, "textSizeMethod": "font"}. Default: none.' },
         options: { type: 'object', description: 'The options passed to enable().' },
         checks: { type: 'array', description: 'Checks, as in the sidebar: each the body of an async function run in the page before enable() and again after it, returning true when the page is as it should be.', items: { type: 'object', required: ['name', 'code'], properties: { name: { type: 'string' }, code: { type: 'string' } } } },
-        ai: { type: 'object', description: 'Fixed answers for the AI functions the adapter calls (tools/utils/ai.js), by name, such as {"describeImage": "A red bicycle."}. Without one, that function is unavailable, as when no AI is set up. What the adapter announces is in globalThis.__verifyAnnounced.' },
+        ai: { description: 'Catalog adapters: fixed answers for the AI functions the adapter calls (tools/utils/ai.js), by name, such as {"describeImage": "A red bicycle."}; what it announces is in globalThis.__verifyAnnounced. Core adapters: fixed answers by block task, such as {"simplify": "Plain words.", "describe": "A red bicycle."}, checked by the same gates as the service\'s answers, or "live" for the real model through the service\'s own prompts and checks (at most 40 calls a run). Without one, AI answers are null, as when no AI is set up.' },
         harness: { type: 'object', description: 'Only for a file of fix functions rather than an adapter object: {"enable": "...", "disable": "..."}, async function bodies, with m the file\'s exports and options the options.', properties: { enable: { type: 'string' }, disable: { type: 'string' } } },
         restores: { type: 'boolean', description: 'false for a file of fixes that has no way to undo them (they are meant to stay): what disable() leaves is then expected.' },
         viewport: { type: 'object', description: '{"width", "height"}; default 1280 by 800. Use 320 wide to check reflow.', properties: { width: { type: 'number' }, height: { type: 'number' } } },
@@ -62,12 +69,12 @@ const TOOLS = [
   },
   {
     name: 'verify_on_sites',
-    description: `Run the adapter, as verify_adapter does, on each live page in the robustness list: ${SITES.map(s => `${s.name} (${s.about})`).join('; ')}. Reports per page: whether enable() applied or skipped, page errors during the run, the axe-core problems it added, the layout shift, and what disable() left of its marks (or whether the page is back exactly, when the page holds still). Your checks are optional here and must hold on any page. Saves what you ran to tools/test/verify/<name>-sites.json.`,
+    description: `Run the adapter, as verify_adapter does, on each live page in the robustness list: ${SITES.map(s => `${s.name} (${s.about})`).join('; ')}. A core adapter also runs on popular real sites: ${REAL_SITES.map(s => `${s.name} (${s.about})`).join('; ')}. Reports per page: whether enable() applied or skipped, page errors during the run, the axe-core problems it added, the layout shift, and what disable() left of its marks (or whether the page is back exactly, when the page holds still). Your checks are optional here and must hold on any page. Saves what you ran to tools/test/verify/<name>-sites.json.`,
     inputSchema: {
       type: 'object', required: ['name', 'file'],
       properties: {
         name: { type: 'string', description: 'The adapter file\'s name without .js.' },
-        file: { type: 'string' }, export: { type: 'string' }, options: { type: 'object' }, ai: { type: 'object' }, harness: { type: 'object' },
+        file: { type: 'string' }, export: { type: 'string' }, options: { type: 'object' }, ai: {}, harness: { type: 'object' }, personal: { type: 'object' },
         checks: { type: 'array', description: 'Optional checks that hold on any page.', items: { type: 'object', required: ['name', 'code'], properties: { name: { type: 'string' }, code: { type: 'string' } } } },
         sites: { type: 'array', items: { type: 'string' }, description: 'Only these sites, by name. Default: all.' },
       },
@@ -75,8 +82,8 @@ const TOOLS = [
   },
   {
     name: 'run_tests',
-    description: 'Run the adapter\'s unit test (tools/test/<name>-test.js, if there is one) and the catalog\'s conformance test. Run them after you change an adapter.',
-    inputSchema: { type: 'object', required: ['name'], properties: { name: { type: 'string', description: 'The adapter file\'s name without .js.' } } },
+    description: 'Run the adapter\'s unit test (tools/test/<name>-test.js, if there is one) and the catalog\'s conformance test. For a core adapter (give file), check it is a web module the runtime can load: no imports, one exported adapter, nothing at the top level that needs the page. Run them after you change an adapter.',
+    inputSchema: { type: 'object', required: ['name'], properties: { name: { type: 'string', description: 'The adapter file\'s name without .js.' }, file: { type: 'string', description: 'A core adapter\'s file, such as tools/core-adapters/text-size.js.' } } },
   },
   {
     name: 'contrast_ratio',
@@ -99,9 +106,24 @@ function resultText(name, r, saved) {
     lines.push(...restoreText(r));
   }
   if (r.announced?.length) lines.push(`Announced: ${r.announced.map(a => JSON.stringify(a)).join(', ')}`);
+  lines.push(...hostText(r));
   lines.push(r.errors?.length ? `Page errors:\n${r.errors.map(e => `- ${e.slice(0, 300)}`).join('\n')}` : 'No page errors.');
   lines.push(`Saved as tools/test/verify/${name}.json.`);
   return lines.filter(Boolean).join('\n');
+}
+
+/** A core adapter's use of the extension's side of the blocks. */
+function hostText(r) {
+  const lines = [];
+  const h = r.host;
+  if (h) {
+    if (h.zoomCalls?.length) lines.push(`Zoom: ${h.zoomCalls.join(', ')}.`);
+    if (h.profile?.length) lines.push(`Saved to the person's profile: ${h.profile.map(p => `${JSON.stringify(p.changes)} for ${p.scope === 'all' ? 'every site' : 'this site'}`).join('; ')}.`);
+    if (h.spoken?.length) lines.push(`Spoken (${h.spoken.length}): ${h.spoken.slice(0, 3).map(x => JSON.stringify(String(x.text).slice(0, 80))).join(', ')}.`);
+  }
+  if (Number.isFinite(r.aiCalls) && r.aiCalls) lines.push(`AI calls: ${r.aiCalls}.`);
+  if (r.zoomLeft !== undefined) lines.push(`After disable() the zoom is still ${r.zoomLeft}: it was not put back.`);
+  return lines;
 }
 
 function restoreText(r) {
@@ -125,6 +147,7 @@ function siteText(site, r) {
     if (r.axe?.fixed?.length) lines.push(`- fixed: ${r.axe.fixed.map(a => `${a.id} on ${a.count}`).join('; ')}`);
     (r.checks || []).forEach((c, i) => { if (!c.after) lines.push(`- check ${i + 1} fails after enable()${c.error ? `: ${c.error}` : ''}`); });
     lines.push(...restoreText(r).map(l => `- ${l}`));
+    lines.push(...hostText(r).map(l => `- ${l}`));
   }
   if (r.errors?.length) lines.push(`- errors during the run (the adapter's, or the site's own: look at them): ${r.errors.map(e => e.slice(0, 200)).join(' | ')}`);
   return lines.join('\n');
@@ -134,7 +157,7 @@ const handlers = {
   async verify_on_sites(args) {
     if (!NAME.test(String(args.name || ''))) return text('name must be lowercase letters, digits and dashes.', true);
     const { name, sites: only, ...rest } = args;
-    const sites = SITES.filter(s => !only?.length || only.includes(s.name));
+    const sites = sitesFor(rest.file).filter(s => !only?.length || only.includes(s.name));
     verifier ||= await openVerifier();
     const results = [];
     const queue = [...sites];
@@ -145,11 +168,12 @@ const handlers = {
         results.push([site, r]);
       }
     }));
-    mkdirSync(SPECS, { recursive: true });
-    writeFileSync(path.join(SPECS, `${name}-sites.json`), JSON.stringify({ ...rest, sites: 'all' }, null, 2) + '\n');
+    const dir = specsFor(rest.file);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, `${name}-sites.json`), JSON.stringify({ ...rest, sites: 'all' }, null, 2) + '\n');
     results.sort((a, b) => sites.indexOf(a[0]) - sites.indexOf(b[0]));
     return text([...results.map(([site, r]) => siteText(site, r)),
-      `Saved as tools/test/verify/${name}-sites.json. Problems on these pages that were there before enable() are the site's. A live page can fail to load or change between runs: run it again before you act on one odd result.`].join('\n\n'));
+      `Saved as ${path.relative(ROOT, dir)}/${name}-sites.json. Problems on these pages that were there before enable() are the site's. A live page can fail to load or change between runs: run it again before you act on one odd result.`].join('\n\n'));
   },
 
   async verify_adapter(args) {
@@ -158,9 +182,10 @@ const handlers = {
     verifier ||= await openVerifier();
     let r;
     try { r = await verifier.verify(spec, { screenshot: screenshot === true }); } catch (e) { return text(e.message, true); }
-    mkdirSync(SPECS, { recursive: true });
-    writeFileSync(path.join(SPECS, `${args.name}.json`), JSON.stringify(spec, null, 2) + '\n');
-    const out = text(resultText(args.name, r, spec));
+    const dir = specsFor(spec.file);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, `${args.name}.json`), JSON.stringify(spec, null, 2) + '\n');
+    const out = text(resultText(args.name, r, spec).replace(`Saved as tools/test/verify/${args.name}.json.`, `Saved as ${path.relative(ROOT, dir)}/${args.name}.json.`));
     if (r.screenshot) out.content.push({ type: 'image', mimeType: 'image/png', data: r.screenshot });
     return out;
   },
@@ -168,6 +193,11 @@ const handlers = {
   async run_tests(args) {
     const name = String(args.name || '');
     if (!NAME.test(name)) return text('name must be lowercase letters, digits and dashes.', true);
+    if (args.file && isCore(args.file)) {
+      let m;
+      try { m = coreModule(args.file); } catch (e) { return text(e.message, true); }
+      return m.error ? text(`${args.file}: FAILED: ${m.error}`, true) : text(`${args.file}: a web module the runtime can load (no imports, one adapter, nothing at the top level that needs the page).`);
+    }
     const tests = [`tools/test/${name}-test.js`, 'tools/test/adapter-conformance-test.js'].filter(t => existsSync(path.join(ROOT, t)));
     const parts = [];
     let failed = false;

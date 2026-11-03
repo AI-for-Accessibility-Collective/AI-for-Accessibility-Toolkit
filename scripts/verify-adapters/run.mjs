@@ -14,7 +14,13 @@
 //     checkout. Gemini through opencode's google provider, with the key in
 //     GEMINI_API_KEY. Writes each agent's report and events to DIR.
 //
-//   ... --agent --sandboxed --review <base> [--model <provider/model>]
+//   ... --agent --sandboxed --create [id ...]
+//     Instead, build the core adapters (core-adapters.json) on the building
+//     blocks: an agent per brief (CREATE.md here) writes
+//     tools/core-adapters/<id>.js, its test page and specs, and verifies it
+//     on the test page and on real sites. Each report starts "Outcome:".
+//
+//   ... --agent --sandboxed --review <base> [--core] [--model <provider/model>]
 //     Instead, an independent review: an agent per adapter changed since
 //     <base> (REVIEW.md here) reads the change and reports what is wrong
 //     with it, confirming with the verifier where it can; it changes
@@ -33,11 +39,12 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { randomBytes } from 'node:crypto';
 import { openVerifier, ROOT } from './harness.mjs';
-import { serveHttp, SITES } from './mcp.mjs';
+import { serveHttp, sitesFor } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
 
 const HERE = path.join(ROOT, 'scripts/verify-adapters');
 const SPECS = path.join(ROOT, 'tools/test/verify');
+const CORE_SPECS = path.join(ROOT, 'tools/test/verify-core');
 // Helpers of agent-watch.js, verified through it; not adapters of their own.
 const NOT_ADAPTERS = new Set(['index', '_primitives', 'agent-watch-shapes', 'agent-watch-surfaces']);
 
@@ -46,6 +53,8 @@ const flag = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ?
 const mode = argv.includes('--agent') ? 'agent' : argv.includes('--replay') ? 'replay' : null;
 if (mode === 'agent' && !argv.includes('--sandboxed')) { console.error('Run the agents in the verify container on the agent host VM (see Dockerfile), with --sandboxed.'); process.exit(2); }
 const parallel = Number(flag('--parallel', 4));
+const create = argv.includes('--create');
+const core = create || argv.includes('--core');
 const reviewBase = flag('--review', null);
 const model = flag('--model', MODEL);
 const logs = path.resolve(flag('--logs', path.join(ROOT, '.verify-logs')));
@@ -57,14 +66,16 @@ else if (mode === 'agent') await agents();
 else { console.error('Usage: run.mjs --replay [name ...] | --agent [name ...] [--parallel N] [--logs DIR] [--skills DIR,...]'); process.exit(2); }
 
 async function replay() {
-  const specs = readdirSync(SPECS).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5))
+  // --core: the core adapters' specs (tools/test/verify-core/); otherwise the catalog's.
+  const dir = argv.includes('--core') ? CORE_SPECS : SPECS;
+  const specs = (existsSync(dir) ? readdirSync(dir) : []).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5))
     .filter(n => !names.length || names.some(x => n === x || n.startsWith(`${x}-`)));
   const v = await openVerifier();
   let failed = 0, skipped = 0;
   const runs = [];
   for (const name of specs) {
-    const spec = JSON.parse(readFileSync(path.join(SPECS, `${name}.json`), 'utf8'));
-    if (spec.sites) for (const site of SITES) runs.push([`${name} @ ${site.name}`, { ...spec, page: site.url, checks: spec.checks || [] }, true, spec.known?.[site.name]]);
+    const spec = JSON.parse(readFileSync(path.join(dir, `${name}.json`), 'utf8'));
+    if (spec.sites) for (const site of sitesFor(spec.file)) runs.push([`${name} @ ${site.name}`, { ...spec, page: site.url, checks: spec.checks || [] }, true, spec.known?.[site.name]]);
     else runs.push([name, spec, false]);
   }
   let known = 0;
@@ -87,6 +98,7 @@ async function replay() {
       else problems.push('disable() does not restore the page');
     }
     if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
+    if (r.zoomLeft !== undefined) problems.push(`disable() leaves the zoom at ${r.zoomLeft}`);
     if (problems.length && knownWhy) { known++; console.log(`KNOWN: ${name}: ${problems.join('; ')}\n  why: ${knownWhy}`); continue; }
     if (problems.length) failed++;
     if (r.status === 'unreachable') continue;
@@ -97,10 +109,27 @@ async function replay() {
   process.exit(failed ? 1 : 0);
 }
 
+/** One core adapter's task: its brief, for CREATE.md. */
+function createTask(b) {
+  if (!b) throw new Error('No such brief in core-adapters.json.');
+  return [
+    `Build the core adapter "${b.name}" as tools/core-adapters/${b.id}.js, on the toolkit's building blocks, and verify it, as your instructions say.`,
+    '', `What it does: ${b.brief}`,
+    '', `Suggested in onboarding for: ${b.suggestedFor.join(', ')} (a suggestion only, never a gate).`,
+    `The person's settings it reads: ${b.reads.length ? b.reads.join(', ') : 'none'}.`,
+    `What the person can adjust: ${b.adjusts}`,
+    `Prior work to learn from: ${b.priorWork.map(f => `tools/adapters/${f}`).join(', ')}.`,
+    '', 'What must be verified:', ...b.verify.map(v => `- ${v}`),
+    '', `Name your specs ${b.id} (and ${b.id}-<variant>), and your test page tools/test/verify-core/pages/${b.id}.html.`,
+  ].join('\n');
+}
+
 async function agents() {
   if (!process.env.GEMINI_API_KEY) { console.error('Set GEMINI_API_KEY.'); process.exit(2); }
-  const all = readdirSync(path.join(ROOT, 'tools/adapters')).filter(f => f.endsWith('.js')).map(f => f.slice(0, -3)).filter(n => !NOT_ADAPTERS.has(n));
-  const changed = reviewBase ? new Set(execFileSync('git', ['diff', '--name-only', reviewBase, 'HEAD', '--', 'tools/adapters'], { cwd: ROOT, encoding: 'utf8' })
+  const briefs = new Map(JSON.parse(readFileSync(path.join(HERE, 'core-adapters.json'), 'utf8')).adapters.map(b => [b.id, b]));
+  const folder = core ? 'tools/core-adapters' : 'tools/adapters';
+  const all = create ? [...briefs.keys()] : readdirSync(path.join(ROOT, folder)).filter(f => f.endsWith('.js')).map(f => f.slice(0, -3)).filter(n => !NOT_ADAPTERS.has(n));
+  const changed = reviewBase ? new Set(execFileSync('git', ['diff', '--name-only', reviewBase, 'HEAD', '--', folder], { cwd: ROOT, encoding: 'utf8' })
     .split('\n').map(f => path.basename(f, '.js')).filter(Boolean)) : null;
   const queue = names.length ? names : changed ? all.filter(n => changed.has(n)) : all;
   mkdirSync(logs, { recursive: true });
@@ -113,7 +142,7 @@ async function agents() {
     provider: { google: { options: { apiKey: '{env:GEMINI_API_KEY}' } } },
     mcp: { verifier: { type: 'remote', url: mcpServer.url, headers: { authorization: `Bearer ${token}` }, oauth: false, codemode: false } },
     permissions: ['webfetch', 'websearch', 'task', 'question'].map(action => ({ action, resource: '*', effect: 'deny' })),
-    instructions: [path.join(HERE, reviewBase ? 'REVIEW.md' : 'AGENTS.md')],
+    instructions: [path.join(HERE, reviewBase ? 'REVIEW.md' : create ? 'CREATE.md' : 'AGENTS.md')],
     skills: [path.join(ROOT, '.claude/skills'), ...skills],
   }, null, 2));
 
@@ -130,10 +159,12 @@ async function agents() {
   const work = async (name, attempt = 1) => {
     const started = Date.now();
     const events = createWriteStream(path.join(logs, `${name}.jsonl`));
+    const pages = core ? 'tools/test/verify-core/pages' : 'tools/test/verify/pages';
     const task = reviewBase
-      ? `Review the changes to the built-in adapter tools/adapters/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page tools/test/verify/pages/review-${name}.html.`
+      ? `Review the changes to the ${core ? 'core' : 'built-in'} adapter ${folder}/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`
+      : create ? createTask(briefs.get(name))
       : `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;
-    const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `${reviewBase ? 'review' : 'verify'} ${name}`, task], {
+    const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `${reviewBase ? 'review' : create ? 'create' : 'verify'} ${name}`, task], {
       cwd: ROOT, env: { ...process.env, OPENCODE_CONFIG: config, HOME: homeOf(name) }, stdio: ['ignore', 'pipe', 'pipe'],
     });
     const timer = setTimeout(() => child.kill('SIGTERM'), 40 * 60_000);

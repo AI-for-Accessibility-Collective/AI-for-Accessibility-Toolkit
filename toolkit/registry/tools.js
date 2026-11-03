@@ -613,6 +613,7 @@ export const settingsMeta = {
   readerMode:      { type: 'boolean', description: 'Clean reading view' },
   dismissOverlays: { type: 'boolean', description: 'Hide cookie banners, newsletter popups, and blocking modals' },
   bigTargets:      { type: 'boolean', description: 'Enlarge and space out small clickable controls' },
+  targetSize:      { type: 'number', range: [24, 64], description: 'Smallest size of a clickable control, in CSS pixels (with bigTargets)' },
   highlightLinks:  { type: 'boolean', description: 'Underline links and show where each one leads' },
   pageOutline:     { type: 'boolean', description: 'On-page heading navigator for jumping between sections' },
   bionicReading:   { type: 'boolean', description: 'Bold the start of each word to guide the eye' },

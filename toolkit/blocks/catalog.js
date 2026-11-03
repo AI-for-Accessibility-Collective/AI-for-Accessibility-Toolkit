@@ -290,10 +290,10 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       's.profile.onChange((personal, changed) => ...)',
     ],
     config: { scope: { default: 'site', description: "set(): 'site' records it for this site; 'all' for every site (and drops this site's own value, so it follows)." } },
-    personal: { speechRate: 'Settable.', fontScale: 'Settable.', textSizeMethod: 'Settable.', motionReducer: 'Settable.', contrastMode: 'Settable.', darkMode: 'Settable.' },
+    personal: Object.fromEntries(['speechRate', 'fontScale', 'textSizeMethod', 'lineHeight', 'letterSpacing', 'targetSize', 'motionReducer', 'contrastMode', 'darkMode'].map((k) => [k, 'Settable.'])),
     invariants: [
       'Only the person changes their profile: set() works only right after their own click, tap or key on the toolkit\'s UI in this page or on an adapter\'s shortcut; otherwise it returns { applied: false, reason: \'not-by-person\' }.',
-      'Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, motionReducer, contrastMode, darkMode.',
+      'Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, lineHeight, letterSpacing, targetSize, motionReducer, contrastMode, darkMode.',
       'The change applies in this page at once, for every adapter, and is saved to the profile where the host can ({ saved }).',
       'What the person set for a site wins over what they set for every site, which wins over what the toolkit derived from their needs.',
     ],

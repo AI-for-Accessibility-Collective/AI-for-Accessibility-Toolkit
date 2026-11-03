@@ -611,7 +611,7 @@ await test('profile.set: only after the person used the toolkit\'s UI; applies p
   const button = s.el('button', { text: 'Bigger' });
   s.append(doc.body, button);
   shared.lastInput = { target: button, at: Date.now() };
-  assert.deepEqual(await s.profile.set({ fontScale: 150, lineHeight: 2, translateTo: 'fr' }), { applied: true, saved: true });
+  assert.deepEqual(await s.profile.set({ fontScale: 150, autoSimplify: true, translateTo: 'fr' }), { applied: true, saved: true });
   assert.deepEqual(saved, [{ op: 'set', changes: { fontScale: 150 }, scope: 'site' }], 'only settable keys');
   assert.equal(s.profile.get('fontScale'), 150);
   assert.equal(other.personal.fontScale, 150, 'every adapter in the page sees it');

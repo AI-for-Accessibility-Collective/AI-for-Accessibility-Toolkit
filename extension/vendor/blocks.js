@@ -1415,18 +1415,29 @@
     speechRate: "Speaking rate, 0.5-2. speech.say({ speechRate }) uses the profile's over yours.",
     fontScale: "Text size in percent, 100-200. Tooltips and panels scale their text by it (their `fontScale`).",
     textSizeMethod: "'zoom' (the browser's zoom) or 'font' (the text size only): how the person wants text made bigger. Unset: your default.",
+    lineHeight: "Line spacing, 1-3 (times the font size).",
+    letterSpacing: "Letter spacing in em, 0-0.5.",
+    targetSize: "Smallest size of a clickable control, in CSS pixels, 24-64.",
     motionReducer: "true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting.",
     contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast.",
     darkMode: "true when the profile asks for a dark theme.",
     readingLevel: "'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours."
   });
-  var SETTABLE_KEYS = Object.freeze(["speechRate", "fontScale", "textSizeMethod", "motionReducer", "contrastMode", "darkMode"]);
+  var SETTABLE_KEYS = Object.freeze(["speechRate", "fontScale", "textSizeMethod", "lineHeight", "letterSpacing", "targetSize", "motionReducer", "contrastMode", "darkMode"]);
   function personalFromSettings(settings, { keepOff = false } = {}) {
     const s = settings || {};
     const out = {};
     if (s.speechRate !== void 0 && s.speechRate !== null && Number.isFinite(Number(s.speechRate))) out.speechRate = clamp(Number(s.speechRate), 0.5, 2);
     if (s.fontScale !== void 0 && s.fontScale !== null && Number.isFinite(Number(s.fontScale))) out.fontScale = clamp(Math.round(Number(s.fontScale)), 100, 200);
     if (s.textSizeMethod === "zoom" || s.textSizeMethod === "font") out.textSizeMethod = s.textSizeMethod;
+    const num = (k, lo, hi, round) => {
+      if (s[k] === void 0 || s[k] === null || !Number.isFinite(Number(s[k]))) return;
+      const v = clamp(Number(s[k]), lo, hi);
+      out[k] = round ? Math.round(v) : Math.round(v * 100) / 100;
+    };
+    num("lineHeight", 1, 3);
+    num("letterSpacing", 0, 0.5);
+    num("targetSize", 24, 64, true);
     for (const k of ["motionReducer", "darkMode"]) {
       if (s[k] === true) out[k] = true;
       else if (keepOff && s[k] === false) out[k] = false;
