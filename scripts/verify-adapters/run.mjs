@@ -74,7 +74,9 @@ async function agents() {
     $schema: 'https://opencode.ai/config.json',
     model: MODEL,
     provider: { google: { options: { apiKey: '{env:GEMINI_API_KEY}' } } },
-    mcp: { verifier: { type: 'local', command: ['node', path.join(HERE, 'mcp.mjs')] } },
+    // Tools called directly, not through opencode's code mode (the agent writing
+    // JavaScript that calls them), as on the agent host.
+    mcp: { verifier: { type: 'local', command: ['node', path.join(HERE, 'mcp.mjs')], codemode: false } },
     permissions: ['bash', 'webfetch', 'websearch', 'question', 'external_directory'].map(action => ({ action, resource: '*', effect: 'deny' })),
     instructions: [path.join(HERE, 'AGENTS.md')],
     skills: [path.join(ROOT, '.claude/skills'), ...skills],

@@ -25,6 +25,9 @@ control the adapter adds or changes.
   `tools/test/verify/<name>.json`, so it can be run again later.
 - `run_tests` runs the adapter's unit test and the catalog's conformance
   test.
+- `contrast_ratio` gives the WCAG contrast ratio of two colours. Use it
+  where the accessibility skill says to run its contrast script; in a check,
+  compare computed colours in the page.
 - File reading and editing. You have no shell and no internet.
 
 ## How you work

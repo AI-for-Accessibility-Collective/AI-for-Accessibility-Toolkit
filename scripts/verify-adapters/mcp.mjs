@@ -11,6 +11,8 @@
 //                    again without an agent.
 //   run_tests        the adapter's unit test (tools/test/<name>-test.js) and
 //                    the catalog's conformance test.
+//   contrast_ratio   the WCAG contrast ratio of two colours (the agent has no
+//                    shell to run the accessibility skill's script).
 //
 // The result text is the sidebar's (axeText, shiftText from the agent host).
 
@@ -20,6 +22,7 @@ import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { openVerifier, ROOT } from './harness.mjs';
 import { axeText, shiftText } from '../../agent-host/src/browser-tools.js';
+import { getContrastRatio, parseColor } from '../../tools/utils/color.js';
 
 const SPECS = path.join(ROOT, 'tools/test/verify');
 const NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -50,6 +53,11 @@ const TOOLS = [
     name: 'run_tests',
     description: 'Run the adapter\'s unit test (tools/test/<name>-test.js, if there is one) and the catalog\'s conformance test. Run them after you change an adapter.',
     inputSchema: { type: 'object', required: ['name'], properties: { name: { type: 'string', description: 'The adapter file\'s name without .js.' } } },
+  },
+  {
+    name: 'contrast_ratio',
+    description: 'The WCAG contrast ratio of a foreground and a background colour (hex or rgb()), and whether it meets 4.5:1 (text) and 3:1 (large text, controls, focus indicators).',
+    inputSchema: { type: 'object', required: ['foreground', 'background'], properties: { foreground: { type: 'string' }, background: { type: 'string' } } },
   },
 ];
 
@@ -104,6 +112,13 @@ const handlers = {
     }
     if (!tests.some(t => t.includes(name))) parts.unshift(`There is no tools/test/${name}-test.js.`);
     return text(parts.join('\n\n'), failed);
+  },
+
+  async contrast_ratio(args) {
+    const fg = String(args.foreground || ''), bg = String(args.background || '');
+    if (!parseColor(fg) || !parseColor(bg)) return text('Give each colour as hex or rgb().', true);
+    const ratio = Math.round(getContrastRatio(fg, bg) * 100) / 100;
+    return text(`${ratio}:1. Text: ${ratio >= 4.5 ? 'meets' : 'fails'} 4.5:1. Large text, controls and focus indicators: ${ratio >= 3 ? 'meets' : 'fails'} 3:1.`);
   },
 };
 
