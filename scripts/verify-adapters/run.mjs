@@ -38,7 +38,8 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, exis
 import path from 'node:path';
 import readline from 'node:readline';
 import { randomBytes } from 'node:crypto';
-import { openVerifier, ROOT } from './harness.mjs';
+import { openVerifier, ROOT, isCore } from './harness.mjs';
+import { keyboardAudit } from './intera11y.mjs';
 import { serveHttp, sitesFor, LIMITS } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
 
@@ -88,10 +89,23 @@ async function replay() {
     if (!fine.includes(r.status)) problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
     else if (r.status === 'unreachable') { skipped++; console.log(`SKIP: ${name} (${r.message})`); }
     if (r.leftovers?.length && spec.restores !== false) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
-    const bad = (r.checks || []).map((c, i) => (!c.after ? spec.checks[i]?.name : null)).filter(Boolean);
+    // On a live page, a check that already failed before enable() is the site's
+    // (Mars has its own tabindex above 0); on a test page it must pass after.
+    const bad = (r.checks || []).map((c, i) => (!c.after && !(live && !c.before) ? spec.checks[i]?.name : null)).filter(Boolean);
     if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
     if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
-    for (const rule of r.axe?.added || []) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);
+    let added = r.axe?.added || [];
+    if (live && added.length) {
+      // The same page with a do-nothing adapter: what it adds by itself (NPR
+      // fills in its own content) is the site's.
+      let c = null;
+      try { c = await v.verify({ ...spec, control: true, checks: [] }); } catch { c = null; }
+      const own = new Map((c?.axe?.added || []).map((x) => [x.id, x.count]));
+      const kept = added.filter((x) => !(own.get(x.id) >= x.count));
+      if (kept.length < added.length) console.log(`  (${name}: ${added.length - kept.length} rule${added.length - kept.length === 1 ? '' : 's'} the page also adds with no adapter: ${added.filter((x) => !kept.includes(x)).map((x) => x.id).join(', ')})`);
+      added = kept;
+    }
+    for (const rule of added) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);
     // A live page changes by itself (Mars's carousel), so an inexact restore there is a warning; leftover marks are not.
     if (r.status === 'applied' && r.restored === false && spec.restores !== false) {
       if (live) console.log(`WARN: ${name}: the page is not exactly as before after disable() (it may have changed by itself)`);
@@ -102,6 +116,19 @@ async function replay() {
     if (r.status === 'skipped' && r.restored === false) problems.push('enable() returned false but left changes in the page');
     if (r.enableMs > LIMITS.enableMs) problems.push(`enable() took ${r.enableMs} ms`);
     if (live && r.aiCalls > LIMITS.aiCalls) problems.push(`${r.aiCalls} AI calls on load`);
+    // A core adapter's main spec: InterA11y's keyboard measurements without
+    // and with it; a new trap or lost focus on what it made or changed fails.
+    if (!live && r.status === 'applied' && isCore(spec.file) && name === path.basename(spec.file, '.js')) {
+      const k = await keyboardAudit(v, spec).catch((e) => ({ error: e.message }));
+      if (k.error) console.log(`  (${name}: keyboard audit could not run: ${k.error})`);
+      else {
+        for (const [key, what] of [['newKeyboardTraps', 'a keyboard trap (2.1.2)'], ['newFocusKept', 'focus that cannot leave (2.1.2)'], ['newFocusRefused', 'focus refused (2.1.1)'], ['newFocusInAriaHidden', 'focus inside aria-hidden content (4.1.2)']]) {
+          const mine = (k[key] || []).filter((x) => x.inScope);
+          if (mine.length) problems.push(`adds ${what}: ${mine.slice(0, 3).map((x) => `${x.xpath}${x.label ? ` "${x.label}"` : ''}`).join('; ')}`);
+        }
+        console.log(`  (${name}: keyboard: ${k.tabStops.before} → ${k.tabStops.after} Tab stops${k.tabStops.newWithAdapter.length ? `, new: ${k.tabStops.newWithAdapter.map((x) => x.label || x.tag).join(', ')}` : ''}${k.tabStops.goneWithAdapter.length ? `, gone: ${k.tabStops.goneWithAdapter.map((x) => x.label || x.tag).join(', ')}` : ''}${k.newOrderFindings.length ? `, ${k.newOrderFindings.length} order finding(s)` : ''})`);
+      }
+    }
     if (r.dwell?.announced.length > LIMITS.dwellAnnounced) problems.push(`said ${r.dwell.announced.length} things while a person only scrolled: ${r.dwell.announced.slice(0, 4).map(a => JSON.stringify(a)).join(', ')}`);
     if (problems.length && knownWhy) { known++; console.log(`KNOWN: ${name}: ${problems.join('; ')}\n  why: ${knownWhy}`); continue; }
     if (problems.length) failed++;
@@ -124,6 +151,7 @@ function createTask(b) {
     `What the person can adjust: ${b.adjusts}`,
     `Prior work to learn from: ${b.priorWork.map(f => `tools/adapters/${f}`).join(', ')}.`,
     '', 'What must be verified:', ...b.verify.map(v => `- ${v}`),
+    ...(b.rubrics?.length ? ['', `WCAG criteria to judge with InterA11y's rubrics (wcag_rubric) and tools, on what your adapter creates, changes or styles: ${b.rubrics.join(', ')}.`] : []),
     '', `Name your specs ${b.id} (and ${b.id}-<variant>), and your test page tools/test/verify-core/pages/${b.id}.html.`,
   ].join('\n');
 }
@@ -165,7 +193,7 @@ async function agents() {
     const events = createWriteStream(path.join(logs, `${name}.jsonl`));
     const pages = core ? 'tools/test/verify-core/pages' : 'tools/test/verify/pages';
     const task = reviewBase
-      ? (core ? `Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`
+      ? (core ? `Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.${briefs.get(name)?.rubrics?.length ? ` WCAG criteria to judge with InterA11y's rubrics and tools, on what it creates, changes or styles: ${briefs.get(name).rubrics.join(', ')}.` : ''}`
         : `Review the changes to the built-in adapter ${folder}/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`)
       : create ? createTask(briefs.get(name))
       : `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;

@@ -1635,7 +1635,8 @@
       const playing = !el.paused || el.autoplay && !(el.played && el.played.length) && !el.currentTime;
       let personTouched = false;
       const mark = () => {
-        if (s.watch.byPerson(el, { withinMs: 1500 })) personTouched = true;
+        const last = env.shared.lastInput;
+        if (s.watch.byPerson(el, { withinMs: 1500 }) || last && Date.now() - last.at < 1500) personTouched = true;
       };
       s.setAttr(el, "autoplay", null);
       if (c.showControls) s.setAttr(el, "controls", "");

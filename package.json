@@ -25,10 +25,12 @@
     "verify:adapters": "node scripts/verify-adapters/run.mjs --replay"
   },
   "devDependencies": {
+    "@guidepup/virtual-screen-reader": "0.32.1",
     "@mozilla/readability": "^0.6.0",
     "esbuild": "^0.28.0",
     "jsdom": "^29.1.1",
     "playwright": "^1.49.0",
+    "puppeteer-core": "24.40.0",
     "typescript": "5.9.3"
   }
 }

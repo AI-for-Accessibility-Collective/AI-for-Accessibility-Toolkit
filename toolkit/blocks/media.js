@@ -25,8 +25,13 @@ export function mediaBlock(s, env) {
     // Playing, or an autoplay that has not started yet.
     const playing = !el.paused || (el.autoplay && !(el.played && el.played.length) && !el.currentTime);
     let personTouched = false;
-    // A play or pause the person made after ours: theirs wins on end().
-    const mark = () => { if (s.watch.byPerson(el, { withinMs: 1500 })) personTouched = true; };
+    // A play or pause the person made after ours: theirs wins on end(). It
+    // can come from the player's own button outside the element, so a play
+    // or pause right after the person's click or key anywhere counts too.
+    const mark = () => {
+      const last = env.shared.lastInput;
+      if (s.watch.byPerson(el, { withinMs: 1500 }) || (last && Date.now() - last.at < 1500)) personTouched = true;
+    };
     s.setAttr(el, 'autoplay', null);
     if (c.showControls) s.setAttr(el, 'controls', '');
     try { el.pause(); } catch { /* a media element that is not ready */ }

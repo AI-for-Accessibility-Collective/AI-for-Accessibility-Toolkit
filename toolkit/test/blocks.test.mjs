@@ -591,6 +591,14 @@ await test('media.pause: plays again only what was playing, and never what the p
   $('#v').dispatchEvent(new win.Event('pause'));
   s2.end();
   assert.equal($('#v').paused, true, 'the person paused it after us');
+  // The player's own button, outside the video, is the person's too.
+  const s3 = tk.session();
+  $('#v').play();
+  s3.media.pause($('#v'));
+  win.__ai4a11yBlocksShared.lastInput = { target: win.document.body, at: Date.now() };
+  $('#v').dispatchEvent(new win.Event('pause'));
+  s3.end();
+  assert.equal($('#v').paused, true, 'a pause right after the person\'s click elsewhere is theirs');
 });
 
 // ── the person's settings ───────────────────────────────────────────────────

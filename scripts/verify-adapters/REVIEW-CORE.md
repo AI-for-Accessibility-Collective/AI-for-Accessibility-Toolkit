@@ -46,6 +46,31 @@ far as you need to know what a call really does.
 
 Not findings: style preferences, naming, formatting.
 
+
+## InterA11y's tools and rubrics
+
+The verifier also has InterA11y's tools (from *InterA11y: Interactive Web
+Accessibility Error Detection with LLM Agents*), each on your page with
+your adapter on: `query_ax_node`, `interact_and_observe`,
+`observe_state_after_activation`, `set_state_and_capture`,
+`probe_screen_reader_after_action` (a virtual screen reader),
+`measure_geometry_live`, `compute_contrast_ratio`, `resolve_part_color`,
+`render_with_overrides`, `request_hi_res_crop`, `resolve_destination`,
+`compare_named_regions`, `capture_full_page`. They return measurements,
+never a verdict. Three more: `adapter_elements` lists what your adapter
+created, changed or styled, with XPaths; `keyboard_audit` compares the
+keyboard (Tab order, traps, focus refused or kept) without and with your
+adapter; `wcag_rubric` gives InterA11y's test rules for one WCAG success
+criterion, the tools for each rule, and its evidence standard.
+
+**Your scope is what your adapter created, changed or styled.** The tools
+refuse an element outside it: a problem there is the page's. For each
+criterion the adapter's brief lists under rubrics (core-adapters.json), read `wcag_rubric`, gather the evidence with
+the tools it names on the elements `adapter_elements` lists, and give each
+one a verdict (FAIL, PASS, NOT_APPLICABLE or UNDETERMINED) with the
+observation it rests on. A FAIL your adapter caused is a finding. Run
+`keyboard_audit` once your adapter adds anything people can focus.
+
 ## Evidence
 
 Confirm a suspected bug before you report it where you can: use the

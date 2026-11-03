@@ -95,6 +95,31 @@ Read the catalog adapters your brief lists under "prior work"
 (`tools/adapters/`): they are older versions that handle real pages' edge
 cases. Learn from them; do not import or copy their shared modules.
 
+
+## InterA11y's tools and rubrics
+
+The verifier also has InterA11y's tools (from *InterA11y: Interactive Web
+Accessibility Error Detection with LLM Agents*), each on your page with
+your adapter on: `query_ax_node`, `interact_and_observe`,
+`observe_state_after_activation`, `set_state_and_capture`,
+`probe_screen_reader_after_action` (a virtual screen reader),
+`measure_geometry_live`, `compute_contrast_ratio`, `resolve_part_color`,
+`render_with_overrides`, `request_hi_res_crop`, `resolve_destination`,
+`compare_named_regions`, `capture_full_page`. They return measurements,
+never a verdict. Three more: `adapter_elements` lists what your adapter
+created, changed or styled, with XPaths; `keyboard_audit` compares the
+keyboard (Tab order, traps, focus refused or kept) without and with your
+adapter; `wcag_rubric` gives InterA11y's test rules for one WCAG success
+criterion, the tools for each rule, and its evidence standard.
+
+**Your scope is what your adapter created, changed or styled.** The tools
+refuse an element outside it: a problem there is the page's. For each
+criterion your task names, read `wcag_rubric`, gather the evidence with
+the tools it names on the elements `adapter_elements` lists, and give each
+one a verdict (FAIL, PASS, NOT_APPLICABLE or UNDETERMINED) with the
+observation it rests on. Fix every FAIL your adapter caused. Run
+`keyboard_audit` once your adapter adds anything people can focus.
+
 ## What you have
 
 The verifier's tools, as for the catalog adapters (pass `file` as
@@ -176,7 +201,9 @@ Your last message is the report, in plain text, starting with one line:
 
 then:
 - what the adapter does, in two sentences, what the shortcut adjusts in it (if anything), and its options;
-- what you verified (the test page, the specs, the checks, the sites);
+- what you verified (the test page, the specs, the checks, the sites), and
+  each WCAG criterion you judged with InterA11y's rubric: the verdict for
+  each element of yours, with its evidence;
 - each problem you found and fixed, with its evidence;
 - what is left, with its evidence, and why you could not fix it;
 - **Blocks:** what a building block lacked or got wrong, with evidence, for

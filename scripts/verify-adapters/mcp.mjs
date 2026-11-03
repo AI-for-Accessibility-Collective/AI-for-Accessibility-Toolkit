@@ -30,6 +30,7 @@ import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openVerifier, ROOT, isCore, coreModule } from './harness.mjs';
+import { interA11yTools, isInterA11yTool, runInterA11yTool } from './intera11y.mjs';
 import { axeText, shiftText } from '../../agent-host/src/browser-tools.js';
 import { getContrastRatio, parseColor } from '../../tools/utils/color.js';
 
@@ -239,9 +240,13 @@ export async function dispatch(msg) {
   const reply = (result) => ({ jsonrpc: '2.0', id, result });
   try {
     if (method === 'initialize') return reply({ protocolVersion: params?.protocolVersion || '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'adapter-verifier', version: '1.0.0' } });
-    if (method === 'tools/list') return reply({ tools: TOOLS });
+    if (method === 'tools/list') return reply({ tools: [...TOOLS, ...interA11yTools()] });
     if (method === 'ping') return reply({});
     if (method === 'tools/call') {
+      if (isInterA11yTool(params?.name)) {
+        if (params.name !== 'wcag_rubric') verifier ||= await openVerifier();
+        return reply(await runInterA11yTool(verifier, params.name, params.arguments || {}));
+      }
       const h = handlers[params?.name];
       return reply(h ? await h(params.arguments || {}) : text(`Unknown tool ${params?.name}.`, true));
     }
