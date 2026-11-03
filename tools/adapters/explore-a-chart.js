@@ -15,7 +15,7 @@ import { registerSweep } from '../utils/observe.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 
-const CHART_HINT = /(?:^|[^a-z])(charts?|graphs?|plots?|diagrams?)(?:[^a-z]|$)/i;
+const CHART_HINT = /chart|(?<!photo)graph(?!ic)|plot|diagram/i;
 const HTML_NS = 'http://www.w3.org/1999/xhtml';
 const MAX_CHARTS = 20;   // a dashboard with 200 sparklines should not get 200 buttons
 const MAX_ROWS = 200;    // never let a runaway model answer freeze the panel
@@ -277,7 +277,14 @@ export const ExploreAChart = {
     this.panel.querySelector('.ai4a11y-chart-body').replaceChildren(p);
     this.panel.style.display = 'block';
     if (this.live) this.live.textContent = text;
-    this.panel.focus();
+    this.focusPanel();
+  },
+
+  // Moves focus into the panel only from its trigger or from inside the panel:
+  // a slow answer must not pull focus away from wherever the person went since.
+  focusPanel() {
+    const active = document.activeElement;
+    if ((active && active === this._trigger) || this.panel.contains(active)) this.panel.focus();
   },
 
   // Model output goes in via textContent ONLY — never innerHTML.
@@ -317,13 +324,15 @@ export const ExploreAChart = {
     this.panel.querySelector('.ai4a11y-chart-body').replaceChildren(table);
     this.panel.style.display = 'block';
     if (this.live) this.live.textContent = `${caption}. Table with ${rows.length} rows and ${data.headers.length} columns.`;
-    this.panel.focus();
+    this.focusPanel();
   },
 
   hide() {
+    this._reqSeq++; // a late answer must not reopen a dismissed panel
     if (!this.panel || this.panel.style.display === 'none') return;
+    const hadFocus = this.panel.contains(document.activeElement);
     this.panel.style.display = 'none';
-    if (this._trigger && typeof this._trigger.focus === 'function') {
+    if (hadFocus && this._trigger && typeof this._trigger.focus === 'function') {
       try { this._trigger.focus(); } catch { /* ignore */ }
     }
     this._trigger = null;

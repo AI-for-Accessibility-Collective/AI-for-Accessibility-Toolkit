@@ -177,9 +177,6 @@ export const ReaderMode = {
       el.replaceWith(div);
     });
     tempDiv.querySelectorAll('[role="main"]').forEach(el => el.removeAttribute('role'));
-    tempDiv.querySelectorAll('img').forEach(img => {
-      if (!img.hasAttribute('alt')) img.setAttribute('alt', '');
-    });
     const dangerousUrlAttrs = ['href', 'src', 'srcset', 'action', 'formaction', 'srcdoc', 'poster', 'xlink:href'];
     const dangerousPrefixes = ['javascript:', 'vbscript:', 'data:text/html', 'data:application', 'data:image/svg+xml'];
     tempDiv.querySelectorAll('*').forEach(el => {
@@ -322,18 +319,6 @@ export const ReaderMode = {
       }
       #ai4a11y-reader-mode a { color: #0b57d0 !important; text-decoration: underline !important; }
       #ai4a11y-reader-mode :focus-visible { outline: 3px solid #0b57d0 !important; outline-offset: 2px; box-shadow: 0 0 0 5px #fff; }
-      #ai4a11y-reader-mode .ai4a11y-reader-close:focus-visible,
-      #ai4a11y-reader-mode .ai4a11y-reader-close:focus {
-        outline: 3px solid #0b57d0 !important;
-        outline-offset: 2px !important;
-        box-shadow: 0 0 0 5px #fff !important;
-      }
-      #ai4a11y-reader-mode a:focus-visible,
-      #ai4a11y-reader-mode a:focus {
-        outline: 3px solid #0b57d0 !important;
-        outline-offset: 2px !important;
-        box-shadow: 0 0 0 5px #fff !important;
-      }
       #ai4a11y-reader-mode .ai4a11y-reader-title:focus { outline: none !important; box-shadow: none; }
     `;
   },

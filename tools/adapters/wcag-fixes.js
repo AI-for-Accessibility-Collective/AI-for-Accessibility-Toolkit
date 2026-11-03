@@ -218,17 +218,6 @@ export function fixInvalidAriaRole(element) {
   }
 }
 
-// Fix disallowed ARIA role
-export function fixDisallowedRole(element) {
-  const role = element.getAttribute('role');
-  if (role) {
-    element.removeAttribute('role');
-    incrementStat('wcag');
-    logFix('aria-allowed-role', element, role, '(removed)');
-    console.log('[AI4A11y] Removed disallowed role:', role);
-  }
-}
-
 // Fix deprecated ARIA role
 export function fixDeprecatedRole(element) {
   const role = element.getAttribute('role');
@@ -432,7 +421,7 @@ const rawHandlers = {
   'tabindex': fixPositiveTabindex,
   'aria-valid-attr': fixInvalidAriaAttr,
   'aria-roles': fixInvalidAriaRole,
-  'aria-allowed-role': fixDisallowedRole,
+  'aria-allowed-role': fixInvalidAriaRole,
   'aria-deprecated-role': fixDeprecatedRole,
   'aria-required-attr': fixMissingAriaAttrs,
   'nested-interactive': fixNestedInteractive,

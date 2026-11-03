@@ -6,11 +6,10 @@
 // video, and (2) it dims video/canvas/animated-GIF surfaces so any flashing
 // that still occurs (e.g. a canvas the page keeps drawing) is lower-intensity.
 //
-// Reversible by construction: every video's autoplay/playing state and
-// exact attribute sequence are recorded before we touch it, so disable()
-// restores the page exactly. A MutationObserver catches videos injected
-// after enable (lazy-loaded players are the common case), and is disconnected
-// on disable.
+// Reversible by construction: every video's autoplay/playing state is
+// recorded before we touch it, so disable() restores the page exactly. A
+// MutationObserver catches videos injected after enable (lazy-loaded players
+// are the common case), and is disconnected on disable.
 import { announce } from '../utils/ai.js';
 
 // dark-mode filters video and canvas too (it turns them back the right way
@@ -26,7 +25,7 @@ const MEDIA_FILTER = 'filter: var(--ai4a11y-media-dim,) var(--ai4a11y-media-dark
 export const FlashGuard = {
   styleId: 'ai4a11y-flash-guard-styles',
   enabled: false,
-  tracked: null,   // Set of { video, hadAutoplay, wasPlaying, hadControls, origAttrs, cleanupListener } for exact restore
+  tracked: null,   // Set of { video, hadAutoplay, wasPlaying, hadControls, cleanupListener } for exact restore
   observer: null,
 
   enable(options = {}) {
@@ -77,9 +76,6 @@ export const FlashGuard = {
     if (!video || !this.tracked) return;
     for (const t of this.tracked) if (t.video === video) return;
     try {
-      const origAttrs = video.attributes
-        ? Array.from(video.attributes).map(a => ({ name: a.name, value: a.value }))
-        : [];
       let cleanupListener = null;
       const hadAutoplay = video.hasAttribute('autoplay');
       const wasPlaying = !video.paused;
@@ -90,7 +86,6 @@ export const FlashGuard = {
         hadAutoplay,
         wasPlaying,
         hadControls,
-        origAttrs,
         cleanupListener: () => { if (cleanupListener) cleanupListener(); }
       });
       // While a play() the page started is still loading, pausing rejects the
@@ -121,22 +116,14 @@ export const FlashGuard = {
     document.getElementById(this.styleId)?.remove();
 
     if (this.tracked) {
-      for (const { video, hadAutoplay, wasPlaying, hadControls, origAttrs, cleanupListener } of this.tracked) {
+      for (const { video, hadAutoplay, wasPlaying, hadControls, cleanupListener } of this.tracked) {
         try {
           if (cleanupListener) cleanupListener();
-          if (origAttrs) {
-            const current = Array.from(video.attributes).map(a => a.name);
-            for (const name of current) video.removeAttribute(name);
-            for (const { name, value } of origAttrs) video.setAttribute(name, value);
-          } else {
-            video.controls = hadControls;
-            if (hadAutoplay) {
-              video.setAttribute('autoplay', '');
-              video.autoplay = true;
-            }
-          }
           video.controls = hadControls;
-          video.autoplay = hadAutoplay;
+          if (hadAutoplay) {
+            video.setAttribute('autoplay', '');
+            video.autoplay = true;
+          }
           // play() may reject (autoplay policy, detached element) — that's fine.
           if (wasPlaying) {
             const p = video.play();

@@ -512,6 +512,7 @@ export const VisualAssist = {
         button, input, select, textarea {
           background-color: #fff !important;
           color: #000 !important;
+          border: 1px solid #000 !important;
         }
         body, p, li, td, th, dt, dd, blockquote, figcaption,
         h1, h2, h3, h4, h5, h6,

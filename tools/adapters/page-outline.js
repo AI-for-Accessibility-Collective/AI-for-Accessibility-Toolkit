@@ -25,7 +25,7 @@ const STYLED_HEADINGS = '[role="heading"], .h1, .h2, .h3, .h4, .h5, .h6';
 
 function levelOf(el) {
   const aria = Number(el.getAttribute('aria-level'));
-  if (aria >= 1 && aria <= 6) return aria;
+  if (aria >= 1) return aria;
   const tag = /^H([1-6])$/.exec(el.tagName);
   if (tag) return Number(tag[1]);
   const cls = el.classList && [...el.classList].map((c) => /^h([1-6])$/.exec(c)).find(Boolean);
@@ -52,7 +52,7 @@ export const PageOutline = {
     this.addedIds = new Set();
     this.addedTabindex = new Set();
     this.selector = options.selector || 'h1, h2, h3';
-    this.maxLevel = options.maxLevel || (options.selector ? 6 : 3);
+    this.maxLevel = options.selector ? 6 : 3;
 
     // Colour the panel's OWN elements defensively. Setting color on the <nav>
     // only reaches inherited text — but the outline's contents are <a>, and the

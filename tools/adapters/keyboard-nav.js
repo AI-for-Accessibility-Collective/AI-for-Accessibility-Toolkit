@@ -27,7 +27,7 @@ function getFocusable(root) {
     'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
   )).filter(el => {
     const style = getComputedStyle(el);
-    return style.display !== 'none' && style.visibility !== 'hidden' && (el.offsetParent !== null || style.position === 'fixed' || (typeof el.getClientRects === 'function' && el.getClientRects().length > 0));
+    return style.display !== 'none' && style.visibility !== 'hidden' && (el.offsetParent !== null || (typeof el.getClientRects === 'function' && el.getClientRects().length > 0));
   });
 }
 

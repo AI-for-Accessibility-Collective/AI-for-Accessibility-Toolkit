@@ -2,7 +2,7 @@
 // giving the eye a fixation point per word. A well-known reading aid for
 // dyslexia and ADHD: the bolded prefix anchors each saccade so the reader's
 // brain completes the word instead of decoding every letter.
-// Skips controls, navigation, citations, and non-prose regions so interactive
+// Skips controls, navigation, dialogs, and citation markers so interactive
 // elements and references remain intact.
 //
 // Reversible by construction via the shared transformTextNodes primitive: each
@@ -15,27 +15,21 @@ const MAX_TEXT_NODES = 2000; // cap work on pathological pages
 // Text a screen reader announces as it changes. Rewrapping it would make the
 // screen reader read the message again, so it is left alone.
 const LIVE_SEL = '[aria-live]:not([aria-live="off"]), [role="status"], [role="alert"], [role="log"]';
-// Non-prose and secondary regions, controls, and citation markers that should
-// not have their words broken into fixation points.
+// Controls, navigation, dialogs, and citation markers that should not have
+// their words broken into fixation points.
 const SKIP_SEL = [
   LIVE_SEL,
   'button', '[role="button"]',
   'nav', '[role="navigation"]', 'menu', '[role="menu"]', '[role="menubar"]', '[role="menuitem"]', '[role="tablist"]', '[role="tab"]',
-  'header', '[role="banner"]', 'footer', '[role="contentinfo"]',
-  'aside', '[role="complementary"]',
   'dialog', '[role="dialog"]', '[role="alertdialog"]',
-  'sup', 'sub', '[role="doc-noteref"]', '[role="doc-backlink"]', '[role="doc-biblioentry"]', '.reference',
+  'sup', 'sub', '[role="doc-noteref"]', '[role="doc-backlink"]', '[role="doc-biblioentry"]',
 ].join(', ');
 // Visually hidden, but read by screen readers. Not selectable, so copying the
 // bolded text does not copy every word twice.
 // Pages style their own spans too (".thumb span { position: absolute }"), so
 // every span we add starts from a clean slate.
 const RESET = 'all: unset;';
-// Visually hidden, but read by screen readers. Not selectable, so copying the
-// bolded text does not copy every word twice.
-// Kept inline-block without position:absolute so it stays in text flow and
-// adjacent inline links keep their text-block context for WCAG 2.5.8 target size.
-const SR_ONLY = RESET + 'display:inline-block;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;' +
+const SR_ONLY = RESET + 'position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;' +
   'clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;user-select:none;-webkit-user-select:none;';
 const RESCAN_MS = 400;
 
@@ -70,7 +64,7 @@ export const BionicReading = {
   },
 
   // One walk over root. Skips our own wrappers (the primitive skips code/pre/etc.
-  // by default), non-word text nodes, live regions, controls, and secondary regions.
+  // by default), non-word text nodes, live regions, controls, navigation, and dialogs.
   pass(root, ratio, cap) {
     return transformTextNodes(root, (text, node) => {
       if (!/[a-zA-Z\p{L}]/u.test(text)) return null;

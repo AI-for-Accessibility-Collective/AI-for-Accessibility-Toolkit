@@ -15,7 +15,7 @@
 //   • Reversible: restoreOriginal() removes added tracks, transcripts, styles,
 //     and processing flags to return the DOM to its exact prior state.
 //
-import { transcribeVideo, transcribeAudio, announce } from '../utils/ai.js';
+import { transcribeVideo, transcribeAudio } from '../utils/ai.js';
 
 const logFix = globalThis.ai4a11yLogFix || (() => {});
 const incrementStat = globalThis.ai4a11yIncrementStat || (() => {});
@@ -82,6 +82,8 @@ export async function generateVideoCaptions(video) {
 
   try {
     const result = await transcribeVideo(src);
+    // restoreOriginal() while it was transcribing: leave the video as restored.
+    if (video.dataset.ai4a11yCaptioned !== 'pending') return null;
 
     if (result?.text && result.text.trim()) {
       const text = result.text.trim();
@@ -89,7 +91,6 @@ export async function generateVideoCaptions(video) {
       video.dataset.ai4a11yCaptioned = 'done';
       incrementStat('captions');
       logFix('captions', video, '(none)', '(generated)');
-      announce('Captions added to video');
       console.log('[AI4A11y] Added video captions');
       return text;
     }
@@ -98,7 +99,7 @@ export async function generateVideoCaptions(video) {
     return null;
   } catch (e) {
     console.warn('[AI4A11y] Failed to caption video:', e);
-    video.dataset.ai4a11yCaptioned = 'failed';
+    if (video.dataset.ai4a11yCaptioned === 'pending') video.dataset.ai4a11yCaptioned = 'failed';
     return null;
   }
 }
@@ -116,6 +117,8 @@ export async function generateAudioCaptions(audio) {
 
   try {
     const result = await transcribeAudio(src);
+    // restoreOriginal() while it was transcribing: leave the audio as restored.
+    if (audio.dataset.ai4a11yCaptioned !== 'pending') return null;
 
     if (result?.text && result.text.trim()) {
       const text = result.text.trim();
@@ -123,7 +126,6 @@ export async function generateAudioCaptions(audio) {
       audio.dataset.ai4a11yCaptioned = 'done';
       incrementStat('captions');
       logFix('transcript', audio, '(none)', '(generated)');
-      announce('Audio transcript added');
       console.log('[AI4A11y] Added audio transcript');
       return text;
     }
@@ -132,7 +134,7 @@ export async function generateAudioCaptions(audio) {
     return null;
   } catch (e) {
     console.warn('[AI4A11y] Failed to transcribe audio:', e);
-    audio.dataset.ai4a11yCaptioned = 'failed';
+    if (audio.dataset.ai4a11yCaptioned === 'pending') audio.dataset.ai4a11yCaptioned = 'failed';
     return null;
   }
 }

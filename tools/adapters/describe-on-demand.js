@@ -71,7 +71,7 @@ export const DescribeOnDemand = {
       // e.code (physical key), not e.key: on macOS Option+D composes '∂', so
       // e.key === 'd' never matches while Alt is held — the keyboard path (the
       // screen-reader path this adapter exists for) would silently do nothing.
-      if (e.altKey && (e.code === 'KeyD' || e.key === 'd' || e.key === 'D' || e.key === '∂')) {
+      if (e.altKey && e.code === 'KeyD') {
         e.preventDefault();
         this.describe(this.target());
       }
@@ -149,7 +149,6 @@ export const DescribeOnDemand = {
       this.panel.id = 'ai4a11y-describe-panel';
       this.panel.setAttribute('role', 'dialog');
       this.panel.setAttribute('aria-labelledby', 'ai4a11y-describe-heading');
-      this.panel.setAttribute('aria-label', 'Description');
       const h = document.createElement('h2');
       h.id = 'ai4a11y-describe-heading';
       h.textContent = 'Description';

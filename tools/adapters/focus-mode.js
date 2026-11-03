@@ -55,7 +55,6 @@ export const FocusMode = {
   leaveHandler: null,
   focusHandler: null,
   blurHandler: null,
-  keyHandler: null,
   hovered: null,         // the element carrying the highlight
   currentSettings: { ...DEFAULT_SETTINGS },
 
@@ -255,19 +254,10 @@ export const FocusMode = {
         this.hovered = null;
       }
     };
-    // WCAG 1.4.13: Content shown on hover or focus can be dismissed with Escape
-    this.keyHandler = (e) => {
-      if (e.key === 'Escape') {
-        this.hovered?.classList.remove(HIGHLIGHT);
-        this.hovered = null;
-      }
-    };
-
     document.addEventListener('mouseover', this.hoverHandler, true);
     document.documentElement.addEventListener('mouseleave', this.leaveHandler);
     document.addEventListener('focusin', this.focusHandler, true);
     document.addEventListener('focusout', this.blurHandler, true);
-    document.addEventListener('keydown', this.keyHandler, true);
   },
 
   disableHoverHighlight() {
@@ -275,8 +265,7 @@ export const FocusMode = {
     if (this.leaveHandler) document.documentElement.removeEventListener('mouseleave', this.leaveHandler);
     if (this.focusHandler) document.removeEventListener('focusin', this.focusHandler, true);
     if (this.blurHandler) document.removeEventListener('focusout', this.blurHandler, true);
-    if (this.keyHandler) document.removeEventListener('keydown', this.keyHandler, true);
-    this.hoverHandler = this.leaveHandler = this.focusHandler = this.blurHandler = this.keyHandler = null;
+    this.hoverHandler = this.leaveHandler = this.focusHandler = this.blurHandler = null;
     this.hovered?.classList.remove(HIGHLIGHT);
     this.hovered = null;
   },

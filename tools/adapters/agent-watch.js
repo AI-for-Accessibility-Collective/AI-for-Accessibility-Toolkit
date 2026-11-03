@@ -135,7 +135,6 @@ export const AgentWatch = {
     this.model = null;
     this._focusedGate = null;
     this._focusedOne = null;
-    this.agent = null;
     this.collapsed = false;
   },
 
@@ -991,17 +990,9 @@ ${surfaceCss(AgentWatch.containerId, base, muted, line, high)}
 #${AgentWatch.containerId} .aw-prompt-edit:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; opacity: 1; }
 #${AgentWatch.containerId} .aw-prompt-value:focus-visible { outline: 3px solid #1a73e8; outline-offset: 1px; }
 #${AgentWatch.containerId} .aw-rules-toggle {
-  min-height: 24px; height: 24px;
-  min-width: 40px; width: 40px;
+  min-height: 24px; min-width: 40px;
   display: inline-flex; align-items: center;
   padding: 2px 3px; box-sizing: border-box;
-}
-#${AgentWatch.containerId} .aw-rules-knob {
-  width: 16px; height: 16px;
-  transform: translateX(18px);
-}
-#${AgentWatch.containerId} .aw-rules-toggle[aria-checked="false"] .aw-rules-knob {
-  transform: translateX(0);
 }
 `;
 }

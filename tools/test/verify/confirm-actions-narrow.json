@@ -2,9 +2,6 @@
   "name": "confirm-actions-narrow",
   "file": "tools/adapters/confirm-actions.js",
   "page": "confirm-actions.html",
-  "options": {
-    "allowUntrusted": true
-  },
   "checks": [
     {
       "name": "narrow viewport elements exist and reflow cleanly",

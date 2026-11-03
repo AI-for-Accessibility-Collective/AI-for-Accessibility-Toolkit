@@ -8,9 +8,9 @@
 // Reversible by construction: meta refreshes are removed but their exact
 // position is recorded for re-insertion; carousel animations are paused via
 // one injected rule; only media WE paused is resumed, and only marquees WE
-// stopped are restarted. A MutationObserver and captured play listener catch
-// media and meta refreshes added or set playing after enable, and are
-// disconnected on disable.
+// stopped are restarted. A MutationObserver catches media that starts
+// playing, and meta refreshes added, after enable, and is disconnected on
+// disable.
 import { announce } from '../utils/ai.js';
 
 // Class-name fragments that indicate auto-rotating content. Paired with the
@@ -61,7 +61,6 @@ export const StopAutoAdvance = {
   stoppedMarquees: null, // Set of <marquee> elements we stopped
   addedControls: null,   // Set of paused videos we showed controls on
   observer: null,
-  playHandler: null,
   slideObserver: null,   // watches slides' classes, see onClassChange
   rotating: null,        // WeakMap slides' parent -> the classes that move between them
   pageHas: null,         // Map slide -> which of those classes the page last gave it
@@ -122,19 +121,6 @@ export const StopAutoAdvance = {
       this.observer.observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    if (typeof document !== 'undefined' && document.addEventListener) {
-      this.playHandler = (e) => {
-        const el = e.target;
-        if (!this.enabled || !el || (el.tagName !== 'VIDEO' && el.tagName !== 'AUDIO')) return;
-        if (this.byUser(el, false) || (typeof navigator !== 'undefined' && navigator.userActivation?.isActive)) {
-          if (this.pausedMedia?.has(el)) this.pausedMedia.delete(el);
-          return;
-        }
-        this.considerMedia(el);
-      };
-      document.addEventListener('play', this.playHandler, true);
-    }
-
     this.holdScriptedCarousels();
 
     const total = this.removedMetas.length + stilled;
@@ -157,12 +143,11 @@ export const StopAutoAdvance = {
     return n;
   },
 
-  // Pause one media element if it is currently playing or set to autoplay.
-  // Returns true if we paused it (and will therefore resume it on disable).
+  // Pause one media element if it is currently playing. Returns true if we
+  // paused it (and will therefore resume it on disable).
   considerMedia(el) {
     try {
-      const isAutoplay = Boolean(el && (el.autoplay || (el.hasAttribute && el.hasAttribute('autoplay'))));
-      if (!el || (el.paused !== false && !isAutoplay) || this.pausedMedia.has(el)) return false;
+      if (!el || el.paused !== false || this.pausedMedia.has(el)) return false;
       if (typeof el.pause === 'function') pauseQuietly(el, () => this.enabled);
       this.pausedMedia.add(el);
       // A video that played by itself often has no controls, so once paused
@@ -353,10 +338,6 @@ export const StopAutoAdvance = {
     if (!this.enabled) return;
     this.enabled = false;
     if (this.observer) { this.observer.disconnect(); this.observer = null; }
-    if (this.playHandler) {
-      document.removeEventListener('play', this.playHandler, true);
-      this.playHandler = null;
-    }
     try { document.getElementById(this.styleId)?.remove(); } catch { /* no DOM */ }
 
     // Put each meta refresh back exactly where it was.

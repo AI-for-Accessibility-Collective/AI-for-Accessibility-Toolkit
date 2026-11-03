@@ -117,6 +117,41 @@ async function run() {
     check('stylesheet removed on restore', doc.getElementById('ai4a11y-generate-captions-styles') === null);
   }
 
+  // ── restoreOriginal() while a transcription is still pending ─────────────
+  {
+    const doc = mount(`
+      <div id="wrapper">
+        <video id="v" src="https://example.com/lecture.mp4"></video>
+        <audio id="a" src="https://example.com/podcast.mp3"></audio>
+      </div>
+    `);
+    const v = doc.getElementById('v');
+    const a = doc.getElementById('a');
+
+    const resolvers = [];
+    setAIProvider({
+      transcribeVideo: () => new Promise(r => resolvers.push(() => r({ text: 'Late video transcript.' }))),
+      transcribeAudio: () => new Promise(r => resolvers.push(() => r({ text: 'Late audio transcript.' }))),
+      announce: () => {},
+    });
+
+    const pv = generateVideoCaptions(v);
+    const pa = generateAudioCaptions(a);
+    check('media marked pending while transcribing', v.dataset.ai4a11yCaptioned === 'pending' && a.dataset.ai4a11yCaptioned === 'pending');
+
+    restoreOriginal();
+    check('restore clears the pending flag', v.dataset.ai4a11yCaptioned === undefined && a.dataset.ai4a11yCaptioned === undefined);
+
+    resolvers.forEach(resolve => resolve());
+    const [rv, ra] = await Promise.all([pv, pa]);
+
+    check('late transcription returns null after restore', rv === null && ra === null);
+    check('no track added after restore', v.querySelectorAll('track').length === 0);
+    check('no transcript added after restore', doc.querySelectorAll('.ai4a11y-transcript').length === 0);
+    check('no flag written back after restore', v.dataset.ai4a11yCaptioned === undefined && a.dataset.ai4a11yCaptioned === undefined);
+    check('no stylesheet added after restore', doc.getElementById('ai4a11y-generate-captions-styles') === null);
+  }
+
   // ── Axe Handlers Export Mapping ──────────────────────────────────────────
   {
     check('axeHandlers exports video-caption', axeHandlers['video-caption'] === generateVideoCaptions);

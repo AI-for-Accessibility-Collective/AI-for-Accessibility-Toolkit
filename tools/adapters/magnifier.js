@@ -38,7 +38,7 @@ export const Magnifier = {
       box-sizing: border-box;
       max-width: min(calc(100vw - 16px), 640px);
       max-height: min(45vh, 360px);
-      overflow: hidden;
+      overflow: auto;
       padding: 12px 18px;
       font-size: ${fontSize}px;
       line-height: 1.35;
@@ -219,8 +219,8 @@ export const Magnifier = {
     this.lastUpdate = 0;
     this.dismissedEl = null;
     this.currentEl = null;
-    if (this.lens) { this.lens.remove(); this.lens = null; }
     document.getElementById(this.lensId)?.remove();
+    this.lens = null;
     console.log('[AI4A11y] Magnifier disabled');
     announce('Magnifier off');
   },

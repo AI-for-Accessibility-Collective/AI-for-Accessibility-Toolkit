@@ -47,10 +47,15 @@ function blackOrWhite(background) {
   return black >= white ? '#000000' : '#ffffff';
 }
 
+// Elements this module marked processed, changed or only checked, so
+// restoreOriginal() clears its own marks and never another adapter's.
+const marked = new Set();
+
 // Fix low contrast text
 export async function fixLowContrast(element, color, background) {
   if (wasProcessed(element)) return null;
   markProcessed(element, 'pending');
+  marked.add(element);
 
   if (hasBackgroundImage(element)) {
     // Can't verify contrast against an image background — leave untouched.
@@ -121,6 +126,7 @@ export async function fixLowContrast(element, color, background) {
 export function fixIndistinguishableLink(link) {
   if (wasProcessed(link)) return;
   markProcessed(link, 'done');
+  marked.add(link);
 
   if (link.style.textDecoration) {
     link.dataset.ai4a11yOriginalTextDecoration = link.style.textDecoration;
@@ -132,15 +138,19 @@ export function fixIndistinguishableLink(link) {
   console.log('[AI4A11y] Added underline to link');
 }
 
-// Restore original styling
+// Restore original styling. Only elements this module marked or changed (its
+// own record, class and original values): data-ai4a11y-processed is shared
+// with other adapters, and clearing it page-wide would make them run again.
 export function restoreOriginal(element) {
   if (!element) {
-    const selector = '.ai4a11y-contrast-fixed, .ai4a11y-link-underlined, [data-ai4a11y-original-color], [data-ai4a11y-original-inline-color], [data-ai4a11y-original-text-decoration], [data-ai4a11y-processed]';
-    document.querySelectorAll(selector).forEach(restoreOriginal);
+    const selector = '.ai4a11y-contrast-fixed, .ai4a11y-link-underlined, [data-ai4a11y-original-color], [data-ai4a11y-original-inline-color], [data-ai4a11y-original-text-decoration]';
+    new Set([...marked, ...document.querySelectorAll(selector)]).forEach((el) => restoreOriginal(el));
     return;
   }
 
+  let changed = false;
   if (element.classList.contains('ai4a11y-contrast-fixed') || element.dataset.ai4a11yOriginalColor !== undefined) {
+    changed = true;
     if (element.dataset.ai4a11yOriginalInlineColor !== undefined) {
       element.style.color = element.dataset.ai4a11yOriginalInlineColor;
     } else {
@@ -152,6 +162,7 @@ export function restoreOriginal(element) {
   }
 
   if (element.classList.contains('ai4a11y-link-underlined') || element.dataset.ai4a11yOriginalTextDecoration !== undefined) {
+    changed = true;
     if (element.dataset.ai4a11yOriginalTextDecoration !== undefined) {
       element.style.textDecoration = element.dataset.ai4a11yOriginalTextDecoration;
     } else {
@@ -161,6 +172,8 @@ export function restoreOriginal(element) {
     delete element.dataset.ai4a11yOriginalTextDecoration;
   }
 
+  if (!changed && !marked.has(element)) return;
+  marked.delete(element);
   delete element.dataset.ai4a11yProcessed;
 
   if (element.hasAttribute('style') && !element.getAttribute('style').trim()) {

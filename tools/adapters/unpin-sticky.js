@@ -69,9 +69,11 @@ export const UnpinSticky = {
   consider(el) {
     if (!el || el.nodeType !== 1 || this.unpinned.has(el)) return false;
     // Other adapters' overlays (focus ring, magnifier lens, tooltip) are
-    // fixed too, and stopped working once unpinned.
+    // fixed too, and stopped working once unpinned. By id: their classes
+    // also mark <html> and <body> (ai4a11y-dimmed, ai4a11y-reflow), which
+    // every element is inside.
     try {
-      if (el.closest('[id^="ai4a11y-"], [class*="ai4a11y-"]')) return false;
+      if (el.closest('[id^="ai4a11y-"]')) return false;
     } catch {
       if (el.id && el.id.startsWith('ai4a11y-')) return false;
     }

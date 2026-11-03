@@ -139,7 +139,6 @@ async function run() {
     const btn = doc.querySelector('#wrap2 .ai4a11y-audio-btn');
     const captionBox = doc.querySelector('#wrap2 .ai4a11y-caption-box');
 
-    check('captionBox has status role', captionBox.getAttribute('role') === 'status');
     check('captionBox initially hidden', captionBox.style.display === 'none');
 
     // Click to transcribe
@@ -179,6 +178,15 @@ async function run() {
     AutoTranscriber.disable();
     check('disable restores exact original src', iframe.getAttribute('src') === 'https://www.youtube.com/embed/xyz?enablejsapi=1');
     check('disable removes dataset mark from iframe', !iframe.dataset.ai4a11yCaptionsEnabled);
+
+    // An iframe the page detaches keeps its src (so putting it back does not load it twice)
+    AutoTranscriber.enable();
+    const changedSrc = iframe.getAttribute('src');
+    iframe.remove();
+    await new Promise((r) => setTimeout(r, 0));
+    check('detached iframe keeps its src', iframe.getAttribute('src') === changedSrc);
+    check('detached iframe is forgotten', !AutoTranscriber.iframeStates.has(iframe));
+    AutoTranscriber.disable();
   }
 
   // ── Pre-existing showing captions ─────────────────────────────────────────

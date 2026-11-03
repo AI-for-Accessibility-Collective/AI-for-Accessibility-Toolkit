@@ -26,7 +26,7 @@ export const MotionReducer = {
   freezeGen: 0,
   currentSettings: { ...DEFAULT_SETTINGS },
 
-  async enable(options = {}) {
+  enable(options = {}) {
     if (this.enabled) return;
     this.currentSettings = { ...DEFAULT_SETTINGS, ...options };
     this.enabled = true;
@@ -76,7 +76,7 @@ export const MotionReducer = {
       };
       document.addEventListener('play', this.playHandler, true);
     }
-    if (s.stopGifs) await this.freezeImages();
+    if (s.stopGifs) this.freezeImages();
 
     // Web Animations API pass — CSS `animation-duration` overrides above don't
     // touch animations created via element.animate()/WAAPI.
@@ -302,8 +302,6 @@ export const MotionReducer = {
     if (img.getClientRects().length) {
       canvas.style.width = box.width;
       canvas.style.height = box.height;
-    } else {
-      canvas.style.maxWidth = '100%';
     }
     canvas.style.maxWidth = box.maxWidth !== 'none' ? box.maxWidth : '100%';
     canvas.style.verticalAlign = box.verticalAlign;
@@ -353,7 +351,8 @@ export const MotionReducer = {
           // of leaving the original GIF animating.
           drawn = true;
         } else {
-          img.dataset.ai4a11yMrFrozen = 'failed';
+          if (this.freezeGen !== capturedGen) delete img.dataset.ai4a11yMrFrozen;
+          else img.dataset.ai4a11yMrFrozen = 'failed';
           return;
         }
       }

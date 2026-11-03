@@ -133,9 +133,11 @@ export const AutoTranscriber = {
         for (const node of mutation.removedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             if (node.tagName === 'VIDEO') this.cleanupVideo(node);
-            if (node.tagName === 'IFRAME') this.cleanupIframe(node);
+            // A detached iframe keeps its src: resetting it would load it again
+            // if the page puts it back.
+            if (node.tagName === 'IFRAME') this.cleanupIframe(node, { restoreSrc: false });
             node.querySelectorAll?.('video')?.forEach(v => this.cleanupVideo(v));
-            node.querySelectorAll?.('iframe')?.forEach(f => this.cleanupIframe(f));
+            node.querySelectorAll?.('iframe')?.forEach(f => this.cleanupIframe(f, { restoreSrc: false }));
           }
         }
       }
@@ -170,11 +172,12 @@ export const AutoTranscriber = {
     delete video.dataset.ai4a11ySetup;
   },
 
-  // Restores a YouTube iframe's src attribute and cleans up its dataset marker.
-  cleanupIframe(iframe) {
+  // Restores a YouTube iframe's src attribute (unless restoreSrc is false) and
+  // cleans up its dataset marker.
+  cleanupIframe(iframe, { restoreSrc = true } = {}) {
     const state = this.iframeStates.get(iframe);
     if (state) {
-      if (state.changed) {
+      if (restoreSrc && state.changed) {
         if (state.prevSrc !== null) iframe.setAttribute('src', state.prevSrc);
         else iframe.removeAttribute('src');
       }
@@ -218,8 +221,6 @@ export const AutoTranscriber = {
 
     const captionBox = document.createElement('div');
     captionBox.className = 'ai4a11y-caption-box';
-    captionBox.setAttribute('role', 'status');
-    captionBox.setAttribute('aria-live', 'polite');
     captionBox.style.display = 'none';
     wrapper.appendChild(captionBox);
 

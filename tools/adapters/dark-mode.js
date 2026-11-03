@@ -66,14 +66,14 @@ export const DarkMode = {
     // it is mostly icons drawn in the text color, and inverting those back
     // left a white cart icon on the now light header. Media inside an element
     // that is already inverted back stays as it is, or it would flip twice.
-    // Inverting <html> needs an opaque white root background to invert
-    // against. Without one (or with a dark background here, which inverts to
-    // light grey), transparent pages and pages without a body background
-    // (such as W3C BAD before pages) invert text to white over a light canvas,
-    // failing WCAG 1.4.3 color contrast. Inverting #fff produces #1a1a1a.
     const BACK = 'img, video, picture, canvas, iframe, [style*="background-image"], [style*="background:"], [style*="background-color"]';
     style.textContent = `
       ${MEDIA_VARS}
+      /* Inverting <html> needs an opaque white root background to invert
+         against. Without one (or with a dark background here, which inverts to
+         light grey), transparent pages and pages without a body background
+         (such as W3C BAD before pages) invert text to white over a light canvas,
+         failing WCAG 1.4.3 color contrast. Inverting #fff produces #1a1a1a. */
       html {
         --ai4a11y-filter-dark: invert(90%) hue-rotate(180deg);
         background: #fff !important;

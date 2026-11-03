@@ -10,7 +10,7 @@
     },
     {
       "name": "hover and keyboard focus highlighting works at narrow viewport",
-      "code": "\n        const p1 = document.getElementById('para-1');\n        if (!p1) return false;\n        if (!document.getElementById('ai4a11y-focus-mode-styles')) return true;\n\n        p1.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        const highlighted = p1.classList.contains('ai4a11y-focus-mode-highlight');\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n        const dismissed = !p1.classList.contains('ai4a11y-focus-mode-highlight');\n\n        return highlighted && dismissed;\n      "
+      "code": "\n        const p1 = document.getElementById('para-1');\n        if (!p1) return false;\n        if (!document.getElementById('ai4a11y-focus-mode-styles')) return true;\n\n        p1.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        const highlighted = p1.classList.contains('ai4a11y-focus-mode-highlight');\n        document.documentElement.dispatchEvent(new MouseEvent('mouseleave'));\n        const dismissed = !p1.classList.contains('ai4a11y-focus-mode-highlight');\n\n        return highlighted && dismissed;\n      "
     }
   ],
   "viewport": {

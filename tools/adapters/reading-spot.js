@@ -132,7 +132,7 @@ export const ReadingSpot = {
   focusAtSpot() {
     try {
       let el = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-      while (el && el !== document.body && !el.matches('a, button, input, select, textarea, p, li, h1, h2, h3, h4, h5, h6, section, article, td, div')) el = el.parentElement;
+      while (el && el !== document.body && !el.matches('p, li, h1, h2, h3, h4, h5, h6, section, article, td, div')) el = el.parentElement;
       if (!el || el === document.body) return;
       if (!el.hasAttribute('tabindex')) {
         el.setAttribute('tabindex', '-1');

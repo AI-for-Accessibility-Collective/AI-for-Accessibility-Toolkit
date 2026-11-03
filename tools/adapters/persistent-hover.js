@@ -117,7 +117,6 @@ export const PersistentHover = {
     const tip = document.createElement('div');
     tip.id = this.tipId;
     tip.setAttribute('role', 'tooltip');
-    tip.setAttribute('aria-live', 'polite');
     tip.hidden = true;
     // Inline too, so the tooltip is hoverable even if the page's own CSS
     // out-specifies our stylesheet.
@@ -216,7 +215,7 @@ export const PersistentHover = {
     document.addEventListener('keydown', this.onKeyDown, true);
 
     this.onScroll = () => {
-      if (!this.enabled || !this.current || !this.tip || this.tip.hidden) return;
+      if (!this.enabled || !this.current || !this.tip) return;
       this.position(this.current);
     };
     if (typeof window !== 'undefined') {

@@ -16,7 +16,7 @@ const MAX_AI_COLUMNS = 12;
  * Fix a table that has no <th> cells.
  *
  * Strategy:
- * 1. If the first row *looks* like a header row (short, distinct text, no data values),
+ * 1. If the first row *looks* like a header row (short, distinct text, at most half data values),
  *    convert its cells to <th scope="col"> — deterministic, no AI.
  * 2. Otherwise, sample each column and ask the AI for a header name,
  *    then insert a generated <thead> (marked as AI-generated).
@@ -42,19 +42,24 @@ export async function fixTableHeaders(table) {
     return false;
   }
 
-  // Numbers, currency, percentages, quantities with units, and dates are data, not header labels.
-  const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*(?:%|°[CF]?|[a-zA-Z/]+(?:\s+[a-zA-Z/]+)*)?$/i.test(t) ||
+  // Numbers, currency, percentages, quantities with a short known unit, and
+  // dates are data, not header labels. Only known units: "1st Quarter",
+  // "2023 Revenue" and "3 Bedrooms" are header labels.
+  const isDataLike = (t) => /^[\s$€£¥+\-]*[\d.,]+\s*(?:%|[$€£]|kg|g|km|m|cm|mm|ms|s|h|min|mph|°[CF]?|px|GB|MB|KB)?$/i.test(t) ||
     /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(t) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t) ||
     /^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}$/i.test(t) ||
     /^\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4}$/i.test(t);
 
   // Heuristic: the first row is a header if every cell is short text that
-  // doesn't repeat in the column below it — AND the row contains no data
+  // doesn't repeat in the column below it — AND the row isn't mostly data
   // values. Without the data check, a genuinely headerless table with short,
   // distinct first-row values (day names, ids, numbers) gets its real data
   // promoted to headers, inventing false semantics.
   const dataLikeCount = firstRowCells.filter(c => isDataLike(c.textContent?.trim() || '')).length;
-  const looksLikeHeader = dataLikeCount === 0 && firstRowCells.every((cell, i) => {
+  // Two columns with a number on the right are label | value pairs
+  // ("Prep time | 20 min", "Floor Area | 45,000 sq ft"), not a header row.
+  const keyValue = firstRowCells.length === 2 && /^[\s$€£¥+\-]*\d/.test(firstRowCells[1].textContent?.trim() || '');
+  const looksLikeHeader = !keyValue && dataLikeCount <= firstRowCells.length / 2 && firstRowCells.every((cell, i) => {
     const text = cell.textContent?.trim() || '';
     if (!text || text.length > 40) return false;
     const below = rows.slice(1, 4).map(r => r.cells[i]?.textContent?.trim());

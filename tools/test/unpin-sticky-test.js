@@ -69,6 +69,13 @@ async function run() {
   UnpinSticky.disable(); // disabling twice is safe
   check('unpin: double disable is safe', UnpinSticky.enabled === false);
 
+  // Another adapter's class on <html> (reduce-brightness) does not exempt the whole page.
+  doc.documentElement.classList.add('ai4a11y-dimmed');
+  UnpinSticky.enable();
+  check('unpin: still unpins with another adapter\'s class on <html>', unpinnedSel('#site-header') === true);
+  UnpinSticky.disable();
+  doc.documentElement.classList.remove('ai4a11y-dimmed');
+
   // Observer stops after disable: a fixed element added now is not touched.
   const afterDisable = doc.createElement('div');
   afterDisable.setAttribute('style', 'position: fixed; top: 0;');

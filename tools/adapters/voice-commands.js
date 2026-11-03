@@ -32,7 +32,7 @@ function nameOf(el) {
   if (!label && el.labels?.length) {
     label = Array.from(el.labels).map(l => l.textContent).join(' ');
   }
-  const text = (el.getAttribute('title') && /^[\s\W_]+$/.test(el.textContent)) ? '' : el.textContent;
+  const text = (el.getAttribute('title') && /^[\s\p{P}\p{S}]+$/u.test(el.textContent)) ? '' : el.textContent;
   const val = (el.type !== 'checkbox' && el.type !== 'radio' && el.type !== 'file') ? el.value : '';
   return squash(label || text || val || el.getAttribute('placeholder') || el.getAttribute('title') ||
     el.querySelector?.('img[alt]')?.getAttribute('alt') || '');

@@ -10,8 +10,9 @@
 // is disconnected on disable.
 import { announce } from '../utils/ai.js';
 
-// Names that, combined with a blocking layout, strongly indicate an overlay.
-// Matched against id / class / aria-label — never on text content, to avoid
+// Names that, combined with a blocking layout (fixed, sticky, or a dialog or
+// alertdialog role), strongly indicate an overlay. Matched against id / class /
+// aria-label / the ids aria-labelledby names — never on text content, to avoid
 // hiding real article sections that merely mention "cookies".
 const OVERLAY_NAME_RE = /(cookie|consent|gdpr|ccpa|newsletter|subscribe|sign[-_]?up|paywall|interstitial|pop[-_]?up|lightbox|backdrop|promo[-_]?(bar|banner)|notification[-_]?bar)/i;
 
@@ -38,7 +39,7 @@ export const DismissOverlays = {
   prevHtmlOverflow: null,
   prevHtmlOverflowY: null,
 
-  enable(options = {}) {
+  enable() {
     if (this.enabled) return;
     this.enabled = true;
     this.hidden = new Set();
@@ -63,7 +64,7 @@ export const DismissOverlays = {
     // a pop-up in their way: leave those. Only the ones that open by
     // themselves are hidden.
     this.lastInput = 0;
-    this.inputHandler = (e) => { if (e.isTrusted || options?.allowUntrusted) this.lastInput = Date.now(); };
+    this.inputHandler = (e) => { if (e.isTrusted) this.lastInput = Date.now(); };
     for (const type of INPUT_EVENTS) document.addEventListener(type, this.inputHandler, true);
 
     // Catch banners injected after load (cookie consent scripts usually run
@@ -103,7 +104,7 @@ export const DismissOverlays = {
     let n = 0;
     let candidates;
     try {
-      candidates = root.querySelectorAll('div, section, aside, dialog, header, footer, nav, form, [role="dialog"], [role="alertdialog"], [aria-modal="true"]');
+      candidates = root.querySelectorAll('div, section, aside, dialog, footer, form, [role="dialog"], [role="alertdialog"], [aria-modal="true"]');
     } catch { return 0; }
     for (const el of candidates) if (this.hide(el)) n++;
     return n;

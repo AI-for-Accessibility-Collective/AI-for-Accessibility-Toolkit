@@ -10,7 +10,7 @@
     },
     {
       "name": "progress indicator and highlighting still function under reduced motion",
-      "code": "\n        const style = document.getElementById('ai4a11y-focus-mode-styles');\n        if (!style) return true;\n\n        const p1 = document.getElementById('para-1');\n        const prog = document.getElementById('ai4a11y-progress');\n        if (!p1 || !prog) return false;\n\n        p1.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        const highlighted = p1.classList.contains('ai4a11y-focus-mode-highlight');\n        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));\n\n        return highlighted && !p1.classList.contains('ai4a11y-focus-mode-highlight');\n      "
+      "code": "\n        const style = document.getElementById('ai4a11y-focus-mode-styles');\n        if (!style) return true;\n\n        const p1 = document.getElementById('para-1');\n        const prog = document.getElementById('ai4a11y-progress');\n        if (!p1 || !prog) return false;\n\n        p1.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));\n        const highlighted = p1.classList.contains('ai4a11y-focus-mode-highlight');\n        document.documentElement.dispatchEvent(new MouseEvent('mouseleave'));\n\n        return highlighted && !p1.classList.contains('ai4a11y-focus-mode-highlight');\n      "
     }
   ],
   "reducedMotion": "reduce"

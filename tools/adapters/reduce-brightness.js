@@ -32,19 +32,14 @@ export const ReduceBrightness = {
     const sat = options.saturation ?? 0.9;      // 1 = unchanged, lower = muted
     const dimLevel = options.dim ?? 0;          // extra flat overlay, off by default
 
-    try {
-      this._origClass = document.documentElement.hasAttribute('class')
-        ? document.documentElement.getAttribute('class')
-        : null;
-      document.documentElement.classList.add(this.htmlClass);
-    } catch { /* detached */ }
+    try { document.documentElement.classList.add(this.htmlClass); } catch { /* detached */ }
 
     const style = document.createElement('style');
     style.id = this.styleId;
     style.textContent = `
 html.${this.htmlClass} { --ai4a11y-filter-dim: brightness(${bright}) saturate(${sat}); }
 ${PAGE_FILTER}`;
-    (document.head || document.documentElement)?.appendChild(style);
+    (document.head || document.documentElement).appendChild(style);
 
     // Optional extra overlay — off by default. Only for contexts where the CSS
     // filter can't reach (e.g. some fullscreen plugins). It never intercepts
@@ -58,7 +53,7 @@ ${PAGE_FILTER}`;
       overlay.style.background = `rgba(0, 0, 0, ${dimLevel})`;
       overlay.style.pointerEvents = 'none';
       overlay.style.zIndex = '2147483646';
-      (document.body || document.documentElement)?.appendChild(overlay);
+      (document.body || document.documentElement).appendChild(overlay);
     }
 
     console.log('[AI4A11y] Reduce Brightness enabled');
@@ -68,25 +63,7 @@ ${PAGE_FILTER}`;
   disable() {
     if (!this.enabled) return;
     this.enabled = false;
-    try {
-      if (this._origClass !== null) {
-        const currentTokens = new Set(document.documentElement.classList);
-        currentTokens.delete(this.htmlClass);
-        const origTokens = new Set(this._origClass.trim().split(/\s+/).filter(Boolean));
-        const setsEqual = currentTokens.size === origTokens.size && [...currentTokens].every((t) => origTokens.has(t));
-        if (setsEqual) {
-          document.documentElement.setAttribute('class', this._origClass);
-        } else {
-          document.documentElement.classList.remove(this.htmlClass);
-        }
-      } else {
-        document.documentElement?.classList.remove(this.htmlClass);
-        if (!document.documentElement?.classList.length) {
-          document.documentElement?.removeAttribute('class');
-        }
-      }
-    } catch { /* detached */ }
-    this._origClass = null;
+    try { document.documentElement?.classList.remove(this.htmlClass); } catch { /* detached */ }
     try { document.getElementById(this.styleId)?.remove(); } catch { /* detached */ }
     try { document.getElementById(this.overlayId)?.remove(); } catch { /* detached */ }
     console.log('[AI4A11y] Reduce Brightness disabled');

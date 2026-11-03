@@ -36,14 +36,12 @@ export const ConfirmActions = {
   armed: null,          // Set of elements currently carrying the data flag
   armedAt: null,        // timeStamp of the click that armed it
   windowMs: 4000,       // how long a first click stays armed
-  allowUntrusted: false,// option for test suites to simulate clicks
 
   enable(options = {}) {
     if (this.enabled) return;
     this.enabled = true;
     this.armed = new Set();
     this.windowMs = typeof options.windowMs === 'number' ? options.windowMs : 4000;
-    this.allowUntrusted = Boolean(options.allowUntrusted);
 
     // Capture phase: run before the page's own handlers so a first click on a
     // risky control can be stopped before anything executes.
@@ -58,11 +56,11 @@ export const ConfirmActions = {
     announce('Confirm actions on: risky buttons need a second click');
   },
 
+  // Escape cancels the armed control, and still reaches the page's own Escape
+  // handling (closing its dialog or menu).
   onKeyDown(e) {
     if (!this.enabled) return;
     if (e.key === 'Escape' && (this.armed?.size || this.prompt)) {
-      e.preventDefault();
-      e.stopPropagation();
       this.clearArmed();
       announce('Confirmation cancelled');
     }
@@ -70,11 +68,10 @@ export const ConfirmActions = {
 
   onClick(e) {
     if (!this.enabled) return;
-    // Only guard real user clicks unless testing allows untrusted. A page's own
-    // programmatic .click() (e.g. a custom control forwarding to a hidden submit
-    // button) is not a tremor or a misread label — intercepting it would silently
-    // break the site's own flow.
-    if (e.isTrusted === false && !this.allowUntrusted) return;
+    // Only guard real user clicks. A page's own programmatic .click() (e.g. a
+    // custom control forwarding to a hidden submit button) is not a tremor or a
+    // misread label — intercepting it would silently break the site's own flow.
+    if (e.isTrusted === false) return;
     const t = e.target;
     if (!t || t.nodeType !== 1) return;
     // Never intercept our own prompt (its text contains "confirm").
