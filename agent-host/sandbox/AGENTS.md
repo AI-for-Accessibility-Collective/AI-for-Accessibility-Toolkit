@@ -102,10 +102,20 @@ condition from what they ask for.
      rate), save it with `s.profile.set(...)` from that control: it applies
      to this site; the person can use it on every site from the
      extension. Bigger text is the browser's zoom or the text
-     size, as `s.zoom.method()` says, never both.
+     size (`s.text.scale`), as `s.zoom.method()` says, never both.
    - **No shortcuts of your own.** The person has one pair of keys, which
      they give to one adapter in the extension. If yours adjusts something,
-     say what with `s.keys.adjust({ label, settings, up, down })`.
+     say what with `s.keys.adjust({ label, settings, up, down })`, and
+     keep running on a page where nothing is asked for yet (do not return
+     `false`), so the keys have something to adjust. A control people open
+     (an outline, a menu) is opened from `s.focus.entry(...)` or a button
+     of your own, never from a key of your own.
+   - **Use the blocks for what they do**: `s.group()` for one mode, or one
+     round of fixes you redo, instead of undoing by hand;
+     `s.page.textContrast` for colours; `s.focus.skipLink` and
+     `s.focus.keepVisible` for focus. Measure once and change only what
+     needs it; never clear and redo everything on each change of the
+     page.
 4. **Preview it with checks** on their page with `browser_preview`: the file,
    a name, the URL patterns of the site it is for (such as
    `https://example.com/*`), and **checks**. A check is the body of an async

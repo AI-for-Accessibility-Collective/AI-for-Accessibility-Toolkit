@@ -134,9 +134,12 @@ ${PREAMBLE}
   } catch (e) { report('failed', 'Loading the adapter: ' + errorText(e)); return; }
   rt.adapters[KEY] = { adapter, revision: REVISION };
   let result;
-  try { result = adapter.enable(PARAMETERS, TOOLKIT); } catch (e) { delete rt.adapters[KEY]; report('failed', 'enable() threw: ' + errorText(e)); return; }
+  // An adapter that says no (false) or fails is wound down: whatever it
+  // started before it did (a listener, a style) goes with its session.
+  const windDown = () => { delete rt.adapters[KEY]; try { adapter.disable(); } catch (e) { /* already failing */ } };
+  try { result = adapter.enable(PARAMETERS, TOOLKIT); } catch (e) { windDown(); report('failed', 'enable() threw: ' + errorText(e)); return; }
   const settled = (value) => {
-    if (value === false) { delete rt.adapters[KEY]; report('skipped', 'enable() returned false: nothing to change on this page'); } else report('applied');
+    if (value === false) { windDown(); report('skipped', 'enable() returned false: nothing to change on this page'); } else report('applied');
   };
   if (!result || typeof result.then !== 'function') return settled(result);
   // An async enable() reports when it ends, unless this copy was turned off
@@ -144,7 +147,7 @@ ${PREAMBLE}
   const mine = () => rt.adapters[KEY] && rt.adapters[KEY].adapter === adapter;
   result.then(
     (value) => { if (mine()) settled(value); },
-    (e) => { if (mine()) { delete rt.adapters[KEY]; report('failed', 'enable() failed: ' + errorText(e)); } });
+    (e) => { if (mine()) { windDown(); report('failed', 'enable() failed: ' + errorText(e)); } });
 })();`;
 }
 
@@ -360,17 +363,21 @@ ${PREVIEW_SPEAK}
   let before = [];
   let axeBefore = null;
   rt.adapters[KEY] = { adapter, revision: 0 };
+  let enableStart = 0, enableMs = 0;
+  const windDown = () => { delete rt.adapters[KEY]; try { adapter.disable(); } catch (e) { /* already failing */ } };
   return runAxe().then((a) => { axeBefore = a; return runChecks(); }).then((b) => {
     before = b;
     if (watch) watch.observe(document.documentElement || document, { subtree: true, childList: true, attributes: true, characterData: true });
     if (shifts) { try { shifts.observe({ type: 'layout-shift' }); } catch (e) { shifts = null; } }
+    enableStart = Date.now();
     return adapter.enable(${JSON.stringify(parameters)}, TOOLKIT);
   }).then(
     (value) => {
-      if (value === false) { delete rt.adapters[KEY]; stopWatching(); return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
-      return report({ status: 'applied' });
+      enableMs = Date.now() - enableStart;
+      if (value === false) { windDown(); stopWatching(); return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
+      return report({ status: 'applied', enableMs });
     },
-    (e) => { delete rt.adapters[KEY]; stopWatching(); return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
+    (e) => { windDown(); stopWatching(); return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
 })()`;
 }
 

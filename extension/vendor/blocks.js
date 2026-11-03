@@ -33,8 +33,10 @@
           // {listeners, stop}
           adjusters: /* @__PURE__ */ new Map(),
           // adapter key -> what the toolkit's shortcut adjusts (keys.adjust)
-          shortcut: null
+          shortcut: null,
           // the person's shortcut here, when they gave it to an adapter
+          entries: null
+          // the box of the toolkit's entries at the start of the tab order (focus.entry)
         }
       });
     }
@@ -325,6 +327,46 @@
   }
   function pick(candidates, against, min) {
     return candidates.find((c) => contrast(c, against) >= min) || null;
+  }
+  var hex = ([r, g, b]) => "#" + [r, g, b].map((n) => Math.round(n).toString(16).padStart(2, "0")).join("");
+  var toHsl = ([r, g, b]) => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+    if (max === min) return [0, 0, l];
+    const d = max - min;
+    const sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [h / 6, sat, l];
+  };
+  var fromHsl = ([h, sat, l]) => {
+    if (!sat) return [l * 255, l * 255, l * 255];
+    const q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat, p = 2 * l - q;
+    const f = (t) => {
+      t = (t + 1) % 1;
+      return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p;
+    };
+    return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255].map(Math.round);
+  };
+  function nearestWithContrast(fg, bg, min) {
+    const f = Array.isArray(fg) ? fg : parseColor(fg);
+    const b = Array.isArray(bg) ? bg : parseColor(bg);
+    if (!f || !b) return null;
+    if (contrast(f, b) >= min) return f.slice(0, 3);
+    const [h, sat, l] = toHsl(f);
+    const dark = luminance(b) > 0.18;
+    for (const toward of dark ? [0, 1] : [1, 0]) {
+      if (contrast(fromHsl([h, sat, toward]), b) < min) continue;
+      let lo = l, hi = toward;
+      for (let i = 0; i < 18; i++) {
+        const mid = (lo + hi) / 2;
+        if (contrast(fromHsl([h, sat, mid]), b) >= min) hi = mid;
+        else lo = mid;
+      }
+      return fromHsl([h, sat, hi]);
+    }
+    return contrast([0, 0, 0], b) >= contrast([255, 255, 255], b) ? [0, 0, 0] : [255, 255, 255];
   }
 
   // toolkit/blocks/highlight.js
@@ -776,9 +818,12 @@
   }
 
   // toolkit/blocks/focus.js
+  var ENTRY_CSS = `[data-ai4a11y-entries] > .ai4a11y-entry:not(:focus) { position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; padding: 0 !important; border: 0 !important; overflow: hidden !important; clip-path: inset(50%) !important; white-space: nowrap !important; }
+[data-ai4a11y-entries] > .ai4a11y-entry:focus { position: fixed !important; top: 8px !important; left: 8px !important; z-index: 2147483647 !important; margin: 0 !important; padding: 10px 16px !important; min-height: 44px !important; background: #fff !important; color: #000 !important; border: 2px solid #000 !important; border-radius: 4px !important; outline: 3px solid #1a5fb4 !important; outline-offset: 2px !important; font: 600 16px/1.4 system-ui, sans-serif !important; text-decoration: underline !important; cursor: pointer !important; box-shadow: 0 0 0 6px #fff !important; }`;
+  var SKIP_TEXT = /skip|jump|main content|go to content/i;
   var NATIVELY_FOCUSABLE = /^(A|BUTTON|INPUT|SELECT|TEXTAREA|SUMMARY|IFRAME)$/;
   function focusBlock(s, env) {
-    const { doc } = env;
+    const { doc, win, shared } = env;
     const focusable = (el) => NATIVELY_FOCUSABLE.test(el.tagName) && !el.disabled || el.hasAttribute("tabindex");
     function region(el, { scroll = true } = {}) {
       if (!s.alive() || !el) return;
@@ -802,7 +847,111 @@
       if (!target || target === doc.body) target = el.parentElement || doc.body;
       region(target, { scroll: false });
     }
-    return { region, keepWhenRemoving };
+    function pageSkipLink() {
+      const first = [...doc.querySelectorAll("a[href], button, input, select, textarea, [tabindex]")].filter((el) => !env.page.isOurs(el) && el.tabIndex >= 0 && !el.disabled).slice(0, 3);
+      return first.find((a) => {
+        const href = a.getAttribute && a.getAttribute("href");
+        if (!href || !/^#./.test(href)) return false;
+        let target = null;
+        try {
+          target = doc.getElementById(decodeURIComponent(href.slice(1))) || doc.querySelector(`a[name="${CSS.escape(href.slice(1))}"]`);
+        } catch {
+          target = null;
+        }
+        return !!target && (SKIP_TEXT.test(env.page.nameOf(a) || a.textContent || "") || target === env.page.main() || target.contains(env.page.main()));
+      }) || null;
+    }
+    function entries() {
+      let box = shared.entries;
+      if (box && box.isConnected) return box;
+      box = doc.createElement("div");
+      box.setAttribute(UI_ATTR, "ui");
+      box.setAttribute("data-ai4a11y-entries", "");
+      const style = doc.createElement("style");
+      style.textContent = ENTRY_CSS;
+      box.appendChild(style);
+      shared.ourNodes.add(box);
+      const skip = pageSkipLink();
+      const body = doc.body || doc.documentElement;
+      if (skip && skip.parentNode) skip.parentNode.insertBefore(box, skip.nextSibling);
+      else body.insertBefore(box, body.firstChild);
+      shared.entries = box;
+      return box;
+    }
+    const dropIfEmpty = () => {
+      const box = shared.entries;
+      if (box && !box.querySelector(".ai4a11y-entry")) {
+        box.remove();
+        shared.entries = null;
+      }
+    };
+    function entry({ label, onActivate } = {}) {
+      if (!s.alive() || !label) return null;
+      const btn = s.el("button", { text: String(label).slice(0, 80), attrs: { type: "button", class: "ai4a11y-entry" } });
+      s.listen(btn, "click", (e) => {
+        e.preventDefault();
+        if (typeof onActivate === "function") onActivate(e);
+      });
+      s.onEnd(dropIfEmpty);
+      s.append(entries(), btn);
+      return btn;
+    }
+    function skipLink({ label = "Skip to main content", to } = {}) {
+      if (!s.alive() || pageSkipLink()) return null;
+      const target = to || env.page.main();
+      if (!target || target === doc.body || target === doc.documentElement) return null;
+      return entry({ label, onActivate: () => region(target) });
+    }
+    function bands(el) {
+      if (typeof doc.elementFromPoint !== "function") return { top: 0, bottom: 0 };
+      const vw = win.innerWidth, vh = win.innerHeight;
+      const r = el.getBoundingClientRect();
+      const xs = [r.left + 2, (r.left + r.right) / 2, r.right - 2].map((x) => Math.min(vw - 1, Math.max(0, x)));
+      const bar = (x, y) => {
+        for (let n = doc.elementFromPoint(x, y); n && n !== doc.body && n !== doc.documentElement; n = n.parentElement) {
+          if (env.page.isOurs(n)) return null;
+          const pos = win.getComputedStyle(n).position;
+          if (pos === "fixed" || pos === "sticky") {
+            const b = n.getBoundingClientRect();
+            if (b.height >= vh * 0.5 || n.contains(el)) return null;
+            return b;
+          }
+        }
+        return null;
+      };
+      let top = 0, bottom = 0;
+      for (const x of xs) {
+        const t = bar(x, 1);
+        if (t && t.top <= 1) top = Math.max(top, t.bottom);
+        const b = bar(x, vh - 2);
+        if (b && b.bottom >= vh - 2) bottom = Math.max(bottom, vh - b.top);
+      }
+      return { top: Math.ceil(top), bottom: Math.ceil(bottom) };
+    }
+    function keepVisible({ margin = 8 } = {}) {
+      if (!s.alive()) return () => {
+      };
+      const root = doc.documentElement;
+      const check = (el) => {
+        if (!s.alive() || !el || el === doc.body || el === root || env.page.isOurs(el) || !el.getBoundingClientRect) return;
+        const { top, bottom } = bands(el);
+        s.setStyle(root, "scroll-padding-top", top ? `${top + margin}px` : "");
+        s.setStyle(root, "scroll-padding-bottom", bottom ? `${bottom + margin}px` : "");
+        const r = el.getBoundingClientRect();
+        const vh = win.innerHeight;
+        let dy = 0;
+        if (top && r.top < top + margin) dy = r.top - top - margin;
+        else if (bottom && r.bottom > vh - bottom - margin && r.height < vh - top - bottom) dy = r.bottom - (vh - bottom - margin);
+        if (dy) win.scrollBy(0, dy);
+      };
+      return s.listen(doc, "focusin", (e) => {
+        const el = e.target;
+        s.frame(() => {
+          if (doc.activeElement === el) check(el);
+        });
+      }, true);
+    }
+    return { region, keepWhenRemoving, entry, skipLink, keepVisible };
   }
   var editable = (t) => !!(t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"]'));
   function keysBlock(s, env) {
@@ -915,7 +1064,111 @@
         return showingOriginal;
       } };
     }
-    return { wrap, set, replaceBlock, nodes: (root, opts) => env.page.textNodes(root, opts) };
+    let scaling = null;
+    const SKIP_SCALE = /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|SVG|MATH|CANVAS|IFRAME|OBJECT|VIDEO|AUDIO|IMG)$/;
+    const FIELDS = "input, select, textarea, button";
+    function carriers(root) {
+      const out = /* @__PURE__ */ new Set();
+      if (!root || root.nodeType !== 1) return out;
+      const walker = doc.createTreeWalker(
+        root,
+        4
+        /* NodeFilter.SHOW_TEXT */
+      );
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const el = n.parentElement;
+        if (!el || out.has(el) || !n.nodeValue.trim() || SKIP_SCALE.test(el.tagName) || env.page.isOurs(el)) continue;
+        out.add(el);
+      }
+      if (root.matches && root.matches(FIELDS) && !env.page.isOurs(root)) out.add(root);
+      for (const f of root.querySelectorAll ? root.querySelectorAll(FIELDS) : []) if (!env.page.isOurs(f)) out.add(f);
+      return out;
+    }
+    function scale(factor) {
+      if (!s.alive()) return 0;
+      const f = Math.max(0.5, Math.min(4, Number(factor) || 1));
+      if (!scaling) scaling = { factor: 1, group: null, orig: /* @__PURE__ */ new WeakMap(), sized: /* @__PURE__ */ new Set(), clipped: /* @__PURE__ */ new WeakSet(), width: env.win.innerWidth, watching: false };
+      const st = scaling;
+      st.factor = f;
+      if (f === 1) {
+        if (st.group) st.group.end();
+        st.group = null;
+        st.sized.clear();
+        st.clipped = /* @__PURE__ */ new WeakSet();
+        return 0;
+      }
+      st.group ||= s.group();
+      const n = apply([...carriers(doc.body)]);
+      if (!st.watching) {
+        st.watching = true;
+        s.watch.added(null, (el) => {
+          if (st.group && st.factor !== 1) apply([...carriers(el)], true);
+        }, { debounceMs: 150 });
+        s.listen(env.win, "resize", () => {
+          if (!st.group || Math.abs(env.win.innerWidth - st.width) < 1) return;
+          st.width = env.win.innerWidth;
+          const keep = st.factor;
+          scale(1);
+          scaling.orig = /* @__PURE__ */ new WeakMap();
+          scale(keep);
+        });
+      }
+      return n;
+    }
+    function apply(list, late = false) {
+      const st = scaling;
+      const g = st.group;
+      const win = env.win;
+      const fresh = list.filter((el) => !st.orig.has(el));
+      const lifted = [];
+      if (late && fresh.length) {
+        for (const el of fresh) {
+          for (let a = el.parentElement; a; a = a.parentElement) {
+            if (st.sized.has(a) && !lifted.includes(a)) {
+              lifted.push(a);
+              break;
+            }
+          }
+        }
+        for (const a of lifted) a.style.setProperty("font-size", `${st.orig.get(a).size}px`, "important");
+      }
+      const boxes = /* @__PURE__ */ new Set();
+      for (const el of fresh) {
+        const cs = win.getComputedStyle(el);
+        const size = parseFloat(cs.fontSize);
+        if (!(size > 0)) continue;
+        const lh = cs.lineHeight;
+        const ratio = /px$/.test(lh) ? parseFloat(lh) / size : null;
+        st.orig.set(el, { size, ratio });
+        for (let b = el, i = 0; b && i < 3 && b !== doc.body; b = b.parentElement, i++) boxes.add(b);
+      }
+      const wasClipped = /* @__PURE__ */ new Map();
+      for (const b of boxes) wasClipped.set(b, b.scrollHeight > b.clientHeight + 1);
+      for (const a of lifted) a.style.setProperty("font-size", `${Math.round(st.orig.get(a).size * st.factor * 100) / 100}px`, "important");
+      let n = 0;
+      for (const el of list) {
+        const o = st.orig.get(el);
+        if (!o || !el.isConnected) continue;
+        const px = Math.round(o.size * st.factor * 100) / 100;
+        g.setStyle(el, "font-size", `${px}px`, "important");
+        if (o.ratio) g.setStyle(el, "line-height", String(Math.round(o.ratio * 1e3) / 1e3));
+        st.sized.add(el);
+        n++;
+      }
+      for (const [b, before] of wasClipped) {
+        if (before || st.clipped.has(b) || !(b.scrollHeight > b.clientHeight + 1)) continue;
+        const cs = win.getComputedStyle(b);
+        if (cs.display === "inline" || /^(auto|scroll)$/.test(cs.overflowY)) continue;
+        st.clipped.add(b);
+        if (cs.height !== "auto") {
+          g.setStyle(b, "min-height", cs.height);
+          g.setStyle(b, "height", "auto", "important");
+        }
+        if (cs.maxHeight !== "none") g.setStyle(b, "max-height", "none", "important");
+      }
+      return n;
+    }
+    return { wrap, set, replaceBlock, scale, nodes: (root, opts) => env.page.textNodes(root, opts) };
   }
 
   // toolkit/blocks/ai/prompts.js
@@ -1574,6 +1827,16 @@
       el.setAttribute(name, value);
       for (const [n, v] of later) el.setAttribute(n, v);
     };
+    const written = /* @__PURE__ */ new WeakMap();
+    const recordOf = (el, key) => {
+      const m = written.get(el);
+      return m && m.get(key);
+    };
+    const keep = (el, key, rec) => {
+      let m = written.get(el);
+      if (!m) written.set(el, m = /* @__PURE__ */ new Map());
+      m.set(key, rec);
+    };
     const noteAttr = (el, name, value) => {
       let m = shared.ourAttrs.get(el);
       if (!m) shared.ourAttrs.set(el, m = /* @__PURE__ */ new Map());
@@ -1594,15 +1857,25 @@
       },
       setAttr(el, name, value) {
         if (!open || !el) return;
+        const next = value === null || value === void 0 || value === false ? null : String(value);
+        const rec = recordOf(el, "a:" + name);
+        if (rec && el.getAttribute(name) === rec.next) {
+          if (next === null) el.removeAttribute(name);
+          else el.setAttribute(name, next);
+          rec.next = next;
+          noteAttr(el, name, next);
+          return;
+        }
         const had = el.hasAttribute(name);
         const before = el.getAttribute(name);
         const index = [...el.attributes].findIndex((a) => a.name === name);
-        const next = value === null || value === void 0 || value === false ? null : String(value);
         if (next === null) el.removeAttribute(name);
         else el.setAttribute(name, next);
         noteAttr(el, name, next);
+        const r = { next };
+        keep(el, "a:" + name, r);
         undo.push(() => {
-          if (!always && el.getAttribute(name) !== next) return;
+          if (!always && el.getAttribute(name) !== r.next) return;
           if (!had) el.removeAttribute(name);
           else if (el.hasAttribute(name)) el.setAttribute(name, before);
           else restoreAttr(el, name, before, index);
@@ -1612,15 +1885,23 @@
       setStyle(el, prop, value, priority = "") {
         if (!open || !el || !el.style) return;
         const p = cssName(prop);
+        const rec = recordOf(el, "s:" + p);
+        if (rec && el.style.getPropertyValue(p) === rec.set) {
+          el.style.setProperty(p, value, priority);
+          rec.set = el.style.getPropertyValue(p);
+          noteAttr(el, "style", el.getAttribute("style"));
+          return;
+        }
         const hadAttr = el.hasAttribute("style");
         const beforeAttr = el.getAttribute("style");
         const before = el.style.getPropertyValue(p);
         const beforePriority = el.style.getPropertyPriority(p);
         el.style.setProperty(p, value, priority);
-        const set = el.style.getPropertyValue(p);
+        const r = { set: el.style.getPropertyValue(p) };
+        keep(el, "s:" + p, r);
         noteAttr(el, "style", el.getAttribute("style"));
         undo.push(() => {
-          if (!always && el.style.getPropertyValue(p) !== set) return;
+          if (!always && el.style.getPropertyValue(p) !== r.set) return;
           if (before) el.style.setProperty(p, before, beforePriority);
           else el.style.removeProperty(p);
           if (!hadAttr && !el.getAttribute("style")) el.removeAttribute("style");
@@ -1750,6 +2031,13 @@
           shared.liveUsers.add(s);
           env.announce(message, options);
         }
+      },
+      /** A session inside this one: its end() undoes only its own changes; it ends with this one. */
+      group(options = {}) {
+        const child = createSession(env, { ...config, ...options });
+        if (open) undo.push(() => child.end());
+        else child.end();
+        return child;
       },
       /** Undo everything, in reverse. Idempotent; never throws. */
       end() {
@@ -1964,6 +2252,31 @@
       }
       return best;
     }
+    function textContrast(el) {
+      const cs = win.getComputedStyle(el);
+      const layers = [];
+      let overImage = false;
+      for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+        const ns = n === el ? cs : win.getComputedStyle(n);
+        const c2 = parseColor(ns.backgroundColor);
+        if (c2 && c2[3] > 0) layers.push(c2);
+        if (c2 && c2[3] >= 0.999) break;
+        if (ns.backgroundImage && ns.backgroundImage !== "none") {
+          overImage = true;
+          break;
+        }
+      }
+      let bg = [255, 255, 255];
+      for (const [r, g, b, a] of layers.reverse()) bg = [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)];
+      const c = parseColor(cs.color) || [0, 0, 0, 1];
+      const fg = [0, 1, 2].map((i) => c[i] * c[3] + bg[i] * (1 - c[3]));
+      const size = parseFloat(cs.fontSize) || 16;
+      const large = size >= 24 || size >= 18.66 && (parseInt(cs.fontWeight, 10) || 400) >= 700;
+      const min = large ? 3 : 4.5;
+      const ratio = Math.round(contrast(fg, bg) * 100) / 100;
+      const fix = overImage || ratio >= min ? null : hex(nearestWithContrast(fg, bg, min + 0.05));
+      return { color: hex(fg), background: hex(bg), ratio, min, large, overImage, fix };
+    }
     return {
       main,
       textNodes,
@@ -1974,7 +2287,8 @@
       isVisible,
       isOurs: (el) => isOurs(el),
       background: (el) => backgroundOf(el, win),
-      contrast
+      contrast,
+      textContrast
     };
   }
   function CSS_escape(s) {

@@ -1,5 +1,6 @@
 // Colour helpers for the blocks that draw: parse a CSS colour, find the
-// background an element is drawn on, and the WCAG contrast ratio.
+// background an element is drawn on, the WCAG contrast ratio, and the
+// nearest colour of the same hue that has enough of it.
 
 /** [r, g, b, a] from rgb()/rgba()/#hex, or null. */
 export function parseColor(value) {
@@ -56,3 +57,42 @@ export function pick(candidates, against, min) {
 }
 
 export const hex = ([r, g, b]) => '#' + [r, g, b].map((n) => Math.round(n).toString(16).padStart(2, '0')).join('');
+
+const toHsl = ([r, g, b]) => {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h / 6, sat, l];
+};
+const fromHsl = ([h, sat, l]) => {
+  if (!sat) return [l * 255, l * 255, l * 255];
+  const q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat, p = 2 * l - q;
+  const f = (t) => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255].map(Math.round);
+};
+
+/** The colour nearest `fg` with its hue and saturation, darker or lighter
+ *  (away from `bg`), that has at least `min` contrast against `bg`; `fg`
+ *  itself when it already has; black or white when no shade of it does. */
+export function nearestWithContrast(fg, bg, min) {
+  const f = Array.isArray(fg) ? fg : parseColor(fg);
+  const b = Array.isArray(bg) ? bg : parseColor(bg);
+  if (!f || !b) return null;
+  if (contrast(f, b) >= min) return f.slice(0, 3);
+  const [h, sat, l] = toHsl(f);
+  // Darker on a light background, lighter on a dark one; the other way if that cannot reach it.
+  const dark = luminance(b) > 0.18;
+  for (const toward of dark ? [0, 1] : [1, 0]) {
+    if (contrast(fromHsl([h, sat, toward]), b) < min) continue;
+    let lo = l, hi = toward; // lo fails, hi passes
+    for (let i = 0; i < 18; i++) {
+      const mid = (lo + hi) / 2;
+      if (contrast(fromHsl([h, sat, mid]), b) >= min) hi = mid; else lo = mid;
+    }
+    return fromHsl([h, sat, hi]);
+  }
+  return contrast([0, 0, 0], b) >= contrast([255, 255, 255], b) ? [0, 0, 0] : [255, 255, 255];
+}

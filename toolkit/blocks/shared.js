@@ -34,6 +34,7 @@ export function sharedState(win) {
         route: null,               // {listeners, stop}
         adjusters: new Map(),      // adapter key -> what the toolkit's shortcut adjusts (keys.adjust)
         shortcut: null,            // the person's shortcut here, when they gave it to an adapter
+        entries: null,             // the box of the toolkit's entries at the start of the tab order (focus.entry)
       },
     });
   }

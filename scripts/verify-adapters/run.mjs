@@ -39,7 +39,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { randomBytes } from 'node:crypto';
 import { openVerifier, ROOT } from './harness.mjs';
-import { serveHttp, sitesFor } from './mcp.mjs';
+import { serveHttp, sitesFor, LIMITS } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
 
 const HERE = path.join(ROOT, 'scripts/verify-adapters');
@@ -99,6 +99,10 @@ async function replay() {
     }
     if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
     if (r.zoomLeft !== undefined) problems.push(`disable() leaves the zoom at ${r.zoomLeft}`);
+    if (r.status === 'skipped' && r.restored === false) problems.push('enable() returned false but left changes in the page');
+    if (r.enableMs > LIMITS.enableMs) problems.push(`enable() took ${r.enableMs} ms`);
+    if (live && r.aiCalls > LIMITS.aiCalls) problems.push(`${r.aiCalls} AI calls on load`);
+    if (r.dwell?.announced.length > LIMITS.dwellAnnounced) problems.push(`said ${r.dwell.announced.length} things while a person only scrolled: ${r.dwell.announced.slice(0, 4).map(a => JSON.stringify(a)).join(', ')}`);
     if (problems.length && knownWhy) { known++; console.log(`KNOWN: ${name}: ${problems.join('; ')}\n  why: ${knownWhy}`); continue; }
     if (problems.length) failed++;
     if (r.status === 'unreachable') continue;

@@ -104,6 +104,23 @@ async function answerAi(spec, request, page, count) {
   try { return gateAnswer(task, await gemini(built.prompt, { images }), request.input || '', built.options); } catch { return { text: null, reason: 'model-error' }; }
 }
 
+/** In the page, after enable(): for a while, what the adapter announces and how long it holds the page up. */
+function startDwell() {
+  const d = { announced: [], longTaskMs: 0, longTasks: 0 };
+  const seen = new WeakMap();
+  const say = (region) => {
+    const text = (region.textContent || '').replace(/\s+/g, ' ').trim();
+    if (text && seen.get(region) !== text) d.announced.push(text.slice(0, 160));
+    seen.set(region, text);
+  };
+  const live = (n) => { const el = n && (n.nodeType === 1 ? n : n.parentElement); return el && el.closest && el.closest('[data-ai4a11y-ui][aria-live]'); };
+  const mo = new MutationObserver((list) => { for (const r of list) { const region = live(r.target); if (region) say(region); } });
+  mo.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  let po = null;
+  try { po = new PerformanceObserver((l) => { for (const e of l.getEntries()) { d.longTasks++; d.longTaskMs += e.duration; } }); po.observe({ type: 'longtask' }); } catch { po = null; }
+  globalThis.__verifyDwell = () => { mo.disconnect(); if (po) { for (const e of po.takeRecords()) { d.longTasks++; d.longTaskMs += e.duration; } po.disconnect(); } d.longTaskMs = Math.round(d.longTaskMs); return d; };
+}
+
 /** In the page, before the adapter: the extension's side of the blocks, recorded. */
 function fakeHost() {
   const rec = { zoom: 1, zoomCalls: [], profile: [], spoken: [], adjustable: null, toggles: 0 };
@@ -273,7 +290,8 @@ export async function openVerifier({ headless = true } = {}) {
     const page = await context.newPage();
     let aiCalls = 0;
     if (core) {
-      await page.exposeFunction('__verifyAi', (request) => answerAi(spec, request, page, () => ++aiCalls));
+      // Every request counts, answered or not: it is what the person's budget would pay for.
+      await page.exposeFunction('__verifyAi', (request) => { aiCalls++; return answerAi(spec, request, page, () => aiCalls); });
       // Trusted input for checks: the person's own click or key.
       await page.exposeFunction('__verifyClick', async (selector) => { await page.click(String(selector), { timeout: 3000 }); return true; });
       await page.exposeFunction('__verifyPress', async (key) => { await page.keyboard.press(String(key)); return true; });
@@ -319,6 +337,27 @@ export async function openVerifier({ headless = true } = {}) {
       if (loadErrors) result.loadErrors = loadErrors;
       if (screenshot && result.status === 'applied') result.screenshot = (await page.screenshot()).toString('base64');
       result.announced = core ? [] : await page.evaluate(() => globalThis.__verifyAnnounced.slice(0, 10));
+      // On a live site, a while on the page as a person would spend it,
+      // scrolling: what the adapter says and costs as the page changes.
+      const dwellMs = spec.dwellMs ?? (core && live ? 6000 : 0);
+      if (core && dwellMs && result.status === 'applied') {
+        await page.evaluate(startDwell);
+        const steps = 4;
+        for (let i = 0; i < steps; i++) {
+          await page.mouse.wheel(0, 700).catch(() => {});
+          await page.waitForTimeout(dwellMs / steps);
+        }
+        result.dwell = { ms: dwellMs, ...(await page.evaluate(() => globalThis.__verifyDwell())) };
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
+      if (result.status === 'skipped' && core) {
+        // It said there was nothing to do: then it must have left nothing behind.
+        await page.waitForTimeout(400);
+        if (steady) {
+          result.restored = (await page.evaluate(snapshot)) === htmlBefore;
+          if (!result.restored) result.difference = firstDifference(htmlBefore, await page.evaluate(snapshot));
+        }
+      }
       if (result.status === 'applied') {
         const off = await page.evaluate(previewTeardownScript());
         await page.waitForTimeout(400);

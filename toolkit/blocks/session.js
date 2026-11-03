@@ -7,6 +7,13 @@
 // callback a block runs checks that its session is still open, and every
 // change after end() is a no-op, so a late answer (an AI reply, a timer)
 // never writes to the page after disable().
+//
+// Writing the same attribute or style property again, while the page has
+// left it as the session set it, changes the one record (the original is
+// kept once), so an adapter that re-applies on every change does not grow
+// its undo list. s.group() is a session inside this one: its end() undoes
+// only what was made through it (one mode of several, one round of fixes),
+// and it ends with this one.
 
 import { UI_ATTR, cssName, slug } from './shared.js';
 import { stylesBlock } from './styles.js';
@@ -43,6 +50,11 @@ export function createSession(env, config = {}) {
     for (const [n, v] of later) el.setAttribute(n, v);
   };
 
+  // What this session last wrote to each element's attribute or style property.
+  const written = new WeakMap();
+  const recordOf = (el, key) => { const m = written.get(el); return m && m.get(key); };
+  const keep = (el, key, rec) => { let m = written.get(el); if (!m) written.set(el, (m = new Map())); m.set(key, rec); };
+
   const noteAttr = (el, name, value) => {
     let m = shared.ourAttrs.get(el);
     if (!m) shared.ourAttrs.set(el, (m = new Map()));
@@ -60,14 +72,24 @@ export function createSession(env, config = {}) {
 
     setAttr(el, name, value) {
       if (!open || !el) return;
+      const next = value === null || value === undefined || value === false ? null : String(value);
+      const rec = recordOf(el, 'a:' + name);
+      if (rec && el.getAttribute(name) === rec.next) {
+        // Still as this session left it: one more write to the same record.
+        if (next === null) el.removeAttribute(name); else el.setAttribute(name, next);
+        rec.next = next;
+        noteAttr(el, name, next);
+        return;
+      }
       const had = el.hasAttribute(name);
       const before = el.getAttribute(name);
       const index = [...el.attributes].findIndex((a) => a.name === name);
-      const next = value === null || value === undefined || value === false ? null : String(value);
       if (next === null) el.removeAttribute(name); else el.setAttribute(name, next);
       noteAttr(el, name, next);
+      const r = { next };
+      keep(el, 'a:' + name, r);
       undo.push(() => {
-        if (!always && el.getAttribute(name) !== next) return;
+        if (!always && el.getAttribute(name) !== r.next) return;
         if (!had) el.removeAttribute(name);
         else if (el.hasAttribute(name)) el.setAttribute(name, before);
         else restoreAttr(el, name, before, index);
@@ -78,15 +100,23 @@ export function createSession(env, config = {}) {
     setStyle(el, prop, value, priority = '') {
       if (!open || !el || !el.style) return;
       const p = cssName(prop);
+      const rec = recordOf(el, 's:' + p);
+      if (rec && el.style.getPropertyValue(p) === rec.set) {
+        el.style.setProperty(p, value, priority);
+        rec.set = el.style.getPropertyValue(p);
+        noteAttr(el, 'style', el.getAttribute('style'));
+        return;
+      }
       const hadAttr = el.hasAttribute('style');
       const beforeAttr = el.getAttribute('style');
       const before = el.style.getPropertyValue(p);
       const beforePriority = el.style.getPropertyPriority(p);
       el.style.setProperty(p, value, priority);
-      const set = el.style.getPropertyValue(p);
+      const r = { set: el.style.getPropertyValue(p) };
+      keep(el, 's:' + p, r);
       noteAttr(el, 'style', el.getAttribute('style'));
       undo.push(() => {
-        if (!always && el.style.getPropertyValue(p) !== set) return;
+        if (!always && el.style.getPropertyValue(p) !== r.set) return;
         if (before) el.style.setProperty(p, before, beforePriority); else el.style.removeProperty(p);
         if (!hadAttr && !el.getAttribute('style')) el.removeAttribute('style');
         else if (hadAttr) {
@@ -198,6 +228,13 @@ export function createSession(env, config = {}) {
     },
 
     announce: (message, options) => { if (open) { shared.liveUsers.add(s); env.announce(message, options); } },
+
+    /** A session inside this one: its end() undoes only its own changes; it ends with this one. */
+    group(options = {}) {
+      const child = createSession(env, { ...config, ...options });
+      if (open) undo.push(() => child.end()); else child.end();
+      return child;
+    },
 
     /** Undo everything, in reverse. Idempotent; never throws. */
     end() {

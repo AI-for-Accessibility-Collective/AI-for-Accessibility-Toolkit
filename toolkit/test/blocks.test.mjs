@@ -52,6 +52,46 @@ await test('session: end() undoes every kind of change, in reverse, and leaves t
   assert.equal(s.end(), false, 'end() is idempotent');
 });
 
+await test('session: writing the same attribute or style again keeps one record; end() still puts the original back', async () => {
+  const { tk, $, html } = page('<p id="a" title="page" style="color: red">x</p>');
+  const before = html();
+  const s = tk.session();
+  for (let i = 0; i < 50; i++) { s.setAttr($('#a'), 'title', `ours ${i}`); s.setStyle($('#a'), 'fontSize', `${10 + i}px`); }
+  s.setAttr($('#a'), 'data-x', '1');
+  s.setAttr($('#a'), 'data-x', null);
+  assert.equal($('#a').getAttribute('title'), 'ours 49');
+  s.end();
+  assert.equal(html(), before);
+  // The page changed it after the session's last write: the page's value stays.
+  const s2 = tk.session();
+  s2.setAttr($('#a'), 'title', 'one');
+  s2.setAttr($('#a'), 'title', 'two');
+  $('#a').setAttribute('title', 'the page');
+  s2.setAttr($('#a'), 'title', 'three');
+  $('#a').setAttribute('title', 'the page again');
+  s2.end();
+  assert.equal($('#a').getAttribute('title'), 'the page again');
+});
+
+await test('session: a group undoes only its own changes, and ends with its session', async () => {
+  const { tk, $, html } = page('<p id="a">x</p><p id="b">y</p>');
+  const before = html();
+  const s = tk.session();
+  s.setAttr($('#a'), 'data-base', '1');
+  const mode = s.group();
+  mode.setAttr($('#b'), 'data-mode', '1');
+  mode.addClass($('#a'), 'm');
+  mode.end();
+  assert.equal($('#a').getAttribute('data-base'), '1', 'the session\'s own change stays');
+  assert.equal($('#b').hasAttribute('data-mode'), false);
+  assert.equal($('#a').classList.contains('m'), false);
+  const next = s.group();
+  next.setAttr($('#b'), 'data-mode', '2');
+  s.end();
+  assert.equal(next.ended, true, 'a group ends with its session');
+  assert.equal(html(), before);
+});
+
 await test('session: a value the page changed since is kept ("unless-changed"); "always" puts it back', async () => {
   const { tk, $ } = page('<p id="a" title="page">x</p>');
   const s = tk.session();
@@ -755,6 +795,70 @@ await test('catalog: every block is described, and every call it documents exist
   }
   for (const [task, t] of Object.entries(TASKS)) assert.ok(['text', 'vision'].includes(t.kind), task);
   s.end();
+});
+
+await test('focus.entry and skipLink: first in the tab order, after the page\'s own skip link; none added where the page has one', async () => {
+  const { tk, doc, $, html, fire } = page('<a href="#c">Skip to content</a><nav><a href="/x">X</a></nav><main id="c"><h1>Title</h1><p>Text</p></main>');
+  const before = html();
+  const s = tk.session();
+  assert.equal(s.focus.skipLink(), null, 'the page has a working skip link');
+  let opened = 0;
+  const btn = s.focus.entry({ label: 'Page outline', onActivate: () => opened++ });
+  assert.equal(btn.tagName, 'BUTTON');
+  assert.equal(doc.body.children[0].tagName, 'A', 'the page\'s skip link stays first');
+  assert.ok(doc.body.children[1].contains(btn), 'ours comes right after it');
+  fire(btn, 'click');
+  assert.equal(opened, 1);
+  const t = tk.session();
+  t.focus.entry({ label: 'Another' });
+  assert.equal(doc.querySelectorAll('[data-ai4a11y-entries]').length, 1, 'one place for every adapter\'s entries');
+  s.end();
+  assert.ok($('[data-ai4a11y-entries]'), 'the box stays while another entry is in it');
+  t.end();
+  assert.equal(html(), before);
+
+  const p2 = page('<nav><a href="/x">X</a></nav><main><h1>Title</h1><p>Text</p></main>');
+  const before2 = p2.html();
+  const u = p2.tk.session();
+  const skip = u.focus.skipLink();
+  assert.ok(skip, 'added where the page has none');
+  assert.equal(p2.doc.body.firstElementChild.contains(skip), true, 'first in the tab order');
+  p2.fire(skip, 'click');
+  assert.equal(p2.doc.activeElement, p2.$('main'));
+  u.end();
+  assert.equal(p2.html(), before2);
+});
+
+await test('page.textContrast: the ratio against blended backgrounds, AA for its size, and the nearest colour of its hue that passes', async () => {
+  const { tk, $ } = page('<div style="background: rgb(255, 255, 255)"><p id="low" style="color: rgb(150, 150, 255)">Low</p><p id="ok" style="color: rgb(0, 0, 0)">Fine</p><p id="big" style="color: rgb(140, 140, 140); font-size: 30px">Big</p></div><div style="background-image: url(x.png)"><p id="img" style="color: #999">Over an image</p></div>');
+  const low = tk.page.textContrast($('#low'));
+  assert.equal(low.min, 4.5);
+  assert.ok(low.ratio < 4.5 && low.fix);
+  assert.ok(tk.page.contrast(low.fix, '#ffffff') >= 4.5, 'the fix passes');
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(low.fix.slice(i, i + 2), 16));
+  assert.ok(b > r && b > g, 'and keeps the hue (blue)');
+  assert.equal(tk.page.textContrast($('#ok')).fix, null);
+  const big = tk.page.textContrast($('#big'));
+  assert.equal(big.large, true); assert.equal(big.min, 3);
+  const img = tk.page.textContrast($('#img'));
+  assert.equal(img.overImage, true); assert.equal(img.fix, null);
+});
+
+await test('text.scale: each element from its own original size, never compounding; 1 and end() put the sizes back', async () => {
+  const { tk, $, html } = page('<main><p id="a" style="font-size: 20px; line-height: 30px">Hello</p><div id="d" style="font-size: 10px"><span id="s" style="font-size: 12px">Small</span></div></main>');
+  const before = html();
+  const s = tk.session();
+  assert.ok(s.text.scale(1.5) >= 2);
+  assert.equal($('#a').style.fontSize, '30px');
+  assert.equal($('#s').style.fontSize, '18px');
+  assert.equal($('#a').style.lineHeight, '1.5', 'a pixel line height keeps its proportion');
+  s.text.scale(2);
+  assert.equal($('#a').style.fontSize, '40px', 'from the original, not from 30px');
+  s.text.scale(1);
+  assert.equal(html(), before);
+  s.text.scale(1.25);
+  s.end();
+  assert.equal(html(), before);
 });
 
 console.log(`\nBuilding blocks: ${pass} passed, ${fail} failed`);

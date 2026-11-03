@@ -112,6 +112,9 @@ function resultText(name, r, saved) {
   return lines.filter(Boolean).join('\n');
 }
 
+/** What a core adapter may cost on one page load, as the replay judges it. */
+export const LIMITS = { aiCalls: 10, enableMs: 1500, dwellAnnounced: 2 };
+
 /** A core adapter's use of the extension's side of the blocks. */
 function hostText(r) {
   const lines = [];
@@ -123,7 +126,12 @@ function hostText(r) {
     if (h.adjustable) lines.push(`The shortcut adjusts: ${h.adjustable.label} (${(h.adjustable.settings || []).join(', ') || 'no settings named'}).`);
     if (h.toggles) lines.push(`The shortcut's first key, with nothing to adjust, would turn it on or off (${h.toggles} press${h.toggles === 1 ? '' : 'es'}).`);
   }
-  if (Number.isFinite(r.aiCalls) && r.aiCalls) lines.push(`AI calls: ${r.aiCalls}.`);
+  if (Number.isFinite(r.aiCalls) && r.aiCalls) lines.push(`AI calls: ${r.aiCalls}${r.aiCalls > LIMITS.aiCalls ? ` (more than ${LIMITS.aiCalls}: the person pays for each, on every page they visit)` : ''}.`);
+  if (Number.isFinite(r.enableMs)) lines.push(`enable() took ${r.enableMs} ms${r.enableMs > LIMITS.enableMs ? ' (too long: the page is held up)' : ''}.`);
+  if (r.dwell) {
+    const n = r.dwell.announced.length;
+    lines.push(`While a person scrolled for ${r.dwell.ms / 1000} s: ${n ? `it said ${n} thing${n === 1 ? '' : 's'} (${r.dwell.announced.slice(0, 5).map(a => JSON.stringify(a)).join(', ')})${n > LIMITS.dwellAnnounced ? ', too many for changes the person did not make' : ''}` : 'it said nothing'}; long tasks in the page ${r.dwell.longTaskMs} ms.`);
+  }
   if (r.zoomLeft !== undefined) lines.push(`After disable() the zoom is still ${r.zoomLeft}: it was not put back.`);
   return lines;
 }

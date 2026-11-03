@@ -19,7 +19,11 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   change to the page through it; `disable()` is `this.s?.end()`, which puts
   the page back exactly as it was. `enable()` may be called again after
   `disable()`, and must not stack a second copy.
-- `enable()` returns `false` when there is nothing to do on the page.
+- `enable()` returns `false` when there is nothing to do on the page; the
+  runtime then calls `disable()`, so nothing it started stays. An adapter
+  that adjusts something (`s.keys.adjust`) keeps running instead, even
+  where nothing is asked for yet, so the person's keys have something to
+  adjust on that page.
 - `options` are the developer's defaults (document each one in the header
   comment); the person's own settings (`s.profile.get()`) win over them.
 - The building blocks are listed, with every call, its config and what it
@@ -27,7 +31,17 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   `reference/building-blocks.md`. **Read it first, all of it.** Use a block
   wherever one does what you need instead of writing your own. The source
   is in `toolkit/blocks/` if you need to know exactly what a call does; do
-  not change it.
+  not change it. In particular: `s.group()` for one mode of several, or one
+  round of fixes you redo (never undo by writing styles yourself);
+  `s.page.textContrast(el)` for colours; `s.text.scale` for the text size
+  without zoom; `s.focus.skipLink`, `s.focus.entry` and
+  `s.focus.keepVisible` for focus.
+- Real pages are big and change all the time (timestamps, tickers, ads,
+  infinite lists). Measure once, change only what needs it, and handle
+  what is added later by itself: never clear and redo the whole page on
+  each change, and never read the layout of every element on the page.
+  The verifier reports how long `enable()` took and, on real sites, what
+  your adapter said and how many AI calls it made while a person scrolled.
 - AI goes only through the blocks (`s.ai.text`, `s.ai.vision`): an answer
   is a string or `null`; on `null`, leave the page as it is. Ask only for
   what the person asked to change, one block of text at a time, never in a
@@ -41,7 +55,9 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   person can adjust, let them adjust it **in the adapter** (a control it
   adds, or the toolkit's shortcut, below), and save it with
   `s.profile.set(changes)`: it applies to this site. The person chooses
-  **every site** in the extension's popup, not in your adapter. `set()`
+  **every site** in the extension's popup, not in your adapter: no "every
+  site" button or key of your own. Announce what `set()` says happened
+  (`applied`), not what you asked for. `set()`
   only works right after the person's own click or key on your UI or their
   shortcut; never call it on load.
 - **No shortcuts of your own.** The toolkit has one pair of keys, which the
@@ -49,7 +65,9 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   adjusts something, say what with `s.keys.adjust({ label, settings, up,
   down })`; when the person gives it the shortcut, its keys call `up()` and
   `down()`. Otherwise the toolkit's first key turns your adapter on and off
-  by itself; do nothing for it.
+  by itself; do nothing for it. A panel or control the person opens is
+  opened from a button: `s.focus.entry({ label, onActivate })` (first in
+  the tab order, shown when focused) or one in your adapter's own UI.
 - Say what changed with `s.announce(...)`, in plain words ("Text size 150%
   on this site.").
 - Follow changes made elsewhere with `s.profile.onChange(...)` where your
@@ -66,7 +84,8 @@ everything the adapter adds or changes. For anything it adds or changes
 that people see or use, load the `intopia-web-accessibility` skill and
 follow its acceptance criteria for each control. Use plain language in
 everything a person reads or hears; describe barriers as being in the page,
-not in people.
+not in people. Never set `disabled` on a control that has focus (Chrome
+moves focus to the page): use `aria-disabled`.
 
 Read the catalog adapters your brief lists under "prior work"
 (`tools/adapters/`): they are older versions that handle real pages' edge

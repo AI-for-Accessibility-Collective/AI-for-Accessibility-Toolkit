@@ -35,12 +35,15 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       's.el(tag, { text, attrs })            // a new element marked as the toolkit\'s own',
       'await s.guard(promise)                // throws Ended if the session ended meanwhile',
       's.onEnd(fn) / s.alive() / s.ended / s.end()',
+      'const mode = s.group()                // a session inside this one: mode.end() undoes only what went through it',
     ],
     config: { restore: { default: 'unless-changed', description: "'unless-changed' puts a value back only if the page has not changed it since; 'always' puts it back regardless." } },
     invariants: [
       'end() undoes everything in reverse, is idempotent and never throws.',
       'After end(), every change and every callback is a no-op: a late answer or timer never writes to the page.',
       'A value the page changed since the session set it stays as the page set it.',
+      'Setting the same attribute or style property again changes the one record: re-applying on every page change never grows what end() has to undo.',
+      'A group ends with its session. Use one for each mode, or each round of fixes you redo, instead of undoing by hand.',
     ],
   },
   {
@@ -87,6 +90,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       'toolkit.page.find(name, { within })   // the visible control whose name best matches',
       'toolkit.page.isVisible(el) / toolkit.page.isOurs(el)',
       'toolkit.page.background(el) / toolkit.page.contrast(a, b)',
+      'toolkit.page.textContrast(el)        // { color, background, ratio, min, large, overImage, fix }',
     ],
     config: {
       skip: { default: '', description: 'More selectors to leave out, on top of code, form fields, live regions, hidden content and the toolkit\'s UI.' },
@@ -188,6 +192,9 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     api: [
       's.focus.region(el)                    // focus a region that is not focusable itself',
       's.focus.keepWhenRemoving(el)          // before el goes, move focus out of it',
+      "s.focus.entry({ label: 'Page outline', onActivate: () => panel.open() })   // a button first in the tab order",
+      's.focus.skipLink()                    // \'Skip to main content\', unless the page has one that works',
+      's.focus.keepVisible()                 // the focused element is never hidden under a fixed or sticky bar',
       "s.keys.adjust({ label: 'Text size', settings: ['fontScale'], up: () => ..., down: () => ... })",
     ],
     config: { label: { default: null, description: "adjust(): what up and down change, for the person choosing their shortcut ('Text size')." }, settings: { default: [], description: "adjust(): the person's settings it changes, so they can use this site's values on every site from the extension." } },
@@ -196,6 +203,8 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       'Adapters have no shortcuts of their own. The toolkit has one pair of keys, off until the person gives it to one adapter: with keys.adjust, up and down adjust; without (or while it is off on the site), the first key turns it on and off on this site.',
       'up() and down() count as the person\'s own key, so they may call profile.set; they never fire in a text field or editable region.',
       'The temporary tabindex region() adds goes when focus leaves.',
+      'entry() and skipLink() are the toolkit\'s own controls at the start of the tab order, after the page\'s own skip link, in one place for every adapter. Each is out of sight until it has focus, then shown at the top left, so it covers nothing. skipLink() adds nothing (null) where the page already has a skip link whose target is there, or no main content to skip to.',
+      'keepVisible() (WCAG 2.4.11) measures what is fixed or stuck at the top and bottom of the window where focus is, sets the page\'s scroll padding to clear it, and scrolls the focused element out from under it once. It never moves focus or changes the tab order.',
     ],
   },
   {
@@ -207,13 +216,15 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       's.text.set(textNode, text)           // in place, for translation',
       "const r = s.text.replaceBlock(paragraph, newText, { label })   // with a Show original button",
       's.text.nodes(root)                    // the text nodes it would change',
+      's.text.scale(1.5)                     // the page\'s text at 150%, px-sized too; 1 puts it back',
     ],
     config: {
       ...cfg(WRAP_DEFAULTS, { cap: 'wrap(): at most this many matches.', skip: 'wrap(): more selectors to leave alone.' }),
       match: { default: null, description: 'wrap(): a regular expression, or its source as a string.' },
       ...cfg(REPLACE_DEFAULTS, { showOriginal: 'replaceBlock(): a button to see the original.', label: 'replaceBlock(): what the new text is.', originalLabel: 'replaceBlock(): the button while the new text shows.', replacedLabel: 'replaceBlock(): the button while the original shows.' }),
     },
-    invariants: ['The original text nodes come back on end(), the same objects.', 'Code, form fields, live regions, hidden content and the toolkit\'s UI are never changed.', 'A replaced block can always be seen as it was.'],
+    invariants: ['The original text nodes come back on end(), the same objects.', 'Code, form fields, live regions, hidden content and the toolkit\'s UI are never changed.', 'A replaced block can always be seen as it was.',
+      'scale() is the text size alone, for when s.zoom.method() is not \'zoom\'. It measures before it writes and sizes each element from its own original size, so a new factor never compounds. Pixel line heights keep their proportion; the person\'s line spacing still wins. A fixed-height box that would cut its text off grows. Text added later is sized as it arrives; the page is measured again when the window\'s width changes.'],
   },
   {
     name: 'ai.text',

@@ -10,7 +10,7 @@
 //   page.background(el), page.contrast(a, b)
 
 import { isOurs, hasLayout, UI_ATTR } from './shared.js';
-import { backgroundOf, contrast } from './color.js';
+import { backgroundOf, contrast, parseColor, nearestWithContrast, hex } from './color.js';
 
 // Never read or rewritten: code, form fields, live regions (the page speaks
 // through them), and the toolkit's own controls.
@@ -175,11 +175,39 @@ export function pageBlock(env) {
     return best;
   }
 
+  // The contrast of an element's text against what it is drawn on (WCAG
+  // 1.4.3), and the nearest colour of its hue that would be enough. Layers
+  // of see-through backgrounds are blended; over an image or a gradient the
+  // background cannot be known, so there is no fix.
+  function textContrast(el) {
+    const cs = win.getComputedStyle(el);
+    const layers = [];
+    let overImage = false;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const ns = n === el ? cs : win.getComputedStyle(n);
+      const c = parseColor(ns.backgroundColor);
+      if (c && c[3] > 0) layers.push(c);
+      if (c && c[3] >= 0.999) break;
+      if (ns.backgroundImage && ns.backgroundImage !== 'none') { overImage = true; break; }
+    }
+    let bg = [255, 255, 255];
+    for (const [r, g, b, a] of layers.reverse()) bg = [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)];
+    const c = parseColor(cs.color) || [0, 0, 0, 1];
+    const fg = [0, 1, 2].map((i) => c[i] * c[3] + bg[i] * (1 - c[3]));
+    const size = parseFloat(cs.fontSize) || 16;
+    const large = size >= 24 || (size >= 18.66 && (parseInt(cs.fontWeight, 10) || 400) >= 700);
+    const min = large ? 3 : 4.5;
+    const ratio = Math.round(contrast(fg, bg) * 100) / 100;
+    const fix = overImage || ratio >= min ? null : hex(nearestWithContrast(fg, bg, min + 0.05));
+    return { color: hex(fg), background: hex(bg), ratio, min, large, overImage, fix };
+  }
+
   return {
     main, textNodes, readableText, headings, nameOf, find, isVisible,
     isOurs: (el) => isOurs(el),
     background: (el) => backgroundOf(el, win),
     contrast,
+    textContrast,
   };
 }
 

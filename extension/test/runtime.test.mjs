@@ -131,6 +131,11 @@ await test('failures are reported with the reason: a throw, a rejection, a load 
   p.run(buildUserScript(entry({ package: { format: 'web-module@1', code: CODE('x', 'return false;') } })));
   await settle();
   assert.deepEqual(p.reports.map(r => r.status), ['skipped']);
+  assert.deepEqual(p.log, ['enable x {}', 'disable x'], 'an adapter that says no is wound down: what it started goes');
+  const q = page('https://shop.example/');
+  q.run(buildUserScript(entry({ package: { format: 'web-module@1', code: CODE('y', 'throw new Error("half done");') } })));
+  await settle();
+  assert.deepEqual(q.log, ['enable y {}', 'disable y'], 'and so is one that throws');
 });
 
 await test('a named entry picks one of several adapters', async () => {
@@ -159,8 +164,10 @@ await test('registrations: only runnable adapters, Chrome patterns without ports
 await test('a preview runs once, replaces the last preview, reports nothing, and comes off', async () => {
   const p = page('https://shop.example/cart');
   const preview = (tag, extra) => buildPreviewScript({ code: CODE(tag, extra), urlPatterns: ['https://shop.example/*'], parameters: { size: 44 } });
-  assert.deepEqual(await plain(p.run(preview('p1'))), { status: 'applied' });
-  assert.deepEqual(await plain(p.run(preview('p2'))), { status: 'applied' });
+  // How long enable() took comes back too.
+  const applied = async (script) => { const r = await plain(p.run(script)); assert.equal(typeof r.enableMs, 'number'); delete r.enableMs; return r; };
+  assert.deepEqual(await applied(preview('p1')), { status: 'applied' });
+  assert.deepEqual(await applied(preview('p2')), { status: 'applied' });
   assert.deepEqual(p.log, ['enable p1 {"size":44}', 'disable p1', 'enable p2 {"size":44}']);
   assert.deepEqual(p.reports, [], 'a preview is never reported to the toolkit');
   // An installed adapter in the same page is left alone.

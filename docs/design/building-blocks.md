@@ -698,6 +698,25 @@ Decided by the project lead, 2026-11-03:
   `npm run test:runtime:e2e` (a click saves the setting for the site, the
   page zooms, the browser speaks, a reload starts with the setting, an
   uninstall puts the zoom back).
+- What building the eleven core adapters on the blocks showed was missing
+  (`tools/core-adapters/`, first built by agents and kept as written in
+  7e9ec0cd): an agent undid one mode of contrast by writing styles back
+  by hand, re-applied target sizes on every change of the page until the
+  undo list grew without end, wrote its own colour maths, scaled text
+  element by element, added a second skip link where the page had one,
+  and scrolled the focused element twice. So the session now keeps one
+  record when the same attribute or style is written again, and
+  `s.group()` is a session inside a session for one mode or one round of
+  fixes; `s.page.textContrast(el)` gives the ratio, the AA minimum for
+  the text's size and the nearest colour of its hue that passes;
+  `s.text.scale(factor)` is the text size without zoom; and
+  `s.focus.entry`, `skipLink` and `keepVisible` are the toolkit's controls
+  at the start of the tab order and focus kept out from under fixed bars
+  (WCAG 2.4.11). The runtime calls `disable()` when `enable()` returns
+  false or throws, so what an adapter started before it said no goes too.
+  The verifier now stays on each real site for a while, scrolling, and
+  reports what the adapter said, how many AI calls it made and how long
+  `enable()` took.
 - The service: `server/src/ai.js` (`POST /v1/ai/text`, `/v1/ai/vision`,
   `GET /v1/ai/usage`, `PUT /v1/ai/settings`). Tests: `server/test/ai.test.mjs`.
 - The builder learns them from the skill's `reference/building-blocks.md`
