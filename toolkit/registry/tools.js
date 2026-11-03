@@ -597,6 +597,10 @@ export const settingsMeta = {
   agentWatch:      { type: 'boolean', description: 'Check what the assistant does against what you asked for' },
   darkMode:        { type: 'boolean', description: 'Dark theme' },
   fontScale:       { type: 'number', range: [50, 200], description: 'Font size percentage' },
+  // How text is made bigger, the person's or the developer's choice (the
+  // toolkit prescribes neither): 'zoom' is the browser's own zoom, which
+  // reflows the page; 'font' changes the text size alone. Never both at once.
+  textSizeMethod:  { type: 'enum', options: ['zoom', 'font'], description: 'How text is made bigger: browser zoom, or the text size only' },
   lineHeight:      { type: 'number', range: [1.0, 3.0], description: 'Line spacing' },
   letterSpacing:   { type: 'number', range: [0, 0.5], description: 'Letter spacing in em' },
   largeCursor:     { type: 'boolean', description: 'Larger mouse cursor' },
@@ -665,7 +669,7 @@ export const settingsMeta = {
 /** @type {Array<[string, string[]]>} */
 const PROMPT_GROUPS = [
   ['Vision & color', ['darkMode', 'contrastMode', 'colorBlindMode', 'largeCursor', 'fixContrast', 'autoWcagFix', 'wcagRiskyFixes']],
-  ['Text & reading', ['fontScale', 'lineHeight', 'letterSpacing', 'readingGuide', 'readerMode', 'speechRate']],
+  ['Text & reading', ['fontScale', 'textSizeMethod', 'lineHeight', 'letterSpacing', 'readingGuide', 'readerMode', 'speechRate']],
   ['Focus & motion', ['focusMode', 'hideDistractions', 'showProgress', 'motionReducer', 'enhanceFocus']],
   ['Motor & input', ['keyboardNav', 'voiceCommands']],
   ["AI-powered (need the user's API key)", ['autoDescribe', 'autoFixLabels', 'autoCaptions', 'autoSimplify', 'autoSummarize']],

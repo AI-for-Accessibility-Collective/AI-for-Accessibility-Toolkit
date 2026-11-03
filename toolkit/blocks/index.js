@@ -12,10 +12,10 @@
 // argument (runtime.js is the bundle it injects); a host embedding adapters
 // itself calls createBlocks with its own `ai` transport.
 
-export { createBlocks } from './create.js';
+export { createBlocks, setPersonal } from './create.js';
 export { Ended } from './session.js';
 export { BLOCK_NAMES, BLOCKS_VERSION } from './names.js';
 export { CATALOG, EXAMPLE } from './catalog.js';
-export { personalFromProfile, PERSONAL_KEYS } from './personal.js';
+export { personalFromProfile, PERSONAL_KEYS, SETTABLE_KEYS, personalFromSettings, explicitFromMemories, personalForSite, siteOf } from './personal.js';
 export { buildPrompt, cleanOptions, PROMPT_FIELDS, TASKS, PROMPT_VERSION, NO_ANSWER } from './ai/prompts.js';
 export { parseColor, contrast } from './color.js';

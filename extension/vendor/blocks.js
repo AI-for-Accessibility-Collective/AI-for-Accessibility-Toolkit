@@ -259,6 +259,12 @@
       if (typeof fn === "function" && s.alive()) {
         fn(now);
         for (const list of Object.values(lists)) if (list?.addEventListener) s.listen(list, "change", () => fn(read()));
+        if (!shared.personalListeners) shared.personalListeners = /* @__PURE__ */ new Set();
+        const h = () => {
+          if (s.alive()) fn(read());
+        };
+        shared.personalListeners.add(h);
+        s.onEnd(() => shared.personalListeners.delete(h));
       }
       return now;
     }
@@ -806,6 +812,7 @@
         if (e.ctrlKey || e.metaKey || e.isComposing) return;
         if (!allowInFields && editable(e.target)) return;
         e.preventDefault();
+        if (e.isTrusted) env.shared.lastShortcut = Date.now();
         fn(e);
       }, true);
     }
@@ -1081,14 +1088,16 @@
     }
     function say(input, opts = {}) {
       const c = resolveConfig(SAY_DEFAULTS, opts, env.personal, { speechRate: "speechRate" });
+      const remote = env.transport.speak;
       const synth = win.speechSynthesis;
       const Utterance = win.SpeechSynthesisUtterance;
       let resolveDone;
       const done = new Promise((r) => {
         resolveDone = r;
       });
+      let current = null;
       const handle = {
-        supported: !!(synth && Utterance),
+        supported: !!remote || !!(synth && Utterance),
         done,
         get speaking() {
           return state === "speaking" || state === "paused";
@@ -1096,13 +1105,15 @@
         pause() {
           if (state === "speaking") {
             state = "paused";
-            synth.pause();
+            if (remote) current?.pause();
+            else synth.pause();
           }
         },
         resume() {
           if (state === "paused") {
             state = "speaking";
-            synth.resume();
+            if (remote) current?.resume();
+            else synth.resume();
           }
         },
         stop() {
@@ -1120,6 +1131,9 @@
         resolveDone(false);
         return handle;
       }
+      const rate = Math.max(0.5, Math.min(2, Number(c.speechRate) || 1));
+      const pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));
+      const lang = c.lang || doc.documentElement.lang || "";
       const rangeAt = (abs, len) => {
         if (!map) return null;
         const entry = map.find((m) => abs >= m.start && abs < m.end);
@@ -1134,6 +1148,22 @@
         const m = /^[\p{L}\p{N}'’-]+/u.exec(text.slice(abs));
         return m ? m[0].length : 1;
       };
+      const word = (abs, len) => {
+        if (state === "done" || !c.onWord) return;
+        try {
+          c.onWord(rangeAt(abs, len || wordLength(abs)), abs);
+        } catch {
+        }
+      };
+      const next = (i) => {
+        if (state !== "done" && s.alive()) {
+          try {
+            c.onChunk?.(i + 1, parts.length);
+          } catch {
+          }
+          speak(i + 1);
+        }
+      };
       const voice = () => {
         const voices = synth.getVoices ? synth.getVoices() : [];
         return voices.find((v) => v.name === c.voice) || c.lang && voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(String(c.lang).toLowerCase())) || null;
@@ -1144,8 +1174,16 @@
         state = "done";
         if (shared.voice === handle) {
           shared.voice = null;
-          if (wasActive) synth.cancel();
+          if (wasActive) {
+            if (remote) {
+              try {
+                current?.stop();
+              } catch {
+              }
+            } else synth.cancel();
+          }
         }
+        current = null;
         if (c.onWord) try {
           c.onWord(null, -1);
         } catch {
@@ -1159,29 +1197,32 @@
           return;
         }
         const part = parts[i];
+        if (remote) {
+          let ended = false;
+          current = remote({ text: part.text, speechRate: rate, pitch, lang, voice: c.voice || null }, (e) => {
+            if (ended || state === "done" || !e) return;
+            if (e.type === "word") word(part.start + (Number(e.charIndex) || 0), Number(e.length) || 0);
+            else if (e.type === "end") {
+              ended = true;
+              next(i);
+            } else if (["error", "interrupted", "cancelled"].includes(e.type)) {
+              ended = true;
+              finish(true);
+            }
+          });
+          return;
+        }
         const u = new Utterance(part.text);
-        u.rate = Math.max(0.5, Math.min(2, Number(c.speechRate) || 1));
-        u.pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));
-        u.lang = c.lang || doc.documentElement.lang || "";
+        u.rate = rate;
+        u.pitch = pitch;
+        u.lang = lang;
         const v = voice();
         if (v) u.voice = v;
         u.onboundary = (e) => {
-          if (state === "done" || e.name && e.name !== "word" || !c.onWord) return;
-          const abs = part.start + e.charIndex;
-          try {
-            c.onWord(rangeAt(abs, e.charLength || wordLength(abs)), abs);
-          } catch {
-          }
+          if (e.name && e.name !== "word") return;
+          word(part.start + e.charIndex, e.charLength);
         };
-        u.onend = () => {
-          if (state !== "done" && s.alive()) {
-            try {
-              c.onChunk?.(i + 1, parts.length);
-            } catch {
-            }
-            speak(i + 1);
-          }
-        };
+        u.onend = () => next(i);
         u.onerror = (e) => {
           if (e.error !== "interrupted" && e.error !== "canceled") finish(true);
         };
@@ -1192,7 +1233,7 @@
         if (shared.voice && shared.voice !== handle) shared.voice.stop();
         shared.voice = handle;
         state = "speaking";
-        synth.cancel();
+        if (!remote) synth.cancel();
         speak(0);
       }
       s.listen(doc, "keydown", (e) => {
@@ -1368,6 +1409,137 @@
     return { pause, pauseAll, mute, captions };
   }
 
+  // toolkit/blocks/personal-sites.js
+  var clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  var PERSONAL_KEYS = Object.freeze({
+    speechRate: "Speaking rate, 0.5-2. speech.say({ speechRate }) uses the profile's over yours.",
+    fontScale: "Text size in percent, 100-200. Tooltips and panels scale their text by it (their `fontScale`).",
+    textSizeMethod: "'zoom' (the browser's zoom) or 'font' (the text size only): how the person wants text made bigger. Unset: your default.",
+    motionReducer: "true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting.",
+    contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast.",
+    darkMode: "true when the profile asks for a dark theme.",
+    readingLevel: "'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours."
+  });
+  var SETTABLE_KEYS = Object.freeze(["speechRate", "fontScale", "textSizeMethod", "motionReducer", "contrastMode", "darkMode"]);
+  function personalFromSettings(settings, { keepOff = false } = {}) {
+    const s = settings || {};
+    const out = {};
+    if (s.speechRate !== void 0 && s.speechRate !== null && Number.isFinite(Number(s.speechRate))) out.speechRate = clamp(Number(s.speechRate), 0.5, 2);
+    if (s.fontScale !== void 0 && s.fontScale !== null && Number.isFinite(Number(s.fontScale))) out.fontScale = clamp(Math.round(Number(s.fontScale)), 100, 200);
+    if (s.textSizeMethod === "zoom" || s.textSizeMethod === "font") out.textSizeMethod = s.textSizeMethod;
+    for (const k of ["motionReducer", "darkMode"]) {
+      if (s[k] === true) out[k] = true;
+      else if (keepOff && s[k] === false) out[k] = false;
+    }
+    if (typeof s.contrastMode === "string") {
+      if (s.contrastMode !== "none") out.contrastMode = s.contrastMode;
+      else if (keepOff) out.contrastMode = "none";
+    }
+    return out;
+  }
+  function siteOf(hostOrUrl) {
+    let host = String(hostOrUrl || "");
+    try {
+      if (/^[a-z][a-z0-9+.-]*:\/\//i.test(host)) host = new URL(host).hostname;
+    } catch {
+    }
+    return host.toLowerCase().replace(/^www\./, "");
+  }
+  function personalForSite(personal, explicit, host) {
+    const site = siteOf(host);
+    const out = { ...personal || {}, ...explicit?.general || {}, ...site && explicit?.sites?.[site] || {} };
+    for (const k of Object.keys(out)) if (out[k] === false || k === "contrastMode" && out[k] === "none") delete out[k];
+    return out;
+  }
+
+  // toolkit/blocks/profile.js
+  var PERSON_MS = 5e3;
+  function profileBlock(s, env) {
+    const { shared } = env;
+    if (!shared.personalListeners) shared.personalListeners = /* @__PURE__ */ new Set();
+    function get(key) {
+      const p = env.personal;
+      return key === void 0 ? p : p[key];
+    }
+    function byPerson() {
+      const now = Date.now();
+      const last = shared.lastInput;
+      if (last && now - last.at <= PERSON_MS && isOurs(last.target)) return true;
+      return !!shared.lastShortcut && now - shared.lastShortcut <= PERSON_MS;
+    }
+    async function set(changes, { scope = "site" } = {}) {
+      if (!s.alive()) return { applied: false, saved: false, reason: "ended" };
+      const wanted = Object.fromEntries(Object.entries(changes || {}).filter(([k]) => SETTABLE_KEYS.includes(k)));
+      const clean = personalFromSettings(wanted, { keepOff: true });
+      if (!Object.keys(clean).length) return { applied: false, saved: false, reason: "nothing-settable" };
+      if (!byPerson()) return { applied: false, saved: false, reason: "not-by-person" };
+      shared.personalOverrides = { ...shared.personalOverrides || {}, ...clean };
+      const now = env.personal;
+      for (const fn of [...shared.personalListeners]) {
+        try {
+          fn(now, clean);
+        } catch {
+        }
+      }
+      if (!env.transport.profile) return { applied: true, saved: false, reason: "unavailable" };
+      try {
+        const r = await env.transport.profile({ op: "set", changes: clean, scope: scope === "all" ? "all" : "site" });
+        return { applied: true, saved: !!(r && r.saved), ...r && r.reason ? { reason: r.reason } : {} };
+      } catch {
+        return { applied: true, saved: false, reason: "unavailable" };
+      }
+    }
+    function onChange(fn) {
+      if (!s.alive() || typeof fn !== "function") return () => {
+      };
+      const h = (p, changed) => {
+        if (s.alive()) fn(p, changed);
+      };
+      shared.personalListeners.add(h);
+      const stop = () => shared.personalListeners.delete(h);
+      s.onEnd(stop);
+      return stop;
+    }
+    return { get, set, onChange, keys: SETTABLE_KEYS };
+  }
+
+  // toolkit/blocks/zoom.js
+  var clamp2 = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function zoomBlock(s, env) {
+    const t = env.transport.zoom;
+    let mine = false;
+    const restore = () => {
+      Promise.resolve(t({ op: "restore" })).catch(() => {
+      });
+    };
+    async function set(factor) {
+      const f = Number(factor);
+      if (!t || !s.alive() || !Number.isFinite(f)) return false;
+      const r = await Promise.resolve(t({ op: "set", factor: clamp2(f, 0.25, 5) })).catch(() => null);
+      if (!r || !r.ok) return false;
+      if (!s.alive()) {
+        restore();
+        return false;
+      }
+      if (!mine) {
+        mine = true;
+        s.onEnd(restore);
+      }
+      return true;
+    }
+    async function get() {
+      if (!t) return null;
+      const r = await Promise.resolve(t({ op: "get" })).catch(() => null);
+      return r && Number.isFinite(r.factor) ? r.factor : null;
+    }
+    function method(builderDefault = "zoom") {
+      const p = env.personal.textSizeMethod;
+      const m = p === "zoom" || p === "font" ? p : builderDefault === "font" ? "font" : "zoom";
+      return m === "zoom" && !t ? "font" : m;
+    }
+    return { supported: !!t, set, get, method };
+  }
+
   // toolkit/blocks/session.js
   var Ended = class extends Error {
     constructor() {
@@ -1398,7 +1570,9 @@
         return !open;
       },
       alive: () => open,
-      personal: env.personal,
+      get personal() {
+        return env.personal;
+      },
       /** Run fn on end(), in reverse order with the rest. */
       onEnd(fn) {
         if (open) undo.push(fn);
@@ -1597,6 +1771,8 @@
     s.ai = aiBlock(s, env);
     s.speech = speechBlock(s, env);
     s.media = mediaBlock(s, env);
+    s.profile = profileBlock(s, env);
+    s.zoom = zoomBlock(s, env);
     s.page = env.page;
     return s;
   }
@@ -1853,27 +2029,67 @@
 
   // toolkit/blocks/names.js
   var BLOCKS_VERSION = "2026-11-03";
-  var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "speech.out", "speech.in", "media"]);
+  var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "speech.out", "speech.in", "media", "profile", "zoom"]);
 
   // toolkit/blocks/create.js
-  function createBlocks({ win = globalThis, adapter = "adapter", personal = {}, ai = null, capture } = {}) {
+  var EMPTY = Object.freeze({});
+  function setPersonal(win, personal, explicit) {
+    const shared = sharedState(win);
+    const before = shared.personalBase ? personalForSite(shared.personalBase, { general: shared.personalOverrides || {} }, "") : {};
+    const base = Object.freeze(explicit ? personalForSite(personal, explicit, win.location && win.location.hostname) : { ...personal || {} });
+    shared.personalBase = base;
+    if (shared.personalOverrides) {
+      const left = Object.fromEntries(Object.entries(shared.personalOverrides).filter(([k, v]) => base[k] !== v && !(base[k] === void 0 && (v === false || v === "none"))));
+      shared.personalOverrides = Object.keys(left).length ? left : void 0;
+    }
+    const after = personalForSite(base, { general: shared.personalOverrides || {} }, "");
+    const changed = {};
+    for (const k of /* @__PURE__ */ new Set([...Object.keys(before), ...Object.keys(after)])) if (before[k] !== after[k]) changed[k] = after[k];
+    if (Object.keys(changed).length && shared.personalListeners) {
+      for (const fn of [...shared.personalListeners]) {
+        try {
+          fn(after, changed);
+        } catch {
+        }
+      }
+    }
+  }
+  function createBlocks({ win = globalThis, adapter = "adapter", personal, explicit = null, ai = null, capture, profile = null, zoom = null, speak = null } = {}) {
     if (!win || !win.document) throw new Error("createBlocks needs a window with a document.");
+    const shared = sharedState(win);
+    const fn = (f) => typeof f === "function" ? f : null;
     const env = {
       win,
       doc: win.document,
-      shared: sharedState(win),
+      shared,
       adapter,
-      personal: Object.freeze({ ...personal || {} }),
-      transport: { ai: typeof ai === "function" ? ai : null },
+      transport: { ai: fn(ai), profile: fn(profile), zoom: fn(zoom), speak: fn(speak) },
       capture: typeof capture === "function" ? capture : (el) => captureInPage(el, win)
     };
+    if (personal !== void 0 || explicit) setPersonal(win, personal, explicit);
+    let seenBase, seenOverrides, current = Object.freeze({});
+    Object.defineProperty(env, "personal", {
+      enumerable: true,
+      get() {
+        const b = shared.personalBase || EMPTY;
+        const o = shared.personalOverrides;
+        if (b !== seenBase || o !== seenOverrides) {
+          seenBase = b;
+          seenOverrides = o;
+          current = Object.freeze(o ? personalForSite(b, { general: o }, "") : b);
+        }
+        return current;
+      }
+    });
     env.page = pageBlock(env);
     env.announce = announcer(env);
     watchInput(env);
     return Object.freeze({
       session: (config) => createSession(env, config),
       page: env.page,
-      personal: env.personal,
+      get personal() {
+        return env.personal;
+      },
       blocks: BLOCK_NAMES,
       version: BLOCKS_VERSION
     });
@@ -1885,7 +2101,8 @@
       configurable: true,
       value: Object.freeze({
         version: BLOCKS_VERSION,
-        create: (options) => createBlocks({ ...options, win: globalThis })
+        create: (options) => createBlocks({ ...options, win: globalThis }),
+        setPersonal: (personal, explicit) => setPersonal(globalThis, personal, explicit)
       })
     });
   }

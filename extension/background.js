@@ -13,8 +13,11 @@
 //                with the page origin only) goes back with adapter_report
 //   blocks       the building blocks' AI (ai.text, ai.vision) goes to the
 //                toolkit's /v1/ai with the token, which stays here; each
-//                sync reads the person's profile, and its personal settings
-//                (speech rate, reading level, ...) go into every script
+//                sync reads the person's profile and the settings they set
+//                themselves (for every site and per site), which go into
+//                every script; profile.set records a setting the person
+//                chose (/v1/librarian/recordScopedSettings), zoom is the
+//                browser's own (chrome.tabs.setZoom) and speech is chrome.tts
 //   wake-ups     install/startup, a 30-second alarm, the registry's
 //                notification stream while the worker is awake, and the
 //                developer console page itself (bridge.js) right after a save
@@ -25,8 +28,8 @@
 
 import { createRegistryClient } from './vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP, normalizedUrl, urlPatternRegExpSource } from './vendor/protocol/adapter/index.js';
-import { registrationFor, runnable, teardownScript, buildUserScript, scriptId, keyOf, SCRIPT_PREFIX, BLOCKS_FILE, PREVIEW_KEY } from './runtime/scripts.js';
-import { personalFromProfile } from './vendor/blocks/personal.js';
+import { registrationFor, runnable, teardownScript, buildUserScript, personalScript, scriptId, keyOf, SCRIPT_PREFIX, BLOCKS_FILE, PREVIEW_KEY } from './runtime/scripts.js';
+import { personalFromProfile, explicitFromMemories, personalFromSettings, siteOf, SETTABLE_KEYS } from './vendor/blocks/personal.js';
 import { isAllowedServerUrl, readConnection, writeConnection, instanceId, runtimeLabel } from './runtime/config.js';
 
 const APP = BROWSER_RUNTIME_APP;
@@ -69,41 +72,51 @@ async function ensureWorld() {
 }
 
 const codeOf = (script) => (script.js || []).map(j => j.code || `file:${j.file}`).join('\n');
+// The adapter's own script, without the person's settings before it.
+const adapterCodeOf = (script) => { const js = script.js || []; return js.length ? (js[js.length - 1].code || '') : ''; };
 
-async function reconcile(adapters, personal) {
+async function reconcile(adapters, personal, explicit) {
   const status = userScriptsStatus();
   if (!status.available) return { registered: 0, ...status };
   await ensureWorld();
-  const desired = runnable(adapters).map(a => registrationFor(a, { personal }));
+  const desired = runnable(adapters).map(a => registrationFor(a, { personal, explicit }));
   const current = (await chrome.userScripts.getScripts()).filter(s => s.id.startsWith(SCRIPT_PREFIX));
   const currentById = new Map(current.map(s => [s.id, s]));
   const desiredIds = new Set(desired.map(s => s.id));
   const removed = current.filter(s => !desiredIds.has(s.id)).map(s => s.id);
   if (removed.length) await chrome.userScripts.unregister({ ids: removed });
+  // `changed`: the adapter itself changed, so open pages run it again. A
+  // change to the person's settings alone updates the registration; open
+  // pages get the settings in place (applyToOpenTabs).
   const changed = [];
   for (const script of desired) {
     const before = currentById.get(script.id);
     if (!before) { await chrome.userScripts.register([script]); changed.push(script.id); continue; }
     const same = codeOf(before) === codeOf(script) && JSON.stringify(before.matches) === JSON.stringify(script.matches);
-    if (!same) { await chrome.userScripts.update([script]); changed.push(script.id); }
+    if (!same) {
+      await chrome.userScripts.update([script]);
+      if (adapterCodeOf(before) !== adapterCodeOf(script) || JSON.stringify(before.matches) !== JSON.stringify(script.matches)) changed.push(script.id);
+    }
   }
   return { registered: desired.length, removed, changed, ...status };
 }
 
 // Pages that are already open run the new code now (or stop the old one).
-async function applyToOpenTabs(adapters, { removed = [], changed = [] }, personal) {
-  if (typeof chrome.userScripts?.execute !== 'function' || (!removed.length && !changed.length)) return;
+async function applyToOpenTabs(adapters, { removed = [], changed = [] }, personal, explicit, personalChanged = false) {
+  if (typeof chrome.userScripts?.execute !== 'function' || (!removed.length && !changed.length && !personalChanged)) return;
   const byId = new Map(runnable(adapters).map(a => [scriptId(keyOf(a)), a]));
   const tabs = (await chrome.tabs.query({})).filter(t => /^https?:/.test(t.url || ''));
   const jobs = [];
   for (const tab of tabs) {
+    // The person's settings, in place: the adapters keep running.
+    if (personalChanged) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ code: personalScript({ personal, explicit }) }], injectImmediately: true }));
     for (const id of removed) {
       const key = id.slice(SCRIPT_PREFIX.length).replaceAll('~', '/');
       jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ code: teardownScript(key) }] }));
     }
     for (const id of changed) {
       const entry = byId.get(id);
-      if (entry) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ file: BLOCKS_FILE }, { code: buildUserScript(entry, { personal }) }], injectImmediately: true }));
+      if (entry) jobs.push(chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', js: [{ file: BLOCKS_FILE }, { code: personalScript({ personal, explicit }) }, { code: buildUserScript(entry) }], injectImmediately: true }));
     }
   }
   // A tab that cannot take scripts (the Web Store, a crashed page) is skipped.
@@ -163,11 +176,15 @@ async function syncOnce(reason) {
     // The person's settings the blocks follow. A change rebuilds every
     // script, so open pages pick it up. Unreadable: keep the last ones.
     let personal = state.personal || {};
+    let explicit = state.explicit || null;
     try {
       const got = await client.profile.get();
       personal = personalFromProfile(got?.profile ?? got);
     } catch { /* the profile could not be read this time */ }
-    const personalChanged = JSON.stringify(personal) !== JSON.stringify(state.personal || {});
+    try {
+      explicit = explicitFromMemories((await librarian('listMemories', [{ status: 'active' }]))?.memories);
+    } catch { /* the same */ }
+    const personalChanged = JSON.stringify([personal, explicit]) !== JSON.stringify([state.personal || {}, state.explicit || null]);
     let trusted = !!state.etag && scripts.available && reason !== 'reconnect' && !personalChanged;
     if (trusted) {
       const ours = (await chrome.userScripts.getScripts()).filter(x => x.id.startsWith(SCRIPT_PREFIX)).length;
@@ -175,14 +192,16 @@ async function syncOnce(reason) {
     }
     const answer = await client.installed(APP, { includeCode: true, ...(trusted ? { ifEtag: state.etag } : {}) });
     if (answer.unchanged) return writeState({ lastSync: new Date().toISOString(), error: null, scripts });
-    const outcome = await reconcile(answer.adapters, personal);
-    await applyToOpenTabs(answer.adapters, outcome, personal);
+    const outcome = await reconcile(answer.adapters, personal, explicit);
+    await applyToOpenTabs(answer.adapters, outcome, personal, explicit, personalChanged);
     // The popup needs no code.
     const listed = answer.adapters.map(({ package: pkg, descriptor, ...a }) => ({ ...a, portable: !!pkg }));
-    return writeState({
+    const next = await writeState({
       etag: scripts.available ? answer.etag : null, registered: outcome.registered,
-      adapters: listed, lastSync: new Date().toISOString(), error: null, scripts, personal,
+      adapters: listed, lastSync: new Date().toISOString(), error: null, scripts, personal, explicit,
     });
+    await staleZoomInOpenTabs(next).catch(() => {});
+    return next;
   } catch (e) {
     const message = e?.code === 'unauthorized' || /401|unauthorized/i.test(e?.message || '') ? 'The toolkit did not accept the token. Connect again.' : `Could not reach the toolkit: ${e?.message || e}`;
     return writeState({ error: message, lastSync: new Date().toISOString(), scripts: userScriptsStatus() });
@@ -268,6 +287,164 @@ async function aiCall(message, sender) {
   return { text: typeof body.text === 'string' ? body.text : null, ...(body.reason ? { reason: body.reason } : {}) };
 }
 
+// The person's Librarian on the toolkit, with the token, for what the MCP
+// tools do not cover: the settings they set themselves.
+async function librarian(method, args) {
+  const connection = await readConnection();
+  if (!connection) throw new Error('This browser is not connected to a toolkit.');
+  const res = await fetch(`${connection.url}/v1/librarian/${method}`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${connection.token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ args }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.ok) throw new Error(body.error || `http-${res.status}`);
+  return body.result;
+}
+
+// An installed adapter, or the sidebar's preview.
+async function knownAdapter(key) {
+  if (key === PREVIEW_KEY) return true;
+  const state = await readState();
+  return (state.adapters || []).some(a => keyOf(a) === key);
+}
+
+// ── the blocks' profile, zoom and speech ─────────────────────────────────────
+
+chrome.runtime.onUserScriptMessage?.addListener((message, sender, sendResponse) => {
+  const handler = { 'ai4a11y:profile': profileCall, 'ai4a11y:zoom': zoomCall }[message?.type];
+  if (!handler) return false;
+  handler(message, sender).then(result => sendResponse({ ok: true, result }), error => sendResponse({ ok: false, error: error.message }));
+  return true;
+});
+
+// profile.set: a setting the person chose in an adapter (the block checked
+// it was their own click or key), recorded as theirs for this site or for
+// every site. For every site, this site's own value goes, so it follows.
+// A preview's change stays in the page.
+async function profileCall(message, sender) {
+  const key = String(message.key || '');
+  if (!(await knownAdapter(key))) throw new Error('This adapter is not installed in this browser.');
+  const r = message.request || {};
+  if (r.op !== 'set') throw new Error(`Unknown profile operation ${r.op}.`);
+  const changes = personalFromSettings(Object.fromEntries(Object.entries(r.changes || {}).filter(([k]) => SETTABLE_KEYS.includes(k))), { keepOff: true });
+  if (!Object.keys(changes).length) throw new Error('Nothing to set.');
+  if (key === PREVIEW_KEY) return { saved: false, reason: 'preview' };
+  const site = siteOf(sender.url || '');
+  if (!site) throw new Error('No site to record it for.');
+  if (!(await readConnection())) return { saved: false, reason: 'not-connected' };
+  const scope = r.scope === 'all' ? 'general' : `origin:${site}`;
+  await librarian('recordScopedSettings', [scope, changes, { writer: 'person' }]);
+  if (scope === 'general') for (const k of Object.keys(changes)) await librarian('removeScopedSetting', [`origin:${site}`, k]).catch(() => {});
+  sync('profile');
+  return { saved: true };
+}
+
+// zoom: the browser's own zoom, which Chrome keeps per site. What the site's
+// zoom was before an adapter changed it is kept here (zoomRecords, by
+// hostname), so turning the adapter off puts it back even after reloads and
+// in another tab; a zoom the person changed meanwhile stays theirs. A restore
+// waits a moment, because an update turns an adapter off and on again.
+const ZOOM_RESTORE_MS = 1500;
+const zoomRestores = new Map();
+const hostOf = (url) => { try { return new URL(url).hostname; } catch { return ''; } };
+const sameZoom = (a, b) => Math.abs(a - b) < 0.001;
+async function zoomRecords() { return (await chrome.storage.local.get('zoomRecords')).zoomRecords || {}; }
+
+async function zoomCall(message, sender) {
+  const key = String(message.key || '');
+  const r = message.request || {};
+  // Putting the zoom back is always allowed: an adapter being uninstalled
+  // asks after it is gone from the list.
+  if (r.op !== 'restore' && !(await knownAdapter(key))) throw new Error('This adapter is not installed in this browser.');
+  const tabId = sender.tab?.id;
+  const host = hostOf(sender.url || '');
+  if (tabId === undefined || !host) throw new Error('No tab to zoom.');
+  if (r.op === 'get') return { factor: await chrome.tabs.getZoom(tabId) };
+  if (r.op === 'set') {
+    const factor = Math.max(0.25, Math.min(5, Number(r.factor)));
+    if (!Number.isFinite(factor)) throw new Error('A zoom factor is a number.');
+    clearTimeout(zoomRestores.get(host));
+    zoomRestores.delete(host);
+    const now = await chrome.tabs.getZoom(tabId);
+    const records = await zoomRecords();
+    records[host] = { original: records[host]?.original ?? now, applied: factor, key };
+    await chrome.storage.local.set({ zoomRecords: records });
+    if (!sameZoom(now, factor)) await chrome.tabs.setZoom(tabId, factor);
+    return { ok: true };
+  }
+  if (r.op === 'restore') {
+    clearTimeout(zoomRestores.get(host));
+    zoomRestores.set(host, setTimeout(() => { zoomRestores.delete(host); restoreZoom(tabId, host).catch(() => {}); }, ZOOM_RESTORE_MS));
+    return { ok: true };
+  }
+  throw new Error(`Unknown zoom operation ${r.op}.`);
+}
+
+async function restoreZoom(tabId, host) {
+  const records = await zoomRecords();
+  const rec = records[host];
+  if (!rec) return;
+  const now = await chrome.tabs.getZoom(tabId); // a closed tab throws: the record waits for the next page
+  if (sameZoom(now, rec.applied)) await chrome.tabs.setZoom(tabId, rec.original);
+  delete records[host];
+  await chrome.storage.local.set({ zoomRecords: records });
+}
+
+// A site whose zoom an adapter changed, where that adapter no longer runs
+// (uninstalled, switched off, switched off for the site, or it was a
+// preview): put the zoom back. Checked when such a page loads, and in open
+// pages after every sync: the page that zoomed may be long gone, and Chrome
+// kept the zoom for the site.
+async function staleZoom(tabId, url, state) {
+  const host = hostOf(url);
+  if (!host || zoomRestores.has(host)) return;
+  const rec = (await zoomRecords())[host];
+  if (!rec) return;
+  state ||= await readState();
+  let here;
+  try { here = normalizedUrl(url); } catch { return; }
+  const origin = new URL(url).origin;
+  const runs = rec.key !== PREVIEW_KEY && (state.adapters || []).some(a => keyOf(a) === rec.key && a.available && a.enabled && a.portable
+    && a.sites?.[origin] !== false && (a.urlPatterns || []).some(p => new RegExp(urlPatternRegExpSource(p)).test(here)));
+  if (!runs) await restoreZoom(tabId, host);
+}
+
+async function staleZoomInOpenTabs(state) {
+  const records = await zoomRecords();
+  if (!Object.keys(records).length) return;
+  for (const tab of await chrome.tabs.query({})) {
+    if (/^https?:/.test(tab.url || '') && records[hostOf(tab.url)]) await staleZoom(tab.id, tab.url, state).catch(() => {});
+  }
+}
+
+// speech: chrome.tts, one voice in the browser. Each say() chunk comes over
+// the page's port; its events go back the same way. When the page goes away
+// (or stops), so does its speech, and only its own.
+let ttsPort = null;
+chrome.runtime.onUserScriptConnect?.addListener((port) => {
+  if (port.name !== 'ai4a11y:tts') return;
+  const post = (e) => { try { port.postMessage(e); } catch { /* gone */ } };
+  port.onMessage.addListener(async (m) => {
+    if (m?.op === 'speak') {
+      if (!(await knownAdapter(String(m.key || '')))) { post({ type: 'error', error: 'not installed' }); return; }
+      ttsPort = port;
+      chrome.tts.speak(String(m.text || '').slice(0, 32000), {
+        rate: Math.max(0.5, Math.min(2, Number(m.speechRate) || 1)), pitch: Math.max(0, Math.min(2, Number(m.pitch) || 1)),
+        ...(m.lang ? { lang: String(m.lang) } : {}), ...(m.voice ? { voiceName: String(m.voice) } : {}),
+        enqueue: false,
+        onEvent: (e) => {
+          if (['end', 'interrupted', 'cancelled', 'error'].includes(e.type) && ttsPort === port) ttsPort = null;
+          post({ type: e.type, charIndex: e.charIndex, length: e.length });
+        },
+      });
+    } else if (ttsPort === port) {
+      if (m?.op === 'stop') { ttsPort = null; chrome.tts.stop(); } else if (m?.op === 'pause') chrome.tts.pause(); else if (m?.op === 'resume') chrome.tts.resume();
+    }
+  });
+  port.onDisconnect.addListener(() => { if (ttsPort === port) { ttsPort = null; chrome.tts.stop(); } });
+});
+
 // What the person sees of an element, from the visible tab: for an element
 // the page cannot draw itself (another site's image). It must be in view.
 async function captureRect(tab, rect) {
@@ -323,9 +500,10 @@ async function flushReports() {
   if (pendingReports.length) flushReports();
 }
 
-chrome.tabs.onUpdated.addListener((tabId, info) => {
+chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
   // A navigation starts the page's adapters over.
   if (info.status === 'loading') readState().then(s => { if (s.tabs?.[tabId]) { delete s.tabs[tabId]; writeState({ tabs: s.tabs }); } }).catch(() => {});
+  if (info.status === 'complete' && /^https?:/.test(tab?.url || '')) staleZoom(tabId, tab.url).catch(() => {});
 });
 chrome.tabs.onRemoved.addListener((tabId) => {
   readState().then(s => { if (s.tabs?.[tabId]) { delete s.tabs[tabId]; writeState({ tabs: s.tabs }); } }).catch(() => {});
@@ -445,4 +623,4 @@ chrome.runtime.onStartup.addListener(() => start('startup'));
 connectionRegistry().catch(() => {});
 
 // For tests and the console: what this runtime is doing.
-globalThis.ai4a11yRuntime = { sync, handlers, readState };
+globalThis.ai4a11yRuntime = { sync, handlers, readState, zoomRecords };

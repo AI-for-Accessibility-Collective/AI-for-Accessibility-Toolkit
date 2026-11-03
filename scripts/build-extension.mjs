@@ -30,6 +30,7 @@ const FILES = [
   'adapter-mcp/registry.js',
   // The person's settings for the blocks, as the web surface derives them.
   'blocks/personal.js',
+  'blocks/personal-sites.js',
   'core/ability.js',
   'core/strength.js',
   'core/units.js',

@@ -220,8 +220,9 @@ async function runPreview(request) {
     // blocks follow the person's settings as of the runtime's last sync.
     const { runtimeState } = await chrome.storage.session.get('runtimeState').catch(() => ({}));
     const personal = runtimeState?.personal || {};
+    const explicit = runtimeState?.explicit || null;
     const [res] = await chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', injectImmediately: true,
-      js: [{ file: AXE_FILE }, { file: BLOCKS_FILE }, { code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks, audit: true, personal }) }] });
+      js: [{ file: AXE_FILE }, { file: BLOCKS_FILE }, { code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks, audit: true, personal, explicit }) }] });
     result = res?.result || { status: 'failed', message: res?.error || 'the page gave no result' };
   } catch (e) {
     result = { status: 'failed', message: e.message };

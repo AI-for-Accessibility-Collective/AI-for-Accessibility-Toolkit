@@ -5,8 +5,11 @@
 //   s.speech.listen({ commands: { 'next heading': () => ..., 'click *': (name) => s.page.find(name)?.click() } });
 //
 // say(): one voice at a time, page-wide, so two adapters never talk over each
-// other. Speech waits for the person's first click or key where the browser
-// requires one, and Escape always stops it. Long text is spoken in chunks
+// other. Where the host has its own speech (the browser runtime: the
+// extension's chrome.tts, the voices the person set up in their system) it
+// speaks with that; otherwise with the page's speechSynthesis. Either way it
+// waits for the person's first click or key in the page, and Escape always
+// stops it. Long text is spoken in chunks
 // (browsers cut long utterances off). Given an element, onWord gets a DOM
 // Range of each word as it is spoken, for highlight.range().
 // The speaking rate comes from the person's profile when it has one.
@@ -51,16 +54,18 @@ export function speechBlock(s, env) {
 
   function say(input, opts = {}) {
     const c = resolveConfig(SAY_DEFAULTS, opts, env.personal, { speechRate: 'speechRate' });
+    const remote = env.transport.speak;
     const synth = win.speechSynthesis;
     const Utterance = win.SpeechSynthesisUtterance;
     let resolveDone;
     const done = new Promise((r) => { resolveDone = r; });
+    let current = null; // the host's speech for the chunk being spoken
     const handle = {
-      supported: !!(synth && Utterance),
+      supported: !!remote || !!(synth && Utterance),
       done,
       get speaking() { return state === 'speaking' || state === 'paused'; },
-      pause() { if (state === 'speaking') { state = 'paused'; synth.pause(); } },
-      resume() { if (state === 'paused') { state = 'speaking'; synth.resume(); } },
+      pause() { if (state === 'speaking') { state = 'paused'; if (remote) current?.pause(); else synth.pause(); } },
+      resume() { if (state === 'paused') { state = 'speaking'; if (remote) current?.resume(); else synth.resume(); } },
       stop() { finish(true); },
     };
     let state = 'waiting';
@@ -68,6 +73,9 @@ export function speechBlock(s, env) {
     const { text, map } = source(input);
     const parts = chunks(text, Math.max(40, Number(c.chunkChars) || 220));
     if (!parts.length) { resolveDone(false); return handle; }
+    const rate = Math.max(0.5, Math.min(2, Number(c.speechRate) || 1));
+    const pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));
+    const lang = c.lang || doc.documentElement.lang || '';
 
     const rangeAt = (abs, len) => {
       if (!map) return null;
@@ -80,6 +88,11 @@ export function speechBlock(s, env) {
       return r;
     };
     const wordLength = (abs) => { const m = /^[\p{L}\p{N}'’-]+/u.exec(text.slice(abs)); return m ? m[0].length : 1; };
+    const word = (abs, len) => {
+      if (state === 'done' || !c.onWord) return;
+      try { c.onWord(rangeAt(abs, len || wordLength(abs)), abs); } catch { /* the builder's callback */ }
+    };
+    const next = (i) => { if (state !== 'done' && s.alive()) { try { c.onChunk?.(i + 1, parts.length); } catch { /* callback */ } speak(i + 1); } };
     const voice = () => {
       const voices = synth.getVoices ? synth.getVoices() : [];
       return voices.find((v) => v.name === c.voice) || (c.lang && voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(String(c.lang).toLowerCase()))) || null;
@@ -89,7 +102,11 @@ export function speechBlock(s, env) {
       if (state === 'done') return;
       const wasActive = state !== 'waiting';
       state = 'done';
-      if (shared.voice === handle) { shared.voice = null; if (wasActive) synth.cancel(); }
+      if (shared.voice === handle) {
+        shared.voice = null;
+        if (wasActive) { if (remote) { try { current?.stop(); } catch { /* gone */ } } else synth.cancel(); }
+      }
+      current = null;
       if (c.onWord) try { c.onWord(null, -1); } catch { /* the builder's callback */ }
       resolveDone(!stopped);
     }
@@ -98,18 +115,26 @@ export function speechBlock(s, env) {
       if (state === 'done' || !s.alive()) return;
       if (i >= parts.length) { finish(false); return; }
       const part = parts[i];
+      if (remote) {
+        let ended = false;
+        current = remote({ text: part.text, speechRate: rate, pitch, lang, voice: c.voice || null }, (e) => {
+          if (ended || state === 'done' || !e) return;
+          if (e.type === 'word') word(part.start + (Number(e.charIndex) || 0), Number(e.length) || 0);
+          else if (e.type === 'end') { ended = true; next(i); } else if (['error', 'interrupted', 'cancelled'].includes(e.type)) { ended = true; finish(true); }
+        });
+        return;
+      }
       const u = new Utterance(part.text);
-      u.rate = Math.max(0.5, Math.min(2, Number(c.speechRate) || 1));
-      u.pitch = Math.max(0, Math.min(2, Number(c.pitch) || 1));
-      u.lang = c.lang || doc.documentElement.lang || '';
+      u.rate = rate;
+      u.pitch = pitch;
+      u.lang = lang;
       const v = voice();
       if (v) u.voice = v;
       u.onboundary = (e) => {
-        if (state === 'done' || (e.name && e.name !== 'word') || !c.onWord) return;
-        const abs = part.start + e.charIndex;
-        try { c.onWord(rangeAt(abs, e.charLength || wordLength(abs)), abs); } catch { /* the builder's callback */ }
+        if (e.name && e.name !== 'word') return;
+        word(part.start + e.charIndex, e.charLength);
       };
-      u.onend = () => { if (state !== 'done' && s.alive()) { try { c.onChunk?.(i + 1, parts.length); } catch { /* callback */ } speak(i + 1); } };
+      u.onend = () => next(i);
       u.onerror = (e) => { if (e.error !== 'interrupted' && e.error !== 'canceled') finish(true); };
       synth.speak(u);
     }
@@ -120,7 +145,7 @@ export function speechBlock(s, env) {
       if (shared.voice && shared.voice !== handle) shared.voice.stop();
       shared.voice = handle;
       state = 'speaking';
-      synth.cancel();
+      if (!remote) synth.cancel();
       speak(0);
     }
 
@@ -128,7 +153,8 @@ export function speechBlock(s, env) {
     s.onEnd(() => finish(true));
     const activation = win.navigator && win.navigator.userActivation;
     if (c.waitForGesture && activation && !activation.hasBeenActive) {
-      // Browsers block speech until the person has used the page.
+      // Nothing talks before the person has used the page (and browsers
+      // block the page's own speech until then).
       const go = (e) => { if (e.isTrusted && e.key !== 'Escape') { off1(); off2(); start(); } };
       const off1 = s.listen(doc, 'pointerdown', go, true);
       const off2 = s.listen(doc, 'keydown', go, true);

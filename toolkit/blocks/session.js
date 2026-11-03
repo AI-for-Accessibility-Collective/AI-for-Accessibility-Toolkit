@@ -19,6 +19,8 @@ import { textBlock } from './text.js';
 import { aiBlock } from './ai.js';
 import { speechBlock } from './speech.js';
 import { mediaBlock } from './media.js';
+import { profileBlock } from './profile.js';
+import { zoomBlock } from './zoom.js';
 
 /** What s.guard() throws when the session ended while it waited. */
 export class Ended extends Error {
@@ -51,7 +53,7 @@ export function createSession(env, config = {}) {
     id,
     get ended() { return !open; },
     alive: () => open,
-    personal: env.personal,
+    get personal() { return env.personal; },
 
     /** Run fn on end(), in reverse order with the rest. */
     onEnd(fn) { if (open) undo.push(fn); },
@@ -225,6 +227,8 @@ export function createSession(env, config = {}) {
   s.ai = aiBlock(s, env);
   s.speech = speechBlock(s, env);
   s.media = mediaBlock(s, env);
+  s.profile = profileBlock(s, env);
+  s.zoom = zoomBlock(s, env);
   s.page = env.page;
   return s;
 }

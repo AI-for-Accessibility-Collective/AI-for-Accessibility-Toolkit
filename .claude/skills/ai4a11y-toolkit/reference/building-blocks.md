@@ -34,6 +34,7 @@ export default {
 |---|---|
 | `speechRate` | Speaking rate, 0.5-2. speech.say({ speechRate }) uses the profile's over yours. |
 | `fontScale` | Text size in percent, 100-200. Tooltips and panels scale their text by it (their `fontScale`). |
+| `textSizeMethod` | 'zoom' (the browser's zoom) or 'font' (the text size only): how the person wants text made bigger. Unset: your default. |
 | `motionReducer` | true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting. |
 | `contrastMode` | 'light' or 'yellow-black' when the profile asks for more contrast. |
 | `darkMode` | true when the profile asks for a dark theme. |
@@ -357,7 +358,7 @@ Always, whatever the config:
 
 ### Speech: speak (`speech.out`)
 
-Read text aloud, with word-by-word events for highlighting.
+Read text aloud, with word-by-word events for highlighting. In the browser runtime it speaks with the browser's own speech (the voices the person set up), elsewhere with the page's.
 
 ```javascript
 const r = s.speech.say(elementOrText, { speechRate, voice, lang, onWord: (range) => h.move(range), onChunk })
@@ -368,10 +369,10 @@ r.pause(); r.resume(); r.stop(); await r.done; r.speaking
 |---|---|---|
 | `speechRate` | `1` | 0.5-2. |
 | `pitch` | `1` | 0-2. |
-| `voice` |  | A voice name from speechSynthesis.getVoices(). |
+| `voice` |  | A voice name (speechSynthesis.getVoices() in a page; the browser's voices in the runtime). |
 | `lang` |  | e.g. 'en-GB'. By default the page's language. |
 | `chunkChars` | `220` | Longest piece spoken at once (browsers cut long ones off). |
-| `waitForGesture` | `true` | Wait for the person's first click or key where the browser requires it. |
+| `waitForGesture` | `true` | Wait for the person's first click or key in the page. |
 
 From the person's profile, over your value:
 
@@ -422,6 +423,62 @@ Always, whatever the config:
 - end() never starts what the person paused or played themselves.
 - It never re-mutes what the person unmuted.
 - It never touches the page's own play() promise.
+
+### The person's settings (`profile`)
+
+Read the person's settings on this site, and record a change they make in your adapter, for this site or every site.
+
+```javascript
+s.profile.get() / s.profile.get('fontScale')   // = toolkit.personal, kept current
+await s.profile.set({ fontScale: 150 })                    // this site (the default)
+await s.profile.set({ fontScale: 150 }, { scope: 'all' })  // every site
+s.profile.onChange((personal, changed) => ...)
+```
+
+| Config | Default | What it does |
+|---|---|---|
+| `scope` | `"site"` | set(): 'site' records it for this site; 'all' for every site (and drops this site's own value, so it follows). |
+
+From the person's profile, over your value:
+
+- `speechRate`: Settable.
+- `fontScale`: Settable.
+- `textSizeMethod`: Settable.
+- `motionReducer`: Settable.
+- `contrastMode`: Settable.
+- `darkMode`: Settable.
+
+Always, whatever the config:
+
+- Only the person changes their profile: set() works only right after their own click, tap or key on the toolkit's UI in this page or on an adapter's shortcut; otherwise it returns { applied: false, reason: 'not-by-person' }.
+- Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, motionReducer, contrastMode, darkMode.
+- The change applies in this page at once, for every adapter, and is saved to the profile where the host can ({ saved }).
+- What the person set for a site wins over what they set for every site, which wins over what the toolkit derived from their needs.
+
+### Browser zoom (`zoom`)
+
+Zoom the page with the browser's own zoom, which reflows it like the person's own zoom; and whether to zoom or change the text size.
+
+```javascript
+const method = s.zoom.method('zoom')   // 'zoom' | 'font': the person's textSizeMethod, else yours
+if (method === 'zoom') await s.zoom.set(1.5); else s.css('text-size', '...')   // never both
+await s.zoom.get()   // the zoom now, or null
+s.zoom.supported
+```
+
+| Config | Default | What it does |
+|---|---|---|
+| `method` | `"zoom"` | method(builderDefault): your default when the person has not chosen; 'font' where zoom is not offered. |
+
+From the person's profile, over your value:
+
+- `textSizeMethod`: The person's choice of zoom or text size wins over yours.
+
+Always, whatever the config:
+
+- Only in the browser runtime (the browser keeps zoom per site); elsewhere supported is false and method() answers 'font'.
+- end() puts back the zoom from before, unless the person changed it meanwhile.
+- Zoom or text size, never both: method() gives one answer.
 
 ## Prompts (`s.ai.text`, `s.ai.vision`)
 

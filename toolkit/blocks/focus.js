@@ -58,6 +58,8 @@ export function keysBlock(s, env) {
       if (e.ctrlKey || e.metaKey || e.isComposing) return;
       if (!allowInFields && editable(e.target)) return;
       e.preventDefault();
+      // The person's own key on a shortcut counts as using the adapter (profile.set).
+      if (e.isTrusted) env.shared.lastShortcut = Date.now();
       fn(e);
     }, true);
   }

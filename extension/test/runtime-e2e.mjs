@@ -269,12 +269,66 @@ try {
   await page.waitForFunction(() => document.querySelector('h1').dataset.fromConsole === undefined, null, background);
   await consoleUi.close();
 
+  // ── the blocks: the person's own setting saved for this site, browser zoom, the browser's speech ──
+  // chrome.tts is the browser's; here it is recorded, with word events as Chrome sends them.
+  await runtime(() => {
+    globalThis.__spoken = [];
+    chrome.tts.speak = (text, opts) => {
+      globalThis.__spoken.push({ text, rate: opts.rate });
+      setTimeout(() => { opts.onEvent({ type: 'word', charIndex: 0, length: 4 }); opts.onEvent({ type: 'end', charIndex: text.length }); }, 20);
+    };
+  });
+  await registry.publish({ descriptor: describe('text-size', 'Text size'), code: `export default {
+  enable(options, toolkit) {
+    const s = (this.s = toolkit.session());
+    const b = s.el('button', { text: 'Bigger text', attrs: { id: 'bigger', type: 'button' } });
+    s.append(document.body, b);
+    s.listen(b, 'click', async () => {
+      const r = await s.profile.set({ fontScale: 150, textSizeMethod: 'zoom' });
+      document.body.dataset.saved = String(r.saved);
+      if (s.zoom.method('font') === 'zoom') await s.zoom.set(s.profile.get('fontScale') / 100);
+      const words = [];
+      const said = await s.speech.say('Text is bigger.', { onWord: (range, at) => { if (at >= 0) words.push(at); } }).done;
+      document.body.dataset.said = said + ':' + words.join(',');
+    });
+    // Without the person, nothing is saved.
+    s.profile.set({ fontScale: 200 }).then((r) => { document.body.dataset.unasked = r.reason; });
+    document.body.dataset.personal = JSON.stringify(toolkit.personal);
+  },
+  disable() { this.s?.end(); delete document.body.dataset.personal; },
+};` });
+  await registry.install('browser-runtime', { appId: 'console', id: 'text-size' });
+  await page.waitForFunction(() => document.body.dataset.personal === '{}', null, background);
+  await page.waitForFunction(() => document.body.dataset.unasked === 'not-by-person', null, background);
+  const zoomNow = () => runtime((id) => chrome.tabs.getZoom(id), shopTabId);
+  assert.equal(await zoomNow(), 1);
+  await page.bringToFront();
+  await page.click('#bigger');
+  await page.waitForFunction(() => document.body.dataset.said, null, background);
+  assert.equal(await page.evaluate(() => document.body.dataset.saved), 'true');
+  assert.equal(await zoomNow(), 1.5, 'the browser zoomed the page');
+  assert.equal(await page.evaluate(() => document.body.dataset.said), 'true:0', 'spoken by the browser, with its word events');
+  assert.deepEqual(await runtime(() => globalThis.__spoken), [{ text: 'Text is bigger.', rate: 1 }]);
+  // Recorded as the person's own, for this site only.
+  const librarianCall = async (method, args) => (await (await fetch(`${base}/v1/librarian/${method}`, { method: 'POST', headers: { authorization: `Bearer ${dev.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args }) })).json()).result;
+  assert.deepEqual((await librarianCall('effectivePreferences', [`${shop}/products`])).settings, { fontScale: 150, textSizeMethod: 'zoom' });
+  assert.deepEqual((await librarianCall('effectivePreferences', ['https://elsewhere.example/'])).settings, {});
+  // The next page on this site starts with it.
+  await until(async () => JSON.stringify((await runtime(() => globalThis.ai4a11yRuntime.readState())).explicit?.sites?.localhost || {}) === '{"fontScale":150,"textSizeMethod":"zoom"}', 'the sync to pick up the setting');
+  await page.reload();
+  await page.waitForFunction(() => document.body.dataset.personal === '{"fontScale":150,"textSizeMethod":"zoom"}', null, background);
+  assert.equal(await zoomNow(), 1.5, 'Chrome kept the zoom for the site');
+  // Uninstalled: the zoom from before comes back.
+  await registry.uninstall('browser-runtime', { owner: 'dev', appId: 'console', id: 'text-size' });
+  await until(async () => (await zoomNow()) === 1, 'the zoom to be put back');
+  assert.deepEqual(await runtime(() => globalThis.ai4a11yRuntime.zoomRecords()), {});
+
   // ── disconnecting removes every script and turns everything off ──
   await runtime(() => globalThis.ai4a11yRuntime.handlers.disconnect());
   await page.waitForFunction(() => document.body.dataset.bigButtons === undefined, null, background);
   assert.deepEqual(await runtime(() => chrome.userScripts.getScripts().then(s => s.length)), 0);
   assert.deepEqual(pageErrors, [], 'the adapters raised no page errors');
-  console.log('Adapter runtime browser workflow passed: user-scripts switch, connect checks, run on target pages with parameters, live edit without reload, exact scope, per-site off and on, a shared pinned adapter, a failing adapter reported, popup, console bridge wake-up, uninstall, an adapter a coding agent published running here and reporting back to the console, disconnect.');
+  console.log('Adapter runtime browser workflow passed: user-scripts switch, connect checks, run on target pages with parameters, live edit without reload, exact scope, per-site off and on, a shared pinned adapter, a failing adapter reported, popup, console bridge wake-up, uninstall, an adapter a coding agent published running here and reporting back to the console, the blocks\' profile, zoom and speech through the browser, disconnect.');
 } finally {
   await context?.close().catch(() => {});
   app.registry.closeAll();

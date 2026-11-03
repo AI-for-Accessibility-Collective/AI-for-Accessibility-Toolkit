@@ -18,8 +18,14 @@
 //   - gives it the building blocks (toolkit/blocks): toolkit.session(),
 //     toolkit.page and toolkit.personal, from the bundle injected before the
 //     script (BLOCKS_FILE). Their AI goes through the service worker to the
-//     toolkit's /v1/ai, and `personal` is the person's profile settings as of
-//     the last sync, which override what the adapter sets as defaults.
+//     toolkit's /v1/ai, and `personal` is the person's settings on this
+//     page's site as of the last sync (from their profile, and what they set
+//     for every site or this one), which override what the adapter sets as
+//     defaults. Those come in their own script before the adapter's
+//     (personalScript), page-wide, so a change reaches open pages without
+//     turning their adapters off and on. Through the service worker too: profile.set (recording a
+//     setting the person chose), zoom (the browser's own, chrome.tabs) and
+//     speech (chrome.tts, over a port that ends with the page).
 // All adapters in a page share one USER_SCRIPT world, so a later
 // chrome.userScripts.execute can find and disable a running adapter.
 
@@ -44,12 +50,29 @@ const PREAMBLE = String.raw`
   };
   const errorText = (e) => (e && (e.stack || e.message)) ? String(e.message || e) : String(e);
   // The building blocks for this adapter, when the bundle is in the page.
-  const blocksFor = (key, personal, ask) => {
+  // Speech goes over a port: the service worker sends its word events back,
+  // and stops speaking when the page goes away.
+  const speakVia = (key) => (request, onEvent) => {
+    let port;
+    try { port = chrome.runtime.connect({ name: 'ai4a11y:tts' }); } catch (e) { setTimeout(() => onEvent({ type: 'error' }), 0); return { stop() {}, pause() {}, resume() {} }; }
+    let open = true;
+    port.onMessage.addListener((e) => { if (open) onEvent(e); });
+    port.onDisconnect.addListener(() => { if (open) { open = false; onEvent({ type: 'error' }); } });
+    port.postMessage({ op: 'speak', key, ...request });
+    const send = (op) => { if (open) try { port.postMessage({ op }); } catch (e) { /* gone */ } };
+    return {
+      stop: () => { if (!open) return; send('stop'); open = false; try { port.disconnect(); } catch (e) { /* gone */ } },
+      pause: () => send('pause'), resume: () => send('resume'),
+    };
+  };
+  const blocksFor = (key, ask) => {
     const B = globalThis.__ai4a11yBlocks;
-    if (!B || typeof B.create !== 'function') return {};
-    const b = B.create({ adapter: key.split('/').pop(), personal,
-      ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })) });
-    return { session: b.session, page: b.page, personal: b.personal, blocks: b.blocks };
+    if (!B || typeof B.create !== 'function') return null;
+    return B.create({ adapter: key.split('/').pop(),
+      ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })),
+      profile: (request) => ask({ type: 'ai4a11y:profile', request }),
+      zoom: (request) => ask({ type: 'ai4a11y:zoom', request }),
+      speak: speakVia(key) });
   };
   const turnOff = () => {
     const running = rt.adapters[KEY];
@@ -59,11 +82,14 @@ const PREAMBLE = String.raw`
     return true;
   };`;
 
+// The preview needs only the speech port of the preamble.
+const PREVIEW_SPEAK = PREAMBLE.slice(PREAMBLE.indexOf('  const speakVia'), PREAMBLE.indexOf('  const blocksFor'));
+
 /**
  * The script for one installed, available adapter.
  * @param {object} entry one item of adapter_installed (with its package)
  */
-export function buildUserScript(entry, { personal = {} } = {}) {
+export function buildUserScript(entry) {
   const key = keyOf(entry);
   const factory = moduleFactorySource(entry.package.code);
   const scope = (entry.urlPatterns || []).map(urlPatternRegExpSource);
@@ -75,12 +101,12 @@ export function buildUserScript(entry, { personal = {} } = {}) {
   const OFF_ON = ${JSON.stringify(off)};
   const PARAMETERS = ${JSON.stringify(entry.parameters || {})};
   const ENTRY = ${JSON.stringify(entry.package.entry || null)};
-  const PERSONAL = ${JSON.stringify(personal || {})};
 ${PREAMBLE}
   const ask = (message) => chrome.runtime.sendMessage({ ...message, key: KEY }).then((r) => {
     if (!r || !r.ok) throw new Error((r && r.error) || 'the toolkit did not answer');
     return r.result;
   });
+  const BLOCKS = blocksFor(KEY, ask);
   const TOOLKIT = Object.freeze({
     data: Object.freeze({
       get: (k) => ask({ type: 'ai4a11y:data', op: 'get', k }),
@@ -88,7 +114,8 @@ ${PREAMBLE}
       delete: (k) => ask({ type: 'ai4a11y:data', op: 'delete', k }),
     }),
     observe: (o) => ask({ type: 'ai4a11y:observe', text: typeof o === 'string' ? o : o && o.text, kind: o && o.type, data: o && o.data }),
-    ...blocksFor(KEY, PERSONAL, ask),
+    ...(BLOCKS ? { session: BLOCKS.session, page: BLOCKS.page, blocks: BLOCKS.blocks } : {}),
+    get personal() { return BLOCKS ? BLOCKS.personal : {}; },
   });
   const wasRunning = turnOff();
   const port = location.port || (location.protocol === 'https:' ? '443' : '80');
@@ -130,12 +157,22 @@ ${PREAMBLE}
 })();`;
 }
 
-/** The chrome.userScripts registration for one adapter: the blocks, then its script. */
-export function registrationFor(entry, options = {}) {
+/**
+ * The person's settings for the blocks in a page: from their profile
+ * (personalFromProfile) and what they set themselves (explicitFromMemories),
+ * the page's site picked in the page. Runs before each adapter, and alone in
+ * open pages when they change.
+ */
+export function personalScript({ personal = {}, explicit = null } = {}) {
+  return `(() => { const B = globalThis.__ai4a11yBlocks; if (B && typeof B.setPersonal === 'function') B.setPersonal(${JSON.stringify(personal || {})}, ${JSON.stringify(explicit || null)}); })();`;
+}
+
+/** The chrome.userScripts registration for one adapter: the blocks, the person's settings, then its script. */
+export function registrationFor(entry, { personal = {}, explicit = null } = {}) {
   return {
     id: scriptId(keyOf(entry)),
     matches: chromeMatchPatterns(entry.urlPatterns || []),
-    js: [{ file: BLOCKS_FILE }, { code: buildUserScript(entry, options) }],
+    js: [{ file: BLOCKS_FILE }, { code: personalScript({ personal, explicit }) }, { code: buildUserScript(entry) }],
     runAt: 'document_idle',
     world: 'USER_SCRIPT',
     allFrames: false,
@@ -174,8 +211,8 @@ const CHECK_MS = 5000;
 const SETTLE_MS = 400;
 const AXE_MS = 30000;
 
-/** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[], audit?: boolean, personal?: object}} preview */
-export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [], audit = false, personal = {} }) {
+/** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[], audit?: boolean, personal?: object, explicit?: object}} preview */
+export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [], audit = false, personal = {}, explicit = null }) {
   const factory = moduleFactorySource(code);
   const scope = (urlPatterns || []).map(urlPatternRegExpSource);
   const checkList = (checks || []).map(c => `async function () {\n${c.code}\n}`).join(',\n');
@@ -192,9 +229,15 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
     if (!r || !r.ok) throw new Error((r && r.error) || 'the toolkit did not answer');
     return r.result;
   });
+  // In the extension, the blocks reach the service worker as the preview
+  // (a preview's profile.set applies in the page only); elsewhere (the
+  // verifier) the page's own speech and no zoom.
   const B = globalThis.__ai4a11yBlocks;
-  const blocks = B && typeof B.create === 'function' ? B.create({ adapter: 'preview', personal: ${JSON.stringify(personal || {})},
-    ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })) }) : null;
+  const viaWorker = typeof chrome === 'object' && !!chrome && !!chrome.runtime && typeof chrome.runtime.connect === 'function';
+${PREVIEW_SPEAK}
+  const blocks = B && typeof B.create === 'function' ? B.create({ adapter: 'preview', personal: ${JSON.stringify(personal || {})}, explicit: ${JSON.stringify(explicit || null)},
+    ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })),
+    ...(viaWorker ? { profile: (request) => ask({ type: 'ai4a11y:profile', request }), zoom: (request) => ask({ type: 'ai4a11y:zoom', request }), speak: speakVia(KEY) } : {}) }) : null;
   const TOOLKIT = Object.freeze({
     data: Object.freeze({
       get: async (k) => (k === undefined ? Object.fromEntries(store) : store.get(k)),
@@ -202,7 +245,8 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
       delete: async (k) => { if (k === undefined) store.clear(); else store.delete(k); },
     }),
     observe: async () => {},
-    ...(blocks ? { session: blocks.session, page: blocks.page, personal: blocks.personal, blocks: blocks.blocks } : {}),
+    ...(blocks ? { session: blocks.session, page: blocks.page, blocks: blocks.blocks } : {}),
+    get personal() { return blocks ? blocks.personal : {}; },
   });
   const port = location.port || (location.protocol === 'https:' ? '443' : '80');
   const here = location.protocol + '//' + location.hostname.toLowerCase() + ':' + port + location.pathname;

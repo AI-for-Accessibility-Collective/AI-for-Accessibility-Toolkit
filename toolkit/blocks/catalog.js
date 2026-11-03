@@ -247,12 +247,12 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
   {
     name: 'speech.out',
     title: 'Speech: speak',
-    summary: 'Read text aloud, with word-by-word events for highlighting.',
+    summary: 'Read text aloud, with word-by-word events for highlighting. In the browser runtime it speaks with the browser\'s own speech (the voices the person set up), elsewhere with the page\'s.',
     api: [
       'const r = s.speech.say(elementOrText, { speechRate, voice, lang, onWord: (range) => h.move(range), onChunk })',
       'r.pause(); r.resume(); r.stop(); await r.done; r.speaking',
     ],
-    config: cfg(SAY_DEFAULTS, { speechRate: '0.5-2.', pitch: '0-2.', voice: 'A voice name from speechSynthesis.getVoices().', lang: "e.g. 'en-GB'. By default the page's language.", chunkChars: 'Longest piece spoken at once (browsers cut long ones off).', waitForGesture: 'Wait for the person\'s first click or key where the browser requires it.' }),
+    config: cfg(SAY_DEFAULTS, { speechRate: '0.5-2.', pitch: '0-2.', voice: 'A voice name (speechSynthesis.getVoices() in a page; the browser\'s voices in the runtime).', lang: "e.g. 'en-GB'. By default the page's language.", chunkChars: 'Longest piece spoken at once (browsers cut long ones off).', waitForGesture: 'Wait for the person\'s first click or key in the page.' }),
     personal: { speechRate: 'The profile\'s speaking rate wins over yours.' },
     invariants: ['One voice at a time, page-wide: a new say() stops the last.', 'Escape always stops it.', 'It never starts before the person has used the page.'],
   },
@@ -278,6 +278,43 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     ],
     config: cfg(PAUSE_DEFAULTS, { showControls: 'pause(): show the browser\'s controls while paused.' }),
     invariants: ['end() never starts what the person paused or played themselves.', 'It never re-mutes what the person unmuted.', 'It never touches the page\'s own play() promise.'],
+  },
+  {
+    name: 'profile',
+    title: 'The person\'s settings',
+    summary: 'Read the person\'s settings on this site, and record a change they make in your adapter, for this site or every site.',
+    api: [
+      "s.profile.get() / s.profile.get('fontScale')   // = toolkit.personal, kept current",
+      "await s.profile.set({ fontScale: 150 })                    // this site (the default)",
+      "await s.profile.set({ fontScale: 150 }, { scope: 'all' })  // every site",
+      's.profile.onChange((personal, changed) => ...)',
+    ],
+    config: { scope: { default: 'site', description: "set(): 'site' records it for this site; 'all' for every site (and drops this site's own value, so it follows)." } },
+    personal: { speechRate: 'Settable.', fontScale: 'Settable.', textSizeMethod: 'Settable.', motionReducer: 'Settable.', contrastMode: 'Settable.', darkMode: 'Settable.' },
+    invariants: [
+      'Only the person changes their profile: set() works only right after their own click, tap or key on the toolkit\'s UI in this page or on an adapter\'s shortcut; otherwise it returns { applied: false, reason: \'not-by-person\' }.',
+      'Only settings, checked and kept in range: speechRate, fontScale, textSizeMethod, motionReducer, contrastMode, darkMode.',
+      'The change applies in this page at once, for every adapter, and is saved to the profile where the host can ({ saved }).',
+      'What the person set for a site wins over what they set for every site, which wins over what the toolkit derived from their needs.',
+    ],
+  },
+  {
+    name: 'zoom',
+    title: 'Browser zoom',
+    summary: 'Zoom the page with the browser\'s own zoom, which reflows it like the person\'s own zoom; and whether to zoom or change the text size.',
+    api: [
+      "const method = s.zoom.method('zoom')   // 'zoom' | 'font': the person's textSizeMethod, else yours",
+      "if (method === 'zoom') await s.zoom.set(1.5); else s.css('text-size', '...')   // never both",
+      'await s.zoom.get()   // the zoom now, or null',
+      's.zoom.supported',
+    ],
+    config: { method: { default: 'zoom', description: "method(builderDefault): your default when the person has not chosen; 'font' where zoom is not offered." } },
+    personal: { textSizeMethod: 'The person\'s choice of zoom or text size wins over yours.' },
+    invariants: [
+      'Only in the browser runtime (the browser keeps zoom per site); elsewhere supported is false and method() answers \'font\'.',
+      'end() puts back the zoom from before, unless the person changed it meanwhile.',
+      'Zoom or text size, never both: method() gives one answer.',
+    ],
   },
 ]);
 

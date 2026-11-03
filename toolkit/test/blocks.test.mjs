@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import {
   createBlocks, Ended, CATALOG, BLOCK_NAMES, personalFromProfile, buildPrompt, cleanOptions, TASKS, NO_ANSWER,
+  explicitFromMemories, personalForSite, setPersonal,
 } from '../blocks/index.js';
 
 const { JSDOM } = createRequire(import.meta.url)('jsdom');
@@ -18,10 +19,10 @@ async function test(name, fn) {
 }
 const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
 
-function page(body, { personal, ai, url = 'https://example.com/a' } = {}) {
+function page(body, { personal, explicit, ai, profile, zoom, speak, url = 'https://example.com/a' } = {}) {
   const dom = new JSDOM(`<!doctype html><html lang="en"><head></head><body>${body}</body></html>`, { url, pretendToBeVisual: true });
   const win = dom.window;
-  const tk = createBlocks({ win, adapter: 'test', personal, ai });
+  const tk = createBlocks({ win, adapter: 'test', personal, explicit, ai, profile, zoom, speak });
   const $ = (sel) => win.document.querySelector(sel);
   const html = () => win.document.documentElement.outerHTML;
   const fire = (el, type, init = {}) => el.dispatchEvent(new win.MouseEvent(type, { bubbles: true, ...init }));
@@ -476,6 +477,36 @@ await test('speech.say: waits for the person to use the page first', async () =>
   assert.equal(await r.done, false);
 });
 
+await test("speech.say: the host's speech when there is one, with its word events, one voice, and stop", async () => {
+  const requests = [];
+  const handles = [];
+  const speak = (req, onEvent) => {
+    requests.push(req);
+    const h = { stopped: false, stop() { this.stopped = true; }, pause() {}, resume() {} };
+    handles.push(h);
+    setTimeout(() => { if (!h.stopped) { onEvent({ type: 'word', charIndex: 4, length: 3 }); onEvent({ type: 'end' }); } }, 5);
+    return h;
+  };
+  const { tk, $, win, doc, key } = page('<p id="p">One two. Three four.</p>', { personal: { speechRate: 1.4 }, speak });
+  const spoken = fakeSpeech(win);
+  const s = tk.session();
+  const words = [];
+  const r = s.speech.say($('#p'), { chunkChars: 40, onWord: (range) => { if (range) words.push(range.toString()); } });
+  assert.equal(await r.done, true);
+  assert.equal(spoken.length, 0, 'not the page\'s speechSynthesis');
+  assert.equal(requests[0].speechRate, 1.4);
+  assert.equal(requests[0].lang, 'en');
+  assert.equal(words[0], 'two');
+  // An interruption (another tab spoke) ends this one.
+  const second = createBlocks({ win, adapter: 'x', speak: (req, onEvent) => { setTimeout(() => onEvent({ type: 'interrupted' }), 5); return { stop() {}, pause() {}, resume() {} }; } }).session();
+  assert.equal(await second.speech.say('Hi.').done, false);
+  const third = s.speech.say('Long enough to stop.');
+  key(doc.body, 'Escape');
+  assert.equal(await third.done, false);
+  assert.equal(handles.at(-1).stopped, true, 'Escape stopped the host speech');
+  s.end(); second.end();
+});
+
 await test('speech.listen: an indicator with Stop, commands with a name, and it stops after repeated errors', async () => {
   const { tk, win, doc, html } = page('<button id="b">Checkout</button>');
   const before = html();
@@ -558,6 +589,117 @@ await test('prompts: the fields shape the prompt; the fence and the output contr
   assert.throws(() => cleanOptions('simplify', { voice: 'x' }), /Unknown option "voice"/);
   assert.throws(() => cleanOptions('simplify', { readingLevel: 20 }), /readingLevel/);
   assert.match(buildPrompt('describe', '', { purpose: 'long' }).prompt, /2 to 5 sentences/);
+});
+
+// ── profile ─────────────────────────────────────────────────────────────────
+
+await test('profile.set: only after the person used the toolkit\'s UI; applies page-wide at once; saved through the host', async () => {
+  const saved = [];
+  const { tk, win, $, doc } = page('<p id="p">x</p>', { personal: { fontScale: 120 }, profile: async (r) => { saved.push(r); return { saved: true }; } });
+  const s = tk.session();
+  const other = createBlocks({ win, adapter: 'other' });
+  const os = other.session();
+  const seen = [];
+  os.profile.onChange((p, changed) => seen.push([p.fontScale, changed]));
+  const shared = win.__ai4a11yBlocksShared;
+  // The adapter alone cannot change the person's profile.
+  assert.deepEqual(await s.profile.set({ fontScale: 150 }), { applied: false, saved: false, reason: 'not-by-person' });
+  // Nor after a click on the page itself.
+  shared.lastInput = { target: $('#p'), at: Date.now() };
+  assert.equal((await s.profile.set({ fontScale: 150 })).reason, 'not-by-person');
+  // A click on the toolkit's own UI counts.
+  const button = s.el('button', { text: 'Bigger' });
+  s.append(doc.body, button);
+  shared.lastInput = { target: button, at: Date.now() };
+  assert.deepEqual(await s.profile.set({ fontScale: 150, lineHeight: 2, translateTo: 'fr' }), { applied: true, saved: true });
+  assert.deepEqual(saved, [{ op: 'set', changes: { fontScale: 150 }, scope: 'site' }], 'only settable keys');
+  assert.equal(s.profile.get('fontScale'), 150);
+  assert.equal(other.personal.fontScale, 150, 'every adapter in the page sees it');
+  assert.equal(tk.personal.fontScale, 150);
+  assert.deepEqual(seen, [[150, { fontScale: 150 }]]);
+  // Out of range is kept in range; every site is 'all'.
+  shared.lastShortcut = Date.now();
+  shared.lastInput = null;
+  await s.profile.set({ fontScale: 900, textSizeMethod: 'font' }, { scope: 'all' });
+  assert.deepEqual(saved[1], { op: 'set', changes: { fontScale: 200, textSizeMethod: 'font' }, scope: 'all' });
+  assert.deepEqual(await s.profile.set({ nope: 1 }), { applied: false, saved: false, reason: 'nothing-settable' });
+  // An explicit off turns off what the profile asked for.
+  await s.profile.set({ motionReducer: false });
+  assert.equal('motionReducer' in s.profile.get(), false);
+  s.end(); os.end();
+});
+
+await test('profile: without a host, a change applies in the page only; a shortcut counts as the person', async () => {
+  const { tk, win, doc } = page('<p>x</p>');
+  const s = tk.session();
+  s.keys.shortcut({ code: 'KeyT', alt: true }, () => {});
+  // jsdom events are untrusted; a trusted key on the shortcut sets this.
+  doc.dispatchEvent(new win.KeyboardEvent('keydown', { code: 'KeyT', altKey: true, bubbles: true }));
+  assert.equal(win.__ai4a11yBlocksShared.lastShortcut, undefined, 'an untrusted key is not the person');
+  win.__ai4a11yBlocksShared.lastShortcut = Date.now();
+  assert.deepEqual(await s.profile.set({ speechRate: 1.5 }), { applied: true, saved: false, reason: 'unavailable' });
+  assert.equal(tk.personal.speechRate, 1.5);
+  s.end();
+});
+
+await test("personal for a site: the profile's, then every site's, then this site's; explicit off wins", async () => {
+  const explicit = explicitFromMemories([
+    { source: 'user-explicit', status: 'active', aspect: 'setting.fontScale', scope: 'general', settings: { fontScale: 140 }, updatedAt: 1 },
+    { source: 'user-explicit', status: 'active', aspect: 'setting.fontScale', scope: 'origin:example.com', settings: { fontScale: 170 }, updatedAt: 1 },
+    { source: 'user-explicit', status: 'active', aspect: 'setting.motionReducer', scope: 'origin:example.com', settings: { motionReducer: false }, updatedAt: 1 },
+    { source: 'user-explicit', status: 'active', aspect: 'setting.darkMode', scope: 'category:news', settings: { darkMode: true }, updatedAt: 1 },
+    { source: 'learned', status: 'active', aspect: 'setting.speechRate', scope: 'general', settings: { speechRate: 2 } },
+    { source: 'user-explicit', status: 'archived', aspect: 'setting.speechRate', scope: 'general', settings: { speechRate: 0.5 } },
+  ]);
+  assert.deepEqual(explicit, { general: { fontScale: 140 }, sites: { 'example.com': { fontScale: 170, motionReducer: false } } });
+  const base = { fontScale: 120, motionReducer: true, readingLevel: 'plain' };
+  assert.deepEqual(personalForSite(base, explicit, 'www.example.com'), { fontScale: 170, readingLevel: 'plain' });
+  assert.deepEqual(personalForSite(base, explicit, 'other.org'), { fontScale: 140, motionReducer: true, readingLevel: 'plain' });
+  const { tk } = page('<p>x</p>', { personal: base, explicit, url: 'https://www.example.com/x' });
+  assert.equal(tk.personal.fontScale, 170);
+});
+
+await test('setPersonal: new settings reach running adapters in place, and tell those that listen', async () => {
+  const { tk, win, doc } = page('<p>x</p>', { personal: { fontScale: 120 } });
+  const s = tk.session();
+  const seen = [];
+  s.profile.onChange((p, changed) => seen.push(changed));
+  const prefs = [];
+  s.watch.prefs((p) => prefs.push(p.motionReducer));
+  const b = s.el('button');
+  s.append(doc.body, b);
+  win.__ai4a11yBlocksShared.lastInput = { target: b, at: Date.now() };
+  await s.profile.set({ speechRate: 1.5 });
+  // The saved setting comes back from the toolkit with a change made elsewhere.
+  setPersonal(win, { fontScale: 120, motionReducer: true }, { general: { speechRate: 1.5 }, sites: {} });
+  assert.deepEqual({ ...s.profile.get() }, { fontScale: 120, motionReducer: true, speechRate: 1.5 });
+  assert.equal(win.__ai4a11yBlocksShared.personalOverrides, undefined, 'what this page set is now in the settings');
+  assert.deepEqual(seen, [{ speechRate: 1.5 }, { motionReducer: true }]);
+  assert.deepEqual(prefs, [false, false, true]);
+  assert.equal(s.ended, false);
+  s.end();
+});
+
+// ── zoom ────────────────────────────────────────────────────────────────────
+
+await test("zoom: the host's zoom, put back on end(); the method follows the person, else the builder", async () => {
+  const calls = [];
+  const zoom = async (r) => { calls.push(r); return r.op === 'get' ? { factor: 1 } : { ok: true }; };
+  const { tk } = page('<p>x</p>', { zoom });
+  const s = tk.session();
+  assert.equal(s.zoom.supported, true);
+  assert.equal(s.zoom.method(), 'zoom');
+  assert.equal(s.zoom.method('font'), 'font');
+  assert.equal(await s.zoom.set(9), true);
+  assert.equal(await s.zoom.get(), 1);
+  s.end();
+  assert.deepEqual(calls.map((c) => c.op + (c.factor ? ':' + c.factor : '')), ['set:5', 'get', 'restore']);
+  const chosen = page('<p>x</p>', { zoom, personal: { textSizeMethod: 'font' } }).tk.session();
+  assert.equal(chosen.zoom.method('zoom'), 'font', "the person's choice wins");
+  const none = page('<p>x</p>', { personal: { textSizeMethod: 'zoom' } }).tk.session();
+  assert.equal(none.zoom.supported, false);
+  assert.equal(none.zoom.method('zoom'), 'font', 'no zoom here: text size');
+  assert.equal(await none.zoom.set(1.5), false);
 });
 
 // ── the catalog documents what exists ───────────────────────────────────────

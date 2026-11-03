@@ -651,7 +651,7 @@ Decided by the project lead, 2026-11-03:
 
 ## What exists now
 
-- `toolkit/blocks/`: the 15 blocks, `createBlocks()`, the catalog the skill
+- `toolkit/blocks/`: the 17 blocks, `createBlocks()`, the catalog the skill
   reference is generated from, the prompts, and `personalFromProfile()`.
   Tests: `toolkit/test/blocks.test.mjs`.
 - The browser runtime injects the blocks bundle (`extension/vendor/blocks.js`,
@@ -661,6 +661,26 @@ Decided by the project lead, 2026-11-03:
   worker to `/v1/ai` with the person's token, which never reaches the page.
   Each sync reads the profile; a change to the personal settings rebuilds
   the scripts, so open pages pick it up.
+- Two blocks added for the decisions above: **profile** (`s.profile.get`,
+  `set(changes, { scope: 'site' | 'all' })`, `onChange`): an adapter
+  records a setting the person chose, only right after their own click or
+  key on the toolkit's UI or an adapter's shortcut, for this site by
+  default or every site; and **zoom** (`s.zoom.set/get/method`): the
+  browser's own zoom, and `method()` picks zoom or text size from the
+  person's `textSizeMethod` (a new settings key), else the builder's
+  default, never both. In the browser runtime, `profile.set` goes to the
+  Librarian's `recordScopedSettings` (scope `origin:<host>` or `general`),
+  zoom is `chrome.tabs.setZoom` (the service worker keeps what each site's
+  zoom was, and puts it back when the adapter stops running there, even
+  after reloads), and `speech.say` speaks with `chrome.tts` over a port
+  that ends with the page. The person's settings now reach every adapter
+  in a page from one script before the adapters (`personalScript`), picked
+  for the page's site; a change reaches open pages in place, without
+  turning their adapters off and on. Tests: `toolkit/test/blocks.test.mjs`,
+  `extension/test/runtime.test.mjs`, and the real-Chromium
+  `npm run test:runtime:e2e` (a click saves the setting for the site, the
+  page zooms, the browser speaks, a reload starts with the setting, an
+  uninstall puts the zoom back).
 - The service: `server/src/ai.js` (`POST /v1/ai/text`, `/v1/ai/vision`,
   `GET /v1/ai/usage`, `PUT /v1/ai/settings`). Tests: `server/test/ai.test.mjs`.
 - The builder learns them from the skill's `reference/building-blocks.md`

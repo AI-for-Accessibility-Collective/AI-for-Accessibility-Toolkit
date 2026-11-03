@@ -139,6 +139,11 @@ export function watchBlock(s, env) {
     if (typeof fn === 'function' && s.alive()) {
       fn(now);
       for (const list of Object.values(lists)) if (list?.addEventListener) s.listen(list, 'change', () => fn(read()));
+      // …and when the person changes theirs in this page (profile.set).
+      if (!shared.personalListeners) shared.personalListeners = new Set();
+      const h = () => { if (s.alive()) fn(read()); };
+      shared.personalListeners.add(h);
+      s.onEnd(() => shared.personalListeners.delete(h));
     }
     return now;
   }

@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
-import { buildUserScript, teardownScript, registrationFor, runnable, scriptId, buildPreviewScript, previewTeardownScript, AXE_TAGS } from '../runtime/scripts.js';
+import { buildUserScript, teardownScript, registrationFor, personalScript, runnable, scriptId, buildPreviewScript, previewTeardownScript, AXE_TAGS } from '../runtime/scripts.js';
 import { isAllowedServerUrl } from '../runtime/config.js';
 
 let pass = 0, fail = 0;
@@ -259,7 +259,9 @@ await test('with the blocks bundle, an adapter builds on toolkit.session() and i
     disable() { this.s.end(); },
   };`;
   const before = w.document.body.innerHTML;
-  w.eval(buildUserScript(entry({ package: { format: 'web-module@1', code } }), { personal: { readingLevel: 'easy-read' } }));
+  // The person's settings come first, page-wide, with what they set for this site.
+  w.eval(personalScript({ personal: { readingLevel: 'easy-read', fontScale: 120 }, explicit: { general: {}, sites: { 'shop.example': { fontScale: 160 } } } }));
+  w.eval(buildUserScript(entry({ package: { format: 'web-module@1', code } })));
   for (let i = 0; i < 20 && !sent.some(m => m.type === 'ai4a11y:report'); i++) await settle();
   const ai = sent.find(m => m.type === 'ai4a11y:ai');
   assert.equal(ai.key, 'ada/console/big-buttons');
@@ -267,14 +269,22 @@ await test('with the blocks bundle, an adapter builds on toolkit.session() and i
   assert.equal(sent.find(m => m.type === 'ai4a11y:report').status, 'applied');
   assert.match(w.document.body.textContent, /Plain words about the loan\./);
   assert.equal(w.__personal.readingLevel, 'easy-read');
+  assert.equal(w.__personal.fontScale, 160, "this site's own setting");
+  // A change reaches the running adapter in place: it is not turned off and on.
+  const reports = sent.filter(m => m.type === 'ai4a11y:report').length;
+  w.eval(personalScript({ personal: { readingLevel: 'plain' } }));
+  await settle();
+  assert.equal(sent.filter(m => m.type === 'ai4a11y:report').length, reports);
+  assert.match(w.document.body.textContent, /Plain words about the loan\./);
   w.eval(teardownScript('ada/console/big-buttons'));
   assert.equal(w.document.body.innerHTML, before);
 });
 
-await test('registrations inject the blocks before the adapter', () => {
+await test("registrations inject the blocks and the person's settings before the adapter", () => {
   const reg = registrationFor(entry(), { personal: { speechRate: 1.5 } });
   assert.deepEqual(reg.js[0], { file: 'vendor/blocks.js' });
-  assert.match(reg.js[1].code, /"speechRate":1\.5/);
+  assert.match(reg.js[1].code, /setPersonal\(\{"speechRate":1\.5\}, null\)/);
+  assert.equal(reg.js[2].code, buildUserScript(entry()), 'the adapter\'s script does not carry them');
 });
 
 await test('extension/vendor matches the toolkit modules', () => {

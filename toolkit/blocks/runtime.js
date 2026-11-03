@@ -4,7 +4,7 @@
 // copy wins, so every adapter's blocks share one live region, one voice and
 // one page filter.
 
-import { createBlocks } from './create.js';
+import { createBlocks, setPersonal } from './create.js';
 import { BLOCKS_VERSION } from './names.js';
 
 if (!globalThis.__ai4a11yBlocks) {
@@ -13,6 +13,7 @@ if (!globalThis.__ai4a11yBlocks) {
     value: Object.freeze({
       version: BLOCKS_VERSION,
       create: (options) => createBlocks({ ...options, win: globalThis }),
+      setPersonal: (personal, explicit) => setPersonal(globalThis, personal, explicit),
     }),
   });
 }
