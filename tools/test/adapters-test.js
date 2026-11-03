@@ -251,6 +251,27 @@ async function run() {
     check('tables: original data rows are preserved', table.querySelectorAll('tr').length === 5);
   }
 
+  // A tfoot written before tbody (HTML 4 order): the generated thead goes
+  // before it, a child of the table, not inside the footer.
+  {
+    const doc = mount(`
+      <table>
+        <caption>Sales</caption>
+        <tfoot><tr><td>Total</td><td>1000</td></tr></tfoot>
+        <tbody>
+          <tr><td>NYC</td><td>100</td></tr>
+          <tr><td>LA</td><td>200</td></tr>
+          <tr><td>NYC</td><td>300</td></tr>
+          <tr><td>SF</td><td>400</td></tr>
+        </tbody>
+      </table>`);
+    fakeAI({ inferColumnHeader: (s) => (s.includes('100') ? 'Amount' : 'City') });
+    const table = doc.querySelector('table');
+    await fixTableHeaders(table);
+    check('tables: generated thead is the table\'s own, with tfoot first', table.tHead !== null && table.tHead.parentElement === table);
+    check('tables: nothing inserted into tfoot', table.tFoot.querySelector('thead') === null);
+  }
+
   // Non-clobbering + skip rules via fixAllTables.
   {
     const doc = mount(`

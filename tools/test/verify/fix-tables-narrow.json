@@ -13,7 +13,7 @@
     },
     {
       "name": "sort button in inventory-table header survives promotion, is focusable, has accessible name and fires click listener",
-      "code": "const btn = document.getElementById('sort-price-btn');\nif (!btn) return false;\nif (btn.closest('th') !== document.querySelector('#inventory-table th.col-price')) return false;\nif (btn.getAttribute('aria-label') !== 'Sort by Unit Price') return false;\nbtn.focus();\nif (document.activeElement !== btn) return false;\nconst rect = btn.getBoundingClientRect();\nif (rect.width < 24 || rect.height < 24) return false;\nconst prevClicks = window.__sortClicked || 0;\nbtn.click();\nreturn window.__sortClicked === prevClicks + 1;"
+      "code": "const btn = document.getElementById('sort-price-btn');\nif (!btn) return false;\nif (btn.closest('th') !== document.querySelector('#inventory-table th.col-price')) return false;\nif (btn.getAttribute('aria-label') !== 'Sort by Unit Price') return false;\nbtn.focus();\nif (document.activeElement !== btn) return false;\nconst rect = btn.getBoundingClientRect();\nif (rect.width < 24 || rect.height < 24) return false;\nconst prevClicks = window.__sortClicked || 0;\nbtn.click();\nconst clicked = window.__sortClicked === prevClicks + 1;\nbtn.blur();\nreturn clicked;"
     },
     {
       "name": "sales-table gets AI-generated thead in correct HTML order and original data rows intact",

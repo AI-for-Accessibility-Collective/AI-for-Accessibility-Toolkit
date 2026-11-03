@@ -11055,7 +11055,7 @@ ${chunk}
         headerRow.appendChild(th);
       }
       thead.appendChild(headerRow);
-      const firstRowOrBody = table.querySelector("tbody, tr");
+      const firstRowOrBody = table.querySelector(":scope > tbody, :scope > tfoot, :scope > tr");
       if (firstRowOrBody) {
         firstRowOrBody.before(thead);
       } else {

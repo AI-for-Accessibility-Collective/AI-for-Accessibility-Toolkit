@@ -134,8 +134,10 @@ export async function fixTableHeaders(table) {
     thead.appendChild(headerRow);
 
     // Place thead in valid HTML sequence: after caption and colgroup,
-    // before tbody or the first tr.
-    const firstRowOrBody = table.querySelector('tbody, tr');
+    // before tbody, tfoot (old pages put it first) or the first tr. The
+    // table's own children only: a row in a nested table or inside tfoot is
+    // not where thead goes.
+    const firstRowOrBody = table.querySelector(':scope > tbody, :scope > tfoot, :scope > tr');
     if (firstRowOrBody) {
       firstRowOrBody.before(thead);
     } else {
