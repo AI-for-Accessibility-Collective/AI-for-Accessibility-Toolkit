@@ -1,0 +1,13 @@
+{
+  "about": "Live pages every built-in adapter is also run on, for robustness: real markup, real barriers, and pages that are already accessible, which an adapter must not make worse. Chosen for range, not endorsed; they change without notice.",
+  "sites": [
+    { "name": "bad-home", "url": "https://www.w3.org/WAI/demos/bad/before/home.html", "about": "W3C's Before and After Demonstration: the inaccessible home page (layout tables, images of text, no headings)" },
+    { "name": "bad-tickets", "url": "https://www.w3.org/WAI/demos/bad/before/tickets.html", "about": "W3C BAD: the inaccessible ticket form" },
+    { "name": "bad-survey", "url": "https://www.w3.org/WAI/demos/bad/before/survey.html", "about": "W3C BAD: the inaccessible survey form" },
+    { "name": "deque-workshop", "url": "https://workshop2.dequelabs.com/", "about": "Deque's training site: a recipe dashboard with cards and small fixed-width tables" },
+    { "name": "deque-mars", "url": "https://dequeuniversity.com/demo/mars/", "about": "Deque's Mars Commuter demo: a travel site with deliberate barriers" },
+    { "name": "uw-before", "url": "https://www.washington.edu/accesscomputing/AU/before.html", "about": "University of Washington's Accessible University, the inaccessible version" },
+    { "name": "wikipedia", "url": "https://en.wikipedia.org/wiki/Web_accessibility", "about": "A long, mostly accessible article with tables, references and navigation" },
+    { "name": "gov-uk", "url": "https://www.gov.uk/", "about": "An accessible government home page" }
+  ]
+}

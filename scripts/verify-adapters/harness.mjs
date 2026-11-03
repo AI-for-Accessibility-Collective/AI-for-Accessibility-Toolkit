@@ -11,7 +11,8 @@
 //
 // A spec names the adapter and the test page it runs on:
 //   { file: 'tools/adapters/big-targets.js', export: 'BigTargets',
-//     page: 'big-targets.html',           // in tools/test/verify/pages/
+//     page: 'big-targets.html',           // in tools/test/verify/pages/, or
+//                                         // an https URL (a robustness site)
 //     options: {},                        // enable(options)
 //     ai: { describeImage: 'A red bicycle.' },   // fixed AI answers, by name
 //     harness: { enable: '...', disable: '...' }, // for a module of fix
@@ -94,6 +95,22 @@ function snapshot() {
   return copy.outerHTML;
 }
 
+/**
+ * The toolkit's marks in the page: elements, classes, ids and data-
+ * attributes named ai4a11y. What disable() leaves of them is left over,
+ * whatever else a live page changed by itself meanwhile.
+ */
+function marks() {
+  const out = new Set();
+  for (const el of document.querySelectorAll('*')) {
+    const tag = el.tagName.toLowerCase();
+    if (/ai4a11y/i.test(el.id)) out.add(`<${tag} id="${el.id}">`);
+    for (const c of el.classList) if (/ai4a11y/i.test(c)) out.add(`<${tag} class="${c}">`);
+    for (const a of el.attributes) if (/ai4a11y/i.test(a.name)) out.add(`<${tag} ${a.name}>`);
+  }
+  return [...out];
+}
+
 /** Where two snapshots of the page's HTML first differ, briefly. */
 function firstDifference(a, b) {
   let i = 0;
@@ -110,24 +127,35 @@ export async function openVerifier({ headless = true } = {}) {
 
   async function verify(spec, { screenshot = false } = {}) {
     if (!spec?.file) throw new Error('file is required');
-    if (!spec.page || !existsSync(path.resolve(PAGES, spec.page))) throw new Error(`page must be a file in tools/test/verify/pages/ (got ${spec.page})`);
+    const live = /^https:\/\//.test(String(spec.page || ''));
+    if (!live && (!spec.page || !existsSync(path.resolve(PAGES, spec.page)))) throw new Error(`page must be a file in tools/test/verify/pages/ or an https URL (got ${spec.page})`);
     const code = await bundle(spec.file);
-    const context = await browser.newContext({ viewport: spec.viewport || { width: 1280, height: 800 }, reducedMotion: spec.reducedMotion || 'no-preference' });
+    // A live site's Content-Security-Policy would block the injected scripts, as the extension's user scripts are not.
+    const context = await browser.newContext({ viewport: spec.viewport || { width: 1280, height: 800 }, reducedMotion: spec.reducedMotion || 'no-preference', bypassCSP: live });
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(`page error: ${e.message}`));
     page.on('console', (msg) => { if (msg.type() === 'error') errors.push(`console error: ${msg.text()}`); });
     try {
-      await page.goto(`${base}/${spec.page}`, { waitUntil: 'load' });
+      if (live) {
+        await page.goto(spec.page, { waitUntil: 'load', timeout: 45_000 });
+        await page.waitForTimeout(1500);
+      } else await page.goto(`${base}/${spec.page}`, { waitUntil: 'load' });
       // Run, then taken out again: the page's HTML is compared before and after.
       for (const content of [axe, code]) await (await page.addScriptTag({ content })).evaluate((el) => el.remove());
       const installed = await page.evaluate(install, { exportName: spec.export, harness: spec.harness, ai: spec.ai });
       if (!installed.ok) return { status: 'failed', message: installed.error, errors };
       await page.waitForTimeout(100);
       const htmlBefore = await page.evaluate(snapshot);
+      const marksBefore = new Set(await page.evaluate(marks));
+      // A page that changes by itself (a carousel, a clock) cannot be compared exactly.
+      await page.waitForTimeout(500);
+      const steady = (await page.evaluate(snapshot)) === htmlBefore;
+      const loadErrors = errors.splice(0).length;
       const result = await page.evaluate(buildPreviewScript({
-        code: SHIM, urlPatterns: ['http://127.0.0.1/*'], parameters: spec.options || {}, checks: spec.checks || [], audit: true,
+        code: SHIM, urlPatterns: ['*'], parameters: spec.options || {}, checks: spec.checks || [], audit: true,
       }));
+      if (loadErrors) result.loadErrors = loadErrors;
       if (screenshot && result.status === 'applied') result.screenshot = (await page.screenshot()).toString('base64');
       result.announced = await page.evaluate(() => globalThis.__verifyAnnounced.slice(0, 10));
       if (result.status === 'applied') {
@@ -135,8 +163,11 @@ export async function openVerifier({ headless = true } = {}) {
         await page.waitForTimeout(400);
         const htmlAfter = await page.evaluate(snapshot);
         result.disable = off === true ? 'ran' : String(off);
-        result.restored = htmlAfter === htmlBefore;
-        if (!result.restored) result.difference = firstDifference(htmlBefore, htmlAfter);
+        result.leftovers = (await page.evaluate(marks)).filter((m) => !marksBefore.has(m)).slice(0, 10);
+        if (steady) {
+          result.restored = htmlAfter === htmlBefore;
+          if (!result.restored) result.difference = firstDifference(htmlBefore, htmlAfter);
+        } else result.restored = result.leftovers.length ? false : 'unknown';
       }
       result.errors = errors.slice(0, 10);
       return result;

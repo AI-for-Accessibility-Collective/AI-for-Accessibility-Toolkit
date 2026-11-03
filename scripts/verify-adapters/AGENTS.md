@@ -23,14 +23,19 @@ control the adapter adds or changes.
   and the layout shift; then `disable()`, and whether the page is back
   exactly as it was; and the page's errors. What you run is saved to
   `tools/test/verify/<name>.json`, so it can be run again later.
+- `verify_on_sites` runs the adapter the same way on real pages, for
+  robustness: W3C's inaccessible demo pages, Deque's training sites, a
+  university's inaccessible page, Wikipedia and GOV.UK. It reports what
+  must hold on any page: no errors, no axe-core problem added, little
+  movement, nothing left behind after `disable()`.
 - `run_tests` runs the adapter's unit test and the catalog's conformance
   test.
 - `contrast_ratio` gives the WCAG contrast ratio of two colours. Use it
   where the accessibility skill says to run its contrast script; in a check,
   compare computed colours in the page.
-- File reading and editing, and a shell when you run in the verify
-  container (you can run `node tools/test/<name>-test.js` and the skill's
-  contrast script yourself). No internet, and no web tools.
+- File reading and editing, and a shell in a sandbox: you can run
+  `node tools/test/<name>-test.js` and the skill's contrast script yourself.
+  No web tools.
 
 ## How you work
 
@@ -62,7 +67,11 @@ control the adapter adds or changes.
    `reducedMotion: "reduce"`. Ask for a screenshot when you need to judge
    what a person will see. Give a second spec its own name
    (`<name>-narrow`).
-5. **Fix what fails in the adapter.** A problem is the adapter's when:
+5. **Run it on real pages** with `verify_on_sites`. Your test page shows the
+   adapter does its job; real pages show it survives markup nobody wrote
+   for it. On the accessible pages (Wikipedia, GOV.UK) it must not make
+   anything worse. Run it again after every fix.
+6. **Fix what fails in the adapter.** A problem is the adapter's when:
    - the page throws an error, or `enable()` fails;
    - `disable()` does not put the page back exactly as it was;
    - a check fails because of the adapter, not the check or the page;
@@ -73,10 +82,13 @@ control the adapter adds or changes.
      name, cannot be reached by keyboard, or something it adds flashes,
      moves on its own or covers the focused element).
 
-   Problems that were on the test page before `enable()` are the page's,
-   not the adapter's. When a check or the test page is wrong, fix the check
+   On real pages, the same: an error from the adapter, a problem it added,
+   a mark it left behind. Fix the cause in general, not for one site (no
+   site names or site-specific selectors). Problems that were on a page
+   before `enable()` are the page's, not the adapter's, and errors a site
+   throws by itself are the site's. When a check or the test page is wrong, fix the check
    or the page, not the adapter; never weaken a check just to make it pass.
-6. **Change as little as you can.** Keep the adapter's style, names,
+7. **Change as little as you can.** Keep the adapter's style, names,
    exported API, options and registry entry. Keep its header comment true:
    when you change what it does, say so there in the same style. Edit only
    the adapter's own file, your test page and specs. Do not edit shared
@@ -85,8 +97,8 @@ control the adapter adds or changes.
    time. If the fix belongs in one of those, do not make it; report it.
    Change its unit test only when the test asserts the very behaviour you
    fixed, and say why.
-7. **Show it works.** After every change, run `verify_adapter` on every
-   spec again and `run_tests`; both must pass. A conformance failure that
+8. **Show it works.** After every change, run `verify_adapter` on every
+   spec again, `verify_on_sites`, and `run_tests`; they must pass. A conformance failure that
    names a different adapter is another agent's work in progress: run it
    again later, and do not touch that adapter.
 

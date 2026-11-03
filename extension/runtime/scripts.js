@@ -203,7 +203,16 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
     return out;
   };
   // axe-core's WCAG A and AA problems in the page, one entry per rule and element.
+  // Matched by the element itself, not axe's selector for it: the selector can
+  // name the adapter's own marks, which would count an old problem as new.
   const AUDIT = ${audit ? 'true' : 'false'};
+  const elementIds = new WeakMap();
+  let nextElementId = 0;
+  const elementKey = (el, target) => {
+    if (!el || typeof el !== 'object') return target;
+    if (!elementIds.has(el)) elementIds.set(el, '#' + (nextElementId++));
+    return elementIds.get(el);
+  };
   const runAxe = async () => {
     if (!AUDIT) return null;
     const axe = globalThis.axe;
@@ -211,12 +220,12 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
     let timer;
     try {
       const r = await Promise.race([
-        axe.run(document, { runOnly: { type: 'tag', values: ${JSON.stringify(AXE_TAGS)} }, resultTypes: ['violations'] }),
+        axe.run(document, { runOnly: { type: 'tag', values: ${JSON.stringify(AXE_TAGS)} }, resultTypes: ['violations'], elementRef: true }),
         new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('took over ${AXE_MS / 1000} seconds')), ${AXE_MS}); })]);
       const found = new Map();
       for (const v of r.violations) for (const n of v.nodes) {
         const target = (n.target || []).map((t) => (Array.isArray(t) ? t.join(' >> ') : String(t))).join(' >> ');
-        found.set(v.id + ' ' + target, { rule: v, target, summary: n.failureSummary || '' });
+        found.set(v.id + ' ' + elementKey(n.element, target), { rule: v, target, summary: n.failureSummary || '' });
       }
       return { found, version: axe.version };
     } catch (e) { return { error: errorText(e).slice(0, 160) }; } finally { clearTimeout(timer); }

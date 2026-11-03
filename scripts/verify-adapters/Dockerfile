@@ -27,4 +27,4 @@ RUN mkdir -p /opt/agent/skills/intopia-web-accessibility && cd /opt/agent/skills
 USER pwuser
 ENV HOME=/home/pwuser
 WORKDIR /repo
-CMD ["sh", "-c", "mkdir -p $HOME/.cache/opencode && cp -n /opt/agent/models.json $HOME/.cache/opencode/models.json && npm ci --no-audit --no-fund --loglevel=error && exec node scripts/verify-adapters/run.mjs --agent --sandboxed --skills /opt/agent/skills --logs /repo/.verify-logs ${VERIFY_ARGS}"]
+CMD ["sh", "-c", "mkdir -p $HOME/.cache/opencode && cp -n /opt/agent/models.json $HOME/.cache/opencode/models.json && npm ci --no-audit --no-fund --loglevel=error && exec node scripts/verify-adapters/run.mjs --agent --sandboxed --skills /opt/agent/skills ${VERIFY_ARGS:---logs /repo/.verify-logs}"]
