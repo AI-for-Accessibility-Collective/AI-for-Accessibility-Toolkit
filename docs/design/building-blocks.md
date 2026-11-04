@@ -729,7 +729,16 @@ Decided by the project lead, 2026-11-03:
   fourth review led to timers that return a function to cancel them,
   `speech.say` of a selection, captions that follow a track in the
   person's language added later, and ten adapters rebuilt (9d33d0eb
-  briefs; the build as the agents wrote it follows).
+  briefs; the build as the agents wrote it follows). Fresh rebuilds did
+  not converge (each fixed what its brief warned of and got something new
+  wrong), so from the sixth review on the adapters were fixed in place
+  from each review (`run.mjs --fix`) and reviewed again with the earlier
+  review and the fix report (`--review --earlier`), three rounds: high
+  findings 11, 12, 10 and medium 17, 14, 11 across the eight adapters;
+  focus-keyboard and text-size came back clean. The same loop is in the
+  skill (step 7, `reference/review-and-fix.md`). Rounds found three block
+  bugs: `watch.added` dropping past its cap, `ai` refusing a long `keep`,
+  and `text.scale` measuring over the toolkit's own spacing sheet.
 - The service: `server/src/ai.js` (`POST /v1/ai/text`, `/v1/ai/vision`,
   `GET /v1/ai/usage`, `PUT /v1/ai/settings`). Tests: `server/test/ai.test.mjs`.
 - The builder learns them from the skill's `reference/building-blocks.md`
