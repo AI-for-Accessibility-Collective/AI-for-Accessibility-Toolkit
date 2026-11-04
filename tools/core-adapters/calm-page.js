@@ -34,8 +34,10 @@
 //     On disable(), restarts with its own separate Play button, or else the same button when it
 //     toggled (its name or aria-pressed changed since the click).
 //     A disabled Pause button means the carousel is not playing: leave it.
-//   • Scripted carousels without pause buttons: holds active slide state class, changing only track children.
-//     If page forces change more than 5 times without user input, ceases holding rather than fight the page.
+//   • Scripted carousels without pause buttons: holds the slides shown (every slide with the state
+//     class, exactly), changing only the track's children. Each advance of the page is held. If the
+//     page undoes the hold within 50 ms of our write 5 times in a row (it reacts to our write),
+//     ceases holding rather than fight the page.
 //   • Measure once: never reads scrollWidth across all elements on the page.
 //   • Says nothing on load to avoid noisy screen reader announcements.
 //   • If all features are turned off, cleans up and returns false. Explicit options take precedence.
@@ -288,56 +290,56 @@ export default {
         return true;
       });
 
-      const holdCarouselSlides = (carousel, { track, slides, stateClass, active }) => {
-        let heldSlide = active;
-        let revertCount = 0;
-        const MAX_REVERTS = 5;
+      // Hold what the slides show: the set of slides carrying the state class
+      // (one, or several where a carousel shows several at once), exactly.
+      // Whenever any slide's state differs from that set, put the set back.
+      // The page fights the hold when it undoes our write at once (within
+      // FIGHT_MS: its own observer, a re-render or a frame reacting to ours);
+      // after MAX_FIGHTS of those in a row, stop holding. A page that advances
+      // again later (a timer tick) is not fighting: each advance is held,
+      // however many there are.
+      const holdCarouselSlides = (carousel, { track, slides, stateClass }) => {
+        const hasState = (sld) => tokensOf(sld).includes(stateClass);
+        let held = new Set(slides.filter(hasState));
+        let fights = 0;
+        let lastWrite = -Infinity;
+        const MAX_FIGHTS = 5;
+        const FIGHT_MS = 50;
         let stoppedHolding = false;
         let isOurUpdate = false;
-        const shown = () => slides.find((sld) => tokensOf(sld).includes(stateClass));
+        const isHeld = () => slides.every((sld) => hasState(sld) === held.has(sld));
 
         const observer = new MutationObserver(() => {
           if (stoppedHolding || isOurUpdate) return;
 
-          // Check if person recently interacted inside this carousel
+          // The person moved it (input inside the carousel): hold what it shows now.
           if (wasUserActionIn(carousel, 1500)) {
-            const current = shown();
-            if (current) {
-              heldSlide = current;
-              revertCount = 0;
-            }
+            const current = slides.filter(hasState);
+            if (current.length) held = new Set(current);
             return;
           }
 
-          // Automated page advance: check if active slide changed away from heldSlide
-          const currentActive = shown();
+          if (isHeld()) return;
+          fights = Date.now() - lastWrite < FIGHT_MS ? fights + 1 : 0;
+          if (fights >= MAX_FIGHTS) {
+            stoppedHolding = true;
+            observer.disconnect();
+            return;
+          }
 
-          if (currentActive && currentActive !== heldSlide) {
-            if (revertCount >= MAX_REVERTS) {
-              stoppedHolding = true;
-              observer.disconnect();
-              return;
+          isOurUpdate = true;
+          try {
+            for (const sld of slides) {
+              const tokens = new Set(tokensOf(sld));
+              if (held.has(sld) === tokens.has(stateClass)) continue;
+              if (held.has(sld)) tokens.add(stateClass);
+              else tokens.delete(stateClass);
+              s.setAttr(sld, 'class', Array.from(tokens).join(' '));
             }
-            revertCount++;
-
-            isOurUpdate = true;
-            try {
-              for (const sld of slides) {
-                const tokens = new Set(tokensOf(sld));
-                if (sld === heldSlide) {
-                  if (!tokens.has(stateClass)) {
-                    tokens.add(stateClass);
-                    s.setAttr(sld, 'class', Array.from(tokens).join(' '));
-                  }
-                } else if (tokens.has(stateClass)) {
-                  tokens.delete(stateClass);
-                  s.setAttr(sld, 'class', Array.from(tokens).join(' '));
-                }
-              }
-            } finally {
-              observer.takeRecords();
-              isOurUpdate = false;
-            }
+          } finally {
+            observer.takeRecords();
+            isOurUpdate = false;
+            lastWrite = Date.now();
           }
         });
 
