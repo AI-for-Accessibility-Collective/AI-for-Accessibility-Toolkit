@@ -319,6 +319,28 @@ await test("page.nameOf: label, aria-labelledby, alt, content, title; never a fi
   assert.equal(tk.page.find('delete')?.id, 'b');
 });
 
+await test("page.nameOf: an svg's own <title> names it; a part's <title> does not", async () => {
+  const { tk, $ } = page(`
+    <svg id="chart" role="img" width="100" height="100"><title>Quarterly sales</title><rect width="100" height="100"/></svg>
+    <svg id="labelled" role="img" aria-label="Map"><title>Ignored</title></svg>
+    <svg id="parts" role="img"><g><title>One bar</title><rect width="5" height="5"/></g></svg>
+    <span id="html-title" role="img"><title>Not svg</title></span>`);
+  assert.equal(tk.page.nameOf($('#chart')), 'Quarterly sales');
+  assert.equal(tk.page.nameOf($('#labelled')), 'Map', 'aria-label comes first');
+  assert.equal(tk.page.nameOf($('#parts')), '', 'a <title> inside a part names the part');
+  assert.equal(tk.page.nameOf($('#html-title')), '', 'only an svg element has a <title> name');
+});
+
+await test('page.isVisible: { size: false } asks only whether the page hides it', async () => {
+  const { tk, $, doc } = page(`<button id="b"><span id="glyph" class="fa fa-print"></span><span id="off" style="display:none"></span><span hidden id="h"></span></button>`);
+  // A laid-out page, where the glyph's own box is empty (jsdom's boxes are).
+  Object.defineProperty(doc.documentElement, 'clientWidth', { value: 1024 });
+  assert.equal(tk.page.isVisible($('#glyph')), false, 'by default an empty box is not visible');
+  assert.equal(tk.page.isVisible($('#glyph'), { size: false }), true);
+  assert.equal(tk.page.isVisible($('#off'), { size: false }), false);
+  assert.equal(tk.page.isVisible($('#h'), { size: false }), false);
+});
+
 await test('page: main region, readable text without code, fields, live regions or hidden text, and headings', async () => {
   const { tk, $ } = page(`<nav>Menu</nav><main id="m"><h1>Title</h1><p>One <code>x()</code> two.</p>
     <div aria-live="polite">Loading</div><p hidden>Secret</p><input value="typed"><h4 aria-hidden="true">No</h4><h2>Sub</h2></main>`);
