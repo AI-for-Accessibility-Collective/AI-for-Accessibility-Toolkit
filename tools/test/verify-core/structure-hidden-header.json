@@ -1,0 +1,11 @@
+{
+  "name": "structure-hidden-header",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-hidden-header.html",
+  "checks": [
+    {
+      "name": "a hidden header element is no banner (the browser exposes none), so the site header div becomes the banner",
+      "code": "return document.getElementById('masthead').getAttribute('role') === 'banner' && document.getElementById('content').getAttribute('role') === 'main' && document.getElementById('small-header').getAttribute('role') === null;"
+    }
+  ]
+}
