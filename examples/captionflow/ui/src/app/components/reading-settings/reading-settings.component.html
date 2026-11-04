@@ -1,0 +1,25 @@
+<div class="d-grid gap-3">
+  <div class="d-flex justify-content-between align-items-baseline gap-3 flex-wrap">
+    <label class="form-label fw-semibold mb-0" for="reading-speed">Reading speed</label>
+    <span class="font-monospace small">{{ settings.wordsPerMinute() }} words per minute</span>
+  </div>
+  <input
+    id="reading-speed"
+    class="form-range"
+    type="range"
+    min="80"
+    max="240"
+    step="5"
+    [value]="settings.wordsPerMinute()"
+    (input)="changeSpeed($event)">
+  <div class="form-check form-switch">
+    <input
+      id="pacing"
+      class="form-check-input"
+      type="checkbox"
+      role="switch"
+      [checked]="settings.pacingEnabled()"
+      (change)="togglePacing($event)">
+    <label class="form-check-label" for="pacing">Slow the video to match my reading</label>
+  </div>
+</div>
