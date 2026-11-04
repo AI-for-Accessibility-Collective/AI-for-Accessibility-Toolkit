@@ -19,6 +19,7 @@ import { UI_ATTR, cssName, slug } from './shared.js';
 import { stylesBlock } from './styles.js';
 import { watchBlock } from './watch.js';
 import { highlightBlock } from './highlight.js';
+import { targetsBlock } from './targets.js';
 import { tooltipBlock } from './tooltip.js';
 import { panelBlock } from './panel.js';
 import { focusBlock, keysBlock } from './focus.js';
@@ -266,6 +267,7 @@ export function createSession(env, config = {}) {
   s.filter = styles.filter;
   s.watch = watchBlock(s, env);
   s.highlight = highlightBlock(s, env);
+  s.targets = targetsBlock(s, env);
   s.tooltip = tooltipBlock(s, env);
   s.panel = panelBlock(s, env);
   s.focus = focusBlock(s, env);

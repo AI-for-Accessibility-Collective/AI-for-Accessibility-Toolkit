@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field Notes - Photo Archive</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; line-height: 1.5; color: #1f2937; }
+    header, main, footer { max-width: 760px; }
+    h1 { font-size: 1.3rem; margin: 0 0 8px; }
+    h2 { font-size: 1.05rem; margin: 20px 0 8px; }
+    .tools { display: flex; gap: 4px; align-items: center; margin: 0 0 12px 40px; }
+    .tools svg { width: 16px; height: 16px; cursor: pointer; }
+    .pager { font-size: 10px; }
+    .pager a { color: #1d4ed8; }
+    .row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .row button { width: 20px; height: 20px; padding: 0; border: 1px solid #555; background: #eee; font-size: 11px; }
+    .row input[type="checkbox"] { width: 14px; height: 14px; margin: 0; }
+    .tags { list-style: none; margin: 0 0 12px; padding: 0; font-size: 11px; line-height: 14px; }
+    .tags li { margin: 0 0 2px; }
+    .tags a { color: #1d4ed8; }
+    .badge { display: inline-block; width: 16px; height: 16px; overflow: hidden; background: #dbeafe; color: #1e3a8a; text-decoration: none; font-size: 10px; }
+    .card { position: relative; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; width: 280px; margin-bottom: 12px; }
+    .card p { margin: 4px 0 0; font-size: 13px; }
+    .stretched::after { content: ""; position: absolute; inset: 0; }
+    .center-btn { display: block; margin: 0 auto; width: 20px; height: 20px; padding: 0; }
+    .toolbar .center-btn { margin: 0; }
+    .toolbar { width: 300px; border: 1px solid #94a3b8; padding: 4px; margin-bottom: 12px; }
+    .wide { width: 300px; border: 1px solid #94a3b8; margin-bottom: 12px; }
+    @media (min-width: 1px) {
+      .media-center { display: block; margin-left: auto; margin-right: auto; width: 20px; height: 20px; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Field Notes</h1>
+    <p>Photos from a year of walking the coast path.</p>
+  </header>
+  <main>
+    <h2>Viewer</h2>
+    <div class="tools" id="tools">
+      <svg id="svg-prev" role="button" tabindex="0" aria-label="Previous photo" viewBox="0 0 16 16"><path d="M10 2 L4 8 L10 14" stroke="#111" fill="none" stroke-width="2"/></svg>
+      <svg id="svg-mid" role="button" tabindex="0" aria-label="Pause slideshow" viewBox="0 0 16 16"><rect x="3" y="2" width="3" height="12" fill="#111"/><rect x="10" y="2" width="3" height="12" fill="#111"/></svg>
+      <svg id="svg-next" role="button" tabindex="0" aria-label="Next photo" viewBox="0 0 16 16"><path d="M6 2 L12 8 L6 14" stroke="#111" fill="none" stroke-width="2"/></svg>
+    </div>
+    <p class="pager" id="pager">Page <a href="#p1" id="pg-1">1</a> <a href="#p2" id="pg-2">2</a> <a href="#p3" id="pg-3">3</a> of 3</p>
+
+    <h2>Select photos</h2>
+    <div class="row" id="select-row">
+      <input type="checkbox" id="chk-a" aria-label="Select harbour photo">
+      <button type="button" id="btn-a" aria-label="Rotate harbour photo">R</button>
+      <button type="button" id="btn-b" aria-label="Delete harbour photo">D</button>
+    </div>
+
+    <h2>Tags</h2>
+    <ul class="tags" id="tags">
+      <li><a href="#t1" id="tag-1">cliffs</a></li>
+      <li><a href="#t2" id="tag-2">gulls</a></li>
+      <li><a href="#t3" id="tag-3">tide</a></li>
+    </ul>
+    <p>New this week: <a href="#new" class="badge" id="badge">Twelve new photos</a></p>
+
+    <h2>Albums</h2>
+    <div class="card" id="card">
+      <a href="#album" class="stretched" id="stretched">Harbour at dawn</a>
+      <p>Twenty photos of the harbour before the boats go out.</p>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <button type="button" class="center-btn" id="btn-left" aria-label="Upload">U</button>
+    </div>
+    <div class="wide" id="wide">
+      <button type="button" class="media-center" id="btn-media" aria-label="Share">S</button>
+    </div>
+    <div id="dyn"></div>
+  </main>
+  <footer><p>Photos are by the archive's volunteers.</p></footer>
+</body>
+</html>

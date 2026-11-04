@@ -203,6 +203,102 @@ await test('watch.prefs: the profile turns reduced motion on even when the syste
   s.end();
 });
 
+// ── targets ─────────────────────────────────────────────────────────────────
+
+const box = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height });
+const grownOf = (e) => ({ left: e.rect.left - e.left, right: e.rect.right + e.right, top: e.rect.top - e.top, bottom: e.rect.bottom + e.bottom });
+const meet = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1e-9 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1e-9;
+
+await test('targets.room: grown boxes never overlap or leave the page, whatever the order (random layouts at 24, 32 and 44)', async () => {
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (const size of [24, 32, 44]) {
+    for (let round = 0; round < 40; round++) {
+      const n = 12;
+      const { tk, doc } = page(Array.from({ length: n }, (_, i) => `<button id="b${i}">${i}</button>`).join(''));
+      const s = tk.session();
+      const els = [...doc.querySelectorAll('button')];
+      const rects = new Map();
+      // Rows and stacks with small gaps, and some that already overlap, as on real pages.
+      for (const el of els) rects.set(el, box(Math.floor(rnd() * 160), Math.floor(rnd() * 160), 4 + Math.floor(rnd() * 50), 4 + Math.floor(rnd() * 30)));
+      const within = { left: 0, top: 0, right: 220, bottom: 200 };
+      const room = s.targets.room(els, { size, rects, within });
+      const back = s.targets.room([...els].reverse(), { size, rects, within });
+      for (const el of els) {
+        const e = room.get(el), r = rects.get(el), g = grownOf(e);
+        assert.deepEqual([e.top, e.right, e.bottom, e.left], [back.get(el).top, back.get(el).right, back.get(el).bottom, back.get(el).left], 'the same in any order');
+        assert.ok(g.left >= within.left - 1e-9 && g.top >= within.top - 1e-9 && g.right <= within.right + 1e-9 && g.bottom <= within.bottom + 1e-9, 'inside the page');
+        assert.ok(g.right - g.left <= Math.max(size, r.width) + 1e-9 && g.bottom - g.top <= Math.max(size, r.height) + 1e-9, 'never more than the size asked for');
+      }
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const a = els[i], b = els[j];
+        if (meet(rects.get(a), rects.get(b))) continue;   // the page put them over each other
+        assert.ok(!meet(grownOf(room.get(a)), grownOf(room.get(b))), `b${i} and b${j} do not overlap once grown (size ${size}, round ${round})`);
+      }
+      s.end();
+    }
+  }
+});
+
+await test('targets.room: half the gap toward a small neighbour, all of it toward a big one, the rest on the free side', async () => {
+  const { tk, $ } = page('<button id="a">a</button><button id="b">b</button><button id="big">big</button>');
+  const s = tk.session();
+  const rects = new Map([[$('#a'), box(100, 100, 20, 20)], [$('#b'), box(124, 100, 20, 20)], [$('#big'), box(60, 100, 38, 30)]]);
+  const room = s.targets.room([$('#a'), $('#b')], { size: 24, others: [$('#big')], rects, within: { left: 0, top: 0, right: 500, bottom: 500 } });
+  const a = room.get($('#a')), b = room.get($('#b'));
+  assert.equal(a.right, 2, 'half the 4px gap to b');
+  assert.equal(a.left, 2, 'the big neighbour 2px away: all of that gap');
+  assert.equal(b.left, 2);
+  assert.equal(b.right, 2);
+  assert.equal(a.top + a.bottom, 4);
+  assert.equal(room.has($('#big')), false, 'others are kept clear of, not returned');
+  s.end();
+});
+
+await test('targets.hitArea: a pseudo-element the page does not use, position: relative only where it moves nothing; end() puts the page back', async () => {
+  const { tk, $, html } = page('<p><a id="a" href="#a">a</a> <a id="b" href="#b">b<span style="position: absolute">x</span></a> <a id="c" href="#c" style="position: absolute">c</a></p>');
+  const before = html();
+  const s = tk.session();
+  const e = { top: 3, right: 2, bottom: 3, left: 2, clipped: false, lines: 1 };
+  assert.equal(s.targets.hitArea($('#a'), e), 'pseudo');
+  assert.equal($('#a').getAttribute('data-ai4a11y-hit'), 'after rel');
+  assert.equal($('#a').style.getPropertyValue('--ai4a11y-hit'), '-3px -2px -3px -2px');
+  assert.equal(s.targets.hitArea($('#c'), e), 'pseudo');
+  assert.equal($('#c').getAttribute('data-ai4a11y-hit'), 'after', 'already positioned: no position: relative');
+  assert.equal(s.targets.hitArea($('#b'), e), null, 'relative would move its absolute child, and there is no anchor positioning here for a ring');
+  assert.equal($('#b').hasAttribute('data-ai4a11y-hit'), false);
+  assert.equal(s.targets.hitArea($('#a'), { ...e, top: 1 }), 'pseudo', 'again: the same one, updated');
+  assert.equal($('#a').style.getPropertyValue('--ai4a11y-hit'), '-1px -2px -3px -2px');
+  assert.equal(s.targets.hitArea($('#a'), { ...e, lines: 2 }), 'pseudo');
+  s.end();
+  assert.equal(html(), before);
+});
+
+await test('targets.hitArea: a ring next to what cannot have a pseudo-element, passing clicks to it; split lines and clipped boxes', async () => {
+  const { tk, $, win, html, fire } = page('<div><input id="i" type="checkbox"><a id="l" href="#l">two lines</a></div>');
+  win.CSS = { supports: () => true };   // jsdom has no anchor positioning
+  const before = html();
+  const s = tk.session();
+  const e = { top: 5, right: 5, bottom: 5, left: 5, clipped: false, lines: 1 };
+  assert.equal(s.targets.hitArea($('#i'), e, { attrs: { 'data-x': 'ring' } }), 'ring');
+  const ring = $('[data-x="ring"]');
+  assert.ok(ring && ring.previousSibling === $('#i'), 'right after the element');
+  assert.equal(ring.getAttribute('aria-hidden'), 'true');
+  assert.ok(ring.hasAttribute('data-ai4a11y-ui'), 'marked as the toolkit\'s own');
+  assert.match(ring.style.cssText, /position-anchor/);
+  let clicks = 0;
+  win.document.body.addEventListener('click', (ev) => { if (ev.target === ring) assert.fail('the ring\'s own click does not reach the page'); });
+  $('#i').addEventListener('click', () => clicks++);
+  fire(ring, 'click');
+  assert.equal(clicks, 1);
+  assert.equal($('#i').checked, true, 'the checkbox toggles as if clicked');
+  assert.equal(s.targets.hitArea($('#l'), { ...e, lines: 2 }), null, 'a link split over lines is left alone');
+  assert.equal(s.targets.hitArea($('#l'), { ...e, clipped: true }), 'ring', 'a pseudo-element would be cut off: a ring');
+  $('#i').checked = false;
+  s.end();
+  assert.equal(html(), before);
+});
+
 // ── page ────────────────────────────────────────────────────────────────────
 
 await test("page.nameOf: label, aria-labelledby, alt, content, title; never a field's typed value", async () => {
