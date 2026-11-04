@@ -224,6 +224,39 @@ async function tabStopsOf(p, cap) {
   return { order, count: order.length, wrapped };
 }
 
+/**
+ * InterA11y counts focus as refused when it lands on the body after focus().
+ * So does a control the page hides at that moment (a slide that moves on), and
+ * on a page that changes by itself that is chance, on either side of the
+ * comparison. Keep a refusal only when focusing it again, three times, refuses
+ * every time it stayed shown throughout (and it stayed shown at least once).
+ */
+export async function confirmRefusals(p, r) {
+  if (!r || !Array.isArray(r.rejections) || !r.rejections.length) return r;
+  const keep = await p.evaluate(async (xps) => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const out = [];
+    for (const xp of xps) {
+      const el = document.evaluate(xp, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const shown = () => el.isConnected && el.checkVisibility({ visibilityProperty: true });
+      let tried = 0, refused = 0;
+      for (let k = 0; el && k < 3; k++) {
+        document.body.tabIndex = -1; document.body.focus();
+        if (!shown()) { await wait(150); continue; }
+        el.focus();
+        let stayed = true;
+        for (let t = 0; t < 6; t++) { await wait(25); if (!shown()) stayed = false; }
+        if (!stayed) continue;
+        tried++;
+        if (document.activeElement !== el && !el.contains(document.activeElement)) refused++;
+      }
+      out.push(tried > 0 && refused === tried);
+    }
+    return out;
+  }, r.rejections.map((x) => x.xpath)).catch(() => null);
+  return keep ? { ...r, rejections: r.rejections.filter((_, i) => keep[i]) } : r;
+}
+
 /** The keyboard measurements without and with the adapter: what is new with it on ({ error } when it could not run). */
 export async function keyboardAudit(verifier, args) {
   const { kbd } = interA11y();
@@ -254,7 +287,7 @@ export async function keyboardAudit(verifier, args) {
         orderFindings: tab.error ? [] : kbd.tabOrderFindings(tab).findings || [],
         traps: await run('keyboard traps', (p) => kbd.detectKeyboardTraps(p)),
         retention: await run('focus kept', (p) => kbd.detectFocusRetentionTraps(p)),
-        rejection: await run('focus refused', (p) => kbd.detectFocusRejection(p)),
+        rejection: await run('focus refused', async (p) => confirmRefusals(p, await kbd.detectFocusRejection(p))),
         ariaHidden: await run('focus in aria-hidden', (p) => kbd.detectFocusRestsInAriaHidden(p)),
       };
       if (adapter) out.scopeOf = async (xp) => (xp ? s.scope(xp) : { inScope: false });
