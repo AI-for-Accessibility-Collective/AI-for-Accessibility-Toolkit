@@ -746,6 +746,42 @@ await test('ai: no transport means null, and a failed call is not cached', async
   s.end(); flaky.end();
 });
 
+await test('ai.choose: the model picks one of the options the adapter found, outlined from what the page shows; anything else is null', async () => {
+  const requests = [];
+  let reply = '2';
+  const { tk } = page('<div id="a"><h2>Site name</h2><a href="/1">Home</a> <a href="/2">News</a></div><div id="b"><h1>A long article</h1><p>Its first paragraph, about the news.</p></div>', { ai: async (r) => { requests.push(r); return { text: reply }; } });
+  const s = tk.session();
+  const doc = tk.page.main().ownerDocument;
+  const [a, b] = [doc.getElementById('a'), doc.getElementById('b')];
+  assert.equal(await s.ai.choose('Which of these is the main content?', [a, b]), b);
+  assert.equal(requests[0].task, 'choose');
+  assert.deepEqual(requests[0].options, { question: 'Which of these is the main content?', choices: 2 });
+  assert.match(requests[0].input, /^Option 1:\n<div> \(id "a"\): .* 2 links/);
+  assert.match(requests[0].input, /Option 2:\n<div> \(id "b"\)[^]*<h1>: "A long article"/);
+  for (const [answer, why] of [['0', 'cannot tell'], ['3', 'not an option'], ['two', 'not a number'], ['', 'no answer']]) {
+    reply = answer;
+    assert.equal(await s.ai.choose(`Asked again (${why})?`, [a, b]), null, why);
+  }
+  reply = '1';
+  assert.equal(await s.ai.choose('Whose header is this?', [{ value: 'site', about: 'The whole site' }, { value: 'content', about: 'The content it is in' }], { context: 'x' }), 'site');
+  assert.equal(await s.ai.choose('No options?', []), null);
+  assert.equal(await s.ai.choose('', [a, b]), null, 'no question');
+  assert.equal(await s.ai.choose('An option with nothing to say?', [a, { value: 1, about: ' ' }]), null);
+  const none = page('<p>x</p>').tk.session();
+  assert.equal(await none.ai.choose('No model?', [a, b]), null);
+  s.end(); none.end();
+});
+
+await test('ai prompts: choose asks for the number of an option, or 0, and needs its question', () => {
+  const { prompt } = buildPrompt('choose', 'Option 1:\nA\n\nOption 2:\nB', { question: 'Which is the main content?', choices: 2 });
+  assert.match(prompt, /Question: Which is the main content\?/);
+  assert.match(prompt, /from 1 to 2\. If the page does not make it clear, or no option fits, answer 0/);
+  assert.match(prompt, /<text>\nOption 1:/);
+  assert.doesNotMatch(prompt, /Answer in the language|Tone:/);
+  assert.throws(() => buildPrompt('choose', 'Option 1:\nA', { choices: 1 }), /needs `question`/);
+  assert.throws(() => buildPrompt('choose', 'x', { question: 'q?', choices: 2, template: '{text}' }), /no template/);
+});
+
 // ── speech ──────────────────────────────────────────────────────────────────
 
 function fakeSpeech(win, { active = true } = {}) {

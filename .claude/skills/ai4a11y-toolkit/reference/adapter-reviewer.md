@@ -45,7 +45,9 @@ you need to know what a call really does. Not the author's notes.
   class, id, words or position, and not from what the page says about it
   (native elements, roles, ARIA states and relationships, landmarks, where
   it sits), find a page where that guess is wrong. Report the guess as the
-  cause, once, with the pages it goes wrong on.
+  cause, once, with the pages it goes wrong on. Where only what the parts
+  contain could tell, say so: `s.ai.choose` is the fix there, not a
+  better rule.
 
 Not findings: style, naming, formatting.
 

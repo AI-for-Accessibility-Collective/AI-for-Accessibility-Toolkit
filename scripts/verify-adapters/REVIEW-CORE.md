@@ -49,7 +49,8 @@ far as you need to know what a call really does.
   about it (native elements, roles, ARIA states and relationships,
   landmarks, where it is in the tree), find a page where that guess is
   wrong. Report the guess as the cause, once, with the pages it goes
-  wrong on, not one finding per page. A fix since the last review that
+  wrong on, not one finding per page. Where only what the parts contain
+  could tell, say so: `s.ai.choose` is the fix there, not a better rule. A fix since the last review that
   added such a guess, where the page could have said, is a finding.
 
 Not findings: style preferences, naming, formatting.

@@ -160,6 +160,17 @@ await test('with no model set up: 503, and nothing counted', async () => {
   svc3.stop();
 });
 
+await test('gateAnswer: a choice is the number of one option; 0 is "cannot tell"', async () => {
+  const o = { question: 'Which?', choices: 3 };
+  assert.deepEqual(gateAnswer('choose', '2', 'input', o), { text: '2' });
+  assert.deepEqual(gateAnswer('choose', ' 3. ', 'input', o), { text: '3' });
+  assert.deepEqual(gateAnswer('choose', '0', 'input', o), { text: null, reason: 'cannot tell' });
+  assert.equal(gateAnswer('choose', '4', 'input', o).reason, 'not one of the options');
+  assert.equal(gateAnswer('choose', 'Option 2', 'input', o).reason, 'not the number of an option');
+  assert.equal(gateAnswer('choose', '2 or 3', 'input', o).text, null);
+  assert.equal(gateAnswer('choose', 'NO_ANSWER', 'input', o).reason, 'no-answer');
+});
+
 await test('gateAnswer: short values are cleaned and checked; descriptions reject guesses', async () => {
   assert.deepEqual(gateAnswer('label', '"Search"', 'icon button'), { text: 'Search' });
   assert.equal(gateAnswer('linkText', 'Unknown', 'a link').text, null);

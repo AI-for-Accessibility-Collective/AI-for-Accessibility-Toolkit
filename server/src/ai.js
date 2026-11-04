@@ -72,6 +72,14 @@ export function gateAnswer(task, answer, input, options = {}) {
         : containsUncertainty(text) && text.length < 200 ? 'reads as uncertain'
         : null;
       break;
+    case 'choice': {
+      // The number of one option, and nothing else; 0 is the model saying the page does not make it clear.
+      const m = /^(\d{1,2})\.?$/.exec(text);
+      const n = m ? Number(m[1]) : NaN;
+      reason = !m ? 'not the number of an option' : n === 0 ? 'cannot tell' : n > (options.choices || 0) ? 'not one of the options' : null;
+      if (!reason) text = String(n);
+      break;
+    }
     default:
       reason = 'unknown task';
   }

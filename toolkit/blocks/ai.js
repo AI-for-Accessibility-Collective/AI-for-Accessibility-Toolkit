@@ -3,6 +3,14 @@
 //   const plain = await s.ai.text('simplify', para.textContent, { context: heading, keep: ['Medicare'] });
 //   if (plain) s.text.replaceBlock(para, plain);
 //   const alt = await s.ai.vision('describe', img, { purpose: 'alt' });
+//   const main = await s.ai.choose('Which of these is the page's main content?', [boxA, boxB]);
+//   if (main) s.setAttr(main, 'role', 'main');
+//
+// choose is for where an adapter's rules run out: the page does not say,
+// and only what its parts contain could tell. The model picks one of the
+// options the adapter found (an element, outlined for it, or { value, about
+// }), or says the page does not make it clear: then null, and the adapter
+// does less. It never writes anything into the page.
 //
 // The prompt is the toolkit's own for the task (./ai/prompts.js), adapted by
 // the builder's fields. The host runs the model and gates the answer: in
@@ -21,7 +29,8 @@ import { TASKS, PROMPT_FIELDS } from './ai/prompts.js';
 export const AI_DEFAULTS = { budget: 40, maxInputChars: 6000 };
 // Personal fields: the person's profile wins over the builder's value.
 const PERSONAL = { readingLevel: 'readingLevel', translateTo: 'translateTo' };
-const OPTION_KEYS = ['readingLevel', 'translateTo', 'language', 'tone', 'audience', 'context', 'keep', 'glossary', 'instructions', 'template', 'maxSentences', 'maxChars', 'purpose', 'minRatio', 'maxRatio'];
+const OPTION_KEYS = ['readingLevel', 'translateTo', 'language', 'tone', 'audience', 'context', 'keep', 'glossary', 'instructions', 'template', 'maxSentences', 'maxChars', 'purpose', 'minRatio', 'maxRatio', 'question', 'choices'];
+const MAX_CHOICES = 12;
 const CACHE_MAX = 300;
 
 export function aiBlock(s, env) {
@@ -98,8 +107,51 @@ export function aiBlock(s, env) {
     return ask('vision', task, note, opts, { cacheKey: id, request: image ? { image } : { rect } });
   }
 
+  /** One of the options, the one the model says answers the question from
+   *  what the page shows of each; null when it cannot tell (or no model).
+   *  An option is an element (outlined for the model) or { value, about }. */
+  async function choose(question, options, opts = {}) {
+    if (!s.alive() || !String(question || '').trim() || !Array.isArray(options)) return null;
+    const list = options.slice(0, MAX_CHOICES)
+      .map((o) => (o && o.nodeType === 1 ? { value: o, about: outline(o) } : o))
+      .filter((o) => o && o.value !== undefined && String(o.about || '').trim());
+    if (!list.length || list.length < Math.min(options.length, MAX_CHOICES)) return null;
+    const max = Number(opts.maxInputChars) || AI_DEFAULTS.maxInputChars;
+    const each = Math.floor(max / list.length) - 20;
+    const input = list.map((o, i) => `Option ${i + 1}:\n${String(o.about).trim().slice(0, each)}`).join('\n\n');
+    const { maxInputChars, ...rest } = opts;
+    const answer = await ask('text', 'choose', input, { ...rest, question: String(question).trim().slice(0, 500), choices: list.length }, {});
+    const n = Number(answer);
+    return Number.isInteger(n) && n >= 1 && n <= list.length ? list[n - 1].value : null;
+  }
+
+  /** What the page shows of an element, for the model: its tag and role, how
+   *  much text and how many links, and each part inside with its first words. */
+  function outline(el, { maxChars = 1500 } = {}) {
+    if (!el || el.nodeType !== 1) return '';
+    const text = (n) => String(n.innerText ?? n.textContent ?? '').replace(/\s+/g, ' ').trim();
+    const links = (n) => n.querySelectorAll('a[href]').length;
+    const what = (n) => {
+      const role = n.getAttribute('role');
+      const names = [n.id && `id "${n.id}"`, n.getAttribute('class') && `class "${String(n.getAttribute('class')).trim().slice(0, 60)}"`].filter(Boolean);
+      return `<${n.localName}>${role ? ` role ${role}` : ''}${names.length ? ` (${names.join(', ')})` : ''}`;
+    };
+    const all = text(el);
+    const lines = [`${what(el)}: ${all.length} characters of text, ${links(el)} links. It begins: "${all.slice(0, 160)}"`];
+    let shown = 0;
+    for (const c of el.children) {
+      if (shown >= 15) { lines.push('  …'); break; }
+      const t = text(c);
+      if (!t && !c.querySelector('img, svg, video, canvas, iframe')) continue;
+      shown++;
+      const k = links(c);
+      lines.push(`  ${what(c)}${t ? `: "${t.slice(0, 100)}"` : ': no text'}${k ? `, ${k} link${k === 1 ? '' : 's'}` : ''}`);
+    }
+    return lines.join('\n').slice(0, maxChars);
+  }
+
   return {
-    text, vision,
+    text, vision, choose, outline,
     get used() { return used; },
     get available() { return typeof transport.ai === 'function'; },
   };

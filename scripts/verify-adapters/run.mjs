@@ -154,7 +154,8 @@ async function judge(v, name, spec, live, { keyboard = false, skipOk = false } =
     if (live) console.log(`WARN: ${name}: enable() returned false and the page is not exactly as before (it may have changed by itself)`);
     else problems.push('enable() returned false but left changes in the page');
   }
-  if (r.enableMs > LIMITS.enableMs) problems.push(`enable() took ${r.enableMs} ms`);
+  // Time waiting on the model (aiWaitMs) does not hold the page up; the dwell check measures what does.
+  if (r.enableMs - (r.aiWaitMs || 0) > LIMITS.enableMs) problems.push(`enable() took ${r.enableMs} ms${r.aiWaitMs ? `, ${r.aiWaitMs} of them waiting on the model` : ''}`);
   if (live && r.aiCalls > LIMITS.aiCalls) problems.push(`${r.aiCalls} AI calls on load`);
   // A core adapter's main spec: InterA11y's keyboard measurements without
   // and with it; a new trap or lost focus on what it made or changed fails.

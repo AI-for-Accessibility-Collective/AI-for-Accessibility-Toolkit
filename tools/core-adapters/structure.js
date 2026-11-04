@@ -13,6 +13,7 @@
 //   outline: Boolean. Whether to provide the page outline panel and button. Defaults to true.
 //   landmarks: Boolean. Whether to discover and add missing ARIA landmarks. Defaults to true.
 //   maxLevel: Number. Maximum heading level (1 to 6) to include in the outline. Defaults to 6.
+//   ai: Boolean. Whether to ask the toolkit's model where the page does not say (below). Defaults to true.
 //
 // Decisions:
 //   • Adds missing landmarks (main, navigation, banner, contentinfo) with ARIA roles only
@@ -38,6 +39,12 @@
 //     or main and one of those (header-wrap, site-footer). entry-header, page-header, card-footer
 //     and the like are parts of the content, and get nothing.
 //   • Takes the outermost candidate, never a part of it.
+//   • Where the rules find no main content only because the region holds the page's only header or
+//     footer (its banner or contentinfo), the page does not say whose they are: the site's, or the
+//     content's (an article's title and date). Only what they contain can tell, so the adapter asks
+//     the toolkit's model (s.ai.choose) about each one, and makes the region main only if every one
+//     is the content's; the site's banner and contentinfo are then found again. When the model
+//     cannot tell, or there is none, nothing changes: the page keeps its landmarks.
 //   • A copyright line alone does not make a footer (requires a footer name).
 //   • The 'Page outline' button is added via s.focus.entry({ label: 'Page outline', onActivate }).
 //   • The heading outline is displayed in an accessible dialog panel (s.panel).
@@ -156,8 +163,21 @@ function addNavigation(s, doc) {
   return count > 0;
 }
 
+// The region the rules make main, from candidates already checked: named main first, the
+// outermost, the one with the most text.
+function pick(candidates) {
+  if (candidates.length === 0) return null;
+  const mainNamed = candidates.filter((el) => named(MAIN_ID, el));
+  const pool = mainNamed.length > 0 ? mainNamed : candidates;
+  const outermost = pool.filter((el) => !pool.some((other) => other !== el && other.contains(el)));
+  if (outermost.length === 0) return null;
+  return outermost.reduce((a, b) => ((a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b));
+}
+
+// Main, by the rules: true when added. When the rules find none only because the region would take
+// the page's last banner or contentinfo, `held` is that region and the landmarks it would take.
 function addMain(s, doc, page) {
-  if (doc.querySelector('main, [role="main"]')) return false;
+  if (doc.querySelector('main, [role="main"]')) return { added: false };
 
   const LANDMARK_ANCESTOR = 'article, [role="article"], header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
   const banners = pageLandmarks(page, 'banner');
@@ -168,30 +188,51 @@ function addMain(s, doc, page) {
   const contentinfo = contentinfoCandidate(doc);
   const chrome = [top, bottom, banner, contentinfo].filter(Boolean);
 
-  let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
+  const loose = [...doc.querySelectorAll('div, section')].filter((el) => {
     if (el.getAttribute('role')) return false;
     if ((el.textContent?.trim().length || 0) <= 100) return false;
     if (el.closest(LANDMARK_ANCESTOR)) return false;
-    if (chrome.some((c) => c.contains(el))) return false;
-    return keeps(el, banners, banner) && keeps(el, footers, contentinfo);
+    return !chrome.some((c) => c.contains(el));
   });
-  candidates = candidates.filter((el) => !wraps(el, top, candidates) && !wraps(el, bottom, candidates));
-
-  if (candidates.length === 0) return false;
-
-  const mainNamed = candidates.filter((el) => named(MAIN_ID, el));
-  const pool = mainNamed.length > 0 ? mainNamed : candidates;
-  const outermost = pool.filter((el) => !pool.some((other) => other !== el && other.contains(el)));
-  if (outermost.length === 0) return false;
-
-  const target = outermost.reduce((a, b) =>
-    (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b
-  );
-
-  s.setAttr(target, 'role', 'main');
-  return true;
+  const unwrapped = (list) => list.filter((el) => !wraps(el, top, list) && !wraps(el, bottom, list));
+  const target = pick(unwrapped(loose.filter((el) => keeps(el, banners, banner) && keeps(el, footers, contentinfo))));
+  if (target) {
+    s.setAttr(target, 'role', 'main');
+    return { added: true };
+  }
+  const region = pick(unwrapped(loose));
+  if (!region) return { added: false };
+  const taken = [...banners.map((el) => ({ el, what: 'header' })), ...footers.map((el) => ({ el, what: 'footer' }))].filter((x) => region.contains(x.el));
+  return { added: false, held: taken.length ? { region, taken } : null };
 }
 
+// Banner and contentinfo, after main, which takes the headers and footers inside it out of the
+// page's, as the browser does; the candidates are found again, so none is inside main.
+function addChrome(s, doc, page) {
+  let added = 0;
+  const banner = pageLandmarks(page, 'banner').length === 0 && bannerCandidate(doc);
+  if (banner) {
+    s.setAttr(banner, 'role', 'banner');
+    added++;
+  }
+  const contentinfo = pageLandmarks(page, 'contentinfo').length === 0 && contentinfoCandidate(doc);
+  if (contentinfo) {
+    s.setAttr(contentinfo, 'role', 'contentinfo');
+    added++;
+  }
+  return added;
+}
+
+// Asks whose each landmark the region would take is; true when every one is the content's.
+async function contentsOwn(s, held) {
+  const answers = await Promise.all(held.taken.map(({ el, what }) => {
+    return s.ai.choose(`This ${what} is the only one on the page, inside a part that may be the page's main content. Is it the ${what} of the whole site, or of the content it is in?`, [
+      { value: 'site', about: `The whole site's ${what}: ${what === 'header' ? "the site's name or logo, a menu or search for the whole site" : "the site's links, contact details, copyright for the whole site"}.` },
+      { value: 'content', about: `The ${what} of the content it is in: ${what === 'header' ? "that content's own title, author, date or summary" : "that content's own tags, author, date, share or comment links"}.` },
+    ], { context: `The ${what}:\n${s.ai.outline(el, { maxChars: 900 })}\n\nThe part it is in:\n${s.ai.outline(held.region, { maxChars: 1000 })}` });
+  }));
+  return answers.every((a) => a === 'content');
+}
 export default {
   s: null,
   options: null,
@@ -209,21 +250,21 @@ export default {
     const doc = document;
 
     let landmarksAdded = 0;
+    let asking = null;
     if (this.options.landmarks !== false) {
       const page = this.toolkit.page;
       if (addNavigation(s, doc)) landmarksAdded++;
-      if (addMain(s, doc, page)) landmarksAdded++;
-      // After main, which takes the headers and footers inside it out of the page's, as the
-      // browser does; the candidates are found again, so none is inside main.
-      const banner = pageLandmarks(page, 'banner').length === 0 && bannerCandidate(doc);
-      if (banner) {
-        s.setAttr(banner, 'role', 'banner');
-        landmarksAdded++;
-      }
-      const contentinfo = pageLandmarks(page, 'contentinfo').length === 0 && contentinfoCandidate(doc);
-      if (contentinfo) {
-        s.setAttr(contentinfo, 'role', 'contentinfo');
-        landmarksAdded++;
+      const main = addMain(s, doc, page);
+      if (main.added) landmarksAdded++;
+      landmarksAdded += addChrome(s, doc, page);
+      // The page does not say whose its only header or footer is: the model may know from what
+      // they contain. Until it answers, and unless it says the content's, the page keeps them.
+      if (main.held && this.options.ai !== false && s.ai.available) {
+        asking = contentsOwn(s, main.held).then((theirs) => {
+          if (!theirs || s.ended || doc.querySelector('main, [role="main"]')) return 0;
+          s.setAttr(main.held.region, 'role', 'main');
+          return 1 + addChrome(s, doc, page);
+        }, () => 0);
       }
     }
 
@@ -232,8 +273,15 @@ export default {
     const headings = wantOutline ? this.toolkit.page.headings({ maxLevel }) : [];
 
     if (landmarksAdded === 0 && (!wantOutline || headings.length === 0)) {
-      this.disable();
-      return false;
+      if (!asking) {
+        this.disable();
+        return false;
+      }
+      return asking.then((added) => {
+        if (added) return true;
+        this.disable();
+        return false;
+      });
     }
 
     if (wantOutline && headings.length > 0) {
@@ -302,6 +350,7 @@ export default {
         onActivate: () => this.openOutline(),
       });
     }
+    if (asking) return asking.then(() => true);
   },
 
   openOutline() {

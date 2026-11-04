@@ -34,7 +34,7 @@
 // answers come from the spec. Its pages are in tools/test/verify-core/pages/.
 // The spec adds:
 //     personal: { fontScale: 150, ... },  // the person's settings (toolkit.personal)
-//     ai: { simplify: 'Plain words.' } | 'live',  // fixed answers by task, or the
+//     ai: { simplify: 'Plain words.', choose: { 'main content': '2' } } | 'live',  // fixed answers by task (choose: by words of the question), or the
 //                                         // real model through the service's own
 //                                         // prompts and checks (GEMINI_API_KEY)
 // Checks can use trusted input, as the person's own: await __verifyClick(selector),
@@ -86,8 +86,15 @@ async function answerAi(spec, request, page, count) {
   let built;
   try { built = buildPrompt(task, request.input || '', request.options || {}); } catch (e) { return { text: null, reason: 'bad-options' }; }
   if (spec.ai && typeof spec.ai === 'object') {
-    if (!(task in spec.ai) || spec.ai[task] === null) return { text: null, reason: 'unavailable' };
-    return gateAnswer(task, String(spec.ai[task]), request.input || '', built.options);
+    let fixed = spec.ai[task];
+    // choose: { "<words of the question>": answer }, as a page may ask more than one.
+    if (fixed && typeof fixed === 'object') {
+      const q = String(request.options?.question || '');
+      const k = Object.keys(fixed).find((x) => q.includes(x));
+      fixed = k === undefined ? null : fixed[k];
+    }
+    if (fixed === undefined || fixed === null) return { text: null, reason: 'unavailable' };
+    return gateAnswer(task, String(fixed), request.input || '', built.options);
   }
   if (spec.ai !== 'live' || !process.env.GEMINI_API_KEY) return { text: null, reason: 'unavailable' };
   if (count() > MAX_AI_CALLS) return { text: null, reason: 'budget' };

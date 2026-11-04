@@ -309,6 +309,27 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     invariants: ['As ai.text: checked answers, null on any doubt, nothing after end().'],
   },
   {
+    name: 'ai.choose',
+    title: 'AI choice: where your rules run out',
+    summary: 'When the page does not say (no role, no native element) and only what its parts contain could tell, ask the model which of the options you found answers your question. It picks one, or says the page does not make it clear: then null, and your adapter does less. Use it instead of a rule that guesses from class names, ids or position.',
+    api: [
+      "const main = await s.ai.choose('Which of these is the page\\'s main content?', [boxA, boxB])",
+      "const whose = await s.ai.choose('Whose header is this?', [{ value: 'site', about: 'The whole site\\'s: its name or logo, a menu for the whole site' }, { value: 'content', about: 'The content\\'s it is in: a title, an author, a date' }], { context: s.ai.outline(header) })",
+      's.ai.outline(el)                      // what the page shows of an element, as the model sees an element option',
+    ],
+    config: {
+      question: { default: null, description: 'A plain question the options answer, about the page.' },
+      options: { default: null, description: 'Up to 12: elements (outlined for the model: tag, role, id and class, how much text and how many links, each part inside with its first words) or { value, about }. You get back the element or the value.' },
+      context: { default: '', description: 'What the model needs besides the options: the part you are asking about, the page\'s title.' },
+    },
+    invariants: [
+      'The answer is one of your options or null: the service lets through only the number of an option, and 0 (the model cannot tell), any other answer, no model, the budget spent or end() are null.',
+      'The model is told that names in the markup are clues, not proof, and that "cannot tell" is always acceptable. Do the same: on null, do less.',
+      'Ask only where your rules run out, once per question: answers are cached for the page, and each call counts against the session\'s budget (ai.text\'s).',
+      'It changes nothing in the page: what you do with the answer is yours, through the session as always.',
+    ],
+  },
+  {
     name: 'speech.out',
     title: 'Speech: speak',
     summary: 'Read text aloud, with word-by-word events for highlighting. In the browser runtime it speaks with the browser\'s own speech (the voices the person set up), elsewhere with the page\'s.',

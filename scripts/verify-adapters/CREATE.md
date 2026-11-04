@@ -289,6 +289,13 @@ when you fix (and when you build):
 3. **When the page does not say, do less.** Leave the element alone
    rather than act on a guess. A fix the adapter misses is better than a
    wrong one: a wrong one harms someone who relied on the page as it was.
+   Where only what the parts contain could tell (whose header this is,
+   which box is the article), ask the model with `s.ai.choose` (see its
+   reference) instead of a rule that guesses: it picks one of the options
+   you found or says it cannot tell, and on null the adapter does less.
+   Ask only there, after the rules, and test both answers and "cannot
+   tell" with fixed answers in the spec (`"ai": { "choose": { "<words of
+   the question>": "2" } }`).
 4. **A guess that more than one adapter needs belongs in a building
    block**, with its tests, not copied into each adapter. Report it.
 5. **Replace or remove a rule rather than add one.** In your report, say

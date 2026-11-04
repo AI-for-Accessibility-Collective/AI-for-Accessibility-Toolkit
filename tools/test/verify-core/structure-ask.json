@@ -1,0 +1,21 @@
+{
+  "name": "structure-ask",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask.html",
+  "ai": {
+    "choose": {
+      "header": "2",
+      "footer": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model says the only header and footer are the article's, their div is made main",
+      "code": "return document.getElementById('main-content').getAttribute('role') === 'main';"
+    },
+    {
+      "name": "and nothing is named the site's banner or contentinfo: the page has no site header or footer",
+      "code": "return !document.querySelector('[role=banner], [role=contentinfo]');"
+    }
+  ]
+}

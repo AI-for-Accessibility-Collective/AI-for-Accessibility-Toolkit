@@ -1,0 +1,17 @@
+{
+  "name": "structure-ask-site",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask.html",
+  "ai": {
+    "choose": {
+      "header": "1",
+      "footer": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model says the header is the site's, the div is not made main, so the page keeps its banner",
+      "code": "return document.getElementById('main-content').getAttribute('role') === null;"
+    }
+  ]
+}

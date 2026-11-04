@@ -107,7 +107,11 @@ A rule added for that page moves the problem to the next page. So:
    applies, not what it matches.
 3. **When the page does not say, do less.** Leave the element alone. A
    change the adapter misses is better than a wrong one: a wrong one
-   harms someone who relied on the page as it was.
+   harms someone who relied on the page as it was. Where only what the
+   parts contain could tell (whose header this is, which box is the
+   article), ask the model with `s.ai.choose` instead of writing a rule
+   that guesses: it picks one of the options you found or says it cannot
+   tell, and on null the adapter does less.
 4. **Remove or narrow a rule rather than add one.** For each rule you
    add, think of a page it would go wrong on, write it as `Breaks on:`,
    and try it when you can.

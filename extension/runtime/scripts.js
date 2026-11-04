@@ -260,8 +260,12 @@ export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks 
   const B = globalThis.__ai4a11yBlocks;
   const viaWorker = typeof chrome === 'object' && !!chrome && !!chrome.runtime && typeof chrome.runtime.connect === 'function';
 ${PREVIEW_SPEAK}
+  // How long an AI request was out: waiting on the model is not the adapter holding the page up.
+  let aiOut = 0, aiSince = 0, aiWaited = 0;
+  const aiWaitMs = () => aiWaited + (aiOut ? Date.now() - aiSince : 0);
+  const aiTimed = (p) => { if (aiOut++ === 0) aiSince = Date.now(); return p.finally(() => { if (--aiOut === 0) aiWaited += Date.now() - aiSince; }); };
   const blocks = B && typeof B.create === 'function' ? B.create({ adapter: 'preview', personal: ${JSON.stringify(personal || {})}, explicit: ${JSON.stringify(explicit || null)},
-    ai: (request) => ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' })),
+    ai: (request) => aiTimed(ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' }))),
     ...(viaWorker ? { profile: (request) => ask({ type: 'ai4a11y:profile', request }), zoom: (request) => ask({ type: 'ai4a11y:zoom', request }), speak: speakVia(KEY),
       adjustable: (info) => ask({ type: 'ai4a11y:adjustable', ...info }) } : {}) }) : null;
   const TOOLKIT = Object.freeze({
@@ -454,8 +458,9 @@ ${PREVIEW_SPEAK}
   }).then(
     (value) => {
       enableMs = Date.now() - enableStart;
+      const aiMs = aiWaitMs();
       if (value === false) { windDown(); stopWatching(); return { status: 'skipped', message: 'enable() returned false: nothing to change on this page' }; }
-      return report({ status: 'applied', enableMs });
+      return report({ status: 'applied', enableMs, ...(aiMs ? { aiWaitMs: aiMs } : {}) });
     },
     (e) => { windDown(); stopWatching(); return { status: 'failed', message: 'enable() failed: ' + errorText(e) }; });
 })()`;

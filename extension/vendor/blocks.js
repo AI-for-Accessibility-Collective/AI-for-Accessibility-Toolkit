@@ -1555,6 +1555,8 @@ ${[...rules.values()].join("\n")}
     template: { ...STR(4e3), description: "A whole prompt of your own instead of the default. Must contain {text}; can use {context}, {readingLevel}, {language}, {translateTo}, {tone}, {audience}, {keep}, {glossary}, {instructions}, {maxSentences}, {maxChars}." },
     maxSentences: { type: "integer", minimum: 1, maximum: 20, description: "At most this many sentences (summarize, define)." },
     maxChars: { type: "integer", minimum: 20, maximum: 2e3, description: "At most this many characters (define, label, describe, chart)." },
+    question: { ...STR(500), description: "choose: the question the options answer, about the page, in a plain sentence: 'Which of these is the page's main content?'" },
+    choices: { type: "integer", minimum: 1, maximum: 12, description: "choose: how many options there are (set by the block)." },
     purpose: { enum: ["alt", "long"], description: "describe: 'alt' is one sentence for alt text, 'long' a fuller description." },
     minRatio: { type: "number", minimum: 0, maximum: 1, description: "Reject a rewrite shorter than this share of the input (gate)." },
     maxRatio: { type: "number", minimum: 0.5, maximum: 5, description: "Reject a rewrite longer than this many times the input (gate)." }
@@ -1568,6 +1570,7 @@ ${[...rules.values()].join("\n")}
     label: { kind: "text", input: "what is known about the control: its type, its current text, nearby text", gate: "short", maxChars: 60, summary: "A short accessible name (1-4 words) for a control." },
     linkText: { kind: "text", input: "the link's text, its address and the sentence around it", gate: "short", maxChars: 60, summary: "Link text (2-8 words) that says where a link goes." },
     columnHeader: { kind: "text", input: "the column's cells, one per line", gate: "short", maxChars: 60, summary: "A short header (1-4 words) for a table column." },
+    choose: { kind: "text", input: "the options, numbered, each with what the page shows of it", gate: "choice", summary: "Which of the options the adapter found answers its question, judged from what the page shows of each; or that the page does not make it clear." },
     describe: { kind: "vision", input: "an image of the element", gate: "description", maxChars: 150, summary: "Describe an image for a person who cannot see it (alt text, or a longer description)." },
     chart: { kind: "vision", input: "an image of a chart", gate: "description", maxChars: 1200, summary: "Describe a chart: its type, axes, trend, and the highest and lowest values." }
   });
@@ -1575,7 +1578,8 @@ ${[...rules.values()].join("\n")}
   // toolkit/blocks/ai.js
   var AI_DEFAULTS = { budget: 40, maxInputChars: 6e3 };
   var PERSONAL = { readingLevel: "readingLevel", translateTo: "translateTo" };
-  var OPTION_KEYS = ["readingLevel", "translateTo", "language", "tone", "audience", "context", "keep", "glossary", "instructions", "template", "maxSentences", "maxChars", "purpose", "minRatio", "maxRatio"];
+  var OPTION_KEYS = ["readingLevel", "translateTo", "language", "tone", "audience", "context", "keep", "glossary", "instructions", "template", "maxSentences", "maxChars", "purpose", "minRatio", "maxRatio", "question", "choices"];
+  var MAX_CHOICES = 12;
   var CACHE_MAX = 300;
   function aiBlock(s, env) {
     let used = 0;
@@ -1643,9 +1647,49 @@ ${[...rules.values()].join("\n")}
       const id = image ? `${image.data.length}:${image.data.slice(0, 64)}:${image.data.slice(-64)}` : JSON.stringify(rect);
       return ask("vision", task, note, opts, { cacheKey: id, request: image ? { image } : { rect } });
     }
+    async function choose(question, options2, opts = {}) {
+      if (!s.alive() || !String(question || "").trim() || !Array.isArray(options2)) return null;
+      const list = options2.slice(0, MAX_CHOICES).map((o) => o && o.nodeType === 1 ? { value: o, about: outline(o) } : o).filter((o) => o && o.value !== void 0 && String(o.about || "").trim());
+      if (!list.length || list.length < Math.min(options2.length, MAX_CHOICES)) return null;
+      const max = Number(opts.maxInputChars) || AI_DEFAULTS.maxInputChars;
+      const each = Math.floor(max / list.length) - 20;
+      const input = list.map((o, i) => `Option ${i + 1}:
+${String(o.about).trim().slice(0, each)}`).join("\n\n");
+      const { maxInputChars, ...rest } = opts;
+      const answer = await ask("text", "choose", input, { ...rest, question: String(question).trim().slice(0, 500), choices: list.length }, {});
+      const n = Number(answer);
+      return Number.isInteger(n) && n >= 1 && n <= list.length ? list[n - 1].value : null;
+    }
+    function outline(el, { maxChars = 1500 } = {}) {
+      if (!el || el.nodeType !== 1) return "";
+      const text2 = (n) => String(n.innerText ?? n.textContent ?? "").replace(/\s+/g, " ").trim();
+      const links = (n) => n.querySelectorAll("a[href]").length;
+      const what = (n) => {
+        const role = n.getAttribute("role");
+        const names = [n.id && `id "${n.id}"`, n.getAttribute("class") && `class "${String(n.getAttribute("class")).trim().slice(0, 60)}"`].filter(Boolean);
+        return `<${n.localName}>${role ? ` role ${role}` : ""}${names.length ? ` (${names.join(", ")})` : ""}`;
+      };
+      const all = text2(el);
+      const lines = [`${what(el)}: ${all.length} characters of text, ${links(el)} links. It begins: "${all.slice(0, 160)}"`];
+      let shown = 0;
+      for (const c of el.children) {
+        if (shown >= 15) {
+          lines.push("  …");
+          break;
+        }
+        const t = text2(c);
+        if (!t && !c.querySelector("img, svg, video, canvas, iframe")) continue;
+        shown++;
+        const k = links(c);
+        lines.push(`  ${what(c)}${t ? `: "${t.slice(0, 100)}"` : ": no text"}${k ? `, ${k} link${k === 1 ? "" : "s"}` : ""}`);
+      }
+      return lines.join("\n").slice(0, maxChars);
+    }
     return {
       text,
       vision,
+      choose,
+      outline,
       get used() {
         return used;
       },
@@ -2954,8 +2998,8 @@ ${[...rules.values()].join("\n")}
   }
 
   // toolkit/blocks/names.js
-  var BLOCKS_VERSION = "2026-11-04";
-  var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "targets", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "speech.out", "speech.in", "media", "profile", "zoom"]);
+  var BLOCKS_VERSION = "2026-11-04.2";
+  var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "targets", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "ai.choose", "speech.out", "speech.in", "media", "profile", "zoom"]);
 
   // toolkit/blocks/shortcut.js
   var SHORTCUT_DEFAULT = Object.freeze({ up: "Alt+Shift+ArrowUp", down: "Alt+Shift+ArrowDown" });

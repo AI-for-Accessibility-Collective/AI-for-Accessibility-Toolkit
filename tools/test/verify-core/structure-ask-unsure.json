@@ -1,0 +1,17 @@
+{
+  "name": "structure-ask-unsure",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask.html",
+  "ai": {
+    "choose": {
+      "header": "0",
+      "footer": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model cannot tell, the div is not made main: the adapter does less",
+      "code": "return document.getElementById('main-content').getAttribute('role') === null;"
+    }
+  ]
+}
