@@ -31,6 +31,8 @@ RUN mkdir -p /opt/agent/skills/intopia-web-accessibility && cd /opt/agent/skills
  && git init -q && git remote add origin https://github.com/Intopia/intopia-web-accessibility-skill.git \
  && git fetch -q --depth 1 origin "${INTOPIA_SKILL_COMMIT}" && git checkout -q FETCH_HEAD && rm -rf .git \
  && test -f SKILL.md && test -f LICENSE && chmod -R a+rX /opt/agent
+# The check image's npm ci writes /repo/node_modules as pwuser; WORKDIR alone would make /repo root's.
+RUN mkdir -p /repo && chown pwuser:pwuser /repo
 
 USER pwuser
 ENV HOME=/home/pwuser
