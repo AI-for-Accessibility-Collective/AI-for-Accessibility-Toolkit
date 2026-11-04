@@ -26,6 +26,9 @@
 //     with it, confirming with the verifier where it can; it changes
 //     nothing. Each report starts "Verdict: ok | issues".
 //
+//     With --earlier <dir>[,<dir>] (an earlier review, the fix report),
+//     the reviewer is given them and checks what was claimed fixed.
+//
 //   ... --agent --sandboxed --fix <dir> [id ...]
 //     Instead, fix each named core adapter in place from its review
 //     (<dir>/<id>.md, a --review report): an agent checks each finding,
@@ -66,6 +69,9 @@ const create = argv.includes('--create');
 const fixFrom = flag('--fix', null);
 const core = create || !!fixFrom || argv.includes('--core');
 const reviewBase = flag('--review', null);
+// --earlier DIR[,DIR]: with --review, the last review and the fix report
+// (DIR/<name>.md each), so the reviewer checks what was claimed fixed.
+const earlier = flag('--earlier', '').split(',').filter(Boolean);
 const model = flag('--model', MODEL);
 const logs = path.resolve(flag('--logs', path.join(ROOT, '.verify-logs')));
 const skills = flag('--skills', '').split(',').filter(Boolean);
@@ -176,6 +182,14 @@ function rubricsRead(e, read) {
   for (const c of st.metadata?.toolCalls || []) if (done(c.tool, c)) read.add(String(c.input.sc));
 }
 
+/** The earlier review and the fix report for a re-review (--earlier). */
+function earlierReports(name) {
+  const found = earlier.map((d) => path.resolve(d, `${name}.md`)).filter((f) => existsSync(f));
+  if (!found.length) return [];
+  return ['', 'This is not the first review. The earlier review, and the report of the agent that fixed the adapter from it, follow. Check that each finding it says it fixed is fixed, then review the whole adapter again: a fix can break something else.',
+    ...found.flatMap((f) => ['', `--- ${path.basename(path.dirname(f))}/${path.basename(f)} ---`, readFileSync(f, 'utf8').trim()])];
+}
+
 /** A core adapter's brief, as its build and fix tasks give it. */
 function briefLines(b) {
   return [`What it does: ${b.brief}`,
@@ -250,7 +264,8 @@ async function agents() {
     const events = createWriteStream(path.join(logs, `${name}.jsonl`));
     const pages = core ? 'tools/test/verify-core/pages' : 'tools/test/verify/pages';
     const task = reviewBase
-      ? (core ? [`Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`, ...rubricLines(briefs.get(name), 'it')].join('\n')
+      ? (core ? [`Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`, ...rubricLines(briefs.get(name), 'it'),
+        ...earlierReports(name)].join('\n')
         : `Review the changes to the built-in adapter ${folder}/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`)
       : fixFrom ? fixTask(briefs.get(name), readFileSync(path.resolve(fixFrom, `${name}.md`), 'utf8'))
       : create ? createTask(briefs.get(name))

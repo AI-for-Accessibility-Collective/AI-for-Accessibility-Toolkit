@@ -453,6 +453,19 @@ await test("ai.text: the profile's reading level wins, answers are cached, the b
   s.end(); s3.end();
 });
 
+await test('ai: keep and glossary past the service\'s limits are cut to fit, not refused', async () => {
+  let sent = null;
+  const { tk } = page('', { ai: async (req) => { sent = req.options; return { text: 'Plain.' }; } });
+  const s = tk.session();
+  const keep = [...Array.from({ length: 70 }, (_, i) => `Term ${i}`), 'x'.repeat(120), 'Term 1'];
+  const glossary = Object.fromEntries(Array.from({ length: 40 }, (_, i) => [`t${i}`, 'means this']));
+  assert.equal(await s.ai.text('simplify', 'Some hard text.', { keep, glossary }), 'Plain.');
+  assert.equal(sent.keep.length, 50);
+  assert.ok(sent.keep.every((x) => x.length <= 80));
+  assert.equal(Object.keys(sent.glossary).length, 30);
+  s.end();
+});
+
 await test('ai: no transport means null, and a failed call is not cached', async () => {
   const { tk } = page('<p>x</p>');
   const s = tk.session();

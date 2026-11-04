@@ -16,7 +16,7 @@
 // each session has a budget of calls.
 
 import { resolveConfig } from './shared.js';
-import { TASKS } from './ai/prompts.js';
+import { TASKS, PROMPT_FIELDS } from './ai/prompts.js';
 
 export const AI_DEFAULTS = { budget: 40, maxInputChars: 6000 };
 // Personal fields: the person's profile wins over the builder's value.
@@ -44,6 +44,18 @@ export function aiBlock(s, env) {
     const c = resolveConfig(AI_DEFAULTS, opts, env.personal, PERSONAL);
     const o = {};
     for (const k of OPTION_KEYS) if (c[k] !== undefined && c[k] !== null && c[k] !== '') o[k] = c[k];
+    // Terms to keep, and a glossary, are hints, often gathered from the
+    // page: past the service's limits they are cut to fit, not refused
+    // (a refused request is no answer, and still a call).
+    if (Array.isArray(o.keep)) {
+      const f = PROMPT_FIELDS.keep;
+      o.keep = [...new Set(o.keep.filter((x) => typeof x === 'string' && x.trim() && x.length <= f.items.maxLength).map((x) => x.trim()))].slice(0, f.maxItems);
+      if (!o.keep.length) delete o.keep;
+    }
+    if (o.glossary && typeof o.glossary === 'object' && !Array.isArray(o.glossary)) {
+      const f = PROMPT_FIELDS.glossary;
+      o.glossary = Object.fromEntries(Object.entries(o.glossary).filter(([, v]) => typeof v === 'string' && v.length <= 200).slice(0, f.maxProperties));
+    }
     return { c, o };
   }
 

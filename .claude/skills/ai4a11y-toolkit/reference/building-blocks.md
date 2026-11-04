@@ -358,6 +358,7 @@ Always, whatever the config:
 - The page text is fenced and marked as content, never instructions; the output contract (only the answer) is always added.
 - Every answer is checked before you get it: refusals, guesses and answers of the wrong length come back as null.
 - null leaves the page as it was. After end(), every answer is null.
+- keep (at most 50 terms of 80 characters) and glossary (at most 30) are cut to fit, never refused: gather them from the page freely.
 
 ### AI vision: describe an image, read a chart (`ai.vision`)
 

@@ -1273,6 +1273,15 @@
       const c = resolveConfig(AI_DEFAULTS, opts, env.personal, PERSONAL);
       const o = {};
       for (const k of OPTION_KEYS) if (c[k] !== void 0 && c[k] !== null && c[k] !== "") o[k] = c[k];
+      if (Array.isArray(o.keep)) {
+        const f = PROMPT_FIELDS.keep;
+        o.keep = [...new Set(o.keep.filter((x) => typeof x === "string" && x.trim() && x.length <= f.items.maxLength).map((x) => x.trim()))].slice(0, f.maxItems);
+        if (!o.keep.length) delete o.keep;
+      }
+      if (o.glossary && typeof o.glossary === "object" && !Array.isArray(o.glossary)) {
+        const f = PROMPT_FIELDS.glossary;
+        o.glossary = Object.fromEntries(Object.entries(o.glossary).filter(([, v]) => typeof v === "string" && v.length <= 200).slice(0, f.maxProperties));
+      }
       return { c, o };
     }
     async function ask(kind, task, input, opts, extra) {
