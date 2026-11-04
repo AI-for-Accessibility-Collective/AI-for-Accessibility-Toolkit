@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calm Page: carousels whose slides have their own buttons</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; background: #fff; }
+    main { padding: 1rem 1.5rem; }
+    .carousel { margin: 1rem 0; padding: 1rem; border: 1px solid #8c959f; border-radius: 6px; }
+    .slide { display: none; padding: 0.5rem 1rem; background: #f6f8fa; border: 1px solid #8c959f; }
+    .slide.active, .item.current { display: block; }
+    .item { display: none; list-style: none; padding: 0.5rem 1rem; background: #f6f8fa; }
+    ul.items { padding: 0; margin: 0.5rem 0; }
+    button { font-size: 1rem; min-height: 24px; min-width: 24px; padding: 0.25rem 0.75rem; }
+    video { display: block; width: 160px; height: 90px; background: #000; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Carousels whose slides have their own buttons</h1>
+    <p>Each carousel below advances on its own. Buttons inside a slide belong to that slide, not to the carousel.</p>
+
+    <!-- S1: no rotation control; a slide has "Play trailer". The carousel must be held. -->
+    <section id="s1" class="carousel" aria-roledescription="carousel" aria-label="Movies">
+      <h2>Movies</h2>
+      <div class="track">
+        <div class="slide active" id="s1-a" aria-roledescription="slide" aria-label="1 of 2"><h3>Movie 1</h3><button type="button" data-count="s1-trailer">Play trailer</button></div>
+        <div class="slide" id="s1-b" aria-roledescription="slide" aria-label="2 of 2"><h3>Movie 2</h3></div>
+      </div>
+    </section>
+
+    <!-- S2: a rotation toggle (renamed Play when paused) outside the slides; a slide has "Play trailer". -->
+    <section id="s2" class="carousel" aria-roledescription="carousel" aria-label="Featured shows">
+      <h2>Featured shows</h2>
+      <div class="track">
+        <div class="slide active" id="s2-a" aria-roledescription="slide" aria-label="1 of 2"><h3>Show 1</h3><button type="button" data-count="s2-trailer">Play trailer</button></div>
+        <div class="slide" id="s2-b" aria-roledescription="slide" aria-label="2 of 2"><h3>Show 2</h3></div>
+      </div>
+      <button type="button" id="s2-toggle" data-toggle="rename">Pause slideshow</button>
+    </section>
+
+    <!-- S3: no rotation control; a slide has "Pause audio". -->
+    <section id="s3" class="carousel" aria-roledescription="carousel" aria-label="Audio tracks">
+      <h2>Audio tracks</h2>
+      <div class="track">
+        <div class="slide active" id="s3-a" aria-roledescription="slide" aria-label="1 of 2"><h3>Track 1</h3><button type="button" data-count="s3-audio">Pause audio</button></div>
+        <div class="slide" id="s3-b" aria-roledescription="slide" aria-label="2 of 2"><h3>Track 2</h3></div>
+      </div>
+    </section>
+
+    <!-- S4: no rotation control; a slide has a disabled "Stop audio". -->
+    <section id="s4" class="carousel" aria-roledescription="carousel" aria-label="Podcasts">
+      <h2>Podcasts</h2>
+      <div class="track">
+        <div class="slide active" id="s4-a" aria-roledescription="slide" aria-label="1 of 2"><h3>Episode 1</h3><button type="button" disabled>Stop audio</button></div>
+        <div class="slide" id="s4-b" aria-roledescription="slide" aria-label="2 of 2"><h3>Episode 2</h3></div>
+      </div>
+    </section>
+
+    <!-- S5: a button outside the slides that says Pause but controls a video (aria-controls), not the carousel. -->
+    <section id="s5" class="carousel" aria-roledescription="carousel" aria-label="Hero">
+      <h2>Hero</h2>
+      <video id="s5-video" muted playsinline title="Background clip"></video>
+      <button type="button" aria-controls="s5-video" data-count="s5-video-pause">Pause background video</button>
+      <div class="track">
+        <div class="slide active" id="s5-a" aria-roledescription="slide" aria-label="1 of 2"><h3>Offer 1</h3></div>
+        <div class="slide" id="s5-b" aria-roledescription="slide" aria-label="2 of 2"><h3>Offer 2</h3></div>
+      </div>
+    </section>
+
+    <!-- S6: slides not marked by role, only by class; a slide has "Pause audio"; the carousel's own Pause comes after them. -->
+    <section id="s6" class="carousel" role="region" aria-label="News slideshow">
+      <h2>News slideshow</h2>
+      <div class="track">
+        <div class="slide active" id="s6-a"><h3>Story 1</h3><button type="button" data-count="s6-audio">Pause audio</button></div>
+        <div class="slide" id="s6-b"><h3>Story 2</h3></div>
+      </div>
+      <button type="button" id="s6-toggle" data-toggle="rename">Pause</button>
+    </section>
+
+    <!-- S7: the APG rotation control, which names the slides it controls; a slide has "Stop video". -->
+    <section id="s7" class="carousel" aria-roledescription="carousel" aria-label="Destinations">
+      <h2>Destinations</h2>
+      <button type="button" id="s7-toggle" aria-controls="s7-items" data-toggle="rename" data-paused-name="Start automatic slide show" data-playing-name="Stop automatic slide show">Stop automatic slide show</button>
+      <div class="track" id="s7-items" aria-live="off">
+        <div class="slide active" id="s7-a" role="group" aria-roledescription="slide" aria-label="1 of 2"><h3>City</h3><button type="button" data-count="s7-video">Stop video</button></div>
+        <div class="slide" id="s7-b" role="group" aria-roledescription="slide" aria-label="2 of 2"><h3>Coast</h3></div>
+      </div>
+    </section>
+
+    <!-- S8: a toggle that stays named Pause and says it is paused with aria-pressed; a slide has "Play video". -->
+    <section id="s8" class="carousel" aria-roledescription="carousel" aria-label="Recipes">
+      <h2>Recipes</h2>
+      <button type="button" id="s8-toggle" data-toggle="pressed">Pause</button>
+      <div class="track">
+        <div class="slide active" id="s8-a" aria-roledescription="slide" aria-label="1 of 2"><h3>Soup</h3><button type="button" data-count="s8-video">Play video</button></div>
+        <div class="slide" id="s8-b" aria-roledescription="slide" aria-label="2 of 2"><h3>Bread</h3></div>
+      </div>
+    </section>
+
+    <!-- S9: each slide repeats the carousel's own toggle, and says so with aria-controls. -->
+    <section id="s9" class="carousel" aria-roledescription="carousel" aria-label="Banners">
+      <h2>Banners</h2>
+      <div class="track" id="s9-items">
+        <div class="slide active" id="s9-a" aria-roledescription="slide" aria-label="1 of 2"><h3>Banner 1</h3><button type="button" aria-controls="s9-items" data-count="s9-pause" data-stops="s9">Pause slideshow</button></div>
+        <div class="slide" id="s9-b" aria-roledescription="slide" aria-label="2 of 2"><h3>Banner 2</h3><button type="button" aria-controls="s9-items" data-count="s9-pause" data-stops="s9">Pause slideshow</button></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Every carousel advances every 500 ms while it plays. Clicks on counted
+    // buttons are counted in window.__counts.
+    window.__counts = {};
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-count]');
+      if (b) window.__counts[b.dataset.count] = (window.__counts[b.dataset.count] || 0) + 1;
+    });
+    window.__carousels = {};
+    for (const c of document.querySelectorAll('.carousel')) {
+      const slides = [...c.querySelectorAll('.track > .slide')];
+      const state = { playing: true, timer: null, toggles: 0 };
+      window.__carousels[c.id] = state;
+      const start = () => {
+        state.playing = true;
+        clearInterval(state.timer);
+        state.timer = setInterval(() => {
+          const i = slides.findIndex((s) => s.classList.contains('active'));
+          slides[i].classList.remove('active');
+          slides[(i + 1) % slides.length].classList.add('active');
+        }, 500);
+      };
+      const stop = () => { state.playing = false; clearInterval(state.timer); state.timer = null; };
+      start();
+      const toggle = c.querySelector(':scope > [data-toggle]');
+      if (toggle) {
+        const playingName = toggle.dataset.playingName || toggle.textContent;
+        const pausedName = toggle.dataset.pausedName || toggle.textContent.replace(/^Pause/, 'Play');
+        toggle.addEventListener('click', () => {
+          state.toggles++;
+          if (state.playing) stop(); else start();
+          if (toggle.dataset.toggle === 'rename') toggle.textContent = state.playing ? playingName : pausedName;
+          else toggle.setAttribute('aria-pressed', state.playing ? 'false' : 'true');
+        });
+      }
+      const repeated = [...c.querySelectorAll('[data-stops]')];
+      for (const b of repeated) b.addEventListener('click', () => {
+        state.toggles++;
+        if (state.playing) stop(); else start();
+        for (const r of repeated) r.textContent = state.playing ? 'Pause slideshow' : 'Play slideshow';
+      });
+    }
+  </script>
+</body>
+</html>

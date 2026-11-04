@@ -94,12 +94,17 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       'toolkit.page.isVisible(el) / toolkit.page.isOurs(el)',
       'toolkit.page.background(el) / toolkit.page.contrast(a, b)',
       'toolkit.page.textContrast(el)        // { color, background, ratio, min, large, overImage, fix }',
+      'toolkit.page.widgetParts(widget)     // a carousel\'s slides or a tab set\'s panels, as ARIA marks them; [] when it does not',
+      'toolkit.page.ownControls(widget, { parts })   // its own buttons (pause, next, pick a slide), not those inside its slides',
     ],
     config: {
       skip: { default: '', description: 'More selectors to leave out, on top of code, form fields, live regions, hidden content and the toolkit\'s UI.' },
       maxLevel: { default: 6, description: 'headings(): the deepest level to include.' },
     },
-    invariants: ['Read-only.'],
+    invariants: [
+      'Read-only.',
+      'ownControls() decides from roles and relationships, never from names or classes: a control that names what it controls (aria-controls) is the widget\'s only when that is the widget, one of its parts or what holds them; one that does not say is the widget\'s only when it is outside every part. A "Play trailer" button inside a slide is the slide\'s, not the carousel\'s.',
+    ],
   },
   {
     name: 'highlight',

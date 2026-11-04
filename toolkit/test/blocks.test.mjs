@@ -232,6 +232,42 @@ await test('page: main region, readable text without code, fields, live regions 
   assert.deepEqual(tk.page.headings({ maxLevel: 1 }).map((h) => h.text), ['Title']);
 });
 
+await test("page.widgetParts and ownControls: a carousel's own buttons from roles and aria-controls, never a button inside a slide, whatever it says", async () => {
+  const { tk, $, doc } = page(`
+    <section id="c" aria-roledescription="carousel" aria-label="Shows">
+      <button id="rot" aria-controls="items">Stop automatic slide show</button>
+      <button id="vid" aria-controls="bg">Pause background video</button><video id="bg"></video>
+      <button id="ghost" aria-controls="nowhere">Next</button>
+      <div id="items">
+        <div id="s1" role="group" aria-roledescription="slide"><button id="trailer">Play trailer</button>
+          <button id="repeat" aria-controls="items">Pause slideshow</button></div>
+        <div id="s2" role="group" aria-roledescription="slide"><button id="audio">Pause audio</button></div>
+      </div>
+      <div role="tablist"><button id="pick" role="tab" aria-controls="s2">Slide 2</button></div>
+    </section>
+    <section id="t"><div role="tabpanel" id="p1"><div role="tabpanel" id="inner"></div></div><button id="tb">Next</button></section>
+    <section id="u"><div id="u1" class="slide"><button id="u1b">Pause audio</button></div><div id="u2" class="slide"></div><button id="ub">Pause</button></section>`);
+  const ids = (els) => els.map((el) => el.id);
+  assert.deepEqual(ids(tk.page.widgetParts($('#c'))), ['s1', 's2']);
+  assert.deepEqual(ids(tk.page.widgetParts($('#t'))), ['p1'], 'outermost parts only');
+  // Rotation (controls the slides' holder), a picker (controls a slide), a
+  // slide's button that says it controls the slides, and one whose
+  // aria-controls names nothing (then where it sits decides).
+  assert.deepEqual(ids(tk.page.ownControls($('#c'))), ['rot', 'ghost', 'repeat', 'pick']);
+  assert.deepEqual(ids(tk.page.ownControls($('#t'))), ['tb']);
+  // The page marks no parts: every button is the widget's, unless the caller
+  // knows the parts another way.
+  assert.deepEqual(tk.page.widgetParts($('#u')), []);
+  assert.deepEqual(ids(tk.page.ownControls($('#u'))), ['u1b', 'ub']);
+  assert.deepEqual(ids(tk.page.ownControls($('#u'), { parts: [$('#u1'), $('#u2')] })), ['ub']);
+  // The toolkit's own buttons are never the widget's.
+  const ours = doc.createElement('button');
+  ours.setAttribute('data-ai4a11y-ui', 'ui');
+  $('#t').append(ours);
+  assert.deepEqual(ids(tk.page.ownControls($('#t'))), ['tb']);
+  assert.deepEqual(tk.page.ownControls(null), []);
+});
+
 // ── announce ────────────────────────────────────────────────────────────────
 
 await test('announce: one shared region, repeats are read again, batches coalesce, and the region goes with the last session', async () => {
