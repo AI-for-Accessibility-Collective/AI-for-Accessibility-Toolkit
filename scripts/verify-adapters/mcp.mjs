@@ -70,7 +70,7 @@ const TOOLS = [
   },
   {
     name: 'verify_on_sites',
-    description: `Run the adapter, as verify_adapter does, on each live page in the robustness list: ${SITES.map(s => `${s.name} (${s.about})`).join('; ')}. A core adapter also runs on popular real sites: ${REAL_SITES.map(s => `${s.name} (${s.about})`).join('; ')}. Reports per page: whether enable() applied or skipped, page errors during the run, the axe-core problems it added, the layout shift, and what disable() left of its marks (or whether the page is back exactly, when the page holds still). Your checks are optional here and must hold on any page. Saves what you ran to tools/test/verify/<name>-sites.json.`,
+    description: `Run the adapter, as verify_adapter does, on the verifier's copy of each real page in the robustness list (recorded from the site, so every run sees the same page and no run visits the site): ${SITES.map(s => `${s.name} (${s.about})`).join('; ')}. A core adapter also runs on popular real sites: ${REAL_SITES.map(s => `${s.name} (${s.about})`).join('; ')}. Reports per page: whether enable() applied or skipped, page errors during the run, the axe-core problems it added, the layout shift, and what disable() left of its marks (or whether the page is back exactly, when the page holds still). Your checks are optional here and must hold on any page. Saves what you ran to tools/test/verify/<name>-sites.json.`,
     inputSchema: {
       type: 'object', required: ['name', 'file'],
       properties: {
@@ -190,7 +190,7 @@ const handlers = {
     const alone = (c) => (!c ? '' : c.error ? `\n  Without the adapter: could not run (${c.error})`
       : `\n  Without the adapter (the page by itself): axe-core problems that appeared: ${(c.axe?.added || []).map((x) => `${x.id} on ${x.count}`).join(', ') || 'none'}; back exactly: ${c.restored === false ? 'no' : c.restored === true ? 'yes' : 'not checked'}; layout shift ${c.shift ?? '-'}.`);
     return text([...results.map(([site, r, c]) => siteText(site, r) + alone(c)),
-      `Saved as ${path.relative(ROOT, dir)}/${name}-sites.json. Problems on these pages that were there before enable() are the site's. A live page can fail to load or change between runs: run it again before you act on one odd result.`].join('\n\n'));
+      `Saved as ${path.relative(ROOT, dir)}/${name}-sites.json. Problems on these pages that were there before enable() are the site's. Each page is a copy recorded from the site (the demo sites once, the others at most once a day): it is the same on every run, but scripts on it still run (carousels turn, timers fire), and what it asks the network for that the copy lacks fails, as if offline.`].join('\n\n'));
   },
 
   async verify_adapter(args) {

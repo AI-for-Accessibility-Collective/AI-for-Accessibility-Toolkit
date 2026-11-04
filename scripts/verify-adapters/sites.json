@@ -1,35 +1,41 @@
 {
-  "about": "Live pages every built-in adapter is also run on, for robustness: real markup, real barriers, and pages that are already accessible, which an adapter must not make worse. Chosen for range, not endorsed; they change without notice.",
+  "about": "Live pages every built-in adapter is also run on, for robustness: real markup, real barriers, and pages that are already accessible, which an adapter must not make worse. Chosen for range, not endorsed; they change without notice. The verifier serves each from a copy (scripts/verify-adapters/sites.mjs): the demo sites, marked static, are recorded once; the others at most once a day.",
   "sites": [
     {
       "name": "bad-home",
       "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
-      "about": "W3C's Before and After Demonstration: the inaccessible home page (layout tables, images of text, no headings)"
+      "about": "W3C's Before and After Demonstration: the inaccessible home page (layout tables, images of text, no headings)",
+      "static": true
     },
     {
       "name": "bad-tickets",
       "url": "https://www.w3.org/WAI/demos/bad/before/tickets.html",
-      "about": "W3C BAD: the inaccessible ticket form"
+      "about": "W3C BAD: the inaccessible ticket form",
+      "static": true
     },
     {
       "name": "bad-survey",
       "url": "https://www.w3.org/WAI/demos/bad/before/survey.html",
-      "about": "W3C BAD: the inaccessible survey form"
+      "about": "W3C BAD: the inaccessible survey form",
+      "static": true
     },
     {
       "name": "deque-workshop",
       "url": "https://workshop2.dequelabs.com/",
-      "about": "Deque's training site: a recipe dashboard with cards and small fixed-width tables"
+      "about": "Deque's training site: a recipe dashboard with cards and small fixed-width tables",
+      "static": true
     },
     {
       "name": "deque-mars",
       "url": "https://dequeuniversity.com/demo/mars/",
-      "about": "Deque's Mars Commuter demo: a travel site with deliberate barriers"
+      "about": "Deque's Mars Commuter demo: a travel site with deliberate barriers",
+      "static": true
     },
     {
       "name": "uw-before",
       "url": "https://www.washington.edu/accesscomputing/AU/before.html",
-      "about": "University of Washington's Accessible University, the inaccessible version"
+      "about": "University of Washington's Accessible University, the inaccessible version",
+      "static": true
     },
     {
       "name": "wikipedia",

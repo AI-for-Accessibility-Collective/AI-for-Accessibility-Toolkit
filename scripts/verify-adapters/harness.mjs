@@ -50,6 +50,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
+import { prepareSite, serveFromCopy, serveFromCopyPuppeteer, VERIFIER_UA } from './sites.mjs';
 import { buildPreviewScript, previewTeardownScript } from '../../extension/runtime/scripts.js';
 import { rewriteExports, instantiateWebModule } from '../../toolkit/protocol/adapter/package.js';
 import { buildPrompt } from '../../toolkit/blocks/ai/prompts.js';
@@ -289,8 +290,13 @@ export async function openVerifier({ headless = true } = {}) {
       if (m.error) return { status: 'failed', message: `Loading the adapter: ${m.error}`, errors: [] };
       code = m.code;
     } else code = await bundle(spec.file);
+    // A real page is served from the verifier's copy of it (sites.mjs): no
+    // visit to the site, and the same page on every run.
+    let copy = null;
+    if (live) { try { copy = await prepareSite(browser, spec.page); } catch (e) { return { status: 'unreachable', message: e.message.slice(0, 200), errors: [] }; } }
     // A live site's Content-Security-Policy would block the injected scripts, as the extension's user scripts are not.
-    const context = await browser.newContext({ viewport: spec.viewport || { width: 1280, height: 800 }, reducedMotion: spec.reducedMotion || 'no-preference', bypassCSP: live });
+    const context = await browser.newContext({ viewport: spec.viewport || { width: 1280, height: 800 }, reducedMotion: spec.reducedMotion || 'no-preference', bypassCSP: live, ...(live ? { userAgent: VERIFIER_UA, serviceWorkers: 'block' } : {}) });
+    if (copy) await serveFromCopy(context, copy);
     const page = await context.newPage();
     let aiCalls = 0;
     if (core) {
@@ -378,6 +384,7 @@ export async function openVerifier({ headless = true } = {}) {
         } else result.restored = result.leftovers.length ? false : 'unknown';
       }
       if (core) { result.aiCalls = aiCalls; if (result.status !== 'applied') result.host = await page.evaluate(() => globalThis.__verifyHost).catch(() => null); }
+      if (copy) result.copy = { recordedAt: copy.recordedAt, stale: !!copy.stale };
       result.errors = errors.slice(0, 10);
       if (siteErrors) result.siteErrors = siteErrors;
       return result;
@@ -415,6 +422,7 @@ export async function openVerifier({ headless = true } = {}) {
     if (!live && (!spec.page || !existsSync(path.resolve(CORE_PAGES, spec.page)))) throw new Error(`page must be a file in ${path.relative(ROOT, CORE_PAGES)}/ or an https URL (got ${spec.page})`);
     const url = live ? spec.page : `${base}/core/${spec.page}`;
     const { installHelpers, installListenerLog } = interA11y().inpage;
+    const copy = live ? await prepareSite(browser, url) : null;
     const b = await puppeteerBrowser();
     const pages = new Set();
     let aiCalls = 0;
@@ -428,7 +436,11 @@ export async function openVerifier({ headless = true } = {}) {
       if (spec.reducedMotion) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: spec.reducedMotion }]).catch(() => {});
       page.__dialogs = [];
       page.on('dialog', (d) => { page.__dialogs.push({ type: d.type(), message: d.message() }); d.dismiss().catch(() => {}); });
-      if (live) await page.setBypassCSP(true);
+      if (live) {
+        await page.setBypassCSP(true);
+        await page.setUserAgent(VERIFIER_UA);
+        if (copy) await serveFromCopyPuppeteer(page, copy);
+      }
       await page.evaluateOnNewDocument(installHelpers);
       await page.evaluateOnNewDocument(installListenerLog);
       await page.exposeFunction('__verifyAi', (request) => { aiCalls++; return answerAi(spec, request, page, () => aiCalls); });
