@@ -1,0 +1,62 @@
+<div class="row justify-content-center">
+  <div class="col-md-10 col-lg-7 col-xl-6">
+    <section class="pace-panel p-4 p-lg-5 d-flex flex-column gap-4 min-w-0">
+      <div class="d-grid gap-3">
+        <app-pip class="text-warning" [large]="true" />
+        <h1 class="h2 mb-0">Choose a video to caption</h1>
+        <p class="text-body-secondary mb-0">The captions appear next to the video as it plays.</p>
+      </div>
+
+      <label
+        class="drop-zone"
+        [class.drop-zone-active]="dragging()"
+        (dragover)="dragOver($event)"
+        (dragleave)="dragLeave()"
+        (drop)="dropVideo($event)">
+        <input
+          id="video"
+          class="visually-hidden"
+          type="file"
+          accept="video/*"
+          [disabled]="busy()"
+          (change)="pickVideo($event)">
+        <span class="btn btn-warning fw-semibold" aria-hidden="true">Choose a video</span>
+        <span class="small text-body-secondary">MP4, MOV or WebM, up to 1 GB. Or drop a video here.</span>
+      </label>
+
+      @if (videoFile(); as file) {
+        <div class="d-flex justify-content-between align-items-baseline gap-3 small">
+          <span class="text-truncate" [title]="file.name">{{ file.name }}</span>
+          <span class="font-monospace flex-shrink-0">{{ fileSize() }}</span>
+        </div>
+      }
+
+      @if (error(); as message) {
+        <div class="alert alert-danger mb-0" role="alert">{{ message }}</div>
+      }
+
+      @if (stage() === 'uploading') {
+        <div class="progress pace-meter" role="progressbar" aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressPercent()">
+          <div class="progress-bar bg-warning" [style.width.%]="progressPercent()"></div>
+        </div>
+      }
+
+      @if (busy()) {
+        <ol class="step-list" aria-label="Progress">
+          <li [class.step-done]="stage() === 'writing'" [class.step-current]="stage() === 'uploading'">Uploaded</li>
+          <li [class.step-current]="stage() === 'writing'">Listening to the speech and writing captions</li>
+          <li>Ready to watch</li>
+        </ol>
+        <p class="small text-body-secondary mb-0" role="status">This can take several minutes for a long video. Keep this tab open.</p>
+      }
+
+      <button type="button" class="btn btn-warning btn-lg fw-semibold" [disabled]="!canSubmit()" (click)="submit()">
+        {{ busy() ? 'Writing captions' : 'Create captions and play' }}
+      </button>
+
+      <p class="small text-body-secondary mb-0">
+        Captions are machine-generated and can miss words. Check important information against the source.
+      </p>
+    </section>
+  </div>
+</div>
