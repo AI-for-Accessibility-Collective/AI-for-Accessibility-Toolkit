@@ -22,10 +22,21 @@
 //   • Elements with aria-hidden="true" or inside aria-hidden subtrees are skipped.
 //   • A file name's words name only a small icon (48 by 48 pixels or smaller); photos
 //     and illustrations are never named from file names (on null from AI, left untouched).
-//   • Words from class or file name match whole words; style words (primary, secondary,
-//     btn, icon, large) are filtered out and not treated as names.
+//   • Words from a file name match whole words; style words (primary, secondary, btn,
+//     icon, large) are filtered out and not treated as names.
+//   • An icon's class names it only when it is the icon library's name class (fa-print,
+//     bi-trash, icon-star, search-icon) made of words, on the icon the control shows
+//     (its shown children, or itself when it has none). Modifier classes (fa-2x, fa-fw,
+//     fa-solid) name nothing; when the classes or the icons disagree, nothing is named
+//     from them (the AI is asked instead). A role="img" element is named this way too,
+//     and otherwise treated as an image: described by vision only when informative.
 //   • A link to '#...', '?...', or non-http(s) schemes (mailto:, tel:) is never named from the path.
-//   • A nearby label names a field only when it sits right before it and labels nothing else.
+//   • A nearby label (a <label>, or a span or div with a form-label class) names a field
+//     only when it sits right before it and labels nothing else: no for, no control in
+//     it, no element pointing to it by aria-labelledby or aria-describedby, not right
+//     after a checkbox or radio button (whose label it is).
+//   • A field's name attribute names it only when it is made of words (customer_email),
+//     never a framework key (ctl00$MainContent$txtEmail).
 //   • Marks an image inside a named control alt="" only when it is small (<= 48px)
 //     or clearly decorative.
 //   • Informative images (> 48px on either side and not decorative) lacking alt text
@@ -205,37 +216,81 @@ function extractWordsFromFileName(src) {
   return sentenceCase(filtered);
 }
 
+// An icon font names its icon in one class: fa-print, bi-trash, glyphicon-search,
+// ion-md-search, icon-star, search-icon. The library's other classes on the same
+// element are its modifiers (fa-2x, fa-fw, fa-solid, fa-stack). A class with a digit
+// or a symbol in it is a modifier or an id, never a name, and a class made only of
+// modifier words names nothing. When the classes, or the icons, disagree, nothing is
+// named from them: a missing name goes to the AI, a wrong one misleads.
+const ICON_CLASS_RE = /^(?:fa|bi|glyphicon|feather|lucide|ion(?:[-_](?:ios|md|logo))?|icon)[-_](.+)$|^(.+)[-_]icon$/i;
+const ICON_MODIFIERS = new Set([
+  'solid', 'regular', 'light', 'thin', 'duotone', 'sharp', 'brands', 'classic',
+  'fw', 'spin', 'pulse', 'beat', 'fade', 'bounce', 'shake', 'flip', 'inverse', 'border',
+  'stack', 'ul', 'li', 'rotate', 'by', 'reverse', 'horizontal', 'vertical', 'both',
+  'xs', 'sm', 'lg', 'xl', 'xxl', 'xxs', 'tiny', 'small', 'medium', 'large', 'huge', 'mini', 'micro',
+  'fill', 'filled', 'outline', 'outlined', 'round', 'rounded', 'twotone',
+  'icon', 'icons', 'btn', 'button', 'nav', 'ui', 'svg', 'img', 'glyph',
+  'primary', 'secondary', 'tertiary', 'default', 'custom', 'active', 'disabled', 'dark'
+]);
+
+// The words of an identifier (customer_email, fa-print, searchIcon), or null when
+// any part of it is not a word (2x, ctl00$txtEmail, data[user]).
+function wordsOf(str) {
+  const words = String(str || '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .split(/[-_\s]+/)
+    .map(w => w.toLowerCase())
+    .filter(Boolean);
+  return words.length && words.every(w => /^[a-z]+$/.test(w)) ? words : null;
+}
+
+// The page shows it: not hidden, not display:none (the icon for a toggle's other
+// state is hidden), whatever its size (an icon font draws in a pseudo-element).
+function isShown(el) {
+  if (el.closest('[hidden]')) return false;
+  if (typeof el.checkVisibility === 'function') {
+    return el.checkVisibility({ opacityProperty: true, visibilityProperty: true });
+  }
+  const style = el.ownerDocument.defaultView?.getComputedStyle(el);
+  return !style || (style.display !== 'none' && style.visibility !== 'hidden');
+}
+
+const AMBIGUOUS = Symbol('ambiguous');
+
+// The one name a list of things gives (each gives a name, nothing, or AMBIGUOUS),
+// or null when none gives one or they disagree.
+function oneName(items, nameOfItem) {
+  const names = new Set();
+  for (const item of items) {
+    const name = nameOfItem(item);
+    if (name === AMBIGUOUS) return null;
+    if (name) names.add(name);
+  }
+  return names.size === 1 ? [...names][0] : null;
+}
+
+function iconNameOfElement(node) {
+  const names = new Set();
+  for (const token of (node.getAttribute('class') || '').split(/\s+/)) {
+    const m = ICON_CLASS_RE.exec(token);
+    if (!m) continue;
+    const words = wordsOf(m[1] || m[2]);
+    if (!words || words.every(w => ICON_MODIFIERS.has(w))) continue;
+    names.add(sentenceCase(words));
+  }
+  if (names.size > 1) return AMBIGUOUS;
+  return names.size ? [...names][0] : null;
+}
+
+// The icon is drawn by the control's shown children (not the parts inside an svg),
+// or, when it has no children, by the control itself (<input type=button>, a
+// role=img span). A control's own classes beside children describe the control
+// (icon-only, has-icon), not its icon.
 function extractWordsFromClass(el) {
-  const elements = [...el.querySelectorAll('*'), el];
-  const allTokens = [];
-
-  for (const node of elements) {
-    const classAttr = node.getAttribute('class');
-    if (!classAttr || typeof classAttr !== 'string') continue;
-    const tokens = classAttr.trim().split(/\s+/).filter(Boolean);
-    for (const token of tokens) {
-      allTokens.push(token);
-    }
-  }
-
-  const ICON_TOKEN_RE = /^(?:fa|bi|glyphicon|feather|lucide|ion|material|icon)[-_]|[-_]icon(?:[-_]|$)/i;
-
-  for (const token of allTokens) {
-    if (ICON_TOKEN_RE.test(token)) {
-      const parts = token
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .split(/[-_\s]+/)
-        .map(w => w.toLowerCase().trim())
-        .filter(Boolean);
-
-      const filtered = parts.filter(w => !STYLE_WORDS.has(w) && !/^\d+$/.test(w));
-      if (filtered.length) {
-        return sentenceCase(filtered);
-      }
-    }
-  }
-
-  return null;
+  const nodes = el.children.length
+    ? [...el.querySelectorAll('*')].filter(n => !n.parentElement?.closest('svg') && isShown(n))
+    : [el];
+  return oneName(nodes, iconNameOfElement);
 }
 
 function extractNameFromLinkPath(link) {
@@ -275,34 +330,39 @@ function extractNameFromLinkPath(link) {
   return sentenceCase(filtered);
 }
 
+// A <label>, or a span or div the page's form styles call a label (field-label,
+// form-label: the whole class, so Bootstrap's label badge is not one), right
+// before the field.
+const FORM_LABEL_CLASS_RE = /^(?:field|form|input|control)[-_]?label$/i;
+
 function extractNearbyLabel(field) {
   const prev = field.previousElementSibling;
   if (!prev) return null;
-  const prevTag = prev.tagName.toLowerCase();
-
-  // Exclude elements that are controls, structural sections, headings, paragraphs, links, lists, tables, etc.
-  const EXCLUDED_TAGS = /^(input|select|textarea|button|h[1-6]|p|a|ul|ol|li|table|tr|td|th|section|nav|header|footer|aside|article|form|fieldset|script|style|template|noscript)$/i;
-  if (EXCLUDED_TAGS.test(prevTag)) return null;
-
-  // Exclude error/validation elements or live alerts
-  const role = (prev.getAttribute('role') || '').toLowerCase().trim();
-  if (role === 'alert' || role === 'status') return null;
+  const doc = field.ownerDocument;
   const classAttr = prev.getAttribute('class') || '';
-  if (/(?:error|invalid|feedback|errormsg|alert|danger|warning|validation)/i.test(classAttr)) return null;
-  if (prev.hasAttribute('aria-live')) return null;
+  const isLabel = prev.tagName === 'LABEL' ||
+    (/^(SPAN|DIV)$/.test(prev.tagName) && classAttr.split(/\s+/).some(c => FORM_LABEL_CLASS_RE.test(c)));
+  if (!isLabel) return null;
 
-  // A label next to a field names it only when it labels nothing else
+  // It labels nothing else: a for names the field it points to, a control inside
+  // it is its own, and what points to it by aria-labelledby or aria-describedby is
+  // what it is for.
+  if (prev.hasAttribute('for')) return null;
   if (prev.querySelector('input, select, textarea, button')) return null;
-
-  if (prevTag === 'label') {
-    const forId = prev.getAttribute('for');
-    if (forId && (!field.id || forId !== field.id)) return null;
-  } else {
-    // Non-label elements must have explicit label intent via class or role
-    if (!/(?:field-label|form-label|label|prompt|legend|caption|lbl)/i.test(classAttr) && role !== 'label' && role !== 'legend') {
-      return null;
-    }
+  if (prev.id) {
+    try {
+      const id = CSS.escape(prev.id);
+      if (doc.querySelector(`[aria-labelledby~="${id}"], [aria-describedby~="${id}"]`)) return null;
+    } catch { return null; }
   }
+  // A label right after a checkbox or radio button is that box's: theirs follow them.
+  const before = prev.previousElementSibling;
+  if (before?.tagName === 'INPUT' && /^(checkbox|radio)$/i.test(before.getAttribute('type') || '')) return null;
+
+  // Error and status messages are not names.
+  const role = (prev.getAttribute('role') || '').toLowerCase().trim();
+  if (role === 'alert' || role === 'status' || prev.hasAttribute('aria-live')) return null;
+  if (/(?:error|invalid|feedback|alert|danger|warning|validation)/i.test(classAttr)) return null;
 
   const text = (prev.textContent || '').trim().replace(/[:*]+$/, '').trim();
   if (text && text.length < 60 && !/\n/.test(text) && !isJunkName(text)) {
@@ -416,8 +476,14 @@ export default {
         return false;
       }
 
-      // 1. SVG title inside control
-      const svgTitle = el.querySelector('svg title')?.textContent?.trim();
+      const role = (el.getAttribute('role') || '').toLowerCase().trim();
+      const isControl = /^(BUTTON|A)$/.test(tag) ||
+                        (tag === 'INPUT' && /^(button|submit|reset|image)$/.test(type)) ||
+                        role === 'button' || role === 'link';
+
+      // 1. SVG title inside control (of the svgs it shows; they must agree)
+      const svgTitle = oneName([...el.querySelectorAll('svg')].filter(isShown),
+        svg => svg.querySelector('title')?.textContent?.trim());
       if (svgTitle) {
         s.setAttr(el, 'aria-label', svgTitle);
         changesCount++;
@@ -437,25 +503,20 @@ export default {
         }
       }
 
-      for (const childImg of el.querySelectorAll('img')) {
-        if (isSmallIcon(childImg) && !isSpacerImage(childImg)) {
-          const iconName = extractWordsFromFileName(childImg.getAttribute('src'));
-          if (iconName) {
-            s.setAttr(el, 'aria-label', iconName);
-            changesCount++;
-            markSmallImagesInNamedControl(el);
-            return true;
-          }
-        }
+      // (the small icon images it shows; they must agree)
+      const childIcons = [...el.querySelectorAll('img')]
+        .filter(img => isShown(img) && isSmallIcon(img) && !isSpacerImage(img));
+      const childIconName = oneName(childIcons, img => extractWordsFromFileName(img.getAttribute('src')));
+      if (childIconName) {
+        s.setAttr(el, 'aria-label', childIconName);
+        changesCount++;
+        markSmallImagesInNamedControl(el);
+        return true;
       }
 
-      // 3. Class words on control or child icon
-      const classWords = extractWordsFromClass(el);
-      const isButtonOrLink = /^(BUTTON|A)$/.test(tag) ||
-                             (tag === 'INPUT' && /^(button|submit|reset|image)$/.test(type)) ||
-                             el.getAttribute('role') === 'button' ||
-                             el.getAttribute('role') === 'link';
-      if (classWords && isButtonOrLink) {
+      // 3. Class words of the icon a control or a role=img element shows
+      const classWords = (isControl || role === 'img') ? extractWordsFromClass(el) : null;
+      if (classWords) {
         s.setAttr(el, 'aria-label', classWords);
         changesCount++;
         markSmallImagesInNamedControl(el);
@@ -463,7 +524,7 @@ export default {
       }
 
       // 4. Link last path part
-      if (tag === 'A' || el.getAttribute('role') === 'link') {
+      if (tag === 'A' || role === 'link') {
         const pathName = extractNameFromLinkPath(el);
         if (pathName) {
           s.setAttr(el, 'aria-label', pathName);
@@ -492,18 +553,13 @@ export default {
         }
 
         const nameAttr = el.getAttribute('name');
-        if (nameAttr && !isJunkName(nameAttr)) {
-          const words = nameAttr
-            .replace(/([a-z])([A-Z])/g, '$1 $2')
-            .split(/[-_\s]+/)
-            .map(w => w.toLowerCase().trim())
-            .filter(Boolean);
-          const formatted = sentenceCase(words);
-          if (formatted) {
-            s.setAttr(el, 'aria-label', formatted);
-            changesCount++;
-            return true;
-          }
+        // Only a name made of words (customer_email), not a framework's key
+        // (ctl00$MainContent$txtEmail, user[email], field_17).
+        const nameWords = nameAttr && !isJunkName(nameAttr) ? wordsOf(nameAttr) : null;
+        if (nameWords) {
+          s.setAttr(el, 'aria-label', sentenceCase(nameWords));
+          changesCount++;
+          return true;
         }
       }
 
@@ -520,8 +576,10 @@ export default {
         if (aiAsked.has(el)) continue;
 
         const tag = el.tagName;
-        if (tag === 'IMG') {
-          const role = (el.getAttribute('role') || '').toLowerCase().trim();
+        const role = (el.getAttribute('role') || '').toLowerCase().trim();
+        // An image, by its tag or its role, is described from how it looks, and
+        // only when it is informative; a small one is left as it was.
+        if (tag === 'IMG' || role === 'img') {
           if (role === 'presentation' || role === 'none') continue;
           if (!isInformativeImage(el)) continue;
 
@@ -530,7 +588,7 @@ export default {
           try {
             const alt = await s.ai.vision('describe', el, { purpose: 'alt' });
             if (alt && typeof alt === 'string' && alt.trim() && s.alive()) {
-              s.setAttr(el, 'alt', alt.trim());
+              s.setAttr(el, tag === 'IMG' ? 'alt' : 'aria-label', alt.trim());
               changesCount++;
             }
           } catch {}

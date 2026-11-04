@@ -1,0 +1,79 @@
+{
+  "name": "names-guesses",
+  "file": "tools/core-adapters/names.js",
+  "page": "names-guesses.html",
+  "checks": [
+    {
+      "name": "AI calls are logged (installs the log before enable)",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        window.__verifyAiCallLog = [];\n        const orig = globalThis.__verifyAi;\n        if (orig && !window.__origVerifyAiHooked) {\n          window.__origVerifyAiHooked = true;\n          globalThis.__verifyAi = (req) => { window.__verifyAiCallLog.push(req); return orig(req); };\n        }\n        return true;\n      }\n      return (window.__verifyAiCallLog || []).length > 0;\n    "
+    },
+    {
+      "name": "review 9: a Font Awesome size class (fa-2x) is not the name; the icon class is",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-fa-2x')?.getAttribute('aria-label') === 'Print';\n    "
+    },
+    {
+      "name": "a fixed-width class (fa-fw) is not the name; the icon class is",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-fa-fw')?.getAttribute('aria-label') === 'Cog';\n    "
+    },
+    {
+      "name": "a toggle is named from the icon it shows, not the hidden one for its other state",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-toggle')?.getAttribute('aria-label') === 'Play';\n    "
+    },
+    {
+      "name": "a stacked icon whose icons disagree is not named from a class (the AI is asked)",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-stack')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "a flip modifier is not the name; the icon class is",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-flip')?.getAttribute('aria-label') === 'Reply';\n    "
+    },
+    {
+      "name": "an icon class is read whole (bi-info-circle is Info circle, not Circle)",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-bi-info')?.getAttribute('aria-label') === 'Info circle';\n    "
+    },
+    {
+      "name": "a control's own class beside an svg (has-icon) is not its icon's name (the AI is asked)",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-has-icon')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "review 9: a role=img icon is named from its icon class, without AI",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('span-icon-img')?.getAttribute('aria-label') === 'Star';\n    "
+    },
+    {
+      "name": "a small role=img with nothing to name it from is not sent to the AI and is left as it was",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const el = document.getElementById('span-img-small');\n      return !!el && !el.hasAttribute('aria-label');\n    "
+    },
+    {
+      "name": "an informative role=img is described by vision, once, and only it",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const describes = (window.__verifyAiCallLog || []).filter(r => r.task === 'describe').length;\n      return document.getElementById('div-img-large')?.getAttribute('aria-label') === 'A scenic mountain landscape with pine trees.' && describes === 1;\n    "
+    },
+    {
+      "name": "review 9: a label another field points to by aria-labelledby does not name the field beside it",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('input-unrelated')?.getAttribute('aria-label') !== 'Billing Zip' && document.getElementById('input-unrelated')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "a hint another field points to by aria-describedby does not name the field beside it",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('input-after-hint')?.getAttribute('aria-label') === 'Store action' && document.getElementById('input-zip')?.getAttribute('aria-label') === 'Zip code';\n    "
+    },
+    {
+      "name": "Bootstrap's label badge (class label) is not a field label",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('input-after-badge')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "a checkbox's label (after it) does not name the next checkbox",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('cb-text')?.getAttribute('aria-label') !== 'Email me' && document.getElementById('cb-email')?.getAttribute('aria-label') !== 'Email me';\n    "
+    },
+    {
+      "name": "a label right before a field, for nothing else, still names it",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('input-city')?.getAttribute('aria-label') === 'Billing city';\n    "
+    },
+    {
+      "name": "a framework's field key (ctl00$MainContent$txtEmail) is not a name",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('input-aspnet')?.getAttribute('aria-label') === 'Store action';\n    "
+    }
+  ],
+  "ai": {
+    "label": "Store action",
+    "describe": "A scenic mountain landscape with pine trees."
+  }
+}
