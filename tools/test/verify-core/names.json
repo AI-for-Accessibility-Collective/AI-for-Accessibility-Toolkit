@@ -29,7 +29,7 @@
     },
     {
       "name": "at most the limit of AI calls on a page with many unnamed controls",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        window.__verifyAiCallLog = [];\n        const orig = globalThis.__verifyAi;\n        if (orig && !window.__origVerifyAiHooked) {\n          window.__origVerifyAiHooked = true;\n          globalThis.__verifyAi = (req) => {\n            window.__verifyAiCallLog.push(req);\n            return orig(req);\n          };\n        }\n        return true;\n      }\n\n      const count = window.__verifyAiCallLog?.length || 0;\n      if (count < 1 || count > 10) return false;\n\n      for (const req of window.__verifyAiCallLog) {\n        const input = String(req.input || '');\n        if (/btn-svg-title|btn-icon-class|btn-small-icon|link-path|input-placeholder|input-name|input-nearby|img-small-icon|input-btn-icon|img-aria-hidden|img-nested-aria-hidden|btn-nested-aria-hidden/i.test(input)) {\n          return false;\n        }\n      }\n      return true;\n    "
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        window.__verifyAiCallLog = [];\n        const orig = globalThis.__verifyAi;\n        if (orig && !window.__origVerifyAiHooked) {\n          window.__origVerifyAiHooked = true;\n          globalThis.__verifyAi = (req) => {\n            window.__verifyAiCallLog.push(req);\n            return orig(req);\n          };\n        }\n        return true;\n      }\n\n      const count = window.__verifyAiCallLog?.length || 0;\n      if (count < 1 || count > 10) return false;\n\n      for (const req of window.__verifyAiCallLog) {\n        const input = String(req.input || '');\n        if (/btn-svg-title|btn-icon-class|btn-small-icon|link-path|input-placeholder|input-name|input-nearby|img-small-icon|input-btn-icon|input-img-icon|img-aria-hidden|img-nested-aria-hidden|btn-nested-aria-hidden/i.test(input)) {\n          return false;\n        }\n      }\n      return true;\n    "
     },
     {
       "name": "Font Awesome 6 icon classes assign icon name, filtering style variants",
@@ -70,6 +70,26 @@
     {
       "name": "input button with icon class is named via page-first rules",
       "code": "\n      const inputBtn = document.getElementById(\"input-btn-icon\");\n      if (!inputBtn) return false;\n      return inputBtn.getAttribute(\"aria-label\") === \"Search\";\n    "
+    },
+    {
+      "name": "btn-* layout classes do not assign layout names and allow child icon naming",
+      "code": "\n      const btnBlock = document.getElementById(\"btn-block-print\");\n      const btnGroup = document.getElementById(\"btn-group-trash\");\n      if (!btnBlock || !btnGroup) return false;\n      return btnBlock.getAttribute(\"aria-label\") === \"Print\" &&\n             btnGroup.getAttribute(\"aria-label\") === \"Trash\";\n    "
+    },
+    {
+      "name": "visible nearby label takes precedence over form field name attribute",
+      "code": "\n      const inputPhone = document.getElementById(\"input-phone-label\");\n      if (!inputPhone) return false;\n      return inputPhone.getAttribute(\"aria-label\") === \"Phone Number\";\n    "
+    },
+    {
+      "name": "visible nearby label takes precedence over placeholder attribute",
+      "code": "\n      const textareaNotes = document.getElementById(\"textarea-notes-label\");\n      if (!textareaNotes) return false;\n      return textareaNotes.getAttribute(\"aria-label\") === \"Delivery Notes\";\n    "
+    },
+    {
+      "name": "input type=image with icon filename is named via page-first rules without AI",
+      "code": "\n      const inputImg = document.getElementById(\"input-img-icon\");\n      if (!inputImg) return false;\n      return inputImg.getAttribute(\"aria-label\") === \"Search\";\n    "
+    },
+    {
+      "name": "extractNameFromLinkPath strips document extensions such as .pdf",
+      "code": "\n      const linkPdf = document.getElementById(\"link-doc-pdf\");\n      if (!linkPdf) return false;\n      return linkPdf.getAttribute(\"aria-label\") === \"Annual report\";\n    "
     }
   ],
   "ai": {

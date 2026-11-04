@@ -74,6 +74,22 @@
     {
       "name": "button with empty aria-controls does not match media element without id",
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const container = document.getElementById('media-no-id-container'); const v = container?.querySelector('video'); const btn = document.getElementById('btn-empty-controls'); if (!v || !btn) return false; await __verifyClick('#btn-empty-controls'); try { await v.play(); } catch {} await new Promise(r => setTimeout(r, 200)); return v.paused === true;"
+    },
+    {
+      "name": "carousel with aria-pressed=true on pause button is left alone and not held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('c8-s1'); const s2 = document.getElementById('c8-s2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const notReverted = s2.classList.contains('active') && !s1.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return notReverted;"
+    },
+    {
+      "name": "separate play button is clicked on disable() even when pause button set aria-pressed=true",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const before = window.__c9PlayClicks || 0; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const after = window.__c9PlayClicks || 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return after === before + 1;"
+    },
+    {
+      "name": "unrelated button in role=region does not cause late autoplay video to be treated as user-started",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const v = document.getElementById('video-in-region'); const btn = document.getElementById('btn-region-unrelated'); if (!v || !btn) return false; await __verifyClick('#btn-region-unrelated'); try { await v.play(); } catch {} await new Promise(r => setTimeout(r, 200)); return v.paused === true;"
+    },
+    {
+      "name": "carousel currently paused with play button is left alone and not held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('c10-s1'); const s2 = document.getElementById('c10-s2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const notReverted = s2.classList.contains('active') && !s1.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return notReverted;"
     }
   ],
   "viewport": {

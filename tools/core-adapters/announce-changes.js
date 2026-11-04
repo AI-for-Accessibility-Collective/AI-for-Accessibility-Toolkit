@@ -25,7 +25,7 @@
 //   • Announce only what reads as a message (role, class, id, or name says status, alert,
 //     error, notice, message, toast, warn, notification, snackbar) or content appearing within ACTION_MS of a user action.
 //   • Route changes announce the new view's heading (inspecting main for top-level view headings
-//     h1, h2, or role="heading" before falling back to document h1) or title, not its full content,
+//     h1-h6 or role="heading" before falling back to document h1) or title, not its full content,
 //     and cancel any pending route announcement when a new route arrives.
 //   • Does not watch characterData: text changing inside existing content on its own is never announced.
 //   • Ignores content outside the viewport and inside iframes.
@@ -42,7 +42,7 @@ const MAX_LINES = 3;
 
 const LIVE_SELECTOR = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"], [role="timer"], [role="marquee"], output';
 const INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
-const MESSAGE_REGEX = /(?:^|[^a-zA-Z0-9])(status|alert|error|notice|message|toast|warn(?:ing)?|snackbar|notification)(?:$|[^a-zA-Z0-9])/i;
+const MESSAGE_REGEX = /(?:^|[^a-zA-Z0-9])(status(?:es)?|alerts?|errors?|notices?|messages?|toasts?|warn(?:ing)?s?|snackbars?|notifications?)(?:$|[^a-zA-Z0-9])/i;
 const CANDIDATE_SELECTOR = 'output, [role="status"], [role="alert"], [class*="status" i], [class*="alert" i], [class*="error" i], [class*="notice" i], [class*="message" i], [class*="toast" i], [class*="warn" i], [class*="notification" i], [class*="snackbar" i], [id*="status" i], [id*="alert" i], [id*="error" i], [id*="notice" i], [id*="message" i], [id*="toast" i], [id*="warn" i], [id*="notification" i], [id*="snackbar" i], [name*="status" i], [name*="alert" i], [name*="error" i], [name*="notice" i], [name*="message" i], [name*="toast" i], [name*="warn" i], [name*="notification" i], [name*="snackbar" i]';
 
 function isTextField(el) {
@@ -164,43 +164,86 @@ function findRouteAnnouncement(s, state = {}) {
     return true;
   };
 
+  const isViewContainer = (el) => Boolean(
+    el && el.closest?.('[id*="view" i], [class*="view" i], [id*="route" i], [class*="route" i], [id*="page" i], [class*="page" i], [data-view], [data-route]')
+  );
+
   const clean = (str) => (str || '').replace(/\s+/g, ' ').trim();
   const titleText = clean(document.title);
 
   let lastMain = '';
   let lastDoc = '';
   let lastTitle = '';
+  let knownHeadings = null;
   if (typeof state === 'object' && state !== null) {
     lastMain = state.mainHeading || '';
     lastDoc = state.docHeading || '';
     lastTitle = state.title || '';
+    knownHeadings = state.knownHeadings || null;
   } else if (typeof state === 'string') {
     lastMain = state;
     lastDoc = state;
   }
 
+  const currentHeadings = new Set();
+
   // Filter for visible headings in the main landmark or view container first:
-  // inspect main for top-level view headings (h1, h2, or [role="heading"])
+  // inspect main for top-level view headings (h1-h6 or [role="heading"])
   const main = document.querySelector('main, [role="main"]');
   let mainHeading = null;
   if (main) {
-    const candidates = main.querySelectorAll('h1, [role="heading"][aria-level="1"]');
-    for (const c of candidates) {
-      if (isVisible(c)) { mainHeading = c; break; }
+    const candidatesH1 = Array.from(main.querySelectorAll('h1, [role="heading"][aria-level="1"]')).filter(isVisible);
+    const candidatesOther = Array.from(main.querySelectorAll('h2, h3, h4, h5, h6, [role="heading"]')).filter(isVisible);
+
+    for (const c of candidatesH1) {
+      const t = clean(c.textContent);
+      if (t) currentHeadings.add(t);
     }
-    if (!mainHeading) {
-      const candidates2 = main.querySelectorAll('h2, [role="heading"]');
-      for (const c of candidates2) {
-        if (isVisible(c)) { mainHeading = c; break; }
+    for (const c of candidatesOther) {
+      const t = clean(c.textContent);
+      if (t) currentHeadings.add(t);
+    }
+
+    const pickHeading = (list) => {
+      // 1. Heading inside a view container that differs from lastMain
+      for (const c of list) {
+        const t = clean(c.textContent);
+        if (t && t !== lastMain && isViewContainer(c)) return c;
       }
+      // 2. Heading whose text was not in knownHeadings (newly mounted)
+      if (knownHeadings && knownHeadings.size > 0) {
+        for (const c of list) {
+          const t = clean(c.textContent);
+          if (t && t !== lastMain && !knownHeadings.has(t)) return c;
+        }
+      }
+      return null;
+    };
+
+    mainHeading = pickHeading(candidatesH1);
+    if (!mainHeading) {
+      mainHeading = pickHeading(candidatesOther);
+    }
+
+    // Fallback if no heading differed: keep first visible heading
+    if (!mainHeading) {
+      mainHeading = candidatesH1[0] || candidatesOther[0] || null;
     }
   }
 
   // Fallback visible h1 in document
   let docH1 = null;
-  const candidates = document.querySelectorAll('h1, [role="heading"][aria-level="1"]');
-  for (const c of candidates) {
-    if (isVisible(c)) { docH1 = c; break; }
+  const docCandidates = Array.from(document.querySelectorAll('h1, [role="heading"][aria-level="1"]')).filter(isVisible);
+  for (const c of docCandidates) {
+    const t = clean(c.textContent);
+    if (t) currentHeadings.add(t);
+  }
+  for (const c of docCandidates) {
+    const t = clean(c.textContent);
+    if (t && t !== lastDoc) { docH1 = c; break; }
+  }
+  if (!docH1 && docCandidates.length) {
+    docH1 = docCandidates[0];
   }
 
   const mainHeadingText = mainHeading ? clean(mainHeading.textContent) : '';
@@ -222,7 +265,8 @@ function findRouteAnnouncement(s, state = {}) {
     heading: mainHeadingText || docH1Text,
     mainHeading: mainHeadingText,
     docHeading: docH1Text,
-    title: titleText
+    title: titleText,
+    headings: currentHeadings
   };
 }
 
@@ -261,16 +305,19 @@ export default {
     this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
+    this.knownHeadings = new Set();
 
     const initial = findRouteAnnouncement(s, {
       mainHeading: '',
       docHeading: '',
-      title: ''
+      title: '',
+      knownHeadings: new Set()
     });
     this.lastMainHeading = initial.mainHeading || '';
     this.lastDocHeading = initial.docHeading || '';
     this.lastRouteHeading = initial.heading || '';
     this.lastRouteTitle = initial.title || '';
+    this.knownHeadings = initial.headings || new Set();
 
     // Listen for actions: click, keydown (not in text fields), submit
     s.listen(document, 'submit', () => {
@@ -304,12 +351,14 @@ export default {
         const res = findRouteAnnouncement(this.s, {
           mainHeading: this.lastMainHeading,
           docHeading: this.lastDocHeading,
-          title: this.lastRouteTitle
+          title: this.lastRouteTitle,
+          knownHeadings: this.knownHeadings
         });
         if (res.mainHeading) this.lastMainHeading = res.mainHeading;
         if (res.docHeading) this.lastDocHeading = res.docHeading;
         if (res.heading) this.lastRouteHeading = res.heading;
         if (res.title) this.lastRouteTitle = res.title;
+        if (res.headings) this.knownHeadings = res.headings;
         if (res.text) {
           this.s.announce(res.text, { politeness: 'polite' });
         }
@@ -467,6 +516,7 @@ export default {
     this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
+    this.knownHeadings = null;
     this.lastAction = 0;
     this.pageSpokeAt = 0;
     this.lastMainHeading = '';

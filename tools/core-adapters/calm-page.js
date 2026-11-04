@@ -152,7 +152,10 @@ export default {
         if (media.id && ariaControls && ariaControls.split(/\s+/).includes(media.id)) return true;
         const container = media.closest ? media.closest('figure, [role="region"], [class*="player"], [class*="video"]') : null;
         if (container && container.contains(btn) && container !== document.body && container !== document.documentElement) {
-          return true;
+          const btnName = (s.page?.nameOf?.(btn) || btn.getAttribute('aria-label') || btn.textContent || '').trim();
+          if (/\b(play|pause|stop|mute|unmute|video|audio|media|track)\b/i.test(btnName)) {
+            return true;
+          }
         }
         const parent = media.parentElement;
         if (parent && parent.contains(btn) && parent !== document.body && parent !== document.documentElement) {
@@ -361,26 +364,36 @@ export default {
         // Find own pause/stop control
         const buttons = carousel.querySelectorAll('button, [role="button"], input[type="button"]');
         let pauseButton = null;
+        let hasPlayButton = false;
 
         for (const btn of buttons) {
           if (btn.closest('form')) continue;
           if (btn.tagName === 'BUTTON' && btn.getAttribute('type')?.toLowerCase() === 'submit') continue;
           if (btn.tagName === 'INPUT' && (btn.type === 'submit' || btn.type === 'image')) continue;
 
-          const name = (s.page?.nameOf?.(btn) || btn.getAttribute('aria-label') || btn.textContent || '').trim();
-          if (!/\b(pause|stop)\b/i.test(name)) continue;
-
           const isDisabled = btn.disabled || btn.getAttribute('aria-disabled') === 'true';
-          if (isDisabled) {
-            // A disabled Pause button means the carousel is not playing: leave it.
-            return;
+          const name = (s.page?.nameOf?.(btn) || btn.getAttribute('aria-label') || btn.textContent || '').trim();
+
+          if (/\b(pause|stop)\b/i.test(name)) {
+            if (isDisabled) {
+              // A disabled Pause button means the carousel is not playing: leave it.
+              return;
+            }
+
+            const pressed = btn.getAttribute('aria-pressed');
+            if (pressed === 'true') {
+              // Pause button is already pressed: the carousel is not playing: leave it.
+              return;
+            }
+
+            if (!pauseButton) {
+              pauseButton = btn;
+            }
+          } else if (/\bplay\b/i.test(name)) {
+            if (!isDisabled) {
+              hasPlayButton = true;
+            }
           }
-
-          const pressed = btn.getAttribute('aria-pressed');
-          if (pressed === 'true') continue;
-
-          pauseButton = btn;
-          break;
         }
 
         if (pauseButton) {
@@ -388,6 +401,11 @@ export default {
             pauseButton.click();
             pausedCarousels.push({ carousel, button: pauseButton });
           } catch {}
+          return;
+        }
+
+        // Carousel currently stopped/paused with a Play button: leave it alone.
+        if (hasPlayButton) {
           return;
         }
 
@@ -447,10 +465,8 @@ export default {
 
           const currentName = (s.page?.nameOf?.(button) || button.getAttribute('aria-label') || button.textContent || '').trim();
           const pressed = button.getAttribute('aria-pressed');
-          if (/\bplay\b/i.test(currentName) || pressed === 'true') {
-            try { button.click(); } catch {}
-            continue;
-          }
+
+          // Look for an enabled Play button in the carousel
           const playBtn = Array.from(carousel.querySelectorAll('button, [role="button"], input[type="button"]')).find((b) => {
             if (b.closest('form')) return false;
             if (b.tagName === 'BUTTON' && b.getAttribute('type')?.toLowerCase() === 'submit') return false;
@@ -459,8 +475,15 @@ export default {
             const n = (s.page?.nameOf?.(b) || b.getAttribute('aria-label') || b.textContent || '').trim();
             return /\bplay\b/i.test(n);
           });
+
           if (playBtn) {
             try { playBtn.click(); } catch {}
+            continue;
+          }
+
+          if (/\bplay\b/i.test(currentName) || pressed === 'true') {
+            try { button.click(); } catch {}
+            continue;
           }
         }
       });

@@ -1,0 +1,19 @@
+{
+  "name": "structure-review-findings",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-review-findings.html",
+  "checks": [
+    {
+      "name": "Finding 1: main-content containing breadcrumb nav is assigned role=main",
+      "code": "\n        const el = document.getElementById('main-content');\n        return el && el.getAttribute('role') === 'main';\n      "
+    },
+    {
+      "name": "Finding 2: candidate inside header inside article is excluded from main landmark",
+      "code": "\n        const el = document.getElementById('article-header-nested');\n        return el && el.getAttribute('role') === null;\n      "
+    },
+    {
+      "name": "Finding 3: colophon containing section header is assigned role=contentinfo",
+      "code": "\n        const el = document.getElementById('colophon');\n        return el && el.getAttribute('role') === 'contentinfo';\n      "
+    }
+  ]
+}

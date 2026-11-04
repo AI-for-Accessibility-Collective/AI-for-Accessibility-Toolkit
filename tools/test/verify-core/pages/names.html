@@ -177,7 +177,33 @@
       </div>
 
       <!-- input[type=button] with icon class (must be named Search via page-first rules) -->
-      <input id="input-btn-icon" type="button" class="btn-search">
+      <input id="input-btn-icon" type="button" class="icon-search">
+
+      <!-- Buttons with layout classes and child icons (must name from child icon, not layout class) -->
+      <button id="btn-block-print" class="btn btn-primary btn-block" type="button">
+        <span class="fa fa-print"></span>
+      </button>
+      <button id="btn-group-trash" class="btn btn-group" type="button">
+        <span class="fa fa-trash"></span>
+      </button>
+
+      <!-- Form field with nearby visible label AND name attribute (visible label must govern) -->
+      <div>
+        <label class="form-label">Phone Number</label>
+        <input id="input-phone-label" type="text" name="u_tel_num">
+      </div>
+
+      <!-- Form field with nearby visible label AND placeholder (visible label must govern) -->
+      <div>
+        <label class="form-label">Delivery Notes</label>
+        <textarea id="textarea-notes-label" name="comments" placeholder="e.g. Leave at gate"></textarea>
+      </div>
+
+      <!-- input[type=image] with icon filename (must be named Search page-first without AI) -->
+      <input id="input-img-icon" type="image" src="search-icon.png" width="24" height="24">
+
+      <!-- Link with document extension (must strip .pdf extension) -->
+      <a id="link-doc-pdf" href="/docs/annual-report.pdf"></a>
     </section>
   </main>
 

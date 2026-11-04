@@ -1,4 +1,7 @@
 {
   "file": "tools/core-adapters/bigger-targets.js",
+  "options": {
+    "targetSize": 24
+  },
   "sites": "all"
 }

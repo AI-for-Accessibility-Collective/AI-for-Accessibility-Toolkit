@@ -1,7 +1,4 @@
 {
   "file": "tools/core-adapters/plain-language.js",
-  "ai": {
-    "simplify": "Our clinic provides medical checkups under health rules starting January 15, 2024. Patients can visit Dr. Robert Miller at reception before 4:30 PM with photo ID proving they live in district 42. Read our registration guidelines for more details."
-  },
   "sites": "all"
 }

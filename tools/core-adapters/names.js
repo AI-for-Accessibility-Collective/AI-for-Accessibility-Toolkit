@@ -15,8 +15,8 @@
 //     has an accessible name, images included. Controls with their own HTML title
 //     attribute already have an accessible name via s.page.nameOf and are left as-is.
 //   • Names from the page first without AI: SVG titles, icon class words, small icon image
-//     file names, link URL last path parts, placeholder attributes, input names (an explicit
-//     extension for form fields), and nearby label text.
+//     file names, link URL last path parts, nearby label text (which takes precedence over
+//     placeholder and form field name attributes), placeholder attributes, and input names.
 //   • Decorative images (tiny spacers <= 2px in both dimensions, role presentation/none)
 //     are left alone or marked clearly with alt="" if spacers, never sent to AI.
 //   • Elements with aria-hidden="true" or inside aria-hidden subtrees are skipped.
@@ -206,7 +206,7 @@ function extractWordsFromFileName(src) {
 }
 
 function extractWordsFromClass(el) {
-  const elements = [el, ...el.querySelectorAll('*')];
+  const elements = [...el.querySelectorAll('*'), el];
   const allTokens = [];
 
   for (const node of elements) {
@@ -218,7 +218,7 @@ function extractWordsFromClass(el) {
     }
   }
 
-  const ICON_TOKEN_RE = /^(?:fa|bi|glyphicon|feather|lucide|ion|material|icon|btn)[-_]|[-_]icon(?:[-_]|$)/i;
+  const ICON_TOKEN_RE = /^(?:fa|bi|glyphicon|feather|lucide|ion|material|icon)[-_]|[-_]icon(?:[-_]|$)/i;
 
   for (const token of allTokens) {
     if (ICON_TOKEN_RE.test(token)) {
@@ -259,7 +259,7 @@ function extractNameFromLinkPath(link) {
   const lastPart = segments[segments.length - 1];
   if (!lastPart) return null;
 
-  const base = lastPart.replace(/\.(html?|php|asp|aspx|jsp)$/i, '');
+  const base = lastPart.replace(/\.[a-zA-Z0-9]+$/, '');
   if (!base) return null;
 
   const rawWords = base
@@ -425,7 +425,18 @@ export default {
         return true;
       }
 
-      // 2. Button or control containing a small icon image with filename words
+      // 2. Button or control containing a small icon image with filename words, or input type=image
+      if (tag === 'INPUT' && type === 'image') {
+        if (isSmallIcon(el) && !isSpacerImage(el)) {
+          const iconName = extractWordsFromFileName(el.getAttribute('src'));
+          if (iconName) {
+            s.setAttr(el, 'aria-label', iconName);
+            changesCount++;
+            return true;
+          }
+        }
+      }
+
       for (const childImg of el.querySelectorAll('img')) {
         if (isSmallIcon(childImg) && !isSpacerImage(childImg)) {
           const iconName = extractWordsFromFileName(childImg.getAttribute('src'));
@@ -441,7 +452,7 @@ export default {
       // 3. Class words on control or child icon
       const classWords = extractWordsFromClass(el);
       const isButtonOrLink = /^(BUTTON|A)$/.test(tag) ||
-                             (tag === 'INPUT' && /^(button|submit|reset)$/.test(type)) ||
+                             (tag === 'INPUT' && /^(button|submit|reset|image)$/.test(type)) ||
                              el.getAttribute('role') === 'button' ||
                              el.getAttribute('role') === 'link';
       if (classWords && isButtonOrLink) {
@@ -462,10 +473,17 @@ export default {
         }
       }
 
-      // 5. Form fields
+      // 5. Form fields: visible nearby label governs over placeholder and name attribute
       const isField = (tag === 'INPUT' && !/^(button|submit|reset|image)$/.test(type)) ||
                       tag === 'TEXTAREA' || tag === 'SELECT';
       if (isField) {
+        const nearby = extractNearbyLabel(el);
+        if (nearby) {
+          s.setAttr(el, 'aria-label', nearby);
+          changesCount++;
+          return true;
+        }
+
         const placeholder = el.getAttribute('placeholder')?.trim();
         if (placeholder) {
           s.setAttr(el, 'aria-label', placeholder);
@@ -486,13 +504,6 @@ export default {
             changesCount++;
             return true;
           }
-        }
-
-        const nearby = extractNearbyLabel(el);
-        if (nearby) {
-          s.setAttr(el, 'aria-label', nearby);
-          changesCount++;
-          return true;
         }
       }
 
@@ -574,6 +585,8 @@ export default {
     // Process initial elements on page
     const initialElements = Array.from(doc.querySelectorAll(CANDIDATE_SELECTOR));
     await processBatch(initialElements);
+
+    if (!s.alive()) return false;
 
     // If nothing was done and session is still ours, disable and return false
     if (changesCount === 0) {

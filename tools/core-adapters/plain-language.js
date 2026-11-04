@@ -220,7 +220,7 @@ export default {
 
       for (const p of longParagraphs) {
         const sec = p.closest(sectionSelector);
-        if (sec && sec !== main && (main.contains(sec) || document.body.contains(sec))) {
+        if (sec && sec !== main && main.contains(sec)) {
           if (!sectionMap.has(sec)) sectionMap.set(sec, []);
           sectionMap.get(sec).push(p);
         } else {

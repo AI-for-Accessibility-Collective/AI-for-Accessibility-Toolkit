@@ -137,6 +137,87 @@ function isCandidate(el, s) {
   return true;
 }
 
+let cachedAutoRules = null;
+function getAutoRules() {
+  if (cachedAutoRules) return cachedAutoRules;
+  const autoRules = [];
+  try {
+    for (const sheet of document.styleSheets) {
+      if (sheet.ownerNode && sheet.ownerNode.hasAttribute && sheet.ownerNode.hasAttribute('data-ai4a11y-bt')) continue;
+      let rules;
+      try { rules = sheet.cssRules; } catch { continue; }
+      if (!rules) continue;
+      for (const rule of rules) {
+        if (!rule.selectorText || !rule.style) continue;
+        const style = rule.style;
+        const hasAuto = style.marginLeft === 'auto' || style.marginRight === 'auto' || style.marginTop === 'auto' || style.marginBottom === 'auto' || (style.margin && style.margin.includes('auto'));
+        if (hasAuto) autoRules.push(rule);
+      }
+    }
+  } catch {}
+  return (cachedAutoRules = autoRules);
+}
+
+function getAutoMargins(el) {
+  const res = { mt: false, mr: false, mb: false, ml: false };
+  if (!el || el.nodeType !== 1) return res;
+  const s = el.style;
+  if (s) {
+    if (s.marginLeft === 'auto') res.ml = true;
+    if (s.marginRight === 'auto') res.mr = true;
+    if (s.marginTop === 'auto') res.mt = true;
+    if (s.marginBottom === 'auto') res.mb = true;
+    if (s.margin && s.margin.includes('auto')) {
+      const parts = s.margin.split(/\s+/).filter(Boolean);
+      if (parts.length === 1 && parts[0] === 'auto') { res.mt = res.mr = res.mb = res.ml = true; }
+      else if (parts.length === 2) {
+        if (parts[0] === 'auto') { res.mt = res.mb = true; }
+        if (parts[1] === 'auto') { res.ml = res.mr = true; }
+      } else if (parts.length === 3) {
+        if (parts[0] === 'auto') res.mt = true;
+        if (parts[1] === 'auto') res.ml = res.mr = true;
+        if (parts[2] === 'auto') res.mb = true;
+      } else if (parts.length === 4) {
+        if (parts[0] === 'auto') res.mt = true;
+        if (parts[1] === 'auto') res.mr = true;
+        if (parts[2] === 'auto') res.mb = true;
+        if (parts[3] === 'auto') res.ml = true;
+      }
+    }
+  }
+  if (res.ml && res.mr && res.mt && res.mb) return res;
+  const autoRules = getAutoRules();
+  for (const rule of autoRules) {
+    try {
+      if (el.matches(rule.selectorText)) {
+        const rStyle = rule.style;
+        if (rStyle.marginLeft === 'auto') res.ml = true;
+        if (rStyle.marginRight === 'auto') res.mr = true;
+        if (rStyle.marginTop === 'auto') res.mt = true;
+        if (rStyle.marginBottom === 'auto') res.mb = true;
+        if (rStyle.margin && rStyle.margin.includes('auto')) {
+          const parts = rStyle.margin.split(/\s+/).filter(Boolean);
+          if (parts.length === 1 && parts[0] === 'auto') { res.mt = res.mr = res.mb = res.ml = true; }
+          else if (parts.length === 2) {
+            if (parts[0] === 'auto') { res.mt = res.mb = true; }
+            if (parts[1] === 'auto') { res.ml = res.mr = true; }
+          } else if (parts.length === 3) {
+            if (parts[0] === 'auto') res.mt = true;
+            if (parts[1] === 'auto') res.ml = res.mr = true;
+            if (parts[2] === 'auto') res.mb = true;
+          } else if (parts.length === 4) {
+            if (parts[0] === 'auto') res.mt = true;
+            if (parts[1] === 'auto') res.mr = true;
+            if (parts[2] === 'auto') res.mb = true;
+            if (parts[3] === 'auto') res.ml = true;
+          }
+        }
+      }
+    } catch {}
+  }
+  return res;
+}
+
 export default {
   enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
@@ -201,6 +282,12 @@ export default {
     };
 
     const createOverlay = (el, cs, MIN) => {
+      let id = el.getAttribute('data-ai4a11y-bt-id');
+      if (!id) {
+        id = String(nextHitId++);
+        sizeGroup.setAttr(el, 'data-ai4a11y-bt-id', id);
+      }
+
       const r = el.getBoundingClientRect();
       const isFixed = cs.position === 'fixed' || (function hasFixedAncestor(node) {
         let p = node.parentElement;
@@ -216,10 +303,15 @@ export default {
       const docR = getDocRect(el);
       const wantX = Math.max(0, MIN - r.width);
       const wantY = Math.max(0, MIN - r.height);
-      let left = Math.floor(wantX / 2);
-      let right = Math.ceil(wantX / 2);
-      let top = Math.floor(wantY / 2);
-      let bottom = Math.ceil(wantY / 2);
+      const idealLeft = Math.floor(wantX / 2);
+      const idealRight = Math.ceil(wantX / 2);
+      const idealTop = Math.floor(wantY / 2);
+      const idealBottom = Math.ceil(wantY / 2);
+
+      let maxClearLeft = wantX;
+      let maxClearRight = wantX;
+      let maxClearTop = wantY;
+      let maxClearBottom = wantY;
 
       const rTopBound = docR.top - MIN;
       const rBottomBound = docR.bottom + MIN;
@@ -231,29 +323,144 @@ export default {
         if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
         const q = o.r;
         if (q.bottom < rTopBound || q.top > rBottomBound || q.right < rLeftBound || q.left > rRightBound) continue;
-        const overlapX = q.left < docR.right + right && q.right > docR.left - left;
-        const overlapY = q.top < docR.bottom + bottom && q.bottom > docR.top - top;
-        if (overlapX && q.bottom <= docR.top + 0.5) top = Math.min(top, Math.max(0, Math.floor((docR.top - q.bottom) / 2)));
-        if (overlapX && q.top >= docR.bottom - 0.5) bottom = Math.min(bottom, Math.max(0, Math.floor((q.top - docR.bottom) / 2)));
-        if (overlapY && q.right <= docR.left + 0.5) left = Math.min(left, Math.max(0, Math.floor((docR.left - q.right) / 2)));
-        if (overlapY && q.left >= docR.right - 0.5) right = Math.min(right, Math.max(0, Math.floor((q.left - docR.right) / 2)));
+        const overlapX = q.left < docR.right + wantX && q.right > docR.left - wantX;
+        const overlapY = q.top < docR.bottom + wantY && q.bottom > docR.top - wantY;
+
+        const shareX = (q.width < MIN) && !processed.has(o.el);
+        const shareY = (q.height < MIN) && !processed.has(o.el);
+
+        if (overlapX && q.bottom <= docR.top + 0.5) {
+          const gap = Math.max(0, docR.top - q.bottom);
+          maxClearTop = Math.min(maxClearTop, shareY ? Math.floor(gap / 2) : Math.floor(gap));
+        }
+        if (overlapX && q.top >= docR.bottom - 0.5) {
+          const gap = Math.max(0, q.top - docR.bottom);
+          maxClearBottom = Math.min(maxClearBottom, shareY ? Math.floor(gap / 2) : Math.floor(gap));
+        }
+        if (overlapY && q.right <= docR.left + 0.5) {
+          const gap = Math.max(0, docR.left - q.right);
+          maxClearLeft = Math.min(maxClearLeft, shareX ? Math.floor(gap / 2) : Math.floor(gap));
+        }
+        if (overlapY && q.left >= docR.right - 0.5) {
+          const gap = Math.max(0, q.left - docR.right);
+          maxClearRight = Math.min(maxClearRight, shareX ? Math.floor(gap / 2) : Math.floor(gap));
+        }
       }
 
-      const baseX = isFixed ? r.left : docR.left;
-      const baseY = isFixed ? r.top : docR.top;
-      const oTop = baseY - top;
-      const oLeft = baseX - left;
-      const oWidth = r.width + left + right;
-      const oHeight = r.height + top + bottom;
+      let left = Math.min(idealLeft, maxClearLeft);
+      let right = Math.min(idealRight, maxClearRight);
+      if (left + right < wantX) {
+        if (right < idealRight) left = Math.min(maxClearLeft, wantX - right);
+        else if (left < idealLeft) right = Math.min(maxClearRight, wantX - left);
+      }
 
-      const overlay = document.createElement('span');
+      let top = Math.min(idealTop, maxClearTop);
+      let bottom = Math.min(idealBottom, maxClearBottom);
+      if (top + bottom < wantY) {
+        if (bottom < idealBottom) top = Math.min(maxClearTop, wantY - bottom);
+        else if (top < idealTop) bottom = Math.min(maxClearBottom, wantY - top);
+      }
+
+      let targetContainer = isFixed ? document.body : el.parentElement;
+      while (!isFixed && targetContainer && targetContainer !== document.body) {
+        let sBox;
+        try { sBox = window.getComputedStyle(targetContainer); } catch { break; }
+        const clips = sBox.overflowX === 'hidden' || sBox.overflowY === 'hidden';
+        if (clips && (targetContainer.clientWidth < MIN || targetContainer.clientHeight < MIN)) {
+          targetContainer = targetContainer.parentElement;
+        } else {
+          break;
+        }
+      }
+      if (!targetContainer) targetContainer = isFixed ? document.body : (el.parentElement || document.body);
+
+      if (!isFixed && targetContainer !== document.body) {
+        let cCs;
+        try { cCs = window.getComputedStyle(targetContainer); } catch {}
+        if (cCs && cCs.position === 'static') {
+          mark(targetContainer, 'rel');
+        }
+      }
+
+      let oTop, oLeft, oWidth, oHeight;
+      if (isFixed || targetContainer === document.body) {
+        const baseX = isFixed ? r.left : docR.left;
+        const baseY = isFixed ? r.top : docR.top;
+        oTop = baseY - top;
+        oLeft = baseX - left;
+        oWidth = r.width + left + right;
+        oHeight = r.height + top + bottom;
+      } else {
+        const parentR = targetContainer.getBoundingClientRect();
+        const baseLeft = (r.left - parentR.left) - targetContainer.clientLeft + targetContainer.scrollLeft;
+        const baseTop = (r.top - parentR.top) - targetContainer.clientTop + targetContainer.scrollTop;
+        oTop = baseTop - top;
+        oLeft = baseLeft - left;
+        oWidth = r.width + left + right;
+        oHeight = r.height + top + bottom;
+      }
+
+      let overlay = document.querySelector(`[data-ai4a11y-bt-overlay-for="${id}"]`);
+      if (overlay) {
+        overlay.style.top = `${oTop}px`;
+        overlay.style.left = `${oLeft}px`;
+        overlay.style.width = `${oWidth}px`;
+        overlay.style.height = `${oHeight}px`;
+        return overlay;
+      }
+
+      overlay = document.createElement('span');
       overlay.setAttribute('data-ai4a11y-bt', 'overlay');
+      overlay.setAttribute('data-ai4a11y-bt-overlay-for', id);
       overlay.setAttribute('aria-hidden', 'true');
       overlay.setAttribute('tabindex', '-1');
 
-      const posType = isFixed ? 'fixed' : 'absolute';
-      overlay.style.cssText = `position: ${posType} !important; top: ${oTop}px !important; left: ${oLeft}px !important; width: ${oWidth}px !important; height: ${oHeight}px !important; pointer-events: auto !important; z-index: 2147483647 !important; background: transparent !important; border: none !important; padding: 0 !important; margin: 0 !important; cursor: ${cs.cursor || 'pointer'} !important;`;
+      const posType = (isFixed || targetContainer === document.body) ? (isFixed ? 'fixed' : 'absolute') : 'absolute';
+      overlay.style.cssText = `position: ${posType} !important; top: ${oTop}px !important; left: ${oLeft}px !important; width: ${oWidth}px !important; height: ${oHeight}px !important; z-index: 2147483647 !important; background: transparent !important; border: none !important; padding: 0 !important; margin: 0 !important; cursor: ${cs.cursor || 'pointer'} !important;`;
 
+      const forwardEvent = (e) => {
+        el.focus();
+        let evt;
+        if (window.PointerEvent && e instanceof PointerEvent) {
+          evt = new PointerEvent(e.type, {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            detail: e.detail,
+            screenX: e.screenX,
+            screenY: e.screenY,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            pointerId: e.pointerId,
+            width: e.width,
+            height: e.height,
+            pressure: e.pressure,
+            tiltX: e.tiltX,
+            tiltY: e.tiltY,
+            pointerType: e.pointerType,
+            isPrimary: e.isPrimary,
+          });
+        } else if (e instanceof MouseEvent) {
+          evt = new MouseEvent(e.type, {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            detail: e.detail,
+            screenX: e.screenX,
+            screenY: e.screenY,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            button: e.button,
+            buttons: e.buttons,
+          });
+        }
+        if (evt) el.dispatchEvent(evt);
+      };
+
+      sizeGroup.listen(overlay, 'pointerdown', forwardEvent);
+      sizeGroup.listen(overlay, 'mousedown', forwardEvent);
+      sizeGroup.listen(overlay, 'pointerup', forwardEvent);
+      sizeGroup.listen(overlay, 'mouseup', forwardEvent);
       sizeGroup.listen(overlay, 'click', (e) => {
         el.focus();
         el.dispatchEvent(new MouseEvent('click', {
@@ -268,7 +475,8 @@ export default {
         }));
       });
 
-      sizeGroup.insert(document.body, overlay);
+      sizeGroup.insert(targetContainer, overlay, targetContainer === el.parentElement ? el.nextSibling : null);
+      return overlay;
     };
 
     const computeHit = (el, cs, MIN) => {
@@ -298,10 +506,15 @@ export default {
 
       const wantX = Math.max(0, MIN - r.width);
       const wantY = Math.max(0, MIN - r.height);
-      let left = Math.floor(wantX / 2);
-      let right = Math.ceil(wantX / 2);
-      let top = Math.floor(wantY / 2);
-      let bottom = Math.ceil(wantY / 2);
+      const idealLeft = Math.floor(wantX / 2);
+      const idealRight = Math.ceil(wantX / 2);
+      const idealTop = Math.floor(wantY / 2);
+      const idealBottom = Math.ceil(wantY / 2);
+
+      let maxClearLeft = wantX;
+      let maxClearRight = wantX;
+      let maxClearTop = wantY;
+      let maxClearBottom = wantY;
 
       const docR = getDocRect(el);
       const rTopBound = docR.top - MIN;
@@ -317,12 +530,42 @@ export default {
           continue;
         }
 
-        const overlapX = q.left < docR.right + right && q.right > docR.left - left;
-        const overlapY = q.top < docR.bottom + bottom && q.bottom > docR.top - top;
-        if (overlapX && q.bottom <= docR.top + 0.5) top = Math.min(top, Math.max(0, Math.floor((docR.top - q.bottom) / 2)));
-        if (overlapX && q.top >= docR.bottom - 0.5) bottom = Math.min(bottom, Math.max(0, Math.floor((q.top - docR.bottom) / 2)));
-        if (overlapY && q.right <= docR.left + 0.5) left = Math.min(left, Math.max(0, Math.floor((docR.left - q.right) / 2)));
-        if (overlapY && q.left >= docR.right - 0.5) right = Math.min(right, Math.max(0, Math.floor((q.left - docR.right) / 2)));
+        const overlapX = q.left < docR.right + wantX && q.right > docR.left - wantX;
+        const overlapY = q.top < docR.bottom + wantY && q.bottom > docR.top - wantY;
+
+        const shareX = (q.width < MIN) && !processed.has(o.el);
+        const shareY = (q.height < MIN) && !processed.has(o.el);
+
+        if (overlapX && q.bottom <= docR.top + 0.5) {
+          const gap = Math.max(0, docR.top - q.bottom);
+          maxClearTop = Math.min(maxClearTop, shareY ? Math.floor(gap / 2) : Math.floor(gap));
+        }
+        if (overlapX && q.top >= docR.bottom - 0.5) {
+          const gap = Math.max(0, q.top - docR.bottom);
+          maxClearBottom = Math.min(maxClearBottom, shareY ? Math.floor(gap / 2) : Math.floor(gap));
+        }
+        if (overlapY && q.right <= docR.left + 0.5) {
+          const gap = Math.max(0, docR.left - q.right);
+          maxClearLeft = Math.min(maxClearLeft, shareX ? Math.floor(gap / 2) : Math.floor(gap));
+        }
+        if (overlapY && q.left >= docR.right - 0.5) {
+          const gap = Math.max(0, q.left - docR.right);
+          maxClearRight = Math.min(maxClearRight, shareX ? Math.floor(gap / 2) : Math.floor(gap));
+        }
+      }
+
+      let left = Math.min(idealLeft, maxClearLeft);
+      let right = Math.min(idealRight, maxClearRight);
+      if (left + right < wantX) {
+        if (right < idealRight) left = Math.min(maxClearLeft, wantX - right);
+        else if (left < idealLeft) right = Math.min(maxClearRight, wantX - left);
+      }
+
+      let top = Math.min(idealTop, maxClearTop);
+      let bottom = Math.min(idealBottom, maxClearBottom);
+      if (top + bottom < wantY) {
+        if (bottom < idealBottom) top = Math.min(maxClearTop, wantY - bottom);
+        else if (top < idealTop) bottom = Math.min(maxClearBottom, wantY - top);
       }
 
       const docEl = document.documentElement;
@@ -393,18 +636,94 @@ export default {
         }
         it.id = id;
 
+        const wantX = Math.max(0, MIN - r.width);
+        const wantY = Math.max(0, MIN - r.height);
+        let idealLeft = Math.floor(wantX / 2);
+        let idealRight = Math.ceil(wantX / 2);
+        let idealTop = Math.floor(wantY / 2);
+        let idealBottom = Math.ceil(wantY / 2);
+
+        let maxClearLeft = wantX;
+        let maxClearRight = wantX;
+        let maxClearTop = wantY;
+        let maxClearBottom = wantY;
+
+        const docR = it.entry.r;
+        const rTopBound = docR.top - MIN;
+        const rBottomBound = docR.bottom + MIN;
+        const rLeftBound = docR.left - MIN;
+        const rRightBound = docR.right + MIN;
+
+        for (const o of allKnownTargets) {
+          if (!o.el.isConnected) continue;
+          if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
+          const q = o.r;
+          if (q.bottom < rTopBound || q.top > rBottomBound || q.right < rLeftBound || q.left > rRightBound) continue;
+
+          const overlapX = q.left < docR.right + wantX && q.right > docR.left - wantX;
+          const overlapY = q.top < docR.bottom + wantY && q.bottom > docR.top - wantY;
+
+          const shareX = (q.width < MIN) && !processed.has(o.el);
+          const shareY = (q.height < MIN) && !processed.has(o.el);
+
+          if (overlapX && q.bottom <= docR.top + 0.5) {
+            const gap = Math.max(0, docR.top - q.bottom);
+            maxClearTop = Math.min(maxClearTop, shareY ? Math.floor(gap / 2) : Math.floor(gap));
+          }
+          if (overlapX && q.top >= docR.bottom - 0.5) {
+            const gap = Math.max(0, q.top - docR.bottom);
+            maxClearBottom = Math.min(maxClearBottom, shareY ? Math.floor(gap / 2) : Math.floor(gap));
+          }
+          if (overlapY && q.right <= docR.left + 0.5) {
+            const gap = Math.max(0, docR.left - q.right);
+            maxClearLeft = Math.min(maxClearLeft, shareX ? Math.floor(gap / 2) : Math.floor(gap));
+          }
+          if (overlapY && q.left >= docR.right - 0.5) {
+            const gap = Math.max(0, q.left - docR.right);
+            maxClearRight = Math.min(maxClearRight, shareX ? Math.floor(gap / 2) : Math.floor(gap));
+          }
+        }
+
+        let expLeft = Math.min(idealLeft, maxClearLeft);
+        let expRight = Math.min(idealRight, maxClearRight);
+        if (expLeft + expRight < wantX) {
+          if (expRight < idealRight) {
+            expLeft = Math.min(maxClearLeft, wantX - expRight);
+          } else if (expLeft < idealLeft) {
+            expRight = Math.min(maxClearRight, wantX - expLeft);
+          }
+        }
+
+        let expTop = Math.min(idealTop, maxClearTop);
+        let expBottom = Math.min(idealBottom, maxClearBottom);
+        if (expTop + expBottom < wantY) {
+          if (expBottom < idealBottom) {
+            expTop = Math.min(maxClearTop, wantY - expBottom);
+          } else if (expTop < idealTop) {
+            expBottom = Math.min(maxClearBottom, wantY - expTop);
+          }
+        }
+
         const isOutFlow = cs.position === 'absolute' || cs.position === 'fixed';
-        const my = isOutFlow ? 0 : Math.max(0, (MIN - r.height) / 2);
-        const mx = isOutFlow ? 0 : Math.max(0, (MIN - r.width) / 2);
         const curMt = parseFloat(cs.marginTop) || 0;
         const curMr = parseFloat(cs.marginRight) || 0;
         const curMb = parseFloat(cs.marginBottom) || 0;
         const curMl = parseFloat(cs.marginLeft) || 0;
-        const mt = curMt - my;
-        const mr = curMr - mx;
-        const mb = curMb - my;
-        const ml = curMl - mx;
+        const mt = curMt - expTop;
+        const mr = curMr - expRight;
+        const mb = curMb - expBottom;
+        const ml = curMl - expLeft;
         it.margins = { mt, mr, mb, ml, curMt, curMr, curMb, curMl, isOutFlow };
+        it.autoMargins = getAutoMargins(el);
+
+        const mtStr = it.autoMargins.mt ? 'auto' : `${mt}px`;
+        const mrStr = it.autoMargins.mr ? 'auto' : `${mr}px`;
+        const mbStr = it.autoMargins.mb ? 'auto' : `${mb}px`;
+        const mlStr = it.autoMargins.ml ? 'auto' : `${ml}px`;
+        const marginRule = isOutFlow ? '' : `margin: ${mtStr} ${mrStr} ${mbStr} ${mlStr} !important; `;
+
+        const finalW = r.width + expLeft + expRight;
+        const finalH = r.height + expTop + expBottom;
 
         if (isBox) {
           const p = el.parentElement;
@@ -412,8 +731,8 @@ export default {
           it.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
           it.kind = 'box';
           mark(el, 'box');
-          const marginRule = isOutFlow ? '' : `margin: ${mt}px ${mr}px ${mb}px ${ml}px !important; `;
           dynamicRules.set(id, `[data-ai4a11y-bt-id="${id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; ${marginRule}vertical-align: middle !important; }`);
+          it.entry.r = { left: docR.left - expLeft, right: docR.left - expLeft + MIN, top: docR.top - expTop, bottom: docR.top - expTop + MIN, width: MIN, height: MIN };
           grown.push(it);
           continue;
         }
@@ -433,13 +752,12 @@ export default {
         const text = (el.textContent || '').trim();
         const iconLike = r.width < MIN && r.height < MIN && text.length <= 2;
 
-        const growable = tag === 'BUTTON' ||
+        const growable = tag !== 'SVG' && (tag === 'BUTTON' ||
           tag === 'SELECT' ||
           tag === 'SUMMARY' ||
-          tag === 'SVG' ||
           (tag === 'INPUT' && !NO_GROW_TYPES.test(type)) ||
           GROW_ROLES.test(role) ||
-          iconLike;
+          iconLike);
 
         if (growable) {
           const p = el.parentElement;
@@ -447,9 +765,8 @@ export default {
           it.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
           it.kind = 'grow';
           mark(el, 'grow');
-          const extraDisp = tag === 'SVG' ? 'display: inline-block !important; ' : '';
-          const marginRule = isOutFlow ? '' : `margin: ${mt}px ${mr}px ${mb}px ${ml}px !important; `;
-          dynamicRules.set(id, `[data-ai4a11y-bt-id="${id}"] { ${extraDisp}min-width: ${MIN}px !important; min-height: ${MIN}px !important; ${marginRule}}`);
+          dynamicRules.set(id, `[data-ai4a11y-bt-id="${id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; ${marginRule}}`);
+          it.entry.r = { left: docR.left - expLeft, right: docR.left - expLeft + MIN, top: docR.top - expTop, bottom: docR.top - expTop + MIN, width: MIN, height: MIN };
           grown.push(it);
         } else {
           it.kind = 'hit';
@@ -465,6 +782,7 @@ export default {
           it.entry.r = getDocRect(it.el);
         }
 
+        let updatedCollision = false;
         const undo = [];
         for (const it of grown) {
           const rNow = it.el.getBoundingClientRect();
@@ -475,14 +793,18 @@ export default {
             const overflowX = Math.ceil(rNow.right - docW);
             if (it.margins && !it.margins.isOutFlow) {
               it.margins.ml -= overflowX;
-              it.margins.mr -= overflowX;
+              it.margins.mr += overflowX;
               const { mt, mr, mb, ml } = it.margins;
+              const mtStr = it.autoMargins?.mt ? 'auto' : `${mt}px`;
+              const mrStr = it.autoMargins?.mr ? 'auto' : `${mr}px`;
+              const mbStr = it.autoMargins?.mb ? 'auto' : `${mb}px`;
+              const mlStr = it.autoMargins?.ml ? 'auto' : `${ml}px`;
               if (it.isBox) {
-                dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; margin: ${mt}px ${mr}px ${mb}px ${ml}px !important; vertical-align: middle !important; }`);
+                dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; margin: ${mtStr} ${mrStr} ${mbStr} ${mlStr} !important; vertical-align: middle !important; }`);
               } else {
-                const extraDisp = it.tag === 'SVG' ? 'display: inline-block !important; ' : '';
-                dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { ${extraDisp}min-width: ${MIN}px !important; min-height: ${MIN}px !important; margin: ${mt}px ${mr}px ${mb}px ${ml}px !important; }`);
+                dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; margin: ${mtStr} ${mrStr} ${mbStr} ${mlStr} !important; }`);
               }
+              updatedCollision = true;
             } else if (it.cs.position === 'absolute' || it.cs.position === 'fixed') {
               const curLeft = parseFloat(it.cs.left);
               if (!Number.isNaN(curLeft)) {
@@ -490,19 +812,18 @@ export default {
                 if (it.isBox) {
                   dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; left: ${newLeft}px !important; vertical-align: middle !important; }`);
                 } else {
-                  const extraDisp = it.tag === 'SVG' ? 'display: inline-block !important; ' : '';
-                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { ${extraDisp}min-width: ${MIN}px !important; min-height: ${MIN}px !important; left: ${newLeft}px !important; }`);
+                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; left: ${newLeft}px !important; }`);
                 }
+                updatedCollision = true;
               } else {
                 if (it.isBox) {
                   dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; margin-left: -${overflowX}px !important; vertical-align: middle !important; }`);
                 } else {
-                  const extraDisp = it.tag === 'SVG' ? 'display: inline-block !important; ' : '';
-                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { ${extraDisp}min-width: ${MIN}px !important; min-height: ${MIN}px !important; margin-left: -${overflowX}px !important; }`);
+                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; margin-left: -${overflowX}px !important; }`);
                 }
+                updatedCollision = true;
               }
             }
-            it.entry.r = getDocRect(it.el);
             continue;
           }
 
@@ -527,19 +848,34 @@ export default {
           }
         }
 
-        for (const it of undo) {
-          unmark(it.el, 'grow');
-          dynamicRules.delete(it.id);
-          it.kind = 'hit';
+        if (updatedCollision || undo.length) {
+          for (const it of undo) {
+            unmark(it.el, 'grow');
+            dynamicRules.delete(it.id);
+            it.kind = 'hit';
+          }
+          if (dynamicStyle) {
+            dynamicStyle.update([...dynamicRules.values()].join('\n'));
+          }
+        }
+
+        for (const it of grown) {
           it.entry.r = getDocRect(it.el);
         }
 
         if (docEl.scrollWidth > docSW + 1) {
+          let undoneMore = false;
           for (const it of grown) {
             if (it.kind === 'grow' && !NO_PSEUDO.test(it.tag)) {
               unmark(it.el, 'grow');
               dynamicRules.delete(it.id);
               it.kind = 'hit';
+              undoneMore = true;
+            }
+          }
+          if (undoneMore && dynamicStyle) {
+            dynamicStyle.update([...dynamicRules.values()].join('\n'));
+            for (const it of grown) {
               it.entry.r = getDocRect(it.el);
             }
           }
@@ -568,6 +904,7 @@ export default {
       nextHitId = 1;
       dynamicRules.clear();
       allKnownTargets.length = 0;
+      cachedAutoRules = null;
 
       const MIN = currentTargetSize;
 

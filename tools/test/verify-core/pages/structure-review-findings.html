@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Review Structure Reproduction Page</title>
+</head>
+<body>
+  <!-- Finding 2: Nested inside header inside article -->
+  <article id="news-article">
+    <header id="article-header">
+      <div id="article-header-nested" class="main-content">
+        <h3>Article Header Content</h3>
+        <p>This is a paragraph with more than one hundred characters of text to exceed the candidate length threshold completely and test whether it gets main landmark.</p>
+      </div>
+    </header>
+  </article>
+
+  <!-- Finding 1: Designated main container containing breadcrumb nav -->
+  <div id="main-content">
+    <nav aria-label="Breadcrumbs">
+      <a href="/">Home</a> / <span>Current Section</span>
+    </nav>
+    <h1>Main Content Heading</h1>
+    <p>This is the primary body of the article with plenty of text exceeding one hundred characters so that it easily qualifies as a main candidate if not for the breadcrumb navigation.</p>
+  </div>
+
+  <!-- Finding 3: Contentinfo candidate containing section header -->
+  <div id="colophon" class="site-footer">
+    <section>
+      <header>
+        <h4>Footer Section</h4>
+      </header>
+      <p>Directory links and auxiliary notes within footer section.</p>
+    </section>
+    <p>© 2026 Test Organization. All rights reserved.</p>
+  </div>
+</body>
+</html>

@@ -78,6 +78,18 @@
     {
       "name": "message element with display: contents whose first child is a text node is announced",
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter?.s || adapter.s.ended) return true; const liveRegion = document.querySelector('[data-ai4a11y-ui][aria-live]'); if (liveRegion) liveRegion.textContent = ''; const container = document.createElement('div'); document.body.appendChild(container); const toast = document.createElement('div'); toast.className = 'toast-alert'; toast.style.display = 'contents'; toast.textContent = 'Contents display alert message'; container.appendChild(toast); await new Promise((r) => setTimeout(r, 600)); const text = document.querySelector('[data-ai4a11y-ui][aria-live]')?.textContent || ''; container.remove(); return text.includes('Contents display alert message');"
+    },
+    {
+      "name": "view heading in main after persistent section heading is announced on route change",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter?.s || adapter.s.ended) return true; const main = document.getElementById('main'); const view = document.createElement('div'); view.id = 'view-container'; const h2 = document.createElement('h2'); h2.textContent = 'Housing Directory'; view.appendChild(h2); main.appendChild(view); window.location.hash = '#/directory'; await new Promise(r => setTimeout(r, 600)); const text = document.querySelector('[data-ai4a11y-ui][aria-live]')?.textContent || ''; view.remove(); window.location.hash = '#/'; await new Promise(r => setTimeout(r, 100)); return text.includes('Housing Directory');"
+    },
+    {
+      "name": "h3 view heading in main is announced on route change",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter?.s || adapter.s.ended) return true; const main = document.getElementById('main'); const origHash = window.location.hash; const view = document.createElement('div'); view.id = 'h3-view'; const h3 = document.createElement('h3'); h3.textContent = 'Special Programs'; view.appendChild(h3); main.prepend(view); window.location.hash = '#/special-programs'; await new Promise(r => setTimeout(r, 600)); const text = document.querySelector('[data-ai4a11y-ui][aria-live]')?.textContent || ''; view.remove(); window.location.hash = origHash || '#/'; await new Promise(r => setTimeout(r, 100)); return text.includes('Special Programs');"
+    },
+    {
+      "name": "elements with plural class like form-errors or system-warnings are announced",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter?.s || adapter.s.ended) return true; const container = document.getElementById('message-container'); const errDiv = document.createElement('div'); errDiv.className = 'form-errors'; errDiv.textContent = 'Please correct the 2 errors below'; container.appendChild(errDiv); await new Promise(r => setTimeout(r, 600)); const text = document.querySelector('[data-ai4a11y-ui][aria-live]')?.textContent || ''; errDiv.remove(); return text.includes('Please correct the 2 errors below');"
     }
   ],
   "viewport": {

@@ -115,7 +115,9 @@ function addContentinfo(s, doc) {
     if (el.getAttribute('role')) return false;
     if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
     if (el.closest('[role="banner"], [role="contentinfo"]')) return false;
-    if (el.querySelector('main, [role="main"], header, [role="banner"]')) return false;
+    if (el.querySelector('main, [role="main"]')) return false;
+    const headers = [...el.querySelectorAll('header, [role="banner"]')];
+    if (headers.some(isTopLevelBanner)) return false;
     if (!hint(FOOTER_HINT, el)) return false;
     if ((el.textContent?.trim().length || 0) >= 1500) return false;
     return true;
@@ -164,18 +166,9 @@ function addMain(s, doc) {
   let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
     if (el.getAttribute('role')) return false;
     if ((el.textContent?.trim().length || 0) <= 100) return false;
-    const closestLandmark = el.closest(LANDMARK_ANCESTOR);
-    if (closestLandmark) {
-      if (closestLandmark.tagName === 'HEADER' && !isTopLevelBanner(closestLandmark)) {
-        // Not a top-level landmark
-      } else if (closestLandmark.tagName === 'FOOTER' && !isTopLevelFooter(closestLandmark)) {
-        // Not a top-level landmark
-      } else {
-        return false;
-      }
-    }
+    if (el.closest(LANDMARK_ANCESTOR)) return false;
     if (containsTopLevelBannerOrFooter(el)) return false;
-    if (el.querySelector('main, [role="main"], nav, [role="navigation"]')) return false;
+    if (el.querySelector('main, [role="main"]')) return false;
     return true;
   });
 
