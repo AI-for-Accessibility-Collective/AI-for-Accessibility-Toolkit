@@ -1,0 +1,35 @@
+{
+  "name": "calm-page-hold",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page-hold.html",
+  "checks": [
+    {
+      "name": "a carousel whose script keeps its own index never shows a second slide beside the held one (review 10, line 3)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__hold) { const ids = ['h1', 'h2', 'h3', 'h4']; const shown = (id) => [...document.querySelectorAll('#' + id + ' .track > .slide.active')].map((el) => el.id).join(','); const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const hold = Object.fromEntries(ids.map((id) => [id, { first: first[id], same: true }])); for (let i = 0; i < 50; i++) { await new Promise((r) => setTimeout(r, 50)); for (const id of ids) if (shown(id) !== first[id]) hold[id].same = false; } window.__hold = hold; } return window.__hold.h1.same === true && window.__hold.h1.first.split(',').length === 1;"
+    },
+    {
+      "name": "a carousel advancing every 150 ms stays held after many more than five advances (review 10, line 9)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__hold) { const ids = ['h1', 'h2', 'h3', 'h4']; const shown = (id) => [...document.querySelectorAll('#' + id + ' .track > .slide.active')].map((el) => el.id).join(','); const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const hold = Object.fromEntries(ids.map((id) => [id, { first: first[id], same: true }])); for (let i = 0; i < 50; i++) { await new Promise((r) => setTimeout(r, 50)); for (const id of ids) if (shown(id) !== first[id]) hold[id].same = false; } window.__hold = hold; } return window.__hold.h2.same === true && window.__hold.h2.first.split(',').length === 1;"
+    },
+    {
+      "name": "a carousel showing three slides at once keeps the same three, not one",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__hold) { const ids = ['h1', 'h2', 'h3', 'h4']; const shown = (id) => [...document.querySelectorAll('#' + id + ' .track > .slide.active')].map((el) => el.id).join(','); const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const hold = Object.fromEntries(ids.map((id) => [id, { first: first[id], same: true }])); for (let i = 0; i < 50; i++) { await new Promise((r) => setTimeout(r, 50)); for (const id of ids) if (shown(id) !== first[id]) hold[id].same = false; } window.__hold = hold; } return window.__hold.h3.same === true && window.__hold.h3.first.split(',').length === 3;"
+    },
+    {
+      "name": "a carousel that shows the next slide before it hides the last keeps what it showed, with no second slide flashing in",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__hold) { const ids = ['h1', 'h2', 'h3', 'h4']; const shown = (id) => [...document.querySelectorAll('#' + id + ' .track > .slide.active')].map((el) => el.id).join(','); const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const hold = Object.fromEntries(ids.map((id) => [id, { first: first[id], same: true }])); for (let i = 0; i < 50; i++) { await new Promise((r) => setTimeout(r, 50)); for (const id of ids) if (shown(id) !== first[id]) hold[id].same = false; } window.__hold = hold; } return window.__hold.h4.same === true;"
+    },
+    {
+      "name": "a page that puts its own slide back at once (its own observer) is not fought: it shows its slide and the writes stop",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const st = window.__h5; await new Promise((r) => setTimeout(r, 400)); const w1 = st.writes; await new Promise((r) => setTimeout(r, 1000)); const shownNow = [...document.querySelectorAll('#h5 .track > .slide.active')].map((el) => el.id); return shownNow.length === 1 && shownNow[0] === 'h5-' + (st.model + 1) && st.writes - w1 <= 10 && st.writes < 200;"
+    },
+    {
+      "name": "a page that puts its own slide back in a later task (setTimeout 0) is not fought either",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const st = window.__h6; await new Promise((r) => setTimeout(r, 400)); const w1 = st.writes; await new Promise((r) => setTimeout(r, 1000)); const shownNow = [...document.querySelectorAll('#h6 .track > .slide.active')].map((el) => el.id); return shownNow.length === 1 && shownNow[0] === 'h6-' + (st.model + 1) && st.writes - w1 <= 10 && st.writes < 200;"
+    },
+    {
+      "name": "nothing is announced on load",
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calm Page: carousels the adapter holds</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; background: #fff; }
+    main { padding: 1rem 1.5rem; }
+    .carousel { margin: 1rem 0; padding: 1rem; border: 1px solid #8c959f; border-radius: 6px; }
+    .track { display: flex; gap: 0.5rem; }
+    .slide { display: none; padding: 0.5rem 1rem; background: #f6f8fa; border: 1px solid #8c959f; }
+    .slide.active { display: block; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Carousels with no pause control</h1>
+    <p>Each carousel below advances on its own and has no pause or stop button, so the adapter holds the slides it shows.</p>
+
+    <!-- H1: the script keeps its own index (review 10, line 3). -->
+    <section id="h1" class="carousel" aria-roledescription="carousel" aria-label="News">
+      <h2>News</h2>
+      <div class="track">
+        <div class="slide active" id="h1-1" aria-roledescription="slide" aria-label="1 of 3">Story 1</div>
+        <div class="slide" id="h1-2" aria-roledescription="slide" aria-label="2 of 3">Story 2</div>
+        <div class="slide" id="h1-3" aria-roledescription="slide" aria-label="3 of 3">Story 3</div>
+      </div>
+    </section>
+
+    <!-- H2: the script reads the shown slide and advances, many times (review 10, line 9). -->
+    <section id="h2" class="carousel" aria-roledescription="carousel" aria-label="Offers">
+      <h2>Offers</h2>
+      <div class="track">
+        <div class="slide active" id="h2-1" aria-roledescription="slide" aria-label="1 of 2">Offer 1</div>
+        <div class="slide" id="h2-2" aria-roledescription="slide" aria-label="2 of 2">Offer 2</div>
+      </div>
+    </section>
+
+    <!-- H3: shows three slides at once and moves on by one. -->
+    <section id="h3" class="carousel" aria-roledescription="carousel" aria-label="Products">
+      <h2>Products</h2>
+      <div class="track">
+        <div class="slide active" id="h3-1" aria-roledescription="slide" aria-label="1 of 5">Product 1</div>
+        <div class="slide active" id="h3-2" aria-roledescription="slide" aria-label="2 of 5">Product 2</div>
+        <div class="slide active" id="h3-3" aria-roledescription="slide" aria-label="3 of 5">Product 3</div>
+        <div class="slide" id="h3-4" aria-roledescription="slide" aria-label="4 of 5">Product 4</div>
+        <div class="slide" id="h3-5" aria-roledescription="slide" aria-label="5 of 5">Product 5</div>
+      </div>
+    </section>
+
+    <!-- H4: shows the next slide first and hides the last one a moment later. -->
+    <section id="h4" class="carousel" aria-roledescription="carousel" aria-label="Events">
+      <h2>Events</h2>
+      <div class="track">
+        <div class="slide active" id="h4-1" aria-roledescription="slide" aria-label="1 of 3">Event 1</div>
+        <div class="slide" id="h4-2" aria-roledescription="slide" aria-label="2 of 3">Event 2</div>
+        <div class="slide" id="h4-3" aria-roledescription="slide" aria-label="3 of 3">Event 3</div>
+      </div>
+    </section>
+
+    <!-- H5: the page puts its own slide back whenever its classes change (it fights). -->
+    <section id="h5" class="carousel" aria-roledescription="carousel" aria-label="Partners">
+      <h2>Partners</h2>
+      <div class="track">
+        <div class="slide active" id="h5-1" aria-roledescription="slide" aria-label="1 of 2">Partner 1</div>
+        <div class="slide" id="h5-2" aria-roledescription="slide" aria-label="2 of 2">Partner 2</div>
+      </div>
+    </section>
+
+    <!-- H6: the same, but the page puts its slide back in a later task (setTimeout 0). -->
+    <section id="h6" class="carousel" aria-roledescription="carousel" aria-label="Sponsors">
+      <h2>Sponsors</h2>
+      <div class="track">
+        <div class="slide active" id="h6-1" aria-roledescription="slide" aria-label="1 of 2">Sponsor 1</div>
+        <div class="slide" id="h6-2" aria-roledescription="slide" aria-label="2 of 2">Sponsor 2</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const slidesOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .slide')];
+
+    // H1: its own index, as calm-page.html's carousel 2 and the reviewer's page.
+    {
+      const sl = slidesOf('h1');
+      let i = 0;
+      setInterval(() => { sl[i].classList.remove('active'); i = (i + 1) % sl.length; sl[i].classList.add('active'); }, 150);
+    }
+    // H2: reads which slide is shown.
+    {
+      const sl = slidesOf('h2');
+      setInterval(() => {
+        const i = sl.findIndex((s) => s.classList.contains('active'));
+        sl[i].classList.remove('active');
+        sl[(i + 1) % sl.length].classList.add('active');
+      }, 150);
+    }
+    // H3: three at once, moving on by one.
+    {
+      const sl = slidesOf('h3');
+      let first = 0;
+      setInterval(() => {
+        first = (first + 1) % sl.length;
+        sl.forEach((s, n) => s.classList.toggle('active', ((n - first + sl.length) % sl.length) < 3));
+      }, 150);
+    }
+    // H4: adds the next first, removes the last 60 ms later.
+    {
+      const sl = slidesOf('h4');
+      let i = 0;
+      setInterval(() => {
+        const prev = sl[i];
+        i = (i + 1) % sl.length;
+        sl[i].classList.add('active');
+        setTimeout(() => prev.classList.remove('active'), 60);
+      }, 200);
+    }
+    // H5, H6: a model the page enforces: its own observer puts the model's
+    // classes back whenever they differ, at once (H5) or in a later task
+    // (H6). window.__h5 and window.__h6 count its writes.
+    for (const [id, later] of [['h5', false], ['h6', true]]) {
+      const sl = slidesOf(id);
+      const st = (window['__' + id] = { model: 0, writes: 0 });
+      const apply = () => sl.forEach((s, n) => {
+        if (s.classList.contains('active') !== (n === st.model)) { st.writes++; s.classList.toggle('active', n === st.model); }
+      });
+      new MutationObserver(() => (later ? setTimeout(apply, 0) : apply())).observe(document.querySelector('#' + id + ' .track'), { attributes: true, subtree: true, attributeFilter: ['class'] });
+      setInterval(() => { st.model = (st.model + 1) % sl.length; apply(); }, 300);
+    }
+  </script>
+</body>
+</html>
