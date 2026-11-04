@@ -1,0 +1,24 @@
+{
+  "videoId": "fictional-notice-001",
+  "sourceLanguage": "en",
+  "segments": [
+    {
+      "id": "seg-001",
+      "start": 0.5,
+      "end": 3.5,
+      "text": "A community meeting will take place on Friday at 2:00 PM."
+    },
+    {
+      "id": "seg-002",
+      "start": 3.8,
+      "end": 7.3,
+      "text": "The meeting will be held at the public library."
+    },
+    {
+      "id": "seg-003",
+      "start": 7.6,
+      "end": 10.7,
+      "text": "Please bring your questions about local services."
+    }
+  ]
+}
