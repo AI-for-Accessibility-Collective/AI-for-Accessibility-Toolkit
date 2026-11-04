@@ -345,6 +345,7 @@ const r = s.text.replaceBlock(paragraph, newText, { label })   // with a Show or
 s.text.nodes(root)                    // the text nodes it would change
 s.text.scale(1.5)                     // the page's text at 150%, px-sized too; 1 puts it back
 s.text.fit(() => s.css('spacing', rules))   // change text; grow only the boxes the change now cuts off
+s.text.fit(() => s.css('spacing', rules), { atLeast: ['line-height', 'letter-spacing', 'word-spacing'] })   // what the rules set is a minimum: text the page gave more room keeps it
 const sp = s.group(); sp.text.fit(() => sp.css('spacing', rules)); ... sp.end()   // a setting the person can turn off: its own group, so end() takes the sheet and the boxes fit grew
 ```
 
@@ -364,7 +365,8 @@ Always, whatever the config:
 - Code, form fields, live regions, hidden content and the toolkit's UI are never changed.
 - A replaced block can always be seen as it was.
 - scale() is the text size alone, for when s.zoom.method() is not 'zoom'. It measures before it writes and sizes each element from its own original size, so a new factor never compounds. Pixel line heights keep their proportion; the person's line spacing still wins. A fixed-height box that would cut its text off grows. Text added later is sized as it arrives; the page is measured again when the window's width changes.
-- fit() measures the boxes around the page's text, runs your change, and grows only those it made cut text off; a box that cut text off before, by the page's design, stays. Use it for spacing, instead of reading every element's height yourself.
+- fit() measures the boxes around the page's text (every one above it), runs your change, and grows only those whose text it made run further past them; a box that hides its overflow and cut text off before, by the page's design, stays. Use it for spacing, instead of reading every element's height yourself.
+- fit() with atLeast keeps, for each element holding text, the line height, letter spacing or word spacing it had where your change would lower it (WCAG 1.4.12 asks for at least), in proportion to its size, by a sheet of its own (a cascade layer, so it wins over your !important) and never the element's style attribute; end() takes it away.
 
 ### AI text: simplify, summarize, define, translate, label (`ai.text`)
 

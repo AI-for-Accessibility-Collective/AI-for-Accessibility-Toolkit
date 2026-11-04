@@ -1156,5 +1156,68 @@ await test('text.scale: each element from its own original size, never compoundi
   assert.equal(html(), before);
 });
 
+await test('text.fit with atLeast: spacing the page had more of is kept, by a layered sheet and never the style attribute; without atLeast, or where the page had less, the change wins; end() puts the page back', async () => {
+  const { tk, $, win, doc, html } = page('<nav><a id="a" style="font-size: 15px; line-height: 50px; letter-spacing: 3px">Hotels</a></nav><p id="p" style="font-size: 16px; line-height: 20px">Text</p>');
+  const before = html();
+  // jsdom has no cascade of an !important sheet over the style attribute; a browser has. Stand in for it.
+  let spaced = false;
+  const real = win.getComputedStyle.bind(win);
+  win.getComputedStyle = (el) => {
+    const cs = real(el);
+    if (!spaced || !el.id) return cs;
+    const fs = parseFloat(cs.fontSize);
+    return new Proxy(cs, { get: (t, k) => (k === 'lineHeight' ? `${fs * 1.5}px` : k === 'letterSpacing' ? `${fs * 0.12}px` : t[k]) });
+  };
+  const s = tk.session();
+  const plain = s.group();
+  plain.text.fit(() => { plain.css('spacing', '* { line-height: 1.5 !important }'); spaced = true; });
+  assert.equal($('#a').hasAttribute('data-ai4a11y-room'), false, 'without atLeast, fit does what it did');
+  plain.end();
+  spaced = false;
+  const sp = s.group();
+  sp.text.fit(() => { sp.css('spacing', '* { line-height: 1.5 !important; letter-spacing: 0.12em !important }'); spaced = true; }, { atLeast: ['line-height', 'letter-spacing', 'word-spacing'] });
+  win.getComputedStyle = real;
+  assert.equal($('#a').getAttribute('data-ai4a11y-room'), 'lh3.333 ls0.2', '50px and 3px at 15px, kept in proportion to the size');
+  assert.equal($('#p').hasAttribute('data-ai4a11y-room'), false, 'it had less than the change asks for');
+  assert.equal($('#a').style.lineHeight, '50px', 'the style attribute stays the page\'s');
+  const sheet = [...doc.querySelectorAll('style')].map((x) => x.textContent).find((t) => t.includes('@layer'));
+  assert.match(sheet, /^@layer ai4a11y-room \{/);
+  assert.match(sheet, /\[data-ai4a11y-room~="lh3\.333"\] \{ line-height: 3\.333 !important; \}/);
+  assert.match(sheet, /\[data-ai4a11y-room~="ls0\.2"\] \{ letter-spacing: 0\.2em !important; \}/);
+  sp.end();
+  assert.equal(html(), before);
+  s.end();
+});
+
+await test('text.fit: a fixed-height box at any depth above the text grows when the text runs further past it; one that hides its overflow and cut it off before stays; one it runs no further past stays; one with no height stays', async () => {
+  const { tk, $, html } = page('<div id="bar" style="height: 50px"><div><div><ul><li><a href="#h">Help</a></li></ul></div></div></div>'
+    + '<div id="clip" style="height: 60px; overflow-y: hidden"><div><div><div><p>A preview cut off by design</p></div></div></div></div>'
+    + '<div id="same" style="height: 40px"><div><div><div><p>Runs past by design, no further</p></div></div></div></div>'
+    + '<ul id="floats" style="height: 0px"><li style="float: left">A floated item</li></ul>');
+  const before = html();
+  let changed = false;
+  // jsdom has no layout: each box's client and scroll height, before and after the change.
+  const geometry = (el, client, scrollBefore, scrollAfter) => {
+    Object.defineProperty(el, 'clientHeight', { configurable: true, get: () => client });
+    Object.defineProperty(el, 'scrollHeight', { configurable: true, get: () => (changed ? scrollAfter : scrollBefore) });
+  };
+  geometry($('#bar'), 50, 54, 150);   // its links' padding ran 4px past it, by design; now a second row of them
+  geometry($('#clip'), 60, 90, 140);
+  geometry($('#same'), 40, 48, 48);
+  geometry($('#floats'), 0, 20, 30);  // a wrapper of floats, no height of its own
+  const s = tk.session();
+  const g = s.group();
+  assert.equal(g.text.fit(() => { changed = true; }), 1);
+  assert.equal($('#bar').style.height, 'auto', 'five levels above the text');
+  assert.equal($('#bar').style.minHeight, '50px');
+  assert.equal($('#clip').style.height, '60px');
+  assert.equal($('#clip').style.minHeight, '');
+  assert.equal($('#same').style.minHeight, '');
+  assert.equal($('#floats').style.minHeight, '');
+  g.end();
+  assert.equal(html(), before);
+  s.end();
+});
+
 console.log(`\nBuilding blocks: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

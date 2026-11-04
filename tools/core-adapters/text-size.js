@@ -28,6 +28,8 @@
 //   • Explicitly resets letter and word spacing on icon fonts and toolkit UI to prevent ligature breakage and styling leaks.
 //   • Spacing is one stylesheet applied through s.text.fit(() => s.css(...)), which grows only boxes
 //     the spacing made cut text off, leaving intentionally truncated boxes alone.
+//   • The spacing is a minimum (WCAG 1.4.12 says "at least"): fit's atLeast keeps the line height and
+//     letter and word spacing the page gave more of (a menu row centred by a 50px line height).
 //   • Size is applied first, then spacing.
 //   • Each setting the person can turn off lives in its own s.group(): turning it off is that group's end().
 //   • When fontScale returns to 100%, forgets what was scaled by ending its group.
@@ -37,6 +39,9 @@
 // What it cannot do:
 //   • Cannot scale text burned into raster images (bitmaps) or canvas drawings.
 //   • Cannot expand fixed-dimension container elements that clip via CSS overflow: scroll or auto.
+//   • With the text size alone, the page keeps its layout for the window's width (its breakpoints
+//     follow the window, not the text): a table wider than its column runs past it, and text laid
+//     over an image of a fixed size can run past the image. Browser zoom ('zoom') reflows instead.
 
 export default {
   enable(options = {}, toolkit) {
@@ -139,7 +144,7 @@ export default {
       rules.push(`p:not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *) {\n  margin-bottom: 2em !important;\n}`);
 
       const cssText = rules.join('\n');
-      spacingGroup.text.fit(() => spacingGroup.css('text-spacing', cssText));
+      spacingGroup.text.fit(() => spacingGroup.css('text-spacing', cssText), { atLeast: ['line-height', 'letter-spacing', 'word-spacing'] });
     };
 
     const applyAll = () => {

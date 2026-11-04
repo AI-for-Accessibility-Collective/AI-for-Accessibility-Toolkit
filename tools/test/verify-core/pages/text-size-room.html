@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Red Planet Travel — Trips and Deals</title>
+  <style>
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.4; color: #1a1a1a; background: #22324d; }
+    .page { width: 760px; margin: 0 auto; background: #ffffff; }
+    /* A menu bar of a fixed height, its links floated and centred by a
+       50px line height; their padding runs a few pixels past it, by design. */
+    .menu-bar { height: 50px; background: #f4f4f4; border-bottom: 1px solid #cccccc; }
+    .menu-bar::after, .menu-inner::after { content: ""; display: block; clear: both; }
+    .menu-bar ul { list-style: none; margin: 0; padding: 0 0 0 8px; }
+    .menu-bar li { float: left; line-height: 50px; font-size: 15px; }
+    .menu-bar a { color: #1d3d6e; text-decoration: none; padding: 20px 10px; }
+    /* A kicker with wide letter spacing, wider than WCAG's 0.12em. */
+    .kicker { letter-spacing: 0.25em; text-transform: uppercase; font-size: 12px; color: #5a1a1a; margin: 16px 16px 4px; }
+    main { padding: 0 16px 16px; }
+    /* A card of a fixed height that shows its overflow, the text four levels down. */
+    .deal-card { height: 120px; width: 300px; background: #eef2f7; border: 1px solid #cccccc; }
+    .deal-card p { margin: 0 0 4px; }
+    /* A preview cut off by design, the text deep inside it. */
+    .preview { height: 60px; overflow: hidden; width: 300px; border: 1px solid #cccccc; margin-top: 16px; }
+    .preview p { margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="menu-bar" id="menu-bar">
+      <div class="menu-inner">
+        <div class="menu-col">
+          <nav aria-label="Trips">
+            <ul>
+              <li><a href="#d" id="menu-first">Destinations</a></li>
+              <li><a href="#h">Hotels</a></li>
+              <li><a href="#c">Car rentals</a></li>
+              <li><a href="#s">Space shuttles</a></li>
+              <li><a href="#a">About us</a></li>
+              <li><a href="#help" id="menu-last">Help</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <p class="kicker" id="kicker">This week's deals</p>
+    <main>
+      <h1>Trips to Mars</h1>
+      <div class="deal-card" id="deal-card">
+        <div><div><div>
+          <p id="deal-text">Seven nights at the Olympus Mons lodge, with a guided walk on the crater rim and two dust-storm viewing evenings.</p>
+        </div></div></div>
+      </div>
+      <div class="preview" id="preview">
+        <div><div><div>
+          <p>Our newest route takes you from the orbital station down to the valley floor in a single afternoon.</p>
+          <p>The rest of this story is cut off by design until you open it.</p>
+        </div></div></div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

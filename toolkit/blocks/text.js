@@ -4,7 +4,7 @@
 //   s.text.set(node, text)                      change one text node in place (translate-style)
 //   s.text.replaceBlock(el, text, opts)         show new text in place of a block, with "Show original"
 //   s.text.scale(factor)                        the page's text at factor (1.5 is 150%), px-sized text too
-//   s.text.fit(() => s.css('spacing', rules))   make a change to text, and grow only the boxes it now cuts off
+//   s.text.fit(() => s.css('spacing', rules), { atLeast })   change text; grow the boxes it now runs past; keep more room the page had
 //
 // text.scale is the text size alone, for when the browser's zoom is not
 // the method (s.zoom.method()). It measures every element that holds text
@@ -17,9 +17,12 @@
 // measured again when the window's width changes (its breakpoints).
 //
 // text.fit is the same care for any change to text (line or letter
-// spacing): it measures the boxes around the page's text, runs the change,
-// and grows only the boxes that the change made cut their text off. Boxes
-// that cut text off before, by the page's design, stay as they are.
+// spacing): it measures the boxes around the page's text (every one above
+// it), runs the change, and grows only the boxes whose text the change made
+// run further past them. A box that hides its overflow and cut text off
+// before, by the page's design, stays as it is. With { atLeast: ['line-height',
+// 'letter-spacing', 'word-spacing'] } what the change sets is a minimum: text
+// the page gave more room keeps it (WCAG 1.4.12 asks for at least).
 //
 // The original text nodes come back on end(), the same node objects. Text in
 // code, form fields, live regions, hidden content and the toolkit's own UI is
@@ -214,24 +217,34 @@ export function textBlock(s, env) {
     return n;
   }
 
-  // The boxes around these elements' text (three levels up), and whether
-  // each cuts its content off now.
+  // The boxes around these elements' text (every ancestor up to the body:
+  // a fixed height can be anywhere above the text), and how far each one's
+  // content runs past its height now.
   function clippedNow(carriersList) {
     const boxes = new Map();
     for (const el of carriersList) {
-      for (let b = el, i = 0; b && i < 3 && b !== doc.body; b = b.parentElement, i++) if (!boxes.has(b)) boxes.set(b, false);
+      for (let b = el; b && b !== doc.body && !boxes.has(b); b = b.parentElement) boxes.set(b, 0);
     }
-    for (const b of boxes.keys()) boxes.set(b, b.scrollHeight > b.clientHeight + 1);
+    for (const b of boxes.keys()) boxes.set(b, b.scrollHeight - b.clientHeight);
     return boxes;
   }
 
-  // A box with a fixed height that cuts text off now, and did not before, grows to fit it.
+  // A box with a fixed height whose text runs past it more than it did
+  // grows to fit it. The page's CSS says which overflow is by design: a box
+  // that hides its overflow (a teaser, a truncated card) and cut text off
+  // before stays as it is; one that shows it (overflow visible) cuts nothing
+  // off, so what ran past it before is no reason to let the text run
+  // further, over what follows.
   function grow(before, into, done) {
     let n = 0;
     for (const [b, was] of before) {
-      if (was || done.has(b) || !b.isConnected || !(b.scrollHeight > b.clientHeight + 1)) continue;
+      // A box with no height (a wrapper of floats, a collapsed region) was not sized to hold the text: left as it is.
+      if (done.has(b) || !b.isConnected || !(b.clientHeight > 0)) continue;
+      const over = b.scrollHeight - b.clientHeight;
+      if (!(over > 1)) continue;
       const cs = env.win.getComputedStyle(b);
       if (cs.display === 'inline' || /^(auto|scroll)$/.test(cs.overflowY)) continue;
+      if (/^(hidden|clip)$/.test(cs.overflowY) ? was > 1 : !(over > was + 1)) continue;
       done.add(b);
       if (cs.height !== 'auto') { into.setStyle(b, 'min-height', cs.height); into.setStyle(b, 'height', 'auto', 'important'); }
       if (cs.maxHeight !== 'none') into.setStyle(b, 'max-height', 'none', 'important');
@@ -240,11 +253,54 @@ export function textBlock(s, env) {
     return n;
   }
 
+  // The spacing fit() can keep from shrinking (atLeast): its computed style
+  // name, how it is written back (relative to the font size, so it keeps its
+  // proportion when the text is scaled again), and a short token for it.
+  const SPACING = {
+    'line-height': { key: 'lineHeight', unit: '', token: 'lh' },
+    'letter-spacing': { key: 'letterSpacing', unit: 'em', token: 'ls' },
+    'word-spacing': { key: 'wordSpacing', unit: 'em', token: 'ws' },
+  };
+  // In px; normal is 0 for letter and word spacing, and a line height of normal is not compared.
+  const spacingPx = (cs, prop) => {
+    const v = cs[SPACING[prop].key];
+    if (v === 'normal') return prop === 'line-height' ? NaN : 0;
+    return parseFloat(v);
+  };
+  const ROOM_ATTR = 'data-ai4a11y-room';
+
   const grown = new WeakSet();
-  function fit(change, { root } = {}) {
+  function fit(change, { root, atLeast = [] } = {}) {
     if (!s.alive() || typeof change !== 'function') return 0;
-    const before = clippedNow([...carriers(root || doc.body)]);
+    const list = [...carriers(root || doc.body)];
+    const props = (Array.isArray(atLeast) ? atLeast : [atLeast]).filter((p) => SPACING[p]);
+    const measure = () => list.map((el) => { const cs = env.win.getComputedStyle(el); return { fs: parseFloat(cs.fontSize), v: props.map((p) => spacingPx(cs, p)) }; });
+    const had = props.length ? measure() : null;
+    const before = clippedNow(list);
     change();
+    // What the change asks for is a minimum: text that had more room keeps
+    // it. Kept by a sheet of this group's in a cascade layer, whose
+    // !important wins over the change's own, and never in the element's
+    // style, which text.scale writes too.
+    if (had) {
+      const now = measure();
+      const rules = new Map();
+      list.forEach((el, i) => {
+        const { fs } = had[i];
+        if (!(fs > 0)) return;
+        const tokens = [];
+        props.forEach((p, j) => {
+          if (!(had[i].v[j] > now[i].v[j] + 0.25)) return;
+          const { unit, token } = SPACING[p];
+          const value = Math.round((had[i].v[j] / fs) * 1000) / 1000;
+          const t = `${token}${value}`;
+          tokens.push(t);
+          rules.set(t, `[${ROOM_ATTR}~="${t}"] { ${p}: ${value}${unit} !important; }`);
+        });
+        if (tokens.length) s.setAttr(el, ROOM_ATTR, tokens.join(' '));
+      });
+      if (rules.size) s.css('text-fit-room', `@layer ai4a11y-room {\n${[...rules.values()].join('\n')}\n}`);
+    }
     return grow(before, s, grown);
   }
 
