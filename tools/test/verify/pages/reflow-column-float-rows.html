@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Riverside Library - Floated Tabs and Columns</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #d7d7cd;
+    }
+    .masthead {
+      background: #ffffff;
+      padding: 1rem 1.5rem 0;
+      overflow: hidden;
+    }
+    .masthead h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+    /* The page's account links: a list set to display:inline and floated,
+     * whose items are floated too (no block of its own). */
+    .account {
+      display: inline;
+      float: right;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .account li { float: left; margin-left: 0.5rem; }
+    .account a {
+      display: inline-block;
+      min-height: 24px;
+      padding: 4px 8px;
+      color: #1d4ed8;
+    }
+    /* A tab row: floated list items holding only their label. */
+    .tabs { margin: 0; padding: 0; list-style: none; overflow: hidden; }
+    .tabs li {
+      float: left;
+      margin-right: 4px;
+      padding: 8px 14px;
+      background: #eeeeee;
+      border: 1px solid #555555;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+    }
+    .tabs li a { color: #222222; }
+    .tabs li.current { background: #ffffff; font-weight: bold; }
+    /* Two rows of links on a coloured strip: each row a floated list item
+     * whose label and links are floated inside it. The strip's colour is the
+     * list item's background, under its floated links. */
+    .switcher { margin: 0; padding: 0; list-style: none; overflow: hidden; }
+    .switcher li { float: left; clear: left; width: 30em; background: #446600; }
+    .switcher li.second { background: #aa0000; }
+    .switcher li strong, .switcher li a {
+      float: left;
+      display: block;
+      width: 8em;
+      min-height: 24px;
+      padding: 2px 12px;
+      color: #ffffff;
+    }
+    main { background: #ffffff; padding: 1.5rem; overflow: hidden; }
+    /* Page columns: floated boxes holding headings and paragraphs. */
+    .story { float: left; width: 62%; }
+    .related { float: right; width: 32%; background: #f1f5f9; padding: 0 1rem; }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <ul class="account" id="account">
+      <li><a href="#sign-in">Sign in</a></li>
+      <li><a href="#join">Join</a></li>
+    </ul>
+    <h1>Riverside Library</h1>
+    <nav aria-label="Sections">
+      <ul class="tabs" id="tabs">
+        <li class="current"><a href="#home" aria-current="page">Home</a></li>
+        <li><a href="#catalog">Catalog</a></li>
+        <li><a href="#events">Events</a></li>
+        <li><a href="#visit">Visit</a></li>
+      </ul>
+    </nav>
+  </header>
+  <nav aria-label="Reading formats">
+    <ul class="switcher" id="switcher">
+      <li id="row-print"><strong>Print:</strong><a href="#print-list" id="print-list">Book list</a><a href="#print-holds">Holds</a></li>
+      <li class="second" id="row-audio"><strong>Audio:</strong><a href="#audio-list">Book list</a><a href="#audio-holds">Holds</a></li>
+    </ul>
+  </nav>
+  <main>
+    <article class="story" id="story">
+      <h2>Extended Hours This Winter</h2>
+      <p>The main branch now stays open until nine on weekday evenings through the end of March, with the reading room and the study rooms available until closing.</p>
+      <p>Evening staff can help with holds, interlibrary loans and the public computers.</p>
+    </article>
+    <aside class="related" id="related">
+      <h2>Related</h2>
+      <p>Study rooms can be booked up to two weeks ahead at the front desk or by phone.</p>
+    </aside>
+  </main>
+</body>
+</html>

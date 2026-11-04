@@ -5,22 +5,21 @@
   "known": {
     "deque-mars": {
       "rules": {
-        "color-contrast": 3,
-        "target-size": 2
+        "color-contrast": 1
       },
-      "why": "Un-floating the menu panel, which has a fixed 50px height, stacks its halves; the right half drops onto the dark body background (contrast) and its links stack closer than 24px. The site fixes the panel height; reflow cannot without guessing."
+      "why": "The social bar's 'Join the Conversation' link (#555 on the body's #344b6e) is at the right end of a 962px fixed-width container, past the 720px column and the light background image behind it. The page does the same at its own layout in a 720px window with no adapter: the same link, the same 1.18 contrast. Fitting it would mean overriding the page's fixed widths."
     },
     "uw-before": {
       "rules": {
         "color-contrast": 6
       },
-      "why": "The 11-column enrollment table cannot shrink below about 708px, so in the 720px measure its last columns overhang the white content box onto the purple body. WCAG 1.4.10 exempts data tables from reflow; making it scroll would add a keyboard problem."
+      "why": "The 11-column enrollment table cannot shrink below about 708px, and the white content box is 80% of the column (576px), so its last columns overhang onto the purple body. WCAG 1.4.10 exempts data tables from reflow; making it scroll would add a keyboard problem."
     },
     "wikipedia": {
       "rules": {
         "target-size": 2
       },
-      "why": "Two links in a reflowed list sit closer than 24px apart (target-size). Wikipedia has 8 target-size problems before and after; reflow trades 2 for 2."
+      "why": "The navbox's horizontal link lists put two links within 24px of each other wherever a line wraps, so which two depends on the width: at its own layout the page has 8 target-size problems at 1280px, and in a 560px window with no adapter the same AccessiBe and Easy Chirp links are flagged. Any column that rewraps the lists moves the pair."
     }
   }
 }

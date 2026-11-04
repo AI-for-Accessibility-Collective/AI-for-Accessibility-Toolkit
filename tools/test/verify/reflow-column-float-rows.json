@@ -1,0 +1,28 @@
+{
+  "name": "reflow-column-float-rows",
+  "file": "tools/adapters/reflow-column.js",
+  "export": "ReflowColumn",
+  "page": "reflow-column-float-rows.html",
+  "checks": [
+    {
+      "name": "a row of floated links keeps its coloured strip under its links (no white text on the page's grey)",
+      "code": "\n        for (const id of ['row-print', 'row-audio']) {\n          const row = document.getElementById(id);\n          if (!row) return false;\n          const r = row.getBoundingClientRect();\n          if (r.height < 20) return false;\n          for (const a of row.querySelectorAll('a, strong')) {\n            const b = a.getBoundingClientRect();\n            if (b.top < r.top - 1 || b.bottom > r.bottom + 1) return false;\n          }\n        }\n        return true;\n      "
+    },
+    {
+      "name": "the switcher's two rows stay apart: the second row's links are below the first row's",
+      "code": "\n        const first = document.getElementById('print-list');\n        const second = document.querySelector('#row-audio a');\n        if (!first || !second) return false;\n        return second.getBoundingClientRect().top >= first.getBoundingClientRect().bottom - 1;\n      "
+    },
+    {
+      "name": "tabs that fit stay side by side in one row",
+      "code": "\n        const tabs = [...document.querySelectorAll('#tabs li')];\n        if (tabs.length !== 4) return false;\n        const top = tabs[0].getBoundingClientRect().top;\n        return tabs.every((t) => Math.abs(t.getBoundingClientRect().top - top) < 2);\n      "
+    },
+    {
+      "name": "the account links stay floated beside the heading, laid out as before",
+      "code": "\n        const list = document.getElementById('account');\n        if (!list) return false;\n        if (getComputedStyle(list).float === 'none') return false;\n        const items = [...list.querySelectorAll('li')];\n        return items.length === 2 && Math.abs(items[0].getBoundingClientRect().top - items[1].getBoundingClientRect().top) < 2;\n      "
+    },
+    {
+      "name": "floated columns of headings and paragraphs still become one column",
+      "code": "\n        const story = document.getElementById('story');\n        const related = document.getElementById('related');\n        if (!story || !related) return false;\n        if (!document.documentElement.classList.contains('ai4a11y-reflow')) return getComputedStyle(story).float === 'left';\n        if (getComputedStyle(story).float !== 'none' || getComputedStyle(related).float !== 'none') return false;\n        return related.getBoundingClientRect().top >= story.getBoundingClientRect().bottom - 5;\n      "
+    }
+  ]
+}
