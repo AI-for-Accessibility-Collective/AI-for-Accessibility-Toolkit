@@ -1,0 +1,32 @@
+{
+  "name": "announce-changes-ask-late",
+  "file": "tools/core-adapters/announce-changes.js",
+  "page": "announce-changes-ask.html",
+  "ai": {
+    "choose": {
+      "a message to the person": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "a toast removed while its answer is on its way is not announced",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const choose = a.s.ai.choose; a.s.ai.choose = (...args) => new Promise((r) => setTimeout(() => r(choose(...args)), 800)); const restore = () => { a.s.ai.choose = choose; }; const t = add('toasts', 'div', { class: 'toast toast-a' }, 'Removed before the answer'); await wait(300); t.remove(); await wait(1100); restore(); return a.asked === 1 && !said().includes('Removed before the answer');"
+    },
+    {
+      "name": "a toast still in the page when a late answer (1.5 s) comes is announced then, and the next one of its kind at once",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const choose = a.s.ai.choose; a.s.ai.choose = (...args) => new Promise((r) => setTimeout(() => r(choose(...args)), 1500)); const restore = () => { a.s.ai.choose = choose; }; await wait(1300); const t = add('toasts', 'div', { class: 'toast toast-b' }, 'Answer came late'); await wait(1000); const early = said().includes('Answer came late'); await wait(900); const late = said().includes('Answer came late'); restore(); const asked = a.asked; const t2 = add('toasts', 'div', { class: 'toast toast-b' }, 'Next of its kind'); await wait(600); const next = said().includes('Next of its kind') && a.asked === asked; t.remove(); t2.remove(); return !early && late && next;"
+    },
+    {
+      "name": "(a toast whose answer will come 5.5 s after it was added: set up here, checked in the next check)",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const choose = a.s.ai.choose; a.s.ai.choose = (...args) => new Promise((r) => setTimeout(() => r(choose(...args)), 5500)); const restore = () => { a.s.ai.choose = choose; }; globalThis.__lateRestore = restore; globalThis.__lateToast = add('slot', 'div', { class: 'toast toast-c' }, 'Answer came too late'); await wait(3000); return true;"
+    },
+    {
+      "name": "a toast whose answer comes more than 5 s after it was added is not announced",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const t = globalThis.__lateToast; if (!t) return false; await wait(3000); globalThis.__lateRestore(); const ok = !said().includes('Answer came too late') && a.kinds.size === 3 && [...a.kinds.values()].at(-1).ms >= 5000; t.remove(); return ok;"
+    },
+    {
+      "name": "a toast whose answer comes after a route change is not announced",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const choose = a.s.ai.choose; a.s.ai.choose = (...args) => new Promise((r) => setTimeout(() => r(choose(...args)), 800)); const restore = () => { a.s.ai.choose = choose; }; const before = location.hash; const t = add('toasts', 'div', { class: 'toast toast-d' }, 'Before the route changed'); await wait(200); location.hash = '#/next'; await wait(1200); restore(); const ok = !said().includes('Before the route changed'); t.remove(); location.hash = before || '#'; await wait(300); return ok;"
+    }
+  ]
+}

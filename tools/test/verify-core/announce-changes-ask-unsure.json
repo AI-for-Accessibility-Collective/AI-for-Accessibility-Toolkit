@@ -1,0 +1,20 @@
+{
+  "name": "announce-changes-ask-unsure",
+  "file": "tools/core-adapters/announce-changes.js",
+  "page": "announce-changes-ask.html",
+  "ai": {
+    "choose": {
+      "a message to the person": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "a toast the page adds by itself is not announced when the model cannot tell",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const t = add('toasts', 'div', { class: 'toast' }, 'Your order was saved'); await wait(700); const ok = !said().includes('Your order was saved') && a.asked === 1; t.remove(); return ok;"
+    },
+    {
+      "name": "a second toast of the same kind is not asked about again, and not announced",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; await wait(1300); const t = add('toasts', 'div', { class: 'toast' }, 'Pickup time changed'); await wait(700); const ok = !said().includes('Pickup time changed') && a.asked === 1; t.remove(); return ok;"
+    }
+  ]
+}

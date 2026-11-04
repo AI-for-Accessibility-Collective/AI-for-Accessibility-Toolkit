@@ -1,0 +1,16 @@
+{
+  "name": "announce-changes-ask-cap",
+  "file": "tools/core-adapters/announce-changes.js",
+  "page": "announce-changes-ask.html",
+  "ai": {
+    "choose": {
+      "a message to the person": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "at most 6 questions a page: past that, a new kind is not asked about and not announced",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const box = add('slot', 'div', {}, ''); for (let i = 1; i <= 8; i++) add(box, 'div', { class: 'alert alert-kind' + 'abcdefgh'[i - 1] }, 'Alert ' + i); await wait(700); const s = said(); box.remove(); return a.asked === 6 && s.includes('Alert 1') && s.includes('Alert 6') && !s.includes('Alert 7') && !s.includes('Alert 8');"
+    }
+  ]
+}

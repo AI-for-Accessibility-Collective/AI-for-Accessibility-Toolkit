@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orders - Corner Bakery</title>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.4; color: #1a1a1a; background: #ffffff; }
+    header { background: #3b2a1a; color: #ffffff; padding: 0.5rem 1rem; }
+    header h1 { margin: 0; font-size: 1.25rem; }
+    main { max-width: 900px; margin: 0 auto; padding: 0.5rem 1rem; }
+    .toasts { position: fixed; top: 0.5rem; right: 0.5rem; width: 280px; z-index: 10; }
+    .toast { background: #1f5130; color: #ffffff; padding: 0.5rem 0.75rem; border-radius: 4px; margin-bottom: 0.25rem; }
+    .orders { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.5rem; }
+    .card { border: 1px solid #cccccc; border-radius: 4px; padding: 0.5rem 0.75rem; }
+    .card h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+    .badge { display: inline-block; padding: 0 0.4rem; border-radius: 3px; font-size: 0.875rem; }
+    .text-warning { color: #6b4a00; }
+    .bg-warning { background: #fff3cd; }
+    .chat { border: 1px solid #cccccc; border-radius: 4px; padding: 0.5rem; margin-top: 0.75rem; }
+    .chat h2 { margin: 0 0 0.25rem; font-size: 1rem; }
+    ul.messages { list-style: none; margin: 0; padding: 0; }
+    button { background: #3b2a1a; color: #ffffff; border: none; border-radius: 4px; padding: 0.5rem 1rem; font-size: 1rem; min-height: 44px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Corner Bakery</h1>
+  </header>
+  <div id="toasts" class="toasts"></div>
+  <main>
+    <h2 style="font-size: 1.1rem;">Your orders</h2>
+    <p><button id="refresh" type="button">Refresh orders</button></p>
+    <div id="orders" class="orders">
+      <div class="card">
+        <h3>Order 1041</h3>
+        <p style="margin: 0;">Two sourdough loaves. <span class="badge text-success">Delivered</span></p>
+      </div>
+    </div>
+    <div id="slot"></div>
+    <section class="chat" aria-labelledby="chat-title">
+      <h2 id="chat-title">Chat with the bakery</h2>
+      <div id="chat"></div>
+    </section>
+  </main>
+</body>
+</html>

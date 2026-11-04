@@ -1,0 +1,32 @@
+{
+  "name": "announce-changes-ask-content",
+  "file": "tools/core-adapters/announce-changes.js",
+  "page": "announce-changes-ask.html",
+  "ai": {
+    "choose": {
+      "a message to the person": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "a card the page adds by itself with text-warning and bg-warning badges is not announced when the model says it is content",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const card = add('orders', 'div', { class: 'card' }, ''); add(card, 'h3', {}, 'Order 1043'); const p = add(card, 'p', {}, 'Three croissants. '); add(p, 'span', { class: 'badge text-warning bg-warning' }, 'Pending'); await wait(700); const ok = !said().includes('Pending') && !said().includes('Order 1043') && a.asked === 1; card.remove(); return ok;"
+    },
+    {
+      "name": "an errorBoundary wrapper the page adds by itself, outside a route change, is not announced when the model says it is content",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const w = add('slot', 'div', { class: 'errorBoundary' }, ''); add(w, 'h3', {}, 'Weekly specials'); add(w, 'p', {}, 'Rye, spelt and seeded loaves are back this week.'); await wait(700); const ok = !said().includes('Weekly specials') && !said().includes('Rye, spelt'); w.remove(); return ok;"
+    },
+    {
+      "name": "a chat list called messages the page adds by itself is not announced when the model says it is content",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const ul = add('chat', 'ul', { class: 'messages' }, ''); add(ul, 'li', {}, 'Sam: Do you have gluten-free bread?'); add(ul, 'li', {}, 'Bakery: Yes, on Fridays.'); await wait(700); const ok = !said().includes('gluten-free'); ul.remove(); return ok;"
+    },
+    {
+      "name": "a role status the page adds by itself is announced without a question: the page says it is a message",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const asked = a.asked; const st = add('slot', 'div', { role: 'status' }, 'Saved to your favourites'); await wait(700); const ok = said().includes('Saved to your favourites') && a.asked === asked; st.remove(); return ok;"
+    },
+    {
+      "name": "content added in answer to a click is announced without a question",
+      "code": "const a = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!a?.s || a.s.ended) return true; const wait = (ms) => new Promise((r) => setTimeout(r, ms)); const regions = () => [...document.querySelectorAll('[data-ai4a11y-ui][aria-live]')]; const said = () => regions().map((r) => r.textContent || '').join(' '); regions().forEach((r) => { r.textContent = ''; }); const add = (where, tag, attrs, text) => { const e = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v); if (text) e.textContent = text; (typeof where === 'string' ? document.getElementById(where) : where).appendChild(e); return e; }; const asked = a.asked; await __verifyClick('#refresh'); const card = add('orders', 'div', { class: 'card' }, 'Order 1044: two baguettes'); await wait(700); const ok = said().includes('Order 1044') && a.asked === asked; card.remove(); return ok;"
+    }
+  ]
+}

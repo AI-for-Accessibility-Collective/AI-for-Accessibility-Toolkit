@@ -9,6 +9,8 @@
 //
 // Options:
 //   debounceMs: Delay in ms to debounce and batch announcements (defaults to 200).
+//   ai: Boolean. Whether to ask the toolkit's model where the page does not say (below). Defaults to true;
+//     false never asks.
 //
 // Decisions:
 //   • Speaks through s.announce, using the toolkit's shared live region, which is in the page
@@ -25,14 +27,26 @@
 //     is typing, not an action; click, non-field keydown, and submit count as actions.
 //     A key that only moves focus or scrolls is not: Tab, a modifier alone, and arrows,
 //     Page Up/Down, Home, End and Space unless a control (a native one or a widget role) has them.
-//   • Announce only what reads as a message (role, class, id, or name says status, alert,
-//     error, notice, message, toast, warn, notification, snackbar) or content appearing within ACTION_MS of a user action.
-//     A class, id or name is read as words (errorMessage, form-errors, FormError2), never as a substring.
-//     A control (link, button, field) is never a message, whatever its class or name says.
+//   • Announces what the page says is a message (role status or alert, <output>) and content
+//     appearing within ACTION_MS of a user action. Nothing else is certain.
+//   • Content the page adds by itself, marked only by a word in its class, id or name (status, alert,
+//     error, notice, message, toast, warn, notification, snackbar), may be a message or just more
+//     content (a text-warning badge in a card, an errorBoundary wrapper, a chat list called messages).
+//     The page does not say, so the adapter asks the toolkit's model (s.ai.choose) which it is, from
+//     what it contains, and announces it only if the model says a message. It asks once per kind of
+//     element (its tag, role, id and class tokens, and those of what it was added to), never per text, so
+//     the next toast in the same place is announced at once from that answer; and at most ASK_CAP times
+//     a page. The first answer may come a second or two late: it is announced then only if it is still
+//     in the page, still in view, no route changed, and it was added less than LATE_MS ago. When the
+//     model cannot tell, or there is none, or ai is false, it says nothing.
+//     A class, id or name is read as words (errorMessage, form-errors, FormError2), never as a substring:
+//     the words only choose what to ask about. A control (link, button, field) is never asked about.
 //   • Route changes announce the new view's heading, not its content, and cancel any pending
 //     route announcement when a new route arrives. The view's heading is found from what changed:
 //     it remembers the headings shown at enable() and after each route, and takes one that was
 //     not shown then or whose text changed (in main first, then the highest level, then the first).
+//     That pick is a rule, not a question to the model: an answer would come a second or two after the
+//     view, and a route is said within 100 ms.
 //     A heading mounted again with text already shown counts only when nothing else changed and
 //     the title did not either. Otherwise it says the title. Headings drawn, or whose text the page
 //     changes in place, while no route change is pending count as shown. It never decides from
@@ -53,6 +67,15 @@ const PAGE_SPOKE_MS = 2000;
 const TICK_WINDOW_MS = 1200;
 const MAX_ANNOUNCE_CHARS = 120;
 const MAX_LINES = 3;
+// The most questions to the model a page asks, and how old new content may be when its answer comes.
+const ASK_CAP = 6;
+const LATE_MS = 5000;
+
+const QUESTION = 'Is this new content a message to the person about what they just did or about the page (an error, a confirmation, a warning), or just more content?';
+const KINDS = [
+  { value: 'message', about: 'A message to the person: an error, a confirmation that something was saved or sent, a warning, a notice that something changed, finished or failed.' },
+  { value: 'content', about: "More of the page's content: an item in a list or feed, a card, a section of the page, a label or badge that is part of what is shown, someone's post or chat message." },
+];
 
 const LIVE_SELECTOR = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"], [role="timer"], [role="marquee"], output';
 const INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
@@ -145,16 +168,24 @@ function saysStatus(el) {
   return role === 'status' || role === 'alert';
 }
 
-function isMessageElement(el) {
-  if (!el || el.nodeType !== 1) return false;
-  if (saysStatus(el)) return true;
-  // A control is not a message, whatever its class says (btn-warning,
-  // a select named status).
-  if (el.matches(INTERACTIVE)) return false;
+// What may be a message but the page does not say: a word in its class, id or name. Only
+// worth a question (or, answering an action, the part to read). A control is not a
+// message, whatever its class says (btn-warning, a select named status).
+function namedMessage(el) {
+  if (!el || el.nodeType !== 1 || el.matches(INTERACTIVE)) return false;
   return saysMessage(el.getAttribute('class')) || saysMessage(el.id) || saysMessage(el.getAttribute('name'));
 }
 
-function findMessage(el, is = isMessageElement) {
+// What an element is, for the model's answer to stand for every one like it: its tag, role,
+// id and class tokens, and those of what it was added to. Not its text. Numbers in names are
+// one kind (toast-17, toast-18).
+function kindOf(el) {
+  const what = (n) => [n.localName, (n.getAttribute('role') || '').trim().toLowerCase(), n.id ? `#${n.id}` : '',
+    ...String(n.getAttribute('class') || '').trim().split(/\s+/).filter(Boolean).sort()].join(' ').replace(/\d+/g, '0');
+  return `${what(el)} < ${el.parentElement ? what(el.parentElement) : ''}`;
+}
+
+function findMessage(el, is) {
   if (is(el)) return el;
   if (typeof el.querySelector === 'function') {
     const candidates = el.querySelectorAll(CANDIDATE_SELECTOR);
@@ -165,7 +196,8 @@ function findMessage(el, is = isMessageElement) {
   return null;
 }
 
-function summarize(el, s) {
+// message: the page or the model says el is a message; then text under 3 characters ("OK") is read too.
+function summarize(el, s, message = false) {
   if (!el || el.nodeType !== 1 || !el.isConnected) return '';
   if (s?.page?.isOurs && s.page.isOurs(el)) return '';
   const tag = el.tagName;
@@ -199,7 +231,7 @@ function summarize(el, s) {
   }
 
   if (!text) return '';
-  if (text.length < 3 && !isMessageElement(el)) return '';
+  if (text.length < 3 && !message) return '';
   if (text.length > MAX_ANNOUNCE_CHARS) text = text.slice(0, MAX_ANNOUNCE_CHARS - 1) + '…';
   return text;
 }
@@ -293,6 +325,11 @@ export default {
     this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
+    // The model's answers, by kind of element (kindOf): { answer, ms, waiting }. answer is
+    // undefined while it is on its way, then 'message', 'content' or null (cannot tell).
+    this.kinds = new Map();
+    this.asked = 0;
+    this.routes = 0;
     // What the page shows now: the next route's view heading is what changes.
     this.seenHeadings = shownHeadings(s);
     this.lastTitle = (document.title || '').replace(/\s+/g, ' ').trim();
@@ -321,6 +358,7 @@ export default {
         this.routeTimer = null;
       }
       this.lastAction = 0;
+      this.routes++;
 
       this.routeTimer = s.timer(() => {
         this.routeTimer = null;
@@ -423,21 +461,77 @@ export default {
       const container = el.parentElement;
       if (container && this.tickers.has(container)) continue;
 
-      const msgEl = routing ? findMessage(el, saysStatus) : findMessage(el);
-      if (!msgEl && (routing || !answering)) continue;
+      // What the page marks as a status is one; while a route is pending, nothing else is.
+      let targetEl = findMessage(el, saysStatus);
+      let message = !!targetEl;
+      if (!targetEl) {
+        if (routing) continue;
+        const named = findMessage(el, namedMessage);
+        if (answering) {
+          // Skip redrawn lists/grids if multiple elements added without a part named as a message
+          if (!named && list.length >= 3) continue;
+          targetEl = named || el;
+          message = !!named;
+        } else {
+          // Added by itself, a message only by its name: the model's answer for its kind.
+          if (!named || !inViewport(named) || !summarize(named, this.s, true)) continue;
+          const kind = this.kindFor(named);
+          if (!kind) continue;
+          if (kind.answer === undefined) {
+            kind.waiting.push({ el: named, container, addedAt: now, route: this.routes });
+            continue;
+          }
+          if (kind.answer !== 'message') continue;
+          targetEl = named;
+          message = true;
+        }
+      }
 
-      // Skip redrawn lists/grids if multiple elements added without explicit message markers
-      if (!msgEl && list.length >= 3) continue;
-
-      const targetEl = msgEl || el;
       if (!inViewport(targetEl)) continue;
 
-      const text = summarize(targetEl, this.s);
+      const text = summarize(targetEl, this.s, message);
       if (!text) continue;
 
       const isAlert = targetEl.getAttribute?.('role')?.toLowerCase() === 'alert';
       this.scheduleAnnouncement(text, container, isAlert ? 'assertive' : 'polite', targetEl);
     }
+  },
+
+  // The model's answer for an element's kind: asked the first time one is seen (at most ASK_CAP
+  // times a page), shared by every one like it after. null when it will not be asked.
+  kindFor(el) {
+    const key = kindOf(el);
+    let kind = this.kinds.get(key);
+    if (kind) return kind;
+    if (this.options.ai === false || !this.s.ai?.available || this.asked >= ASK_CAP) return null;
+    this.asked++;
+    const started = Date.now();
+    kind = { answer: undefined, ms: null, waiting: [] };
+    this.kinds.set(key, kind);
+    const s = this.s;
+    const context = `It appeared on its own: the person did nothing on the page in the last few seconds.\n\nThe new content:\n${s.ai.outline(el, { maxChars: 900 })}\n\nWhat it was added to:\n${s.ai.outline(el.parentElement || el, { maxChars: 700 })}`;
+    Promise.resolve()
+      .then(() => s.ai.choose(QUESTION, KINDS, { context }))
+      .catch(() => null)
+      .then((answer) => {
+        kind.answer = answer === 'message' || answer === 'content' ? answer : null;
+        kind.ms = Date.now() - started;
+        const waiting = kind.waiting;
+        kind.waiting = [];
+        if (this.s !== s || s.ended || kind.answer !== 'message') return;
+        for (const item of waiting) this.announceLate(item);
+      });
+    return kind;
+  },
+
+  // A message whose answer came after it was added: said only if it is still in the page and
+  // in view, still new, and no route changed since.
+  announceLate({ el, container, addedAt, route }) {
+    if (!el.isConnected || Date.now() - addedAt > LATE_MS || route !== this.routes) return;
+    if (container && this.tickers.has(container)) return;
+    if (!inViewport(el)) return;
+    const text = summarize(el, this.s, true);
+    if (text) this.scheduleAnnouncement(text, container, 'polite', el);
   },
 
   scheduleAnnouncement(text, container, politeness = 'polite', el = null) {
@@ -506,6 +600,8 @@ export default {
     this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
+    this.kinds = new Map();
+    this.asked = 0;
     this.seenHeadings = null;
     this.lastAction = 0;
     this.pageSpokeAt = 0;
