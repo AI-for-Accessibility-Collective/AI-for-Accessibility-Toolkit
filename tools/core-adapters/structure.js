@@ -18,10 +18,17 @@
 //   • Adds missing landmarks (main, navigation, banner, contentinfo) with ARIA roles only
 //     where the page has none and the region is unambiguous.
 //   • Gives a landmark role only to a <div> or <section>, never to a list (ul, ol) or a native element.
-//   • A header or footer inside an article, section, aside, main or nav is not the page's banner
-//     or contentinfo: it neither counts as one nor stops a region from being the main content.
+//   • The page's banner and contentinfo are found the way the browser finds them: an element with
+//     that role, or a header or footer with no role, not inside an article, section, aside, main or
+//     nav (or an element with role article, complementary, main or navigation). A header or footer
+//     inside those neither counts as one nor stops a region from being the main content.
+//   • Main is decided first: a region made main takes the headers and footers inside it out of the
+//     page's (the browser scopes them to it). So main may hold a stray header or footer, never the
+//     page's last banner or contentinfo, unless the region the adapter would name banner or
+//     contentinfo, outside it, takes its place. Banner and contentinfo are then added only if the
+//     page has none left.
 //   • Banner and contentinfo candidates follow the same rule as header and footer: not inside an
-//     article, section, aside, main or nav.
+//     article, section, aside, main or nav. A contentinfo candidate never holds every banner.
 //   • Takes the outermost candidate, never a part of it.
 //   • A copyright line alone does not make a footer (requires a footer hint).
 //   • The 'Page outline' button is added via s.focus.entry({ label: 'Page outline', onActivate }).
@@ -39,7 +46,11 @@
 //   • Cannot invent landmarks for arbitrary layouts where regions are ambiguous or absent.
 //   • Does not reorder headings or synthesize missing heading levels in author content.
 
-const NON_TOP_ANCESTOR = 'article, section, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+// Inside these a header or footer is not the page's banner or contentinfo (as Chrome computes it;
+// it does not scope by role="region").
+const SCOPE = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"]';
+// Where the adapter adds no banner or contentinfo of its own.
+const NON_TOP_ANCESTOR = `${SCOPE}, [role="region"]`;
 const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
 const NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
 const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon)\b/i;
@@ -59,74 +70,45 @@ function looksLikeNav(el) {
   return cls.split(/\s+/).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
 }
 
-function isTopLevelBanner(el) {
-  if (!el || el.matches('article, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"]')) return false;
-  if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
-  const role = el.getAttribute('role');
-  if (role) return role === 'banner';
-  return el.tagName === 'HEADER';
-}
-
-function isTopLevelFooter(el) {
-  if (!el || el.matches('article, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"]')) return false;
-  if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
-  const role = el.getAttribute('role');
-  if (role) return role === 'contentinfo';
-  return el.tagName === 'FOOTER';
-}
-
-function hasBanner(doc) {
-  return [...doc.querySelectorAll('header, [role="banner"]')].some(isTopLevelBanner);
-}
-
-function hasContentinfo(doc) {
-  return [...doc.querySelectorAll('footer, [role="contentinfo"]')].some(isTopLevelFooter);
-}
-
-function hasMain(doc) {
-  return doc.querySelector('main, [role="main"]') !== null;
+// The page's banners ('banner') or contentinfos ('contentinfo') as it is now: what the browser
+// exposes, except that an explicit role inside SCOPE does not count either (the brief).
+function pageLandmarks(doc, role) {
+  const tag = role === 'banner' ? 'header' : 'footer';
+  return [...doc.querySelectorAll(`${tag}, [role="${role}"]`)].filter((el) => {
+    const explicit = (el.getAttribute('role') || '').trim().split(/\s+/)[0];
+    if (explicit ? explicit !== role : el.localName !== tag) return false;
+    return !el.parentElement?.closest(SCOPE);
+  });
 }
 
 function hasNavigation(doc) {
   return doc.querySelector('nav, [role="navigation"]') !== null;
 }
 
-function addBanner(s, doc) {
-  if (hasBanner(doc)) return false;
-  let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
+// The outermost top-level divs and sections named like a banner (re) or contentinfo.
+function hintCandidates(doc, re, maxText, ok) {
+  const found = [...doc.querySelectorAll('div, section')].filter((el) => {
     if (el.getAttribute('role')) return false;
     if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
     if (el.closest('[role="banner"], [role="contentinfo"]')) return false;
     if (el.querySelector('main, [role="main"]')) return false;
-    if (!hint(HEADER_HINT, el) || hint(NOT_HEADER, el)) return false;
-    if ((el.textContent?.trim().length || 0) >= 2000) return false;
-    return true;
+    if (!hint(re, el) || !ok(el)) return false;
+    return (el.textContent?.trim().length || 0) < maxText;
   });
-  candidates = candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el)));
-  if (candidates.length === 0) return false;
-  const target = candidates[0];
-  s.setAttr(target, 'role', 'banner');
-  return true;
+  return found.filter((el) => !found.some((other) => other !== el && other.contains(el)));
 }
 
-function addContentinfo(s, doc) {
-  if (hasContentinfo(doc)) return false;
-  let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
-    if (el.getAttribute('role')) return false;
-    if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
-    if (el.closest('[role="banner"], [role="contentinfo"]')) return false;
-    if (el.querySelector('main, [role="main"]')) return false;
-    const headers = [...el.querySelectorAll('header, [role="banner"]')];
-    if (headers.some(isTopLevelBanner)) return false;
-    if (!hint(FOOTER_HINT, el)) return false;
-    if ((el.textContent?.trim().length || 0) >= 1500) return false;
-    return true;
-  });
-  candidates = candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el)));
-  if (candidates.length === 0) return false;
-  const target = candidates[candidates.length - 1];
-  s.setAttr(target, 'role', 'contentinfo');
-  return true;
+// Whether every one of found is inside el (and there is one): a contentinfo there would bury
+// the page's banner.
+function holdsAll(el, found) {
+  return found.length > 0 && found.every((x) => el.contains(x));
+}
+
+// Whether the page keeps a banner (or contentinfo) once el is main: one of its own (found) outside
+// el, or the adapter's candidate (hint) outside el; or it had none to lose.
+function keeps(el, found, hint) {
+  if (found.some((x) => !el.contains(x))) return true;
+  return hint ? !el.contains(hint) : found.length === 0;
 }
 
 function addNavigation(s, doc) {
@@ -150,26 +132,20 @@ function addNavigation(s, doc) {
   return count > 0;
 }
 
-function containsTopLevelBannerOrFooter(el) {
-  const headers = [...el.querySelectorAll('header, [role="banner"]')];
-  if (headers.some(isTopLevelBanner)) return true;
-  const footers = [...el.querySelectorAll('footer, [role="contentinfo"]')];
-  if (footers.some(isTopLevelFooter)) return true;
-  return false;
-}
-
-function addMain(s, doc) {
-  if (hasMain(doc)) return false;
+// bannerHint, footerHint: the regions the adapter would name banner and contentinfo, or null.
+function addMain(s, doc, bannerHint, footerHint) {
+  if (doc.querySelector('main, [role="main"]')) return false;
 
   const LANDMARK_ANCESTOR = 'article, [role="article"], header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+  const banners = pageLandmarks(doc, 'banner');
+  const footers = pageLandmarks(doc, 'contentinfo');
 
   let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
     if (el.getAttribute('role')) return false;
     if ((el.textContent?.trim().length || 0) <= 100) return false;
     if (el.closest(LANDMARK_ANCESTOR)) return false;
-    if (containsTopLevelBannerOrFooter(el)) return false;
-    if (el.querySelector('main, [role="main"]')) return false;
-    return true;
+    if (bannerHint?.contains(el) || footerHint?.contains(el)) return false;
+    return keeps(el, banners, bannerHint) && keeps(el, footers, footerHint);
   });
 
   if (candidates.length === 0) return false;
@@ -211,10 +187,21 @@ export default {
 
     let landmarksAdded = 0;
     if (this.options.landmarks !== false) {
-      if (addBanner(s, doc)) landmarksAdded++;
-      if (addContentinfo(s, doc)) landmarksAdded++;
+      const banners = pageLandmarks(doc, 'banner');
+      const bannerHint = hintCandidates(doc, HEADER_HINT, 2000, (el) => !hint(NOT_HEADER, el))[0] || null;
+      const footerHint = hintCandidates(doc, FOOTER_HINT, 1500, (el) => !holdsAll(el, banners)).at(-1) || null;
       if (addNavigation(s, doc)) landmarksAdded++;
-      if (addMain(s, doc)) landmarksAdded++;
+      if (addMain(s, doc, bannerHint, footerHint)) landmarksAdded++;
+      // After main, which scopes the headers and footers inside it, as the browser does.
+      if (bannerHint && pageLandmarks(doc, 'banner').length === 0) {
+        s.setAttr(bannerHint, 'role', 'banner');
+        landmarksAdded++;
+      }
+      if (footerHint && pageLandmarks(doc, 'contentinfo').length === 0
+        && !footerHint.closest('[role="banner"]') && !holdsAll(footerHint, pageLandmarks(doc, 'banner'))) {
+        s.setAttr(footerHint, 'role', 'contentinfo');
+        landmarksAdded++;
+      }
     }
 
     const wantOutline = this.options.outline !== false;

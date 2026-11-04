@@ -1,0 +1,15 @@
+{
+  "name": "structure-scoped-masthead",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-scoped-masthead.html",
+  "checks": [
+    {
+      "name": "review 9 finding 2: a story header and footer inside the region made main do not stop the masthead and colophon divs from becoming banner and contentinfo",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('site-masthead') === 'banner' && g('main-article') === 'main' && g('site-colophon') === 'contentinfo';"
+    },
+    {
+      "name": "the page wrapper, which holds the masthead and colophon, is not main",
+      "code": "return document.getElementById('page').getAttribute('role') === null;"
+    }
+  ]
+}

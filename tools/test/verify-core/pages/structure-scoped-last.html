@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Structure: the page's only footer is inside the content</title>
+</head>
+<body>
+  <!-- A header in a region: Chrome still gives it the banner role, so the page has a banner. -->
+  <div role="region" aria-label="Library">
+    <header id="region-header">
+      <p>Riverside Library</p>
+    </header>
+  </div>
+  <div id="masthead" class="site-header">
+    <p>Opening hours, events and the catalog.</p>
+  </div>
+
+  <!-- Its only footer: making this div main would take the page's contentinfo away. -->
+  <div id="story">
+    <h1>Opening hours this winter</h1>
+    <p>From the first of December the library opens an hour later on weekdays and closes at six. Saturday hours stay the same, and the reading room is open on Sundays from noon.</p>
+    <footer id="only-footer">
+      <p>© 2026 Riverside Library.</p>
+    </footer>
+  </div>
+</body>
+</html>
