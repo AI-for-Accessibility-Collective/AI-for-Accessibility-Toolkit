@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Account settings — Names: what the page says and what it does not</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 8px; color: #222; background: #fff; }
+    section { margin-bottom: 6px; padding: 4px 8px; border: 1px solid #ddd; }
+    h1, h2 { margin: 4px 0; }
+    button, input, label, span, div { margin: 2px; vertical-align: middle; }
+    button, input { display: inline-block; min-width: 24px; min-height: 24px; box-sizing: border-box; }
+    .box { display: inline-block; width: 24px; height: 24px; background: #555; }
+    #div-img-large { display: inline-block; width: 120px; height: 80px; background: #2a6; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Account settings</h1>
+
+    <section aria-labelledby="icons-heading">
+      <h2 id="icons-heading">Toolbar</h2>
+      <!-- Review 9: a Font Awesome size class is not the icon's name -->
+      <button id="btn-fa-2x" type="button"><span class="fa fa-2x fa-print"></span></button>
+      <!-- fixed width is a modifier too -->
+      <button id="btn-fa-fw" type="button"><i class="fa fa-fw fa-cog"></i></button>
+      <!-- a toggle: the icon for the other state is hidden, and comes first -->
+      <button id="btn-toggle" type="button"><span class="fa fa-pause" hidden></span><span class="fa fa-play"></span></button>
+      <!-- a stacked icon: two icons that disagree, and the stack's own class -->
+      <button id="btn-stack" type="button"><span class="fa-stack"><i class="fa fa-circle fa-stack-2x"></i><i class="fa fa-flag fa-stack-1x fa-inverse"></i></span></button>
+      <!-- a flip modifier before the icon's name -->
+      <button id="btn-flip" type="button"><i class="fa fa-flip-horizontal fa-reply"></i></button>
+      <!-- the name is the whole class: info circle, not circle -->
+      <button id="btn-bi-info" type="button"><i class="bi bi-info-circle"></i></button>
+      <!-- the control's own class beside an svg says it has an icon, not which -->
+      <button id="btn-has-icon" class="btn has-icon" type="button"><svg width="16" height="16" aria-hidden="true" focusable="false"><path d="M2 2h12v12H2z"/></svg></button>
+
+      <!-- Review 9: a role=img icon is named from its class, not sent to the AI -->
+      <span id="span-icon-img" role="img" class="box icon-star"></span>
+      <!-- a small role=img with nothing to name it from is not sent to the AI -->
+      <span id="span-img-small" role="img" class="box"></span>
+      <!-- an informative role=img is described as an image -->
+      <div id="div-img-large" role="img"></div>
+    </section>
+
+    <section aria-labelledby="form-heading">
+      <h2 id="form-heading">Billing</h2>
+      <!-- Review 9: a label another field points to by aria-labelledby is that field's -->
+      <label id="lbl-other-input" class="form-label">Billing Zip</label>
+      <input id="input-unrelated" type="text">
+      <input id="input-targeted" type="text" aria-labelledby="lbl-other-input">
+
+      <!-- a hint another field points to by aria-describedby is that field's -->
+      <div>
+        <span id="zip-hint" class="field-label">Five digits</span>
+        <input id="input-after-hint" type="text">
+        <input id="input-zip" type="text" aria-label="Zip code" aria-describedby="zip-hint">
+      </div>
+
+      <!-- Bootstrap's label class is a badge, not a field label -->
+      <div>
+        <span class="label label-info">New</span>
+        <input id="input-after-badge" type="text">
+      </div>
+
+      <!-- a checkbox's label follows it: it is not the next box's -->
+      <div>
+        <input id="cb-email" type="checkbox"><label>Email me</label>
+        <input id="cb-text" type="checkbox"><label>Text me</label>
+      </div>
+
+      <!-- a label before a field, for nothing else, still names it -->
+      <div>
+        <label>Billing city</label>
+        <input id="input-city" type="text">
+      </div>
+
+      <!-- a framework's field key is not a name -->
+      <input id="input-aspnet" type="text" name="ctl00$MainContent$txtEmail">
+    </section>
+  </main>
+</body>
+</html>
