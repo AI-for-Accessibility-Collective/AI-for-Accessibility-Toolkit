@@ -78,6 +78,7 @@ const TOOLS = [
         file: { type: 'string' }, export: { type: 'string' }, options: { type: 'object' }, ai: {}, harness: { type: 'object' }, personal: { type: 'object' },
         checks: { type: 'array', description: 'Optional checks that hold on any page.', items: { type: 'object', required: ['name', 'code'], properties: { name: { type: 'string' }, code: { type: 'string' } } } },
         sites: { type: 'array', items: { type: 'string' }, description: 'Only these sites, by name. Default: all.' },
+        withoutAdapter: { type: 'boolean', description: 'Also run each page the same way with an adapter that does nothing, and report what the page does by itself: the axe-core problems that appear, whether it is back exactly, its layout shift. What it shows there is the site\'s, not your adapter\'s.' },
       },
     },
   },
@@ -168,7 +169,7 @@ function siteText(site, r) {
 const handlers = {
   async verify_on_sites(args) {
     if (!NAME.test(String(args.name || ''))) return text('name must be lowercase letters, digits and dashes.', true);
-    const { name, sites: only, ...rest } = args;
+    const { name, sites: only, withoutAdapter, ...rest } = args;
     const sites = sitesFor(rest.file).filter(s => !only?.length || only.includes(s.name));
     verifier ||= await openVerifier();
     const results = [];
@@ -177,14 +178,18 @@ const handlers = {
       for (let site; (site = queue.shift());) {
         let r;
         try { r = await verifier.verify({ ...rest, page: site.url, checks: rest.checks || [] }); } catch (e) { r = { error: e.message.slice(0, 200) }; }
-        results.push([site, r]);
+        let c = null;
+        if (withoutAdapter && !r.error && r.status !== 'unreachable') { try { c = await verifier.verify({ ...rest, page: site.url, checks: [], control: true }); } catch (e) { c = { error: e.message.slice(0, 200) }; } }
+        results.push([site, r, c]);
       }
     }));
     const dir = specsFor(rest.file);
     mkdirSync(dir, { recursive: true });
     writeFileSync(path.join(dir, `${name}-sites.json`), JSON.stringify({ ...rest, sites: 'all' }, null, 2) + '\n');
     results.sort((a, b) => sites.indexOf(a[0]) - sites.indexOf(b[0]));
-    return text([...results.map(([site, r]) => siteText(site, r)),
+    const alone = (c) => (!c ? '' : c.error ? `\n  Without the adapter: could not run (${c.error})`
+      : `\n  Without the adapter (the page by itself): axe-core problems that appeared: ${(c.axe?.added || []).map((x) => `${x.id} on ${x.count}`).join(', ') || 'none'}; back exactly: ${c.restored === false ? 'no' : c.restored === true ? 'yes' : 'not checked'}; layout shift ${c.shift ?? '-'}.`);
+    return text([...results.map(([site, r, c]) => siteText(site, r) + alone(c)),
       `Saved as ${path.relative(ROOT, dir)}/${name}-sites.json. Problems on these pages that were there before enable() are the site's. A live page can fail to load or change between runs: run it again before you act on one odd result.`].join('\n\n'));
   },
 

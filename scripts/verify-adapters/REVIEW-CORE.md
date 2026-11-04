@@ -65,11 +65,38 @@ criterion, the tools for each rule, and its evidence standard.
 
 **Your scope is what your adapter created, changed or styled.** The tools
 refuse an element outside it: a problem there is the page's. For each
-criterion the adapter's brief lists under rubrics (core-adapters.json), read `wcag_rubric`, gather the evidence with
+criterion the task lists, read `wcag_rubric`, gather the evidence with
 the tools it names on the elements `adapter_elements` lists, and give each
 one a verdict (FAIL, PASS, NOT_APPLICABLE or UNDETERMINED) with the
 observation it rests on. A FAIL your adapter caused is a finding. Run
 `keyboard_audit` once your adapter adds anything people can focus.
+
+## The site's change or the adapter's
+
+A real page changes a lot that the adapter did not do: ads and iframes
+fill in, carousels turn, content loads as you scroll, timestamps tick,
+consent banners come and go, and the site's own scripts react to what is
+on the page. Before you report a problem on a real site, decide whose it
+is, from how the adapter is designed. Read what its code creates,
+changes and styles, and what the blocks it calls do, and compare with
+what `adapter_elements` lists.
+
+- **The adapter's**: the problem is on something it created, changed or
+  styled (its stylesheet's selectors match the element), or its design
+  would cause it there (it moved, hid, relabelled or resized something
+  the problem depends on), or the site's script reacted to something the
+  adapter did.
+- **The site's**: the problem is on content the page added or changed by
+  itself, nothing in the adapter's design touches it, or it shows up the
+  same without the adapter. `verify_on_sites` with `withoutAdapter: true`
+  runs the page with an adapter that does nothing; what appears there is
+  the site's. A problem that comes and goes between two runs of the same
+  page is the page's until a run shows the adapter causing it.
+
+For each problem on a real site, say whose it is and why, from the
+adapter's code and those runs. When you cannot tell, run it again, with
+and without the adapter, and say undetermined rather than guess. Never
+report the site's problem as the adapter's.
 
 ## Evidence
 
@@ -89,7 +116,7 @@ Your last message is the report, in plain text, starting with one line:
 then one entry per finding, most severe first:
 
     [high|medium|low] <file>:<line> — <what is wrong>
-      Evidence: <confirmed how, or suspected from which code>
+      Evidence: <confirmed how, or suspected from which code; on a real site, why it is the adapter's and not the site's>
       Fix: <the smallest change that fixes it, and whether it belongs in the adapter or a block>
 
 High: harms a person, leaves the page broken, or the adapter does not do

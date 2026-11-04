@@ -38,7 +38,7 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, exis
 import path from 'node:path';
 import readline from 'node:readline';
 import { randomBytes } from 'node:crypto';
-import { openVerifier, ROOT, isCore } from './harness.mjs';
+import { openVerifier, ROOT, isCore, interA11y } from './harness.mjs';
 import { keyboardAudit } from './intera11y.mjs';
 import { serveHttp, sitesFor, LIMITS } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
@@ -145,6 +145,17 @@ async function replay() {
   process.exit(failed ? 1 : 0);
 }
 
+/** The WCAG criteria a core adapter is judged on, each with the tools its rubric names. */
+function rubricLines(b, whose) {
+  if (!b?.rubrics?.length) return [];
+  const { rubric } = interA11y();
+  return ['', `WCAG criteria to judge with InterA11y's rubrics, on what ${whose} creates, changes or styles. Read each with wcag_rubric before you judge it, and give a verdict for each in your report:`,
+    ...b.rubrics.map((sc) => `- ${sc} ${rubric.load(sc).title}: the tools its rules name are ${rubric.toolsOf(sc).join(', ')}.`),
+    'Use those tools on the elements adapter_elements lists; the others are there if you need them.'];
+}
+// The success criteria whose rubric an agent's tool calls returned.
+const RUBRIC_READ = /Analyze compliance with WCAG SC ([0-9]+\.[0-9]+\.[0-9]+)/g;
+
 /** One core adapter's task: its brief, for CREATE.md. */
 function createTask(b) {
   if (!b) throw new Error('No such brief in core-adapters.json.');
@@ -156,7 +167,7 @@ function createTask(b) {
     `What the person can adjust: ${b.adjusts}`,
     `Prior work to learn from: ${b.priorWork.map(f => `tools/adapters/${f}`).join(', ')}.`,
     '', 'What must be verified:', ...b.verify.map(v => `- ${v}`),
-    ...(b.rubrics?.length ? ['', `WCAG criteria to judge with InterA11y's rubrics (wcag_rubric) and tools, on what your adapter creates, changes or styles: ${b.rubrics.join(', ')}.`] : []),
+    ...rubricLines(b, 'your adapter'),
     '', `Name your specs ${b.id} (and ${b.id}-<variant>), and your test page tools/test/verify-core/pages/${b.id}.html.`,
   ].join('\n');
 }
@@ -198,7 +209,7 @@ async function agents() {
     const events = createWriteStream(path.join(logs, `${name}.jsonl`));
     const pages = core ? 'tools/test/verify-core/pages' : 'tools/test/verify/pages';
     const task = reviewBase
-      ? (core ? `Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.${briefs.get(name)?.rubrics?.length ? ` WCAG criteria to judge with InterA11y's rubrics and tools, on what it creates, changes or styles: ${briefs.get(name).rubrics.join(', ')}.` : ''}`
+      ? (core ? [`Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`, ...rubricLines(briefs.get(name), 'it')].join('\n')
         : `Review the changes to the built-in adapter ${folder}/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`)
       : create ? createTask(briefs.get(name))
       : `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;
@@ -208,12 +219,14 @@ async function agents() {
     const timer = setTimeout(() => child.kill('SIGTERM'), 40 * 60_000);
     let text = '';
     let stderr = '';
+    const read = new Set();
     child.stderr.on('data', (d) => { stderr = (stderr + d).slice(-4000); });
     for await (const line of readline.createInterface({ input: child.stdout })) {
       events.write(line + '\n');
       try {
         const e = JSON.parse(line);
         if (e.type === 'text' && e.part?.text) text = e.part.text;
+        if (e.type === 'tool_use') for (const m of String(e.part?.state?.output ?? '').matchAll(RUBRIC_READ)) read.add(m[1]);
       } catch { /* not JSON */ }
     }
     const code = await new Promise((r) => (child.exitCode !== null ? r(child.exitCode) : child.on('close', r)));
@@ -221,8 +234,10 @@ async function agents() {
     events.end();
     if (!text && attempt === 1 && /before reporting readiness/.test(stderr)) return work(name, 2);
     const report = text || `(no report; opencode exited ${code})\n${stderr}`;
-    writeFileSync(path.join(logs, `${name}.md`), report + '\n');
-    results[name] = (/^(?:Outcome|Verdict):\s*([a-z-]+)/m.exec(report) || [, 'no-report'])[1];
+    // A rubric it was given and never read: its verdicts for it rest on nothing.
+    const unread = core ? (briefs.get(name)?.rubrics || []).filter((sc) => !read.has(sc)) : [];
+    writeFileSync(path.join(logs, `${name}.md`), report + (unread.length ? `\n\n(The verifier: this agent never read the rubric for ${unread.join(', ')}.)` : '') + '\n');
+    results[name] = (/^(?:Outcome|Verdict):\s*([a-z-]+)/m.exec(report) || [, 'no-report'])[1] + (unread.length ? `, rubrics not read: ${unread.join(' ')}` : '');
     console.log(`${name}: ${results[name]} (${Math.round((Date.now() - started) / 60000)} min)`);
   };
   const pending = [...queue];

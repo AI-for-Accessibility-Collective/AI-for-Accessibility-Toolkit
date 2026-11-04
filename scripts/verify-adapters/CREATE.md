@@ -103,6 +103,33 @@ Read the catalog adapters your brief lists under "prior work"
 cases. Learn from them; do not import or copy their shared modules.
 
 
+## The site's change or the adapter's
+
+A real page changes a lot that the adapter did not do: ads and iframes
+fill in, carousels turn, content loads as you scroll, timestamps tick,
+consent banners come and go, and the site's own scripts react to what is
+on the page. Before you fix a problem on a real site, decide whose it
+is, from how the adapter is designed. Read what its code creates,
+changes and styles, and what the blocks it calls do, and compare with
+what `adapter_elements` lists.
+
+- **The adapter's**: the problem is on something it created, changed or
+  styled (its stylesheet's selectors match the element), or its design
+  would cause it there (it moved, hid, relabelled or resized something
+  the problem depends on), or the site's script reacted to something the
+  adapter did.
+- **The site's**: the problem is on content the page added or changed by
+  itself, nothing in the adapter's design touches it, or it shows up the
+  same without the adapter. `verify_on_sites` with `withoutAdapter: true`
+  runs the page with an adapter that does nothing; what appears there is
+  the site's. A problem that comes and goes between two runs of the same
+  page is the page's until a run shows the adapter causing it.
+
+For each problem on a real site, say whose it is and why, from the
+adapter's code and those runs. When you cannot tell, run it again, with
+and without the adapter, and say undetermined rather than guess. Never
+work around the site's own problem in the adapter unless your brief asks for it, and never add selectors for one site.
+
 ## InterA11y's tools and rubrics
 
 The verifier also has InterA11y's tools (from *InterA11y: Interactive Web
