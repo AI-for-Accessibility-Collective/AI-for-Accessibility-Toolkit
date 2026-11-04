@@ -1,11 +1,16 @@
 # Review an adapter, then fix it in place
 
 Every time an adapter runs ("Check that it ran" says "Running on …"), a
-reviewer that did not write it reviews it, you fix what the review finds
-in the file as it is, and a new reviewer reviews it again. Do this on your
-own, without asking the person first, after the first build and after any
-change they ask for that is more than a small one. It stops when a review
-finds nothing high or medium, or after three rounds.
+reviewer that did not write it reviews it, and you fix what the review
+finds in the file as it is. That is one round. Do it on your own, without
+asking the person first, after the first build and after any change they
+ask for that is more than a small one.
+
+One round is the default. After it, stop and tell the person what was
+found and fixed, and ask whether they want another round; a new reviewer
+then checks your fixes. Go on only if they say yes, one round at a time,
+or for as many rounds as they ask for at once, and never more than three
+in all. Stop sooner when a review finds nothing high or medium.
 
 The toolkit is an active research project in pre-alpha, and an adapter is
 unvalidated until people who use it have tried it. A review finds bugs in
@@ -44,8 +49,10 @@ report, as `bigger-buttons.review-1.md`, then:
 node <skill folder>/scripts/adapter.mjs findings bigger-buttons.review-1.md --round 1
 ```
 
-It counts the findings and says what to do next: fix and review again, or
-stop.
+It counts the findings and says what to do next: fix, then stop and ask
+the person; fix and review again, when they chose more rounds; or stop.
+When the person asks for more than one round at the start, pass
+`--rounds 2` (or 3) to `review` and `findings`.
 
 ## 2. Fix it in place
 
@@ -70,19 +77,23 @@ Write what you did with each finding under it in the report file: fixed
 (and how you checked), not a problem (why), the site's (why), or left for
 the person or the toolkit (why). Publish again and check that it runs.
 
-## 3. Review it again
+## 3. Stop and ask, or review it again
 
-Build the next prompt with the earlier report and what you did, and give
-it to a **new** reviewer, as in step 1:
+When `findings` says stop, tell the person in plain words what the review
+found, what you fixed, and what is left (low findings, findings about the
+toolkit's building blocks, and what could not be checked, such as real
+speech or a screen reader on their own device). Your fixes have not been
+reviewed yet: say so, and ask whether they want another round.
+
+Only if they say yes (or chose more rounds at the start), build the next
+prompt with the earlier report and what you did, and give it to a **new**
+reviewer, as in step 1:
 
 ```bash
 node <skill folder>/scripts/adapter.mjs review bigger-buttons.js \
   --asked "…" --runs-on "https://example.com/*" \
-  --round 2 --earlier bigger-buttons.review-1.md > review-prompt.txt
+  --round 2 --rounds 2 --earlier bigger-buttons.review-1.md > review-prompt.txt
 ```
 
-Then `findings` on its report with `--round 2`, and so on. When `findings`
-says stop, tell the person in plain words what the reviews found, what you
-fixed, and what is left (low findings, findings about the toolkit's
-building blocks, and what could not be checked, such as real speech or a
-screen reader on their own device).
+Then `findings` on its report with the same `--round` and `--rounds`, and
+do what it says.

@@ -38,8 +38,10 @@
 //           (--round 2 --earlier <report>), and how to run it with the
 //           building blocks (the extension's vendor/blocks.js; --dir names
 //           the extension folder). See reference/review-and-fix.md.
-// findings  counts a reviewer's report and says what to do next: fix and
-//           review again, or stop (nothing high or medium, or round 3).
+// findings  counts a reviewer's report and says what to do next. One round
+//           (a review, then the fixes) unless the person chose more
+//           (--rounds N, at most 3): after the last round you fix, stop, and
+//           ask them whether they want another.
 //
 // review and findings work on this computer only and need no toolkit.
 //
@@ -86,6 +88,7 @@ function parse(argv) {
     else if (flag === '--dir') flags.dir = value();
     else if (flag === '--asked') flags.asked = value();
     else if (flag === '--round') flags.round = Number(value());
+    else if (flag === '--rounds') flags.rounds = Number(value());
     else if (flag === '--earlier') flags.earlier = value();
     else fail(`Unknown option ${flag}.`);
   }
@@ -299,8 +302,10 @@ async function answer(id, flags) {
   console.log(response === 'accept' ? 'Accepted. The profile changed, and the apps following it pick it up.' : response === 'suppress' ? 'The toolkit stops suggesting this.' : 'Not now.');
 }
 
-// The most rounds of review and fix before stopping anyway.
+// One round of review and fix unless the person chooses more (--rounds),
+// and never more than MAX_ROUNDS.
 const MAX_ROUNDS = 3;
+const roundsChosen = (flags) => Math.max(1, Math.min(MAX_ROUNDS, Number(flags.rounds) || 1));
 
 function review(file, flags) {
   if (!file || !existsSync(file)) fail('Use: node adapter.mjs review <adapter.js> --asked "what the person asked" --runs-on <pattern> [--round N --earlier <report.md>]');
@@ -320,29 +325,32 @@ function review(file, flags) {
   const blocks = ext && path.join(ext, 'vendor', 'blocks.js');
   if (blocks && existsSync(blocks)) parts.push(`To run it as the browser runtime does: add ${blocks} to the page first (with Playwright, page.addScriptTag({ path })); then window.__ai4a11yBlocks.create({ adapter: 'review' }) is the toolkit argument to enable(options, toolkit). There every AI call answers null.`);
   else parts.push('The building blocks bundle (the extension\'s vendor/blocks.js) was not found here (--dir <the extension folder> names it): review a blocks adapter by reading it and reference/building-blocks.md.');
-  parts.push(`Round ${round} of at most ${MAX_ROUNDS}.`);
+  parts.push(`Round ${round} of ${Math.max(round, roundsChosen(flags))}.`);
   if (round > 1) parts.push('', 'The earlier review, with what the author did about each finding:', '', readFileSync(flags.earlier, 'utf8').trim());
   console.log(parts.join('\n'));
 }
 
 function findings(file, flags) {
-  if (!file || !existsSync(file)) fail('Use: node adapter.mjs findings <report.md> --round N');
+  if (!file || !existsSync(file)) fail('Use: node adapter.mjs findings <report.md> --round N [--rounds M]');
   const text = readFileSync(file, 'utf8');
   const verdict = (/^Verdict:\s*(ok|issues)/mi.exec(text) || [])[1];
   if (!verdict) fail(`${file} has no "Verdict: ok | issues" line: it is not a reviewer's report. Start the reviewer again with the prompt from "review".`);
   const count = (level) => (text.match(new RegExp(`^\\[${level}\\]`, 'gmi')) || []).length;
   const [high, medium, low] = ['high', 'medium', 'low'].map(count);
   const round = flags.round || 1;
-  console.log(`Round ${round}: ${high} high, ${medium} medium, ${low} low.`);
-  if (!high && !medium) console.log('Stop: nothing high or medium. Tell the person what the reviews found, what you fixed and what is left.');
-  else if (round >= MAX_ROUNDS) console.log(`Stop: ${MAX_ROUNDS} rounds. Tell the person what is still open (each high and medium finding), what you fixed, and what is left.`);
-  else console.log(`Fix in place: check each finding, fix what is real, and write what you did under each one in ${file}. Publish again, then start a new reviewer with: review <adapter.js> --asked … --runs-on … --round ${round + 1} --earlier ${file}`);
+  const rounds = Math.max(round, roundsChosen(flags));
+  console.log(`Round ${round} of ${rounds}: ${high} high, ${medium} medium, ${low} low.`);
+  const fix = `Fix in place: check each finding, fix what is real, and write what you did under each one in ${file}. Publish again and check that it runs.`;
+  if (!high && !medium) console.log(`Stop: nothing high or medium.${low ? ' Fix the low ones that are quick and clearly real, in place.' : ''} Tell the person what the review found, what you fixed and what is left.`);
+  else if (round < rounds) console.log(`${fix} Then start a new reviewer with: review <adapter.js> --asked … --runs-on … --round ${round + 1} --rounds ${rounds} --earlier ${file}`);
+  else if (round >= MAX_ROUNDS) console.log(`${fix} Then stop: ${MAX_ROUNDS} rounds is the most. Tell the person what you fixed and what is still open (each high and medium finding you could not fix).`);
+  else console.log(`${fix} Then stop, and tell the person what the review found, what you fixed, and what may still be open. Ask whether they want another round (a new reviewer checks your fixes and looks again); only if they say yes: review <adapter.js> --asked … --runs-on … --round ${round + 1} --rounds ${round + 1} --earlier ${file}`);
 }
 
 const { command, target, flags } = parse(process.argv.slice(2));
 const COMMANDS = { publish, status, share, extension, check, profile, learned, answer, review, findings };
 if (!COMMANDS[command]) {
-  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check | profile | learned | answer <id> accept|not-now|never | review <file.js> --asked … --runs-on … | findings <report.md> --round N');
+  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check | profile | learned | answer <id> accept|not-now|never | review <file.js> --asked … --runs-on … | findings <report.md> --round N [--rounds M]');
 }
 if (command === 'extension') { extension(target, flags); process.exit(0); }
 if (command === 'review' || command === 'findings') { COMMANDS[command](target, flags); process.exit(0); }
