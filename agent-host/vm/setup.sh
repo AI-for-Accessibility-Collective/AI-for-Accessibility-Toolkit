@@ -6,6 +6,8 @@
 # Metadata (gcloud compute instances add-metadata):
 #   agent-host-image     us-central1-docker.pkg.dev/<project>/toolkit/agent-host:<tag>
 #   agent-sandbox-image  us-central1-docker.pkg.dev/<project>/toolkit/agent-sandbox:<tag>
+#   agent-check-image    us-central1-docker.pkg.dev/<project>/toolkit/agent-check:<tag>
+#                        (optional: without it the host serves no adapter checks)
 #   sandbox-internet     "on" lets sandboxes reach the internet (still never the
 #                        metadata server, private addresses or each other);
 #                        anything else, or unset, keeps them off it
@@ -18,11 +20,16 @@ meta() { curl -fsS -H 'Metadata-Flavor: Google' "http://metadata.google.internal
 HOST_IMAGE=$(meta instance/attributes/agent-host-image)
 SANDBOX_IMAGE=$(meta instance/attributes/agent-sandbox-image)
 SANDBOX_INTERNET=$(meta instance/attributes/sandbox-internet 2>/dev/null || echo off)
+CHECK_IMAGE=$(meta instance/attributes/agent-check-image 2>/dev/null || echo)
 PROJECT=$(meta project/project-id)
 DATA=/srv/agent-host
 SBX_NET=ai4a11y-sbx
 SBX_BRIDGE=sbx0
 SBX_GATEWAY=172.30.0.1
+# The adapter reviewers' network (src/checks.js): the model proxy, nothing else.
+# (The checks themselves run with --network none.)
+CHK_NET=ai4a11y-chk
+CHK_BRIDGE=chk0
 
 # ── docker and gVisor ─────────────────────────────────────────────────────────
 if ! command -v runsc >/dev/null; then
@@ -60,10 +67,32 @@ EOF
 chmod 0755 /usr/local/sbin/ai4a11y-sandbox-firewall
 /usr/local/sbin/ai4a11y-sandbox-firewall
 
+# ── the reviewers' network: never forwarded anywhere (no internet, no
+#    metadata server, no other container), and on the host only the model
+#    proxy on the sandbox port.
+docker network inspect "$CHK_NET" >/dev/null 2>&1 || docker network create --driver bridge \
+  --subnet 172.31.0.0/16 --gateway 172.31.0.1 \
+  -o com.docker.network.bridge.name="$CHK_BRIDGE" -o com.docker.network.bridge.enable_icc=false "$CHK_NET"
+cat > /usr/local/sbin/ai4a11y-check-firewall <<EOF
+#!/bin/sh
+iptables -C DOCKER-USER -i $CHK_BRIDGE -j DROP 2>/dev/null || iptables -I DOCKER-USER 1 -i $CHK_BRIDGE -j DROP
+iptables -C INPUT -i $CHK_BRIDGE -j DROP 2>/dev/null || {
+  iptables -I INPUT 1 -i $CHK_BRIDGE -j DROP
+  iptables -I INPUT 1 -i $CHK_BRIDGE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  iptables -I INPUT 1 -i $CHK_BRIDGE -p tcp -d $SBX_GATEWAY --dport 8790 -j ACCEPT
+}
+EOF
+chmod 0755 /usr/local/sbin/ai4a11y-check-firewall
+/usr/local/sbin/ai4a11y-check-firewall
+
 # ── the host ──────────────────────────────────────────────────────────────────
 mkdir -p "$DATA" && chmod 0700 "$DATA"
 docker pull "$HOST_IMAGE"
 docker pull "$SANDBOX_IMAGE"
+# The recorded copies of real sites the checks use, read-only in each check
+# (record them with the command in README.md, "Adapter checks").
+mkdir -p "$DATA/verify-sites"
+if [ -n "$CHECK_IMAGE" ]; then docker pull "$CHECK_IMAGE"; fi
 cat > /usr/local/sbin/ai4a11y-agent-host-env <<EOF
 #!/bin/sh
 # The secrets, into a file on tmpfs that only root reads.
@@ -82,12 +111,14 @@ Requires=docker.service
 
 [Service]
 ExecStartPre=/usr/local/sbin/ai4a11y-sandbox-firewall
+ExecStartPre=/usr/local/sbin/ai4a11y-check-firewall
 ExecStartPre=/usr/local/sbin/ai4a11y-agent-host-env
 ExecStartPre=-/usr/bin/docker rm -f ai4a11y-agent-host
 ExecStart=/usr/bin/docker run --rm --name ai4a11y-agent-host --network host \\
   --env-file /run/ai4a11y-agent-host.env \\
   -e AGENT_SANDBOX_IMAGE=$SANDBOX_IMAGE -e AGENT_SANDBOX_NETWORK=$SBX_NET \\
   -e AGENT_SANDBOX_LISTEN=$SBX_GATEWAY:8790 -e AGENT_API_LISTEN=0.0.0.0:8791 \\
+  -e AGENT_CHECK_IMAGE=$CHECK_IMAGE -e AGENT_CHECK_NETWORK=$CHK_NET -e AGENT_CHECK_SITES=$DATA/verify-sites \\
   -v /var/run/docker.sock:/var/run/docker.sock -v $DATA:$DATA \\
   $HOST_IMAGE
 ExecStop=/usr/bin/docker stop ai4a11y-agent-host

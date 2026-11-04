@@ -125,6 +125,8 @@ export function createClient(baseUrl, token, fetcher = fetch) {
       presets: async () => (await request('/v1/account/presets')).presets,
       savePresets: async (presets) => (await request('/v1/account/presets', { presets }, 'PUT')).presets,
     },
+    // Checks of published adapters on the server, latest first.
+    checks: { list: () => request('/v1/adapters/checks') },
     // Apps connected with the Adapter MCP SDK, grouped by app.
     apps: {
       list: () => request('/v1/apps'),

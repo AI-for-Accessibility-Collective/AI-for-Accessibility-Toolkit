@@ -1,4 +1,4 @@
-# Build the agent host and sandbox images (context = repo root).
+# Build the agent host, sandbox and check images (context = repo root).
 #   gcloud builds submit --config agent-host/cloudbuild.yaml \
 #     --ignore-file agent-host/.gcloudignore --substitutions SHORT_SHA=<tag> .
 steps:
@@ -6,6 +6,10 @@ steps:
     args: [build, -f, agent-host/Dockerfile, -t, 'us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/agent-host:$SHORT_SHA', .]
   - name: gcr.io/cloud-builders/docker
     args: [build, -f, agent-host/sandbox/Dockerfile, -t, 'us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/agent-sandbox:$SHORT_SHA', .]
+  # The server checks of published adapters: the verify image with the repository baked in.
+  - name: gcr.io/cloud-builders/docker
+    args: [build, -f, scripts/verify-adapters/Dockerfile, --target, check, -t, 'us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/agent-check:$SHORT_SHA', .]
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/agent-host:$SHORT_SHA'
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/agent-sandbox:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/toolkit/agent-check:$SHORT_SHA'

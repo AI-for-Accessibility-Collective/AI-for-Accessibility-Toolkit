@@ -1,0 +1,9 @@
+# Never in an image: secrets, local data, packages (each image installs its own), git.
+**/node_modules
+**/.env
+**/.env.*
+.git
+data
+.verify-cache
+.verify-logs
+tools/core-adapters/.check

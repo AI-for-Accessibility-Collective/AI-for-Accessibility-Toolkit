@@ -22,3 +22,15 @@ tools/node_modules/**
 !.claude/skills/**
 !README.md
 !CLAUDE.md
+# The verify image's check target (scripts/verify-adapters/Dockerfile).
+!scripts/
+!scripts/verify-adapters/
+!scripts/verify-adapters/**
+!server/
+!server/src/
+!server/src/**
+!cli/
+!cli/axe-core.min.js
+!package.json
+!package-lock.json
+!.dockerignore

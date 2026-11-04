@@ -10,6 +10,13 @@
 //   AGENT_API_LISTEN      the API port (default 127.0.0.1:8791; on the VM 0.0.0.0:8791, firewalled to the toolkit service)
 //   AGENT_SANDBOX_DNS     resolvers for the sandboxes (default 8.8.8.8,1.1.1.1)
 //   AGENT_OPENCODE_BIN    opencode for the local runner (default opencode)
+//
+// Checks of published adapters (src/checks.js):
+//   AGENT_CHECK_IMAGE     the verify image's check target (docker; without it, the VM serves no checks)
+//   AGENT_CHECK_NETWORK   the reviewers' docker network, which reaches only the model proxy (default ai4a11y-chk)
+//   AGENT_CHECK_SITES     the recorded copies of real sites (default <data>/verify-sites; local: .verify-cache/sites)
+//   AGENT_CHECK_MODEL_URL how a reviewer reaches the model proxy (default the sandbox URL + /model/v1beta)
+//   AGENT_CHECK_MINUTES   a check's time limit (default 20); AGENT_REVIEW_MINUTES a review's (default 45)
 
 import path from 'node:path';
 import os from 'node:os';
@@ -36,6 +43,12 @@ const host = createHost({
   modelsJson: env.AGENT_MODELS_JSON || path.join(os.homedir(), '.cache/opencode/models.json'),
   // Local runner only: more skill directories, comma-separated (the sandbox image has its own).
   skillDirs: (env.AGENT_SKILL_DIRS || '').split(',').map(s => s.trim()).filter(Boolean).map(d => path.resolve(d)),
+  checkImage: env.AGENT_CHECK_IMAGE || undefined,
+  checkNetwork: env.AGENT_CHECK_NETWORK || 'ai4a11y-chk',
+  sitesDir: env.AGENT_CHECK_SITES ? path.resolve(env.AGENT_CHECK_SITES) : undefined,
+  checkModelUrl: env.AGENT_CHECK_MODEL_URL || undefined,
+  checkTimeoutMs: (Number(env.AGENT_CHECK_MINUTES) || 20) * 60_000,
+  reviewTimeoutMs: (Number(env.AGENT_REVIEW_MINUTES) || 45) * 60_000,
   log,
 });
 

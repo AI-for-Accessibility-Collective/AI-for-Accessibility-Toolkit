@@ -59,6 +59,7 @@ jobs:
           node server/test/server-test.mjs
           node server/test/delete-cascade.test.mjs
           node server/test/gcs-pagination.test.mjs
+          node server/test/adapter-checks.test.mjs
 
       - name: Toolkit package self-check
         # Validates the package exactly as npm would publish it, catching

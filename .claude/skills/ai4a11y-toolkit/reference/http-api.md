@@ -51,6 +51,9 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 | GET | `/v1/adapters/{appId}/{id}/code` | `{code, sha256, size, updatedAt}` for a kind-`code` listing |
 | PUT | `/v1/adapters/{appId}/{id}/install` | mark installed for the calling uid |
 | DELETE | `/v1/adapters/{appId}/{id}/install` | clear installed for the calling uid |
+| POST | `/v1/adapters/checks` | check a published adapter's current revision on the server `{id, appId?, owner?, review?}` → 202 `{check, framing}` (see "Adapter checks") |
+| GET | `/v1/adapters/checks` | the account's checks, latest first `{checks, usage, framing}`; filters `?appId=` `?id=` `?owner=` |
+| GET | `/v1/adapters/checks/{checkId}` | one check `{check: {status, position?, revision, result?, error?}, framing}` |
 | POST | `/v1/ai/text` | the building blocks' AI for adapters `{task, input, options?, adapter?}` → `{text\|null, reason?, task, version, usage}` (see "Server-side LLM") |
 | POST | `/v1/ai/vision` | the same for an image `{task, image: {mimeType, data}, input?, options?, adapter?}` |
 | GET | `/v1/ai/usage` | today's spending `{day, spentUsd, budgetUsd, calls, perAdapterLimit, byAdapter, enabled, available}` |

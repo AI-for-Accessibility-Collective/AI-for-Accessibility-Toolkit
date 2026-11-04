@@ -10,6 +10,7 @@
 //   node adapter.mjs share bigger-buttons
 //   node adapter.mjs extension
 //   node adapter.mjs check
+//   node adapter.mjs check bigger-buttons [--review]
 //   node adapter.mjs profile
 //   node adapter.mjs learned
 //   node adapter.mjs answer prop_123 accept
@@ -26,6 +27,15 @@
 //           says how to get it), opens Chrome's extensions page and copies the
 //           folder's path (--no-open only prints them; --dir names the folder).
 // check     whether a browser runtime is connected to this toolkit.
+//           With an adapter's id: asks the toolkit to check the adapter's
+//           current revision on the server (the verification protocol's
+//           automated steps, on its test pages and recorded copies of real
+//           sites, in a sandbox), waits, and prints what passed, what failed
+//           and why, and the advice. --review also has an independent
+//           reviewer (a model) read and try it with WCAG rubrics. Only when
+//           asked; a small number a day per account (reviews fewer). It
+//           waits up to 9 minutes (--wait N); run it again to keep waiting,
+//           which neither starts another check nor uses the quota.
 // profile   the person's profile as apps read it (supportAreas, fields.needs, …).
 // learned   what the toolkit learned about the person: suggested profile
 //           changes waiting for an answer, and memories.
@@ -94,6 +104,8 @@ function parse(argv) {
     else if (flag === '--round') flags.round = Number(value());
     else if (flag === '--rounds') flags.rounds = Number(value());
     else if (flag === '--earlier') flags.earlier = value();
+    else if (flag === '--review') flags.review = true;
+    else if (flag === '--wait') flags.wait = Number(value());
     else fail(`Unknown option ${flag}.`);
   }
   return { command, target, flags };
@@ -262,7 +274,8 @@ const ago = iso => {
   return s < 90 ? 'just now' : s < 5400 ? `${Math.round(s / 60)} minutes ago` : s < 129600 ? `${Math.round(s / 3600)} hours ago` : `${Math.round(s / 86400)} days ago`;
 };
 
-async function check() {
+async function check(id, flags) {
+  if (id) return serverCheck(id, flags);
   const { instances = [] } = await tool('adapter_status', { app: 'browser-runtime' });
   if (!instances.length) {
     console.log([
@@ -273,6 +286,95 @@ async function check() {
   }
   for (const i of instances) console.log(`Connected: ${i.label || 'a browser'}, last seen ${ago(i.lastSeenAt)}.`);
   console.log('If an adapter does not run, check that Allow User Scripts is on in the extension\'s Details.');
+}
+
+// ── a check on the server ───────────────────────────────────────────────────
+
+async function api(method, p, body) {
+  let res;
+  try {
+    res = await fetch(`${base}${p}`, {
+      method, headers: { authorization: `Bearer ${token}`, ...(body ? { 'content-type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) { fail(`Could not reach the toolkit at ${base}: ${e.message}`); }
+  if (res.status === 401) fail('The toolkit did not accept the token. Copy the two lines into .env again from the developer console (Adapters, New adapter).');
+  return { status: res.status, body: await res.json().catch(() => ({})) };
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const FINAL = ['done', 'failed'];
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+function progress(c) {
+  if (c.status === 'queued') return c.position > 1 ? `Waiting: ${plural(c.position - 1, 'check')} ahead of it.` : 'Waiting to start.';
+  if (c.status === 'running') return c.review ? 'Running: the automated checks, then the review.' : 'Running the automated checks.';
+  return '';
+}
+
+/** One line per problem, with the pages it happened on. */
+function grouped(runs, field) {
+  const by = new Map();
+  for (const r of runs) for (const p of r[field] || []) by.set(p, [...(by.get(p) || []), r.name]);
+  return [...by].map(([p, pages]) => `- ${p}, on ${pages.slice(0, 4).join(', ')}${pages.length > 4 ? ` and ${pages.length - 4} more` : ''}`);
+}
+
+function printCheck(c, framing) {
+  const name = `“${c.name}” (${c.adapter.owner}/${c.adapter.appId}/${c.adapter.id}), revision ${c.revision}`;
+  const out = [];
+  if (c.status === 'failed') {
+    out.push(`The server check of ${name} could not run: ${c.error || 'no reason given'}`);
+  } else {
+    const check = c.result?.check || {};
+    const s = check.summary || {};
+    const runs = check.runs || [];
+    out.push(`Server check of ${name}: done.`, '',
+      'The automated checks (the verification protocol\'s steps 2 to 8, no model): on the toolkit\'s test pages, each also on a narrow screen and with reduced motion, and on recorded copies of real sites.',
+      `${s.passed ?? 0} passed, ${s.failed ?? 0} failed, ${s.skipped ?? 0} skipped (no copy of that page on the server). It applied on ${s.appliedOnTestPages ?? 0} of ${s.testPages ?? 0} test pages; on the others enable() returned false, which is fine where the page has nothing for it.`);
+    const failing = runs.filter(r => r.status === 'fail');
+    if (failing.length) out.push('', 'What failed, and why:', ...grouped(failing, 'problems').slice(0, 25));
+    else out.push('', 'Nothing failed.');
+    const advice = grouped(runs, 'advice');
+    if (advice.length) out.push('', 'Advice (axe-core best practices and AAA rules; not counted as failures):', ...advice.slice(0, 15));
+    const notes = (check.notes || []).filter(n => !/only the people who use it can/.test(n));
+    if (notes.length) out.push('', ...notes.map(n => `Note: ${n}`));
+    const rv = c.result?.review;
+    if (c.review && !rv) out.push('', 'The review did not run.');
+    if (rv?.error) out.push('', `The review could not finish: ${rv.error}`);
+    else if (rv) {
+      const f = c.findings || {};
+      out.push('', `The independent review: ${rv.verdict === 'ok' ? 'no problems found' : rv.verdict === 'issues' ? `issues (${f.high ?? 0} high, ${f.medium ?? 0} medium, ${f.low ?? 0} low)` : 'no verdict'}. A model that did not write the adapter read it and tried it${rv.rubricsRead?.length ? `, with InterA11y's rubrics for WCAG ${rv.rubricsRead.join(', ')}` : ''}. Check each finding yourself before you act on it.`,
+        '', rv.report.trim());
+    } else if (!c.review) out.push('', `For an independent review as well: node adapter.mjs check ${c.adapter.id} --review`);
+  }
+  out.push('', `What this means: ${framing}`);
+  console.log(out.join('\n'));
+}
+
+async function serverCheck(id, flags) {
+  const name = flags.app && !id.includes('/') ? `${flags.app}/${id}` : id;
+  const asked = await api('POST', '/v1/adapters/checks', { id: name, review: !!flags.review });
+  if (![200, 202].includes(asked.status)) fail(asked.body.message || `The toolkit answered ${asked.status}.`);
+  let c = asked.body.check;
+  const framing = asked.body.framing || '';
+  console.log(asked.body.reused
+    ? `Revision ${c.revision} of ${c.name} was already ${FINAL.includes(c.status) ? 'checked' : 'asked for'}${c.review ? ', with a review' : ''}: ${FINAL.includes(c.status) ? 'here is that check' : 'waiting for it'} (no new check, nothing used of today's quota).`
+    : `Asked the toolkit to check revision ${c.revision} of ${c.name}${c.review ? ', with an independent review' : ''}. A check takes a few minutes${c.review ? ', a review up to half an hour' : ''}.`);
+  const until = Date.now() + (Number.isFinite(flags.wait) ? flags.wait : 9) * 60_000;
+  let said = '';
+  while (!FINAL.includes(c.status)) {
+    const line = progress(c);
+    if (line && line !== said) { console.log(line); said = line; }
+    if (Date.now() >= until) {
+      console.log(`Not finished yet. Run the same command again to keep waiting (node adapter.mjs check ${id}${flags.review ? ' --review' : ''}): it does not start another check or use your quota.`);
+      return;
+    }
+    await sleep(Number(process.env.AI4A11Y_CHECK_POLL_MS) || 10_000);
+    const got = await api('GET', `/v1/adapters/checks/${c.checkId}`);
+    if (got.status !== 200) fail(got.body.message || `The toolkit answered ${got.status}.`);
+    c = got.body.check;
+  }
+  printCheck(c, framing);
 }
 
 async function learned() {
@@ -425,7 +527,7 @@ function findings(file, flags) {
 const { command, target, flags } = parse(process.argv.slice(2));
 const COMMANDS = { publish, status, share, extension, check, profile, learned, answer, review, findings };
 if (!COMMANDS[command]) {
-  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check | profile | learned | answer <id> accept|not-now|never | review <file.js> --asked … --runs-on … | findings <report.md> --round N [--rounds M]');
+  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check [<id> [--review]] | profile | learned | answer <id> accept|not-now|never | review <file.js> --asked … --runs-on … | findings <report.md> --round N [--rounds M]');
 }
 if (command === 'extension') { extension(target, flags); process.exit(0); }
 if (command === 'review' || command === 'findings') { COMMANDS[command](target, flags); process.exit(0); }

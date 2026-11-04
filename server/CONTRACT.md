@@ -64,6 +64,9 @@
 | GET | `/v1/adapters/{appId}/{id}/code` | `{code, sha256, size, updatedAt}` for a kind-`code` listing |
 | PUT | `/v1/adapters/{appId}/{id}/install` | mark installed for the calling uid |
 | DELETE | `/v1/adapters/{appId}/{id}/install` | clear installed for the calling uid |
+| POST | `/v1/adapters/checks` | check a published adapter's current revision on the server `{id, appId?, owner?, review?}` → 202 `{check, framing}` (see "Adapter checks") |
+| GET | `/v1/adapters/checks` | the account's checks, latest first `{checks, usage, framing}`; filters `?appId=` `?id=` `?owner=` |
+| GET | `/v1/adapters/checks/{checkId}` | one check `{check: {status, position?, revision, result?, error?}, framing}` |
 | POST | `/v1/ai/text` | the building blocks' AI for adapters `{task, input, options?, adapter?}` → `{text\|null, reason?, task, version, usage}` (see "Server-side LLM") |
 | POST | `/v1/ai/vision` | the same for an image `{task, image: {mimeType, data}, input?, options?, adapter?}` |
 | GET | `/v1/ai/usage` | today's spending `{day, spentUsd, budgetUsd, calls, perAdapterLimit, byAdapter, enabled, available}` |
@@ -370,6 +373,31 @@ where apps share adapters other apps can run.
   and describe the same `appId/id`; the service stores it with the
   `descriptorDigest` it computed. Entries without one are legacy,
   metadata-only listings (the developer console labels them so).
+
+## Adapter checks
+
+`/v1/adapters/checks` runs the verification protocol (`docs/verification.md`)
+on a published adapter, on the server, when its developer asks: nothing
+runs on its own. It takes the account's default token or a console session;
+an app-bound token is refused (403), as for `/v1/agent`. The adapter is
+named by `id` (the account's own adapter with that id), `appId/id`, or
+`owner/appId/id` for a shared one, and must be a web adapter with code
+(`web-module@1`) the account can read. The service reads its current
+revision from the registry and sends the code to the agent host
+(`AGENT_HOST_URL`, signed with `AGENT_HOST_SECRET`; 503 without them), which
+runs steps 2 to 8 in a one-shot gVisor container with no network, one check
+at a time. With `review: true`, an independent reviewer (opencode with
+Gemini, through the host's model proxy) then reads and tries the adapter
+with InterA11y's rubrics and the verifier's tools. A revision already
+checked (or being checked) is answered with that check (`reused: true`), at
+no cost; a review also answers a plain check of its revision. Each account
+may ask for `ADAPTER_CHECKS_PER_DAY` checks (default 5) and
+`ADAPTER_REVIEWS_PER_DAY` reviews (default 2) per UTC day; past that, 429. A
+job the host refuses or never gets does not count. Results are kept with the
+revision they checked, in `users/<uid>/adapter-checks.json` (summaries) and
+`users/<uid>/adapter-checks/<checkId>.json`. Every answer carries `framing`:
+what a check can and cannot show. Neither the code nor the reports are in
+the request log.
 
 ## Health path caveat
 

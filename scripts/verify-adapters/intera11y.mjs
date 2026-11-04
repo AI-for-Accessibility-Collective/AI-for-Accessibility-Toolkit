@@ -13,12 +13,12 @@
 // adapter's elements count. keyboard_audit compares the page without and
 // with the adapter and reports only what the adapter brought.
 
-import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { interA11y } from './harness.mjs';
+import { rubricMatches, rubricFile, rubricUrl } from './intera11y-upstream.mjs';
 
 // The tools InterA11y's own runtime offers its judge (src/lib/v3.js).
 export const IA_TOOLS = ['query_ax_node', 'observe_state_after_activation', 'interact_and_observe', 'set_state_and_capture',
@@ -113,24 +113,16 @@ const fail = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
 // from: 'gena11y') are left blank in intera11y/rubrics/. When a rubric
 // that has them is asked for, their text is read from InterA11y itself, at
 // the vendored commit: a checkout (INTERA11Y_DIR, else ../InterA11y beside
-// this repository), else GitHub. The file must hash as recorded here, and it
-// is evaluated with nothing but a module object.
-const IA_COMMIT = '8dcf06e258df88a8f39a3e37ebfce060c45a1cdd';
-const IA_RUBRIC_SHA256 = {
-  '1.1.1': '391612c491e0b673c4a5e8762ad5bec9a12a8821e77182175a216feda3283d7d',
-  '1.4.1': '9654df19dbfe459cfcb657ad012300b870ed6b5ed3b9e17cedda8ed7a5d9f980',
-  '2.4.4': 'a70a23a82c708a8a1732b4b4e9c6b89571eea403281f490fe8335b0596116563',
-  '3.3.1': 'fa94100d81182f11bd46e8f4dfe1078068c2357e9294ee46d75d7401df995fd7',
-};
+// this repository), else GitHub. The file must hash as recorded in
+// intera11y-upstream.mjs, and it is evaluated with nothing but a module object.
 const blankRule = (r) => r.from === 'gena11y' && !r.text;
 
 async function upstreamRubricSource(sc) {
-  const want = IA_RUBRIC_SHA256[sc];
-  const ok = (src) => src != null && createHash('sha256').update(src).digest('hex') === want;
+  const ok = (src) => rubricMatches(sc, src);
   const dir = process.env.INTERA11Y_DIR || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'InterA11y');
-  const local = await readFile(path.join(dir, 'runtime', 'intera11y', 'rubrics', `${sc}.js`), 'utf8').catch(() => null);
+  const local = await readFile(rubricFile(dir, sc), 'utf8').catch(() => null);
   if (ok(local)) return local;
-  const res = await fetch(`https://raw.githubusercontent.com/jszh/InterA11y/${IA_COMMIT}/runtime/intera11y/rubrics/${sc}.js`, { signal: AbortSignal.timeout(15_000) });
+  const res = await fetch(rubricUrl(sc), { signal: AbortSignal.timeout(15_000) });
   const remote = res.ok ? await res.text() : null;
   if (ok(remote)) return remote;
   throw new Error(res.ok ? 'the file from GitHub does not match the vendored commit' : `GitHub answered ${res.status}`);

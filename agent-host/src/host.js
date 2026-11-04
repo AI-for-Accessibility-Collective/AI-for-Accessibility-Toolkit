@@ -6,7 +6,10 @@
 //   API port      reachable only from the toolkit service, which signs every
 //                 request with the shared secret and names the account it
 //                 authenticated (x-ai4a11y-uid): the sidebar's chats, events
-//                 and answers
+//                 and answers (/agent/…, which the service forwards as they
+//                 come), and checks of published adapters (/checks, which
+//                 only the service's own check route sends: it holds the
+//                 quota and reads the adapter from the registry)
 //
 // Logs say who did what and how big, never what: no messages, no page data.
 
@@ -22,6 +25,8 @@ import { createModelProxy } from './model-proxy.js';
 import { createBrowserTools } from './browser-tools.js';
 import { createPageData } from './page-data.js';
 import { dockerRunner, localRunner } from './runner.js';
+import { createChecks, dockerCheckRunner, localCheckRunner } from './checks.js';
+import { fetchRubrics as fetchUpstreamRubrics } from '../../scripts/verify-adapters/intera11y-upstream.mjs';
 
 const MAX_BODY = 12_000_000;
 
@@ -39,7 +44,8 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  * @param {'docker'|'local'} [o.runnerKind]
  */
 export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
-  opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, perMinute, requestTimeoutMs, log = createLogger(), runner: givenRunner }) {
+  opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, perMinute, requestTimeoutMs, log = createLogger(), runner: givenRunner,
+  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkRunner: givenCheckRunner, fetchRubrics, checkScript }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
   const events = createEvents();
@@ -50,7 +56,17 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   // tools is made below; a run only ends after both exist.
   const chats = createChats({ accounts, runner, events, requests, log, afterRun: (...a) => tools.afterRun(...a) });
   const pageData = createPageData({ accounts });
-  const model = createModelProxy({ apiKey, uidForToken: accounts.uidForToken, upstream, fetch, perMinute, log });
+  // Checks of published adapters: one-shot containers (or, with the local runner, plain processes).
+  const rubricsDir = path.join(dataDir, 'intera11y');
+  const sites = sitesDir || (runnerKind === 'local' && repoDir ? path.join(repoDir, '.verify-cache/sites') : path.join(dataDir, 'verify-sites'));
+  const modelUrl = checkModelUrl || `${sandboxUrl}/model/v1beta`;
+  const checkRunner = givenCheckRunner || (runnerKind === 'local'
+    ? localCheckRunner({ repoDir, sitesDir: sites, rubricsDir, modelUrl, opencodeBin, script: checkScript })
+    : checkImage ? dockerCheckRunner({ image: checkImage, network: checkNetwork, sitesDir: sites, rubricsDir, modelUrl, log }) : null);
+  const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs,
+    fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;
+  // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
+  const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, perMinute, log });
   const tools = createBrowserTools({ uidForToken: accounts.uidForToken, chats, requests, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });
 
   function sandboxHandler(req, res) {
@@ -108,6 +124,12 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
       const code = readFileSync(path.join(accounts.dirOf(uid), 'work', adapter.file), 'utf8');
       return send(res, 200, { adapter: { ...adapter, code } });
     }
+    if (p === '/checks' || p.startsWith('/checks/')) {
+      if (!checks) return send(res, 503, { error: 'checks-unavailable', message: 'Checks are not set up on this host.' });
+      if (m === 'POST' && p === '/checks') return send(res, 202, { check: checks.submit(uid, await body(req)) });
+      if ((r = /^\/checks\/([^/]+)$/.exec(p)) && m === 'GET') return send(res, 200, { check: checks.get(uid, r[1]) });
+      return send(res, 404, { error: 'not-found' });
+    }
     if ((r = /^\/agent\/requests\/([^/]+)$/.exec(p)) && m === 'POST') {
       const b = await body(req);
       log.info('request.answered', { uid, id: r[1], level: b.level, status: b.status, screenshot: !!(b.screenshot || b.after?.screenshot) });
@@ -127,10 +149,11 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
 
   /** Start every known account's sandbox, so they are running before anyone asks. */
   async function warm() {
+    await checks?.recover().catch(e => log.error('check.recover-failed', { error: e.message }));
     for (const uid of accounts.known()) await runner.ensure(uid).catch(e => log.error('sandbox.start-failed', { uid, error: e.message }));
   }
 
-  return { sandboxHandler, apiHandler, warm, accounts, chats, requests, events };
+  return { sandboxHandler, apiHandler, warm, accounts, chats, requests, events, checks };
 }
 
 function send(res, status, body) {

@@ -73,6 +73,56 @@ Steps 1 to 8 need Chromium (`npx playwright install chromium`).
 - **Step 9 for the core adapters**: `run.mjs --agent --sandboxed --review`
   and `--fix`, only in the verify container on the agent host VM
   (`scripts/verify-adapters/Dockerfile`).
+- **A published adapter, on the server**: see the next section.
+
+## On the server
+
+A developer, or their coding agent, can have a published adapter checked
+on the toolkit's server instead of on their own computer. It is optional
+and runs only when asked:
+
+```bash
+node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--review]
+```
+
+- **What runs.** Steps 2 to 8, as `run.mjs --check` runs them, on the
+  adapter's current revision: every test page, each also on a narrow
+  screen and with reduced motion, and the recorded copy of every real page.
+  With `--review`, step 9 as well: an independent reviewer (opencode with
+  Gemini) that did not write the adapter reads it and tries it. Its
+  instructions are the skill's reviewer's (`toolkit/scripts/adapter-reviewer.md`)
+  and `scripts/verify-adapters/REVIEW-FILE.md`. It is told what the adapter
+  is for (its published description) and what the check found, and it has
+  the verifier's tools and InterA11y's tools and rubrics. It chooses the
+  WCAG criteria that apply to what the adapter changes, reads each rubric
+  and gives a verdict for each. Its report starts `Verdict: ok | issues`.
+- **What comes back.** `adapter.mjs` prints what passed, what failed and
+  why, the advice, the review's findings, and what a check cannot show. The
+  developer console's Adapters page shows the latest check on the
+  adapter's card. Results are kept with the revision they checked: asking
+  again for the same revision gives the same check, at no cost.
+- **Where it runs.** The toolkit service checks the developer's token
+  (not an app-bound one) and that the account can read the adapter (its
+  own, or a shared one). It then sends the job to the agent host
+  (`agent-host/`). The host runs one check at a time, each in a one-shot
+  container under gVisor that has no network at all. The copies of real
+  pages are mounted read-only, so no site is visited. The reviewer runs in
+  a second container whose only network is the host's model proxy. The
+  model key stays on the host. The GenA11y rubric text is fetched by the
+  host beforehand, so the reviewer needs no internet.
+- **Limits.** Each account may ask for a few checks a day and fewer
+  reviews, since a review runs a model (`ADAPTER_CHECKS_PER_DAY`, default
+  5; `ADAPTER_REVIEWS_PER_DAY`, default 2). A check stops after 20 minutes,
+  a review after 45. A check the server could not start does not count.
+- **When it helps.** When the developer's computer cannot run the verifier
+  (no Chromium, no recorded copies of the sites), when a coding agent has no
+  browser, or before an adapter is shared. It adds to the review in the
+  skill (`reference/review-and-fix.md`); it does not replace it, or trying
+  the adapter with the people it is for.
+
+The same status applies: an adapter that passes every step on the server
+can still fail the people it is for. The server's report is about the code,
+not about whether the adapter helps.
 
 ## Where the steps live
 
@@ -86,8 +136,11 @@ Steps 1 to 8 need Chromium (`npx playwright install chromium`).
   GenA11y (GPL-3.0) are blank there and read from InterA11y when an agent
   asks for them.
 - `scripts/verify-adapters/run.mjs`: `--replay`, `--check` and the agent
-  runs; `REVIEW-CORE.md` and `CREATE.md`: the reviewer's and the author's
-  instructions.
+  runs (`--review-file` is the server's review of one file); `REVIEW-CORE.md`
+  and `CREATE.md`: the reviewer's and the author's instructions;
+  `REVIEW-FILE.md`: what is different for the server's reviewer.
+- `server/src/adapter-checks.js` and `agent-host/src/checks.js`: checks on
+  the server (the quota, the queue, the containers).
 
 InterA11y and GenA11y are prior research this verification layer builds
 on; their rubrics are theirs.

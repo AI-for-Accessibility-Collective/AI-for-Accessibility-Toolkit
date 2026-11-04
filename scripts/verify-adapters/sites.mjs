@@ -8,6 +8,10 @@
 //                           pages at most once a day (VERIFY_SITE_TTL_HOURS)
 //   refresh                 record every page again, once (VERIFY_SITES=refresh)
 //   live                    load the site itself each time (VERIFY_SITES=live)
+//   offline                 only the copies there are, however old, and never
+//                           a visit (VERIFY_SITES=offline): the server's check
+//                           container, which has no network and the copies
+//                           mounted read-only
 //
 // Visits are polite: the verifier names itself in its user agent, follows
 // robots.txt, records one page at a time and waits between two visits to
@@ -36,7 +40,7 @@ const RETRY = 6 * HOUR;
 const HOST_GAP = 10_000;
 const MAX_BODY = 20 * 1024 * 1024;
 
-export const siteMode = () => (['live', 'refresh'].includes(process.env.VERIFY_SITES) ? process.env.VERIFY_SITES : 'recorded');
+export const siteMode = () => (['live', 'refresh', 'offline'].includes(process.env.VERIFY_SITES) ? process.env.VERIFY_SITES : 'recorded');
 const siteOf = (url) => KNOWN.find((s) => s.url === url);
 const keyOf = (url) => {
   const u = new URL(url);
@@ -168,6 +172,11 @@ export async function prepareSite(browser, url) {
   const mode = siteMode();
   if (mode === 'live') return null;
   const dir = path.join(CACHE, keyOf(url));
+  if (mode === 'offline') {
+    const copy = readJson(path.join(dir, 'index.json'));
+    if (!copy) throw new Error('there is no copy of this page here, and this run visits no site');
+    return copy;
+  }
   mkdirSync(dir, { recursive: true });
   const index = () => readJson(path.join(dir, 'index.json'));
   const have = index();

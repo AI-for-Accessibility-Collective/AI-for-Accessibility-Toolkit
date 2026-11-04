@@ -39,6 +39,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
   let registry = null;     // for the current connection
   let uid = null;
   let mine = [], shared = [], installed = new Map(), results = [], instances = [], apps = [];
+  let checks = new Map();       // adapter key -> this account's latest server check of it
   let restrictions = new Map(); // adapter key -> the level the person narrowed it to
   let tab = 'mine';
   let editing = null;      // the adapter_get result being edited
@@ -68,13 +69,15 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     }
     try {
       const client = getClient();
-      const [who, a, b, inst, st, appList, visibility] = await Promise.all([
+      const [who, a, b, inst, st, appList, visibility, checkList] = await Promise.all([
         uid ? { uid } : client.whoami(),
         r.search({ scope: 'mine' }), r.search({ scope: 'shared' }),
         r.installed(BROWSER_RUNTIME_APP), r.status({ app: BROWSER_RUNTIME_APP }),
         client.apps.list().catch(() => ({ apps: [] })),
         r.access.get().catch(() => ({ adapters: [] })),
+        client.checks.list().catch(() => ({ checks: [] })),
       ]);
+      checks = latestChecks(checkList.checks || []);
       restrictions = new Map(visibility.adapters.map(x => [keyOf(x.adapter), x.restricted]));
       uid = who.uid;
       mine = a.adapters;
@@ -87,6 +90,32 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     } catch (error) {
       status(error.message, true);
     }
+  }
+  // The account's server checks (adapter.mjs check <id>), latest first: the newest per adapter.
+  function latestChecks(list) {
+    const latest = new Map();
+    for (const c of list) if (!latest.has(keyOf(c.adapter))) latest.set(keyOf(c.adapter), c);
+    return latest;
+  }
+  function checkLine(card, a) {
+    const c = checks.get(keyOf(a.adapter));
+    if (!c) return;
+    const s = c.summary;
+    const parts = [`Server check · revision ${c.revision}${c.revision !== a.revision ? ' (an earlier one)' : ''}`];
+    if (c.status === 'queued' || c.status === 'running') parts.push(c.status === 'queued' ? 'waiting' : 'running');
+    else if (c.status === 'failed') parts.push(`could not run — ${c.error || 'no reason given'}`);
+    else if (s) parts.push(`${s.passed} passed, ${s.failed} failed, ${s.skipped} skipped · applied on ${s.appliedOnTestPages} of ${s.testPages} test pages`);
+    if (c.review && c.status === 'done') {
+      const f = c.findings;
+      parts.push(c.verdict === 'ok' ? 'review: no problems found' : c.verdict === 'issues' && f ? `review: ${f.high} high, ${f.medium} medium, ${f.low} low` : 'review: no verdict');
+    }
+    parts.push(ago(c.finishedAt || c.requestedAt));
+    const list = element('ul', 'runtime-results');
+    list.setAttribute('aria-label', `The server check of ${a.name}`);
+    const item = element('li', `result ${c.status === 'failed' || s?.failed || c.verdict === 'issues' ? 'failed' : 'applied'}`);
+    item.append(element('span', '', `${parts.join(' · ')}. The full report: node adapter.mjs check ${a.adapter.id}`));
+    list.append(item);
+    card.append(list);
   }
   function refreshSoon() {
     clearTimeout(refreshTimer);
@@ -200,6 +229,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     const card = cardTop(a, badges);
     details(card, a, `${a.adapter.appId}/${a.adapter.id} · revision ${a.revision} · updated ${ago(a.updatedAt)}`);
     runtimeLines(card, a);
+    checkLine(card, a);
     card.append(visibilityOf(a));
     const actions = element('div', 'card-actions');
     if (a.portable) actions.append(button('secondary', 'Edit', () => run(() => openEditor(a)), `Edit ${a.name}`));

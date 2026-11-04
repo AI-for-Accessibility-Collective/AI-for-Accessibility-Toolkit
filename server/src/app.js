@@ -32,6 +32,7 @@ import { createProfileEvents, cleanSelection, PROFILE_WRITES } from './profile-e
 import { auditAccounts } from './audit.js';
 import { createAgentProxy, AGENT_PREFIX, agentContentLogged } from './agent-proxy.js';
 import { createAiRoutes, aiContentLogged } from './ai.js';
+import { createAdapterChecks, ADAPTER_CHECKS_PREFIX } from './adapter-checks.js';
 
 const ADMIN_TOKENS_PREFIX = '/admin/tokens';
 const ADMIN_USERS_PREFIX = '/admin/users';
@@ -59,7 +60,7 @@ const SDK_PREFIX = '/sdk/';
  *  @param {ReturnType<import('./log.js').createLogger>} [config.log]  structured logger (silent by default)
  *  @returns {((req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) & {relay: ReturnType<typeof createRelay>, accounts: ReturnType<typeof createAccounts>, activity: ReturnType<typeof createActivityLog>}}
  */
-export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {} }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {}, checks = {} }) {
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
@@ -110,6 +111,10 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   // The model behind the building blocks' AI (toolkit/blocks), for adapters.
   const aiRoutes = createAiRoutes({ store, withUserLock, authenticate: (req) => authenticate(req), caller: ai.caller || null, log, ...(ai.dailyBudgetUsd ? { dailyBudgetUsd: ai.dailyBudgetUsd } : {}), ...(ai.dailyPerAdapter ? { dailyPerAdapter: ai.dailyPerAdapter } : {}), ...(ai.price ? { price: ai.price } : {}) });
   const adaptersRouter = createAdaptersRouter({ store, adminPassword, withUserLock });
+  // Checks of published adapters, on request, run by the agent host.
+  const adapterChecks = createAdapterChecks({ store, withUserLock, authenticate: (req) => authenticate(req), registry: () => registry,
+    hostUrl: agentHost.url, secret: agentHost.secret, fetch: agentHost.fetch, log,
+    ...(checks.checksPerDay ? { checksPerDay: checks.checksPerDay } : {}), ...(checks.reviewsPerDay ? { reviewsPerDay: checks.reviewsPerDay } : {}) });
   const accounts = auditAccounts(createAccounts({ store, secret: tokenSecret || adminPassword, relay }), log);
   const authenticate = async (req) => {
     const presented = bearerFrom(req);
@@ -170,7 +175,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
 
   function listener(req, res) {
     const started = process.hrtime.bigint();
-    if (logContent && agentContentLogged(pathOf(req)) && aiContentLogged(pathOf(req))) captureContent(req, res);
+    // Left out of the request log's bodies: page data, AI text, and check reports (long, and the account's own).
+    if (logContent && agentContentLogged(pathOf(req)) && aiContentLogged(pathOf(req)) && !pathOf(req).startsWith(ADAPTER_CHECKS_PREFIX)) captureContent(req, res);
     res.once('close', () => logRequest(req, res, started));
     handle(req, res).catch((e) => {
       const path = pathOf(req);
@@ -378,6 +384,12 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       || pathname.startsWith(MCP_PREFIX)
       || pathname === APPS_PREFIX || pathname.startsWith(APPS_PREFIX + '/')) {
       return providerRoutes(req, res, method, pathname);
+    }
+
+    // Checks of a published adapter on the server (before the marketplace,
+    // which would read "checks" as an appId).
+    if (pathname === ADAPTER_CHECKS_PREFIX || pathname.startsWith(ADAPTER_CHECKS_PREFIX + '/')) {
+      return adapterChecks(req, res, method, pathname, url.search);
     }
 
     // The adapter marketplace (CONTRACT.md "Adapter marketplace"). Its own

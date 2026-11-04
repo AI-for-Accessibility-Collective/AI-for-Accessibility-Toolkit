@@ -93,10 +93,49 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
 | Page address, source outline, screenshots the person shared | host: `accounts/<uid>/page-data/<chat>/` | **no**: the service leaves `/v1/agent/requests/…` bodies out of its log; the host logs only sizes |
 | Adapters the agent wrote | host: `accounts/<uid>/work/adapters/` | no |
 | Model calls | sent to Gemini through the proxy | account, size and time only |
+| Adapter checks: who asked, the adapter's name and revision, the result | host: `checks/<checkId>/job.json`, a week | who, which check, how long, how it came out; never code |
+| The adapter's code, during a check | host: `checks/<checkId>/in/`, removed when the check ends | no |
 
 Page data stays on the VM's disk for the research team to deidentify after
 the workshop. The sidebar tells people what they share is not used to
 identify them.
+
+## Adapter checks
+
+A developer can have a published adapter checked on the server
+(`adapter.mjs check <id> [--review]`, `POST /v1/adapters/checks`; see
+[docs/verification.md](../docs/verification.md), "On the server"). The
+toolkit service holds the quota and reads the adapter from the registry;
+it sends the job to this host's `POST /checks` (the API port, signed like
+`/v1/agent`, but not under `/agent/`, so the sidebar's forwarding cannot
+reach it) and asks `GET /checks/<id>` for the result
+([src/checks.js](src/checks.js)).
+
+- **One at a time**, in the order asked; at most 2 waiting or running per
+  account and 20 in all.
+- **The check** is `run.mjs --check` in a one-shot container from the
+  verify image's `check` target (`scripts/verify-adapters/Dockerfile`, the
+  repository and its packages baked in): gVisor, `--network none`, no
+  capabilities, `no-new-privileges`, 4 CPUs, 6 GB, removed when it ends.
+  The adapter is mounted read-only at `/job`; the recorded copies of real
+  sites (`AGENT_CHECK_SITES`, default `<data>/verify-sites`) read-only at
+  `/sites`, served with `VERIFY_SITES=offline` (no visit, ever). It is
+  stopped after 20 minutes (`AGENT_CHECK_MINUTES`).
+- **The review** (with `--review`) is `run.mjs --review-file` in a second
+  one-shot container on the network `ai4a11y-chk`, which reaches the
+  host's sandbox port and nothing else ([vm/setup.sh](vm/setup.sh)). Its
+  opencode talks to the model proxy with a token made for this review: it
+  names the account, works only at the model proxy (never the browser
+  tools), only while the review runs, and for at most 400 calls. The real
+  key stays on the host. The rubric text InterA11y adapted from GenA11y
+  (GPL-3.0) is fetched by the host from InterA11y at the vendored commit,
+  checked against its hash, into `<data>/intera11y/`, and mounted read-only
+  (`INTERA11Y_DIR`). It is stopped after 45 minutes (`AGENT_REVIEW_MINUTES`).
+- **After a restart**, checks that were waiting or running start again.
+
+**Status:** the checks and the review find some bugs in code. They do not
+show that an adapter helps anyone, so a developer still tries it with the
+people it is for.
 
 ## Run it locally (development only)
 
@@ -111,11 +150,32 @@ AGENT_HOST_SECRET=$(openssl rand -hex 24) AGENT_RUNNER=local \
 AGENT_HOST_URL=http://127.0.0.1:8791 AGENT_HOST_SECRET=… npm run dev:workshop
 ```
 
+With the local runner, checks run too, as plain processes in this checkout:
+`run.mjs --check` with the copies of real sites in `.verify-cache/sites/`
+(`node scripts/verify-adapters/sites.mjs record` makes them), and the
+review as opencode on your computer through the host's model proxy. **No
+sandbox**: the adapter runs in your Chromium and the reviewer has a shell
+as you, so check only your own adapters. To try it end to end:
+
+```bash
+SECRET=$(openssl rand -hex 24)
+AGENT_HOST_SECRET=$SECRET AGENT_RUNNER=local GEMINI_API_KEY=… node agent-host/index.js
+AGENT_HOST_URL=http://127.0.0.1:8791 AGENT_HOST_SECRET=$SECRET npm run dev:workshop
+# with TOOLKIT_URL and TOOLKIT_TOKEN in .env (the console's New adapter guide):
+node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs publish my-adapter.js --name … --runs-on … --no-run
+node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check my-adapter [--review]
+```
+
+`AGENT_OPENCODE_BIN=agent-host/test/fake-reviewer.mjs` stands in for
+opencode in the review, with no model.
+
 `AGENT_SKILL_DIRS` (optional, comma-separated) names more skill directories.
 Use it for a folder that holds a checkout of Intopia's skill as
 `intopia-web-accessibility/`, the way the sandbox image has it.
 
 Tests: `node agent-host/test/host.test.mjs` (a stand-in for opencode),
+`node agent-host/test/checks.test.mjs` (adapter checks, with stand-ins for
+run.mjs, opencode and docker),
 `npm run test:assistant:e2e` (the real extension in Chromium, with the
 stand-in), and `AGENT_E2E_REAL=1 npm run test:assistant:e2e` (real opencode
 and Gemini on your computer, unsandboxed).
@@ -156,7 +216,21 @@ gcloud run services update toolkit-service --project $P --region $R --network de
   --update-env-vars AGENT_HOST_URL=http://$IP:8791 --update-secrets AGENT_HOST_SECRET=agent-host-secret:latest
 ```
 
-To update: build with a new tag, set the two metadata values to it
+Adapter checks also need the check image, the reviewers' network (made by
+`vm/setup.sh`) and the recorded copies of real sites, once:
+
+```bash
+gcloud compute instances add-metadata agent-host --project $P --zone $Z \
+  --metadata agent-check-image=$R-docker.pkg.dev/$P/toolkit/agent-check:$TAG
+# Over IAP SSH: rerun setup, then record the sites' copies (they visit each site once, politely; see docs/verification.md)
+sudo google_metadata_script_runner startup
+sudo docker run --rm --runtime=runsc --user 0 -v /srv/agent-host/verify-sites:/sites -e VERIFY_SITE_CACHE=/sites \
+  $R-docker.pkg.dev/$P/toolkit/agent-check:$TAG node scripts/verify-adapters/sites.mjs record
+# The toolkit service: how many each account may ask for a day (optional; defaults 5 and 2)
+gcloud run services update toolkit-service --project $P --region $R --update-env-vars ADAPTER_CHECKS_PER_DAY=5,ADAPTER_REVIEWS_PER_DAY=2
+```
+
+To update: build with a new tag, set the image metadata values to it
 (`gcloud compute instances add-metadata`), and rerun the startup script
 (`sudo google_metadata_script_runner startup` over IAP SSH). Each sandbox is
 recreated on the new image the next time it is needed; its home and `/work`

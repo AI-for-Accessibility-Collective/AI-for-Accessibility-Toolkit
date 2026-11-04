@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 COPY toolkit/protocol/ ./toolkit/protocol/
 COPY agent-host/ ./agent-host/
+# Where the GenA11y rubric text comes from, for the server's reviewers (src/checks.js).
+COPY scripts/verify-adapters/intera11y-upstream.mjs ./scripts/verify-adapters/
 WORKDIR /app/agent-host
 ENV NODE_ENV=production AGENT_RUNNER=docker AGENT_DATA_DIR=/srv/agent-host
 CMD ["node", "index.js"]
