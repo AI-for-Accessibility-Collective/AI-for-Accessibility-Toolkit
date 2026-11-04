@@ -1467,17 +1467,20 @@
     function clippedNow(carriersList) {
       const boxes = /* @__PURE__ */ new Map();
       for (const el of carriersList) {
-        for (let b = el, i = 0; b && i < 3 && b !== doc.body; b = b.parentElement, i++) if (!boxes.has(b)) boxes.set(b, false);
+        for (let b = el; b && b !== doc.body && !boxes.has(b); b = b.parentElement) boxes.set(b, 0);
       }
-      for (const b of boxes.keys()) boxes.set(b, b.scrollHeight > b.clientHeight + 1);
+      for (const b of boxes.keys()) boxes.set(b, b.scrollHeight - b.clientHeight);
       return boxes;
     }
     function grow(before, into, done) {
       let n = 0;
       for (const [b, was] of before) {
-        if (was || done.has(b) || !b.isConnected || !(b.scrollHeight > b.clientHeight + 1)) continue;
+        if (done.has(b) || !b.isConnected || !(b.clientHeight > 0)) continue;
+        const over = b.scrollHeight - b.clientHeight;
+        if (!(over > 1)) continue;
         const cs = env.win.getComputedStyle(b);
         if (cs.display === "inline" || /^(auto|scroll)$/.test(cs.overflowY)) continue;
+        if (/^(hidden|clip)$/.test(cs.overflowY) ? was > 1 : !(over > was + 1)) continue;
         done.add(b);
         if (cs.height !== "auto") {
           into.setStyle(b, "min-height", cs.height);
@@ -1488,11 +1491,50 @@
       }
       return n;
     }
+    const SPACING = {
+      "line-height": { key: "lineHeight", unit: "", token: "lh" },
+      "letter-spacing": { key: "letterSpacing", unit: "em", token: "ls" },
+      "word-spacing": { key: "wordSpacing", unit: "em", token: "ws" }
+    };
+    const spacingPx = (cs, prop) => {
+      const v = cs[SPACING[prop].key];
+      if (v === "normal") return prop === "line-height" ? NaN : 0;
+      return parseFloat(v);
+    };
+    const ROOM_ATTR = "data-ai4a11y-room";
     const grown = /* @__PURE__ */ new WeakSet();
-    function fit(change, { root } = {}) {
+    function fit(change, { root, atLeast = [] } = {}) {
       if (!s.alive() || typeof change !== "function") return 0;
-      const before = clippedNow([...carriers(root || doc.body)]);
+      const list = [...carriers(root || doc.body)];
+      const props = (Array.isArray(atLeast) ? atLeast : [atLeast]).filter((p) => SPACING[p]);
+      const measure = () => list.map((el) => {
+        const cs = env.win.getComputedStyle(el);
+        return { fs: parseFloat(cs.fontSize), v: props.map((p) => spacingPx(cs, p)) };
+      });
+      const had = props.length ? measure() : null;
+      const before = clippedNow(list);
       change();
+      if (had) {
+        const now = measure();
+        const rules = /* @__PURE__ */ new Map();
+        list.forEach((el, i) => {
+          const { fs } = had[i];
+          if (!(fs > 0)) return;
+          const tokens = [];
+          props.forEach((p, j) => {
+            if (!(had[i].v[j] > now[i].v[j] + 0.25)) return;
+            const { unit, token } = SPACING[p];
+            const value = Math.round(had[i].v[j] / fs * 1e3) / 1e3;
+            const t = `${token}${value}`;
+            tokens.push(t);
+            rules.set(t, `[${ROOM_ATTR}~="${t}"] { ${p}: ${value}${unit} !important; }`);
+          });
+          if (tokens.length) s.setAttr(el, ROOM_ATTR, tokens.join(" "));
+        });
+        if (rules.size) s.css("text-fit-room", `@layer ai4a11y-room {
+${[...rules.values()].join("\n")}
+}`);
+      }
       return grow(before, s, grown);
     }
     return { wrap, set, replaceBlock, scale, fit, nodes: (root, opts) => env.page.textNodes(root, opts) };

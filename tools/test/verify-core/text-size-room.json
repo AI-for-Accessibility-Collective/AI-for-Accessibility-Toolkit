@@ -1,0 +1,37 @@
+{
+  "name": "text-size-room",
+  "file": "tools/core-adapters/text-size.js",
+  "page": "text-size-room.html",
+  "personal": {
+    "fontScale": 150,
+    "textSizeMethod": "font",
+    "lineHeight": 1.5,
+    "letterSpacing": 0.12
+  },
+  "checks": [
+    {
+      "name": "a line height the page set taller than the person's is kept, not lowered to theirs (a menu row centred by a 50px line height, now 75px at 150%)",
+      "code": "const a = document.querySelector('#menu-first'); const row = a.parentElement.getBoundingClientRect().height; const on = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter?.s && !globalThis.__ai4a11yRuntime.adapters.preview.adapter.s.ended; if (!on) return parseFloat(getComputedStyle(a).lineHeight) === 50; return parseFloat(getComputedStyle(a).lineHeight) >= 74.5 && row >= 74.5 && Math.abs(parseFloat(getComputedStyle(a).fontSize) - 22.5) < 0.5;"
+    },
+    {
+      "name": "letter spacing the page set wider than the person's is kept, not narrowed to 0.12em",
+      "code": "const k = document.getElementById('kicker'); const cs = getComputedStyle(k); return parseFloat(cs.letterSpacing) >= 0.25 * parseFloat(cs.fontSize) - 0.25;"
+    },
+    {
+      "name": "the person's spacing still applies where the page had less (body text at line height 1.5 and letter spacing 0.12em)",
+      "code": "const p = document.getElementById('deal-text'); const cs = getComputedStyle(p); const fs = parseFloat(cs.fontSize); const on = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter?.s && !globalThis.__ai4a11yRuntime.adapters.preview.adapter.s.ended; if (!on) return true; return Math.abs(fs - 21) < 0.5 && parseFloat(cs.lineHeight) >= 1.5 * fs - 0.5 && parseFloat(cs.letterSpacing) >= 0.12 * fs - 0.25;"
+    },
+    {
+      "name": "a fixed-height menu bar whose floated links wrap onto a second row grows to hold them, though it sits five levels above the text and its links ran a few pixels past it by design",
+      "code": "const bar = document.getElementById('menu-bar'); const last = document.getElementById('menu-last').parentElement; const b = bar.getBoundingClientRect(); const l = last.getBoundingClientRect(); return l.bottom <= b.bottom + 1 && bar.scrollHeight - bar.clientHeight <= 5;"
+    },
+    {
+      "name": "a fixed-height card that shows its overflow grows to hold its text, four levels down",
+      "code": "const c = document.getElementById('deal-card'); return c.scrollHeight <= c.clientHeight + 1;"
+    },
+    {
+      "name": "a preview cut off by design (fixed height, overflow hidden) is left as it is, though its text is four levels down",
+      "code": "const p = document.getElementById('preview'); return p.offsetHeight === 62 && !p.style.height && !p.style.minHeight;"
+    }
+  ]
+}
