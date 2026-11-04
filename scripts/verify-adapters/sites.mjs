@@ -229,11 +229,15 @@ const servedHeaders = (e) => { const { 'set-cookie': _, ...h } = e.headers || {}
 
 export async function serveFromCopyPuppeteer(page, rec) {
   await page.setRequestInterception(true);
+  // Each answer's failure stays with that request (it fails to load), never
+  // an unhandled rejection that ends the process (a review, mid-way).
+  const quiet = (p) => Promise.resolve(p).catch(() => {});
   page.on('request', (req) => {
-    if (/^(data|blob):/.test(req.url())) return req.continue();
+    if (/^(data|blob):/.test(req.url())) return quiet(req.continue());
     const e = req.method() === 'GET' && lookup(rec, req.url());
-    if (!e) return req.abort('internetdisconnected');
-    return req.respond({ status: e.status, headers: servedHeaders(e), body: bodyOf(rec, e) });
+    if (!e) return quiet(req.abort('internetdisconnected'));
+    return Promise.resolve().then(() => req.respond({ status: e.status, headers: servedHeaders(e), body: bodyOf(rec, e) }))
+      .catch(() => quiet(req.abort('failed')));
   });
 }
 
