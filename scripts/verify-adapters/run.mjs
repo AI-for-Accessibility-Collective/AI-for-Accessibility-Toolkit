@@ -26,6 +26,12 @@
 //     with it, confirming with the verifier where it can; it changes
 //     nothing. Each report starts "Verdict: ok | issues".
 //
+//   ... --agent --sandboxed --fix <dir> [id ...]
+//     Instead, fix each named core adapter in place from its review
+//     (<dir>/<id>.md, a --review report): an agent checks each finding,
+//     fixes what is real in the file as it is, and verifies again
+//     (CREATE.md, "When you fix"). Each report starts "Outcome:".
+//
 //     Only in the container this folder's Dockerfile builds, on the agent
 //     host VM under gVisor with a copy of the repository (--sandboxed says
 //     you are there): the agent has a shell and opencode's code mode
@@ -55,7 +61,10 @@ const mode = argv.includes('--agent') ? 'agent' : argv.includes('--replay') ? 'r
 if (mode === 'agent' && !argv.includes('--sandboxed')) { console.error('Run the agents in the verify container on the agent host VM (see Dockerfile), with --sandboxed.'); process.exit(2); }
 const parallel = Number(flag('--parallel', 4));
 const create = argv.includes('--create');
-const core = create || argv.includes('--core');
+// --fix DIR: fix each named core adapter in place, from the review report
+// DIR/<name>.md an independent reviewer wrote (rather than building anew).
+const fixFrom = flag('--fix', null);
+const core = create || !!fixFrom || argv.includes('--core');
 const reviewBase = flag('--review', null);
 const model = flag('--model', MODEL);
 const logs = path.resolve(flag('--logs', path.join(ROOT, '.verify-logs')));
@@ -64,7 +73,7 @@ const names = argv.filter(a => !a.startsWith('--'));
 
 if (mode === 'replay') await replay();
 else if (mode === 'agent') await agents();
-else { console.error('Usage: run.mjs --replay [name ...] | --agent [name ...] [--parallel N] [--logs DIR] [--skills DIR,...]'); process.exit(2); }
+else { console.error('Usage: run.mjs --replay [name ...] | --agent [--create | --review BASE | --fix DIR] [name ...] [--parallel N] [--logs DIR] [--skills DIR,...]'); process.exit(2); }
 
 async function replay() {
   // --core: the core adapters' specs (tools/test/verify-core/); otherwise the catalog's.
@@ -167,6 +176,27 @@ function rubricsRead(e, read) {
   for (const c of st.metadata?.toolCalls || []) if (done(c.tool, c)) read.add(String(c.input.sc));
 }
 
+/** A core adapter's brief, as its build and fix tasks give it. */
+function briefLines(b) {
+  return [`What it does: ${b.brief}`,
+    '', `Suggested in onboarding for: ${b.suggestedFor.join(', ')} (a suggestion only, never a gate).`,
+    `The person's settings it reads: ${b.reads.length ? b.reads.join(', ') : 'none'}.`,
+    `What the person can adjust: ${b.adjusts}`,
+    '', 'What must be verified:', ...b.verify.map(v => `- ${v}`),
+    ...rubricLines(b, 'your adapter')];
+}
+
+/** One core adapter's fix task: its brief and the review, for CREATE.md's "When you fix". */
+function fixTask(b, review) {
+  if (!b) throw new Error('No such brief in core-adapters.json.');
+  return [
+    `Fix the core adapter "${b.name}", tools/core-adapters/${b.id}.js, in place, as your instructions say under "When you fix". An independent reviewer read it and found the problems in its report below. The reviewer's own specs and page (tools/test/verify-core/review-${b.id}*.json, pages/review-${b.id}.html) reproduce some of them: run them, and do not edit them.`,
+    '', ...briefLines(b),
+    '', `Your specs are ${b.id} and ${b.id}-<variant>, and your test page tools/test/verify-core/pages/${b.id}.html.`,
+    '', 'The review:', '', review.trim(),
+  ].join('\n');
+}
+
 /** One core adapter's task: its brief, for CREATE.md. */
 function createTask(b) {
   if (!b) throw new Error('No such brief in core-adapters.json.');
@@ -187,7 +217,7 @@ async function agents() {
   if (!process.env.GEMINI_API_KEY) { console.error('Set GEMINI_API_KEY.'); process.exit(2); }
   const briefs = new Map(JSON.parse(readFileSync(path.join(HERE, 'core-adapters.json'), 'utf8')).adapters.map(b => [b.id, b]));
   const folder = core ? 'tools/core-adapters' : 'tools/adapters';
-  const all = create ? [...briefs.keys()] : readdirSync(path.join(ROOT, folder)).filter(f => f.endsWith('.js')).map(f => f.slice(0, -3)).filter(n => !NOT_ADAPTERS.has(n));
+  const all = create || fixFrom ? [...briefs.keys()] : readdirSync(path.join(ROOT, folder)).filter(f => f.endsWith('.js')).map(f => f.slice(0, -3)).filter(n => !NOT_ADAPTERS.has(n));
   const changed = reviewBase ? new Set(execFileSync('git', ['diff', '--name-only', reviewBase, 'HEAD', '--', folder], { cwd: ROOT, encoding: 'utf8' })
     .split('\n').map(f => path.basename(f, '.js')).filter(Boolean)) : null;
   const queue = names.length ? names : changed ? all.filter(n => changed.has(n)) : all;
@@ -201,7 +231,7 @@ async function agents() {
     provider: { google: { options: { apiKey: '{env:GEMINI_API_KEY}' } } },
     mcp: { verifier: { type: 'remote', url: mcpServer.url, headers: { authorization: `Bearer ${token}` }, oauth: false, codemode: false } },
     permissions: ['webfetch', 'websearch', 'task', 'question'].map(action => ({ action, resource: '*', effect: 'deny' })),
-    instructions: [path.join(HERE, reviewBase ? (core ? 'REVIEW-CORE.md' : 'REVIEW.md') : create ? 'CREATE.md' : 'AGENTS.md')],
+    instructions: [path.join(HERE, reviewBase ? (core ? 'REVIEW-CORE.md' : 'REVIEW.md') : create || fixFrom ? 'CREATE.md' : 'AGENTS.md')],
     skills: [path.join(ROOT, '.claude/skills'), ...skills],
   }, null, 2));
 
@@ -222,9 +252,10 @@ async function agents() {
     const task = reviewBase
       ? (core ? [`Review the core adapter tools/core-adapters/${name}.js, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`, ...rubricLines(briefs.get(name), 'it')].join('\n')
         : `Review the changes to the built-in adapter ${folder}/${name}.js since commit ${reviewBase}, as your instructions say. Name any specs review-${name} and any page ${pages}/review-${name}.html.`)
+      : fixFrom ? fixTask(briefs.get(name), readFileSync(path.resolve(fixFrom, `${name}.md`), 'utf8'))
       : create ? createTask(briefs.get(name))
       : `Verify the built-in adapter tools/adapters/${name}.js with the verifiers, and fix what fails in it, as your instructions say. Name your specs ${name} (and ${name}-<variant>), and your test page tools/test/verify/pages/${name}.html.`;
-    const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `${reviewBase ? 'review' : create ? 'create' : 'verify'} ${name}`, task], {
+    const child = spawn('opencode', ['run', '--standalone', '--auto', '--format', 'json', '--title', `${reviewBase ? 'review' : fixFrom ? 'fix' : create ? 'create' : 'verify'} ${name}`, task], {
       cwd: ROOT, env: { ...process.env, OPENCODE_CONFIG: config, HOME: homeOf(name) }, stdio: ['ignore', 'pipe', 'pipe'],
     });
     const timer = setTimeout(() => child.kill('SIGTERM'), 40 * 60_000);

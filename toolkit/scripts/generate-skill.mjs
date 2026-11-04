@@ -272,8 +272,9 @@ The person says what should change, you write the file, and the toolkit runs it 
    - If the person chose to share it, add \`--share\`. If only this adapter should read what it gives the toolkit, add \`--visibility adapter\`.
    - If the toolkit refuses the file, the message names the line. Fix it and run the command again.
 6. Check that it ran: \`node <skill folder>/scripts/adapter.mjs status bigger-buttons\` prints "Running on …", or "Failed on …" with the error. Fix the file and publish again. Each publish is a new revision, and open pages pick it up without a reload.
-7. When the person asks, share it with everyone on their toolkit: \`node <skill folder>/scripts/adapter.mjs share bigger-buttons\`. Until then it stays private to their account.
-8. Over time the toolkit learns from what the person does with their adapters and suggests changes to their profile. \`node <skill folder>/scripts/adapter.mjs learned\` lists the suggestions and what it remembers. Read a suggestion to the person and pass on their answer only: \`node <skill folder>/scripts/adapter.mjs answer <id> accept\` (or \`not-now\`, \`never\`).
+7. Have it reviewed, then fix it in place, as \`reference/review-and-fix.md\` says: a reviewer that did not write it (a subagent, or a second session) reports what is wrong; you check each finding, fix what is real in the file as it is (never a rewrite), publish again, and have it reviewed again, until a review finds nothing high or medium. Tell the person what was found and fixed, and what is left.
+8. When the person asks, share it with everyone on their toolkit: \`node <skill folder>/scripts/adapter.mjs share bigger-buttons\`. Until then it stays private to their account.
+9. Over time the toolkit learns from what the person does with their adapters and suggests changes to their profile. \`node <skill folder>/scripts/adapter.mjs learned\` lists the suggestions and what it remembers. Read a suggestion to the person and pass on their answer only: \`node <skill folder>/scripts/adapter.mjs answer <id> accept\` (or \`not-now\`, \`never\`).
 
 The adapter also shows on the developer console's **Adapters** page, where the person can read the code and its reports.
 
@@ -300,7 +301,8 @@ The adaptations are part of the app's code, so you work in the app's repository 
 5. Send the observations the person chose, each one plain sentence with \`profile_observe\` or \`POST /v1/librarian/logObservation\`, for example "Turned on Calm urgency on the Redbird store." Use \`type: 'setting-change'\` for a deliberate choice. Put \`app: '<app id>'\` in every observation: the app's visibility applies only to observations that name it. (An app token made for the app names it by itself; with the default token, an observation without \`app\` is kept for every app.) Never page content or anything they typed. If the person chose images, add up to 4 as \`images: [{ mimeType: 'image/png', data: <base64> }]\`; they are kept with the observation and shown to the model when it learns. To keep values in the toolkit, use \`registry.data({ appId, id }).set(key, value)\` for an adaptation published to the registry.
 6. If the app shows suggestions, read them with \`profile_learned\` (\`registry.profile.learned()\`), keep the ones the person chose (each has a \`change\`, such as \`{op: 'profile-set', path: 'fields.largeTargets', value: true}\`), show each in plain words, and pass on the person's answer with \`profile_proposal_respond\`: accept, declineOnce or suppress. Never answer for them. An accepted change reaches the app through \`/v1/profile/events\`, like any other profile change.
 7. Check it: open the app, then the console's **Apps** page. The app is listed, and **Try it** switches each adaptation. A coding agent can do the same through \`/v1/mcp/apps/<app id>\`.
-8. Only when the person asks to share an adaptation with other apps: publish it with \`registry.publish\` (see \`reference/adapter-mcp.md\`). A web adaptation can carry its code; any other is a description only.`;
+8. Have each adaptation reviewed, then fix it in place, as \`reference/review-and-fix.md\` says (a reviewer that did not write it, then fixes to the code as it is, then review again).
+9. Only when the person asks to share an adaptation with other apps: publish it with \`registry.publish\` (see \`reference/adapter-mcp.md\`). A web adaptation can carry its code; any other is a description only.`;
 
 const ADD_SKILL_SECTION = `This skill ships **inside the toolkit repo** at \`.claude/skills/ai4a11y-toolkit/SKILL.md\`, so anyone opening this repo in Claude Code gets it automatically. To use it from **your own project**:
 
@@ -406,10 +408,17 @@ Load the bundle the runtime injects, \`extension/vendor/blocks.js\`, into the pa
 `;
 }
 
+/** reference/review-and-fix.md, from toolkit/scripts/review-and-fix.md (the review and fix loop for any adapter). */
+function reviewAndFix() {
+  const [title, ...rest] = readFileSync(path.join(__dirname, 'review-and-fix.md'), 'utf8').split('\n');
+  return `${title}\n\n${GENERATED} Source: \`toolkit/scripts/review-and-fix.md\`.\n${rest.join('\n')}`;
+}
+
 /** The reference files beside SKILL.md, by path relative to the skill folder. */
 export function renderReferences(model) {
   return {
     'reference/building-blocks.md': buildBlocksReference(),
+    'reference/review-and-fix.md': reviewAndFix(),
     'reference/adapter-mcp.md': `# Sharing adapters between apps (Adapter MCP)
 
 ${GENERATED}
@@ -472,6 +481,7 @@ ${QUICK_START_CODE}\`\`\`
 Read these from this skill's folder when a task needs them:
 
 - \`reference/building-blocks.md\`: the building blocks an adapter gets on \`toolkit\` (session, styles, watch, page, highlight, announce, tooltip, panel, focus and keys, text, AI text and vision, speech, media): each one's calls, config, what the person's profile overrides, and what it always does; the AI tasks and their prompt fields.
+- \`reference/review-and-fix.md\`: having an adapter reviewed by an agent that did not write it, and fixing it in place from the findings: what a review looks for, telling the site's problems from the adapter's, and the fix loop.
 - \`reference/adapter-mcp.md\`: sharing adapters between apps through the toolkit's registry, the SDK (\`createRegistryClient\`, \`connectToToolkit\`, live control), the registry's MCP tools, the browser runtime, visibility and adapter data.
 - \`reference/http-api.md\`: the hosted service's HTTP endpoints and the \`/v1/librarian/{method}\` mapping, for a client in any language.
 - \`reference/core-api.md\`: embedding the core in-process: every Librarian and Datastore method by concern, and the ports a host implements.

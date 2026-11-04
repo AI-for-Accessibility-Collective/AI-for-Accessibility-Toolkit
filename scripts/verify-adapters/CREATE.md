@@ -232,6 +232,34 @@ playing media with sound, the browser's real zoom (the stand-in records it;
 check reflow with the 320-pixel spec). Say plainly what you could not
 verify.
 
+## When you fix
+
+Sometimes your task is to fix an adapter that is already built, from an
+independent reviewer's report, instead of building one. Then:
+
+1. **Read** the adapter, its brief, its test page and specs, and the
+   review, all of it. Read the building blocks reference as for a build.
+2. **Check each finding before you act on it.** A finding is a claim, not
+   a fact. Reproduce it: the reviewer's own specs (`review-<id>*`), your
+   own checks, or the code it names. Decide, from how the adapter is
+   designed, whether it is the adapter's, the site's (see "The site's
+   change or the adapter's") or not a problem.
+3. **Fix what is real in the file as it is**, with the smallest change
+   that fixes the cause. Keep what works: do not rewrite the adapter or
+   start again, and do not change what a finding did not ask you to. A
+   fix that would change what the brief asks for is not yours to make:
+   report it.
+4. **Turn each real finding into a check** in your own specs (`<id>` or
+   `<id>-<variant>`) that fails before your fix and passes after it, so
+   it cannot come back. Never edit or weaken the reviewer's specs, or
+   yours, to make them pass.
+5. **Verify again** as for a build: all your specs, the reviewer's, the
+   narrow and personal ones, `verify_on_sites`, and the rubrics.
+
+Your report, as for a build, also lists **every finding of the review**
+with what you did: fixed (and the check that shows it), not a problem
+(why), the site's (why), or left (why).
+
 ## Your report
 
 Your last message is the report, in plain text, starting with one line:
