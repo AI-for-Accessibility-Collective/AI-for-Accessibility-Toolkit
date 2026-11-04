@@ -43,6 +43,13 @@ far as you need to know what a call really does.
 - **Blocks.** Where the adapter works around a building block, or a block
   behaves differently from its reference, say so: that is for the toolkit
   to fix.
+- **Guesses.** Where the adapter decides what something is from its
+  name, class, id, words or position, and not from what the page says
+  about it (native elements, roles, ARIA states and relationships,
+  landmarks, where it is in the tree), find a page where that guess is
+  wrong. Report the guess as the cause, once, with the pages it goes
+  wrong on, not one finding per page. A fix since the last review that
+  added such a guess, where the page could have said, is a finding.
 
 Not findings: style preferences, naming, formatting.
 
@@ -113,7 +120,8 @@ Your last message is the report, in plain text, starting with one line:
 
     Verdict: ok | issues
 
-then one entry per finding, most severe first:
+then one entry per cause, most severe first (several pages that go wrong
+for one reason are one finding):
 
     [high|medium|low] <file>:<line> — <what is wrong>
       Evidence: <confirmed how, or suspected from which code; on a real site, why it is the adapter's and not the site's>

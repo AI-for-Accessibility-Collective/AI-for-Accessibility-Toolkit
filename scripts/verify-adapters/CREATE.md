@@ -245,7 +245,8 @@ independent reviewer's report, instead of building one. Then:
    designed, whether it is the adapter's, the site's (see "The site's
    change or the adapter's") or not a problem.
 3. **Fix what is real in the file as it is**, with the smallest change
-   that fixes the cause. Keep what works: do not rewrite the adapter or
+   that fixes the cause (see "Fix the cause, not the case" below). Keep
+   what works: do not rewrite the adapter or
    start again, and do not change what a finding did not ask you to. A
    fix that would change what the brief asks for is not yours to make:
    report it.
@@ -259,6 +260,38 @@ independent reviewer's report, instead of building one. Then:
 Your report, as for a build, also lists **every finding of the review**
 with what you did: fixed (and the check that shows it), not a problem
 (why), the site's (why), or left (why).
+
+## Fix the cause, not the case
+
+Most findings in these adapters are a guess that went wrong on one page:
+a button taken for the carousel's own because its name says "Play", a
+class read as an icon's name, a heading taken for the new view's because
+it sits in a container called "page". A rule added for that page moves
+the problem to the next page, and the next review finds it there. So,
+when you fix (and when you build):
+
+1. **Find the guess behind the finding**, and the earlier fixes that
+   touched the same guess (the adapter's history, the earlier reviews and
+   fix reports, when you have them). When an earlier fix added the rule
+   that now goes wrong, that rule is the cause, not this page.
+2. **Decide from what the page says about itself**, not from what it
+   looks like or is called: native elements and what they do, roles,
+   ARIA states and relationships (`aria-controls`, `aria-pressed`,
+   `aria-labelledby`, `for`), landmarks, and where an element is in the
+   tree (inside which slide, labelled by what). Names, classes, ids,
+   words in text and positions on screen are guesses. Where a guess is
+   still needed, narrow where it applies (only controls outside the
+   slides, only the first heading inside what changed), not what it
+   matches.
+3. **When the page does not say, do less.** Leave the element alone
+   rather than act on a guess. A fix the adapter misses is better than a
+   wrong one: a wrong one harms someone who relied on the page as it was.
+4. **A guess that more than one adapter needs belongs in a building
+   block**, with its tests, not copied into each adapter. Report it.
+5. **Replace or remove a rule rather than add one.** In your report, say
+   for each fix which rule you added, narrowed or removed, and name a
+   page that would make a rule you added go wrong. If you can name one,
+   test it on that page.
 
 ## Your report
 
