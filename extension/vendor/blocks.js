@@ -165,6 +165,8 @@
       };
       const { debounceMs = 0, cap = 500, types = ["childList"], selector = null, batch = false } = opts;
       const target = root || doc.body || doc.documentElement;
+      const watchAdded = types.includes("childList");
+      const watchText = types.includes("characterData");
       let pending = /* @__PURE__ */ new Set();
       let timer = null;
       const limit = cap * 50;
@@ -196,7 +198,13 @@
         for (const r of records) {
           if (ourRecord(r)) continue;
           if (r.type === "childList") {
-            for (const n of r.addedNodes) if (!shared.ourNodes.has(n)) take(n);
+            let text = false;
+            for (const n of r.addedNodes) {
+              if (shared.ourNodes.has(n)) continue;
+              if (n.nodeType === 3) text = true;
+              else if (watchAdded) take(n);
+            }
+            if (text && watchText) take(r.target);
           } else {
             take(r.target.nodeType === 1 ? r.target : r.target.parentElement);
           }
@@ -212,7 +220,7 @@
       });
       mo.observe(target, {
         subtree: true,
-        childList: types.includes("childList"),
+        childList: watchAdded || watchText,
         attributes: types.includes("attributes"),
         characterData: types.includes("characterData")
       });
@@ -2451,6 +2459,12 @@
         env.announce.batch(key, message, options);
       }
     };
+    s.announce.ready = () => {
+      if (open) {
+        shared.liveUsers.add(s);
+        env.announce.ready();
+      }
+    };
     const styles = stylesBlock(s, env);
     s.css = styles.css;
     s.filter = styles.filter;
@@ -2724,14 +2738,16 @@
   }
 
   // toolkit/blocks/announce.js
+  var SETTLE_MS = 250;
   var SR_ONLY = "position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;border:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;";
   function announcer(env) {
     const { doc, win, shared } = env;
     const batches = /* @__PURE__ */ new Map();
     let batchTimer = null;
+    const born = shared.liveBorn || (shared.liveBorn = /* @__PURE__ */ new WeakMap());
     function region(politeness) {
       let r = shared.liveRegions[politeness];
-      if (r && r.isConnected) return { el: r, fresh: false };
+      if (r && r.isConnected) return r;
       r = doc.createElement("div");
       r.setAttribute(UI_ATTR, "ui");
       r.setAttribute("aria-live", politeness);
@@ -2740,26 +2756,32 @@
       shared.ourNodes.add(r);
       (doc.body || doc.documentElement).appendChild(r);
       shared.liveRegions[politeness] = r;
-      return { el: r, fresh: true };
+      born.set(r, Date.now());
+      return r;
     }
     const pending = shared.livePending || (shared.livePending = {});
     function announce(message, { politeness = "polite", maxChars = 300 } = {}) {
       const text = String(message ?? "").replace(/\s+/g, " ").trim().slice(0, maxChars);
       if (!text) return;
       const p = politeness === "assertive" ? "assertive" : "polite";
-      const { el, fresh } = region(p);
+      const el = region(p);
       if (pending[p]) {
         pending[p].text += " " + text;
         return;
       }
       el.textContent = "";
       pending[p] = { text };
+      const age = Date.now() - (born.get(el) || 0);
       win.setTimeout(() => {
         const entry = pending[p];
         delete pending[p];
         if (entry && el.isConnected) el.textContent = entry.text;
-      }, fresh ? 250 : 60);
+      }, Math.max(60, SETTLE_MS - age));
     }
+    announce.ready = () => {
+      region("polite");
+      region("assertive");
+    };
     announce.batch = (key, message, { windowMs = 400, politeness = "polite" } = {}) => {
       batches.set(key, { message, politeness });
       if (batchTimer) return;

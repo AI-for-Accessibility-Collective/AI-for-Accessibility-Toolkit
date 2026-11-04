@@ -1,6 +1,8 @@
 // Block 3, watch: what changes in the page while the adapter runs.
 //
-//   s.watch.added(root, fn, opts)  new elements (or changed text/attributes)
+//   s.watch.added(root, fn, opts)  new elements (or changed text/attributes:
+//                                  with 'characterData', the element whose
+//                                  text was set, as el.textContent = 'x' does)
 //   s.watch.route(fn)              the address changed without a page load
 //   s.watch.prefs(fn)              reduced motion, contrast, colour scheme
 //   s.watch.byPerson(el, opts)     did the person just click or type in el?
@@ -47,6 +49,8 @@ export function watchBlock(s, env) {
     // measure them all before it changes any (one layout, not one each).
     const { debounceMs = 0, cap = 500, types = ['childList'], selector = null, batch = false } = opts;
     const target = root || doc.body || doc.documentElement;
+    const watchAdded = types.includes('childList');
+    const watchText = types.includes('characterData');
     let pending = new Set();
     let timer = null;
     // At most cap elements per call; the rest come in the next calls, one
@@ -74,7 +78,14 @@ export function watchBlock(s, env) {
       for (const r of records) {
         if (ourRecord(r)) continue;
         if (r.type === 'childList') {
-          for (const n of r.addedNodes) if (!shared.ourNodes.has(n)) take(n);
+          let text = false;
+          for (const n of r.addedNodes) {
+            if (shared.ourNodes.has(n)) continue;
+            if (n.nodeType === 3) text = true; else if (watchAdded) take(n);
+          }
+          // New text put in an element (el.textContent = 'x') is a change
+          // of its text, as characterData is: the element is what changed.
+          if (text && watchText) take(r.target);
         } else {
           take(r.target.nodeType === 1 ? r.target : r.target.parentElement);
         }
@@ -84,7 +95,7 @@ export function watchBlock(s, env) {
     });
     mo.observe(target, {
       subtree: true,
-      childList: types.includes('childList'),
+      childList: watchAdded || watchText,
       attributes: types.includes('attributes'),
       characterData: types.includes('characterData'),
     });

@@ -11,7 +11,8 @@
 //   debounceMs: Delay in ms to debounce and batch announcements (defaults to 200).
 //
 // Decisions:
-//   • Speaks through s.announce, using the toolkit's shared live region.
+//   • Speaks through s.announce, using the toolkit's shared live region, which is in the page
+//     from enable() (s.announce.ready()), so a screen reader has seen it before the first message.
 //   • Never announces the adapter's own or the toolkit's UI (checked with s.page.isOurs).
 //   • Never announces changes inside an existing aria-live region (including <output>) twice.
 //   • A newly inserted element that is itself role="status" or "alert" is announced;
@@ -22,25 +23,30 @@
 //     by tracking update counts per container; cancels pending timers and suppresses them.
 //   • Distinguishes typing from actions: typing in text fields (Space and Enter included)
 //     is typing, not an action; click, non-field keydown, and submit count as actions.
+//     A key that only moves focus or scrolls is not: Tab, a modifier alone, and arrows,
+//     Page Up/Down, Home, End and Space unless a control (a native one or a widget role) has them.
 //   • Announce only what reads as a message (role, class, id, or name says status, alert,
 //     error, notice, message, toast, warn, notification, snackbar) or content appearing within ACTION_MS of a user action.
 //     A class, id or name is read as words (errorMessage, form-errors, FormError2), never as a substring.
+//     A control (link, button, field) is never a message, whatever its class or name says.
 //   • Route changes announce the new view's heading, not its content, and cancel any pending
 //     route announcement when a new route arrives. The view's heading is found from what changed:
 //     it remembers the headings shown at enable() and after each route, and takes one that was
 //     not shown then or whose text changed (in main first, then the highest level, then the first).
 //     A heading mounted again with text already shown counts only when nothing else changed and
-//     the title did not either. Otherwise it says the title. Headings drawn while no route change
-//     is pending count as shown. It never decides from container names.
-//   • Does not watch characterData: text changing inside existing content on its own is never announced.
+//     the title did not either. Otherwise it says the title. Headings drawn, or whose text the page
+//     changes in place, while no route change is pending count as shown. It never decides from
+//     container names. While a route change is pending, what is added is the view: only an element
+//     the page marks as a status (role status or alert, <output>) is announced with it.
+//   • Text changing inside existing content is never announced (it is watched only to keep the
+//     headings' text current).
 //   • Ignores content outside the viewport and inside iframes.
 //
 // What it cannot do:
 //   • Cannot observe or announce updates inside cross-origin iframes.
 //   • Cannot detect status conveyed purely through CSS styling, canvas, or video without DOM changes.
 //   • A view that draws its heading more than 100 ms after the address changes (after a fetch),
-//     or more than about 50 ms before it, is announced by its title. A heading whose text the
-//     page changes in place between two routes counts as changed at the next route.
+//     or more than about 50 ms before it, is announced by its title.
 
 const ACTION_MS = 3000;
 const PAGE_SPOKE_MS = 2000;
@@ -66,6 +72,22 @@ function isTextField(el) {
     return !nonText.includes(type);
   }
   return false;
+}
+
+// A key that only moves focus or scrolls is not an action: Tab, a modifier
+// pressed alone (Control stops a screen reader's speech), and the keys that
+// scroll (arrows, Page Up and Down, Home, End, Space) unless a control has
+// them (a tab list's arrows, a slider's Home). Space and Enter on a native
+// button or link are also a click.
+const MOVE_KEYS = new Set(['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'OS', 'CapsLock', 'NumLock', 'Fn', 'Insert', 'Tab']);
+const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar']);
+const WIDGET = `${INTERACTIVE}, summary, [role="tab" i], [role^="menuitem" i], [role="option" i], [role="checkbox" i], [role="radio" i], [role="switch" i], [role="slider" i], [role="spinbutton" i], [role="treeitem" i], [role="gridcell" i], [role="combobox" i], [role="listbox" i], [role="tree" i], [role="grid" i], [role="treegrid" i], [role="menu" i], [role="menubar" i], [role="tablist" i], [role="radiogroup" i], [role="toolbar" i]`;
+
+function isActionKey(e) {
+  if (MOVE_KEYS.has(e.key)) return false;
+  if (!SCROLL_KEYS.has(e.key)) return true;
+  const t = e.target;
+  return !!(t && t.nodeType === 1 && t.closest?.(WIDGET));
 }
 
 function inViewport(el) {
@@ -116,21 +138,28 @@ function saysMessage(str) {
   return words.some((w) => MESSAGE_WORD.test(w));
 }
 
+// What the page itself says is a status message: <output>, role status or alert.
+function saysStatus(el) {
+  if (el.tagName === 'OUTPUT') return true;
+  const role = (el.getAttribute('role') || '').toLowerCase().trim();
+  return role === 'status' || role === 'alert';
+}
+
 function isMessageElement(el) {
   if (!el || el.nodeType !== 1) return false;
-  const tag = el.tagName.toLowerCase();
-  if (tag === 'output') return true;
-  const role = (el.getAttribute('role') || '').toLowerCase().trim();
-  if (role === 'status' || role === 'alert') return true;
+  if (saysStatus(el)) return true;
+  // A control is not a message, whatever its class says (btn-warning,
+  // a select named status).
+  if (el.matches(INTERACTIVE)) return false;
   return saysMessage(el.getAttribute('class')) || saysMessage(el.id) || saysMessage(el.getAttribute('name'));
 }
 
-function findMessage(el) {
-  if (isMessageElement(el)) return el;
+function findMessage(el, is = isMessageElement) {
+  if (is(el)) return el;
   if (typeof el.querySelector === 'function') {
     const candidates = el.querySelectorAll(CANDIDATE_SELECTOR);
     for (const c of candidates) {
-      if (isMessageElement(c)) return c;
+      if (is(c)) return c;
     }
   }
   return null;
@@ -252,6 +281,9 @@ export default {
     if (!this.toolkit) return false;
 
     const s = (this.s = this.toolkit.session());
+    // The live regions are in the page from now, before the first message:
+    // a screen reader can miss text written to a region it had not seen.
+    s.announce.ready();
 
     this.debounceMs = this.options.debounceMs ?? 200;
     this.lastAction = 0;
@@ -277,7 +309,7 @@ export default {
     }, true);
 
     s.listen(document, 'keydown', (e) => {
-      if (!isTextField(e.target)) {
+      if (!isTextField(e.target) && isActionKey(e)) {
         this.lastAction = Date.now();
       }
     }, true);
@@ -308,12 +340,28 @@ export default {
       if (!this.s || this.s.ended) return;
       this.onAdded(els);
     }, { batch: true, debounceMs: 50 });
+
+    // Heading text the page changes in place while no route change is
+    // pending ("Inbox (3 new)") is what the person is already on: noted as
+    // shown, so the next route does not take it for its view's heading.
+    // Never announced: text changing inside existing content is not a message.
+    s.watch.added(null, (els) => {
+      if (!this.s || this.s.ended || this.routeTimer || !this.seenHeadings) return;
+      for (const el of els) {
+        const h = el.closest(HEADINGS);
+        if (h) noteHeadings(this.s, this.seenHeadings, h);
+      }
+    }, { batch: true, debounceMs: 50, types: ['characterData'] });
   },
 
   onAdded(elements) {
     const list = Array.isArray(elements) ? elements : [elements];
     const now = Date.now();
     const answering = now - this.lastAction < ACTION_MS;
+    // While a route change is pending, what is added is the new view, said
+    // by its heading: only what the page itself marks as a status or alert
+    // (role, <output>) is announced too, never one a class name suggests.
+    const routing = !!this.routeTimer;
 
     if (!this.routeTimer && this.seenHeadings) {
       for (const el of list) if (el?.nodeType === 1 && el.isConnected) noteHeadings(this.s, this.seenHeadings, el);
@@ -375,8 +423,8 @@ export default {
       const container = el.parentElement;
       if (container && this.tickers.has(container)) continue;
 
-      const msgEl = findMessage(el);
-      if (!msgEl && !answering) continue;
+      const msgEl = routing ? findMessage(el, saysStatus) : findMessage(el);
+      if (!msgEl && (routing || !answering)) continue;
 
       // Skip redrawn lists/grids if multiple elements added without explicit message markers
       if (!msgEl && list.length >= 3) continue;
