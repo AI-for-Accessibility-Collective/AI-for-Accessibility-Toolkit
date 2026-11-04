@@ -1,0 +1,15 @@
+{
+  "name": "structure-scoped-footer",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-scoped-footer.html",
+  "checks": [
+    {
+      "name": "a content div holding a post footer in a div becomes main, because the page's own footer stays outside it",
+      "code": "return document.getElementById('story').getAttribute('role') === 'main';"
+    },
+    {
+      "name": "the page wrapper, which holds the page's header and footer, is not main, and no banner or contentinfo role is added",
+      "code": "return document.getElementById('page').getAttribute('role') === null && document.querySelectorAll('[role=\"banner\"], [role=\"contentinfo\"]').length === 0;"
+    }
+  ]
+}

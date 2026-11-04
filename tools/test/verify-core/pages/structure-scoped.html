@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Structure: headers and footers inside the content</title>
+</head>
+<body>
+  <header id="site-header">
+    <p>Riverside Library</p>
+  </header>
+
+  <!-- The content region holds the story's own header and footer, in a div, not an article. -->
+  <div id="main-content" class="main">
+    <header id="story-header">
+      <h1>Opening hours this winter</h1>
+      <p>What changes from December to February.</p>
+    </header>
+    <p>From the first of December the library opens an hour later on weekdays and closes at six. Saturday hours stay the same, and the reading room is open on Sundays from noon.</p>
+    <footer id="story-footer">
+      <p>Posted by the front desk team.</p>
+    </footer>
+  </div>
+
+  <!-- The site footer has a column header nested in a div. -->
+  <div id="colophon" class="site-footer">
+    <div class="footer-col">
+      <header>
+        <h2>Visit us</h2>
+      </header>
+      <p>12 River Street, open every day.</p>
+    </div>
+    <p>© 2026 Riverside Library.</p>
+  </div>
+</body>
+</html>

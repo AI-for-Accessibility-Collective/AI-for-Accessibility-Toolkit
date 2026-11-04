@@ -1,0 +1,15 @@
+{
+  "name": "structure-scoped-last",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-scoped-last.html",
+  "checks": [
+    {
+      "name": "a header inside role=region is still the page's banner (as Chrome exposes it), so the masthead div gets no second banner",
+      "code": "return document.getElementById('masthead').getAttribute('role') === null;"
+    },
+    {
+      "name": "the div holding the page's only footer is not made main, which would take the page's contentinfo away",
+      "code": "return document.getElementById('story').getAttribute('role') === null;"
+    }
+  ]
+}
