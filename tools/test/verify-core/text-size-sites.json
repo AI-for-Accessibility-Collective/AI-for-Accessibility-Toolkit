@@ -8,9 +8,29 @@
   },
   "sites": "all",
   "known": {
-    "bad-tickets": "The site's: color-contrast on 1, the 'Concession' label (#41545d on #a9b8bf, 3.88:1, bold below 14pt at both sizes). It fails the same at the page's own size, where axe-core cannot measure it (incomplete: its 15px text runs past its 12px-high cell, 'partially obscured'); with more line room the cell holds the text and axe-core sees it.",
-    "mdn": "The site's: target-size on 9 sidebar entries, each a details > summary holding a link. The summary's own target is what the link leaves of the row, its 16px marker, wherever the link fills the row: 8 rows already fail at the page's own size, every one whose link spans the sidebar. At 150% more link names wrap and fill their rows (17 fail).",
-    "uw-before": "Unavoidable with the text size alone: color-contrast on 3, cells of the last column of the 11-column enrollment table. At 150% with WCAG letter and word spacing the table cannot be narrower than 1152px, wider than #content (80% of the window, 1024px), so its last column runs onto the body's dark purple (#2a194c). The size alone or the spacing alone fits; at 150% browser zoom with the same spacing (an 853px window) it fits too, as the page's widths follow the window, not the text.",
-    "guardian": "Unavoidable with the text size alone: color-contrast on 1, a card's kicker (#fff4f2, meant for the photo behind it). The headline sits in a box placed over the bottom of the photo (position: absolute; bottom: 0), and the card is the photo's height (375px). At 150% with the spacing the headline needs 450px in its 284px column, so it runs 75px above the photo onto the white page. Growing the card to hold it (tried) puts its last two lines (#f6f6f6) on the card's light grey (#ededed) below the photo instead: as unreadable, though axe-core then calls it incomplete, not a failure. The size alone or the spacing alone fits; at 150% browser zoom with the spacing (an 853px window) it fits."
+    "bad-tickets": {
+      "rules": {
+        "color-contrast": 1
+      },
+      "why": "The site's: color-contrast on 1, the 'Concession' label (#41545d on #a9b8bf, 3.88:1, bold below 14pt at both sizes). It fails the same at the page's own size, where axe-core cannot measure it (incomplete: its 15px text runs past its 12px-high cell, 'partially obscured'); with more line room the cell holds the text and axe-core sees it."
+    },
+    "mdn": {
+      "rules": {
+        "target-size": 9
+      },
+      "why": "The site's: target-size on 9 sidebar entries, each a details > summary holding a link. The summary's own target is what the link leaves of the row, its 16px marker, wherever the link fills the row: 8 rows already fail at the page's own size, every one whose link spans the sidebar. At 150% more link names wrap and fill their rows (17 fail)."
+    },
+    "uw-before": {
+      "rules": {
+        "color-contrast": 3
+      },
+      "why": "Unavoidable with the text size alone: color-contrast on 3, cells of the last column of the 11-column enrollment table. At 150% with WCAG letter and word spacing the table cannot be narrower than 1152px, wider than #content (80% of the window, 1024px), so its last column runs onto the body's dark purple (#2a194c). The size alone or the spacing alone fits; at 150% browser zoom with the same spacing (an 853px window) it fits too, as the page's widths follow the window, not the text."
+    },
+    "guardian": {
+      "rules": {
+        "color-contrast": 1
+      },
+      "why": "Unavoidable with the text size alone: color-contrast on 1, a card's kicker (#fff4f2, meant for the photo behind it). The headline sits in a box placed over the bottom of the photo (position: absolute; bottom: 0), and the card is the photo's height (375px). At 150% with the spacing the headline needs 450px in its 284px column, so it runs 75px above the photo onto the white page. Growing the card to hold it (tried) puts its last two lines (#f6f6f6) on the card's light grey (#ededed) below the photo instead: as unreadable, though axe-core then calls it incomplete, not a failure. The size alone or the spacing alone fits; at 150% browser zoom with the spacing (an 853px window) it fits."
+    }
   }
 }

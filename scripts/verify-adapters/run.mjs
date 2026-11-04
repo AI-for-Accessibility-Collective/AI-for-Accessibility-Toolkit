@@ -241,10 +241,19 @@ async function replay() {
     else runs.push([name, spec, false]);
   }
   let known = 0;
-  for (const [name, spec, live, knownWhy] of runs) {
-    const { r, problems } = await judge(v, name, spec, live, { keyboard: isCore(spec.file) && name === path.basename(spec.file, '.js') });
+  for (const [name, spec, live, knownOn] of runs) {
+    const judged = await judge(v, name, spec, live, { keyboard: isCore(spec.file) && name === path.basename(spec.file, '.js') });
+    const { r } = judged;
+    let { problems } = judged;
     if (r.status === 'unreachable') { skipped++; console.log(`SKIP: ${name} (${r.message})`); }
-    if (problems.length && knownWhy) { known++; console.log(`KNOWN: ${name}: ${problems.join('; ')}\n  why: ${knownWhy}`); continue; }
+    // A known problem names its rule and the most it may add ({ "rules": { "color-contrast": 3 }, "why": "…" }):
+    // anything else on that site, or more of it, still fails.
+    if (knownOn && (typeof knownOn !== 'object' || !knownOn.rules || !knownOn.why)) problems = [...problems, 'its "known" entry must be { "rules": { "<axe rule>": <most it may add> }, "why": "…" }'];
+    else if (problems.length && knownOn) {
+      const left = problems.filter((p) => { const m = /^adds (\S+) \(WCAG [^)]*\) on (\d+)$/.exec(p); return !(m && Number(m[2]) <= (knownOn.rules[m[1]] ?? -1)); });
+      if (!left.length) { known++; console.log(`KNOWN: ${name}: ${problems.join('; ')}\n  why: ${knownOn.why}`); continue; }
+      problems = left;
+    }
     if (problems.length) failed++;
     if (r.status === 'unreachable') continue;
     console.log(`${problems.length ? 'FAIL' : 'PASS'}: ${name}${r.status === 'applied' ? ` (shift ${r.shift ?? '-'})` : ''}${problems.length ? `\n  ${problems.join('\n  ')}` : ''}`);

@@ -3,8 +3,24 @@
   "export": "ReflowColumn",
   "sites": "all",
   "known": {
-    "deque-mars": "Un-floating the menu panel, which has a fixed 50px height, stacks its halves; the right half drops onto the dark body background (contrast) and its links stack closer than 24px. The site fixes the panel height; reflow cannot without guessing.",
-    "uw-before": "The 11-column enrollment table cannot shrink below about 708px, so in the 720px measure its last columns overhang the white content box onto the purple body. WCAG 1.4.10 exempts data tables from reflow; making it scroll would add a keyboard problem.",
-    "wikipedia": "Two links in a reflowed list sit closer than 24px apart (target-size). Wikipedia has 8 target-size problems before and after; reflow trades 2 for 2."
+    "deque-mars": {
+      "rules": {
+        "color-contrast": 3,
+        "target-size": 2
+      },
+      "why": "Un-floating the menu panel, which has a fixed 50px height, stacks its halves; the right half drops onto the dark body background (contrast) and its links stack closer than 24px. The site fixes the panel height; reflow cannot without guessing."
+    },
+    "uw-before": {
+      "rules": {
+        "color-contrast": 6
+      },
+      "why": "The 11-column enrollment table cannot shrink below about 708px, so in the 720px measure its last columns overhang the white content box onto the purple body. WCAG 1.4.10 exempts data tables from reflow; making it scroll would add a keyboard problem."
+    },
+    "wikipedia": {
+      "rules": {
+        "target-size": 2
+      },
+      "why": "Two links in a reflowed list sit closer than 24px apart (target-size). Wikipedia has 8 target-size problems before and after; reflow trades 2 for 2."
+    }
   }
 }
