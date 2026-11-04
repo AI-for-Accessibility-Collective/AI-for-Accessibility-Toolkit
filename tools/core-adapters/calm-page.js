@@ -18,7 +18,8 @@
 // Decisions:
 //   • Motion reduction is applied through one injected stylesheet (via s.css) and s.media.
 //   • Never pauses CSS animations with animation-play-state (which stops at frame 0); ends them
-//     with duration 0s, delay 0s, and iteration-count 1 so content stays visible in its final state.
+//     with duration 0s, delay 0s, iteration-count 1, and animation-fill-mode forwards so content
+//     stays visible in its final state.
 //   • Collapses transition-duration and transition-delay to 0s so state changes apply immediately.
 //   • Sets scroll-behavior to auto so smooth scrolling does not cause motion sickness.
 //   • Pauses autoplaying and looping videos through s.media.pause(el, { showControls: true }),
@@ -101,6 +102,7 @@ export default {
         'animation-duration: 0s !important; ' +
         'animation-delay: 0s !important; ' +
         'animation-iteration-count: 1 !important; ' +
+        'animation-fill-mode: forwards !important; ' +
         '}'
       );
     }
@@ -128,8 +130,16 @@ export default {
 
     // Input tracking for user-initiated plays and carousel interactions
     let lastInput = null;
+    const userInteractedCarousels = new WeakSet();
     const noteInput = (e) => {
-      if (e.isTrusted) lastInput = { target: e.target, at: Date.now() };
+      if (e.isTrusted && e.target) {
+        lastInput = { target: e.target, at: Date.now() };
+        let el = e.target;
+        while (el && el !== document.documentElement) {
+          userInteractedCarousels.add(el);
+          el = el.parentElement;
+        }
+      }
     };
     for (const type of ['pointerdown', 'keydown', 'click']) {
       s.listen(document, type, noteInput, true);
@@ -149,9 +159,16 @@ export default {
         const btn = target.closest ? target.closest('button, [role="button"], input[type="button"]') : null;
         if (!btn) return false;
         if (btn.getAttribute('aria-controls') === media.id) return true;
-        const container = media.closest ? media.closest('figure, section, article, div, [class*="player"], [class*="video"]') : null;
+        const container = media.closest ? media.closest('figure, [role="region"], [class*="player"], [class*="video"]') : null;
         if (container && container.contains(btn) && container !== document.body && container !== document.documentElement) {
           return true;
+        }
+        const parent = media.parentElement;
+        if (parent && parent.contains(btn) && parent !== document.body && parent !== document.documentElement) {
+          const btnName = (s.page?.nameOf?.(btn) || btn.getAttribute('aria-label') || btn.textContent || '').trim();
+          if (/\b(play|pause|stop|mute|unmute|video|audio|media|track)\b/i.test(btnName)) {
+            return true;
+          }
         }
         return false;
       };
@@ -351,7 +368,7 @@ export default {
         handledCarousels.add(carousel);
 
         // Find own pause/stop control
-        const buttons = carousel.querySelectorAll('button, [role="button"]');
+        const buttons = carousel.querySelectorAll('button, [role="button"], input[type="button"]');
         let pauseButton = null;
 
         for (const btn of buttons) {
@@ -383,10 +400,13 @@ export default {
       };
 
       const findAndProcessCarousels = (root) => {
+        if (!root) return;
         const list = [];
-        const candidates = root.querySelectorAll(
-          '[aria-roledescription="carousel" i], [role="region"], [role="group"], section, div'
-        );
+        const selector = '[aria-roledescription="carousel" i], [role="region"], [role="group"], section, div';
+        const candidates = [
+          ...(root.matches?.(selector) ? [root] : []),
+          ...root.querySelectorAll(selector),
+        ];
         for (const el of candidates) {
           const roledescription = (el.getAttribute('aria-roledescription') || '').toLowerCase();
           if (roledescription === 'carousel') {
@@ -398,7 +418,9 @@ export default {
           if (role === 'region' || role === 'group' || tag === 'section' || tag === 'div') {
             const name = (s.page?.nameOf?.(el) || el.getAttribute('aria-label') || '').toLowerCase();
             if (/\b(carousel|slideshow)\b/i.test(name)) {
-              list.push(el);
+              if (!el.querySelector('[aria-roledescription="carousel" i]')) {
+                list.push(el);
+              }
             }
           }
         }
@@ -412,8 +434,11 @@ export default {
       if (root) {
         findAndProcessCarousels(root);
         if (s.watch && typeof s.watch.added === 'function') {
-          s.watch.added(root, (el) => {
-            if (el.nodeType === 1) findAndProcessCarousels(el);
+          s.watch.added(root, (nodes) => {
+            const list = Array.isArray(nodes) ? nodes : [nodes];
+            for (const el of list) {
+              if (el && el.nodeType === 1) findAndProcessCarousels(el);
+            }
           });
         }
       }
@@ -422,13 +447,18 @@ export default {
       s.onEnd(() => {
         for (const { carousel, button } of pausedCarousels) {
           if (!carousel.isConnected) continue;
+          if (userInteractedCarousels.has(carousel)) continue;
+
           const currentName = (s.page?.nameOf?.(button) || button.getAttribute('aria-label') || button.textContent || '').trim();
           const pressed = button.getAttribute('aria-pressed');
           if (/\bplay\b/i.test(currentName) || pressed === 'true') {
             try { button.click(); } catch {}
             continue;
           }
-          const playBtn = Array.from(carousel.querySelectorAll('button, [role="button"]')).find((b) => {
+          if (/\b(pause|stop)\b/i.test(currentName) && pressed !== 'true') {
+            continue;
+          }
+          const playBtn = Array.from(carousel.querySelectorAll('button, [role="button"], input[type="button"]')).find((b) => {
             if (b.closest('form')) return false;
             const n = (s.page?.nameOf?.(b) || b.getAttribute('aria-label') || b.textContent || '').trim();
             return /\bplay\b/i.test(n);

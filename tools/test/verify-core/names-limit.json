@@ -8,11 +8,11 @@
   "checks": [
     {
       "name": "custom limit of 5 is strictly respected",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        window.__verifyAiCallLog = [];\n        const orig = globalThis.__verifyAi;\n        if (orig && !window.__origVerifyAiHooked) {\n          window.__origVerifyAiHooked = true;\n          globalThis.__verifyAi = (req) => {\n            window.__verifyAiCallLog.push(req);\n            return orig(req);\n          };\n        }\n        return true;\n      }\n\n      const count = window.__verifyAiCallLog?.length || 0;\n      return count > 0 && count <= 5;\n    "
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) {\n          window.__verifyAiCallLog = [];\n          const orig = globalThis.__verifyAi;\n          if (orig && !window.__origVerifyAiHooked) {\n            window.__origVerifyAiHooked = true;\n            globalThis.__verifyAi = (req) => {\n              window.__verifyAiCallLog.push(req);\n              return orig(req);\n            };\n          }\n          return true;\n        }\n\n        const count = window.__verifyAiCallLog?.length || 0;\n        return count > 0 && count <= 5;\n      "
     },
     {
       "name": "elements processed after limit of 5 is reached are not sent to AI",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      const burstBtns = Array.from(document.querySelectorAll('.burst-wrap button'));\n      const unlabeledBurst = burstBtns.filter(b => !b.hasAttribute('aria-label'));\n      return unlabeledBurst.length >= 10;\n    "
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        const burstBtns = Array.from(document.querySelectorAll('.burst-wrap button'));\n        const unlabeledBurst = burstBtns.filter(b => !b.hasAttribute('aria-label'));\n        return unlabeledBurst.length >= 10;\n      "
     }
   ],
   "ai": {

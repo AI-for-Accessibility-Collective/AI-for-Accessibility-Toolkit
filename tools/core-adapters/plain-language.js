@@ -59,16 +59,16 @@ function extractKeepTerms(element, extraKeep = []) {
   const text = element.textContent || '';
 
   // Months: January, Jan, February, Feb, etc.
-  const months = 'Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?';
+  const months = 'Jan(?:uary|\\.)?|Feb(?:ruary|\\.)?|Mar(?:ch|\\.)?|Apr(?:il|\\.)?|May|Jun(?:e|\\.)?|Jul(?:y|\\.)?|Aug(?:ust|\\.)?|Sep(?:tember|\\.)?|Oct(?:ober|\\.)?|Nov(?:ember|\\.)?|Dec(?:ember|\\.)?';
 
   // Day-first dates: 15 January 2024, 15 Jan 2024, 15th of Jan 2024, 15 Jan
-  const dayFirstRegex = new RegExp(`\\b\\d{1,2}(?:st|nd|rd|th)?(?:\\s+of)?\\s+(?:${months})(?:,?\\s+\\d{2,4})?\\b`, 'gi');
+  const dayFirstRegex = new RegExp(`\\b\\d{1,2}(?:st|nd|rd|th)?(?:\\s+of)?\\s+(?:${months})(?:,?\\s+\\d{2,4})?(?=\\b|\\s|[.,;:!?]|$)`, 'gi');
   for (const m of text.matchAll(dayFirstRegex)) {
     terms.add(m[0].trim());
   }
 
   // Month-first dates: January 15, 2024, Jan 15 2024, Jan 15
-  const monthFirstRegex = new RegExp(`\\b(?:${months})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,?\\s+\\d{2,4})?\\b`, 'gi');
+  const monthFirstRegex = new RegExp(`\\b(?:${months})\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,?\\s+\\d{2,4})?(?=\\b|\\s|[.,;:!?]|$)`, 'gi');
   for (const m of text.matchAll(monthFirstRegex)) {
     terms.add(m[0].trim());
   }
@@ -84,7 +84,7 @@ function extractKeepTerms(element, extraKeep = []) {
   }
 
   // Numbers, currency, percentages, times (e.g. 4:30 PM, $50,000, 250%, 2025)
-  for (const m of text.matchAll(/\b(?:\$|£|€)?\d+(?:,\d{3})*(?:\.\d+)?%?(?:\s*(?:AM|PM|am|pm))?\b/g)) {
+  for (const m of text.matchAll(/(?:[\$£€]\s*)?\b\d+(?:,\d{3})*(?::\d{2}|\.\d+)?%?(?:\s*(?:AM|PM|am|pm))?(?=\b|\s|[.,;:!?]|$)/gi)) {
     terms.add(m[0].trim());
   }
 
@@ -102,7 +102,7 @@ function extractKeepTerms(element, extraKeep = []) {
     // Drop first word of sentence
     const firstWordMatch = trimmed.match(/^[A-Z][a-z]*/);
     const rest = firstWordMatch ? trimmed.slice(firstWordMatch[0].length) : trimmed;
-    for (const m of rest.matchAll(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g)) {
+    for (const m of rest.matchAll(/\b[A-Z][a-z]*(?:\s+[A-Z][a-z]*)*\b/g)) {
       const w = m[0].trim();
       if (w.length > 1) {
         terms.add(w);
@@ -115,7 +115,7 @@ function extractKeepTerms(element, extraKeep = []) {
 
 export default {
   enable(options = {}, toolkit) {
-    if (this.s && !this.s.ended) return;
+    if (this.s && !this.s.ended) return false;
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
@@ -245,7 +245,11 @@ export default {
           }
         }
         if (!insertTarget) {
-          insertTarget = paras[0] || sec.firstChild;
+          let cur = paras[0];
+          while (cur && cur.parentNode !== sec) {
+            cur = cur.parentNode;
+          }
+          insertTarget = (cur && cur.parentNode === sec) ? cur : sec.firstChild;
         }
         s.insert(sec, btn, insertTarget);
 
@@ -286,7 +290,7 @@ export default {
               if (!s.alive()) return;
               const text = (this.toolkit.page ? this.toolkit.page.readableText(p) : p.textContent) || '';
               const keep = extractKeepTerms(p, this.options.keep);
-              const readingLevel = this.options.readingLevel || 'plain';
+              const readingLevel = s.profile.get('readingLevel') || this.options.readingLevel || 'plain';
 
               const answer = await s.ai.text('simplify', text, {
                 context: document.title || '',
@@ -379,7 +383,7 @@ export default {
       try {
         const text = (this.toolkit.page ? this.toolkit.page.readableText(p) : p.textContent) || '';
         const keep = extractKeepTerms(p, this.options.keep);
-        const readingLevel = this.options.readingLevel || 'plain';
+        const readingLevel = s.profile.get('readingLevel') || this.options.readingLevel || 'plain';
 
         const answer = await s.ai.text('simplify', text, {
           context: document.title || '',

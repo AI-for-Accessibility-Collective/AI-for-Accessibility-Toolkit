@@ -1,0 +1,20 @@
+{
+  "name": "text-size-spacing-scale",
+  "file": "tools/core-adapters/text-size.js",
+  "page": "text-size.html",
+  "personal": {
+    "lineHeight": 2,
+    "letterSpacing": 0.12,
+    "textSizeMethod": "font"
+  },
+  "checks": [
+    {
+      "name": "tight container expanded initially with spacing",
+      "code": "\n        const box = document.getElementById('box-tight');\n        if (!box) return false;\n        return box.scrollHeight <= box.clientHeight + 1 && box.offsetHeight > 50;\n      "
+    },
+    {
+      "name": "tight container remains expanded and unclipped after fontScale adjusted via shortcut",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return false;\n\n        const box = document.getElementById('box-tight');\n        if (!box) return false;\n\n        // Increase size from 100 to 150 (5 presses)\n        for (let i = 0; i < 5; i++) {\n          await __verifyPress('Alt+Shift+ArrowUp');\n          await new Promise(r => setTimeout(r, 60));\n        }\n\n        const isClipped = box.scrollHeight > box.clientHeight + 1;\n        return !isClipped && box.offsetHeight > 50;\n      "
+    }
+  ]
+}

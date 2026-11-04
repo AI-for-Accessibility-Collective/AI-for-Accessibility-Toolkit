@@ -69,6 +69,7 @@ export default {
         } else if (zoomApplied) {
           // Previously zoomed, now back at 100% or unset after adjustment
           s.zoom.set(1);
+          zoomApplied = false;
         }
       } else {
         // Font method: zoom is never touched
@@ -145,6 +146,12 @@ export default {
       const letterSpacing = s.profile.get('letterSpacing') ?? this.options.letterSpacing;
       const method = s.zoom.method(this.options.method || 'zoom');
 
+      // End spacing first so size inspection sees unspaced layout
+      if (spacingGroup) {
+        spacingGroup.end();
+        spacingGroup = null;
+      }
+
       // Size first, then spacing
       applySize(fontScale, method);
       applySpacing(lineHeight, letterSpacing);
@@ -156,7 +163,7 @@ export default {
       const current = s.profile.get('fontScale') ?? this.options.fontScale;
       const base = current !== undefined && current !== null ? Number(current) : 100;
       const next = Math.max(100, Math.min(200, Math.round((base + delta) / 10) * 10));
-      if (next === current) return;
+      if (next === base) return;
 
       const res = await s.profile.set({ fontScale: next });
       if (res && res.applied) {

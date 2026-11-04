@@ -30,6 +30,22 @@
     {
       "name": "ordinary content is left alone",
       "code": "\n        const intro = document.getElementById('prose-intro');\n        const help = document.getElementById('prose-help');\n        const disabledBtn = document.getElementById('btn-disabled');\n        if (!intro || !help || !disabledBtn) return false;\n        if (!intro.textContent.includes('Access self-service account options')) return false;\n        if (!help.textContent.includes('All system inquiries are processed')) return false;\n        if (!disabledBtn.disabled) return false;\n        return true;\n      "
+    },
+    {
+      "name": "button with contenteditable false is counted as focusable",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || typeof adapter.isFocusable !== 'function') return false;\n        const btn = document.getElementById('btn-ce-false');\n        if (!btn) return false;\n        return adapter.isFocusable(btn) === true;\n      "
+    },
+    {
+      "name": "uppercase type HIDDEN input is excluded from focusable count",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || typeof adapter.isFocusable !== 'function') return false;\n        const input = document.getElementById('input-hidden-upper');\n        if (!input) return false;\n        return adapter.isFocusable(input) === false;\n      "
+    },
+    {
+      "name": "SVG link with href is counted as focusable",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || typeof adapter.isFocusable !== 'function') return false;\n        const link = document.getElementById('svg-link');\n        if (!link) return false;\n        return adapter.isFocusable(link) === true;\n      "
+    },
+    {
+      "name": "details without summary is counted as focusable",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || typeof adapter.isFocusable !== 'function' || typeof adapter.countFocusable !== 'function') return false;\n        const details = document.getElementById('details-no-summary');\n        if (!details) return false;\n        const isFoc = adapter.isFocusable(details) === true;\n        const count = adapter.countFocusable(details.parentElement);\n        return isFoc && count >= 1;\n      "
     }
   ]
 }

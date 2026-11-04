@@ -209,6 +209,14 @@
       color: #94a3b8;
       cursor: not-allowed;
     }
+    .ext-link::after {
+      content: " [PDF]";
+      color: #e11d48;
+    }
+    .box-overflow {
+      overflow: hidden;
+      display: inline-block;
+    }
     footer {
       margin-top: 2rem;
       padding: 1.5rem;
@@ -271,6 +279,22 @@
           Read our full warranty terms in the <a href="#warranty" id="link-inline">warranty policy</a> before placing your order.
           All standard orders qualify for express processing.
         </p>
+      </div>
+
+      <div class="box-overflow" id="tight-svg-box" style="width: 30px; height: 18px; border: 1px solid #cbd5e1; margin: 1rem 0;">
+        <svg role="button" tabindex="0" id="svg-tight" width="16" height="16" viewBox="0 0 16 16" aria-label="Audio sample"><circle cx="8" cy="8" r="7" fill="#64748b"/></svg>
+      </div>
+
+      <div class="box-overflow" id="tight-input-box" style="width: 30px; height: 18px; border: 1px solid #cbd5e1; margin: 1rem 0;">
+        <input type="text" id="input-tight" style="width: 20px; height: 16px;" aria-label="Passcode">
+      </div>
+
+      <div id="section-pseudo" style="margin: 1rem 0;">
+        <a href="#manual" id="link-ext" class="ext-link">User Manual</a>
+      </div>
+
+      <div id="section-dynamic-test" style="margin: 1rem 0;">
+        <a href="#test" id="link-dyn-target">Options</a>
       </div>
 
       <div id="dynamic-container"></div>

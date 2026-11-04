@@ -108,6 +108,20 @@
       font-size: 14px;
       line-height: 1.2;
     }
+    /* A tight box that fits initially, used to verify spacing then scale */
+    .box-tight {
+      height: 50px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      padding: 2px;
+      background: #f1f5f9;
+      margin-bottom: 1.5rem;
+    }
+    .box-tight p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.2;
+    }
     /* A box that cuts text off by design initially (teaser / truncated preview) */
     .teaser-box {
       height: 42px;
@@ -157,6 +171,14 @@
       <p>The container below fits its text initially, but will expand when text size or spacing grows.</p>
       <div id="box-fitted" class="box-fitted">
         <p id="box-fitted-text">This container fits its text when standard sizes are used.</p>
+      </div>
+
+      <div id="box-tight" class="box-tight">
+        <p id="box-tight-text">
+          Line one fits container.<br>
+          Line two fits container.<br>
+          Line three fits container.
+        </p>
       </div>
 
       <p>The container below is intentionally truncated by design (such as a headline teaser).</p>

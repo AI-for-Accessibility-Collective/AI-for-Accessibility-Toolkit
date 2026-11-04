@@ -12,10 +12,11 @@
 //
 // Decisions:
 //   • Measures first with s.page.nameOf helper: never renames anything that already
-//     has an accessible name, images included.
-//   • Names from the page first without AI: title attributes, SVG titles, icon class words,
-//     small icon image file names, link URL last path parts, placeholder attributes,
-//     input names, and nearby label text.
+//     has an accessible name, images included. Controls with their own HTML title
+//     attribute already have an accessible name via s.page.nameOf and are left as-is.
+//   • Names from the page first without AI: SVG titles, icon class words, small icon image
+//     file names, link URL last path parts, placeholder attributes, input names, and
+//     nearby label text.
 //   • Decorative images (tiny spacers <= 2px, role presentation/none) are left alone
 //     or marked clearly with alt="" if spacers, never sent to AI.
 //   • A file name's words name only a small icon (48 by 48 pixels or smaller); photos
@@ -42,11 +43,14 @@
 const CANDIDATE_SELECTOR = 'button, a[href], input, textarea, select, img, [role="button"], [role="link"], [role="img"]';
 
 const STYLE_WORDS = new Set([
-  'btn', 'button', 'icon', 'primary', 'secondary', 'tertiary',
+  'btn', 'button', 'icon', 'icons', 'primary', 'secondary', 'tertiary',
   'large', 'small', 'medium', 'tiny', 'huge', 'dark', 'light',
   'default', 'custom', 'active', 'disabled', 'fab', 'fas', 'far',
-  'fal', 'fad', 'fa', 'bi', 'glyphicon', 'material-icons', 'svg',
-  'img', 'nav', 'link'
+  'fal', 'fad', 'fa', 'bi', 'glyphicon', 'material-icons', 'material-symbols',
+  'material', 'symbols', 'svg', 'img', 'nav', 'link',
+  'solid', 'regular', 'brands', 'duotone', 'thin', 'sharp', 'outline',
+  'outlined', 'ui', 'js', 'filled', 'round', 'rounded', 'glyph',
+  'classic', 'mini', 'micro', 'feather', 'lucide', 'ion', 'ionicons'
 ]);
 
 const JUNK_NAME_RE = /^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken)$/i;
@@ -201,11 +205,22 @@ function extractWordsFromFileName(src) {
 
 function extractWordsFromClass(el) {
   const elements = [el, ...el.querySelectorAll('*')];
+  const allTokens = [];
+
   for (const node of elements) {
     const classAttr = node.getAttribute('class');
     if (!classAttr || typeof classAttr !== 'string') continue;
     const tokens = classAttr.trim().split(/\s+/).filter(Boolean);
     for (const token of tokens) {
+      allTokens.push(token);
+    }
+  }
+
+  const ICON_TOKEN_RE = /^(?:fa|bi|glyphicon|feather|lucide|ion|material)[-_]|[-_]icon(?:[-_]|$)/i;
+
+  // Pass 1: Icon-specific tokens (e.g. fa-play, bi-trash, icon-search)
+  for (const token of allTokens) {
+    if (ICON_TOKEN_RE.test(token)) {
       const parts = token
         .replace(/([a-z])([A-Z])/g, '$1 $2')
         .split(/[-_\s]+/)
@@ -218,6 +233,22 @@ function extractWordsFromClass(el) {
       }
     }
   }
+
+  // Pass 2: Other class tokens
+  for (const token of allTokens) {
+    if (ICON_TOKEN_RE.test(token)) continue;
+    const parts = token
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .split(/[-_\s]+/)
+      .map(w => w.toLowerCase().trim())
+      .filter(Boolean);
+
+    const filtered = parts.filter(w => !STYLE_WORDS.has(w) && !/^\d+$/.test(w));
+    if (filtered.length) {
+      return sentenceCase(filtered);
+    }
+  }
+
   return null;
 }
 
@@ -261,15 +292,33 @@ function extractNearbyLabel(field) {
   const prev = field.previousElementSibling;
   if (!prev) return null;
   const prevTag = prev.tagName.toLowerCase();
-  if (/^(input|select|textarea|button)$/.test(prevTag)) return null;
+
+  // Exclude elements that are controls, structural sections, headings, paragraphs, links, lists, tables, etc.
+  const EXCLUDED_TAGS = /^(input|select|textarea|button|h[1-6]|p|a|ul|ol|li|table|tr|td|th|section|nav|header|footer|aside|article|form|fieldset|script|style|template|noscript)$/i;
+  if (EXCLUDED_TAGS.test(prevTag)) return null;
+
+  // Exclude error/validation elements or live alerts
+  const role = (prev.getAttribute('role') || '').toLowerCase().trim();
+  if (role === 'alert' || role === 'status') return null;
+  const classAttr = prev.getAttribute('class') || '';
+  if (/(?:error|invalid|feedback|errormsg|alert|danger|warning|validation)/i.test(classAttr)) return null;
+  if (prev.hasAttribute('aria-live')) return null;
+
+  // A label next to a field names it only when it labels nothing else
+  if (prev.querySelector('input, select, textarea, button')) return null;
 
   if (prevTag === 'label') {
     const forId = prev.getAttribute('for');
-    if (forId && forId !== field.id) return null;
+    if (forId && (!field.id || forId !== field.id)) return null;
+  } else {
+    // Non-label elements must have explicit label intent via class or role
+    if (!/(?:field-label|form-label|label|prompt|legend|caption|lbl)/i.test(classAttr) && role !== 'label' && role !== 'legend') {
+      return null;
+    }
   }
 
-  const text = (prev.textContent || '').trim().replace(/:$/, '').trim();
-  if (text && text.length < 60 && !/\n/.test(text)) {
+  const text = (prev.textContent || '').trim().replace(/[:*]+$/, '').trim();
+  if (text && text.length < 60 && !/\n/.test(text) && !isJunkName(text)) {
     return text;
   }
   return null;
@@ -284,6 +333,29 @@ function getControlContext(el) {
   if (href && href !== '#') parts.push(`href="${href}"`);
   const text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80);
   if (text) parts.push(`text: "${text}"`);
+
+  // Surrounding context: container heading or aria-label
+  const container = el.closest('fieldset, form, section, article, nav, aside, main');
+  if (container) {
+    const containerLabel = container.getAttribute('aria-label');
+    if (containerLabel) {
+      parts.push(`in section: "${containerLabel.slice(0, 60)}"`);
+    } else {
+      const heading = container.querySelector('h1, h2, h3, h4, h5, h6, legend');
+      if (heading) {
+        const headingText = (heading.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+        if (headingText) parts.push(`under heading: "${headingText}"`);
+      }
+    }
+  }
+
+  // Preceding sibling text if available
+  const prev = el.previousElementSibling;
+  if (prev && !/^(input|select|textarea|button|script|style)$/i.test(prev.tagName)) {
+    const prevText = (prev.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+    if (prevText) parts.push(`preceded by: "${prevText}"`);
+  }
+
   return parts.join(', ');
 }
 
@@ -346,7 +418,9 @@ export default {
         return false;
       }
 
-      // Check if control already has an accessible name
+      // Check if control already has an accessible name.
+      // Controls with their own non-empty title attribute already have an accessible name
+      // computed via hasAccessibleName / s.page.nameOf and are left as-is.
       if (hasAccessibleName(el, s)) {
         if (/^(BUTTON|A)$/.test(tag) || el.getAttribute('role') === 'button' || el.getAttribute('role') === 'link') {
           markSmallImagesInNamedControl(el);
@@ -354,16 +428,7 @@ export default {
         return false;
       }
 
-      // 1. Element's own title
-      const ownTitle = el.getAttribute('title')?.trim();
-      if (ownTitle) {
-        s.setAttr(el, 'aria-label', ownTitle);
-        changesCount++;
-        if (/^(BUTTON|A)$/.test(tag)) markSmallImagesInNamedControl(el);
-        return true;
-      }
-
-      // 2. SVG title inside control
+      // 1. SVG title inside control
       const svgTitle = el.querySelector('svg title')?.textContent?.trim();
       if (svgTitle) {
         s.setAttr(el, 'aria-label', svgTitle);
@@ -372,19 +437,20 @@ export default {
         return true;
       }
 
-      // 3. Button or control containing a small icon image with filename words
-      const childImg = el.querySelector('img');
-      if (childImg && isSmallIcon(childImg)) {
-        const iconName = extractWordsFromFileName(childImg.getAttribute('src'));
-        if (iconName) {
-          s.setAttr(el, 'aria-label', iconName);
-          changesCount++;
-          markSmallImagesInNamedControl(el);
-          return true;
+      // 2. Button or control containing a small icon image with filename words
+      for (const childImg of el.querySelectorAll('img')) {
+        if (isSmallIcon(childImg) && !isSpacerImage(childImg)) {
+          const iconName = extractWordsFromFileName(childImg.getAttribute('src'));
+          if (iconName) {
+            s.setAttr(el, 'aria-label', iconName);
+            changesCount++;
+            markSmallImagesInNamedControl(el);
+            return true;
+          }
         }
       }
 
-      // 4. Class words on control or child icon
+      // 3. Class words on control or child icon
       const classWords = extractWordsFromClass(el);
       if (classWords && (/^(BUTTON|A)$/.test(tag) || el.getAttribute('role') === 'button' || el.getAttribute('role') === 'link')) {
         s.setAttr(el, 'aria-label', classWords);
@@ -393,7 +459,7 @@ export default {
         return true;
       }
 
-      // 5. Link last path part
+      // 4. Link last path part
       if (tag === 'A' || el.getAttribute('role') === 'link') {
         const pathName = extractNameFromLinkPath(el);
         if (pathName) {
@@ -404,7 +470,7 @@ export default {
         }
       }
 
-      // 6. Form fields
+      // 5. Form fields
       const isField = (tag === 'INPUT' && !/^(button|submit|reset|image)$/.test(type)) ||
                       tag === 'TEXTAREA' || tag === 'SELECT';
       if (isField) {

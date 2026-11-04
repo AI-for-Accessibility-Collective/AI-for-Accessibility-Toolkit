@@ -158,6 +158,23 @@
         <button type="button" id="btn-outline-none" class="no-outline">Outline Suppressed Button</button>
       </section>
 
+      <section id="review-findings-section" aria-labelledby="heading-findings" class="card">
+        <h2 id="heading-findings">Additional Controls and Edge Cases</h2>
+        <p>Controls representing various HTML and SVG keyboard focus edge cases.</p>
+        <button type="button" id="btn-ce-false" contenteditable="false">Button with contenteditable false</button>
+        <form onsubmit="return false;" style="display:inline;">
+          <input type="HIDDEN" id="input-hidden-upper" name="token" value="CSRF_UPPERCASE_VAL">
+        </form>
+        <svg width="120" height="36" role="img" aria-label="Quick jump">
+          <a href="#help" id="svg-link" aria-label="SVG Help Link">
+            <text x="10" y="24" fill="#1d4ed8">SVG Help Link</text>
+          </a>
+        </svg>
+        <details id="details-no-summary">
+          <p>Disclosure content inside details without an explicit summary element.</p>
+        </details>
+      </section>
+
       <section id="account" aria-labelledby="heading-account" class="card">
         <h2 id="heading-account">Account Verification</h2>
         <form id="form-account" onsubmit="return false;">

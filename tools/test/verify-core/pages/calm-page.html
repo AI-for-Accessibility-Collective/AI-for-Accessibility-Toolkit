@@ -76,6 +76,14 @@
       border: 1px solid #d0d7de;
       animation: fadeInReveal 3s forwards;
     }
+    .reveal-box-no-forwards {
+      opacity: 0;
+      padding: 1rem;
+      margin: 1rem 0;
+      background: #f6f8fa;
+      border: 1px solid #d0d7de;
+      animation: fadeInReveal 3s;
+    }
 
     /* Carousels */
     .carousel-section {
@@ -174,6 +182,12 @@
         <h3>Critical Announcement Content</h3>
         <p>This message was hidden at the animation start state (opacity: 0) and must be visible in its final state.</p>
       </div>
+
+      <!-- Hidden by animation start state without explicit forwards fill-mode -->
+      <div id="anim-no-forwards" class="reveal-box-no-forwards">
+        <h3>Non-forwards Animation Announcement</h3>
+        <p>This message was hidden at the animation start state without forwards fill mode and must stay visible in its final state.</p>
+      </div>
     </section>
 
     <!-- Media Section -->
@@ -198,6 +212,13 @@
         <h3>User-Requested Documentary Video</h3>
         <video id="video-paused" width="320" height="180" controls muted playsinline title="Documentary interview"></video>
         <button id="btn-play-paused" type="button">Play User Video</button>
+      </div>
+
+      <!-- Media in generic container with unrelated action button -->
+      <div id="unrelated-btn-container">
+        <h3>Media in Generic Container</h3>
+        <video id="video-in-generic-div" width="320" height="180" muted playsinline title="Generic container video"></video>
+        <button id="btn-unrelated-action" type="button">Unrelated Action Button</button>
       </div>
     </section>
 
@@ -244,6 +265,41 @@
           <button id="btn-next-slide" type="button">Next Slide</button>
         </div>
       </section>
+
+      <!-- Carousel 3: With input[type="button"] pause control -->
+      <section id="carousel-input-btn" class="carousel-section" role="region" aria-roledescription="carousel" aria-label="Input Button Carousel">
+        <h3>Input Button Carousel</h3>
+        <div class="carousel-controls">
+          <input id="btn-input-pause" type="button" value="Pause slideshow" aria-label="Pause slideshow">
+        </div>
+        <div id="carousel-3-track" class="slides-track">
+          <div class="slide active" id="c3-slide-1" aria-roledescription="slide" aria-label="1 of 2">
+            <h4>Gallery 1: Sunset</h4>
+            <p>Evening lighting over mountain peaks.</p>
+          </div>
+          <div class="slide" id="c3-slide-2" aria-roledescription="slide" aria-label="2 of 2">
+            <h4>Gallery 2: Sunrise</h4>
+            <p>Morning mist across the valley.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Carousel 4: Carousel with separate play and pause buttons -->
+      <section id="carousel-user-toggle" class="carousel-section" role="region" aria-roledescription="carousel" aria-label="Separate Controls Carousel">
+        <h3>Separate Controls Carousel</h3>
+        <div class="carousel-controls">
+          <button id="btn-sep-pause" type="button" aria-label="Pause slideshow">Pause slideshow</button>
+          <button id="btn-sep-play" type="button" aria-label="Play slideshow">Play slideshow</button>
+        </div>
+        <div class="slides-track">
+          <div class="slide active" id="c4-slide-1" aria-roledescription="slide">Item 1</div>
+          <div class="slide" id="c4-slide-2" aria-roledescription="slide">Item 2</div>
+        </div>
+      </section>
+
+      <!-- Container for dynamically added carousel -->
+      <div id="dynamic-carousel-slot">
+      </div>
 
       <!-- Marquee Section -->
       <div>
@@ -299,9 +355,11 @@
         const vAuto = document.getElementById('video-autoplay');
         const vLoop = document.getElementById('video-looping');
         const vPaused = document.getElementById('video-paused');
+        const vGeneric = document.getElementById('video-in-generic-div');
         if (vAuto) vAuto.srcObject = stream;
         if (vLoop) vLoop.srcObject = stream;
         if (vPaused) vPaused.srcObject = stream;
+        if (vGeneric) vGeneric.srcObject = stream;
       }
     } catch (e) {}
 
@@ -397,6 +455,25 @@
     if (btnOutsidePause) {
       btnOutsidePause.addEventListener('click', () => {
         window.__outsideStopClickedCount = (window.__outsideStopClickedCount || 0) + 1;
+      });
+    }
+
+    // 5. Input pause button tracking
+    window.__inputPauseClicked = false;
+    const btnInputPause = document.getElementById('btn-input-pause');
+    if (btnInputPause) {
+      btnInputPause.addEventListener('click', () => {
+        window.__inputPauseClicked = true;
+      });
+    }
+
+    // 6. Separate play button tracking
+    window.__sepPlayClicks = 0;
+    const btnSepPause = document.getElementById('btn-sep-pause');
+    const btnSepPlay = document.getElementById('btn-sep-play');
+    if (btnSepPlay) {
+      btnSepPlay.addEventListener('click', () => {
+        window.__sepPlayClicks++;
       });
     }
   </script>

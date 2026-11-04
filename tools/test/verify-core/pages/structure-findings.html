@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Structure Adapter Edge Cases</title>
+</head>
+<body>
+  <div id="site-masthead" class="site-header">
+    <h1>Site Header</h1>
+    <p>Site subtitle and masthead information.</p>
+  </div>
+
+  <div id="site-nav" class="navbar main-nav">
+    <ul>
+      <li><a href="#link1">Section 1</a></li>
+      <li><a href="#link2">Section 2</a></li>
+      <li><a href="#link3">Section 3</a></li>
+    </ul>
+  </div>
+
+  <!-- Finding 3 & 1: class="main-content" must be matched by MAIN_ID; article header/footer must not block main or top-level landmarks -->
+  <div id="primary-area" class="main-content">
+    <h2>Main Content Title</h2>
+    <p>This is the primary content area designated by author class main-content. It has enough content to exceed one hundred characters threshold.</p>
+    <article id="nested-article">
+      <header role="banner">
+        <p>Article header announcement</p>
+      </header>
+      <p>Article body copy inside an article landmark.</p>
+      <footer role="contentinfo">
+        <p>Article metadata and date</p>
+      </footer>
+    </article>
+  </div>
+
+  <!-- A large non-main container with more text to ensure class="main-content" prioritization works -->
+  <div id="other-large-container" class="additional-info">
+    <h2>Supplementary Section</h2>
+    <p>This section is deliberately longer than the primary area. It contains extensive text to ensure that candidate sorting by length would pick this element if named matching failed on class main-content. Sentence one is here. Sentence two contains extra details. Sentence three elaborates further on secondary topics. Sentence four adds more text. Sentence five continues with even more detailed paragraphs. Sentence six rounds out the large supplementary content block.</p>
+  </div>
+
+  <!-- Finding 2: site-footer wraps a nav element -->
+  <div id="site-footer" class="site-footer">
+    <nav aria-label="Footer Navigation">
+      <ul>
+        <li><a href="#privacy">Privacy</a></li>
+        <li><a href="#terms">Terms</a></li>
+        <li><a href="#accessibility">Accessibility</a></li>
+      </ul>
+    </nav>
+    <p>© 2026 Test Organization. All rights reserved.</p>
+  </div>
+</body>
+</html>

@@ -42,7 +42,7 @@ const MAX_LINES = 3;
 const LIVE_SELECTOR = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"], [role="timer"], [role="marquee"], output';
 const INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
 const MESSAGE_REGEX = /\b(status|alert|error|notice|message|toast|warn(?:ing)?|snackbar|notification)\b/i;
-const CANDIDATE_SELECTOR = '[role="status"], [role="alert"], [class*="status" i], [class*="alert" i], [class*="error" i], [class*="notice" i], [class*="message" i], [class*="toast" i], [class*="warn" i], [class*="notification" i], [id*="status" i], [id*="alert" i], [id*="error" i], [id*="notice" i], [id*="message" i], [id*="toast" i]';
+const CANDIDATE_SELECTOR = 'output, [role="status"], [role="alert"], [class*="status" i], [class*="alert" i], [class*="error" i], [class*="notice" i], [class*="message" i], [class*="toast" i], [class*="warn" i], [class*="notification" i], [id*="status" i], [id*="alert" i], [id*="error" i], [id*="notice" i], [id*="message" i], [id*="toast" i]';
 
 function isTextField(el) {
   if (!el || el.nodeType !== 1) return false;
@@ -76,6 +76,8 @@ function inViewport(el) {
 
 function isMessageElement(el) {
   if (!el || el.nodeType !== 1) return false;
+  const tag = el.tagName.toLowerCase();
+  if (tag === 'output') return true;
   const role = (el.getAttribute('role') || '').toLowerCase().trim();
   if (role === 'status' || role === 'alert') return true;
   const cls = el.getAttribute('class');
@@ -134,6 +136,65 @@ function summarize(el, s) {
   return text;
 }
 
+function findRouteAnnouncement(s, lastHeading) {
+  const isVisible = (el) => {
+    if (!el || el.nodeType !== 1) return false;
+    if (s?.page?.isOurs && s.page.isOurs(el)) return false;
+    if (el.closest('[hidden], [aria-hidden="true"], iframe')) return false;
+    if (typeof el.checkVisibility === 'function' && !el.checkVisibility()) return false;
+    return true;
+  };
+
+  const clean = (str) => (str || '').replace(/\s+/g, ' ').trim();
+  const titleText = clean(document.title);
+
+  // Filter for visible headings in the main landmark or view container first
+  const main = document.querySelector('main, [role="main"]');
+  let h1 = null;
+  if (main) {
+    const candidates = main.querySelectorAll('h1, [role="heading"][aria-level="1"]');
+    for (const c of candidates) {
+      if (isVisible(c)) { h1 = c; break; }
+    }
+  }
+  // Otherwise visible h1 in document
+  if (!h1) {
+    const candidates = document.querySelectorAll('h1, [role="heading"][aria-level="1"]');
+    for (const c of candidates) {
+      if (isVisible(c)) { h1 = c; break; }
+    }
+  }
+
+  const headingText = h1 ? clean(h1.textContent) : '';
+  const headingChanged = Boolean(headingText && headingText !== lastHeading);
+
+  if (headingChanged) {
+    return { text: headingText, heading: headingText };
+  }
+
+  // When the main heading has not changed, announce document.title
+  const text = titleText || headingText;
+  return { text, heading: headingText };
+}
+
+function joinTexts(items) {
+  const unique = [];
+  for (const item of items) {
+    if (!unique.includes(item.text)) unique.push(item.text);
+  }
+  let combined = '';
+  for (const part of unique) {
+    const next = !combined ? part : combined + (/[.!?:;,…]$/.test(combined) ? ' ' : '. ') + part;
+    if (combined && next.length > MAX_ANNOUNCE_CHARS) break;
+    combined = next;
+  }
+  if (!combined && unique.length) combined = unique[0];
+  if (combined.length > MAX_ANNOUNCE_CHARS) {
+    combined = combined.slice(0, MAX_ANNOUNCE_CHARS - 1) + '…';
+  }
+  return combined;
+}
+
 export default {
   enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
@@ -148,11 +209,12 @@ export default {
     this.pageSpokeAt = 0;
     this.debounceTimer = null;
     this.routeTimer = null;
-    this.pendingText = null;
-    this.pendingContainer = null;
-    this.pendingPoliteness = 'polite';
+    this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
+
+    const initial = findRouteAnnouncement(s, '');
+    this.lastRouteHeading = initial.heading || '';
 
     // Listen for actions: click, keydown (not in text fields), submit
     s.listen(document, 'submit', () => {
@@ -183,12 +245,10 @@ export default {
         this.routeTimer = null;
         if (!this.s || this.s.ended) return;
 
-        const h1 = document.querySelector('h1, [role="heading"][aria-level="1"], [role="heading"]');
-        const headingText = h1 ? (h1.textContent || '').replace(/\s+/g, ' ').trim() : '';
-        const titleText = (document.title || '').replace(/\s+/g, ' ').trim();
-        const text = headingText || titleText;
-        if (text) {
-          this.s.announce(text, { politeness: 'polite' });
+        const res = findRouteAnnouncement(this.s, this.lastRouteHeading);
+        if (res.heading) this.lastRouteHeading = res.heading;
+        if (res.text) {
+          this.s.announce(res.text, { politeness: 'polite' });
         }
       }, 100);
     });
@@ -202,7 +262,8 @@ export default {
 
   onAdded(elements) {
     const list = Array.isArray(elements) ? elements : [elements];
-    const answering = Date.now() - this.lastAction < ACTION_MS;
+    const now = Date.now();
+    const answering = now - this.lastAction < ACTION_MS;
 
     // Track affected containers in this batch to detect tickers
     const touchedContainers = new Set();
@@ -210,18 +271,20 @@ export default {
       if (el?.parentElement) touchedContainers.add(el.parentElement);
     }
 
-    const now = Date.now();
     for (const container of touchedContainers) {
-      if (this.tickers.has(container)) continue;
       let cInfo = this.containerInfo.get(container);
       if (!cInfo) {
-        cInfo = { count: 0, lastActionAt: this.lastAction, lastUpdateAt: 0, cancelTimer: null };
+        cInfo = { count: 0, lastActionAt: this.lastAction, lastUpdateAt: 0 };
         this.containerInfo.set(container, cInfo);
       }
 
       const hadAction = this.lastAction > cInfo.lastActionAt;
-      const withinTickerWindow = now - cInfo.lastUpdateAt < TICK_WINDOW_MS;
+      if (hadAction) {
+        this.tickers.delete(container);
+      }
+      if (this.tickers.has(container)) continue;
 
+      const withinTickerWindow = now - cInfo.lastUpdateAt < TICK_WINDOW_MS;
       if (hadAction || !withinTickerWindow) {
         cInfo.count = 1;
         cInfo.lastActionAt = this.lastAction;
@@ -230,19 +293,13 @@ export default {
       }
       cInfo.lastUpdateAt = now;
 
-      if (cInfo.count > 1) {
+      // Require >= 3 rapid updates without user actions to classify as ticker
+      if (!answering && cInfo.count >= 3) {
         this.tickers.add(container);
-        if (cInfo.cancelTimer) {
-          cInfo.cancelTimer();
-          cInfo.cancelTimer = null;
-        }
-        if (this.pendingContainer === container) {
-          this.pendingText = null;
-          this.pendingContainer = null;
-          if (this.debounceTimer) {
-            this.debounceTimer();
-            this.debounceTimer = null;
-          }
+        this.pendingItems = this.pendingItems.filter((item) => item.container !== container);
+        if (!this.pendingItems.length && this.debounceTimer) {
+          this.debounceTimer();
+          this.debounceTimer = null;
         }
       }
     }
@@ -263,7 +320,6 @@ export default {
 
       const container = el.parentElement;
       if (container && this.tickers.has(container)) continue;
-      if (!inViewport(el)) continue;
 
       const msgEl = findMessage(el);
       if (!msgEl && !answering) continue;
@@ -272,18 +328,20 @@ export default {
       if (!msgEl && list.length >= 3) continue;
 
       const targetEl = msgEl || el;
+      if (!inViewport(targetEl)) continue;
+
       const text = summarize(targetEl, this.s);
       if (!text) continue;
 
       const isAlert = targetEl.getAttribute?.('role')?.toLowerCase() === 'alert';
-      this.scheduleAnnouncement(text, container, isAlert ? 'assertive' : 'polite');
+      this.scheduleAnnouncement(text, container, isAlert ? 'assertive' : 'polite', targetEl);
     }
   },
 
-  scheduleAnnouncement(text, container, politeness = 'polite') {
-    this.pendingText = text;
-    this.pendingContainer = container;
-    this.pendingPoliteness = politeness;
+  scheduleAnnouncement(text, container, politeness = 'polite', el = null) {
+    if (!this.pendingItems.some((item) => item.text === text && item.container === container)) {
+      this.pendingItems.push({ text, container, politeness, el });
+    }
 
     if (this.debounceTimer) {
       this.debounceTimer();
@@ -297,7 +355,7 @@ export default {
   },
 
   flushAnnouncement() {
-    if (!this.s || this.s.ended || !this.pendingText) return;
+    if (!this.s || this.s.ended || !this.pendingItems.length) return;
 
     const elapsed = Date.now() - this.pageSpokeAt;
     if (elapsed < PAGE_SPOKE_MS) {
@@ -309,11 +367,28 @@ export default {
       return;
     }
 
-    const text = this.pendingText;
-    const politeness = this.pendingPoliteness || 'polite';
-    this.pendingText = null;
-    this.pendingContainer = null;
-    this.s.announce(text, { politeness });
+    const items = this.pendingItems;
+    this.pendingItems = [];
+
+    const activeItems = items.filter((item) => !item.container || !this.tickers.has(item.container));
+    if (!activeItems.length) return;
+
+    const connected = activeItems.filter((item) => !item.el || item.el.isConnected);
+    const validItems = connected.length ? connected : activeItems;
+
+    const assertiveItems = validItems.filter((i) => i.politeness === 'assertive');
+    const politeItems = validItems.filter((i) => i.politeness !== 'assertive');
+
+    if (assertiveItems.length && politeItems.length) {
+      const aText = joinTexts(assertiveItems);
+      const pText = joinTexts(politeItems);
+      if (aText) this.s.announce(aText, { politeness: 'assertive' });
+      if (pText) this.s.announce(pText, { politeness: 'polite' });
+    } else {
+      const isAssertive = assertiveItems.length > 0;
+      const text = joinTexts(validItems);
+      if (text) this.s.announce(text, { politeness: isAssertive ? 'assertive' : 'polite' });
+    }
   },
 
   disable() {
@@ -326,12 +401,13 @@ export default {
       this.routeTimer();
       this.routeTimer = null;
     }
-    this.pendingText = null;
-    this.pendingContainer = null;
+    this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
     this.lastAction = 0;
     this.pageSpokeAt = 0;
+    this.lastRouteHeading = '';
+    this.lastRouteTitle = '';
     this.s.end();
     this.s = null;
   },

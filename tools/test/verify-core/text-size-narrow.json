@@ -15,7 +15,7 @@
     },
     {
       "name": "no text cut off and fitted container expanded as needed",
-      "code": "\n      const fitted = document.getElementById('box-fitted');\n      if (!fitted) return false;\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const isEnabled = adapter && adapter.s && !adapter.s.ended;\n      if (!isEnabled) return true;\n\n      return fitted.scrollHeight <= fitted.clientHeight + 1;\n      "
+      "code": "\n      const fitted = document.getElementById('box-fitted');\n      if (!fitted) return false;\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      return fitted.scrollHeight <= fitted.clientHeight + 1;\n      "
     }
   ],
   "viewport": {

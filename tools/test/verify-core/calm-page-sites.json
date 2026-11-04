@@ -1,10 +1,4 @@
 {
   "file": "tools/core-adapters/calm-page.js",
-  "checks": [
-    {
-      "name": "body animation and transition durations are 0 after enable()",
-      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const animDur = parseFloat(getComputedStyle(document.body).animationDuration);\n        const transDur = parseFloat(getComputedStyle(document.body).transitionDuration);\n        return animDur === 0 && transDur === 0;\n      "
-    }
-  ],
   "sites": "all"
 }

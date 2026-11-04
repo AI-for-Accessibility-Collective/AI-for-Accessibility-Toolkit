@@ -1,0 +1,19 @@
+{
+  "name": "structure-findings",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-findings.html",
+  "checks": [
+    {
+      "name": "finding 1: banner and contentinfo inside article do not block site banner, main, or footer",
+      "code": "\n        const masthead = document.getElementById('site-masthead');\n        const footer = document.getElementById('site-footer');\n        const main = document.getElementById('primary-area');\n        if (!masthead || !footer || !main) return false;\n        return masthead.getAttribute('role') === 'banner' &&\n               footer.getAttribute('role') === 'contentinfo' &&\n               main.getAttribute('role') === 'main';\n      "
+    },
+    {
+      "name": "finding 2: candidate footer containing nav is recognized as contentinfo",
+      "code": "\n        const footer = document.getElementById('site-footer');\n        if (!footer) return false;\n        const innerNav = footer.querySelector('nav');\n        return Boolean(innerNav) && footer.getAttribute('role') === 'contentinfo';\n      "
+    },
+    {
+      "name": "finding 3: element with class main-content is prioritized over larger unnamed candidate",
+      "code": "\n        const main = document.getElementById('primary-area');\n        const other = document.getElementById('other-large-container');\n        if (!main || !other) return false;\n        return main.getAttribute('role') === 'main' && other.getAttribute('role') === null;\n      "
+    }
+  ]
+}

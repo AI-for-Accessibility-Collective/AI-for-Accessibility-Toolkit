@@ -18,8 +18,9 @@
 //   margin: Clearance margin in pixels for keepVisible scroll padding. Defaults to 8.
 //
 // Decisions:
-//   • Counts only elements a person can focus (excludes disabled controls, type=hidden,
-//     tabindex < 0, contenteditable="false", and the toolkit's own UI elements).
+//   • Counts only elements a person can focus (excludes disabled controls, case-insensitive
+//     type=hidden, tabindex < 0, non-control elements with contenteditable="false", and the
+//     toolkit's own UI elements; counts SVG links, and details without summary).
 //   • Parses tabindex numerically: any value below 0 is negative and not sequentially focusable.
 //   • Detects whether a valid main content region exists (or resolves options.to if given).
 //   • If the page has no focusable elements and no main content, ends the session and returns false.
@@ -41,17 +42,16 @@ function isFocusable(el) {
   if (!el || el.nodeType !== 1) return false;
   if (el.hasAttribute('data-ai4a11y-ui') || el.closest('[data-ai4a11y-ui]')) return false;
   if (el.disabled || el.hasAttribute('disabled')) return false;
-  if (el.getAttribute('type') === 'hidden') return false;
-  if (el.getAttribute('contenteditable') === 'false') return false;
+  if (el.type === 'hidden' || el.getAttribute('type')?.toLowerCase() === 'hidden') return false;
 
   const rawTabindex = el.getAttribute('tabindex');
   const hasTabindex = rawTabindex !== null;
   const parsedTabindex = hasTabindex ? parseInt(rawTabindex, 10) : NaN;
   if (hasTabindex && !isNaN(parsedTabindex) && parsedTabindex < 0) return false;
 
-  const tag = el.tagName;
+  const tag = el.tagName?.toUpperCase();
   if (tag === 'A' || tag === 'AREA') {
-    return el.hasAttribute('href') || (!isNaN(parsedTabindex) && parsedTabindex >= 0);
+    return el.hasAttribute('href') || el.hasAttribute('xlink:href') || (!isNaN(parsedTabindex) && parsedTabindex >= 0);
   }
   if (tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'SUMMARY' || tag === 'IFRAME') {
     return true;
@@ -59,11 +59,14 @@ function isFocusable(el) {
   if (tag === 'INPUT') {
     return true;
   }
+  if (tag === 'DETAILS') {
+    return !el.querySelector('summary') || (!isNaN(parsedTabindex) && parsedTabindex >= 0);
+  }
   if (tag === 'AUDIO' || tag === 'VIDEO') {
     return el.hasAttribute('controls') || (!isNaN(parsedTabindex) && parsedTabindex >= 0);
   }
   const ce = el.getAttribute('contenteditable');
-  if (ce === '' || ce === 'true' || el.isContentEditable) {
+  if (ce !== 'false' && (ce === '' || ce === 'true' || el.isContentEditable)) {
     return true;
   }
   if (hasTabindex && !isNaN(parsedTabindex) && parsedTabindex >= 0) {
@@ -74,7 +77,7 @@ function isFocusable(el) {
 
 function countFocusable(doc) {
   const elements = doc.querySelectorAll(
-    'a, area, button, input, select, textarea, summary, iframe, audio, video, [contenteditable], [tabindex]'
+    'a, area, button, input, select, textarea, summary, details, iframe, audio, video, [contenteditable], [tabindex]'
   );
   let count = 0;
   for (const el of elements) {
@@ -144,4 +147,7 @@ export default {
     this.s?.end();
     this.s = null;
   },
+
+  isFocusable,
+  countFocusable,
 };

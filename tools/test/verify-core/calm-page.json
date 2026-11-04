@@ -38,6 +38,26 @@
     {
       "name": "content to leave alone is left alone and landmarks are intact",
       "code": "\n      const h1 = document.querySelector('header h1');\n      const prose = document.getElementById('prose-policy');\n      const btn = document.getElementById('btn-standard');\n      const nav = document.querySelector('nav');\n      if (!h1 || !prose || !btn || !nav) return false;\n      if (!h1.textContent.includes('Calm Page Accessibility Verification')) return false;\n      const rect = btn.getBoundingClientRect();\n      if (rect.width < 24 || rect.height < 24) return false;\n      return true;\n    "
+    },
+    {
+      "name": "animation without forwards remains visible (opacity 1) after enable()",
+      "code": "\n      const el = document.getElementById('anim-no-forwards');\n      if (!el) return false;\n      const op = parseFloat(getComputedStyle(el).opacity);\n      return op === 1;\n    "
+    },
+    {
+      "name": "dynamically added carousel element is processed and held",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const container = document.getElementById('dynamic-carousel-slot');\n      if (!container) return false;\n\n      let dynClicked = false;\n      const dynCarousel = document.createElement('section');\n      dynCarousel.setAttribute('aria-roledescription', 'carousel');\n      dynCarousel.setAttribute('aria-label', 'Dynamic Test Carousel');\n      dynCarousel.innerHTML = '<button id=\"btn-dyn-test-pause\" type=\"button\" aria-label=\"Pause carousel\">Pause carousel</button>';\n      const btn = dynCarousel.querySelector('#btn-dyn-test-pause');\n      btn.addEventListener('click', () => { dynClicked = true; });\n\n      container.appendChild(dynCarousel);\n      await new Promise(r => setTimeout(r, 400));\n      const result = dynClicked;\n      dynCarousel.remove();\n\n      return result === true;\n    "
+    },
+    {
+      "name": "user play on a paused carousel is not re-clicked on disable()",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      await __verifyClick('#btn-sep-play');\n      await new Promise(r => setTimeout(r, 100));\n      const clicksAfterUser = window.__sepPlayClicks;\n\n      adapter.disable();\n      await new Promise(r => setTimeout(r, 100));\n      const clicksAfterDisable = window.__sepPlayClicks;\n\n      adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit);\n      return clicksAfterUser === 1 && clicksAfterDisable === 1;\n    "
+    },
+    {
+      "name": "click on unrelated button in same div does not treat late video as user-started",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const v = document.getElementById('video-in-generic-div');\n      const btnUnrelated = document.getElementById('btn-unrelated-action');\n      if (!v || !btnUnrelated) return false;\n\n      await __verifyClick('#btn-unrelated-action');\n      try { await v.play(); } catch {}\n      await new Promise(r => setTimeout(r, 200));\n\n      return v.paused === true;\n    "
+    },
+    {
+      "name": "pause control using input type button inside carousel is recognized and clicked",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return window.__inputPauseClicked === true;\n    "
     }
   ]
 }

@@ -60,21 +60,15 @@ function looksLikeNav(el) {
 }
 
 function isTopLevelBanner(el) {
-  if (!el) return false;
-  if (el.getAttribute('role') === 'banner') return true;
-  if (el.tagName === 'HEADER') {
-    return !el.closest(NON_TOP_ANCESTOR);
-  }
-  return false;
+  if (!el || el.matches('article, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"]')) return false;
+  if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
+  return el.getAttribute('role') === 'banner' || el.tagName === 'HEADER';
 }
 
 function isTopLevelFooter(el) {
-  if (!el) return false;
-  if (el.getAttribute('role') === 'contentinfo') return true;
-  if (el.tagName === 'FOOTER') {
-    return !el.closest(NON_TOP_ANCESTOR);
-  }
-  return false;
+  if (!el || el.matches('article, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"]')) return false;
+  if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
+  return el.getAttribute('role') === 'contentinfo' || el.tagName === 'FOOTER';
 }
 
 function hasBanner(doc) {
@@ -97,7 +91,7 @@ function addBanner(s, doc) {
   if (hasBanner(doc)) return false;
   let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
     if (el.getAttribute('role')) return false;
-    if (el.closest(NON_TOP_ANCESTOR)) return false;
+    if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
     if (el.closest('[role="banner"], [role="contentinfo"]')) return false;
     if (el.querySelector('main, [role="main"]')) return false;
     if (!hint(HEADER_HINT, el) || hint(NOT_HEADER, el)) return false;
@@ -115,9 +109,9 @@ function addContentinfo(s, doc) {
   if (hasContentinfo(doc)) return false;
   let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
     if (el.getAttribute('role')) return false;
-    if (el.closest(NON_TOP_ANCESTOR)) return false;
+    if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
     if (el.closest('[role="banner"], [role="contentinfo"]')) return false;
-    if (el.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')) return false;
+    if (el.querySelector('main, [role="main"], header, [role="banner"]')) return false;
     if (!hint(FOOTER_HINT, el)) return false;
     if ((el.textContent?.trim().length || 0) >= 1500) return false;
     return true;
@@ -188,7 +182,7 @@ function addMain(s, doc) {
     const id = el.getAttribute('id') || '';
     if (MAIN_ID.test(id)) return true;
     const cls = el.getAttribute('class') || '';
-    return cls.split(/\s+/).some((c) => /^(main|content)$/i.test(c));
+    return cls.split(/\s+/).some((c) => MAIN_ID.test(c));
   });
 
   const pool = named.length > 0 ? named : candidates;

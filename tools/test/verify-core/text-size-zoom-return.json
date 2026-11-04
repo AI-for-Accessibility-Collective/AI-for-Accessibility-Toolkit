@@ -1,0 +1,11 @@
+{
+  "name": "text-size-zoom-return",
+  "file": "tools/core-adapters/text-size.js",
+  "page": "text-size.html",
+  "checks": [
+    {
+      "name": "returning to 100% zoom does not cause redundant zoom set calls on subsequent profile change",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n        // 1. Zoom up to 110%\n        await __verifyPress('Alt+Shift+ArrowUp');\n        await new Promise(r => setTimeout(r, 60));\n\n        // 2. Zoom back to 100%\n        await __verifyPress('Alt+Shift+ArrowDown');\n        await new Promise(r => setTimeout(r, 60));\n\n        const callsAfterReturn = (globalThis.__verifyHost?.zoomCalls || []).length;\n\n        // 3. Trigger profile change without fontScale change\n        await adapter.s.profile.set({ lineHeight: 1.5 });\n        await new Promise(r => setTimeout(r, 60));\n\n        const callsAfterChange = (globalThis.__verifyHost?.zoomCalls || []).length;\n        // Should NOT have made another zoom.set call\n        return callsAfterChange === callsAfterReturn;\n      "
+    }
+  ]
+}
