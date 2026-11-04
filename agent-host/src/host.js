@@ -45,7 +45,7 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  */
 export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
   opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, perMinute, requestTimeoutMs, log = createLogger(), runner: givenRunner,
-  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, reviewModelCalls, checkRunner: givenCheckRunner, fetchRubrics, checkScript }) {
+  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkParallel, checkRunner: givenCheckRunner, fetchRubrics, checkScript }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
   const events = createEvents();
@@ -63,7 +63,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   const checkRunner = givenCheckRunner || (runnerKind === 'local'
     ? localCheckRunner({ repoDir, sitesDir: sites, rubricsDir, modelUrl, opencodeBin, script: checkScript })
     : checkImage ? dockerCheckRunner({ image: checkImage, network: checkNetwork, sitesDir: sites, rubricsDir, modelUrl, log }) : null);
-  const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs, reviewModelCalls,
+  const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs, parallel: checkParallel,
     fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;
   // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
   const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, perMinute, log });

@@ -112,7 +112,7 @@ node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--
   a second container whose only network is the host's model proxy. The
   model key stays on the host. The GenA11y rubric text is fetched by the
   host beforehand, so the reviewer needs no internet.
-- **Time.** Checks run one at a time; the rest wait their turn. A check
+- **Time.** Four checks run at a time; the rest wait their turn. A check
   stops after 20 minutes and a review after 45, and a review that keeps
   calling the model is stopped after a set number of calls.
 - **When it helps.** When the developer's computer cannot run the verifier

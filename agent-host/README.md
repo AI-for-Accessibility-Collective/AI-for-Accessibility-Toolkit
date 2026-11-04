@@ -111,8 +111,9 @@ it sends the job to this host's `POST /checks` (the API port, signed like
 reach it) and asks `GET /checks/<id>` for the result
 ([src/checks.js](src/checks.js)).
 
-- **One at a time**, in the order asked; the rest wait. There is no limit on
-  how many a person asks for.
+- **Four at a time** (`AGENT_CHECK_PARALLEL`), in the order asked; the rest
+  wait. There is no limit on how many a person asks for. Each takes 4 CPUs
+  and 6 GB; the VM (32 vCPUs, 128 GB) also runs the sidebar's sandboxes.
 - **The check** is `run.mjs --check` in a one-shot container from the
   verify image's `check` target (`scripts/verify-adapters/Dockerfile`, the
   repository and its packages baked in): gVisor, `--network none`, no
@@ -126,10 +127,7 @@ reach it) and asks `GET /checks/<id>` for the result
   host's sandbox port and nothing else ([vm/setup.sh](vm/setup.sh)). Its
   opencode talks to the model proxy with a token made for this review: it
   names the account, works only at the model proxy (never the browser
-  tools), only while the review runs, and for at most 400 calls
-  (`AGENT_REVIEW_MODEL_CALLS`): that stops a reviewer that loops, not the
-  person. The real
-  key stays on the host. The rubric text InterA11y adapted from GenA11y
+  tools), and only while the review runs. The real key stays on the host. The rubric text InterA11y adapted from GenA11y
   (GPL-3.0) is fetched by the host from InterA11y at the vendored commit,
   checked against its hash, into `<data>/intera11y/`, and mounted read-only
   (`INTERA11Y_DIR`). It is stopped after 45 minutes (`AGENT_REVIEW_MINUTES`).

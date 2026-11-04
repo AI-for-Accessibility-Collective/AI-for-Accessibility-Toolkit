@@ -108,6 +108,26 @@ await test('one check at a time, in order; the rest wait, however many one accou
   await finished(bobs.checkId, 'bob');
 });
 
+await test('with parallel, that many run at once, in the order asked', async () => {
+  const dir4 = mkdtempSync(path.join(tmpdir(), 'agent-checks-parallel-'));
+  let now = 0, most = 0;
+  const started = [];
+  const checks = createChecks({ dataDir: dir4, rubricsDir: path.join(dir4, 'intera11y'), log, parallel: 2, runner: {
+    async check({ id, dir }) {
+      started.push(id); most = Math.max(most, ++now);
+      await new Promise((r) => setTimeout(r, 150));
+      now--;
+      writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [] }));
+      return { code: 0, timedOut: false, stderr: '' };
+    },
+  } });
+  const ids = ['c1', 'c2', 'c3', 'c4', 'c5'].map((x) => `chk_00000000000000${x}`);
+  for (const id of ids) checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {};' } });
+  await until(() => ids.every((id) => checks.get('ada', id).status === 'done'));
+  assert.equal(most, 2, 'two at once, never more');
+  assert.deepEqual(started, ids.map((id) => id.slice(4)), 'started in the order asked');
+});
+
 await test('a check that runs too long is stopped, and one with no report fails, in plain words', async () => {
   const hang = job('// HANG');
   await api('/checks', { method: 'POST', body: hang });
@@ -161,17 +181,17 @@ await test('after a restart, what was waiting runs; what lost its files fails', 
   assert.match(checks.get('ada', 'chk_00000000000000a2').error, /restarted/);
 });
 
-await test('a review\'s token names the account only while the review runs, and only for so many model calls', async () => {
+await test('a review\'s token names the account while the review runs, for as many model calls as it makes', async () => {
   const dir3 = mkdtempSync(path.join(tmpdir(), 'agent-checks-token-'));
   let token, during = [];
-  const checks = createChecks({ dataDir: dir3, rubricsDir: path.join(dir3, 'intera11y'), log, reviewModelCalls: 2, runner: {
+  const checks = createChecks({ dataDir: dir3, rubricsDir: path.join(dir3, 'intera11y'), log, runner: {
     async check({ dir }) { writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [] })); return { code: 0, timedOut: false, stderr: '' }; },
-    async review({ dir, token: t }) { token = t; during = [checks.uidForToken(t), checks.uidForToken(t), checks.uidForToken(t)]; writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Verdict: ok\nFine.' })); return { code: 0, timedOut: false, stderr: '' }; },
+    async review({ dir, token: t }) { token = t; during = Array.from({ length: 500 }, () => checks.uidForToken(t)); writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Verdict: ok\nFine.' })); return { code: 0, timedOut: false, stderr: '' }; },
   } });
   const id = 'chk_00000000000000b1';
   checks.submit('ada', { checkId: id, review: true, adapter: { key: 'ada/agent/a', code: 'export default {};' } });
   await until(() => checks.get('ada', id).status === 'done');
-  assert.deepEqual(during, ['ada', 'ada', null], 'two calls, then no more');
+  assert.ok(during.every((u) => u === 'ada'), 'no cap on calls');
   assert.equal(checks.uidForToken(token), null, 'gone after the review');
   assert.equal(checks.get('ada', id).result.review.verdict, 'ok');
 });

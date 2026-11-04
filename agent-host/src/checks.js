@@ -10,8 +10,7 @@
 // timeout. With review, an independent reviewer then runs in a second
 // one-shot container (run.mjs --review-file): opencode with Gemini, whose
 // only network is the host's model proxy, with a token that names this
-// job and is good for a set number of model calls while it runs (a cap that
-// stops a reviewer that loops, not the person; AGENT_REVIEW_MODEL_CALLS). The
+// job and is good only while that review runs. The
 // GenA11y rubric text it may read is fetched here first, into a folder
 // mounted read-only (INTERA11Y_DIR), so the reviewer needs no internet.
 //
@@ -165,13 +164,12 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
  * @param {Function} [o.fetchRubrics] (dir) => { have, missing }
  */
 export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async () => ({ have: [], missing: [] }), log,
-  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, reviewModelCalls = 400, now = () => Date.now() }) {
+  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, parallel = 1, now = () => Date.now() }) {
   const root = path.join(dataDir, 'checks');
   mkdirSync(root, { recursive: true });
-  const queue = [];        // checkIds waiting
-  let current = null;      // the checkId running
-  let pumping = false;
-  const tokens = new Map(); // job token -> { uid, checkId, calls }
+  const queue = [];         // checkIds waiting
+  const running = new Set(); // checkIds running, at most `parallel`
+  const tokens = new Map();  // job token -> { uid, checkId }
 
   const dirOf = (id) => {
     if (!CHECK_ID.test(String(id))) throw httpError(400, 'bad-check-id', 'Not a check id.');
@@ -183,7 +181,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
 
   function position(id) {
     const i = queue.indexOf(id);
-    return i < 0 ? null : i + 1 + (current ? 1 : 0);
+    return i < 0 ? null : i + 1 + running.size;
   }
 
   function view(job) {
@@ -236,16 +234,14 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     return view(job);
   }
 
-  async function pump() {
-    if (pumping) return;
-    pumping = true;
-    try {
-      while (queue.length) {
-        current = queue.shift();
-        try { await runJob(current); } catch (e) { log?.error('check.crashed', { checkId: current, error: e.message }); }
-        current = null;
-      }
-    } finally { pumping = false; }
+  // Up to `parallel` jobs at once, in the order asked; the rest wait.
+  function pump() {
+    while (running.size < Math.max(1, parallel) && queue.length) {
+      const id = queue.shift();
+      running.add(id);
+      runJob(id).catch((e) => log?.error('check.crashed', { checkId: id, error: e.message }))
+        .finally(() => { running.delete(id); pump(); });
+    }
   }
 
   async function runJob(id) {
@@ -287,7 +283,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     if (got.missing?.length) log?.warn('check.rubrics-missing', { checkId: job.checkId, missing: got.missing.map((m) => m.sc).filter(Boolean) });
     writeFileSync(path.join(dir, 'in', 'report.json'), JSON.stringify(report));
     const token = `chk_${randomBytes(24).toString('hex')}`;
-    tokens.set(token, { uid: job.uid, checkId: job.checkId, calls: 0 });
+    tokens.set(token, { uid: job.uid, checkId: job.checkId });
     let r;
     try { r = await runner.review({ id: job.checkId.slice(4), dir, file: job.file, token, timeoutMs: reviewTimeoutMs }); } finally { tokens.delete(token); }
     const out = readJson(path.join(dir, 'review', 'review.json'), 2_000_000);
@@ -302,15 +298,9 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     };
   }
 
-  /** The model proxy's side: the account a review's token names, while its review runs and within its calls. */
+  /** The model proxy's side: the account a review's token names, while its review runs. */
   function uidForToken(token) {
-    const t = tokens.get(String(token || ''));
-    if (!t) return null;
-    if (++t.calls > reviewModelCalls) {
-      if (t.calls === reviewModelCalls + 1) log?.warn('check.review-calls-used', { uid: t.uid, checkId: t.checkId, calls: reviewModelCalls });
-      return null;
-    }
-    return t.uid;
+    return tokens.get(String(token || ''))?.uid || null;
   }
 
   /** Jobs older than a week go. */
@@ -340,5 +330,5 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     setImmediate(pump);
   }
 
-  return { submit, get, uidForToken, recover, idle: () => !pumping && !queue.length };
+  return { submit, get, uidForToken, recover, idle: () => !running.size && !queue.length };
 }

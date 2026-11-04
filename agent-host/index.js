@@ -17,7 +17,7 @@
 //   AGENT_CHECK_SITES     the recorded copies of real sites (default <data>/verify-sites; local: .verify-cache/sites)
 //   AGENT_CHECK_MODEL_URL how a reviewer reaches the model proxy (default the sandbox URL + /model/v1beta)
 //   AGENT_CHECK_MINUTES   a check's time limit (default 20); AGENT_REVIEW_MINUTES a review's (default 45)
-//   AGENT_REVIEW_MODEL_CALLS  model calls a review may make before it is stopped (default 400): stops a looping reviewer
+//   AGENT_CHECK_PARALLEL  checks (and reviews) run at once (default 4; each takes 4 CPUs and 6 GB)
 
 import path from 'node:path';
 import os from 'node:os';
@@ -50,7 +50,7 @@ const host = createHost({
   checkModelUrl: env.AGENT_CHECK_MODEL_URL || undefined,
   checkTimeoutMs: (Number(env.AGENT_CHECK_MINUTES) || 20) * 60_000,
   reviewTimeoutMs: (Number(env.AGENT_REVIEW_MINUTES) || 45) * 60_000,
-  reviewModelCalls: Number(env.AGENT_REVIEW_MODEL_CALLS) || undefined,
+  checkParallel: Number(env.AGENT_CHECK_PARALLEL) || 4,
   log,
 });
 
