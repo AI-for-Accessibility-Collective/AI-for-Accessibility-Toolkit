@@ -1,0 +1,18 @@
+<div class="pace-frame mx-auto rounded-4" [style.width]="frameWidth()" [style.aspect-ratio]="ratio()">
+  <video
+    #video
+    controls
+    playsinline
+    preload="metadata"
+    [src]="source()"
+    (loadedmetadata)="onMetadata()"
+    (error)="onError()"
+    (timeupdate)="onTimeUpdate()"></video>
+  @if (failed()) {
+    <p class="position-absolute top-50 start-50 translate-middle text-center text-white px-3 mb-0" role="alert">
+      This video cannot play in this browser. Try an MP4 (H.264) file.
+    </p>
+  } @else {
+    <app-caption-overlay [text]="caption()" />
+  }
+</div>

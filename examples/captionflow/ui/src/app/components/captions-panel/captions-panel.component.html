@@ -1,0 +1,32 @@
+<section class="pace-panel overflow-hidden d-flex flex-column" aria-label="Captions and timestamps">
+  <div class="d-flex align-items-center justify-content-between gap-2 px-3 py-3 border-bottom">
+    <h2 class="h5 mb-0">Captions</h2>
+    <button
+      type="button"
+      class="btn btn-sm"
+      [class.btn-warning]="followEnabled()"
+      [class.btn-outline-secondary]="!followEnabled()"
+      [attr.aria-pressed]="followEnabled()"
+      (click)="toggleFollow()">
+      Follow along
+    </button>
+  </div>
+  <div #list class="lyrics-list px-3" role="list">
+    @for (caption of captions(); track $index; let index = $index) {
+      <div role="listitem">
+        <button
+          #item
+          type="button"
+          class="btn btn-link lyric text-start text-decoration-none w-100 d-flex align-items-baseline gap-3"
+          [class.lyric-current]="index === activeIndex()"
+          [class.opacity-50]="index < activeIndex()"
+          [attr.aria-current]="index === activeIndex() ? 'true' : null"
+          (click)="captionSelected.emit(caption)">
+          <span class="font-monospace small flex-shrink-0" [class.text-warning]="index === activeIndex()">{{ caption.startSeconds | clock }}</span>
+          <span>{{ caption.text }}</span>
+        </button>
+      </div>
+    }
+  </div>
+  <p class="small text-body-secondary px-3 py-2 mb-0 border-top">Select a line to play from there.</p>
+</section>

@@ -1,0 +1,20 @@
+@if (media(); as loaded) {
+  <div class="row g-4">
+    <div class="col-lg-8 d-flex flex-column gap-3 min-w-0">
+      <div class="d-flex align-items-center gap-3">
+        <h1 class="h4 mb-0 text-truncate flex-grow-1" [title]="loaded.title">{{ loaded.title }}</h1>
+        <span class="pace-chip flex-shrink-0">{{ paceLabel() }}</span>
+      </div>
+      <app-video-player [source]="loaded.videoUrl" [caption]="captionText()" />
+      <div class="d-flex justify-content-end">
+        <a class="btn btn-sm btn-outline-secondary" routerLink="/">Choose another video</a>
+      </div>
+      <div class="pace-panel p-3 p-lg-4">
+        <app-reading-settings />
+      </div>
+    </div>
+    <aside class="col-lg-4 min-w-0">
+      <app-captions-panel [captions]="loaded.captions" [activeIndex]="activeIndex()" (captionSelected)="playFrom($event)" />
+    </aside>
+  </div>
+}
