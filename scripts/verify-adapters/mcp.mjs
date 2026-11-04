@@ -31,7 +31,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openVerifier, ROOT, isCore, coreModule } from './harness.mjs';
 import { interA11yTools, isInterA11yTool, runInterA11yTool } from './intera11y.mjs';
-import { axeText, shiftText } from '../../agent-host/src/browser-tools.js';
+import { axeText, shiftText, smallTextText } from '../../agent-host/src/browser-tools.js';
 import { getContrastRatio, parseColor } from '../../tools/utils/color.js';
 
 const SPECS = path.join(ROOT, 'tools/test/verify');
@@ -105,6 +105,7 @@ function resultText(name, r, saved) {
   if (r.checks?.length) lines.push('Checks (before enable → after):', ...r.checks.map((c, i) => `- ${saved.checks[i]?.name}: ${c.before ? 'pass' : 'fail'} → ${c.after ? 'pass' : 'fail'}${c.error ? ` (${c.error})` : ''}`));
   if (r.status === 'applied') {
     lines.push(axeText(r.axe).replace(/ \(the intopia-web-accessibility skill\)/, ''));
+    if (r.smallText) lines.push(smallTextText(r.smallText));
     lines.push(...restoreText(r));
   }
   if (r.announced?.length) lines.push(`Announced: ${r.announced.map(a => JSON.stringify(a)).join(', ')}`);
@@ -155,6 +156,9 @@ function siteText(site, r) {
   if (r.status === 'applied') {
     lines.push(`- ${r.changes ?? '?'} changes; layout shift ${r.shift ?? '?'}${r.shift >= 0.1 ? ' (a lot)' : ''}.`);
     if (r.axe?.error) lines.push(`- axe-core could not run: ${r.axe.error}`);
+    for (const t of r.smallText?.drawn || []) lines.push(`- TEXT drawn at ${t.px}px, below the ${r.smallText.min}px minimum: "${t.text}"`);
+    for (const t of r.smallText?.shrunk || []) lines.push(`- TEXT made smaller, ${t.from} → ${t.px}px: "${t.text}"`);
+    if (r.axe?.advice?.length) lines.push(`- advice, not counted: ${r.axe.advice.map((a) => `${a.id} on ${a.count}`).join('; ')}`);
     for (const a of r.axe?.added || []) lines.push(`- ADDED ${a.id}: ${a.help}${a.wcag.length ? ` (WCAG ${a.wcag.join(', ')})` : ''}, on ${a.count}: ${(a.targets || []).join('; ')}${a.summary ? ` (${a.summary.replace(/\s+/g, ' ').slice(0, 200)})` : ''}`);
     if (r.axe?.fixed?.length) lines.push(`- fixed: ${r.axe.fixed.map(a => `${a.id} on ${a.count}`).join('; ')}`);
     if (r.axe?.onPageAdded) lines.push(`- ${r.axe.onPageAdded} problem${r.axe.onPageAdded === 1 ? '' : 's'} on content the site added itself after enable() (not counted)`);

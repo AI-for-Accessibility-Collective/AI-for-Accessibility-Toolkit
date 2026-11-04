@@ -195,7 +195,9 @@ change are barriers too, for many people.
 - **Change only what the barrier needs.** Keep the site's fonts, colours,
   spacing, wording and order. Anything you add looks like part of the site:
   take its font, colours and corner radius from the page (computed styles),
-  not from your own taste.
+  not from your own taste. Its text is at least 16px (12pt), scaled up by
+  the person's text size, even where the site's own is smaller; never make
+  the page's text smaller.
 - **Be consistent.** The same thing has the same name, look and place
   everywhere it appears, on every page the adapter runs on (WCAG 3.2.3,
   3.2.4). Style through one stylesheet the adapter adds (`s.css(...)`, with

@@ -225,6 +225,13 @@ export function runnable(adapters) {
 export const PREVIEW_KEY = 'preview';
 export const AXE_FILE = 'vendor/axe-core.min.js';
 export const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+// Run too, and reported as advice, not counted as a problem: axe-core's
+// best practices and WCAG AAA (some best practices are wrong about pages an
+// adapter makes, such as a header inside a div with role="main").
+export const AXE_ADVICE_TAGS = ['best-practice', 'wcag2aaa'];
+// The smallest text the toolkit draws (12pt); the blocks scale up from it
+// with the person's text size.
+export const MIN_TEXT_PX = 16;
 const CHECK_MS = 5000;
 const SETTLE_MS = 400;
 const AXE_MS = 30000;
@@ -291,7 +298,8 @@ ${PREVIEW_SPEAK}
     }
     return out;
   };
-  // axe-core's WCAG A and AA problems in the page, one entry per rule and element.
+  // axe-core's problems in the page, one entry per rule and element: WCAG A
+  // and AA count; best practices and AAA are advice.
   // Matched by the element itself, not axe's selector for it: the selector can
   // name the adapter's own marks, which would count an old problem as new.
   const AUDIT = ${audit ? 'true' : 'false'};
@@ -309,7 +317,7 @@ ${PREVIEW_SPEAK}
     let timer;
     try {
       const r = await Promise.race([
-        axe.run(document, { runOnly: { type: 'tag', values: ${JSON.stringify(AXE_TAGS)} }, resultTypes: ['violations'], elementRef: true }),
+        axe.run(document, { runOnly: { type: 'tag', values: ${JSON.stringify([...AXE_TAGS, ...AXE_ADVICE_TAGS])} }, resultTypes: ['violations'], elementRef: true }),
         new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('took over ${AXE_MS / 1000} seconds')), ${AXE_MS}); })]);
       const found = new Map();
       for (const v of r.violations) for (const n of v.nodes) {
@@ -336,7 +344,56 @@ ${PREVIEW_SPEAK}
   // element is the toolkit's own. So is one on an element the toolkit did
   // not change whose new content the page added (an ad slot filling in).
   let existed = null;
-  const noteExisting = () => { if (AUDIT && typeof document === 'object' && document && typeof document.querySelectorAll === 'function') existed = new WeakSet(document.querySelectorAll('*')); };
+  // The size of the page's text before enable(), to tell text the adapter
+  // made smaller.
+  let sizes = null;
+  const ownText = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+  const shown = (el) => {
+    if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ visibilityProperty: true, opacityProperty: true })) return false;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 1 || r.height <= 1) return false;
+    const cs = getComputedStyle(el);
+    return !/rect\\(0(px)?,? 0(px)?/.test(cs.clip) && cs.clipPath !== 'inset(50%)';
+  };
+  const noteExisting = () => {
+    if (!(AUDIT && typeof document === 'object' && document && typeof document.querySelectorAll === 'function')) return;
+    existed = new WeakSet(document.querySelectorAll('*'));
+    sizes = new Map();
+    for (const el of document.body ? document.body.querySelectorAll('*') : []) {
+      if (sizes.size >= 3000) break;
+      if (ownText(el)) sizes.set(el, parseFloat(getComputedStyle(el).fontSize) || 0);
+    }
+  };
+  // Text the toolkit draws below MIN_TEXT_PX, and page text it made smaller
+  // (through its own attributes or its style sheets).
+  const smallText = () => {
+    if (!AUDIT || typeof document !== 'object' || !document.body) return undefined;
+    const say = (el) => (el.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 40);
+    const drawn = [];
+    for (const el of document.body.querySelectorAll('[data-ai4a11y-ui], [data-ai4a11y-ui] *')) {
+      if (drawn.length >= 5) break;
+      if (/^(STYLE|SCRIPT)$/.test(el.tagName) || !ownText(el) || !shown(el)) continue;
+      const px = parseFloat(getComputedStyle(el).fontSize) || 0;
+      if (px && px < ${MIN_TEXT_PX} - 0.25) drawn.push({ px: Math.round(px * 10) / 10, text: say(el) });
+    }
+    const shrunk = [];
+    const ours = globalThis.__ai4a11yBlocksShared;
+    const sheets = [...document.querySelectorAll('style[data-ai4a11y-ui]')].map((st) => st.sheet).filter(Boolean);
+    for (const [el, was] of sizes || []) {
+      if (shrunk.length >= 5) break;
+      if (!el.isConnected || !shown(el)) continue;
+      const px = parseFloat(getComputedStyle(el).fontSize) || 0;
+      if (!(px < was - 0.5)) continue;
+      let toolkit = !!(ours && ours.ourAttrs && [el, ...(function* up(e) { for (let p = e.parentElement; p; p = p.parentElement) yield p; })(el)].some((e) => ours.ourAttrs.has(e)));
+      if (!toolkit && sheets.length) {
+        sheets.forEach((sh) => { sh.disabled = true; });
+        toolkit = (parseFloat(getComputedStyle(el).fontSize) || 0) >= was - 0.5;
+        sheets.forEach((sh) => { sh.disabled = false; });
+      }
+      if (toolkit) shrunk.push({ from: Math.round(was * 10) / 10, px: Math.round(px * 10) / 10, text: say(el) });
+    }
+    return drawn.length || shrunk.length ? { min: ${MIN_TEXT_PX}, ...(drawn.length ? { drawn } : {}), ...(shrunk.length ? { shrunk } : {}) } : undefined;
+  };
   const pageAdded = (el) => !existed.has(el) && !(el.closest && el.closest('[data-ai4a11y-ui]'));
   const sitesOwn = (e) => {
     const el = e.element;
@@ -349,11 +406,15 @@ ${PREVIEW_SPEAK}
   const compare = (before, after) => {
     if (!before || !after) return undefined;
     if (before.error || after.error) return { error: before.error || after.error };
+    const counted = (e) => (e.rule.tags || []).some((t) => ${JSON.stringify(AXE_TAGS)}.includes(t));
     const newly = [...after.found].filter(([k]) => !before.found.has(k)).map(([, e]) => e);
-    const added = newly.filter((e) => !sitesOwn(e));
-    const onPageAdded = newly.length - added.length;
-    const fixed = [...before.found].filter(([k]) => !after.found.has(k)).map(([, e]) => e);
-    return { version: after.version, added: byRule(added), fixed: byRule(fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })), remaining: after.found.size - added.length, ...(onPageAdded ? { onPageAdded } : {}) };
+    const mine = newly.filter((e) => !sitesOwn(e));
+    const added = mine.filter(counted);
+    const advice = mine.filter((e) => !counted(e));
+    const onPageAdded = newly.filter(counted).length - added.length;
+    const fixed = [...before.found].filter(([k, e]) => counted(e) && !after.found.has(k)).map(([, e]) => e);
+    const remaining = [...after.found.values()].filter(counted).length - added.length;
+    return { version: after.version, added: byRule(added), ...(advice.length ? { advice: byRule(advice) } : {}), fixed: byRule(fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })), remaining, ...(onPageAdded ? { onPageAdded } : {}) };
   };
   // Counted as they arrive: records handed to the callback are gone from takeRecords().
   let records = 0;
@@ -371,6 +432,8 @@ ${PREVIEW_SPEAK}
     stopWatching();
     const axeAfter = await runAxe();
     if (axeAfter) result.axe = compare(axeBefore, axeAfter);
+    const small = smallText();
+    if (small) result.smallText = small;
     if (CHECKS.length) {
       const after = await runChecks();
       result.checks = after.map((a, i) => ({ before: before[i].ok, after: a.ok, ...(a.error ? { error: a.error } : {}) }));

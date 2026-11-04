@@ -18,3 +18,5 @@ build/
 onboarding/onboarding-data/
 .verify-logs/
 .verify-cache/
+tools/core-adapters/.check/
+.adapter-reviews/

@@ -101,7 +101,10 @@ that people see or use, load the `intopia-web-accessibility` skill and
 follow its acceptance criteria for each control. Use plain language in
 everything a person reads or hears; describe barriers as being in the page,
 not in people. Never set `disabled` on a control that has focus (Chrome
-moves focus to the page): use `aria-disabled`.
+moves focus to the page): use `aria-disabled`. Text the adapter shows
+(labels, buttons, panels, outlines) is at least 16px (12pt), scaled up by
+the person's text size, and it never makes the page's text smaller: the
+verifier fails it otherwise.
 
 Read the catalog adapters your brief lists under "prior work"
 (`tools/adapters/`): they are older versions that handle real pages' edge

@@ -461,7 +461,7 @@ await test("tooltip and panel: the profile's text size wins over the builder's f
   s.tooltip({ trigger: 'abbr', fontScale: 100 });
   s.panel({ label: 'P', fontScale: 120 });
   const css = [...doc.querySelectorAll('style')].map((x) => x.textContent).join('\n');
-  assert.match(css, /font: 21px\/1\.45/);
+  assert.match(css, /font: 24px\/1\.45/);
   assert.match(css, /font-size: 24px/);
   s.end();
 });

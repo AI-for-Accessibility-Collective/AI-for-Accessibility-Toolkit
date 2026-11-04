@@ -183,10 +183,11 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       describe: 'Point the trigger\'s aria-describedby at it while open.',
       maxWidth: 'Pixels.',
       theme: "'dark' or 'light'.",
-      fontScale: 'Text size in percent.',
+      fontScale: 'Text size in percent, of 16px (12pt); it never goes below 100.',
     }),
     personal: { fontScale: 'The profile\'s text size wins over yours.' },
     invariants: [
+      'Its text is at least 16px (12pt), scaled up by the person\'s text size.',
       'It can be hovered without closing.',
       'Escape closes it, and it stays closed while the pointer or focus stays on that trigger.',
       'It stays open while its trigger has focus.',

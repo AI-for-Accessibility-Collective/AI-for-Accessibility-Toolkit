@@ -163,7 +163,7 @@ export default {
   min-width: 24px;
   box-sizing: border-box;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 500;
   line-height: 1.3;
   color: #0a4b78;

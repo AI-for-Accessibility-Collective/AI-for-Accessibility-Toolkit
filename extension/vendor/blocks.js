@@ -837,7 +837,7 @@
       const scale = Math.max(1, (Number(c.fontScale) || 100) / 100);
       s.css(`tip-${n}`, `#${id} { position: fixed; left: 0; top: 0; z-index: 2147483646; box-sizing: border-box;
   max-width: min(${Number(c.maxWidth) || 320}px, calc(100vw - 16px)); padding: 8px 10px; border-radius: 6px;
-  font: ${Math.round(14 * scale)}px/1.45 system-ui, sans-serif; text-align: start; white-space: normal;
+  font: ${Math.round(16 * scale)}px/1.45 system-ui, sans-serif; text-align: start; white-space: normal;
   ${THEMES[c.theme] || THEMES.dark} box-shadow: 0 2px 8px rgba(0,0,0,.3); pointer-events: auto; }
 #${id}[hidden] { display: none !important; }`);
       s.append(doc.body, tip);
@@ -1335,7 +1335,7 @@
         s.listen(button, "click", () => toggle());
         s.css("replace-block", `[data-ai4a11y-replaced] > div > p { margin: 0 0 .75em; }
 .ai4a11y-replaced-bar { margin: 4px 0 12px; }
-.ai4a11y-replaced-bar button { font: inherit; font-size: .9em; min-height: 32px; padding: 2px 10px; cursor: pointer; }`);
+.ai4a11y-replaced-bar button { font: inherit; font-size: max(1em, 16px); min-height: 32px; padding: 2px 10px; cursor: pointer; }`);
       }
       function toggle(original = !showingOriginal) {
         if (!s.alive()) return;

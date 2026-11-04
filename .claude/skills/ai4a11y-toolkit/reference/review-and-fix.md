@@ -32,7 +32,9 @@ node <skill folder>/scripts/adapter.mjs review bigger-buttons.js \
 ```
 
 `--asked` is what the person said they need, in their words and their
-answers to your questions. Then give that prompt, as it is, to a new
+answers to your questions. The prompt also lists the lines of the adapter
+that may decide what something is from a name, class, id or words (a
+simple scan, so some are harmless), for the reviewer to try first. Then give that prompt, as it is, to a new
 agent:
 
 - **Claude Code**: the Agent tool, with `subagent_type: "general-purpose"`

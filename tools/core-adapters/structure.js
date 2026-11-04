@@ -243,7 +243,7 @@ export default {
   border-radius: 4px !important;
   color: inherit !important;
   text-decoration: underline !important;
-  font-size: 14px !important;
+  font-size: 16px !important;
   line-height: 1.4 !important;
 }
 .ai4a11y-outline-link:hover {
@@ -253,7 +253,7 @@ export default {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 11px !important;
+  font-size: 16px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   padding: 2px 5px !important;

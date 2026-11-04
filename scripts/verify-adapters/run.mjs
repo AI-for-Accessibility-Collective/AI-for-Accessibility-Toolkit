@@ -43,7 +43,7 @@
 //     you. No web tools: the job needs none, as for the sidebar's agent.
 
 import { spawn, execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, createWriteStream } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, createWriteStream, rmSync } from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { randomBytes } from 'node:crypto';
@@ -60,7 +60,7 @@ const NOT_ADAPTERS = new Set(['index', '_primitives', 'agent-watch-shapes', 'age
 
 const argv = process.argv.slice(2);
 const flag = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ? argv.splice(i, 2)[1] : fallback; };
-const mode = argv.includes('--agent') ? 'agent' : argv.includes('--replay') ? 'replay' : null;
+const mode = argv.includes('--agent') ? 'agent' : argv.includes('--replay') ? 'replay' : argv.includes('--check') ? 'check' : null;
 if (mode === 'agent' && !argv.includes('--sandboxed')) { console.error('Run the agents in the verify container on the agent host VM (see Dockerfile), with --sandboxed.'); process.exit(2); }
 const parallel = Number(flag('--parallel', 4));
 const create = argv.includes('--create');
@@ -75,11 +75,132 @@ const earlier = flag('--earlier', '').split(',').filter(Boolean);
 const model = flag('--model', MODEL);
 const logs = path.resolve(flag('--logs', path.join(ROOT, '.verify-logs')));
 const skills = flag('--skills', '').split(',').filter(Boolean);
+const checkOptions = JSON.parse(flag('--options', '{}'));
+const checkPersonal = JSON.parse(flag('--personal', 'null'));
+const checkPages = flag('--pages', '').split(',').filter(Boolean);
+const checkOut = flag('--out', null);
 const names = argv.filter(a => !a.startsWith('--'));
 
 if (mode === 'replay') await replay();
+else if (mode === 'check') await check(names[0]);
 else if (mode === 'agent') await agents();
-else { console.error('Usage: run.mjs --replay [name ...] | --agent [--create | --review BASE | --fix DIR] [name ...] [--parallel N] [--logs DIR] [--skills DIR,...]'); process.exit(2); }
+else { console.error('Usage: run.mjs --replay [name ...] | --check <adapter.js> [--options JSON] [--personal JSON] [--pages a.html,b.html] [--no-sites] [--out report.json] | --agent [--create | --review BASE | --fix DIR] [name ...] [--parallel N] [--logs DIR] [--skills DIR,...]'); process.exit(2); }
+
+/** One run of a spec, judged as the replay judges it: { r, problems }. On a
+ *  real page, skipping (nothing to do there) is fine, and a page that does
+ *  not load is reported, not failed. keyboard: also InterA11y's keyboard
+ *  measurements, without and with the adapter. */
+async function judge(v, name, spec, live, { keyboard = false, skipOk = false } = {}) {
+  let r;
+  try { r = await v.verify(spec); } catch (e) { r = { status: live ? 'unreachable' : 'failed', message: e.message.slice(0, 200) }; }
+  const problems = [];
+  // On a live page, skipping (nothing to do there) is fine, and a page that does not load is reported, not failed.
+  const fine = live ? ['applied', 'skipped', 'unreachable'] : skipOk ? ['applied', 'skipped'] : ['applied'];
+  if (!fine.includes(r.status)) problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
+  if (r.leftovers?.length && spec.restores !== false) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
+  // On a live page, a check that already failed before enable() is the site's
+  // (Mars has its own tabindex above 0); on a test page it must pass after.
+  const bad = (r.checks || []).map((c, i) => (!c.after && !(live && !c.before) ? spec.checks[i]?.name : null)).filter(Boolean);
+  if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
+  if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
+  let added = r.axe?.added || [];
+  if (live && added.length) {
+    // The same page with a do-nothing adapter: a rule it adds by itself
+    // (NPR fills in its own content, a different amount each load) is the
+    // site's, whatever the count; it is shown as a warning.
+    let c = null;
+    try { c = await v.verify({ ...spec, control: true, checks: [] }); } catch { c = null; }
+    const own = new Map((c?.axe?.added || []).map((x) => [x.id, x.count]));
+    const kept = added.filter((x) => !own.has(x.id));
+    const site = added.filter((x) => own.has(x.id));
+    if (site.length) console.log(`WARN: ${name}: the page also adds with no adapter: ${site.map((x) => `${x.id} (${x.count} with the adapter, ${own.get(x.id)} without)`).join(', ')}`);
+    added = kept;
+  }
+  for (const rule of added) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);
+  // Text the toolkit draws is at least 12pt (16px), and page text is never made smaller.
+  for (const t of r.smallText?.drawn || []) problems.push(`draws text at ${t.px}px, below the ${r.smallText.min}px minimum: "${t.text}"`);
+  for (const t of r.smallText?.shrunk || []) problems.push(`makes page text smaller, ${t.from} → ${t.px}px: "${t.text}"`);
+  if (r.axe?.advice?.length) console.log(`  (${name}: advice, not counted: ${r.axe.advice.map((a) => `${a.id} on ${a.count}`).join(', ')})`);
+  // A live page changes by itself (Mars's carousel), so an inexact restore there is a warning; leftover marks are not.
+  if (r.status === 'applied' && r.restored === false && spec.restores !== false) {
+    if (live) console.log(`WARN: ${name}: the page is not exactly as before after disable() (it may have changed by itself)`);
+    else problems.push('disable() does not restore the page');
+  }
+  if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
+  if (r.zoomLeft !== undefined) problems.push(`disable() leaves the zoom at ${r.zoomLeft}`);
+  if (r.status === 'skipped' && r.restored === false) {
+    if (live) console.log(`WARN: ${name}: enable() returned false and the page is not exactly as before (it may have changed by itself)`);
+    else problems.push('enable() returned false but left changes in the page');
+  }
+  if (r.enableMs > LIMITS.enableMs) problems.push(`enable() took ${r.enableMs} ms`);
+  if (live && r.aiCalls > LIMITS.aiCalls) problems.push(`${r.aiCalls} AI calls on load`);
+  // A core adapter's main spec: InterA11y's keyboard measurements without
+  // and with it; a new trap or lost focus on what it made or changed fails.
+  if (!live && r.status === 'applied' && keyboard) {
+    const k = await keyboardAudit(v, spec).catch((e) => ({ error: e.message }));
+    if (k.error) console.log(`  (${name}: keyboard audit could not run: ${k.error})`);
+    else {
+      for (const [key, what] of [['newKeyboardTraps', 'a keyboard trap (2.1.2)'], ['newFocusKept', 'focus that cannot leave (2.1.2)'], ['newFocusRefused', 'focus refused (2.1.1)'], ['newFocusInAriaHidden', 'focus inside aria-hidden content (4.1.2)']]) {
+        const mine = (k[key] || []).filter((x) => x.inScope);
+        if (mine.length) problems.push(`adds ${what}: ${mine.slice(0, 3).map((x) => `${x.xpath}${x.label ? ` "${x.label}"` : ''}`).join('; ')}`);
+      }
+      console.log(`  (${name}: keyboard: ${k.tabStops.before} → ${k.tabStops.after} Tab stops${k.tabStops.newWithAdapter.length ? `, new: ${k.tabStops.newWithAdapter.map((x) => x.label || x.tag).join(', ')}` : ''}${k.tabStops.goneWithAdapter.length ? `, gone: ${k.tabStops.goneWithAdapter.map((x) => x.label || x.tag).join(', ')}` : ''}${k.newOrderFindings.length ? `, ${k.newOrderFindings.length} order finding(s)` : ''})`);
+    }
+  }
+  if (r.dwell?.announced.length > LIMITS.dwellAnnounced) problems.push(`said ${r.dwell.announced.length} things while a person only scrolled: ${r.dwell.announced.slice(0, 4).map(a => JSON.stringify(a)).join(', ')}`);
+  return { r, problems };
+}
+
+/**
+ * The verification protocol's automated steps for any adapter built on the
+ * building blocks (docs/verification.md): on every test page we have (each
+ * also on a narrow screen, with reduced motion, and with the person's
+ * settings when --personal gives them), and on the copy of every real page
+ * in sites.json. On a page it is not for, enable() returning false is fine.
+ */
+async function check(file) {
+  if (!file || !existsSync(file)) { console.error('Use: run.mjs --check <adapter.js>'); process.exit(2); }
+  // Run as a core adapter is (with the blocks): from a copy under tools/core-adapters/.check/.
+  const dir = path.join(ROOT, 'tools/core-adapters/.check');
+  mkdirSync(dir, { recursive: true });
+  const copy = path.join(dir, path.basename(file).replace(/[^\w.-]/g, '_'));
+  copyFileSync(file, copy);
+  const rel = path.relative(ROOT, copy);
+  const pages = checkPages.length ? checkPages : readdirSync(path.join(CORE_SPECS, 'pages')).filter((f) => f.endsWith('.html') && !f.startsWith('review-')).sort();
+  const base = { file: rel, options: checkOptions, checks: [] };
+  const runs = [];
+  for (const page of pages) {
+    runs.push([page, { ...base, page }, false, true]);
+    runs.push([`${page} (narrow)`, { ...base, page, viewport: { width: 390, height: 844 } }, false, false]);
+    runs.push([`${page} (reduced motion)`, { ...base, page, reducedMotion: 'reduce' }, false, false]);
+    if (checkPersonal) runs.push([`${page} (their settings)`, { ...base, page, personal: checkPersonal }, false, false]);
+  }
+  if (!argv.includes('--no-sites')) for (const site of sitesFor(rel)) runs.push([`@ ${site.name}`, { ...base, page: site.url }, true, false]);
+  const v = await openVerifier();
+  const report = { adapter: path.basename(file), at: new Date().toISOString(), runs: [] };
+  let failed = 0, skipped = 0, applied = 0, keyboards = 0;
+  try {
+    for (const [name, spec, live, first] of runs) {
+      // InterA11y's keyboard audit on the first five test pages it applies on.
+      const { r, problems } = await judge(v, name, spec, live, { skipOk: true, keyboard: first && keyboards < 5 });
+      if (first && r.status === 'applied') { applied++; keyboards++; }
+      const status = r.status === 'unreachable' ? 'skip' : problems.length ? 'fail' : 'pass';
+      if (status === 'skip') skipped++;
+      if (status === 'fail') failed++;
+      report.runs.push({ name, status, result: r.status, problems, ...(r.axe?.advice?.length ? { advice: r.axe.advice.map((a) => `${a.id} on ${a.count}`) } : {}), ...(r.copy ? { copy: r.copy } : {}) });
+      console.log(`${status.toUpperCase()}: ${name}${r.status === 'skipped' ? ' (enable() returned false: nothing for it here)' : r.status === 'applied' ? ` (shift ${r.shift ?? '-'})` : r.message ? ` (${r.message})` : ''}${problems.length ? `\n  ${problems.join('\n  ')}` : ''}`);
+    }
+  } finally {
+    await v.close();
+    rmSync(copy, { force: true });
+  }
+  report.summary = { passed: runs.length - failed - skipped, failed, skipped, appliedOnTestPages: applied, testPages: pages.length };
+  if (!applied) console.log(`\nNOTE: it applied on none of the ${pages.length} test pages: the checks above say little until it runs on a page with the barrier it is for (--pages, or its own page).`);
+  console.log(`\n${report.summary.passed} passed, ${failed} failed, ${skipped} skipped (site unreachable); it applied on ${applied} of ${pages.length} test pages.`);
+  console.log('These checks find some problems in code. They do not show that the adapter helps anyone: only the people who use it can.');
+  if (checkOut) writeFileSync(checkOut, JSON.stringify(report, null, 2) + '\n');
+  process.exit(failed ? 1 : 0);
+}
 
 async function replay() {
   // --core: the core adapters' specs (tools/test/verify-core/); otherwise the catalog's.
@@ -96,60 +217,8 @@ async function replay() {
   }
   let known = 0;
   for (const [name, spec, live, knownWhy] of runs) {
-    let r;
-    try { r = await v.verify(spec); } catch (e) { r = { status: live ? 'unreachable' : 'failed', message: e.message.slice(0, 200) }; }
-    const problems = [];
-    // On a live page, skipping (nothing to do there) is fine, and a page that does not load is reported, not failed.
-    const fine = live ? ['applied', 'skipped', 'unreachable'] : ['applied'];
-    if (!fine.includes(r.status)) problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
-    else if (r.status === 'unreachable') { skipped++; console.log(`SKIP: ${name} (${r.message})`); }
-    if (r.leftovers?.length && spec.restores !== false) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
-    // On a live page, a check that already failed before enable() is the site's
-    // (Mars has its own tabindex above 0); on a test page it must pass after.
-    const bad = (r.checks || []).map((c, i) => (!c.after && !(live && !c.before) ? spec.checks[i]?.name : null)).filter(Boolean);
-    if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
-    if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
-    let added = r.axe?.added || [];
-    if (live && added.length) {
-      // The same page with a do-nothing adapter: a rule it adds by itself
-      // (NPR fills in its own content, a different amount each load) is the
-      // site's, whatever the count; it is shown as a warning.
-      let c = null;
-      try { c = await v.verify({ ...spec, control: true, checks: [] }); } catch { c = null; }
-      const own = new Map((c?.axe?.added || []).map((x) => [x.id, x.count]));
-      const kept = added.filter((x) => !own.has(x.id));
-      const site = added.filter((x) => own.has(x.id));
-      if (site.length) console.log(`WARN: ${name}: the page also adds with no adapter: ${site.map((x) => `${x.id} (${x.count} with the adapter, ${own.get(x.id)} without)`).join(', ')}`);
-      added = kept;
-    }
-    for (const rule of added) problems.push(`adds ${rule.id} (WCAG ${rule.wcag.join(', ') || '-'}) on ${rule.count}`);
-    // A live page changes by itself (Mars's carousel), so an inexact restore there is a warning; leftover marks are not.
-    if (r.status === 'applied' && r.restored === false && spec.restores !== false) {
-      if (live) console.log(`WARN: ${name}: the page is not exactly as before after disable() (it may have changed by itself)`);
-      else problems.push('disable() does not restore the page');
-    }
-    if (r.errors?.length) problems.push(`errors: ${r.errors.join(' | ').slice(0, 300)}`);
-    if (r.zoomLeft !== undefined) problems.push(`disable() leaves the zoom at ${r.zoomLeft}`);
-    if (r.status === 'skipped' && r.restored === false) {
-      if (live) console.log(`WARN: ${name}: enable() returned false and the page is not exactly as before (it may have changed by itself)`);
-      else problems.push('enable() returned false but left changes in the page');
-    }
-    if (r.enableMs > LIMITS.enableMs) problems.push(`enable() took ${r.enableMs} ms`);
-    if (live && r.aiCalls > LIMITS.aiCalls) problems.push(`${r.aiCalls} AI calls on load`);
-    // A core adapter's main spec: InterA11y's keyboard measurements without
-    // and with it; a new trap or lost focus on what it made or changed fails.
-    if (!live && r.status === 'applied' && isCore(spec.file) && name === path.basename(spec.file, '.js')) {
-      const k = await keyboardAudit(v, spec).catch((e) => ({ error: e.message }));
-      if (k.error) console.log(`  (${name}: keyboard audit could not run: ${k.error})`);
-      else {
-        for (const [key, what] of [['newKeyboardTraps', 'a keyboard trap (2.1.2)'], ['newFocusKept', 'focus that cannot leave (2.1.2)'], ['newFocusRefused', 'focus refused (2.1.1)'], ['newFocusInAriaHidden', 'focus inside aria-hidden content (4.1.2)']]) {
-          const mine = (k[key] || []).filter((x) => x.inScope);
-          if (mine.length) problems.push(`adds ${what}: ${mine.slice(0, 3).map((x) => `${x.xpath}${x.label ? ` "${x.label}"` : ''}`).join('; ')}`);
-        }
-        console.log(`  (${name}: keyboard: ${k.tabStops.before} → ${k.tabStops.after} Tab stops${k.tabStops.newWithAdapter.length ? `, new: ${k.tabStops.newWithAdapter.map((x) => x.label || x.tag).join(', ')}` : ''}${k.tabStops.goneWithAdapter.length ? `, gone: ${k.tabStops.goneWithAdapter.map((x) => x.label || x.tag).join(', ')}` : ''}${k.newOrderFindings.length ? `, ${k.newOrderFindings.length} order finding(s)` : ''})`);
-      }
-    }
-    if (r.dwell?.announced.length > LIMITS.dwellAnnounced) problems.push(`said ${r.dwell.announced.length} things while a person only scrolled: ${r.dwell.announced.slice(0, 4).map(a => JSON.stringify(a)).join(', ')}`);
+    const { r, problems } = await judge(v, name, spec, live, { keyboard: isCore(spec.file) && name === path.basename(spec.file, '.js') });
+    if (r.status === 'unreachable') { skipped++; console.log(`SKIP: ${name} (${r.message})`); }
     if (problems.length && knownWhy) { known++; console.log(`KNOWN: ${name}: ${problems.join('; ')}\n  why: ${knownWhy}`); continue; }
     if (problems.length) failed++;
     if (r.status === 'unreachable') continue;

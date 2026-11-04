@@ -38,7 +38,7 @@ export function tooltipBlock(s, env) {
     const scale = Math.max(1, (Number(c.fontScale) || 100) / 100);
     s.css(`tip-${n}`, `#${id} { position: fixed; left: 0; top: 0; z-index: 2147483646; box-sizing: border-box;
   max-width: min(${Number(c.maxWidth) || 320}px, calc(100vw - 16px)); padding: 8px 10px; border-radius: 6px;
-  font: ${Math.round(14 * scale)}px/1.45 system-ui, sans-serif; text-align: start; white-space: normal;
+  font: ${Math.round(16 * scale)}px/1.45 system-ui, sans-serif; text-align: start; white-space: normal;
   ${THEMES[c.theme] || THEMES.dark} box-shadow: 0 2px 8px rgba(0,0,0,.3); pointer-events: auto; }
 #${id}[hidden] { display: none !important; }`);
     s.append(doc.body, tip);

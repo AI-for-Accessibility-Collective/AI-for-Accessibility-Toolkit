@@ -32,8 +32,9 @@ far as you need to know what a call really does.
   page steady and familiar" and "Accessible to WCAG 2.2 AA" in
   `agent-host/sandbox/AGENTS.md`. Look for: content hidden from screen
   readers, things read twice, focus moved unexpectedly or lost, motion or
-  flashing, content covered, contrast or target size made worse, the
-  person's own actions undone, AI called more than the person asked for.
+  flashing, content covered, contrast or target size made worse, text it
+  shows below 16px (12pt) or page text made smaller, the person's own
+  actions undone, AI called more than the person asked for.
 - **Reversibility.** `disable()` (the session's `end()`) puts the page and
   the zoom back, without undoing what the page or another adapter changed
   meanwhile.

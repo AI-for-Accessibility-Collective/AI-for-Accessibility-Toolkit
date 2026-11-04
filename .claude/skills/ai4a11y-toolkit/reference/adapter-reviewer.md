@@ -31,8 +31,8 @@ you need to know what a call really does. Not the author's notes.
 - **People.** It must not make the page worse for anyone: content hidden
   from screen readers, things read twice, focus moved unexpectedly or
   lost, motion or flashing, content covered, contrast or target size made
-  worse, the person's own actions undone, AI called more than they asked
-  for.
+  worse, text it shows below 16px (12pt) or page text made smaller, the
+  person's own actions undone, AI called more than they asked for.
 - **Reversibility.** `disable()` puts the page back exactly as it was,
   without undoing what the page itself changed meanwhile.
 - **Real pages.** Big pages, pages that change by themselves, single-page

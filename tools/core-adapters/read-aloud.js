@@ -107,14 +107,14 @@ export default {
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.25);
   box-sizing: border-box;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
 }
 .ai4a11y-read-aloud-bar button {
   min-width: 44px;
   min-height: 32px;
   padding: 4px 12px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.4;
   color: #ffffff;

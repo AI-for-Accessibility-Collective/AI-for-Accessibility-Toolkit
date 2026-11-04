@@ -100,7 +100,7 @@ export function textBlock(s, env) {
       s.listen(button, 'click', () => toggle());
       s.css('replace-block', `[data-ai4a11y-replaced] > div > p { margin: 0 0 .75em; }
 .ai4a11y-replaced-bar { margin: 4px 0 12px; }
-.ai4a11y-replaced-bar button { font: inherit; font-size: .9em; min-height: 32px; padding: 2px 10px; cursor: pointer; }`);
+.ai4a11y-replaced-bar button { font: inherit; font-size: max(1em, 16px); min-height: 32px; padding: 2px 10px; cursor: pointer; }`);
     }
     function toggle(original = !showingOriginal) {
       if (!s.alive()) return;

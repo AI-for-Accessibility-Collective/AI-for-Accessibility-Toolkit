@@ -253,7 +253,7 @@ const t = s.tooltip(...); t.open(el); t.hide()
 | `describe` | `true` | Point the trigger's aria-describedby at it while open. |
 | `maxWidth` | `320` | Pixels. |
 | `theme` | `"dark"` | 'dark' or 'light'. |
-| `fontScale` | `100` | Text size in percent. |
+| `fontScale` | `100` | Text size in percent, of 16px (12pt); it never goes below 100. |
 
 From the person's profile, over your value:
 
@@ -261,6 +261,7 @@ From the person's profile, over your value:
 
 Always, whatever the config:
 
+- Its text is at least 16px (12pt), scaled up by the person's text size.
 - It can be hovered without closing.
 - Escape closes it, and it stays closed while the pointer or focus stays on that trigger.
 - It stays open while its trigger has focus.

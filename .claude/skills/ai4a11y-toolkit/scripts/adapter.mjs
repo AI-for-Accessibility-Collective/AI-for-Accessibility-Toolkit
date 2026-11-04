@@ -331,6 +331,28 @@ function unanswered(text) {
   return missing;
 }
 
+// Lines that decide what something is from its name, class, id, words or
+// text: a simple scan, for the reviewer to test first. Some are harmless
+// (the adapter's own classes are left out).
+const GUESS = [
+  /\[(?:class|id|name|title|alt|src|href|aria-label)\s*[*^$|~]=/i,                        // [class*="slide"]
+  /\.test\(\s*[\w.$]*(?:className|\.id\b|textContent|innerText|innerHTML|\.src\b|\.href\b|\.title\b|\.name\b|getAttribute\(\s*['"](?:class|id|aria-label|title|name|alt|src|href)['"])/,
+  /(?:className|\.id\b|textContent|innerText|getAttribute\(\s*['"](?:class|id|aria-label|title|name|alt|src|href)['"]\s*\))[\w.?()]*\.(?:match|includes|startsWith|endsWith|search)\(/,
+  /classList\.contains\(/,
+  /\/[^/\n]*(?:\\b|\|)[^/\n]*\/[gimsuy]*\.(?:test|exec)\(/,                                     // /\b(play|pause)\b/i.test(name)
+  /\b[A-Z][A-Z0-9_]*(?:_RE|_REGEX|_HINTS?|_WORDS|_PATTERNS?)\s*=/,                               // ICON_RE = …, NAV_HINT = …
+];
+function guessLines(source) {
+  const out = [];
+  source.split('\n').forEach((line, i) => {
+    if (/ai4a11y/i.test(line) || /^\s*(\/\/|\*)/.test(line)) return;
+    // A test of a tag, type, role or key is what the page says, not a guess.
+    const said = line.replace(/\/[^/\n]*\/[gimsuy]*\.(?:test|exec)\(\s*[\w.?]*(?:tag|tagName|type|nodeName|localName|role|key)\b[^)]*\)/g, '');
+    if (GUESS.some((re) => re.test(said))) out.push(`${i + 1}: ${line.trim().slice(0, 140)}`);
+  });
+  return out;
+}
+
 // The fixes since the last review, as a unified diff; '' when none or when
 // neither git nor diff is here.
 function fixesSince(before, file) {
@@ -365,7 +387,9 @@ function review(file, flags) {
   const blocks = ext && path.join(ext, 'vendor', 'blocks.js');
   if (blocks && existsSync(blocks)) parts.push(`To run it as the browser runtime does: add ${blocks} to the page first (with Playwright, page.addScriptTag({ path })); then window.__ai4a11yBlocks.create({ adapter: 'review' }) is the toolkit argument to enable(options, toolkit). There every AI call answers null.`);
   else parts.push('The building blocks bundle (the extension\'s vendor/blocks.js) was not found here (--dir <the extension folder> names it): review a blocks adapter by reading it and reference/building-blocks.md.');
-  parts.push(`Round ${round} of ${Math.max(round, roundsChosen(flags))}.`);
+  const guesses = guessLines(readFileSync(file, 'utf8'));
+  if (guesses.length) parts.push('', `Lines that may decide what something is from its name, class, id, words or text (a simple scan, so some are harmless): find a page where each goes wrong, first.`, ...guesses.slice(0, 40).map((l) => `  ${l}`), ...(guesses.length > 40 ? [`  … and ${guesses.length - 40} more.`] : []));
+  parts.push('', `Round ${round} of ${Math.max(round, roundsChosen(flags))}.`);
   if (round > 1) {
     parts.push('', 'The earlier review, with what the author did about each finding:', '', earlier);
     const before = reviewedCopy(file, round - 1);

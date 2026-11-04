@@ -46,8 +46,17 @@ function axeOf(a) {
     ...(Array.isArray(r?.targets) ? { targets: r.targets.slice(0, 3).map(t => cut(t, 160)) } : {}),
     ...(r?.summary ? { summary: cut(r.summary, 300) } : {}) });
   const list = (l) => (Array.isArray(l) ? l.slice(0, MAX_AXE_RULES).map(rule) : []);
-  return { version: cut(a.version, 20), added: list(a.added), fixed: list(a.fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })),
-    remaining: Math.max(0, Number(a.remaining) || 0) };
+  return { version: cut(a.version, 20), added: list(a.added), ...(Array.isArray(a.advice) && a.advice.length ? { advice: list(a.advice).map(({ id, help, count }) => ({ id, help, count })) } : {}),
+    fixed: list(a.fixed).map(({ id, help, wcag, count }) => ({ id, help, wcag, count })), remaining: Math.max(0, Number(a.remaining) || 0) };
+}
+
+/** Text the adapter draws below the toolkit's minimum, or page text it made smaller, in a few lines; '' when none. */
+export function smallTextText(t) {
+  if (!t || typeof t !== 'object') return '';
+  const lines = [];
+  for (const d of (Array.isArray(t.drawn) ? t.drawn : []).slice(0, 5)) lines.push(`- It draws text at ${Number(d.px) || 0}px, below the ${Number(t.min) || 16}px (12pt) minimum: "${cut(d.text, 40)}".`);
+  for (const d of (Array.isArray(t.shrunk) ? t.shrunk : []).slice(0, 5)) lines.push(`- It makes the page's text smaller, ${Number(d.from) || 0} → ${Number(d.px) || 0}px: "${cut(d.text, 40)}".`);
+  return lines.length ? ['Text size: fix these (text the adapter shows is at least 16px, scaled up by the person\'s text size, and it never makes the page\'s text smaller):', ...lines].join('\n') : '';
 }
 
 /** What the agent reads about the axe-core check. */
@@ -65,6 +74,7 @@ export function axeText(axe) {
   } else lines.push('- The adapter added no problems axe-core finds.');
   if (axe.fixed.length) lines.push(`- It fixed: ${axe.fixed.map(r => `${r.id}${wcag(r)} on ${r.count} element${r.count === 1 ? '' : 's'}`).join('; ')}.`);
   if (axe.remaining) lines.push(`- ${axe.remaining} problems were on the page before and still are: the site's, not the adapter's. Leave them unless the person asked about them.`);
+  if (axe.advice?.length) lines.push(`- Advice, not counted (axe-core's best practices and WCAG AAA; some are wrong about pages an adapter makes): it added ${axe.advice.map(r => `${r.id} on ${r.count}`).join('; ')}. Look at each; fix it when it is real.`);
   lines.push('axe-core finds only some WCAG failures. For what the adapter adds or changes, also check what it cannot: keyboard use and visible focus, name, role and state, target size, and contrast you chose (the intopia-web-accessibility skill).');
   return lines.join('\n');
 }
@@ -272,6 +282,7 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
         a.status === 'applied' ? shiftText(shift) : '',
         results.length ? ['Checks (before enable → after):', ...results.map(c => `- ${c.name}: ${c.before ? 'pass' : 'fail'} → ${c.after ? 'pass' : 'fail'}${c.error ? ` (${c.error})` : ''}`)].join('\n') : '',
         a.status === 'applied' ? axeText(axe) : '',
+        a.status === 'applied' ? smallTextText(a.smallText) : '',
         a.status === 'applied' ? (!good
           ? `It is not ready: it ${v.why}. Fix the adapter (or a check that is wrong) and preview again. Do not tell the person it works.`
           : !v.concern
