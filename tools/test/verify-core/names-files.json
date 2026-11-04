@@ -1,0 +1,59 @@
+{
+  "name": "names-files",
+  "file": "tools/core-adapters/names.js",
+  "page": "names-files.html",
+  "checks": [
+    {
+      "name": "review 10: a size in a file name (icon-24px.png, icon-2x.png) is not a control's name",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const a = document.getElementById('btn-icon-24px')?.getAttribute('aria-label');\n      const b = document.getElementById('btn-icon-2x')?.getAttribute('aria-label');\n      return a === 'Store action' && b === 'Store action';\n    "
+    },
+    {
+      "name": "review 10: a file name with a size part (trash-24px.png) names nothing, not 'Trash 24px'",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-trash-24px')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "a density in an icon's file name (ic_delete_48dp.png) names nothing",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-ic-delete')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "a version in the query string does not stop a file name naming its icon (print.svg?v=3 is 'Print')",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('btn-print-query')?.getAttribute('aria-label') === 'Print';\n    "
+    },
+    {
+      "name": "review 10: a standalone small image named only by a size (icon-24px.png) is left as it was",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return !document.getElementById('img-icon-24px')?.hasAttribute('alt');\n    "
+    },
+    {
+      "name": "review 10: a file name that only says what kind of file it is (image.png, photo-placeholder.png) is not alt text",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return !document.getElementById('img-generic')?.hasAttribute('alt') && !document.getElementById('img-placeholder')?.hasAttribute('alt');\n    "
+    },
+    {
+      "name": "a kind word beside a real one stays in the name (acme-logo.png is 'Acme logo')",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('img-acme-logo')?.getAttribute('alt') === 'Acme logo';\n    "
+    },
+    {
+      "name": "a link whose last path part has a number (top-10-tips) is not named without it ('Top tips')",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('link-top-10')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "a percent-encoded path (caf%C3%A9-specials) is not read as a name",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('link-encoded')?.getAttribute('aria-label') === 'Store action';\n    "
+    },
+    {
+      "name": "a plain path still names its link (returns-policy is 'Returns policy')",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('link-returns')?.getAttribute('aria-label') === 'Returns policy';\n    "
+    },
+    {
+      "name": "review 10: an svg role=img with its own <title> is named, left alone and not described by the AI",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return !document.getElementById('svg-role-img')?.hasAttribute('aria-label');\n    "
+    },
+    {
+      "name": "an svg role=img whose only <title> is a part's is unnamed, and described as an informative image",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return document.getElementById('svg-part-title')?.getAttribute('aria-label') === 'A scenic mountain landscape with pine trees.';\n    "
+    }
+  ],
+  "ai": {
+    "label": "Store action",
+    "describe": "A scenic mountain landscape with pine trees."
+  }
+}

@@ -22,8 +22,13 @@
 //   • Elements with aria-hidden="true" or inside aria-hidden subtrees are skipped.
 //   • A file name's words name only a small icon (48 by 48 pixels or smaller); photos
 //     and illustrations are never named from file names (on null from AI, left untouched).
-//   • Words from a file name match whole words; style words (primary, secondary, btn,
-//     icon, large) are filtered out and not treated as names.
+//   • A file name or a link's last path part names something only when every part
+//     of it is a word: one with a digit or a symbol (icon-24px, trash@2x, top-10-tips,
+//     IMG_2034) names nothing. Style words (primary, secondary, btn, icon, large) are
+//     left out, and a file name that only says what kind of file it is (image.png,
+//     photo, logo, placeholder) names nothing.
+//   • An svg's own <title> is its name (s.page.nameOf): an svg role="img" with one is
+//     named and left alone.
 //   • An icon's class names it only when it is the icon library's name class (fa-print,
 //     bi-trash, icon-star, search-icon) made of words, on the icon the control shows
 //     (its shown children, or itself when it has none). Modifier classes (fa-2x, fa-fw,
@@ -182,38 +187,37 @@ function hasAccessibleName(el, s) {
   return Boolean(name && name.trim());
 }
 
-function extractWordsFromFileName(src) {
+// The words of the last part of an address's path (a file name, a page), or
+// null. Every part must be a word: a part with a digit or a symbol (24px, 2x,
+// @2x, top-10, IMG_2034, a hash) is the file's size, version or copy, and
+// what is left is not the name the page gave it, so nothing is named from it.
+// Never from a data: or blob: URI, another scheme, or a host.
+function lastPathWords(src) {
   if (!src || typeof src !== 'string') return null;
-  const trimmed = src.trim();
-  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:') || trimmed.startsWith('javascript:')) return null;
+  let url;
+  try { url = new URL(src.trim(), 'http://dummy.local'); } catch { return null; }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  const last = url.pathname.split('/').filter(Boolean).pop();
+  if (!last) return null;
+  let base = last.replace(/\.[a-zA-Z0-9]+$/, '');
+  try { base = decodeURIComponent(base); } catch { return null; }
+  return wordsOf(base);
+}
 
-  let pathPart = trimmed;
-  try {
-    const url = new URL(trimmed, 'http://dummy.local');
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
-    pathPart = url.pathname;
-  } catch {
-    pathPart = pathPart.split('?')[0].split('#')[0];
-  }
+// What a file is (an image, a photo, a logo, a placeholder) is not what it
+// shows (F30): a file name made only of such words names nothing.
+const FILE_KIND_WORDS = new Set([
+  'image', 'images', 'photo', 'photos', 'picture', 'pictures', 'pic', 'pics',
+  'graphic', 'graphics', 'logo', 'thumb', 'thumbnail', 'avatar', 'placeholder',
+  'untitled', 'blank', 'spacer', 'pixel', 'transparent', 'sprite', 'file', 'asset', 'assets'
+]);
 
-  const segments = pathPart.split('/').filter(Boolean);
-  if (!segments.length) return null;
-  const lastPart = segments[segments.length - 1];
-  if (!lastPart || lastPart.includes(':')) return null;
-
-  const withoutExt = lastPart.replace(/\.[a-zA-Z0-9]+$/, '');
-  if (!withoutExt) return null;
-
-  const rawWords = withoutExt
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .split(/[-_\s]+/)
-    .map(w => w.toLowerCase().trim())
-    .filter(Boolean);
-
-  const filtered = rawWords.filter(w => !STYLE_WORDS.has(w) && !/^\d+$/.test(w));
-  if (!filtered.length) return null;
-
-  return sentenceCase(filtered);
+// A small icon's name from its file name (trash-can.png is "Trash can"); style
+// words (icon, btn, large) are left out.
+function extractWordsFromFileName(src) {
+  const words = lastPathWords(src)?.filter(w => !STYLE_WORDS.has(w));
+  if (!words?.length || words.every(w => FILE_KIND_WORDS.has(w))) return null;
+  return sentenceCase(words);
 }
 
 // An icon font names its icon in one class: fa-print, bi-trash, glyphicon-search,
@@ -242,17 +246,6 @@ function wordsOf(str) {
     .map(w => w.toLowerCase())
     .filter(Boolean);
   return words.length && words.every(w => /^[a-z]+$/.test(w)) ? words : null;
-}
-
-// The page shows it: not hidden, not display:none (the icon for a toggle's other
-// state is hidden), whatever its size (an icon font draws in a pseudo-element).
-function isShown(el) {
-  if (el.closest('[hidden]')) return false;
-  if (typeof el.checkVisibility === 'function') {
-    return el.checkVisibility({ opacityProperty: true, visibilityProperty: true });
-  }
-  const style = el.ownerDocument.defaultView?.getComputedStyle(el);
-  return !style || (style.display !== 'none' && style.visibility !== 'hidden');
 }
 
 const AMBIGUOUS = Symbol('ambiguous');
@@ -285,49 +278,25 @@ function iconNameOfElement(node) {
 // The icon is drawn by the control's shown children (not the parts inside an svg),
 // or, when it has no children, by the control itself (<input type=button>, a
 // role=img span). A control's own classes beside children describe the control
-// (icon-only, has-icon), not its icon.
-function extractWordsFromClass(el) {
+// (icon-only, has-icon), not its icon. isShown: the page does not hide it,
+// whatever its size (an icon font draws in a pseudo-element; the icon for a
+// toggle's other state is hidden).
+function extractWordsFromClass(el, isShown) {
   const nodes = el.children.length
     ? [...el.querySelectorAll('*')].filter(n => !n.parentElement?.closest('svg') && isShown(n))
     : [el];
   return oneName(nodes, iconNameOfElement);
 }
 
+// A link's name from the last part of its path (/user/shopping-cart is
+// "Shopping cart"); never for '#...' or '?...', which stay on this page.
+const LINK_STOP_WORDS = new Set(['index', 'default', 'home', 'page']);
+
 function extractNameFromLinkPath(link) {
-  const rawHref = link.getAttribute('href') || '';
-  const trimmed = rawHref.trim();
-  if (!trimmed || trimmed.charAt(0) === '#' || trimmed.charAt(0) === '?' || trimmed.startsWith('javascript:')) {
-    return null;
-  }
-
-  let pathname = '';
-  try {
-    const url = new URL(trimmed, 'http://dummy.local');
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
-    pathname = url.pathname;
-  } catch {
-    return null;
-  }
-
-  const segments = pathname.split('/').filter(Boolean);
-  if (!segments.length) return null;
-  const lastPart = segments[segments.length - 1];
-  if (!lastPart) return null;
-
-  const base = lastPart.replace(/\.[a-zA-Z0-9]+$/, '');
-  if (!base) return null;
-
-  const rawWords = base
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .split(/[-_\s]+/)
-    .map(w => w.toLowerCase().trim())
-    .filter(Boolean);
-
-  const STOP_WORDS = new Set(['index', 'default', 'home', 'page']);
-  const filtered = rawWords.filter(w => !STOP_WORDS.has(w) && !STYLE_WORDS.has(w) && !/^\d+$/.test(w));
-  if (!filtered.length) return null;
-
-  return sentenceCase(filtered);
+  const href = (link.getAttribute('href') || '').trim();
+  if (!href || href.charAt(0) === '#' || href.charAt(0) === '?') return null;
+  const words = lastPathWords(href)?.filter(w => !LINK_STOP_WORDS.has(w) && !STYLE_WORDS.has(w));
+  return words?.length ? sentenceCase(words) : null;
 }
 
 // A <label>, or a span or div the page's form styles call a label (field-label,
@@ -416,6 +385,7 @@ export default {
     const s = (this.s = this.toolkit.session());
     const doc = s.page?.doc || document;
 
+    const isShown = (el) => s.page.isVisible(el, { size: false });
     const maxAiCalls = this.options.limit ?? 10;
     let aiCallsMade = 0;
     const aiAsked = new WeakSet();
@@ -515,7 +485,7 @@ export default {
       }
 
       // 3. Class words of the icon a control or a role=img element shows
-      const classWords = (isControl || role === 'img') ? extractWordsFromClass(el) : null;
+      const classWords = (isControl || role === 'img') ? extractWordsFromClass(el, isShown) : null;
       if (classWords) {
         s.setAttr(el, 'aria-label', classWords);
         changesCount++;

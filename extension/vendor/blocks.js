@@ -2531,17 +2531,19 @@
   var INTERACTIVE = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="option"], [tabindex]:not([tabindex="-1"])';
   var NAME_FROM_CONTENT = /^(a|button|summary|h[1-6]|label|legend|caption|figcaption|option|td|th|li|dt)$/i;
   var CONTENT_ROLES = /* @__PURE__ */ new Set(["button", "link", "menuitem", "menuitemcheckbox", "menuitemradio", "tab", "checkbox", "radio", "switch", "option", "treeitem", "cell", "columnheader", "rowheader", "heading", "tooltip"]);
+  var SVG_NS = "http://www.w3.org/2000/svg";
   var squash = (t) => String(t || "").replace(/\s+/g, " ").trim();
   function pageBlock(env) {
     const { doc, win } = env;
     const layout = () => hasLayout(doc);
-    function isVisible(el) {
+    function isVisible(el, { size = true } = {}) {
       if (!el || el.nodeType !== 1 || !el.isConnected) return false;
       if (el.closest("[hidden]")) return false;
       const style = win.getComputedStyle(el);
       if (style.display === "none" || style.visibility === "hidden" || parseFloat(style.opacity) === 0) return false;
       if (!layout()) return true;
       if (typeof el.checkVisibility === "function" && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false;
+      if (!size) return true;
       const r = el.getBoundingClientRect();
       return r.width > 0 && r.height > 0;
     }
@@ -2632,6 +2634,11 @@
       if (wrap && !labels.includes(wrap)) labels.push(wrap);
       return labels.map((l) => squash(contentText(l))).filter(Boolean).join(" ");
     }
+    function svgTitleOf(el) {
+      if (el.namespaceURI !== SVG_NS) return "";
+      for (const child of el.children) if (child.localName === "title" && child.namespaceURI === SVG_NS) return child.textContent;
+      return "";
+    }
     function nameOf(el) {
       if (!el || el.nodeType !== 1) return "";
       const tag = el.tagName;
@@ -2641,6 +2648,7 @@
       const candidates = [
         labelledBy(el),
         el.getAttribute("aria-label"),
+        svgTitleOf(el),
         tag === "IMG" || tag === "INPUT" && type === "image" || tag === "AREA" ? el.getAttribute("alt") : "",
         isField ? labelFor(el) : "",
         tag === "INPUT" && /^(button|submit|reset)$/.test(type) ? el.getAttribute("value") : "",

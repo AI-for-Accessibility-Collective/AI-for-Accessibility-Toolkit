@@ -6,7 +6,7 @@
 //   page.headings({ maxLevel })     visible headings with their levels
 //   page.nameOf(el)                 accessible name; never a field's typed value
 //   page.find(name, opts)           the control whose name best matches
-//   page.isVisible(el), page.isOurs(el)
+//   page.isVisible(el, { size }), page.isOurs(el)
 //   page.background(el), page.contrast(a, b)
 //   page.widgetParts(widget), page.ownControls(widget, { parts })   (widget.js)
 
@@ -31,19 +31,24 @@ const INTERACTIVE = 'a[href], button, input:not([type="hidden"]), select, textar
 const NAME_FROM_CONTENT = /^(a|button|summary|h[1-6]|label|legend|caption|figcaption|option|td|th|li|dt)$/i;
 const CONTENT_ROLES = new Set(['button', 'link', 'menuitem', 'menuitemcheckbox', 'menuitemradio', 'tab', 'checkbox', 'radio', 'switch', 'option', 'treeitem', 'cell', 'columnheader', 'rowheader', 'heading', 'tooltip']);
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 const squash = (t) => String(t || '').replace(/\s+/g, ' ').trim();
 
 export function pageBlock(env) {
   const { doc, win } = env;
   const layout = () => hasLayout(doc);
 
-  function isVisible(el) {
+  // With { size: false }, only whether the page hides it: an icon font's
+  // glyph, drawn in a pseudo-element, often has no box of its own.
+  function isVisible(el, { size = true } = {}) {
     if (!el || el.nodeType !== 1 || !el.isConnected) return false;
     if (el.closest('[hidden]')) return false;
     const style = win.getComputedStyle(el);
     if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) return false;
     if (!layout()) return true;
     if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false;
+    if (!size) return true;
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   }
@@ -140,6 +145,14 @@ export function pageBlock(env) {
     return labels.map((l) => squash(contentText(l))).filter(Boolean).join(' ');
   }
 
+  // An svg element's own <title> child is its name (SVG Accessibility API
+  // Mappings); a <title> deeper down is a part's, not the element's.
+  function svgTitleOf(el) {
+    if (el.namespaceURI !== SVG_NS) return '';
+    for (const child of el.children) if (child.localName === 'title' && child.namespaceURI === SVG_NS) return child.textContent;
+    return '';
+  }
+
   /** The accessible name, close to the ARIA name computation. A field's
    *  typed value is never its name: only a button-type input's value is. */
   function nameOf(el) {
@@ -151,6 +164,7 @@ export function pageBlock(env) {
     const candidates = [
       labelledBy(el),
       el.getAttribute('aria-label'),
+      svgTitleOf(el),
       tag === 'IMG' || (tag === 'INPUT' && type === 'image') || tag === 'AREA' ? el.getAttribute('alt') : '',
       isField ? labelFor(el) : '',
       tag === 'INPUT' && /^(button|submit|reset)$/.test(type) ? el.getAttribute('value') : '',

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Order history — Names: file names, paths and svg titles</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 8px; color: #222; background: #fff; }
+    section { margin-bottom: 6px; padding: 4px 8px; border: 1px solid #ddd; }
+    h1, h2 { margin: 4px 0; }
+    button, a, img, svg { margin: 2px; vertical-align: middle; }
+    button { display: inline-block; min-width: 24px; min-height: 24px; box-sizing: border-box; }
+    a { display: inline-block; min-width: 24px; min-height: 24px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Order history</h1>
+
+    <section aria-labelledby="files-heading">
+      <h2 id="files-heading">Toolbar</h2>
+      <!-- Review 10: a size or density in a file name is not a name -->
+      <button id="btn-icon-24px" type="button"><img src="icon-24px.png" width="24" height="24"></button>
+      <button id="btn-icon-2x" type="button"><img src="icon-2x.png" width="24" height="24"></button>
+      <button id="btn-trash-24px" type="button"><img src="trash-24px.png" width="24" height="24"></button>
+      <!-- an Android-style icon name with its density -->
+      <button id="btn-ic-delete" type="button"><img src="/res/ic_delete_48dp.png" width="24" height="24"></button>
+      <!-- a version in the query string is not the file name -->
+      <button id="btn-print-query" type="button"><img src="/icons/print.svg?v=3" width="24" height="24"></button>
+
+      <!-- Review 10: a standalone small image named only by its size or its kind -->
+      <img id="img-icon-24px" src="icon-24px.png" width="24" height="24">
+      <img id="img-generic" src="image.png" width="24" height="24">
+      <img id="img-placeholder" src="/media/photo-placeholder.png" width="24" height="24">
+      <!-- a kind word beside a real one stays in the name -->
+      <img id="img-acme-logo" src="/brand/acme-logo.png" width="24" height="24">
+    </section>
+
+    <section aria-labelledby="links-heading">
+      <h2 id="links-heading">Reading</h2>
+      <!-- a number in the path is part of what the page is: no name without it -->
+      <a id="link-top-10" href="/blog/top-10-tips"><svg width="16" height="16" aria-hidden="true" focusable="false"><path d="M2 2h12v12H2z"/></svg></a>
+      <!-- a path in another script is not read as escapes -->
+      <a id="link-encoded" href="/menu/caf%C3%A9-specials"><svg width="16" height="16" aria-hidden="true" focusable="false"><path d="M2 2h12v12H2z"/></svg></a>
+      <!-- a plain path still names its link -->
+      <a id="link-returns" href="/help/returns-policy"><svg width="16" height="16" aria-hidden="true" focusable="false"><path d="M2 2h12v12H2z"/></svg></a>
+    </section>
+
+    <section aria-labelledby="charts-heading">
+      <h2 id="charts-heading">Charts</h2>
+      <!-- Review 10: an svg role=img with its own title has a name -->
+      <svg id="svg-role-img" role="img" width="100" height="100"><title>Quarterly sales chart</title><rect width="100" height="100" fill="#246"/></svg>
+      <!-- a title on a part names the part, not the chart -->
+      <svg id="svg-part-title" role="img" width="100" height="100"><g><title>One bar</title><rect width="100" height="100" fill="#642"/></g></svg>
+    </section>
+  </main>
+</body>
+</html>
