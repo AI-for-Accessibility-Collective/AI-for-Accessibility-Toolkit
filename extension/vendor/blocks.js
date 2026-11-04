@@ -585,8 +585,10 @@
       memo.set(start, out);
       return out;
     }
-    function room(els, { size = 24, others = [], rects = null, within = null } = {}) {
+    const labelled = (el) => el.tagName === "LABEL" && el.control || null;
+    function room(els, { size = 24, others = [], rects = null, within = null, still = null } = {}) {
       const S = Number(size) > 0 ? Number(size) : 24;
+      const keeps = still ? new Set(still) : null;
       const out = /* @__PURE__ */ new Map();
       const R = /* @__PURE__ */ new Map();
       for (const el of [...els, ...others]) {
@@ -621,7 +623,7 @@
         const cap = edge(r, { x: bound, y: bound }, wx, wy);
         if (wx || wy) {
           for (const [o, full, oc] of all) {
-            if (o === el || o.contains(el) || el.contains(o)) continue;
+            if (o === el || o.contains(el) || el.contains(o) || labelled(o) === el || labelled(el) === o) continue;
             const sx = oc.nx && !oc.nx.contains(el), sy = oc.ny && !oc.ny.contains(el);
             const q = {
               left: sx ? Math.max(full.left, oc.vx.left) : full.left,
@@ -636,11 +638,11 @@
             const gy = Math.max(q.top - r.bottom, r.top - q.bottom);
             if (gx >= 2 * S || gy >= 2 * S) continue;
             if (gx >= gy) {
-              const g = quarter(Math.max(0, gx) * (q.width < S ? 0.5 : 1));
+              const g = quarter(Math.max(0, gx) * (q.width < S && !keeps?.has(o) ? 0.5 : 1));
               if (q.left + q.right > r.left + r.right) cap.right = Math.min(cap.right, g);
               else cap.left = Math.min(cap.left, g);
             } else {
-              const g = quarter(Math.max(0, gy) * (q.height < S ? 0.5 : 1));
+              const g = quarter(Math.max(0, gy) * (q.height < S && !keeps?.has(o) ? 0.5 : 1));
               if (q.top + q.bottom > r.top + r.bottom) cap.bottom = Math.min(cap.bottom, g);
               else cap.top = Math.min(cap.top, g);
             }

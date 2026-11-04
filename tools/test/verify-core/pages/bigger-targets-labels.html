@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allotment Society - Seed Order</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; line-height: 1.5; color: #1f2937; }
+    main { max-width: 720px; }
+    h1 { font-size: 1.3rem; margin: 0 0 8px; }
+    h2 { font-size: 1.05rem; margin: 20px 0 8px; }
+    .row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .step { width: 20px; height: 20px; padding: 0; border: 1px solid #555; background: #eee; font-size: 12px; }
+    .qty { width: 30px; height: 20px; padding: 0; font-size: 12px; }
+    .picks { display: flex; gap: 4px; align-items: center; margin-bottom: 12px; }
+    .picks input { width: 13px; height: 13px; margin: 0; }
+    .picks label { font-size: 14px; margin-right: 6px; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .toggle { display: inline-block; width: 16px; height: 16px; border: 2px solid #1d4ed8; border-radius: 3px; vertical-align: middle; cursor: pointer; }
+    .tag { background: #e0f2fe; color: #0369a1; font-size: 12px; line-height: 14px; }
+    .tag-both { padding: 0 14px; }
+    .tag-left { padding-left: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Seed order</h1>
+
+    <h2>Quantity</h2>
+    <div class="row" id="qty-row">
+      <label for="beans" id="lbl-beans">Beans:</label>
+      <button type="button" class="step" id="beans-dec" aria-label="Fewer beans">-</button>
+      <input type="text" class="qty" id="beans" value="2">
+      <button type="button" class="step" id="beans-inc" aria-label="More beans">+</button>
+    </div>
+
+    <h2>Varieties</h2>
+    <div class="picks" id="picks">
+      <input type="checkbox" id="v-chard"><label for="v-chard" id="lbl-chard">Rainbow chard</label>
+      <input type="checkbox" id="v-kale"><label for="v-kale" id="lbl-kale">Curly kale</label>
+      <input type="checkbox" id="v-leek"><label for="v-leek" id="lbl-leek">Winter leek</label>
+    </div>
+
+    <h2>Delivery</h2>
+    <p id="toggle-row">
+      <input type="checkbox" id="gift" class="visually-hidden"><label for="gift" class="toggle" id="lbl-gift"><span class="visually-hidden">Send as a gift</span></label>
+      Send as a gift
+    </p>
+    <p id="disabled-row">
+      <input type="checkbox" id="express" disabled><label for="express" id="lbl-express">Express (not available in your area)</label>
+    </p>
+
+    <h2>Notes</h2>
+    <p id="prose">
+      Seeds are packed by <a href="#v" class="tag tag-both" id="link-both">volunteers</a>,
+      sent <a href="#post" class="tag tag-left" id="link-left">second class</a>, and listed in our
+      <a href="#guide" id="link-plain">growing guide</a>.
+    </p>
+
+    <div class="row" id="dyn-row">
+      <button type="button" class="step" id="dyn-base" aria-label="Add a row">+</button>
+    </div>
+  </main>
+</body>
+</html>

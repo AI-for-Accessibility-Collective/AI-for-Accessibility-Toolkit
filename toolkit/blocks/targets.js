@@ -1,6 +1,6 @@
 // Block: targets, for controls too small to hit.
 //
-//   s.targets.room(els, { size, others, rects, within })
+//   s.targets.room(els, { size, others, rects, within, still })
 //       how far each element may grow on each side, measured once
 //   s.targets.hitArea(el, entry, { attrs })  /  s.targets.hitAreas(map, { attrs })
 //       a larger hit area that changes neither how the element looks nor where anything is
@@ -8,12 +8,14 @@
 // room() decides from geometry only, the same way whatever order the
 // elements come in: between two targets, each may take half the gap when the
 // other also grows toward it, the whole gap when the other is already big
-// enough on that axis, and nothing past the page's edge. So two grown boxes
-// never overlap, and a later batch measured with the same rule never meets
-// an earlier one. It also says whether the element's own box, grown that
-// much, would be cut off by an ancestor that clips (`clipped`) and how many
-// line boxes it has (`lines`), so that nothing has to be read again after a
-// change.
+// enough on that axis or is one of `still` (others the caller never grows),
+// and nothing past the page's edge. So two grown boxes never overlap, and a
+// later batch measured with the same rule never meets an earlier one. A
+// <label> and the control it labels count as one target (a click on either
+// reaches the control), so neither keeps the other back. It also says
+// whether the element's own box, grown that much, would be cut off by an
+// ancestor that clips (`clipped`) and how many line boxes it has (`lines`),
+// so that nothing has to be read again after a change.
 //
 // hitArea() uses a pseudo-element when the element can have one: one of
 // ::after or ::before the page does not use (any rendered content counts,
@@ -26,6 +28,10 @@
 // passing the pointer's presses and clicks on the ring to the element. The
 // element itself is never covered, so its own hover, menus and touch work
 // as before. Where the browser has no anchor positioning, no ring is made.
+// The ring is inserted right after the element, in the same stacking context
+// (elsewhere it would paint above a dialog or below its own control's), so
+// the page's rules that count siblings (:last-child, +, ~, :nth-child) can
+// match differently around it: every place in the tree changes some of them.
 
 const REPLACED = /^(input|select|textarea|img|video|audio|iframe|canvas|object|embed|svg)$/i;
 const FORWARD = ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'];
@@ -79,8 +85,13 @@ export function targetsBlock(s, env) {
     return out;
   }
 
-  function room(els, { size = 24, others = [], rects = null, within = null } = {}) {
+  // The control a <label> labels (the page's own relationship), or null.
+  const labelled = (el) => (el.tagName === 'LABEL' && el.control) || null;
+
+  function room(els, { size = 24, others = [], rects = null, within = null, still = null } = {}) {
     const S = Number(size) > 0 ? Number(size) : 24;
+    // Others that keep their size (never grown, by the caller's word): a target may take the whole gap to them.
+    const keeps = still ? new Set(still) : null;
     const out = new Map();
     const R = new Map();
     for (const el of [...els, ...others]) {
@@ -110,7 +121,8 @@ export function targetsBlock(s, env) {
       const cap = edge(r, { x: bound, y: bound }, wx, wy);
       if (wx || wy) {
         for (const [o, full, oc] of all) {
-          if (o === el || o.contains(el) || el.contains(o)) continue;
+          // A label and the control it labels are one target: a click on either reaches the control.
+          if (o === el || o.contains(el) || el.contains(o) || labelled(o) === el || labelled(el) === o) continue;
           // A neighbour counts where it can be seen from here: what a scroller or clip it is in, and
           // this element is not, shows of it (one scrolled out of view is not next to this one).
           const sx = oc.nx && !oc.nx.contains(el), sy = oc.ny && !oc.ny.contains(el);
@@ -125,10 +137,10 @@ export function targetsBlock(s, env) {
           if (gx >= 2 * S || gy >= 2 * S) continue;
           // Kept apart on the axis with the larger gap; each side the same for both.
           if (gx >= gy) {
-            const g = quarter(Math.max(0, gx) * (q.width < S ? 0.5 : 1));
+            const g = quarter(Math.max(0, gx) * (q.width < S && !keeps?.has(o) ? 0.5 : 1));
             if (q.left + q.right > r.left + r.right) cap.right = Math.min(cap.right, g); else cap.left = Math.min(cap.left, g);
           } else {
-            const g = quarter(Math.max(0, gy) * (q.height < S ? 0.5 : 1));
+            const g = quarter(Math.max(0, gy) * (q.height < S && !keeps?.has(o) ? 0.5 : 1));
             if (q.top + q.bottom > r.top + r.bottom) cap.bottom = Math.min(cap.bottom, g); else cap.top = Math.min(cap.top, g);
           }
         }
