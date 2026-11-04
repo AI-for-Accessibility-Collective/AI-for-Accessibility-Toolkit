@@ -1,0 +1,16 @@
+{
+  "name": "structure-ask-main-wrap",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-main.html",
+  "ai": {
+    "choose": {
+      "page's main content:": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model picks the two columns together, their wrapper is main",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('story') === null && g('content') === null && document.querySelector('.cols').getAttribute('role') === 'main';"
+    }
+  ]
+}

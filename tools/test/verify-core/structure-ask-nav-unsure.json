@@ -1,0 +1,16 @@
+{
+  "name": "structure-ask-nav-unsure",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-nav.html",
+  "ai": {
+    "choose": {
+      "site's menu": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model cannot tell, neither list becomes navigation: the adapter does less",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('links-a') === null && g('links-b') === null;"
+    }
+  ]
+}

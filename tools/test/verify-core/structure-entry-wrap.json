@@ -2,13 +2,20 @@
   "name": "structure-entry-wrap",
   "file": "tools/core-adapters/structure.js",
   "page": "structure-entry-wrap.html",
+  "ai": {
+    "choose": {
+      "page's main content:": "2",
+      "whole site's header": "0",
+      "whole site's footer": "0"
+    }
+  },
   "checks": [
     {
       "name": "a story whose header, body and footer are divs: its entry-header and entry-footer are not made the site's banner or contentinfo",
       "code": "return document.getElementById('entry-header').getAttribute('role') === null && document.getElementById('entry-footer').getAttribute('role') === null && document.querySelectorAll('[role=\"banner\"], [role=\"contentinfo\"]').length === 0;"
     },
     {
-      "name": "the story still gets one main region, holding its text",
+      "name": "when the model says the entry-content div is the main content, it is the one main region, holding the story text",
       "code": "const mains = document.querySelectorAll('[role=\"main\"]'); return mains.length === 1 && mains[0].contains(document.getElementById('entry-content'));"
     }
   ]

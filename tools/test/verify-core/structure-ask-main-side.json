@@ -1,0 +1,16 @@
+{
+  "name": "structure-ask-main-side",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-main.html",
+  "ai": {
+    "choose": {
+      "page's main content:": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model picks the side column, that one is main",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('story') === null && g('content') === 'main' && document.querySelector('.cols').getAttribute('role') === null;"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "structure-ask-chrome-unsure",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-chrome.html",
+  "ai": {
+    "choose": {
+      "whole site's header": "0",
+      "whole site's footer": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model cannot tell, no div becomes banner or contentinfo: the adapter does less",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('top-a') === null && g('top-b') === null && g('end-c') === null && g('end-d') === null;"
+    }
+  ]
+}

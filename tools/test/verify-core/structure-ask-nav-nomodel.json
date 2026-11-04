@@ -1,0 +1,11 @@
+{
+  "name": "structure-ask-nav-nomodel",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-nav.html",
+  "checks": [
+    {
+      "name": "with no model, neither list becomes navigation: no name says which is the menu",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('links-a') === null && g('links-b') === null;"
+    }
+  ]
+}

@@ -2,9 +2,18 @@
   "name": "structure-scoped-masthead",
   "file": "tools/core-adapters/structure.js",
   "page": "structure-scoped-masthead.html",
+  "ai": {
+    "choose": {
+      "This header is the only one": "2",
+      "This footer is the only one": "2",
+      "page's main content:": "2",
+      "whole site's header": "1",
+      "whole site's footer": "1"
+    }
+  },
   "checks": [
     {
-      "name": "review 9 finding 2: a story header and footer inside the region made main do not stop the masthead and colophon divs from becoming banner and contentinfo",
+      "name": "review 9 finding 2: a story header and footer inside the region made main (the model says they are the story's) do not stop the masthead and colophon divs from becoming banner and contentinfo",
       "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('site-masthead') === 'banner' && g('main-article') === 'main' && g('site-colophon') === 'contentinfo';"
     },
     {

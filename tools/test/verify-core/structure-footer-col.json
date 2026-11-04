@@ -2,9 +2,14 @@
   "name": "structure-footer-col",
   "file": "tools/core-adapters/structure.js",
   "page": "structure-footer-col.html",
+  "ai": {
+    "choose": {
+      "whole site's footer": "1"
+    }
+  },
   "checks": [
     {
-      "name": "review 10 finding 2: with no site header, the site footer div holding a column header still becomes contentinfo",
+      "name": "review 10 finding 2: with no site header, the footer div holding a column header can become contentinfo (the model says it is the site's footer)",
       "code": "return document.getElementById('colophon').getAttribute('role') === 'contentinfo' && document.getElementById('main').getAttribute('role') === 'main';"
     },
     {

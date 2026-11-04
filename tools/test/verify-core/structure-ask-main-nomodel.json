@@ -1,0 +1,11 @@
+{
+  "name": "structure-ask-main-nomodel",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-main.html",
+  "checks": [
+    {
+      "name": "with no model, nothing is made main: the id \"content\" does not decide it",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('story') === null && g('content') === null && document.querySelector('.cols').getAttribute('role') === null;"
+    }
+  ]
+}

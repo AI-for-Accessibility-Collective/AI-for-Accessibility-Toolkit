@@ -2,13 +2,20 @@
   "name": "structure-wrapper",
   "file": "tools/core-adapters/structure.js",
   "page": "structure-wrapper.html",
+  "ai": {
+    "choose": {
+      "page's main content:": "2",
+      "whole site's header": "1",
+      "whole site's footer": "1"
+    }
+  },
   "checks": [
     {
-      "name": "a wrapper holding the site header div beside the story is not main; the story is",
+      "name": "a wrapper holding the site header div beside the story is not main; the story is (the model says so)",
       "code": "return document.getElementById('page').getAttribute('role') === null && document.getElementById('story').getAttribute('role') === 'main';"
     },
     {
-      "name": "the site header and footer divs become banner and contentinfo; the story's entry-header, inside main, gets nothing",
+      "name": "the header and footer divs become banner and contentinfo (the model says they are the site's); the story's entry-header, inside main, gets nothing",
       "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('masthead') === 'banner' && g('colophon') === 'contentinfo' && g('story-header') === null;"
     }
   ]

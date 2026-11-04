@@ -1,0 +1,22 @@
+{
+  "name": "structure-ask-main",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-main.html",
+  "ai": {
+    "choose": {
+      "page's main content:": "3",
+      "whole site's header": "1",
+      "whole site's footer": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model says the story column is the main content, it is main, not the side column with the id \"content\"",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('story') === 'main' && g('content') === null && document.querySelector('.cols').getAttribute('role') === null;"
+    },
+    {
+      "name": "the page's own header and footer are its banner and contentinfo, so the model is never asked about the div before main (its answer '1' would name it)",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('before-main') === null && !document.querySelector('[role=banner], [role=contentinfo]');"
+    }
+  ]
+}

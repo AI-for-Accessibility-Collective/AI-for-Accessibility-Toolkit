@@ -1,0 +1,15 @@
+{
+  "name": "structure-nomodel",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure.html",
+  "checks": [
+    {
+      "name": "with no model, no div is named banner, navigation, main or contentinfo from its class or id: the adapter does less",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return ['masthead', 'primary-nav', 'main-content', 'colophon', 'cookie-notice'].every((id) => g(id) === null) && !document.querySelector('[role=banner], [role=contentinfo], [role=main], [role=navigation]');"
+    },
+    {
+      "name": "it still offers the page outline",
+      "code": "return Boolean(document.querySelector('.ai4a11y-entry'));"
+    }
+  ]
+}

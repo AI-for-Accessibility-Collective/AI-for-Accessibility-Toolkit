@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planting a winter garden</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 0; color: #1a1a1a; background: #fff; }
+    .cols { display: flex; flex-wrap: wrap; gap: 2em; max-width: 60em; margin: 0 auto; padding: 1em; }
+    .col-a { flex: 1 1 12em; }
+    .col-b { flex: 3 1 20em; }
+    a { color: #0645ad; }
+  </style>
+</head>
+<body>
+  <!-- No main landmark: two columns side by side, and the names mislead (the story is col-b; the
+       side column has the id "content", which a name rule would make main). The page's header and
+       footer are its own elements, so the model is never asked about them. -->
+  <header id="site-top">
+    <p>Green Thumb Gardening Club</p>
+  </header>
+  <div id="before-main" class="intro">
+    <p>Monthly tips from our members, for gardens of every size.</p>
+  </div>
+  <div class="cols">
+    <div id="content" class="col-a">
+      <h2>About the club</h2>
+      <p>We meet on the first Saturday of each month at the community hall. New members are always welcome; bring a friend.</p>
+      <p><a href="#join">Join the club</a> · <a href="#calendar">Meeting calendar</a></p>
+    </div>
+    <div id="story" class="col-b">
+      <h1>Planting a winter garden</h1>
+      <p>Winter is a good time to plan next year's beds. The soil is resting, and you can see the shape of the garden without leaves in the way.</p>
+      <h2>Choose hardy plants</h2>
+      <p>Kale, leeks and winter onions keep growing through cold weather. Plant them before the first hard frost so their roots settle.</p>
+      <h2>Protect the soil</h2>
+      <p>Cover empty beds with leaves or straw. It keeps the soil from washing away and feeds it as it breaks down.</p>
+    </div>
+  </div>
+  <footer id="site-bottom">
+    <p>© 2026 Green Thumb Gardening Club.</p>
+  </footer>
+</body>
+</html>

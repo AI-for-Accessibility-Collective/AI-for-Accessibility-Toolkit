@@ -1,0 +1,11 @@
+{
+  "name": "structure-ask-chrome-nomodel",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-chrome.html",
+  "checks": [
+    {
+      "name": "with no model, no div becomes banner or contentinfo",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('top-a') === null && g('top-b') === null && g('end-c') === null && g('end-d') === null;"
+    }
+  ]
+}

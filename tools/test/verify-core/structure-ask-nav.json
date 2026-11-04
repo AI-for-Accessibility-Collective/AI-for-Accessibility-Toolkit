@@ -1,0 +1,16 @@
+{
+  "name": "structure-ask-nav",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-nav.html",
+  "ai": {
+    "choose": {
+      "site's menu": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model says the header's list of links is the site's menu, its div becomes navigation, and the list of stories does not",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('links-a') === 'navigation' && g('links-b') === null;"
+    }
+  ]
+}

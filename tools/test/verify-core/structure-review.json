@@ -2,9 +2,17 @@
   "name": "structure-review",
   "file": "tools/core-adapters/structure.js",
   "page": "structure-review.html",
+  "ai": {
+    "choose": {
+      "site's menu": "1",
+      "page's main content:": "2",
+      "whole site's header": "1",
+      "whole site's footer": "1"
+    }
+  },
   "checks": [
     {
-      "name": "Finding 1: designated main element inside wrapper container is assigned role=main, wrapper is not",
+      "name": "Finding 1: when the model says main_content is the main content, it is main and the wrapper is not",
       "code": "const wrapper = document.getElementById('wrapper'); const main = document.getElementById('main_content'); if (!wrapper || !main) return false; return main.getAttribute('role') === 'main' && wrapper.getAttribute('role') === null;"
     },
     {
@@ -12,11 +20,11 @@
       "code": "const articleMain = document.getElementById('article-main'); if (!articleMain) return false; return articleMain.getAttribute('role') === null;"
     },
     {
-      "name": "Finding 3: presentation header and footer do not block banner and contentinfo landmarks",
+      "name": "Finding 3: presentation header and footer do not stop the divs the model names from becoming banner and contentinfo",
       "code": "const masthead = document.getElementById('masthead'); const colophon = document.getElementById('colophon'); if (!masthead || !colophon) return false; return masthead.getAttribute('role') === 'banner' && colophon.getAttribute('role') === 'contentinfo';"
     },
     {
-      "name": "Finding 4: snake_case main_content identifier is recognized by MAIN_ID",
+      "name": "Finding 4: main_content is main by the answer, not by its name",
       "code": "const main = document.getElementById('main_content'); if (!main) return false; return main.getAttribute('role') === 'main';"
     }
   ]
