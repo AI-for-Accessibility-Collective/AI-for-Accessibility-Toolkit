@@ -241,9 +241,9 @@ The person says what should change, you write the file, and the toolkit runs it 
    - For AI (simplify, summarize, define, translate, label a control, describe an image or a chart), use \`s.ai.text(task, text, fields)\` or \`s.ai.vision(task, element, fields)\`: the toolkit runs the model with its own prompt for the task, adapted by your fields (reading level, tone, audience, context, terms to keep, instructions), and checks the answer. The adapter needs no key and no network. An answer is a string or \`null\`; on \`null\`, leave the page as it is.
 
    \`\`\`javascript
-   // Bigger buttons: makes small buttons at least 44 pixels tall (or the
-   // person's own target size, if larger), for people who find small targets
-   // hard to hit.
+   // Bigger buttons: gives small buttons a hit area of at least 44 by 44
+   // pixels (or the person's own target size, if larger), for people who find
+   // small targets hard to hit, without moving or covering anything.
    const BUTTONS = 'button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]';
 
    export const BiggerButtons = {
@@ -251,21 +251,26 @@ The person says what should change, you write the file, and the toolkit runs it 
        if (this.s && !this.s.ended) return;
        const s = (this.s = toolkit.session());
        const size = Math.max(s.profile.get('targetSize') || 0, options.size || 44);
-       // Measure them all first, then change the visible ones too small.
-       const grow = (els) => {
-         const small = els.filter((el) => el.getClientRects().length && el.getBoundingClientRect().height < size)
-           .map((el) => ({ el, inline: getComputedStyle(el).display === 'inline' }));
-         for (const { el, inline } of small) {
-           if (inline) s.setStyle(el, 'display', 'inline-block');
-           s.setStyle(el, 'min-height', \`\${size}px\`, 'important');
-         }
+       const done = new WeakSet();
+       // Measure every button first, then give each small one a hit area of at
+       // least size by size that moves and covers nothing: half the gap to a
+       // neighbour that grows too, never past the page's edge.
+       const grow = () => {
+         const shown = [...document.querySelectorAll(BUTTONS)].filter((el) => el.getClientRects().length);
+         const small = shown.filter((el) => {
+           const r = el.getBoundingClientRect();
+           return !done.has(el) && (r.width < size || r.height < size);
+         });
+         if (!small.length) return 0;
+         const room = s.targets.room(small, { size, others: shown.filter((el) => !small.includes(el)) });
+         for (const [el, how] of s.targets.hitAreas(room)) if (how) done.add(el);
+         return small.length;
        };
-       // Buttons the page adds later too (a page that renders after load), a
-       // batch at a time.
-       s.watch.added(document.body, grow, { selector: BUTTONS, batch: true });
-       // No buttons on this page at all: say so, and leave it as it is.
-       if (!document.querySelector(BUTTONS)) { this.disable(); return false; }
-       grow([...document.querySelectorAll(BUTTONS)]);
+       // No small buttons on this page: say so, and leave it as it is.
+       if (!grow()) { this.disable(); return false; }
+       // Buttons the page adds or shows later (a class or style change): look
+       // again, once for each batch of changes.
+       s.watch.added(document.body || document.documentElement, grow, { types: ['childList', 'attributes'], batch: true, debounceMs: 100 });
      },
      disable() {
        this.s?.end();
