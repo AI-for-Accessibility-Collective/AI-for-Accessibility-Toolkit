@@ -72,7 +72,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     config: {
       debounceMs: { default: 0, description: 'Wait this long after the last change before calling back.' },
       cap: { default: 500, description: 'At most this many elements per call (per batch); more added at once come in the next calls, none dropped.' },
-      types: { default: ['childList'], description: "What to watch: 'childList', 'attributes', 'characterData'." },
+      types: { default: ['childList'], description: "What to watch: 'childList' (elements added), 'attributes', 'characterData' (changed text: the element whose text changed, also when the page set new text in it, as el.textContent = 'x' does)." },
       selector: { default: null, description: 'Only elements matching this (and matches inside added subtrees).' },
       batch: { default: false, description: 'Call back once with every element of the flush, instead of once for each: read all their sizes before writing any.' },
       withinMs: { default: 1000, description: 'byPerson: how recent the click or key must be.' },
@@ -165,9 +165,10 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     api: [
       's.announce(message, { politeness })   // "polite" (default) or "assertive"',
       's.announce.batch(key, message, { windowMs })   // many changes, one announcement',
+      's.announce.ready()   // the regions in the page now, before the first message (for an adapter that tells the page\'s own changes)',
     ],
     config: { politeness: { default: 'polite', description: "'polite' or 'assertive' (only for what the person must hear at once)." }, windowMs: { default: 400, description: 'batch(): how long to gather messages.' } },
-    invariants: ['One live region per page for all adapters.', 'The same message twice is read twice.', 'The regions go when the last session that announced ends.'],
+    invariants: ['One live region per page for all adapters.', 'The same message twice is read twice.', 'A message is written only once its region has been in the page 250 ms, so a screen reader has noticed the region.', 'The regions go when the last session that announced, or called ready(), ends.'],
   },
   {
     name: 'tooltip',

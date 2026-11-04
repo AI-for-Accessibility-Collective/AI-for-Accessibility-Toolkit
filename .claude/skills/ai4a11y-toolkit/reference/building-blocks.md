@@ -107,7 +107,7 @@ s.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped
 |---|---|---|
 | `debounceMs` | `0` | Wait this long after the last change before calling back. |
 | `cap` | `500` | At most this many elements per call (per batch); more added at once come in the next calls, none dropped. |
-| `types` | `["childList"]` | What to watch: 'childList', 'attributes', 'characterData'. |
+| `types` | `["childList"]` | What to watch: 'childList' (elements added), 'attributes', 'characterData' (changed text: the element whose text changed, also when the page set new text in it, as el.textContent = 'x' does). |
 | `selector` |  | Only elements matching this (and matches inside added subtrees). |
 | `batch` | `false` | Call back once with every element of the flush, instead of once for each: read all their sizes before writing any. |
 | `withinMs` | `1000` | byPerson: how recent the click or key must be. |
@@ -224,6 +224,7 @@ Tell screen reader users what changed, through one shared live region.
 ```javascript
 s.announce(message, { politeness })   // "polite" (default) or "assertive"
 s.announce.batch(key, message, { windowMs })   // many changes, one announcement
+s.announce.ready()   // the regions in the page now, before the first message (for an adapter that tells the page's own changes)
 ```
 
 | Config | Default | What it does |
@@ -235,7 +236,8 @@ Always, whatever the config:
 
 - One live region per page for all adapters.
 - The same message twice is read twice.
-- The regions go when the last session that announced ends.
+- A message is written only once its region has been in the page 250 ms, so a screen reader has noticed the region.
+- The regions go when the last session that announced, or called ready(), ends.
 
 ### Tooltip (WCAG 1.4.13) (`tooltip`)
 

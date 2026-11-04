@@ -261,6 +261,7 @@ export function createSession(env, config = {}) {
     },
   };
   s.announce.batch = (key, message, options) => { if (open) { shared.liveUsers.add(s); env.announce.batch(key, message, options); } };
+  s.announce.ready = () => { if (open) { shared.liveUsers.add(s); env.announce.ready(); } };
 
   const styles = stylesBlock(s, env);
   s.css = styles.css;

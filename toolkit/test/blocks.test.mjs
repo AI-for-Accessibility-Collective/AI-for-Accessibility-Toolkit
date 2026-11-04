@@ -181,6 +181,26 @@ await test("watch.added: sees the page's new elements, never the blocks' own, an
   assert.deepEqual(seen, ['theirs']);
 });
 
+await test("watch.added with characterData: text the page sets in an element (textContent) is that element's change; without it, nothing; added elements only with childList", async () => {
+  const { tk, doc, $ } = page('<main id="m"><h2 id="h">Inbox</h2><p id="p">x</p></main>');
+  const s = tk.session();
+  const text = [], plain = [], both = [];
+  s.watch.added($('#m'), (el) => text.push(el.id || el.tagName), { types: ['characterData'] });
+  s.watch.added($('#m'), (el) => plain.push(el.id || el.tagName));
+  s.watch.added($('#m'), (el) => both.push(el.id || el.tagName), { types: ['childList', 'characterData'] });
+  $('#h').textContent = 'Inbox (3 new)';
+  $('#p').firstChild.nodeValue = 'y';
+  const sec = doc.createElement('section');
+  sec.id = 'sec';
+  $('#m').append(sec);
+  s.append($('#p'), doc.createTextNode(' ours'));
+  await tick();
+  assert.deepEqual(text, ['h', 'p'], 'the heading whose text was replaced, the paragraph whose text node changed; not the new element, not the blocks\' text');
+  assert.deepEqual(plain, ['sec'], 'childList alone: added elements only, as before');
+  assert.deepEqual(both, ['h', 'p', 'sec']);
+  s.end();
+});
+
 await test('watch.byPerson: true only for a recent trusted click or key inside the element', async () => {
   const { tk, $, win } = page('<button id="b">Go</button><p id="p">x</p>');
   const s = tk.session();
@@ -425,6 +445,38 @@ await test('announce: one shared region, repeats are read again, batches coalesc
   assert.ok(region.isConnected, 'still used by the other session');
   s2.end();
   assert.equal(html(), before);
+});
+
+await test('announce.ready: both regions are in the page, empty, before the first message, which is then not delayed; they go when that session ends', async () => {
+  const { tk, doc, html } = page('<p>x</p>');
+  const before = html();
+  const s = tk.session();
+  s.announce.ready();
+  const polite = doc.querySelector('[aria-live="polite"]');
+  const assertive = doc.querySelector('[aria-live="assertive"]');
+  assert.ok(polite && assertive, 'both regions, before any message');
+  assert.equal(polite.textContent + assertive.textContent, '');
+  s.announce.ready();
+  assert.equal(doc.querySelectorAll('[aria-live]').length, 2, 'ready() again makes no more');
+  await tick(260);
+  s.announce('Saved');
+  assert.equal(doc.querySelector('[aria-live="polite"]'), polite, 'the message goes in the region that was already there');
+  await tick(100);
+  assert.equal(polite.textContent, 'Saved', 'the usual short wait, not the new region\'s');
+  s.end();
+  assert.equal(html(), before, 'a session that only called ready() still takes the regions away');
+});
+
+await test('announce: a message to a region made a moment ago waits until the region has been in the page 250 ms', async () => {
+  const { tk, doc } = page('<p>x</p>');
+  const s = tk.session();
+  s.announce('First');
+  const region = doc.querySelector('[aria-live="polite"]');
+  await tick(120);
+  assert.equal(region.textContent, '', 'not yet: the region is too new');
+  await tick(200);
+  assert.equal(region.textContent, 'First');
+  s.end();
 });
 
 // ── highlight ───────────────────────────────────────────────────────────────
