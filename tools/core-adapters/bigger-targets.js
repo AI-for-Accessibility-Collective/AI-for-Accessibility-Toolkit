@@ -15,7 +15,10 @@
 // Decisions:
 //   • Measures before it changes anything: each interactive control (links, buttons, form controls,
 //     elements with an interactive role, a <label> only when its control cannot be the target) is
-//     measured once, and only those smaller than targetSize change.
+//     measured once, and only those smaller than targetSize change. What is a target comes from what
+//     the page says (TARGET_SELECTORS, el.control), also for what is added later.
+//   • A <label> whose control is the target is still a neighbour: a click on it reaches the control,
+//     so other targets keep clear of it. The control itself may grow over its own label.
 //   • Nothing too small, or bigTargets off: enable() ends the session and returns false.
 //   • How far each target may grow comes from s.targets.room(): between two targets each takes at most
 //     half the gap when the other grows toward it, the whole gap when the other is big enough already,
@@ -29,18 +32,22 @@
 //   • Everything else gets a hit area from s.targets.hitArea(): an invisible pseudo-element, or, for SVG
 //     controls and what cannot have one, an HTML ring around it (never over it) that passes the
 //     pointer's presses and clicks to it.
-//   • Inline links in running text get 2px of padding on each side first, then everything is measured.
-//     A link broken over two lines is left as it is.
+//   • Inline links in running text get 2px of padding on each side where the page gives less (the
+//     page's own padding is kept when it is more), then everything is measured. A link broken over
+//     two lines is left as it is.
 //   • Elements added later come in batches (s.watch.added with { batch: true }): the batch and the
 //     targets near it on screen are measured once; only those near it change again.
 //   • A new targetSize redoes the sizes in a fresh s.group().
-//   • Leaves the page's pointer-events alone; a <label> is a target only when it labels a control,
-//     and never both it and its control. Nothing outside its job (no focus styles).
+//   • Leaves the page's pointer-events alone; a <label> is a target only when it labels a control
+//     (one that is not disabled), and never both it and its control. Nothing outside its job (no
+//     focus styles).
 //
 // What it cannot do:
 //   • Grow a target past its neighbours: in a row of small controls closer together than targetSize,
 //     each reaches what its half of the gaps allows.
 //   • Hover, touch events and the context menu on a ring's area (the control itself still has them).
+//   • A ring is an element right after its control, so the page's rules that count siblings
+//     (:last-child, :nth-child, +, ~) can match differently there; no place in the page avoids that.
 //   • Rings need CSS anchor positioning (Chrome 125+, Safari 26): without it, SVG controls and other
 //     targets that need a ring are left as they are.
 //   • Targets inside cross-origin frames, shadow roots or canvas-drawn interfaces.
@@ -90,43 +97,43 @@ function isInsideLinkOrButton(el) {
   return false;
 }
 
-function isCandidate(el, s) {
-  if (!el || !el.isConnected) return false;
-  if (el.closest && el.closest('[data-ai4a11y-ui]')) return false;
-  if (s && s.page && s.page.isOurs && s.page.isOurs(el)) return false;
-  if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
+// What the page says el is: 'target' (one of TARGET_SELECTORS, shown and hit by the pointer: it may
+// grow), 'label' (a <label> whose control is itself a target: a click on the label still reaches
+// the control, so other targets keep clear of it, but it never grows), or null.
+function kindOf(el, s) {
+  if (!el || !el.isConnected || !el.matches || !el.matches(TARGET_QUERY)) return null;
+  if (el.closest('[data-ai4a11y-ui]')) return null;
+  if (s && s.page && s.page.isOurs && s.page.isOurs(el)) return null;
+  if (el.disabled || el.getAttribute('aria-disabled') === 'true') return null;
   // Inside an SVG drawing (not the <svg> itself): no HTML can sit next to it.
-  if (el.ownerSVGElement) return false;
+  if (el.ownerSVGElement) return null;
 
   const tag = el.tagName;
   const type = (el.getAttribute('type') || '').toLowerCase();
-  if (tag === 'INPUT' && type === 'hidden') return false;
+  if (tag === 'INPUT' && type === 'hidden') return null;
 
-  if (isInsideLinkOrButton(el)) return false;
-
-  if (tag === 'LABEL') {
-    // A <label> is a target only when it labels a control, and never both it and its control.
-    const control = el.control || (el.htmlFor ? document.getElementById(el.htmlFor) : el.querySelector('input, select, textarea, button'));
-    if (!control) return false;
-    if (control.isConnected && !control.disabled && control.getAttribute('aria-disabled') !== 'true') {
-      let ccs;
-      try { ccs = window.getComputedStyle(control); } catch { return false; }
-      if (ccs.display !== 'none' && ccs.visibility !== 'hidden' && parseFloat(ccs.opacity) > 0) return false;
-    }
-  }
+  if (isInsideLinkOrButton(el)) return null;
 
   let cs;
-  try { cs = window.getComputedStyle(el); } catch { return false; }
-  if (cs.display === 'none' || cs.visibility === 'hidden' || cs.display === 'contents') return false;
-  if (parseFloat(cs.opacity) === 0) return false;
-  if (cs.pointerEvents === 'none') return false;
+  try { cs = window.getComputedStyle(el); } catch { return null; }
+  if (cs.display === 'none' || cs.visibility === 'hidden' || cs.display === 'contents') return null;
+  if (parseFloat(cs.opacity) === 0) return null;
+  if (cs.pointerEvents === 'none') return null;
   // Hidden from the eye by the page itself (a "visually hidden" skip link): a hit area there would be invisible.
-  if (cs.clip && cs.clip !== 'auto') return false;
+  if (cs.clip && cs.clip !== 'auto') return null;
 
   const r = el.getBoundingClientRect();
-  if (r.width <= 1 || r.height <= 1) return false;
+  if (r.width <= 1 || r.height <= 1) return null;
 
-  return true;
+  if (tag === 'LABEL') {
+    // A <label> does something only through the control it labels (el.control, the page's own link),
+    // and is never grown as well as its control: the control is the target when it is one itself.
+    const control = el.control;
+    // (A label for a <meter>, <output> or <progress> does nothing when pressed.)
+    if (!control || !control.matches(TARGET_QUERY) || control.disabled || control.getAttribute('aria-disabled') === 'true') return null;
+    return kindOf(control, s) === 'target' ? 'label' : 'target';
+  }
+  return 'target';
 }
 
 // A margin the page set to auto (its computed value, not the pixels it resolves to).
@@ -162,13 +169,25 @@ export default {
     }
 
     const isSmall = (r, MIN) => r.width < MIN || r.height < MIN;
-    const candidatesIn = (list) => {
-      const out = [];
-      for (const el of list) if (isCandidate(el, s)) out.push(el);
-      return out;
+    // Labels whose control is the target: neighbours to keep clear of, never grown.
+    const labels = new WeakSet();
+    // The targets (and such labels) among nodes and under them, by what the page says they are.
+    const targetsIn = (nodes) => {
+      const out = new Set();
+      for (const node of nodes) {
+        if (!node || node.nodeType !== 1) continue;
+        for (const el of node === root ? node.querySelectorAll(TARGET_QUERY) : [node, ...node.querySelectorAll(TARGET_QUERY)]) {
+          if (out.has(el)) continue;
+          const kind = kindOf(el, s);
+          if (!kind) continue;
+          if (kind === 'label') labels.add(el); else labels.delete(el);
+          out.add(el);
+        }
+      }
+      return [...out];
     };
 
-    if (!candidatesIn(root.querySelectorAll(TARGET_QUERY)).some((el) => isSmall(el.getBoundingClientRect(), currentTargetSize))) {
+    if (!targetsIn([root]).some((el) => !labels.has(el) && isSmall(el.getBoundingClientRect(), currentTargetSize))) {
       this.disable();
       return false;
     }
@@ -224,9 +243,19 @@ export default {
     // Size the small ones among `fresh` (new to us) and `again` (known, near what is new),
     // keeping clear of every target in `known`. Reads everything, then writes.
     const size = (fresh, again, known, MIN) => {
-      // Inline links in running text get spacing first; it is the one change that moves text.
-      const inline = fresh.filter((el) => el.tagName === 'A' && isSmall(el.getBoundingClientRect(), MIN) && window.getComputedStyle(el).display === 'inline');
-      for (const el of inline) mark(el, 'inline-link');
+      // Inline links in running text get spacing first, 2px on a side where the page gives less (never
+      // less than it gives); it is the one change that moves text.
+      const pads = [];
+      for (const el of fresh) {
+        if (el.tagName !== 'A' || !isSmall(el.getBoundingClientRect(), MIN)) continue;
+        const cs = window.getComputedStyle(el);
+        if (cs.display !== 'inline') continue;
+        for (const side of ['left', 'right']) if (!(parseFloat(cs[side === 'left' ? 'paddingLeft' : 'paddingRight']) >= 2)) pads.push([el, side]);
+      }
+      for (const [el, side] of pads) {
+        mark(el, 'inline-link');
+        group.setStyle(el, `padding-${side}`, '2px', 'important');
+      }
       // The size each had before it grew.
       const rects = new Map();
       for (const el of known) {
@@ -236,8 +265,8 @@ export default {
           ? { left: r.left + g.left, top: r.top + g.top, right: r.right - g.right, bottom: r.bottom - g.bottom, width: r.width - g.left - g.right, height: r.height - g.top - g.bottom }
           : { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height });
       }
-      const small = [...fresh, ...again].filter((el) => rects.has(el) && isSmall(rects.get(el), MIN));
-      const room = group.targets.room(small, { size: MIN, others: known, rects });
+      const small = [...fresh, ...again].filter((el) => !labels.has(el) && rects.has(el) && isSmall(rects.get(el), MIN));
+      const room = group.targets.room(small, { size: MIN, others: known, rects, still: known.filter((el) => labels.has(el)) });
 
       const grows = [];
       const hits = new Map();
@@ -271,8 +300,7 @@ export default {
       group = s.group();
       nextId = 1;
       records.clear();
-      group.css('base', '[data-ai4a11y-bt~="inline-link"] { padding-left: 2px !important; padding-right: 2px !important; }');
-      const all = candidatesIn(root.querySelectorAll(TARGET_QUERY));
+      const all = targetsIn([root]);
       size(all, [], all, currentTargetSize);
     };
 
@@ -285,13 +313,7 @@ export default {
         const MIN = currentTargetSize;
         for (const el of [...records.keys()]) if (!el.isConnected) records.delete(el);
 
-        const fresh = new Set();
-        for (const added of addedElements) {
-          if (!records.has(added) && isCandidate(added, s)) fresh.add(added);
-          if (added.querySelectorAll) {
-            for (const d of added.querySelectorAll(TARGET_QUERY)) if (!records.has(d) && isCandidate(d, s)) fresh.add(d);
-          }
-        }
+        const fresh = new Set(targetsIn(addedElements).filter((el) => !records.has(el)));
         if (!fresh.size) return;
 
         // The known targets near the batch on screen are sized again with it; the rest stay as they are.

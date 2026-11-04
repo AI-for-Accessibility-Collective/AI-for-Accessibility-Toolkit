@@ -255,6 +255,20 @@ await test('targets.room: half the gap toward a small neighbour, all of it towar
   s.end();
 });
 
+await test('targets.room: a label and the control it labels are one target; other targets keep clear of the label', async () => {
+  const { tk, $ } = page('<button id="b">-</button><label id="l" for="i">Qty</label><input id="i" type="checkbox">');
+  const s = tk.session();
+  // b | 4px | label (40 wide) | 4px | checkbox
+  const rects = new Map([[$('#b'), box(100, 100, 20, 20)], [$('#l'), box(124, 100, 40, 20)], [$('#i'), box(168, 102, 13, 13)]]);
+  const room = s.targets.room([$('#b'), $('#i')], { size: 44, others: [$('#l')], rects, within: { left: 0, top: 0, right: 500, bottom: 500 } });
+  assert.equal(room.get($('#b')).right, 2, 'the button takes half the gap to the label, never more');
+  assert.equal(room.get($('#i')).left + room.get($('#i')).right, 31, 'the checkbox reaches 44 wide: its own label does not hold it back');
+  assert.ok(room.get($('#i')).left > 4, 'it grows over its own label');
+  const kept = s.targets.room([$('#b')], { size: 44, others: [$('#l')], rects, still: [$('#l')], within: { left: 0, top: 0, right: 500, bottom: 500 } });
+  assert.equal(kept.get($('#b')).right, 4, 'a neighbour the caller never grows: the whole gap, never past it');
+  s.end();
+});
+
 await test('targets.hitArea: a pseudo-element the page does not use, position: relative only where it moves nothing; end() puts the page back', async () => {
   const { tk, $, html } = page('<p><a id="a" href="#a">a</a> <a id="b" href="#b">b<span style="position: absolute">x</span></a> <a id="c" href="#c" style="position: absolute">c</a></p>');
   const before = html();
