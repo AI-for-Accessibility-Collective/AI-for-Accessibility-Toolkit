@@ -131,7 +131,7 @@ async function record(browser, url, dir) {
           const sha = createHash('sha256').update(body).digest('hex');
           writeFileSync(path.join(bodies, sha), body);
           const headers = { ...response.headers() };
-          for (const h of ['content-encoding', 'content-length', 'transfer-encoding', 'content-security-policy', 'content-security-policy-report-only']) delete headers[h];
+          for (const h of ['content-encoding', 'content-length', 'transfer-encoding', 'content-security-policy', 'content-security-policy-report-only', 'set-cookie']) delete headers[h];
           entries[req.url()] = { status: response.status(), headers, body: sha };
         }
       } catch {}
@@ -218,18 +218,22 @@ export async function serveFromCopy(context, rec) {
     const req = route.request();
     const e = req.method() === 'GET' && lookup(rec, req.url());
     if (!e) return route.abort('internetdisconnected');
-    return route.fulfill({ status: e.status, headers: e.headers, body: bodyOf(rec, e) });
+    return route.fulfill({ status: e.status, headers: servedHeaders(e), body: bodyOf(rec, e) });
   });
 }
 
 /** The same for a Puppeteer page. */
+// A copy never sets cookies. (Copies recorded before this kept set-cookie,
+// several of them joined by newlines, which DevTools' fulfillRequest refuses.)
+const servedHeaders = (e) => { const { 'set-cookie': _, ...h } = e.headers || {}; return h; };
+
 export async function serveFromCopyPuppeteer(page, rec) {
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     if (/^(data|blob):/.test(req.url())) return req.continue();
     const e = req.method() === 'GET' && lookup(rec, req.url());
     if (!e) return req.abort('internetdisconnected');
-    return req.respond({ status: e.status, headers: e.headers, body: bodyOf(rec, e) });
+    return req.respond({ status: e.status, headers: servedHeaders(e), body: bodyOf(rec, e) });
   });
 }
 
