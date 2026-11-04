@@ -28,6 +28,7 @@ async function test(name, fn) {
 const jobs = new Map();
 const seen = [];
 let refuse = null;
+let quiet = false;
 const agentHost = http.createServer(async (req, res) => {
   const chunks = []; for await (const c of req) chunks.push(c);
   const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null;
@@ -40,6 +41,7 @@ const agentHost = http.createServer(async (req, res) => {
   }
   const m = /^\/checks\/([^/]+)$/.exec(req.url);
   if (req.method === 'GET' && m) {
+    if (quiet) return send(500, { error: 'busy' });
     const j = jobs.get(m[1]);
     if (!j || j.uid !== req.headers['x-ai4a11y-uid']) return send(404, { error: 'not-found' });
     return send(200, { check: { checkId: m[1], ...j } });
@@ -130,6 +132,15 @@ await test('while a check of the same revision is waiting or running, asking aga
   assert.equal(again.check.checkId, first.checkId);
   assert.equal(again.check.status, 'running');
   assert.equal(seen.filter((s, i) => i >= sentBefore && s.method === 'POST').length, 0, 'nothing new sent');
+});
+
+await test('while the host does not answer, it says the last state it saw', async () => {
+  quiet = true;
+  try {
+    const body = await (await call(`/v1/adapters/checks/${first.checkId}`)).json();
+    assert.equal(body.check.status, 'running', 'not back to waiting');
+    assert.match(body.note, /not answering/);
+  } finally { quiet = false; }
 });
 
 await test('shows the result once the host has it, and keeps it with the revision', async () => {

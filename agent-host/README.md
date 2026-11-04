@@ -221,6 +221,7 @@ Adapter checks also need the check image, the reviewers' network (made by
 
 ```bash
 gcloud compute instances add-metadata agent-host --project $P --zone $Z \
+  --metadata-from-file startup-script=agent-host/vm/setup.sh \
   --metadata agent-check-image=$R-docker.pkg.dev/$P/toolkit/agent-check:$TAG
 # Over IAP SSH: rerun setup, then record the sites' copies (they visit each site once, politely; see docs/verification.md)
 sudo google_metadata_script_runner startup
@@ -230,6 +231,9 @@ sudo docker run --rm --runtime=runsc --user 0 -v /srv/agent-host/verify-sites:/s
 
 To update: build with a new tag, set the image metadata values to it
 (`gcloud compute instances add-metadata`), and rerun the startup script
-(`sudo google_metadata_script_runner startup` over IAP SSH). Each sandbox is
+(`sudo google_metadata_script_runner startup` over IAP SSH). The VM runs the
+copy of `vm/setup.sh` in its metadata, not the repository's: when the script
+has changed, send it again first (`--metadata-from-file
+startup-script=agent-host/vm/setup.sh`). Each sandbox is
 recreated on the new image the next time it is needed; its home and `/work`
 stay. Keep the toolkit service at `--max-instances 1`.

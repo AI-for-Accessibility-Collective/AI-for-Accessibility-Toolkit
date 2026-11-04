@@ -108,7 +108,12 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
     }
     if (r.status !== 200 || !c) return { entry, result: null, unreachable: true };
     const changes = { status: c.status, startedAt: c.startedAt || null, finishedAt: c.finishedAt || null, ...(c.error ? { error: c.error } : {}) };
-    if (!FINAL.has(c.status)) return { entry: { ...entry, ...changes }, result: null, position: c.position ?? null };
+    if (!FINAL.has(c.status)) {
+      // Kept, so that while the host does not answer the toolkit says the last state it saw, not "waiting".
+      const moved = c.status !== entry.status || (changes.startedAt || null) !== (entry.startedAt || null);
+      const kept = moved ? (await save(uid, entry.checkId, (e) => Object.assign(e, { status: changes.status, startedAt: changes.startedAt }))).entry : entry;
+      return { entry: { ...kept, ...changes }, result: null, position: c.position ?? null };
+    }
     const result = c.result || null;
     if (result) await store.writeJSON(RESULT_DOC(uid, entry.checkId), result);
     return save(uid, entry.checkId, (e) => Object.assign(e, summaryOf({ ...e, ...changes }, result)), result);
