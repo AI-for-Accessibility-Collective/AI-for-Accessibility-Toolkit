@@ -26,7 +26,7 @@
 // never changed (page.textNodes decides). The person can always see the
 // original of a replaced block.
 
-import { resolveConfig } from './shared.js';
+import { resolveConfig, UI_ATTR } from './shared.js';
 
 export const WRAP_DEFAULTS = { cap: 500, skip: '' };
 export const REPLACE_DEFAULTS = { showOriginal: true, label: 'Simplified', originalLabel: 'Show original', replacedLabel: 'Show simplified' };
@@ -181,14 +181,21 @@ export function textBlock(s, env) {
       }
       for (const a of lifted) a.style.setProperty('font-size', `${st.orig.get(a).size}px`, 'important');
     }
-    // Every read before any write.
-    for (const el of fresh) {
-      const cs = win.getComputedStyle(el);
-      const size = parseFloat(cs.fontSize);
-      if (!(size > 0)) continue;
-      const lh = cs.lineHeight;
-      const ratio = /px$/.test(lh) ? parseFloat(lh) / size : null;
-      st.orig.set(el, { size, ratio });
+    // Every read before any write, of the page's own size and line height:
+    // the toolkit's stylesheets (a spacing sheet) are off while it reads.
+    const sheetsOff = [...doc.querySelectorAll(`style[${UI_ATTR}]`)].map((x) => x.sheet).filter((sh) => sh && !sh.disabled);
+    for (const sh of sheetsOff) sh.disabled = true;
+    try {
+      for (const el of fresh) {
+        const cs = win.getComputedStyle(el);
+        const size = parseFloat(cs.fontSize);
+        if (!(size > 0)) continue;
+        const lh = cs.lineHeight;
+        const ratio = /px$/.test(lh) ? parseFloat(lh) / size : null;
+        st.orig.set(el, { size, ratio });
+      }
+    } finally {
+      for (const sh of sheetsOff) sh.disabled = false;
     }
     // All of them: a new factor can make a box cut off what the last one did not.
     const wasClipped = clippedNow(list);

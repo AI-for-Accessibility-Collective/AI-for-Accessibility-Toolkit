@@ -36,13 +36,18 @@ A **web module**: one self-contained file, `tools/core-adapters/<id>.js`.
   `reference/building-blocks.md`. **Read it first, all of it.** Use a block
   wherever one does what you need instead of writing your own. The source
   is in `toolkit/blocks/` if you need to know exactly what a call does; do
-  not change it. In particular: `s.group()` for one mode of several, or one
-  round of fixes you redo (never undo by writing styles yourself);
+  not change it. In particular: `s.group()` for one mode of several, one
+  round of fixes you redo, or a setting the person can turn off (its
+  `end()` takes away its stylesheet and what `s.text.fit` grew for it;
+  never undo by writing styles or removing elements yourself);
   `s.page.textContrast(el)` for colours; `s.text.scale` for the text size
   without zoom; `s.focus.skipLink`, `s.focus.entry` and
   `s.focus.keepVisible` for focus; `s.text.fit` around a change to text
   spacing; `s.watch.added(..., { batch: true })` to measure what was added
-  all at once. Never click the page's own controls, except where your brief
+  all at once (it hands you an array, and without a `selector` only the
+  elements added, not the controls inside them). Read an element's
+  classes with `getAttribute('class')`: an SVG's `className` is not a
+  string. Never click the page's own controls, except where your brief
   says exactly which.
 - Real pages are big and change all the time (timestamps, tickers, ads,
   infinite lists). Measure once, change only what needs it, and handle

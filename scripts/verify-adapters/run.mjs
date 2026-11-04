@@ -153,8 +153,18 @@ function rubricLines(b, whose) {
     ...b.rubrics.map((sc) => `- ${sc} ${rubric.load(sc).title}: the tools its rules name are ${rubric.toolsOf(sc).join(', ')}.`),
     'Use those tools on the elements adapter_elements lists; the others are there if you need them.'];
 }
-// The success criteria whose rubric an agent's tool calls returned.
+// The success criteria whose rubric an agent read: a wcag_rubric call of
+// its own, one inside a script it ran (opencode lists those in the event's
+// metadata), or a rubric's text in what a call returned.
 const RUBRIC_READ = /Analyze compliance with WCAG SC ([0-9]+\.[0-9]+\.[0-9]+)/g;
+function rubricsRead(e, read) {
+  if (e.type !== 'tool_use') return;
+  const st = e.part?.state || {};
+  const done = (tool, call) => /wcag_rubric$/.test(String(tool)) && call.status === 'completed' && call.input?.sc;
+  for (const m of String(st.output ?? '').matchAll(RUBRIC_READ)) read.add(m[1]);
+  if (done(e.part?.tool, st)) read.add(String(st.input.sc));
+  for (const c of st.metadata?.toolCalls || []) if (done(c.tool, c)) read.add(String(c.input.sc));
+}
 
 /** One core adapter's task: its brief, for CREATE.md. */
 function createTask(b) {
@@ -226,7 +236,7 @@ async function agents() {
       try {
         const e = JSON.parse(line);
         if (e.type === 'text' && e.part?.text) text = e.part.text;
-        if (e.type === 'tool_use') for (const m of String(e.part?.state?.output ?? '').matchAll(RUBRIC_READ)) read.add(m[1]);
+        rubricsRead(e, read);
       } catch { /* not JSON */ }
     }
     const code = await new Promise((r) => (child.exitCode !== null ? r(child.exitCode) : child.on('close', r)));

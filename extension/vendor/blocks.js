@@ -74,6 +74,17 @@
     function css(name, text, { scope } = {}) {
       if (!s.alive()) return null;
       let el = sheets.get(name);
+      if (text == null) {
+        if (el) {
+          el.remove();
+          sheets.delete(name);
+        }
+        return null;
+      }
+      if (el && !el.isConnected) {
+        sheets.delete(name);
+        el = null;
+      }
       if (!el) {
         el = env.doc.createElement("style");
         el.id = `ai4a11y-${s.id}-${String(name).replace(/[^\w-]/g, "-")}`;
@@ -1134,13 +1145,19 @@
         }
         for (const a of lifted) a.style.setProperty("font-size", `${st.orig.get(a).size}px`, "important");
       }
-      for (const el of fresh) {
-        const cs = win.getComputedStyle(el);
-        const size = parseFloat(cs.fontSize);
-        if (!(size > 0)) continue;
-        const lh = cs.lineHeight;
-        const ratio = /px$/.test(lh) ? parseFloat(lh) / size : null;
-        st.orig.set(el, { size, ratio });
+      const sheetsOff = [...doc.querySelectorAll(`style[${UI_ATTR}]`)].map((x) => x.sheet).filter((sh) => sh && !sh.disabled);
+      for (const sh of sheetsOff) sh.disabled = true;
+      try {
+        for (const el of fresh) {
+          const cs = win.getComputedStyle(el);
+          const size = parseFloat(cs.fontSize);
+          if (!(size > 0)) continue;
+          const lh = cs.lineHeight;
+          const ratio = /px$/.test(lh) ? parseFloat(lh) / size : null;
+          st.orig.set(el, { size, ratio });
+        }
+      } finally {
+        for (const sh of sheetsOff) sh.disabled = false;
       }
       const wasClipped = clippedNow(list);
       for (const a of lifted) a.style.setProperty("font-size", `${Math.round(st.orig.get(a).size * st.factor * 100) / 100}px`, "important");
@@ -1642,14 +1659,25 @@
   function mediaBlock(s, env) {
     const isMedia = (el) => !!el && (el.tagName === "VIDEO" || el.tagName === "AUDIO");
     const chosen = /* @__PURE__ */ new WeakMap();
+    const paused = /* @__PURE__ */ new WeakMap();
     function pause(el, opts = {}) {
       if (!s.alive() || !isMedia(el)) return false;
       const c = resolveConfig(PAUSE_DEFAULTS, opts, env.personal, {});
+      if (paused.has(el)) {
+        if (c.showControls) s.setAttr(el, "controls", "");
+        try {
+          el.pause();
+        } catch {
+        }
+        return paused.get(el).playing;
+      }
       const playing = !el.paused || el.autoplay && !(el.played && el.played.length) && !el.currentTime;
       let personTouched = false;
+      const CONTROL = 'button, [role="button"], input[type="button"], input[type="submit"], summary';
       const mark = () => {
         const last = env.shared.lastInput;
-        if (s.watch.byPerson(el, { withinMs: 1500 }) || last && Date.now() - last.at < 1500) personTouched = true;
+        const onControl = last && Date.now() - last.at < 1500 && last.target && last.target.closest && last.target.closest(CONTROL);
+        if (s.watch.byPerson(el, { withinMs: 1500 }) || onControl) personTouched = true;
       };
       s.setAttr(el, "autoplay", null);
       if (c.showControls) s.setAttr(el, "controls", "");
@@ -1657,6 +1685,8 @@
         el.pause();
       } catch {
       }
+      paused.set(el, { playing });
+      s.onEnd(() => paused.delete(el));
       s.listen(el, "play", mark);
       s.listen(el, "pause", mark);
       s.onEnd(() => {

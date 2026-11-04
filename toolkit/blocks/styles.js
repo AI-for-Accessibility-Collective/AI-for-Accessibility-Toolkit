@@ -2,7 +2,7 @@
 // adapter shares.
 //
 // s.css(name, text, { scope }) adds one <style> per name (a second call with
-// the same name replaces its text) and, with `scope`, a class on <html> while
+// the same name replaces its text; s.css(name, null) takes it away) and, with `scope`, a class on <html> while
 // the session is open, for the rules to hang from. s.filter(name, value) adds
 // a CSS filter to the page's single filter chain: dark mode, dimming and
 // colour filters compose instead of overwriting each other.
@@ -17,6 +17,12 @@ export function stylesBlock(s, env) {
   function css(name, text, { scope } = {}) {
     if (!s.alive()) return null;
     let el = sheets.get(name);
+    if (text == null) {
+      // Takes it away; the same name later makes a new one.
+      if (el) { el.remove(); sheets.delete(name); }
+      return null;
+    }
+    if (el && !el.isConnected) { sheets.delete(name); el = null; }
     if (!el) {
       el = env.doc.createElement('style');
       el.id = `ai4a11y-${s.id}-${String(name).replace(/[^\w-]/g, '-')}`;

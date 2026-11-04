@@ -19,23 +19,35 @@ export const PAUSE_DEFAULTS = { showControls: false };
 export function mediaBlock(s, env) {
   const isMedia = (el) => !!el && (el.tagName === 'VIDEO' || el.tagName === 'AUDIO');
   const chosen = new WeakMap(); // video → { track } this session turned on
+  const paused = new WeakMap(); // media → { playing } this session paused
 
   function pause(el, opts = {}) {
     if (!s.alive() || !isMedia(el)) return false;
     const c = resolveConfig(PAUSE_DEFAULTS, opts, env.personal, {});
+    // Again on an element this session already paused: pause it, nothing more.
+    if (paused.has(el)) {
+      if (c.showControls) s.setAttr(el, 'controls', '');
+      try { el.pause(); } catch { /* not ready */ }
+      return paused.get(el).playing;
+    }
     // Playing, or an autoplay that has not started yet.
     const playing = !el.paused || (el.autoplay && !(el.played && el.played.length) && !el.currentTime);
     let personTouched = false;
     // A play or pause the person made after ours: theirs wins on end(). It
-    // can come from the player's own button outside the element, so a play
-    // or pause right after the person's click or key anywhere counts too.
+    // can come from the player's own button outside the element, so one
+    // right after the person activated a control anywhere counts too (not
+    // typing, not a click on text).
+    const CONTROL = 'button, [role="button"], input[type="button"], input[type="submit"], summary';
     const mark = () => {
       const last = env.shared.lastInput;
-      if (s.watch.byPerson(el, { withinMs: 1500 }) || (last && Date.now() - last.at < 1500)) personTouched = true;
+      const onControl = last && Date.now() - last.at < 1500 && last.target && last.target.closest && last.target.closest(CONTROL);
+      if (s.watch.byPerson(el, { withinMs: 1500 }) || onControl) personTouched = true;
     };
     s.setAttr(el, 'autoplay', null);
     if (c.showControls) s.setAttr(el, 'controls', '');
     try { el.pause(); } catch { /* a media element that is not ready */ }
+    paused.set(el, { playing });
+    s.onEnd(() => paused.delete(el));
     s.listen(el, 'play', mark);
     s.listen(el, 'pause', mark);
     s.onEnd(() => {

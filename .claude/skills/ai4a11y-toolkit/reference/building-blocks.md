@@ -82,6 +82,7 @@ Stylesheets the adapter adds, and the one page filter all adapters share.
 
 ```javascript
 s.css(name, cssText, { scope })       // one <style> per name; scope adds that class to <html> while open
+s.css(name, null)                     // takes that <style> away
 s.filter(name, value)                 // e.g. s.filter("dim", "brightness(0.85)"); composes with other adapters' filters
 ```
 
@@ -119,6 +120,8 @@ Always, whatever the config:
 
 - Never reacts to the toolkit's own UI or to what a block wrote.
 - Stops on end().
+- Without a selector you get each element added, not what is inside it (an added list brings its items in, unseen); give a selector to get the controls inside added content too.
+- With batch, fn gets an array.
 
 ### Page (read-only) (`page`)
 
@@ -307,6 +310,7 @@ const r = s.text.replaceBlock(paragraph, newText, { label })   // with a Show or
 s.text.nodes(root)                    // the text nodes it would change
 s.text.scale(1.5)                     // the page's text at 150%, px-sized too; 1 puts it back
 s.text.fit(() => s.css('spacing', rules))   // change text; grow only the boxes the change now cuts off
+const sp = s.group(); sp.text.fit(() => sp.css('spacing', rules)); ... sp.end()   // a setting the person can turn off: its own group, so end() takes the sheet and the boxes fit grew
 ```
 
 | Config | Default | What it does |

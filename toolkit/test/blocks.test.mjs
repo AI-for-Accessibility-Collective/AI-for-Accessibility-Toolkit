@@ -595,7 +595,7 @@ await test('speech.listen: an indicator with Stop, commands with a name, and it 
 // ── media ───────────────────────────────────────────────────────────────────
 
 await test('media.pause: plays again only what was playing, and never what the person paused since', async () => {
-  const { tk, $, win } = page('<video id="v" autoplay></video><video id="w"></video>');
+  const { tk, $, win } = page('<video id="v" autoplay></video><video id="w"></video><button id="own">Pause</button><p id="text">Text</p>');
   const fake = (el, playing) => {
     let paused = !playing;
     Object.defineProperty(el, 'paused', { get: () => paused, configurable: true });
@@ -625,10 +625,45 @@ await test('media.pause: plays again only what was playing, and never what the p
   const s3 = tk.session();
   $('#v').play();
   s3.media.pause($('#v'));
-  win.__ai4a11yBlocksShared.lastInput = { target: win.document.body, at: Date.now() };
+  win.__ai4a11yBlocksShared.lastInput = { target: $('#own'), at: Date.now() };
   $('#v').dispatchEvent(new win.Event('pause'));
   s3.end();
-  assert.equal($('#v').paused, true, 'a pause right after the person\'s click elsewhere is theirs');
+  assert.equal($('#v').paused, true, 'a pause right after the person pressed a control elsewhere is theirs');
+  // A click on text, or typing, elsewhere is not.
+  const s4 = tk.session();
+  $('#v').play();
+  s4.media.pause($('#v'));
+  win.__ai4a11yBlocksShared.lastInput = { target: $('#text'), at: Date.now() };
+  $('#v').dispatchEvent(new win.Event('pause'));
+  s4.end();
+  assert.equal($('#v').paused, false, 'it plays again');
+});
+
+await test('media.pause: called again on the same element adds nothing; end() plays it once', async () => {
+  const { tk, $ } = page('<video id="v"></video>');
+  let paused = false, plays = 0;
+  Object.defineProperty($('#v'), 'paused', { get: () => paused, configurable: true });
+  $('#v').pause = () => { paused = true; };
+  $('#v').play = () => { paused = false; plays++; return Promise.resolve(); };
+  const s = tk.session();
+  assert.equal(s.media.pause($('#v')), true);
+  $('#v').play(); plays = 0;
+  assert.equal(s.media.pause($('#v')), true, 'still what it was the first time');
+  s.end();
+  assert.equal(plays, 1);
+});
+
+await test('styles: css(name, null) takes the sheet away; the same name later makes a new one', async () => {
+  const { tk, doc } = page('');
+  const s = tk.session();
+  s.css('spacing', 'p { line-height: 2 }');
+  assert.equal(doc.querySelectorAll('style[data-ai4a11y-ui]').length, 1);
+  assert.equal(s.css('spacing', null), null);
+  assert.equal(doc.querySelectorAll('style[data-ai4a11y-ui]').length, 0);
+  s.css('spacing', 'p { line-height: 3 }');
+  assert.match(doc.querySelector('style[data-ai4a11y-ui]').textContent, /3/);
+  s.end();
+  assert.equal(doc.querySelectorAll('style[data-ai4a11y-ui]').length, 0);
 });
 
 // ── the person's settings ───────────────────────────────────────────────────
@@ -929,6 +964,22 @@ await test('watch.added with batch: one call with every element of the flush', a
   for (const id of ['a', 'b', 'c']) { const p = doc.createElement('p'); p.id = id; $('#m').append(p); }
   await tick(40);
   assert.deepEqual(calls, [['a', 'b', 'c']]);
+  s.end();
+});
+
+await test('text.scale: the page\'s own line height, not a toolkit stylesheet\'s; turning that sheet off later leaves the page\'s', async () => {
+  const { tk, $, win } = page('<p id="p" style="font-size: 20px; line-height: 25px">Some text</p>');
+  const s = tk.session();
+  const sp = s.group();
+  const sheet = sp.css('spacing', 'p { line-height: 40px !important }').el.sheet;
+  // jsdom ignores a disabled sheet; a browser does not.
+  const real = win.getComputedStyle.bind(win);
+  win.getComputedStyle = (el) => { const cs = real(el); return el.id === 'p' && sheet.disabled ? new Proxy(cs, { get: (t, k) => (k === 'lineHeight' ? '25px' : t[k]) }) : cs; };
+  s.text.scale(1.5);
+  win.getComputedStyle = real;
+  sp.end();
+  assert.equal($('#p').style.lineHeight, '1.25', 'the ratio the page had (25 / 20)');
+  assert.equal(win.getComputedStyle($('#p')).fontSize, '30px');
   s.end();
 });
 
