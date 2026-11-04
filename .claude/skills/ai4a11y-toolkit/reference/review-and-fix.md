@@ -64,9 +64,10 @@ For each finding:
    read the code it names, and decide whether it is the adapter's, the
    site's, or not a problem.
 2. **Fix what is real in the file as it is**, with the smallest change
-   that fixes the cause. Keep what works. Do not rewrite the adapter or
-   start again: a fresh rewrite fixes what it was warned about and gets
-   something new wrong. Do not change what no finding asked you to.
+   that fixes the cause (see "Fix the cause, not the case" below). Keep
+   what works. Do not rewrite the adapter or start again: a fresh rewrite
+   fixes what it was warned about and gets something new wrong. Do not
+   change what no finding asked you to.
 3. **Ask the person** about a fix that would change what the adapter does
    for them (what it changes, how much, where). That is their choice. Wait
    for their answer, and act on it, before the next review: a finding left
@@ -75,9 +76,41 @@ For each finding:
    small page that has the problem and a check that fails before the fix
    and passes after it.
 
-Write what you did with each finding under it in the report file: fixed
-(and how you checked), not a problem (why), the site's (why), or left for
-the person or the toolkit (why). Publish again and check that it runs.
+Under each finding in the report file, write what you did and the rule
+your fix changed:
+
+    Done: fixed (how, and how you checked) | not a problem (why) | the site's (why) | left for the person or the toolkit (why)
+    Rule: added | narrowed | removed | none — which rule
+    Breaks on: a page where the rule you added would go wrong (tested or not)
+
+`Breaks on:` is for an added rule only. From round 2, `review` will not
+build the prompt until each high and medium finding has its `Done:` and
+`Rule:` lines. Publish again and check that it runs.
+
+### Fix the cause, not the case
+
+Many findings are a guess that went wrong on one page: a button taken for
+a carousel's own because its name says "Play", a class read as an icon's
+name, a heading taken for the new view's because of the box it sits in.
+A rule added for that page moves the problem to the next page. So:
+
+1. **Find the guess behind the finding.** When the same kind of finding
+   comes back on another page in a later round, your earlier fix was a
+   guess: replace or remove it, do not patch it again.
+2. **Decide from what the page says about itself**: native elements,
+   roles, ARIA states and relationships (`aria-controls`,
+   `aria-labelledby`, `for`), landmarks, and where an element sits (in
+   which slide, labelled by what). Names, classes, ids, words and
+   positions are guesses. Where you still need one, narrow where it
+   applies, not what it matches.
+3. **When the page does not say, do less.** Leave the element alone. A
+   change the adapter misses is better than a wrong one: a wrong one
+   harms someone who relied on the page as it was.
+4. **Remove or narrow a rule rather than add one.** For each rule you
+   add, think of a page it would go wrong on, write it as `Breaks on:`,
+   and try it when you can.
+5. **A guess the building blocks should make** (more than one adapter
+   needs it): say so to the person, as something for the toolkit.
 
 ## 3. Stop and ask, or review it again
 
@@ -89,7 +122,9 @@ reviewed yet: say so, and ask whether they want another round.
 
 Only if they say yes (or chose more rounds at the start), build the next
 prompt with the earlier report and what you did, and give it to a **new**
-reviewer, as in step 1:
+reviewer, as in step 1. `review` keeps a copy of the file as each round
+reviewed it in `.adapter-reviews/` beside it, and gives the new reviewer
+the diff of your fixes, so the rules you changed are checked first:
 
 ```bash
 node <skill folder>/scripts/adapter.mjs review bigger-buttons.js \

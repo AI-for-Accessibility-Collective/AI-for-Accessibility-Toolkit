@@ -39,6 +39,11 @@ you need to know what a call really does. Not the author's notes.
 - **Building blocks.** Where the adapter works around a block, or a block
   does something other than its reference says: that is for the toolkit to
   fix. Say so.
+- **Guesses.** Where the adapter decides what something is from its name,
+  class, id, words or position, and not from what the page says about it
+  (native elements, roles, ARIA states and relationships, landmarks, where
+  it sits), find a page where that guess is wrong. Report the guess as the
+  cause, once, with the pages it goes wrong on.
 
 Not findings: style, naming, formatting.
 
@@ -72,7 +77,8 @@ Your last message is the report, in plain text, starting with one line:
 
     Verdict: ok | issues
 
-then one entry per finding, most severe first:
+then one entry per cause, most severe first (several pages that go
+wrong for one reason are one finding):
 
     [high|medium|low] <file>:<line> — <what is wrong>
       Evidence: <confirmed how, or suspected from which code; on a real page, why it is the adapter's>
@@ -82,6 +88,9 @@ High: it harms a person, leaves the page broken, or the adapter does not
 do its job. Medium: a real bug in a less common case. Low: minor. If it is
 fine, say so in one line after the verdict. No preamble.
 
-When this is not the first round, you are given the earlier findings and
-what the author did about each. Check that each "fixed" one is fixed, and
-look again at the whole adapter: a fix can break something else.
+When this is not the first round, you are given the earlier findings,
+what the author did about each, and the diff of their fixes. Check that
+each "fixed" one is fixed. Then check each rule the diff adds or changes,
+first on the page its `Breaks on:` names: a fix that added a guess where
+the page could have said is a finding. Then look again at the whole
+adapter: a fix can break something else.
