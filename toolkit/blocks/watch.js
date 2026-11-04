@@ -49,19 +49,25 @@ export function watchBlock(s, env) {
     const target = root || doc.body || doc.documentElement;
     let pending = new Set();
     let timer = null;
+    // At most cap elements per call; the rest come in the next calls, one
+    // task apart, so a page that adds thousands at once is not frozen and
+    // none is dropped. (A bound on what waits keeps memory in check.)
+    const limit = cap * 50;
     const flush = () => {
       timer = null;
-      const list = [...pending].slice(0, cap);
-      pending = new Set();
+      const all = [...pending];
+      const list = all.slice(0, cap);
+      pending = new Set(all.slice(cap));
+      if (pending.size) timer = win.setTimeout(flush, 0);
       const live = list.filter((el) => el.isConnected && !isOurs(el));
       if (!s.alive() || !live.length) return;
       if (batch) fn(live); else for (const el of live) if (s.alive()) fn(el);
     };
     const take = (el) => {
-      if (!el || el.nodeType !== 1 || isOurs(el)) return;
+      if (!el || el.nodeType !== 1 || isOurs(el) || pending.size >= limit) return;
       if (!selector) { pending.add(el); return; }
       if (el.matches(selector)) pending.add(el);
-      for (const m of el.querySelectorAll(selector)) if (pending.size < cap * 2) pending.add(m);
+      for (const m of el.querySelectorAll(selector)) { if (pending.size >= limit) break; pending.add(m); }
     };
     const mo = new win.MutationObserver((records) => {
       if (!s.alive()) return;
@@ -74,7 +80,7 @@ export function watchBlock(s, env) {
         }
       }
       if (!pending.size) return;
-      if (debounceMs > 0) { win.clearTimeout(timer); timer = win.setTimeout(flush, debounceMs); } else flush();
+      if (debounceMs > 0) { win.clearTimeout(timer); timer = win.setTimeout(flush, debounceMs); } else { win.clearTimeout(timer); flush(); }
     });
     mo.observe(target, {
       subtree: true,

@@ -71,7 +71,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     ],
     config: {
       debounceMs: { default: 0, description: 'Wait this long after the last change before calling back.' },
-      cap: { default: 500, description: 'At most this many elements per call-back batch.' },
+      cap: { default: 500, description: 'At most this many elements per call (per batch); more added at once come in the next calls, none dropped.' },
       types: { default: ['childList'], description: "What to watch: 'childList', 'attributes', 'characterData'." },
       selector: { default: null, description: 'Only elements matching this (and matches inside added subtrees).' },
       batch: { default: false, description: 'Call back once with every element of the flush, instead of once for each: read all their sizes before writing any.' },

@@ -1,78 +1,55 @@
 # Review an adapter, then fix it in place
 
-Once an adapter runs ("Check that it ran"), have it reviewed, fix what
-the review finds in the file as it is, and review it again. Do the same
-after any change the person asks for that is more than a small one. Tell
-the person in plain words what the review found and what you fixed.
+Every time an adapter runs ("Check that it ran" says "Running on …"), a
+reviewer that did not write it reviews it, you fix what the review finds
+in the file as it is, and a new reviewer reviews it again. Do this on your
+own, without asking the person first, after the first build and after any
+change they ask for that is more than a small one. It stops when a review
+finds nothing high or medium, or after three rounds.
 
-The toolkit is an active research project in pre-alpha, and an adapter
-is unvalidated until people who use it have tried it. A review finds
-bugs in code; it does not show the adapter helps anyone. Say so when you
-tell the person it is done.
+The toolkit is an active research project in pre-alpha, and an adapter is
+unvalidated until people who use it have tried it. A review finds bugs in
+code; it does not show the adapter helps anyone. Say so when you tell the
+person it is done.
 
-## 1. Review it, independently
+## 1. Start the reviewer
 
-Use a reviewer that did not write the adapter: a subagent, or a second
-session of your coding agent. An agent reviewing its own code tends to
-confirm it. Give the reviewer the adapter file, what the person asked for
-(their answers to your questions), the pages it runs on, and this file.
-Do not give it your own conclusions. The reviewer reports problems; it
-changes nothing.
+Build its prompt with the helper. It joins the reviewer's instructions
+(`reference/adapter-reviewer.md`) with the adapter, what the person asked
+and where it runs, and nothing of yours:
 
-What the reviewer looks for:
+```bash
+node <skill folder>/scripts/adapter.mjs review bigger-buttons.js \
+  --asked "Small buttons are hard to hit; make them at least 44 pixels tall." \
+  --runs-on "https://example.com/*" > review-prompt.txt
+```
 
-- **Correctness.** Wrong selectors, state not reset, work after
-  `disable()`, a second `enable()` stacking a copy, errors on unusual
-  markup (SVG, iframes, shadow roots, huge pages), exceptions that escape,
-  a building block used in a way its reference says it does not work.
-- **The request.** It does what the person asked, all of it, and nothing
-  they did not ask for. `enable()` returns `false` when there is nothing
-  to do on the page.
-- **People.** It must not make the page worse for anyone: content hidden
-  from screen readers, things read twice, focus moved unexpectedly or
-  lost, motion or flashing, content covered, contrast or target size made
-  worse, the person's own actions undone, AI called more than they asked
-  for.
-- **Reversibility.** `disable()` puts the page back exactly as it was,
-  without undoing what the page itself changed meanwhile.
-- **Real pages.** Big pages, pages that change by themselves, single-page
-  apps, sites with their own focus styles, sticky headers, dark themes;
-  the work it does per change, per scroll and per element.
-- **Building blocks.** Where the adapter works around a block, or a block
-  does something other than its reference says: that is for the toolkit to
-  fix, so report it to the toolkit's maintainers too.
+`--asked` is what the person said they need, in their words and their
+answers to your questions. Then give that prompt, as it is, to a new
+agent:
 
-**The site's problem or the adapter's.** A real page changes a lot by
-itself: ads and iframes fill in, carousels turn, content loads as you
-scroll, timestamps tick. Before reporting a problem on a real page, decide
-whose it is from how the adapter is designed. Read what its code creates,
-changes and styles. It is the adapter's when it is on something the
-adapter made, changed or styled, or when the adapter's design would cause
-it. It is the site's when it is on content the page added or changed by
-itself, or when it shows up the same with the adapter off. A problem that
-comes and goes between two loads of the same page is the page's until a
-run shows the adapter causing it. When you cannot tell, try the page with
-and without the adapter, and say undetermined rather than guess.
+- **Claude Code**: the Agent tool, with `subagent_type: "general-purpose"`
+  and the prompt file's text as `prompt`.
+- **opencode**: the `task` tool, with the `general` subagent and the
+  prompt file's text as `prompt`.
+- **Any other coding agent**: its own subagent tool if it has one; else a
+  second session from the shell, such as `claude -p "$(cat review-prompt.txt)"`
+  or `opencode run "$(cat review-prompt.txt)"`.
 
-Confirm a suspected problem before reporting it wherever you can: in a
-browser (the person's, with the extension, or a headless one with
-Playwright), on a small test page that has the problem, or by reading the
-code it names. Mark each finding confirmed (reproduced) or suspected (from
-reading).
+Never review it yourself in place of the reviewer: an agent reviewing its
+own code tends to confirm it. Save the reviewer's last message, its
+report, as `bigger-buttons.review-1.md`, then:
 
-The review is a list, most severe first:
+```bash
+node <skill folder>/scripts/adapter.mjs findings bigger-buttons.review-1.md --round 1
+```
 
-    [high|medium|low] <file>:<line> — <what is wrong>
-      Evidence: <confirmed how, or suspected from which code; on a real page, why it is the adapter's>
-      Fix: <the smallest change that fixes it, and whether it belongs in the adapter or a building block>
+It counts the findings and says what to do next: fix and review again, or
+stop.
 
-High: it harms a person, leaves the page broken, or the adapter does not
-do its job. Medium: a real bug in a less common case. Low: minor. Style
-and naming are not findings.
+## 2. Fix it in place
 
-## 2. Fix it in place, from the review
-
-The author gets the whole review. For each finding:
+For each finding:
 
 1. **Check it first.** A finding is a claim, not a fact. Reproduce it, or
    read the code it names, and decide whether it is the adapter's, the
@@ -82,19 +59,30 @@ The author gets the whole review. For each finding:
    start again: a fresh rewrite fixes what it was warned about and gets
    something new wrong. Do not change what no finding asked you to.
 3. **Ask the person** about a fix that would change what the adapter does
-   for them (what it changes, how much, where). That is their choice.
+   for them (what it changes, how much, where). That is their choice. Wait
+   for their answer, and act on it, before the next review: a finding left
+   open for them comes back in every round.
 4. **Keep each real finding as a test** you can run again, such as a
    small page that has the problem and a check that fails before the fix
-   and passes after it, so it cannot come back.
+   and passes after it.
 
-Then publish again, check that it runs, and list every finding with what
-you did: fixed (and how you checked), not a problem (why), the site's
-(why), left for the person or the toolkit (why).
+Write what you did with each finding under it in the report file: fixed
+(and how you checked), not a problem (why), the site's (why), or left for
+the person or the toolkit (why). Publish again and check that it runs.
 
 ## 3. Review it again
 
-Have a fresh reviewer read the fixed version, given the earlier findings
-and what you did about each. Stop when a review finds nothing high or
-medium, or after three rounds. Then tell the person what is left (low
-findings, and what could not be checked, such as real speech or a screen
-reader on their own device).
+Build the next prompt with the earlier report and what you did, and give
+it to a **new** reviewer, as in step 1:
+
+```bash
+node <skill folder>/scripts/adapter.mjs review bigger-buttons.js \
+  --asked "…" --runs-on "https://example.com/*" \
+  --round 2 --earlier bigger-buttons.review-1.md > review-prompt.txt
+```
+
+Then `findings` on its report with `--round 2`, and so on. When `findings`
+says stop, tell the person in plain words what the reviews found, what you
+fixed, and what is left (low findings, findings about the toolkit's
+building blocks, and what could not be checked, such as real speech or a
+screen reader on their own device).

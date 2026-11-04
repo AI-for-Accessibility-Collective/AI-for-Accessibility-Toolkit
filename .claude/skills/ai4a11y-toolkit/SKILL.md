@@ -67,24 +67,35 @@ The person says what should change, you write the file, and the toolkit runs it 
    - For AI (simplify, summarize, define, translate, label a control, describe an image or a chart), use `s.ai.text(task, text, fields)` or `s.ai.vision(task, element, fields)`: the toolkit runs the model with its own prompt for the task, adapted by your fields (reading level, tone, audience, context, terms to keep, instructions), and checks the answer. The adapter needs no key and no network. An answer is a string or `null`; on `null`, leave the page as it is.
 
    ```javascript
-   // Bigger buttons: makes small buttons at least 44 pixels tall,
-   // for people who find small targets hard to hit.
+   // Bigger buttons: makes small buttons at least 44 pixels tall (or the
+   // person's own target size, if larger), for people who find small targets
+   // hard to hit.
+   const BUTTONS = 'button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"]';
+
    export const BiggerButtons = {
-     enabled: false,
-     changed: [],
-     enable() {
-       if (this.enabled) return;
-       this.enabled = true;
-       for (const el of document.querySelectorAll('button, [role="button"]')) {
-         this.changed.push({ el, before: el.style.minHeight });
-         el.style.minHeight = '44px';
-       }
+     enable(options = {}, toolkit) {
+       if (this.s && !this.s.ended) return;
+       const s = (this.s = toolkit.session());
+       const size = Math.max(s.profile.get('targetSize') || 0, options.size || 44);
+       // Measure them all first, then change the visible ones too small.
+       const grow = (els) => {
+         const small = els.filter((el) => el.getClientRects().length && el.getBoundingClientRect().height < size)
+           .map((el) => ({ el, inline: getComputedStyle(el).display === 'inline' }));
+         for (const { el, inline } of small) {
+           if (inline) s.setStyle(el, 'display', 'inline-block');
+           s.setStyle(el, 'min-height', `${size}px`, 'important');
+         }
+       };
+       // Buttons the page adds later too (a page that renders after load), a
+       // batch at a time.
+       s.watch.added(document.body, grow, { selector: BUTTONS, batch: true });
+       // No buttons on this page at all: say so, and leave it as it is.
+       if (!document.querySelector(BUTTONS)) { this.disable(); return false; }
+       grow([...document.querySelectorAll(BUTTONS)]);
      },
      disable() {
-       if (!this.enabled) return;
-       this.enabled = false;
-       for (const { el, before } of this.changed) el.style.minHeight = before;
-       this.changed = [];
+       this.s?.end();
+       this.s = null;
      },
    };
    ```
@@ -100,7 +111,12 @@ The person says what should change, you write the file, and the toolkit runs it 
    - If the person chose to share it, add `--share`. If only this adapter should read what it gives the toolkit, add `--visibility adapter`.
    - If the toolkit refuses the file, the message names the line. Fix it and run the command again.
 6. Check that it ran: `node <skill folder>/scripts/adapter.mjs status bigger-buttons` prints "Running on …", or "Failed on …" with the error. Fix the file and publish again. Each publish is a new revision, and open pages pick it up without a reload.
-7. Have it reviewed, then fix it in place, as `reference/review-and-fix.md` says: a reviewer that did not write it (a subagent, or a second session) reports what is wrong; you check each finding, fix what is real in the file as it is (never a rewrite), publish again, and have it reviewed again, until a review finds nothing high or medium. Tell the person what was found and fixed, and what is left.
+7. Then, on your own and without asking first, have it reviewed and fix it in place, as `reference/review-and-fix.md` says:
+   - `node <skill folder>/scripts/adapter.mjs review bigger-buttons.js --asked "<what the person asked>" --runs-on "https://example.com/*"` prints the prompt for the reviewer: its instructions (`reference/adapter-reviewer.md`), the file, the request and the pages, and nothing of yours.
+   - Give that prompt to a new agent: in Claude Code the Agent tool (`subagent_type: "general-purpose"`), in opencode the `task` tool (the `general` subagent), elsewhere a second session (`claude -p`, `opencode run`). Never review it yourself instead.
+   - Save its report, and run `node <skill folder>/scripts/adapter.mjs findings <report> --round 1`: it says whether to fix and review again or stop.
+   - Check each finding, fix what is real in the file as it is (never a rewrite), write what you did under each, publish again, and start a new reviewer with `--round 2 --earlier <report>`. It stops when a review finds nothing high or medium, or after three rounds.
+   - Tell the person what the reviews found, what you fixed, and what is left.
 8. When the person asks, share it with everyone on their toolkit: `node <skill folder>/scripts/adapter.mjs share bigger-buttons`. Until then it stays private to their account.
 9. Over time the toolkit learns from what the person does with their adapters and suggests changes to their profile. `node <skill folder>/scripts/adapter.mjs learned` lists the suggestions and what it remembers. Read a suggestion to the person and pass on their answer only: `node <skill folder>/scripts/adapter.mjs answer <id> accept` (or `not-now`, `never`).
 
@@ -129,7 +145,7 @@ The adaptations are part of the app's code, so you work in the app's repository 
 5. Send the observations the person chose, each one plain sentence with `profile_observe` or `POST /v1/librarian/logObservation`, for example "Turned on Calm urgency on the Redbird store." Use `type: 'setting-change'` for a deliberate choice. Put `app: '<app id>'` in every observation: the app's visibility applies only to observations that name it. (An app token made for the app names it by itself; with the default token, an observation without `app` is kept for every app.) Never page content or anything they typed. If the person chose images, add up to 4 as `images: [{ mimeType: 'image/png', data: <base64> }]`; they are kept with the observation and shown to the model when it learns. To keep values in the toolkit, use `registry.data({ appId, id }).set(key, value)` for an adaptation published to the registry.
 6. If the app shows suggestions, read them with `profile_learned` (`registry.profile.learned()`), keep the ones the person chose (each has a `change`, such as `{op: 'profile-set', path: 'fields.largeTargets', value: true}`), show each in plain words, and pass on the person's answer with `profile_proposal_respond`: accept, declineOnce or suppress. Never answer for them. An accepted change reaches the app through `/v1/profile/events`, like any other profile change.
 7. Check it: open the app, then the console's **Apps** page. The app is listed, and **Try it** switches each adaptation. A coding agent can do the same through `/v1/mcp/apps/<app id>`.
-8. Have each adaptation reviewed, then fix it in place, as `reference/review-and-fix.md` says (a reviewer that did not write it, then fixes to the code as it is, then review again).
+8. Then, on your own, have each adaptation reviewed and fix it in place, as `reference/review-and-fix.md` says: `adapter.mjs review <file> --asked … --runs-on …` prints the reviewer's prompt for a new agent (the Agent tool in Claude Code, `task` in opencode), `adapter.mjs findings` says whether to fix and review again, up to three rounds.
 9. Only when the person asks to share an adaptation with other apps: publish it with `registry.publish` (see `reference/adapter-mcp.md`). A web adaptation can carry its code; any other is a description only.
 
 ## Quick Start
@@ -170,7 +186,8 @@ console.log('Quick Start OK:', JSON.stringify(model));
 Read these from this skill's folder when a task needs them:
 
 - `reference/building-blocks.md`: the building blocks an adapter gets on `toolkit` (session, styles, watch, page, highlight, announce, tooltip, panel, focus and keys, text, AI text and vision, speech, media): each one's calls, config, what the person's profile overrides, and what it always does; the AI tasks and their prompt fields.
-- `reference/review-and-fix.md`: having an adapter reviewed by an agent that did not write it, and fixing it in place from the findings: what a review looks for, telling the site's problems from the adapter's, and the fix loop.
+- `reference/review-and-fix.md`: the review and fix loop after an adapter runs: starting a reviewer that did not write it (which tool in which coding agent), fixing in place from its findings, and when to stop.
+- `reference/adapter-reviewer.md`: the reviewer's own instructions, which `adapter.mjs review` puts in its prompt: what it looks for, telling the site's problems from the adapter's, evidence, and its report.
 - `reference/adapter-mcp.md`: sharing adapters between apps through the toolkit's registry, the SDK (`createRegistryClient`, `connectToToolkit`, live control), the registry's MCP tools, the browser runtime, visibility and adapter data.
 - `reference/http-api.md`: the hosted service's HTTP endpoints and the `/v1/librarian/{method}` mapping, for a client in any language.
 - `reference/core-api.md`: embedding the core in-process: every Librarian and Datastore method by concern, and the ports a host implements.

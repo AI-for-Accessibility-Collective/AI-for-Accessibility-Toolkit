@@ -956,6 +956,17 @@ await test('page.headings leaves out a heading whose role is taken away (present
   assert.deepEqual(tk.page.headings().map((h) => [h.level, h.text]), [[1, 'Title'], [2, 'Section']]);
 });
 
+await test('watch.added: more than cap added at once come in the next calls, none dropped', async () => {
+  const { tk, doc } = page('<div id="box"></div>');
+  const s = tk.session();
+  const seen = [];
+  s.watch.added(doc.body, (els) => seen.push(els.length), { batch: true, selector: 'button' });
+  doc.getElementById('box').innerHTML = '<button>x</button>'.repeat(700);
+  await tick(30);
+  assert.deepEqual(seen, [500, 200]);
+  s.end();
+});
+
 await test('watch.added with batch: one call with every element of the flush', async () => {
   const { tk, doc, $ } = page('<main id="m"></main>');
   const s = tk.session();

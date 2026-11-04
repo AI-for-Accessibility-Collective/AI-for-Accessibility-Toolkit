@@ -106,7 +106,7 @@ s.watch.byPerson(el, { withinMs })    // true if the person just clicked, tapped
 | Config | Default | What it does |
 |---|---|---|
 | `debounceMs` | `0` | Wait this long after the last change before calling back. |
-| `cap` | `500` | At most this many elements per call-back batch. |
+| `cap` | `500` | At most this many elements per call (per batch); more added at once come in the next calls, none dropped. |
 | `types` | `["childList"]` | What to watch: 'childList', 'attributes', 'characterData'. |
 | `selector` |  | Only elements matching this (and matches inside added subtrees). |
 | `batch` | `false` | Call back once with every element of the flush, instead of once for each: read all their sizes before writing any. |
