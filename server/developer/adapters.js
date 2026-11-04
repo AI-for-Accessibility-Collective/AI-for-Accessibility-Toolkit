@@ -113,7 +113,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     const list = element('ul', 'runtime-results');
     list.setAttribute('aria-label', `The server check of ${a.name}`);
     const item = element('li', `result ${c.status === 'failed' || s?.failed || c.verdict === 'issues' ? 'failed' : 'applied'}`);
-    item.append(element('span', '', `${parts.join(' · ')}. The full report: node adapter.mjs check ${a.adapter.id}`));
+    item.append(element('span', '', `${parts.join(' · ')}.`));
     list.append(item);
     card.append(list);
   }

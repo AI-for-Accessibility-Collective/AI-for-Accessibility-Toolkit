@@ -3,21 +3,20 @@
 // request: nothing here runs on its own.
 //
 //   POST /v1/adapters/checks          { id, appId?, owner?, review? } -> 202 { check }
-//   GET  /v1/adapters/checks          this account's checks, latest first (?appId=&id=&owner=), and today's use
+//   GET  /v1/adapters/checks          this account's checks, latest first (?appId=&id=&owner=)
 //   GET  /v1/adapters/checks/{checkId} one check, with its result once it is done
 //
 // The service checks the token (the account's own: an app-bound token is
 // refused, as for /v1/agent), reads the adapter's current revision from the
-// registry (only one the account can read: its own, or a shared one), holds
-// the daily quota (checks and reviews counted apart; a review runs a model
-// and is the costly one), and sends the job to the agent host
+// registry (only one the account can read: its own, or a shared one), and
+// sends the job to the agent host
 // (agent-host/src/checks.js) signed with AGENT_HOST_SECRET, the way
 // agent-proxy.js does. The host runs it in a sandbox; the service asks it
 // for the result when someone looks and keeps the result with the
 // revision it checked.
 //
 // Storage (the account's, deleted with it):
-//   users/<uid>/adapter-checks.json              today's use and a summary of each check
+//   users/<uid>/adapter-checks.json              a summary of each check
 //   users/<uid>/adapter-checks/<checkId>.json     one check's full result
 // Never logged: the adapter's code or the reports.
 
@@ -37,19 +36,13 @@ export const CHECK_FRAMING = 'The toolkit is an active research project, in pre-
 
 const findingsIn = (text) => Object.fromEntries(['high', 'medium', 'low'].map((l) => [l, (String(text || '').match(new RegExp(`^\\[${l}\\]`, 'gmi')) || []).length]));
 
-export function createAdapterChecks({ store, withUserLock, authenticate, registry, hostUrl, secret, fetch = globalThis.fetch, log,
-  checksPerDay = 5, reviewsPerDay = 2, now = () => new Date() }) {
+export function createAdapterChecks({ store, withUserLock, authenticate, registry, hostUrl, secret, fetch = globalThis.fetch, log, now = () => new Date() }) {
   const base = hostUrl ? String(hostUrl).replace(/\/+$/, '') : null;
-  const today = () => now().toISOString().slice(0, 10);
 
   async function readIndex(uid) {
     const doc = await store.readJSON(INDEX_DOC(uid));
-    return { usage: doc?.usage && typeof doc.usage === 'object' ? doc.usage : {}, checks: Array.isArray(doc?.checks) ? doc.checks : [] };
+    return { checks: Array.isArray(doc?.checks) ? doc.checks : [] };
   }
-  const usageOf = (index) => {
-    const u = index.usage.day === today() ? index.usage : { day: today(), checks: 0, reviews: 0 };
-    return { day: u.day, checks: u.checks || 0, reviews: u.reviews || 0, checksPerDay, reviewsPerDay };
-  };
 
   async function host(method, path, uid, body) {
     const res = await fetch(`${base}${path}`, {
@@ -137,37 +130,34 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
     const review = body.review === true;
     const { owner, appId, id, got } = await resolve(rec.uid, body);
     const key = { owner, appId, id };
+    const sameRevision = (e) => e.adapter.owner === owner && e.adapter.appId === appId && e.adapter.id === id && e.revision === got.revision;
+    // What the toolkit last knew may be out of date: ask the host about this revision's unfinished checks first.
+    for (const e of (await readIndex(rec.uid)).checks) if (sameRevision(e) && !FINAL.has(e.status)) await refresh(rec.uid, e);
     const reserved = await withUserLock(rec.uid, async () => {
       const index = await readIndex(rec.uid);
-      // The same revision, already checked or being checked: that one, at no cost.
-      const same = index.checks.find((e) => e.adapter.owner === owner && e.adapter.appId === appId && e.adapter.id === id
-        && e.revision === got.revision && e.status !== 'failed' && (!review || e.review));
+      // The same revision still waiting or running (with a review, if one is asked for): that one,
+      // so the same work is not done twice at once. A finished check is never reused: asking again checks again.
+      const same = index.checks.find((e) => sameRevision(e) && !FINAL.has(e.status) && (!review || e.review));
       if (same) return { reused: same };
-      const usage = usageOf(index);
-      if (review && usage.reviews >= reviewsPerDay) throw new HttpError(429, 'quota', `An account can ask for ${reviewsPerDay} reviews a day, and this one has. Try again tomorrow (UTC), or check without --review.`, { usage });
-      if (!review && usage.checks >= checksPerDay) throw new HttpError(429, 'quota', `An account can ask for ${checksPerDay} checks a day, and this one has. Try again tomorrow (UTC).`, { usage });
       const entry = {
         checkId: `chk_${crypto.randomBytes(10).toString('hex')}`, adapter: key, name: got.name, revision: got.revision,
         review, status: 'queued', requestedAt: now().toISOString(),
       };
-      index.usage = { day: usage.day, checks: usage.checks + (review ? 0 : 1), reviews: usage.reviews + (review ? 1 : 0) };
       index.checks.unshift(entry);
       const dropped = index.checks.splice(KEEP);
       await store.writeJSON(INDEX_DOC(rec.uid), index);
       for (const d of dropped) await store.writeJSON(RESULT_DOC(rec.uid, d.checkId), null);
-      return { entry, usage: index.usage };
+      return { entry };
     });
     if (reserved.reused) {
       const { entry, result, position } = await refresh(rec.uid, reserved.reused);
       return sendJSON(res, 200, { check: { ...entry, ...(position ? { position } : {}), ...(result ? { result } : {}) }, reused: true, framing: CHECK_FRAMING });
     }
     const { entry } = reserved;
-    // Not sent, or refused: the check never happened, so it does not count.
+    // Not sent, or refused: the check never happened, so it is not listed.
     const undo = (error) => withUserLock(rec.uid, async () => {
       const index = await readIndex(rec.uid);
       index.checks = index.checks.filter((e) => e.checkId !== entry.checkId);
-      const u = usageOf(index);
-      index.usage = { day: u.day, checks: Math.max(0, u.checks - (review ? 0 : 1)), reviews: Math.max(0, u.reviews - (review ? 1 : 0)) };
       await store.writeJSON(INDEX_DOC(rec.uid), index);
       log?.warn('check.not-sent', { uid: rec.uid, checkId: entry.checkId, error });
     });
@@ -182,12 +172,12 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
       });
     } catch (e) {
       await undo(e);
-      return sendJSON(res, 502, { error: 'checker-unreachable', message: 'The checker is not answering. Try again in a few minutes; this did not count against your quota.' });
+      return sendJSON(res, 502, { error: 'checker-unreachable', message: 'The checker is not answering. Try again in a few minutes.' });
     }
     if (r.status !== 202) {
       await undo(`host ${r.status}`);
-      const status = [429, 503].includes(r.status) ? r.status : 502;
-      return sendJSON(res, status, { error: r.json?.error || 'checker-refused', message: `${r.json?.message || 'The checker could not take it.'} This did not count against your quota.` });
+      const status = r.status === 503 ? 503 : 502;
+      return sendJSON(res, status, { error: r.json?.error || 'checker-refused', message: r.json?.message || 'The checker could not take it. Try again in a few minutes.' });
     }
     log?.info('check.asked', { uid: rec.uid, checkId: entry.checkId, adapter: `${owner}/${appId}/${id}`, revision: got.revision, review });
     return sendJSON(res, 202, { check: { ...entry, position: r.json?.check?.position ?? null }, framing: CHECK_FRAMING });
@@ -212,9 +202,9 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
     const index = await readIndex(rec.uid);
     let checks = index.checks.filter((e) => (!q.get('appId') || e.adapter.appId === q.get('appId')) && (!q.get('id') || e.adapter.id === q.get('id'))
       && (!q.get('owner') || e.adapter.owner === q.get('owner')));
-    // Unfinished ones: ask the host (an account has at most two there at a time).
-    checks = await Promise.all(checks.map(async (e, i) => (FINAL.has(e.status) || i > 20 ? e : { ...e, ...(await refresh(rec.uid, e)).entry })));
-    return sendJSON(res, 200, { checks, usage: usageOf(index), framing: CHECK_FRAMING });
+    // Unfinished ones: ask the host (the 20 latest).
+    checks = await Promise.all(checks.map(async (e, i) => (FINAL.has(e.status) || i >= 20 ? e : { ...e, ...(await refresh(rec.uid, e)).entry })));
+    return sendJSON(res, 200, { checks, framing: CHECK_FRAMING });
   }
 
   return async function route(req, res, method, pathname, search = '') {

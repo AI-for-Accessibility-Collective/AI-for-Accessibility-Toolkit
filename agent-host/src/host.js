@@ -8,8 +8,8 @@
 //                 authenticated (x-ai4a11y-uid): the sidebar's chats, events
 //                 and answers (/agent/…, which the service forwards as they
 //                 come), and checks of published adapters (/checks, which
-//                 only the service's own check route sends: it holds the
-//                 quota and reads the adapter from the registry)
+//                 only the service's own check route sends: it checks who
+//                 may ask and reads the adapter from the registry)
 //
 // Logs say who did what and how big, never what: no messages, no page data.
 
@@ -45,7 +45,7 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  */
 export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
   opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, perMinute, requestTimeoutMs, log = createLogger(), runner: givenRunner,
-  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkRunner: givenCheckRunner, fetchRubrics, checkScript }) {
+  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, reviewModelCalls, checkRunner: givenCheckRunner, fetchRubrics, checkScript }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
   const events = createEvents();
@@ -63,7 +63,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   const checkRunner = givenCheckRunner || (runnerKind === 'local'
     ? localCheckRunner({ repoDir, sitesDir: sites, rubricsDir, modelUrl, opencodeBin, script: checkScript })
     : checkImage ? dockerCheckRunner({ image: checkImage, network: checkNetwork, sitesDir: sites, rubricsDir, modelUrl, log }) : null);
-  const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs,
+  const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs, reviewModelCalls,
     fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;
   // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
   const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, perMinute, log });

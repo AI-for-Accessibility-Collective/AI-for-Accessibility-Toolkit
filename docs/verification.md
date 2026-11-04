@@ -99,8 +99,10 @@ node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--
 - **What comes back.** `adapter.mjs` prints what passed, what failed and
   why, the advice, the review's findings, and what a check cannot show. The
   developer console's Adapters page shows the latest check on the
-  adapter's card. Results are kept with the revision they checked: asking
-  again for the same revision gives the same check, at no cost.
+  adapter's card. Results are kept with the revision they checked. Asking
+  again runs a new check; only while a check of the same revision is still
+  waiting or running is that one the answer, so the same work is not done
+  twice at once.
 - **Where it runs.** The toolkit service checks the developer's token
   (not an app-bound one) and that the account can read the adapter (its
   own, or a shared one). It then sends the job to the agent host
@@ -110,10 +112,9 @@ node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--
   a second container whose only network is the host's model proxy. The
   model key stays on the host. The GenA11y rubric text is fetched by the
   host beforehand, so the reviewer needs no internet.
-- **Limits.** Each account may ask for a few checks a day and fewer
-  reviews, since a review runs a model (`ADAPTER_CHECKS_PER_DAY`, default
-  5; `ADAPTER_REVIEWS_PER_DAY`, default 2). A check stops after 20 minutes,
-  a review after 45. A check the server could not start does not count.
+- **Time.** Checks run one at a time; the rest wait their turn. A check
+  stops after 20 minutes and a review after 45, and a review that keeps
+  calling the model is stopped after a set number of calls.
 - **When it helps.** When the developer's computer cannot run the verifier
   (no Chromium, no recorded copies of the sites), when a coding agent has no
   browser, or before an adapter is shared. It adds to the review in the
@@ -140,7 +141,7 @@ not about whether the adapter helps.
   and `CREATE.md`: the reviewer's and the author's instructions;
   `REVIEW-FILE.md`: what is different for the server's reviewer.
 - `server/src/adapter-checks.js` and `agent-host/src/checks.js`: checks on
-  the server (the quota, the queue, the containers).
+  the server (the routes, the queue, the containers).
 
 InterA11y and GenA11y are prior research this verification layer builds
 on; their rubrics are theirs.

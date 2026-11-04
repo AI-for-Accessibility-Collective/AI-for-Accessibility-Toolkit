@@ -65,7 +65,7 @@
 | PUT | `/v1/adapters/{appId}/{id}/install` | mark installed for the calling uid |
 | DELETE | `/v1/adapters/{appId}/{id}/install` | clear installed for the calling uid |
 | POST | `/v1/adapters/checks` | check a published adapter's current revision on the server `{id, appId?, owner?, review?}` → 202 `{check, framing}` (see "Adapter checks") |
-| GET | `/v1/adapters/checks` | the account's checks, latest first `{checks, usage, framing}`; filters `?appId=` `?id=` `?owner=` |
+| GET | `/v1/adapters/checks` | the account's checks, latest first `{checks, framing}`; filters `?appId=` `?id=` `?owner=` |
 | GET | `/v1/adapters/checks/{checkId}` | one check `{check: {status, position?, revision, result?, error?}, framing}` |
 | POST | `/v1/ai/text` | the building blocks' AI for adapters `{task, input, options?, adapter?}` → `{text\|null, reason?, task, version, usage}` (see "Server-side LLM") |
 | POST | `/v1/ai/vision` | the same for an image `{task, image: {mimeType, data}, input?, options?, adapter?}` |
@@ -388,12 +388,13 @@ revision from the registry and sends the code to the agent host
 runs steps 2 to 8 in a one-shot gVisor container with no network, one check
 at a time. With `review: true`, an independent reviewer (opencode with
 Gemini, through the host's model proxy) then reads and tries the adapter
-with InterA11y's rubrics and the verifier's tools. A revision already
-checked (or being checked) is answered with that check (`reused: true`), at
-no cost; a review also answers a plain check of its revision. Each account
-may ask for `ADAPTER_CHECKS_PER_DAY` checks (default 5) and
-`ADAPTER_REVIEWS_PER_DAY` reviews (default 2) per UTC day; past that, 429. A
-job the host refuses or never gets does not count. Results are kept with the
+with InterA11y's rubrics and the verifier's tools. Asking again runs a new
+check, with one exception: while a check of the same revision is still
+waiting or running (with a review, if one is asked for), that check is the
+answer (`reused: true`), so the same work is not done twice at once. A
+finished check is never reused. There is no daily limit; the host runs one
+check at a time and the rest wait. A job the host refuses or never gets is
+not listed. Results are kept with the
 revision they checked, in `users/<uid>/adapter-checks.json` (summaries) and
 `users/<uid>/adapter-checks/<checkId>.json`. Every answer carries `framing`:
 what a check can and cannot show. Neither the code nor the reports are in

@@ -1,9 +1,9 @@
 // /v1/adapters/checks: a check of a published adapter, on request. The
 // service checks the token (no app-bound ones), reads the adapter from the
-// registry as the account can, holds the daily quota (checks and reviews
-// apart; a refused or unsent job does not count), forwards to the agent host
-// with the shared secret and the code, and keeps the result with the
-// revision it checked.
+// registry as the account can, forwards to the agent host with the shared
+// secret and the code, and keeps the result with the revision it checked.
+// No limit on how many: asking again checks again, except that a check of
+// the same revision still waiting or running is shared rather than run twice.
 //
 //   node server/test/adapter-checks.test.mjs
 
@@ -16,7 +16,6 @@ import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 import { createLogger } from '../src/log.js';
-import { createAdapterChecks } from '../src/adapter-checks.js';
 
 const ADMIN = 'test-admin-password';
 const SECRET = 'agent-host-secret-for-tests-0123456789';
@@ -35,7 +34,7 @@ const agentHost = http.createServer(async (req, res) => {
   seen.push({ method: req.method, url: req.url, auth: req.headers.authorization, uid: req.headers['x-ai4a11y-uid'], body });
   const send = (status, obj) => { res.writeHead(status, { 'content-type': 'application/json' }); res.end(JSON.stringify(obj)); };
   if (req.method === 'POST' && req.url === '/checks') {
-    if (refuse) return send(refuse, { error: 'busy', message: 'An account has at most 2 checks waiting or running at a time.' });
+    if (refuse) return send(refuse, { error: 'checks-unavailable', message: 'Checks are not set up on this host.' });
     jobs.set(body.checkId, { uid: req.headers['x-ai4a11y-uid'], status: 'queued', position: 1, review: body.review });
     return send(202, { check: { checkId: body.checkId, status: 'queued', position: 1 } });
   }
@@ -56,13 +55,13 @@ const RESULT = {
 };
 const finish = (checkId, result = RESULT) => Object.assign(jobs.get(checkId), { status: 'done', startedAt: new Date().toISOString(), finishedAt: new Date().toISOString(), result });
 
-async function boot(agent, checks = {}) {
+async function boot(agent) {
   const dir = await mkdtemp(path.join(tmpdir(), 'adapter-checks-test-'));
   const store = fileStore(dir);
   const lines = [];
   const log = createLogger({ format: 'json', level: 'debug', write: (line) => lines.push(line) });
   const toolkitHost = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
-  const app = createApp({ store, adminPassword: ADMIN, toolkitHost, log, agentHost: agent, checks });
+  const app = createApp({ store, adminPassword: ADMIN, toolkitHost, log, agentHost: agent });
   const server = http.createServer(app);
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -76,7 +75,7 @@ async function boot(agent, checks = {}) {
   return { base, lines, mint, publish, store, stop: () => { app.relay.closeAll(); server.closeAllConnections?.(); server.close(); } };
 }
 
-const svc = await boot({ url: hostUrl, secret: SECRET }, { checksPerDay: 2, reviewsPerDay: 1 });
+const svc = await boot({ url: hostUrl, secret: SECRET });
 const ada = await svc.mint('ada');
 const call = (p, { token = ada, method = 'GET', body } = {}) => fetch(svc.base + p, { method, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined });
 await svc.publish('ada', 'bigger-buttons');
@@ -119,20 +118,21 @@ await test('asks the host to check the current revision, with the code, the secr
   assert.deepEqual(sent.body.adapter.urlPatterns, ['https://example.com/*']);
 });
 
-await test('the same revision again is the same check, at no cost', async () => {
+await test('while a check of the same revision is waiting or running, asking again shares it', async () => {
   const sentBefore = seen.length;
   const res = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'agent/bigger-buttons' } });
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.equal(body.reused, true);
   assert.equal(body.check.checkId, first.checkId);
+  jobs.get(first.checkId).status = 'running';
+  const again = await (await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } })).json();
+  assert.equal(again.check.checkId, first.checkId);
+  assert.equal(again.check.status, 'running');
   assert.equal(seen.filter((s, i) => i >= sentBefore && s.method === 'POST').length, 0, 'nothing new sent');
-  const list = await (await call('/v1/adapters/checks')).json();
-  assert.equal(list.usage.checks, 1);
 });
 
 await test('shows the result once the host has it, and keeps it with the revision', async () => {
-  jobs.get(first.checkId).status = 'running';
   let c = (await (await call(`/v1/adapters/checks/${first.checkId}`)).json()).check;
   assert.equal(c.status, 'running');
   finish(first.checkId, { check: RESULT.check });
@@ -148,51 +148,70 @@ await test('shows the result once the host has it, and keeps it with the revisio
   const list = await (await call('/v1/adapters/checks?appId=agent&id=bigger-buttons')).json();
   assert.equal(list.checks[0].summary.failed, 2);
   assert.equal(list.checks[0].result, undefined, 'the list has summaries only');
+  assert.equal(list.usage, undefined, 'no usage: there is no limit');
   // Another account cannot read it.
   const bo = await svc.mint('bo');
   assert.equal((await call(`/v1/adapters/checks/${first.checkId}`, { token: bo })).status, 404);
 });
 
-await test('a review is counted apart, with its verdict and findings in the summary', async () => {
+await test('a finished check is never reused: asking again runs a new one', async () => {
+  const res = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } });
+  assert.equal(res.status, 202);
+  const { check } = await res.json();
+  assert.notEqual(check.checkId, first.checkId);
+  assert.equal(check.revision, 1);
+  // One the host finished that the service has not heard about yet is not shared either.
+  finish(check.checkId, { check: RESULT.check });
+  const next = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } });
+  assert.equal(next.status, 202);
+  const third = (await next.json()).check;
+  assert.notEqual(third.checkId, check.checkId);
+  assert.equal((await (await call(`/v1/adapters/checks/${check.checkId}`)).json()).check.status, 'done');
+  // Many in a row are fine: no daily limit.
+  for (let i = 0; i < 6; i++) {
+    finish(third.checkId, { check: RESULT.check });
+    const r = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } });
+    assert.equal(r.status, 202);
+    third.checkId = (await r.json()).check.checkId;
+  }
+  finish(third.checkId, { check: RESULT.check });
+});
+
+await test('a review is not shared with a plain check, and has its verdict and findings in the summary', async () => {
+  const plain = (await (await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } })).json()).check;
   const res = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons', review: true } });
-  assert.equal(res.status, 202, 'a done check does not stand in for a review');
+  assert.equal(res.status, 202, 'a running plain check does not stand in for a review');
   const { check } = await res.json();
   assert.equal(seen.at(-1).body.review, true);
+  // While the review runs, a plain check of the revision shares it.
+  finish(plain.checkId, { check: RESULT.check });
+  const shared = await (await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } })).json();
+  assert.equal(shared.check.checkId, check.checkId);
   finish(check.checkId);
   const c = (await (await call(`/v1/adapters/checks/${check.checkId}`)).json()).check;
   assert.equal(c.verdict, 'issues');
   assert.deepEqual(c.findings, { high: 1, medium: 0, low: 1 });
-  // A plain check of the same revision is now that review, at no cost.
-  const again = await (await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } })).json();
-  assert.equal(again.check.checkId, check.checkId);
-  // The second review of the day is refused, in plain words.
-  await svc.publish('ada', 'bigger-buttons', 'export default { enable() { return false; }, disable() {} };');
-  const over = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons', review: true } });
-  assert.equal(over.status, 429);
-  assert.match((await over.json()).message, /1 reviews a day/);
+  // Reviews as often as asked.
+  const again = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons', review: true } });
+  assert.equal(again.status, 202);
+  finish((await again.json()).check.checkId);
 });
 
-await test('a check the host refuses or never gets does not count', async () => {
-  refuse = 429;
+await test('a check the host refuses or never gets is not listed, and says why', async () => {
+  refuse = 503;
   const busy = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } });
-  assert.equal(busy.status, 429);
-  assert.match((await busy.json()).message, /did not count/);
+  assert.equal(busy.status, 503);
+  assert.doesNotMatch((await busy.json()).message, /quota|count/);
   refuse = null;
   const down = await boot({ url: 'http://127.0.0.1:1', secret: SECRET });
   await down.publish('ada', 'x1');
   const t = await down.mint('ada');
   const r = await fetch(`${down.base}/v1/adapters/checks`, { method: 'POST', headers: { authorization: `Bearer ${t}`, 'content-type': 'application/json' }, body: '{"id":"x1"}' });
   assert.equal(r.status, 502);
+  assert.match((await r.json()).message, /not answering/);
   const list = await (await fetch(`${down.base}/v1/adapters/checks`, { headers: { authorization: `Bearer ${t}` } })).json();
-  assert.equal(list.usage.checks, 0);
   assert.equal(list.checks.length, 0);
   down.stop();
-  // Revision 2 is checked now; the daily limit of 2 checks is then reached.
-  assert.equal((await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } })).status, 202);
-  await svc.publish('ada', 'bigger-buttons', 'export default { enable() { return true; }, disable() {} }; // 3');
-  const over = await call('/v1/adapters/checks', { method: 'POST', body: { id: 'bigger-buttons' } });
-  assert.equal(over.status, 429);
-  assert.match((await over.json()).message, /2 checks a day/);
 });
 
 await test('only adapters the account can read; shared ones are fine; no code, no check', async () => {
@@ -218,27 +237,6 @@ await test('neither the code nor a report is in the request log', async () => {
   assert.ok(!log.includes('dataset.big'), 'no code');
   assert.ok(!log.includes('adds target-size'), 'no report');
   assert.ok(log.includes('"event":"check.asked"'));
-});
-
-await test('the quota starts again each day (UTC)', async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), 'adapter-checks-day-'));
-  const store = fileStore(dir);
-  let day = new Date('2026-11-04T23:00:00Z');
-  const registry = { call: async (uid, name) => (name === 'adapter_get' ? { adapter: { owner: uid }, name: 'A', revision: ++rev, package: { format: 'web-module@1', code: 'x' } } : { adapters: [{ adapter: { appId: 'agent', id: 'a' } }] }) };
-  let rev = 0;
-  const route = createAdapterChecks({ store, withUserLock: (u, fn) => fn(), authenticate: async () => ({ uid: 'ada', kind: 'default' }), registry: () => registry,
-    hostUrl, secret: SECRET, checksPerDay: 1, now: () => day });
-  const ask = async () => {
-    let status;
-    const res = { writeHead: (s) => { status = s; }, end: () => {} };
-    const req = Object.assign((async function* () { yield Buffer.from('{"id":"a"}'); })(), { headers: { authorization: 'Bearer x' } });
-    await route(req, res, 'POST', '/v1/adapters/checks');
-    return status;
-  };
-  assert.equal(await ask(), 202);
-  assert.equal(await ask(), 429);
-  day = new Date('2026-11-05T00:30:00Z');
-  assert.equal(await ask(), 202);
 });
 
 svc.stop();

@@ -60,7 +60,7 @@ const SDK_PREFIX = '/sdk/';
  *  @param {ReturnType<import('./log.js').createLogger>} [config.log]  structured logger (silent by default)
  *  @returns {((req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) & {relay: ReturnType<typeof createRelay>, accounts: ReturnType<typeof createAccounts>, activity: ReturnType<typeof createActivityLog>}}
  */
-export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {}, checks = {} }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {} }) {
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
@@ -113,8 +113,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   const adaptersRouter = createAdaptersRouter({ store, adminPassword, withUserLock });
   // Checks of published adapters, on request, run by the agent host.
   const adapterChecks = createAdapterChecks({ store, withUserLock, authenticate: (req) => authenticate(req), registry: () => registry,
-    hostUrl: agentHost.url, secret: agentHost.secret, fetch: agentHost.fetch, log,
-    ...(checks.checksPerDay ? { checksPerDay: checks.checksPerDay } : {}), ...(checks.reviewsPerDay ? { reviewsPerDay: checks.reviewsPerDay } : {}) });
+    hostUrl: agentHost.url, secret: agentHost.secret, fetch: agentHost.fetch, log });
   const accounts = auditAccounts(createAccounts({ store, secret: tokenSecret || adminPassword, relay }), log);
   const authenticate = async (req) => {
     const presented = bearerFrom(req);

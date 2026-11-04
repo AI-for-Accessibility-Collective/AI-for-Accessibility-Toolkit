@@ -1,6 +1,6 @@
 // Checks of published adapters on the agent host (src/checks.js), with a
 // stand-in for run.mjs (fake-check.mjs): who may ask, one at a time and in
-// order, the result and what is kept, a review's token good only at the
+// order with no cap on the queue, the result and what is kept, a review's token good only at the
 // model proxy and only while it runs, time limits, a restart, and what the
 // VM's runner hands docker.
 
@@ -92,19 +92,19 @@ await test('the check sees none of the host\'s secrets, and only the recorded si
   assert.equal(env[1], 'secrets absent');
 });
 
-await test('one check at a time, in order, at most two waiting per account', async () => {
-  const a = job('// SLOW'), b = job('// SLOW'), extra = job();
-  assert.equal((await api('/checks', { method: 'POST', body: a })).status, 202);
-  const second = await (await api('/checks', { method: 'POST', body: b })).json();
-  assert.equal(second.check.status, 'queued');
-  assert.equal(second.check.position, 2);
-  const third = await api('/checks', { method: 'POST', body: extra });
-  assert.equal(third.status, 429);
-  // Another account is not held back by Ada's limit.
+await test('one check at a time, in order; the rest wait, however many one account asks for', async () => {
+  const many = [job('// SLOW'), job('// SLOW'), job(), job(), job()];
+  for (const [i, j] of many.entries()) {
+    const res = await api('/checks', { method: 'POST', body: j });
+    assert.equal(res.status, 202, 'no cap per account or on the queue');
+    const c = (await res.json()).check;
+    if (i > 0) assert.equal(c.position, i + 1);
+  }
   const bobs = job(); bobs.adapter.key = 'bob/agent/x';
   assert.equal((await api('/checks', { method: 'POST', body: bobs, uid: 'bob' })).status, 202);
-  const ca = await finished(a.checkId), cb = await finished(b.checkId);
-  assert.ok(Date.parse(cb.startedAt) >= Date.parse(ca.finishedAt), 'the second started after the first ended');
+  const done = [];
+  for (const j of many) done.push(await finished(j.checkId));
+  for (let i = 1; i < done.length; i++) assert.ok(Date.parse(done[i].startedAt) >= Date.parse(done[i - 1].finishedAt), 'each started after the one before ended');
   await finished(bobs.checkId, 'bob');
 });
 

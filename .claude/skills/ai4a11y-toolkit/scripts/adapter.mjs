@@ -33,9 +33,9 @@
 //           sites, in a sandbox), waits, and prints what passed, what failed
 //           and why, and the advice. --review also has an independent
 //           reviewer (a model) read and try it with WCAG rubrics. Only when
-//           asked; a small number a day per account (reviews fewer). It
-//           waits up to 9 minutes (--wait N); run it again to keep waiting,
-//           which neither starts another check nor uses the quota.
+//           asked. It waits up to 9 minutes (--wait N); run it again to keep
+//           waiting: while that check is still running it waits for it, and
+//           once it has finished, asking again runs a new check.
 // profile   the person's profile as apps read it (supportAreas, fields.needs, …).
 // learned   what the toolkit learned about the person: suggested profile
 //           changes waiting for an answer, and memories.
@@ -358,7 +358,7 @@ async function serverCheck(id, flags) {
   let c = asked.body.check;
   const framing = asked.body.framing || '';
   console.log(asked.body.reused
-    ? `Revision ${c.revision} of ${c.name} was already ${FINAL.includes(c.status) ? 'checked' : 'asked for'}${c.review ? ', with a review' : ''}: ${FINAL.includes(c.status) ? 'here is that check' : 'waiting for it'} (no new check, nothing used of today's quota).`
+    ? `A check of revision ${c.revision} of ${c.name}${c.review ? ', with a review,' : ''} is already waiting or running: waiting for that one rather than starting another.`
     : `Asked the toolkit to check revision ${c.revision} of ${c.name}${c.review ? ', with an independent review' : ''}. A check takes a few minutes${c.review ? ', a review up to half an hour' : ''}.`);
   const until = Date.now() + (Number.isFinite(flags.wait) ? flags.wait : 9) * 60_000;
   let said = '';
@@ -366,7 +366,7 @@ async function serverCheck(id, flags) {
     const line = progress(c);
     if (line && line !== said) { console.log(line); said = line; }
     if (Date.now() >= until) {
-      console.log(`Not finished yet. Run the same command again to keep waiting (node adapter.mjs check ${id}${flags.review ? ' --review' : ''}): it does not start another check or use your quota.`);
+      console.log(`Not finished yet. Run the same command again to keep waiting (node adapter.mjs check ${id}${flags.review ? ' --review' : ''}): while this check is running it waits for it rather than starting another.`);
       return;
     }
     await sleep(Number(process.env.AI4A11Y_CHECK_POLL_MS) || 10_000);

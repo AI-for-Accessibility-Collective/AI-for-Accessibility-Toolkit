@@ -1,8 +1,8 @@
 // Server-side checks of a published adapter, asked for by a developer
 // through the toolkit service (POST /v1/adapters/checks, which checks who
-// may, and the daily quota, and sends the adapter's code here).
+// may and sends the adapter's code here).
 //
-// One check at a time, in the order asked. Each is the verification
+// One check at a time, in the order asked; the rest wait. Each is the verification
 // protocol's automated steps 2 to 8 (scripts/verify-adapters/run.mjs
 // --check) in a one-shot container from the verify image under gVisor,
 // with no network at all: the adapter is written into it, the recorded
@@ -10,7 +10,8 @@
 // timeout. With review, an independent reviewer then runs in a second
 // one-shot container (run.mjs --review-file): opencode with Gemini, whose
 // only network is the host's model proxy, with a token that names this
-// job and is good for a limited number of model calls while it runs. The
+// job and is good for a set number of model calls while it runs (a cap that
+// stops a reviewer that loops, not the person; AGENT_REVIEW_MODEL_CALLS). The
 // GenA11y rubric text it may read is fetched here first, into a folder
 // mounted read-only (INTERA11Y_DIR), so the reviewer needs no internet.
 //
@@ -164,7 +165,7 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
  * @param {Function} [o.fetchRubrics] (dir) => { have, missing }
  */
 export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async () => ({ have: [], missing: [] }), log,
-  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, maxQueued = 20, perAccount = 2, reviewModelCalls = 400, now = () => Date.now() }) {
+  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, reviewModelCalls = 400, now = () => Date.now() }) {
   const root = path.join(dataDir, 'checks');
   mkdirSync(root, { recursive: true });
   const queue = [];        // checkIds waiting
@@ -207,9 +208,6 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     const idPart = String(a.key || '').split('/').at(-1);
     if (!NAME.test(idPart)) throw httpError(400, 'bad-adapter', 'The adapter has no usable id.');
     if (existsSync(dir)) throw httpError(409, 'exists', 'That check was already asked for.');
-    const mine = [...queue, current].filter(Boolean).filter((x) => readJob(x)?.uid === uid).length;
-    if (mine >= perAccount) throw httpError(429, 'busy', `An account has at most ${perAccount} checks waiting or running at a time.`);
-    if (queue.length >= maxQueued) throw httpError(503, 'queue-full', 'The checker has a long queue right now. Try again later.');
     sweep();
     mkdirSync(path.join(dir, 'in'), { recursive: true });
     const file = `${idPart}.js`;

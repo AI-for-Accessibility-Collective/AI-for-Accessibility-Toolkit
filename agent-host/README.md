@@ -105,14 +105,14 @@ identify them.
 A developer can have a published adapter checked on the server
 (`adapter.mjs check <id> [--review]`, `POST /v1/adapters/checks`; see
 [docs/verification.md](../docs/verification.md), "On the server"). The
-toolkit service holds the quota and reads the adapter from the registry;
+toolkit service checks who may ask and reads the adapter from the registry;
 it sends the job to this host's `POST /checks` (the API port, signed like
 `/v1/agent`, but not under `/agent/`, so the sidebar's forwarding cannot
 reach it) and asks `GET /checks/<id>` for the result
 ([src/checks.js](src/checks.js)).
 
-- **One at a time**, in the order asked; at most 2 waiting or running per
-  account and 20 in all.
+- **One at a time**, in the order asked; the rest wait. There is no limit on
+  how many a person asks for.
 - **The check** is `run.mjs --check` in a one-shot container from the
   verify image's `check` target (`scripts/verify-adapters/Dockerfile`, the
   repository and its packages baked in): gVisor, `--network none`, no
@@ -126,7 +126,9 @@ reach it) and asks `GET /checks/<id>` for the result
   host's sandbox port and nothing else ([vm/setup.sh](vm/setup.sh)). Its
   opencode talks to the model proxy with a token made for this review: it
   names the account, works only at the model proxy (never the browser
-  tools), only while the review runs, and for at most 400 calls. The real
+  tools), only while the review runs, and for at most 400 calls
+  (`AGENT_REVIEW_MODEL_CALLS`): that stops a reviewer that loops, not the
+  person. The real
   key stays on the host. The rubric text InterA11y adapted from GenA11y
   (GPL-3.0) is fetched by the host from InterA11y at the vendored commit,
   checked against its hash, into `<data>/intera11y/`, and mounted read-only
@@ -226,8 +228,6 @@ gcloud compute instances add-metadata agent-host --project $P --zone $Z \
 sudo google_metadata_script_runner startup
 sudo docker run --rm --runtime=runsc --user 0 -v /srv/agent-host/verify-sites:/sites -e VERIFY_SITE_CACHE=/sites \
   $R-docker.pkg.dev/$P/toolkit/agent-check:$TAG node scripts/verify-adapters/sites.mjs record
-# The toolkit service: how many each account may ask for a day (optional; defaults 5 and 2)
-gcloud run services update toolkit-service --project $P --region $R --update-env-vars ADAPTER_CHECKS_PER_DAY=5,ADAPTER_REVIEWS_PER_DAY=2
 ```
 
 To update: build with a new tag, set the image metadata values to it

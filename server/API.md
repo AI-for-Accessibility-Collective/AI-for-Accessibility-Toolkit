@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-11-04T18:27:31.321Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-11-04T19:21:16.216Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -23,8 +23,8 @@ Version: `0.1.0`
 | GET | `/v1/adapters/{appId}/{id}/code` | bearer | {code, sha256, size, updatedAt} for a kind "code" listing; 404 for data-only |
 | PUT | `/v1/adapters/{appId}/{id}/install` | bearer | mark installed in the calling uid's state -> {ok, installed:true} |
 | DELETE | `/v1/adapters/{appId}/{id}/install` | bearer | clear it -> {ok, installed:false} |
-| POST | `/v1/adapters/checks` | bearer (default token or session) | check a published adapter's current revision on the server {id (id, appId/id or owner/appId/id), appId?, owner?, review?} -> 202 {check, framing}, or 200 {check, reused:true} when that revision was already checked; the verification protocol's steps 2-8 in a sandbox on the agent host, and with review:true an independent reviewer (a model); only adapters the account can read; a daily quota per account, checks and reviews apart (ADAPTER_CHECKS_PER_DAY, default 5; ADAPTER_REVIEWS_PER_DAY, default 2; 429 past it); 503 when no agent host is set up |
-| GET | `/v1/adapters/checks` | bearer (default token or session) | the account's checks, latest first, as summaries {checks, usage, framing}; filters ?appId= ?id= ?owner= |
+| POST | `/v1/adapters/checks` | bearer (default token or session) | check a published adapter's current revision on the server {id (id, appId/id or owner/appId/id), appId?, owner?, review?} -> 202 {check, framing}, or 200 {check, reused:true} while a check of that revision (with a review, if asked) is still waiting or running; a finished check is never reused; the verification protocol's steps 2-8 in a sandbox on the agent host, one at a time, and with review:true an independent reviewer (a model); only adapters the account can read; 503 when no agent host is set up |
+| GET | `/v1/adapters/checks` | bearer (default token or session) | the account's checks, latest first, as summaries {checks, framing}; filters ?appId= ?id= ?owner= |
 | GET | `/v1/adapters/checks/{checkId}` | bearer (default token or session) | one check {check: {status queued\|running\|done\|failed, position?, revision, result?: {check: {summary, runs, notes}, review?: {verdict, rubricsRead, report}}, error?}, framing} |
 | GET | `/sdk/adapter-mcp.js` | none (public code, any origin) | the Adapter MCP SDK entry point for apps; its modules are under /sdk/toolkit/ |
 | POST | `/v1/auth/login` | none (rate limited) | developer sign-in {username, password} -> {token (session, expires), expiresAt, account, defaultToken} |
