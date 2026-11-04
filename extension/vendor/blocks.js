@@ -2785,7 +2785,7 @@
   }
 
   // toolkit/blocks/names.js
-  var BLOCKS_VERSION = "2026-11-03";
+  var BLOCKS_VERSION = "2026-11-04";
   var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "targets", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "speech.out", "speech.in", "media", "profile", "zoom"]);
 
   // toolkit/blocks/shortcut.js
