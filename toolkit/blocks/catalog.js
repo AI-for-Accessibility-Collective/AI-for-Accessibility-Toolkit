@@ -129,6 +129,32 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     ],
   },
   {
+    name: 'targets',
+    title: 'Targets: room to grow and hit areas',
+    summary: 'Make controls easier to hit without covering each other: how far each may grow, measured once, and a larger hit area that changes neither how it looks nor where anything is.',
+    api: [
+      'const room = s.targets.room(els, { size, others, rects, within })',
+      '// Map el -> { rect, top, right, bottom, left, clipped, lines }: how far to grow on each side',
+      's.targets.hitArea(el, room.get(el), { attrs })   // "pseudo", "ring" or null',
+      's.targets.hitAreas(room, { attrs })             // all at once: Map el -> "pseudo" | "ring" | null',
+    ],
+    config: {
+      size: { default: 24, description: 'room(): the smallest size, in CSS pixels, each element should reach in both directions.' },
+      others: { default: [], description: 'room(): more targets to keep clear of (measured, not returned).' },
+      rects: { default: null, description: 'room(): a Map el -> rect to use instead of measuring: the size an element had before you grew it.' },
+      within: { default: null, description: 'room(): the box nothing may grow past (default: the page; the viewport for fixed elements).' },
+      attrs: { default: null, description: 'hitArea(): attributes for the ring, if one is made (an object, or a function of the element), so you can find it later.' },
+    },
+    personal: { targetSize: 'Pass the person\'s targetSize as room()\'s size.' },
+    invariants: [
+      'room() is the same whatever order elements come in: between two targets each takes at most half the gap when the other grows toward it, the whole gap when the other is already big enough that way. Grown boxes never overlap, and none goes past the page\'s edge.',
+      'room() reads the layout once and says what would be cut off by a clipping ancestor (clipped) and how many lines an element has (lines), so nothing is read again after a change.',
+      'hitArea() never changes how the element looks or where anything is: a pseudo-element the page does not use (any content counts, even ""), and position: relative only where it moves nothing else.',
+      'Otherwise a ring around the element, never over it: anchored to it (it follows scrolling and reflow), hidden when the element is scrolled or clipped out of view, and passing presses and clicks on the ring to the element. Where the browser cannot anchor, nothing is made (null).',
+      'hitArea() again on the same element updates the one it made; end() takes all of it away.',
+    ],
+  },
+  {
     name: 'announce',
     title: 'Announce',
     summary: 'Tell screen reader users what changed, through one shared live region.',

@@ -14,30 +14,36 @@
 //
 // Decisions:
 //   • Measures before it changes anything: each interactive control (links, buttons, form controls,
-//     and elements with an interactive role) is evaluated once and only grown if smaller than targetSize.
-//   • If nothing is too small on the page or bigTargets is turned off, enable() ends the session and returns false.
-//   • Prefers growing the hit area without moving surrounding content:
-//     - Buttons, form controls and non-inline elements receive min-width/min-height with margin offsets in normal flow.
-//     - Checked afterwards: if direct sizing causes container overflow or pushes past document bounds,
-//       direct sizing is undone on elements supporting pseudo-elements and falls back to an expanded pseudo-element hit area (::after, or ::before if author ::after exists).
-//     - SVG controls reach targetSize and receive an HTML hit overlay placed over them so their hit area is accessible even in clipped containers.
-//     - Text links and inline controls keep their visual layout and text flow; inline links in running text receive spacing; an invisible pseudo-element
-//       expands their clickable hit area into available free space without affecting line height.
-//     - Checkboxes and radios reach targetSize at any size asked for (24, 32, 44) with margin offsets so native inputs stay hit-accessible without layout shift.
-//     - Absolutely and fixed positioned controls, as well as SVG controls, reach targetSize at every size.
-//     - Leaves the page's pointer-events alone; a <label> is a target only when it labels a control,
-//       and never both it and its control.
-//   • Overlap prevention: hit areas expand only into available free space and take at most half the gap
-//     between neighbouring interactive elements, guaranteeing targets never cover each other.
-//   • Neighbours are what is near on screen, not only siblings, measured in document-relative coordinates, also for what is added later.
-//   • Dynamic content: elements added later come in batches (s.watch.added with { batch: true }).
-//     The batch and targets near it on screen are measured once and adjusted without redoing existing targets, ensuring existing hit areas never cover newly added targets.
-//   • Size adjustment: a new targetSize redoes all sizes in a fresh s.group(), cleanly undoing previous sizing.
-//   • Pure target sizing: nothing outside its job (no focus styles).
+//     elements with an interactive role, a <label> only when its control cannot be the target) is
+//     measured once, and only those smaller than targetSize change.
+//   • Nothing too small, or bigTargets off: enable() ends the session and returns false.
+//   • How far each target may grow comes from s.targets.room(): between two targets each takes at most
+//     half the gap when the other grows toward it, the whole gap when the other is big enough already,
+//     nothing past the page's edge. The same whatever order they are measured in, so no two hit areas
+//     overlap, also with what is added later. Where there is not enough room, a target grows as far as
+//     it can and no further: it never covers a neighbour to reach the size.
+//   • Native buttons, selects, summaries, inputs, checkboxes and radios (and elements with role button,
+//     tab, menuitem, switch or option) grow their own box (min-width/min-height) with the same amount
+//     taken off their margins, so nothing around them moves; margins the page set to auto stay auto.
+//     Where an ancestor would cut the grown box off (overflow), they get a hit area instead.
+//   • Everything else gets a hit area from s.targets.hitArea(): an invisible pseudo-element, or, for SVG
+//     controls and what cannot have one, an HTML ring around it (never over it) that passes the
+//     pointer's presses and clicks to it.
+//   • Inline links in running text get 2px of padding on each side first, then everything is measured.
+//     A link broken over two lines is left as it is.
+//   • Elements added later come in batches (s.watch.added with { batch: true }): the batch and the
+//     targets near it on screen are measured once; only those near it change again.
+//   • A new targetSize redoes the sizes in a fresh s.group().
+//   • Leaves the page's pointer-events alone; a <label> is a target only when it labels a control,
+//     and never both it and its control. Nothing outside its job (no focus styles).
 //
 // What it cannot do:
-//   • Cannot expand targets within cross-origin or canvas-drawn interfaces that do not expose DOM elements.
-//   • Cannot extend hit areas outside the viewport or beyond clipping ancestor bounds.
+//   • Grow a target past its neighbours: in a row of small controls closer together than targetSize,
+//     each reaches what its half of the gaps allows.
+//   • Hover, touch events and the context menu on a ring's area (the control itself still has them).
+//   • Rings need CSS anchor positioning (Chrome 125+, Safari 26): without it, SVG controls and other
+//     targets that need a ring are left as they are.
+//   • Targets inside cross-origin frames, shadow roots or canvas-drawn interfaces.
 
 const TARGET_SELECTORS = [
   'a[href]',
@@ -66,11 +72,10 @@ const TARGET_SELECTORS = [
 ];
 const TARGET_QUERY = TARGET_SELECTORS.join(',');
 
-const NO_PSEUDO = /^(INPUT|SELECT|TEXTAREA|IMG|VIDEO|AUDIO|IFRAME|CANVAS|SVG|OBJECT|EMBED)$/i;
-const BOX_TYPES = /^(checkbox|radio)$/i;
 const NO_GROW_TYPES = /^(hidden|range|file|color|image)$/i;
+const GROW_TAGS = /^(BUTTON|SELECT|SUMMARY|INPUT)$/;
 const GROW_ROLES = /^(button|tab|menuitem|switch|option)$/i;
-
+const SIDES = ['top', 'right', 'bottom', 'left'];
 const SIZES = [24, 32, 44];
 
 function isInsideLinkOrButton(el) {
@@ -85,25 +90,13 @@ function isInsideLinkOrButton(el) {
   return false;
 }
 
-function getDocRect(el) {
-  const r = el.getBoundingClientRect();
-  const sx = window.scrollX || window.pageXOffset || 0;
-  const sy = window.scrollY || window.pageYOffset || 0;
-  return {
-    top: r.top + sy,
-    bottom: r.bottom + sy,
-    left: r.left + sx,
-    right: r.right + sx,
-    width: r.width,
-    height: r.height,
-  };
-}
-
 function isCandidate(el, s) {
   if (!el || !el.isConnected) return false;
   if (el.closest && el.closest('[data-ai4a11y-ui]')) return false;
   if (s && s.page && s.page.isOurs && s.page.isOurs(el)) return false;
   if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
+  // Inside an SVG drawing (not the <svg> itself): no HTML can sit next to it.
+  if (el.ownerSVGElement) return false;
 
   const tag = el.tagName;
   const type = (el.getAttribute('type') || '').toLowerCase();
@@ -115,13 +108,10 @@ function isCandidate(el, s) {
     // A <label> is a target only when it labels a control, and never both it and its control.
     const control = el.control || (el.htmlFor ? document.getElementById(el.htmlFor) : el.querySelector('input, select, textarea, button'));
     if (!control) return false;
-    // If the associated control is connected and perceivable, the control will be the target.
     if (control.isConnected && !control.disabled && control.getAttribute('aria-disabled') !== 'true') {
       let ccs;
       try { ccs = window.getComputedStyle(control); } catch { return false; }
-      if (ccs.display !== 'none' && ccs.visibility !== 'hidden' && parseFloat(ccs.opacity) > 0) {
-        return false;
-      }
+      if (ccs.display !== 'none' && ccs.visibility !== 'hidden' && parseFloat(ccs.opacity) > 0) return false;
     }
   }
 
@@ -130,92 +120,21 @@ function isCandidate(el, s) {
   if (cs.display === 'none' || cs.visibility === 'hidden' || cs.display === 'contents') return false;
   if (parseFloat(cs.opacity) === 0) return false;
   if (cs.pointerEvents === 'none') return false;
+  // Hidden from the eye by the page itself (a "visually hidden" skip link): a hit area there would be invisible.
+  if (cs.clip && cs.clip !== 'auto') return false;
 
   const r = el.getBoundingClientRect();
-  if (r.width === 0 || r.height === 0) return false;
+  if (r.width <= 1 || r.height <= 1) return false;
 
   return true;
 }
 
-let cachedAutoRules = null;
-function getAutoRules() {
-  if (cachedAutoRules) return cachedAutoRules;
-  const autoRules = [];
+// A margin the page set to auto (its computed value, not the pixels it resolves to).
+function isAutoMargin(el, side) {
   try {
-    for (const sheet of document.styleSheets) {
-      if (sheet.ownerNode && sheet.ownerNode.hasAttribute && sheet.ownerNode.hasAttribute('data-ai4a11y-bt')) continue;
-      let rules;
-      try { rules = sheet.cssRules; } catch { continue; }
-      if (!rules) continue;
-      for (const rule of rules) {
-        if (!rule.selectorText || !rule.style) continue;
-        const style = rule.style;
-        const hasAuto = style.marginLeft === 'auto' || style.marginRight === 'auto' || style.marginTop === 'auto' || style.marginBottom === 'auto' || (style.margin && style.margin.includes('auto'));
-        if (hasAuto) autoRules.push(rule);
-      }
-    }
-  } catch {}
-  return (cachedAutoRules = autoRules);
-}
-
-function getAutoMargins(el) {
-  const res = { mt: false, mr: false, mb: false, ml: false };
-  if (!el || el.nodeType !== 1) return res;
-  const s = el.style;
-  if (s) {
-    if (s.marginLeft === 'auto') res.ml = true;
-    if (s.marginRight === 'auto') res.mr = true;
-    if (s.marginTop === 'auto') res.mt = true;
-    if (s.marginBottom === 'auto') res.mb = true;
-    if (s.margin && s.margin.includes('auto')) {
-      const parts = s.margin.split(/\s+/).filter(Boolean);
-      if (parts.length === 1 && parts[0] === 'auto') { res.mt = res.mr = res.mb = res.ml = true; }
-      else if (parts.length === 2) {
-        if (parts[0] === 'auto') { res.mt = res.mb = true; }
-        if (parts[1] === 'auto') { res.ml = res.mr = true; }
-      } else if (parts.length === 3) {
-        if (parts[0] === 'auto') res.mt = true;
-        if (parts[1] === 'auto') res.ml = res.mr = true;
-        if (parts[2] === 'auto') res.mb = true;
-      } else if (parts.length === 4) {
-        if (parts[0] === 'auto') res.mt = true;
-        if (parts[1] === 'auto') res.mr = true;
-        if (parts[2] === 'auto') res.mb = true;
-        if (parts[3] === 'auto') res.ml = true;
-      }
-    }
-  }
-  if (res.ml && res.mr && res.mt && res.mb) return res;
-  const autoRules = getAutoRules();
-  for (const rule of autoRules) {
-    try {
-      if (el.matches(rule.selectorText)) {
-        const rStyle = rule.style;
-        if (rStyle.marginLeft === 'auto') res.ml = true;
-        if (rStyle.marginRight === 'auto') res.mr = true;
-        if (rStyle.marginTop === 'auto') res.mt = true;
-        if (rStyle.marginBottom === 'auto') res.mb = true;
-        if (rStyle.margin && rStyle.margin.includes('auto')) {
-          const parts = rStyle.margin.split(/\s+/).filter(Boolean);
-          if (parts.length === 1 && parts[0] === 'auto') { res.mt = res.mr = res.mb = res.ml = true; }
-          else if (parts.length === 2) {
-            if (parts[0] === 'auto') { res.mt = res.mb = true; }
-            if (parts[1] === 'auto') { res.ml = res.mr = true; }
-          } else if (parts.length === 3) {
-            if (parts[0] === 'auto') res.mt = true;
-            if (parts[1] === 'auto') res.ml = res.mr = true;
-            if (parts[2] === 'auto') res.mb = true;
-          } else if (parts.length === 4) {
-            if (parts[0] === 'auto') res.mt = true;
-            if (parts[1] === 'auto') res.mr = true;
-            if (parts[2] === 'auto') res.mb = true;
-            if (parts[3] === 'auto') res.ml = true;
-          }
-        }
-      }
-    } catch {}
-  }
-  return res;
+    const v = el.computedStyleMap && el.computedStyleMap().get(`margin-${side}`);
+    return !!v && String(v) === 'auto';
+  } catch { return false; }
 }
 
 export default {
@@ -242,686 +161,119 @@ export default {
       return false;
     }
 
-    let anySmall = false;
-    for (const el of root.querySelectorAll(TARGET_QUERY)) {
-      if (isCandidate(el, s)) {
-        const r = el.getBoundingClientRect();
-        if (r.width < currentTargetSize || r.height < currentTargetSize) {
-          anySmall = true;
-          break;
-        }
-      }
-    }
+    const isSmall = (r, MIN) => r.width < MIN || r.height < MIN;
+    const candidatesIn = (list) => {
+      const out = [];
+      for (const el of list) if (isCandidate(el, s)) out.push(el);
+      return out;
+    };
 
-    if (!anySmall) {
+    if (!candidatesIn(root.querySelectorAll(TARGET_QUERY)).some((el) => isSmall(el.getBoundingClientRect(), currentTargetSize))) {
       this.disable();
       return false;
     }
 
-    let sizeGroup = null;
-    let nextHitId = 1;
-    let dynamicRules = new Map();
-    let dynamicStyle = null;
-    const processed = new WeakSet();
-    const allKnownTargets = [];
+    let group = null;
+    let nextId = 1;
+    // Every target seen, small or not: el -> { grown: { top, right, bottom, left } | null, kind }
+    const records = new Map();
 
     const mark = (el, token) => {
       const cur = el.getAttribute('data-ai4a11y-bt') || '';
       const tokens = new Set(cur.split(/\s+/).filter(Boolean));
-      for (const t of token.split(/\s+/).filter(Boolean)) tokens.add(t);
+      tokens.add(token);
       const next = [...tokens].join(' ');
-      if (next !== cur) sizeGroup.setAttr(el, 'data-ai4a11y-bt', next);
+      if (next !== cur) group.setAttr(el, 'data-ai4a11y-bt', next);
     };
-
-    const unmark = (el, token) => {
-      const cur = el.getAttribute('data-ai4a11y-bt') || '';
-      const tokens = new Set(cur.split(/\s+/).filter(Boolean));
-      for (const t of token.split(/\s+/).filter(Boolean)) tokens.delete(t);
-      const next = [...tokens].join(' ');
-      sizeGroup.setAttr(el, 'data-ai4a11y-bt', next || null);
-    };
-
-    const createOverlay = (el, cs, MIN) => {
+    const idOf = (el) => {
       let id = el.getAttribute('data-ai4a11y-bt-id');
-      if (!id) {
-        id = String(nextHitId++);
-        sizeGroup.setAttr(el, 'data-ai4a11y-bt-id', id);
+      if (!id) { id = String(nextId++); group.setAttr(el, 'data-ai4a11y-bt-id', id); }
+      return id;
+    };
+
+    // Its own box grows by e on each side, and its margins give the same back.
+    const grow = (el, e, g) => {
+      const pad = (a, b) => (g.boxSizing === 'content-box' ? a + b : 0);
+      group.setStyle(el, 'min-width', `${e.rect.width + e.left + e.right - pad(g.px, g.bx)}px`, 'important');
+      group.setStyle(el, 'min-height', `${e.rect.height + e.top + e.bottom - pad(g.py, g.by)}px`, 'important');
+      for (const side of SIDES) {
+        if (!g.auto[side]) group.setStyle(el, `margin-${side}`, `${g.margin[side] - e[side]}px`, 'important');
       }
+    };
 
-      const r = el.getBoundingClientRect();
-      const isFixed = cs.position === 'fixed' || (function hasFixedAncestor(node) {
-        let p = node.parentElement;
-        while (p && p !== document.body && p !== document.documentElement) {
-          try {
-            if (window.getComputedStyle(p).position === 'fixed') return true;
-          } catch { break; }
-          p = p.parentElement;
-        }
-        return false;
-      })(el);
-
-      const docR = getDocRect(el);
-      const wantX = Math.max(0, MIN - r.width);
-      const wantY = Math.max(0, MIN - r.height);
-      const idealLeft = Math.floor(wantX / 2);
-      const idealRight = Math.ceil(wantX / 2);
-      const idealTop = Math.floor(wantY / 2);
-      const idealBottom = Math.ceil(wantY / 2);
-
-      let maxClearLeft = wantX;
-      let maxClearRight = wantX;
-      let maxClearTop = wantY;
-      let maxClearBottom = wantY;
-
-      const rTopBound = docR.top - MIN;
-      const rBottomBound = docR.bottom + MIN;
-      const rLeftBound = docR.left - MIN;
-      const rRightBound = docR.right + MIN;
-
-      for (const o of allKnownTargets) {
-        if (!o.el.isConnected) continue;
-        if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
-        const q = o.r;
-        if (q.bottom < rTopBound || q.top > rBottomBound || q.right < rLeftBound || q.left > rRightBound) continue;
-        const overlapX = q.left < docR.right + wantX && q.right > docR.left - wantX;
-        const overlapY = q.top < docR.bottom + wantY && q.bottom > docR.top - wantY;
-
-        const shareX = (q.width < MIN) && !processed.has(o.el);
-        const shareY = (q.height < MIN) && !processed.has(o.el);
-
-        if (overlapX && q.bottom <= docR.top + 0.5) {
-          const gap = Math.max(0, docR.top - q.bottom);
-          maxClearTop = Math.min(maxClearTop, shareY ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-        if (overlapX && q.top >= docR.bottom - 0.5) {
-          const gap = Math.max(0, q.top - docR.bottom);
-          maxClearBottom = Math.min(maxClearBottom, shareY ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-        if (overlapY && q.right <= docR.left + 0.5) {
-          const gap = Math.max(0, docR.left - q.right);
-          maxClearLeft = Math.min(maxClearLeft, shareX ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-        if (overlapY && q.left >= docR.right - 0.5) {
-          const gap = Math.max(0, q.left - docR.right);
-          maxClearRight = Math.min(maxClearRight, shareX ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-      }
-
-      let left = Math.min(idealLeft, maxClearLeft);
-      let right = Math.min(idealRight, maxClearRight);
-      if (left + right < wantX) {
-        if (right < idealRight) left = Math.min(maxClearLeft, wantX - right);
-        else if (left < idealLeft) right = Math.min(maxClearRight, wantX - left);
-      }
-
-      let top = Math.min(idealTop, maxClearTop);
-      let bottom = Math.min(idealBottom, maxClearBottom);
-      if (top + bottom < wantY) {
-        if (bottom < idealBottom) top = Math.min(maxClearTop, wantY - bottom);
-        else if (top < idealTop) bottom = Math.min(maxClearBottom, wantY - top);
-      }
-
-      let targetContainer = isFixed ? document.body : el.parentElement;
-      while (!isFixed && targetContainer && targetContainer !== document.body) {
-        let sBox;
-        try { sBox = window.getComputedStyle(targetContainer); } catch { break; }
-        const clips = sBox.overflowX === 'hidden' || sBox.overflowY === 'hidden';
-        if (clips && (targetContainer.clientWidth < MIN || targetContainer.clientHeight < MIN)) {
-          targetContainer = targetContainer.parentElement;
-        } else {
-          break;
-        }
-      }
-      if (!targetContainer) targetContainer = isFixed ? document.body : (el.parentElement || document.body);
-
-      if (!isFixed && targetContainer !== document.body) {
-        let cCs;
-        try { cCs = window.getComputedStyle(targetContainer); } catch {}
-        if (cCs && cCs.position === 'static') {
-          mark(targetContainer, 'rel');
-        }
-      }
-
-      let oTop, oLeft, oWidth, oHeight;
-      if (isFixed || targetContainer === document.body) {
-        const baseX = isFixed ? r.left : docR.left;
-        const baseY = isFixed ? r.top : docR.top;
-        oTop = baseY - top;
-        oLeft = baseX - left;
-        oWidth = r.width + left + right;
-        oHeight = r.height + top + bottom;
-      } else {
-        const parentR = targetContainer.getBoundingClientRect();
-        const baseLeft = (r.left - parentR.left) - targetContainer.clientLeft + targetContainer.scrollLeft;
-        const baseTop = (r.top - parentR.top) - targetContainer.clientTop + targetContainer.scrollTop;
-        oTop = baseTop - top;
-        oLeft = baseLeft - left;
-        oWidth = r.width + left + right;
-        oHeight = r.height + top + bottom;
-      }
-
-      let overlay = document.querySelector(`[data-ai4a11y-bt-overlay-for="${id}"]`);
-      if (overlay) {
-        overlay.style.top = `${oTop}px`;
-        overlay.style.left = `${oLeft}px`;
-        overlay.style.width = `${oWidth}px`;
-        overlay.style.height = `${oHeight}px`;
-        return overlay;
-      }
-
-      overlay = document.createElement('span');
-      overlay.setAttribute('data-ai4a11y-bt', 'overlay');
-      overlay.setAttribute('data-ai4a11y-bt-overlay-for', id);
-      overlay.setAttribute('aria-hidden', 'true');
-      overlay.setAttribute('tabindex', '-1');
-
-      const posType = (isFixed || targetContainer === document.body) ? (isFixed ? 'fixed' : 'absolute') : 'absolute';
-      overlay.style.cssText = `position: ${posType} !important; top: ${oTop}px !important; left: ${oLeft}px !important; width: ${oWidth}px !important; height: ${oHeight}px !important; z-index: 2147483647 !important; background: transparent !important; border: none !important; padding: 0 !important; margin: 0 !important; cursor: ${cs.cursor || 'pointer'} !important;`;
-
-      const forwardEvent = (e) => {
-        el.focus();
-        let evt;
-        if (window.PointerEvent && e instanceof PointerEvent) {
-          evt = new PointerEvent(e.type, {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            detail: e.detail,
-            screenX: e.screenX,
-            screenY: e.screenY,
-            clientX: e.clientX,
-            clientY: e.clientY,
-            pointerId: e.pointerId,
-            width: e.width,
-            height: e.height,
-            pressure: e.pressure,
-            tiltX: e.tiltX,
-            tiltY: e.tiltY,
-            pointerType: e.pointerType,
-            isPrimary: e.isPrimary,
-          });
-        } else if (e instanceof MouseEvent) {
-          evt = new MouseEvent(e.type, {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            detail: e.detail,
-            screenX: e.screenX,
-            screenY: e.screenY,
-            clientX: e.clientX,
-            clientY: e.clientY,
-            button: e.button,
-            buttons: e.buttons,
-          });
-        }
-        if (evt) el.dispatchEvent(evt);
+    const growInfo = (el) => {
+      // An SVG control's hit area comes from HTML around it, never from resizing the drawing.
+      if (el instanceof SVGElement) return null;
+      let cs;
+      try { cs = window.getComputedStyle(el); } catch { return null; }
+      const tag = el.tagName.toUpperCase();
+      const type = (el.getAttribute('type') || '').toLowerCase();
+      const role = el.getAttribute('role') || '';
+      const native = GROW_TAGS.test(tag) && !(tag === 'INPUT' && NO_GROW_TYPES.test(type));
+      if (!(native || GROW_ROLES.test(role)) || cs.display === 'inline') return null;
+      const n = (v) => parseFloat(v) || 0;
+      return {
+        boxSizing: cs.boxSizing,
+        px: n(cs.paddingLeft) + n(cs.paddingRight), py: n(cs.paddingTop) + n(cs.paddingBottom),
+        bx: n(cs.borderLeftWidth) + n(cs.borderRightWidth), by: n(cs.borderTopWidth) + n(cs.borderBottomWidth),
+        margin: { top: n(cs.marginTop), right: n(cs.marginRight), bottom: n(cs.marginBottom), left: n(cs.marginLeft) },
+        auto: Object.fromEntries(SIDES.map((side) => [side, isAutoMargin(el, side)])),
       };
-
-      sizeGroup.listen(overlay, 'pointerdown', forwardEvent);
-      sizeGroup.listen(overlay, 'mousedown', forwardEvent);
-      sizeGroup.listen(overlay, 'pointerup', forwardEvent);
-      sizeGroup.listen(overlay, 'mouseup', forwardEvent);
-      sizeGroup.listen(overlay, 'click', (e) => {
-        el.focus();
-        el.dispatchEvent(new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          detail: e.detail,
-          screenX: e.screenX,
-          screenY: e.screenY,
-          clientX: e.clientX,
-          clientY: e.clientY,
-        }));
-      });
-
-      sizeGroup.insert(targetContainer, overlay, targetContainer === el.parentElement ? el.nextSibling : null);
-      return overlay;
     };
 
-    const computeHit = (el, cs, MIN) => {
-      const r = el.getBoundingClientRect();
-      if (r.width >= MIN && r.height >= MIN) return;
-      if (el.getClientRects && el.getClientRects().length > 1) return;
-
-      const isClippedBySelf = cs.overflow !== 'visible';
-      if (NO_PSEUDO.test(el.tagName) || isClippedBySelf) {
-        createOverlay(el, cs, MIN);
-        return;
-      }
-
-      let csAfter, csBefore;
-      try {
-        csAfter = window.getComputedStyle(el, '::after');
-        csBefore = window.getComputedStyle(el, '::before');
-      } catch { return; }
-
-      const hasAfter = csAfter && csAfter.content && csAfter.content !== 'none' && csAfter.content !== 'normal' && csAfter.content !== '""' && csAfter.content !== "''";
-      let pseudo = 'after';
-      if (hasAfter) {
-        const hasBefore = csBefore && csBefore.content && csBefore.content !== 'none' && csBefore.content !== 'normal' && csBefore.content !== '""' && csBefore.content !== "''";
-        if (hasBefore) return;
-        pseudo = 'before';
-      }
-
-      const wantX = Math.max(0, MIN - r.width);
-      const wantY = Math.max(0, MIN - r.height);
-      const idealLeft = Math.floor(wantX / 2);
-      const idealRight = Math.ceil(wantX / 2);
-      const idealTop = Math.floor(wantY / 2);
-      const idealBottom = Math.ceil(wantY / 2);
-
-      let maxClearLeft = wantX;
-      let maxClearRight = wantX;
-      let maxClearTop = wantY;
-      let maxClearBottom = wantY;
-
-      const docR = getDocRect(el);
-      const rTopBound = docR.top - MIN;
-      const rBottomBound = docR.bottom + MIN;
-      const rLeftBound = docR.left - MIN;
-      const rRightBound = docR.right + MIN;
-
-      for (const o of allKnownTargets) {
-        if (!o.el.isConnected) continue;
-        if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
-        const q = o.r;
-        if (q.bottom < rTopBound || q.top > rBottomBound || q.right < rLeftBound || q.left > rRightBound) {
-          continue;
-        }
-
-        const overlapX = q.left < docR.right + wantX && q.right > docR.left - wantX;
-        const overlapY = q.top < docR.bottom + wantY && q.bottom > docR.top - wantY;
-
-        const shareX = (q.width < MIN) && !processed.has(o.el);
-        const shareY = (q.height < MIN) && !processed.has(o.el);
-
-        if (overlapX && q.bottom <= docR.top + 0.5) {
-          const gap = Math.max(0, docR.top - q.bottom);
-          maxClearTop = Math.min(maxClearTop, shareY ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-        if (overlapX && q.top >= docR.bottom - 0.5) {
-          const gap = Math.max(0, q.top - docR.bottom);
-          maxClearBottom = Math.min(maxClearBottom, shareY ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-        if (overlapY && q.right <= docR.left + 0.5) {
-          const gap = Math.max(0, docR.left - q.right);
-          maxClearLeft = Math.min(maxClearLeft, shareX ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-        if (overlapY && q.left >= docR.right - 0.5) {
-          const gap = Math.max(0, q.left - docR.right);
-          maxClearRight = Math.min(maxClearRight, shareX ? Math.floor(gap / 2) : Math.floor(gap));
-        }
-      }
-
-      let left = Math.min(idealLeft, maxClearLeft);
-      let right = Math.min(idealRight, maxClearRight);
-      if (left + right < wantX) {
-        if (right < idealRight) left = Math.min(maxClearLeft, wantX - right);
-        else if (left < idealLeft) right = Math.min(maxClearRight, wantX - left);
-      }
-
-      let top = Math.min(idealTop, maxClearTop);
-      let bottom = Math.min(idealBottom, maxClearBottom);
-      if (top + bottom < wantY) {
-        if (bottom < idealBottom) top = Math.min(maxClearTop, wantY - bottom);
-        else if (top < idealTop) bottom = Math.min(maxClearBottom, wantY - top);
-      }
-
-      const docEl = document.documentElement;
-      const docW = docEl.clientWidth;
-      let box = { left: 0, right: docW, top: -window.scrollY, bottom: docEl.scrollHeight - window.scrollY };
-      for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
-        if (a.scrollHeight > a.clientHeight || a.scrollWidth > a.clientWidth) {
-          let sBox;
-          try { sBox = window.getComputedStyle(a); } catch { break; }
-          if (sBox.overflowX !== 'visible' || sBox.overflowY !== 'visible') {
-            const ar = a.getBoundingClientRect();
-            const x0 = ar.left + a.clientLeft;
-            const y0 = ar.top + a.clientTop;
-            box = { left: x0, right: x0 + a.clientWidth, top: y0, bottom: y0 + a.clientHeight };
-            break;
-          }
-        }
-      }
-
-      const px = (v) => Math.max(0, Math.floor(v));
-      const t = px(Math.min(top, r.top - box.top));
-      const b = px(Math.min(bottom, box.bottom - r.bottom));
-      const l = px(Math.min(left, r.left - box.left));
-      const rt = px(Math.min(right, box.right - r.right));
-
-      let id = el.getAttribute('data-ai4a11y-bt-id');
-      if (!id) {
-        id = String(nextHitId++);
-        sizeGroup.setAttr(el, 'data-ai4a11y-bt-id', id);
-      }
-      mark(el, cs.position === 'static' ? 'hit rel' : 'hit');
-      dynamicRules.set(id, `[data-ai4a11y-bt-id="${id}"]::${pseudo} { content: "" !important; position: absolute !important; top: -${t}px; right: -${rt}px; bottom: -${b}px; left: -${l}px; }`);
-    };
-
-    const processItems = (targets, MIN) => {
-      if (!targets.length) return;
-      const docEl = document.documentElement;
-      const docW = docEl.clientWidth;
-      const docSW = docEl.scrollWidth;
-
-      const items = [];
-      for (const el of targets) {
-        processed.add(el);
+    // Size the small ones among `fresh` (new to us) and `again` (known, near what is new),
+    // keeping clear of every target in `known`. Reads everything, then writes.
+    const size = (fresh, again, known, MIN) => {
+      // Inline links in running text get spacing first; it is the one change that moves text.
+      const inline = fresh.filter((el) => el.tagName === 'A' && isSmall(el.getBoundingClientRect(), MIN) && window.getComputedStyle(el).display === 'inline');
+      for (const el of inline) mark(el, 'inline-link');
+      // The size each had before it grew.
+      const rects = new Map();
+      for (const el of known) {
         const r = el.getBoundingClientRect();
-        if (!r.width || !r.height) continue;
-        const entry = { el, r: getDocRect(el) };
-        allKnownTargets.push(entry);
-
-        let cs;
-        try { cs = window.getComputedStyle(el); } catch { continue; }
-        const tag = el.tagName.toUpperCase();
-        const type = (el.getAttribute('type') || '').toLowerCase();
-        const isBox = tag === 'INPUT' && BOX_TYPES.test(type);
-        const small = r.width < MIN || r.height < MIN;
-        if (!small) continue;
-        items.push({ el, cs, r, tag, type, isBox, entry });
+        const g = records.get(el)?.grown;
+        rects.set(el, g
+          ? { left: r.left + g.left, top: r.top + g.top, right: r.right - g.right, bottom: r.bottom - g.bottom, width: r.width - g.left - g.right, height: r.height - g.top - g.bottom }
+          : { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height });
       }
+      const small = [...fresh, ...again].filter((el) => rects.has(el) && isSmall(rects.get(el), MIN));
+      const room = group.targets.room(small, { size: MIN, others: known, rects });
 
-      if (!items.length) return;
-
-      const grown = [];
-      for (const it of items) {
-        const { el, cs, r, tag, type, isBox } = it;
-        let id = el.getAttribute('data-ai4a11y-bt-id');
-        if (!id) {
-          id = String(nextHitId++);
-          sizeGroup.setAttr(el, 'data-ai4a11y-bt-id', id);
-        }
-        it.id = id;
-
-        const wantX = Math.max(0, MIN - r.width);
-        const wantY = Math.max(0, MIN - r.height);
-        let idealLeft = Math.floor(wantX / 2);
-        let idealRight = Math.ceil(wantX / 2);
-        let idealTop = Math.floor(wantY / 2);
-        let idealBottom = Math.ceil(wantY / 2);
-
-        let maxClearLeft = wantX;
-        let maxClearRight = wantX;
-        let maxClearTop = wantY;
-        let maxClearBottom = wantY;
-
-        const docR = it.entry.r;
-        const rTopBound = docR.top - MIN;
-        const rBottomBound = docR.bottom + MIN;
-        const rLeftBound = docR.left - MIN;
-        const rRightBound = docR.right + MIN;
-
-        for (const o of allKnownTargets) {
-          if (!o.el.isConnected) continue;
-          if (o.el === el || o.el.contains(el) || el.contains(o.el)) continue;
-          const q = o.r;
-          if (q.bottom < rTopBound || q.top > rBottomBound || q.right < rLeftBound || q.left > rRightBound) continue;
-
-          const overlapX = q.left < docR.right + wantX && q.right > docR.left - wantX;
-          const overlapY = q.top < docR.bottom + wantY && q.bottom > docR.top - wantY;
-
-          const shareX = (q.width < MIN) && !processed.has(o.el);
-          const shareY = (q.height < MIN) && !processed.has(o.el);
-
-          if (overlapX && q.bottom <= docR.top + 0.5) {
-            const gap = Math.max(0, docR.top - q.bottom);
-            maxClearTop = Math.min(maxClearTop, shareY ? Math.floor(gap / 2) : Math.floor(gap));
-          }
-          if (overlapX && q.top >= docR.bottom - 0.5) {
-            const gap = Math.max(0, q.top - docR.bottom);
-            maxClearBottom = Math.min(maxClearBottom, shareY ? Math.floor(gap / 2) : Math.floor(gap));
-          }
-          if (overlapY && q.right <= docR.left + 0.5) {
-            const gap = Math.max(0, docR.left - q.right);
-            maxClearLeft = Math.min(maxClearLeft, shareX ? Math.floor(gap / 2) : Math.floor(gap));
-          }
-          if (overlapY && q.left >= docR.right - 0.5) {
-            const gap = Math.max(0, q.left - docR.right);
-            maxClearRight = Math.min(maxClearRight, shareX ? Math.floor(gap / 2) : Math.floor(gap));
-          }
-        }
-
-        let expLeft = Math.min(idealLeft, maxClearLeft);
-        let expRight = Math.min(idealRight, maxClearRight);
-        if (expLeft + expRight < wantX) {
-          if (expRight < idealRight) {
-            expLeft = Math.min(maxClearLeft, wantX - expRight);
-          } else if (expLeft < idealLeft) {
-            expRight = Math.min(maxClearRight, wantX - expLeft);
-          }
-        }
-
-        let expTop = Math.min(idealTop, maxClearTop);
-        let expBottom = Math.min(idealBottom, maxClearBottom);
-        if (expTop + expBottom < wantY) {
-          if (expBottom < idealBottom) {
-            expTop = Math.min(maxClearTop, wantY - expBottom);
-          } else if (expTop < idealTop) {
-            expBottom = Math.min(maxClearBottom, wantY - expTop);
-          }
-        }
-
-        const isOutFlow = cs.position === 'absolute' || cs.position === 'fixed';
-        const curMt = parseFloat(cs.marginTop) || 0;
-        const curMr = parseFloat(cs.marginRight) || 0;
-        const curMb = parseFloat(cs.marginBottom) || 0;
-        const curMl = parseFloat(cs.marginLeft) || 0;
-        const mt = curMt - expTop;
-        const mr = curMr - expRight;
-        const mb = curMb - expBottom;
-        const ml = curMl - expLeft;
-        it.margins = { mt, mr, mb, ml, curMt, curMr, curMb, curMl, isOutFlow };
-        it.autoMargins = getAutoMargins(el);
-
-        const mtStr = it.autoMargins.mt ? 'auto' : `${mt}px`;
-        const mrStr = it.autoMargins.mr ? 'auto' : `${mr}px`;
-        const mbStr = it.autoMargins.mb ? 'auto' : `${mb}px`;
-        const mlStr = it.autoMargins.ml ? 'auto' : `${ml}px`;
-        const marginRule = isOutFlow ? '' : `margin: ${mtStr} ${mrStr} ${mbStr} ${mlStr} !important; `;
-
-        const finalW = r.width + expLeft + expRight;
-        const finalH = r.height + expTop + expBottom;
-
-        if (isBox) {
-          const p = el.parentElement;
-          const g = p && p.parentElement;
-          it.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
-          it.kind = 'box';
-          mark(el, 'box');
-          dynamicRules.set(id, `[data-ai4a11y-bt-id="${id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; ${marginRule}vertical-align: middle !important; }`);
-          it.entry.r = { left: docR.left - expLeft, right: docR.left - expLeft + MIN, top: docR.top - expTop, bottom: docR.top - expTop + MIN, width: MIN, height: MIN };
-          grown.push(it);
-          continue;
-        }
-
-        if (tag === 'A' && cs.display === 'inline') {
-          mark(el, 'inline-link');
-          it.kind = 'hit';
-          continue;
-        }
-
-        if (tag !== 'SVG' && cs.display === 'inline') {
-          it.kind = 'hit';
-          continue;
-        }
-
-        const role = el.getAttribute('role') || '';
-        const text = (el.textContent || '').trim();
-        const iconLike = r.width < MIN && r.height < MIN && text.length <= 2;
-
-        const growable = tag !== 'SVG' && (tag === 'BUTTON' ||
-          tag === 'SELECT' ||
-          tag === 'SUMMARY' ||
-          (tag === 'INPUT' && !NO_GROW_TYPES.test(type)) ||
-          GROW_ROLES.test(role) ||
-          iconLike);
-
-        if (growable) {
-          const p = el.parentElement;
-          const g = p && p.parentElement;
-          it.before = [p, g].filter(Boolean).map((a) => [a, a.scrollWidth - a.clientWidth, a.scrollHeight - a.clientHeight]);
-          it.kind = 'grow';
-          mark(el, 'grow');
-          dynamicRules.set(id, `[data-ai4a11y-bt-id="${id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; ${marginRule}}`);
-          it.entry.r = { left: docR.left - expLeft, right: docR.left - expLeft + MIN, top: docR.top - expTop, bottom: docR.top - expTop + MIN, width: MIN, height: MIN };
-          grown.push(it);
-        } else {
-          it.kind = 'hit';
-        }
+      const grows = [];
+      const hits = new Map();
+      for (const el of small) {
+        const e = room.get(el);
+        if (!e) continue;
+        const rec = records.get(el);
+        const info = rec?.kind ? rec.info : !e.clipped && growInfo(el);
+        if (info) grows.push([el, e, info]);
+        else hits.set(el, e);
       }
-
-      if (dynamicStyle) {
-        dynamicStyle.update([...dynamicRules.values()].join('\n'));
+      for (const [el, e, info] of grows) {
+        idOf(el);
+        mark(el, 'grow');
+        grow(el, e, info);
+        records.set(el, { kind: 'grow', info, grown: { top: e.top, right: e.right, bottom: e.bottom, left: e.left } });
       }
-
-      if (grown.length) {
-        for (const it of grown) {
-          it.entry.r = getDocRect(it.el);
-        }
-
-        let updatedCollision = false;
-        const undo = [];
-        for (const it of grown) {
-          const rNow = it.el.getBoundingClientRect();
-          const pushesDoc = rNow.right > docW + 0.5 && it.r.right <= docW + 0.5;
-          const isNoPseudo = NO_PSEUDO.test(it.tag);
-
-          if (pushesDoc && isNoPseudo) {
-            const overflowX = Math.ceil(rNow.right - docW);
-            if (it.margins && !it.margins.isOutFlow) {
-              it.margins.ml -= overflowX;
-              it.margins.mr += overflowX;
-              const { mt, mr, mb, ml } = it.margins;
-              const mtStr = it.autoMargins?.mt ? 'auto' : `${mt}px`;
-              const mrStr = it.autoMargins?.mr ? 'auto' : `${mr}px`;
-              const mbStr = it.autoMargins?.mb ? 'auto' : `${mb}px`;
-              const mlStr = it.autoMargins?.ml ? 'auto' : `${ml}px`;
-              if (it.isBox) {
-                dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; margin: ${mtStr} ${mrStr} ${mbStr} ${mlStr} !important; vertical-align: middle !important; }`);
-              } else {
-                dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; margin: ${mtStr} ${mrStr} ${mbStr} ${mlStr} !important; }`);
-              }
-              updatedCollision = true;
-            } else if (it.cs.position === 'absolute' || it.cs.position === 'fixed') {
-              const curLeft = parseFloat(it.cs.left);
-              if (!Number.isNaN(curLeft)) {
-                const newLeft = curLeft - overflowX;
-                if (it.isBox) {
-                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; left: ${newLeft}px !important; vertical-align: middle !important; }`);
-                } else {
-                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; left: ${newLeft}px !important; }`);
-                }
-                updatedCollision = true;
-              } else {
-                if (it.isBox) {
-                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { width: ${MIN}px !important; height: ${MIN}px !important; min-width: ${MIN}px !important; min-height: ${MIN}px !important; flex-shrink: 0 !important; margin-left: -${overflowX}px !important; vertical-align: middle !important; }`);
-                } else {
-                  dynamicRules.set(it.id, `[data-ai4a11y-bt-id="${it.id}"] { min-width: ${MIN}px !important; min-height: ${MIN}px !important; margin-left: -${overflowX}px !important; }`);
-                }
-                updatedCollision = true;
-              }
-            }
-            continue;
-          }
-
-          if (pushesDoc && !isNoPseudo) {
-            undo.push(it);
-            continue;
-          }
-
-          const overflowsContainer = it.before && it.before.some(([a, w, h]) => {
-            let csA;
-            try { csA = window.getComputedStyle(a); } catch { return false; }
-            const clipsX = csA.overflowX !== 'visible';
-            const clipsY = csA.overflowY !== 'visible';
-            if (!clipsX && !clipsY) return false;
-            const xOverflow = clipsX && (a.scrollWidth - a.clientWidth) > w + 1;
-            const yOverflow = clipsY && (a.scrollHeight - a.clientHeight) > h + 1;
-            return xOverflow || yOverflow;
-          });
-          if (overflowsContainer && !isNoPseudo) {
-            undo.push(it);
-            continue;
-          }
-        }
-
-        if (updatedCollision || undo.length) {
-          for (const it of undo) {
-            unmark(it.el, 'grow');
-            dynamicRules.delete(it.id);
-            it.kind = 'hit';
-          }
-          if (dynamicStyle) {
-            dynamicStyle.update([...dynamicRules.values()].join('\n'));
-          }
-        }
-
-        for (const it of grown) {
-          it.entry.r = getDocRect(it.el);
-        }
-
-        if (docEl.scrollWidth > docSW + 1) {
-          let undoneMore = false;
-          for (const it of grown) {
-            if (it.kind === 'grow' && !NO_PSEUDO.test(it.tag)) {
-              unmark(it.el, 'grow');
-              dynamicRules.delete(it.id);
-              it.kind = 'hit';
-              undoneMore = true;
-            }
-          }
-          if (undoneMore && dynamicStyle) {
-            dynamicStyle.update([...dynamicRules.values()].join('\n'));
-            for (const it of grown) {
-              it.entry.r = getDocRect(it.el);
-            }
-          }
-        }
+      for (const el of hits.keys()) idOf(el);
+      const how = group.targets.hitAreas(hits, {
+        attrs: (el) => ({ 'data-ai4a11y-bt': 'overlay', 'data-ai4a11y-bt-overlay-for': el.getAttribute('data-ai4a11y-bt-id') }),
+      });
+      for (const [el, h] of how) {
+        if (h) mark(el, 'hit');
+        records.set(el, { kind: 'hit', grown: null });
       }
-
-      for (const it of items) {
-        if (it.tag === 'SVG') {
-          createOverlay(it.el, it.cs, MIN);
-        }
-      }
-
-      for (const it of items) {
-        if (it.kind !== 'hit') continue;
-        computeHit(it.el, it.cs, MIN);
-      }
-
-      if (dynamicStyle) {
-        dynamicStyle.update([...dynamicRules.values()].join('\n'));
-      }
+      for (const el of fresh) if (!records.has(el)) records.set(el, { kind: null, grown: null });
     };
 
     const redoAll = () => {
-      if (sizeGroup) sizeGroup.end();
-      sizeGroup = s.group();
-      nextHitId = 1;
-      dynamicRules.clear();
-      allKnownTargets.length = 0;
-      cachedAutoRules = null;
-
-      const MIN = currentTargetSize;
-
-      sizeGroup.css(
-        'base',
-        `[data-ai4a11y-bt~="inline-link"] { padding-left: 2px !important; padding-right: 2px !important; }
-[data-ai4a11y-bt~="rel"] { position: relative !important; }`
-      );
-
-      dynamicStyle = sizeGroup.css('dynamic', '');
-
-      const initialTargets = [];
-      for (const el of root.querySelectorAll(TARGET_QUERY)) {
-        if (isCandidate(el, s)) initialTargets.push(el);
-      }
-
-      processItems(initialTargets, MIN);
+      if (group) group.end();
+      group = s.group();
+      nextId = 1;
+      records.clear();
+      group.css('base', '[data-ai4a11y-bt~="inline-link"] { padding-left: 2px !important; padding-right: 2px !important; }');
+      const all = candidatesIn(root.querySelectorAll(TARGET_QUERY));
+      size(all, [], all, currentTargetSize);
     };
 
     redoAll();
@@ -931,64 +283,26 @@ export default {
       (addedElements) => {
         if (!s.alive()) return;
         const MIN = currentTargetSize;
+        for (const el of [...records.keys()]) if (!el.isConnected) records.delete(el);
 
-        let liveCount = 0;
-        for (let i = 0; i < allKnownTargets.length; i++) {
-          if (allKnownTargets[i].el.isConnected) {
-            allKnownTargets[liveCount++] = allKnownTargets[i];
-          }
-        }
-        allKnownTargets.length = liveCount;
-
-        const batchTargets = [];
-
+        const fresh = new Set();
         for (const added of addedElements) {
-          if (isCandidate(added, s) && !processed.has(added)) {
-            batchTargets.push(added);
-          }
+          if (!records.has(added) && isCandidate(added, s)) fresh.add(added);
           if (added.querySelectorAll) {
-            for (const desc of added.querySelectorAll(TARGET_QUERY)) {
-              if (isCandidate(desc, s) && !processed.has(desc)) {
-                batchTargets.push(desc);
-              }
-            }
+            for (const d of added.querySelectorAll(TARGET_QUERY)) if (!records.has(d) && isCandidate(d, s)) fresh.add(d);
           }
         }
+        if (!fresh.size) return;
 
-        if (!batchTargets.length) return;
-
-        const batchDocRects = batchTargets.map((el) => getDocRect(el));
-        const nearbyExisting = [];
-        for (const known of allKnownTargets) {
-          if (!known.el.isConnected) continue;
-          if (batchTargets.includes(known.el)) continue;
-          const kr = getDocRect(known.el);
-          known.r = kr;
-          const isNear = batchDocRects.some((br) => {
-            const dx = Math.max(0, Math.max(br.left - kr.right, kr.left - br.right));
-            const dy = Math.max(0, Math.max(br.top - kr.bottom, kr.top - br.bottom));
-            return dx <= MIN && dy <= MIN;
-          });
-          if (isNear) {
-            nearbyExisting.push(known);
-          }
+        // The known targets near the batch on screen are sized again with it; the rest stay as they are.
+        const batch = [...fresh].map((el) => el.getBoundingClientRect());
+        const again = [];
+        for (const [el, rec] of records) {
+          if (!rec.kind) continue;
+          const r = el.getBoundingClientRect();
+          if (batch.some((b) => Math.max(b.left - r.right, r.left - b.right) <= 2 * MIN && Math.max(b.top - r.bottom, r.top - b.bottom) <= 2 * MIN)) again.push(el);
         }
-
-        processItems(batchTargets, MIN);
-
-        let changedNearby = false;
-        for (const known of nearbyExisting) {
-          const id = known.el.getAttribute('data-ai4a11y-bt-id');
-          if (id && dynamicRules.has(id)) {
-            let cs;
-            try { cs = window.getComputedStyle(known.el); } catch { continue; }
-            computeHit(known.el, cs, MIN);
-            changedNearby = true;
-          }
-        }
-        if (changedNearby && dynamicStyle) {
-          dynamicStyle.update([...dynamicRules.values()].join('\n'));
-        }
+        size([...fresh], again, [...records.keys(), ...fresh], MIN);
       },
       { batch: true, debounceMs: 40, cap: 1000 }
     );
