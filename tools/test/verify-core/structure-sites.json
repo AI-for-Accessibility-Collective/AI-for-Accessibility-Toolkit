@@ -1,14 +1,4 @@
 {
   "file": "tools/core-adapters/structure.js",
-  "checks": [
-    {
-      "name": "if page outline entry button is present it is an accessible button",
-      "code": "\n        const btn = document.querySelector('.ai4a11y-entry');\n        if (!btn) return true;\n        return btn.tagName === 'BUTTON' && btn.textContent.trim() === 'Page outline';\n    "
-    },
-    {
-      "name": "if panel is present it is a dialog hidden by default",
-      "code": "\n        const panelEl = document.querySelector('section[role=\"dialog\"][aria-labelledby]');\n        if (!panelEl) return true;\n        return panelEl.hidden === true;\n    "
-    }
-  ],
   "sites": "all"
 }

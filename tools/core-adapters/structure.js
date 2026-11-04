@@ -1,7 +1,7 @@
-// structure.js — Gives the page a structure people can navigate by.
-// Barrier: Pages built with generic containers (div-soup) lack ARIA landmarks and
-// clear heading structure, preventing screen reader and keyboard users from jumping
-// directly to main content, navigation, headers, footers, or specific sections.
+// structure.js — Gives the page a structure people can navigate by: adds missing
+// ARIA landmarks and provides an on-page heading outline panel.
+// Barrier: Blind, low-vision, and motor-impaired users struggle to navigate pages
+// lacking landmark regions or to skim and jump between sections on long, dense pages.
 //
 // Suggested in onboarding for: vision, motor (a suggestion only, never a gate).
 // The person's settings it reads: none.
@@ -10,268 +10,242 @@
 // after any skip link, visible when focused, so it covers nothing.
 //
 // Options:
-//   landmarks: boolean (default true) — whether to infer and add missing ARIA landmarks.
-//   outline: boolean (default true) — whether to provide the page outline panel.
-//   maxLevel: number (default 6) — deepest heading level to include in the outline (1–6).
+//   outline: Boolean. Whether to provide the page outline panel and button. Defaults to true.
+//   landmarks: Boolean. Whether to discover and add missing ARIA landmarks. Defaults to true.
+//   maxLevel: Number. Maximum heading level (1 to 6) to include in the outline. Defaults to 6.
 //
 // Decisions:
-//   • Adds missing ARIA landmarks (main, navigation, banner, contentinfo) only where
-//     the page has none and the region is unambiguous.
-//   • Gives a landmark role only to a div or section, never to a list (ul, ol) or a native element.
-//   • A header or footer inside an article, section, aside, main, or nav is not the page's
-//     banner or contentinfo: it neither counts as one nor stops a region from being main content.
-//   • Never overwrites existing roles or native semantic elements.
-//   • Provides an outline of the page's headings in an accessible dialog panel (s.panel)
-//     opened from a 'Page outline' button (s.focus.entry).
-//   • Lists headings in document order with levels (H1–H6), accessible names, and links.
-//   • Choosing a heading moves focus to that heading (s.focus.region) and closes the panel.
-//   • Closing the panel (via Escape or Close button) returns focus to the 'Page outline' button.
-//   • Never changes headings' levels, tag names, or text content.
-//   • The panel never covers the content it points to; it sits in a corner and closes on activation.
-//   • Ends the session and returns false if there are no landmarks to add and no headings.
+//   • Adds missing landmarks (main, navigation, banner, contentinfo) with ARIA roles only
+//     where the page has none and the region is unambiguous.
+//   • Gives a landmark role only to a <div> or <section>, never to a list (ul, ol) or a native element.
+//   • A header or footer inside an article, section, aside, main or nav is not the page's banner
+//     or contentinfo: it neither counts as one nor stops a region from being the main content.
+//   • Banner and contentinfo candidates follow the same rule as header and footer: not inside an
+//     article, section, aside, main or nav.
+//   • Takes the outermost candidate, never a part of it.
+//   • A copyright line alone does not make a footer (requires a footer hint).
+//   • The 'Page outline' button is added via s.focus.entry({ label: 'Page outline', onActivate }).
+//   • The heading outline is displayed in an accessible dialog panel (s.panel).
+//   • Headings' levels and text are never modified.
+//   • Gives headings ids only when the outline is opened, generating ids with s.setAttr so they
+//     are cleanly restored when the session ends.
+//   • Choosing a heading link moves focus to that heading (s.focus.region) and closes the panel.
+//   • Escape closes the panel and focus returns to the 'Page outline' entry button.
+//   • The panel never covers the content it points to; it has an accessible name and a Close button.
+//   • If there are no landmarks to add and no outline asked for (or no headings on the page),
+//     ends the session and returns false.
 //
 // What it cannot do:
-//   • Cannot fix heading hierarchy or missing heading text in page content.
-//   • Cannot infer landmarks on pages with ambiguous or fragmented layouts.
+//   • Cannot invent landmarks for arbitrary layouts where regions are ambiguous or absent.
+//   • Does not reorder headings or synthesize missing heading levels in author content.
 
-function isDivOrSection(el) {
-  if (!el || el.nodeType !== 1) return false;
-  const tag = el.tagName;
-  return tag === 'DIV' || tag === 'SECTION';
+const NON_TOP_ANCESTOR = 'article, section, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
+const NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
+const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon)\b/i;
+const NAV_HINT = /\b(nav|navbar|navigation)\b/i;
+const MAIN_ID = /^(main|content|main-?content|primary)$/i;
+
+function hint(re, el) {
+  const cls = el.getAttribute('class') || '';
+  const id = el.getAttribute('id') || '';
+  return re.test(cls) || re.test(id);
 }
 
-function isPageHeader(el) {
-  if (!el || el.tagName !== 'HEADER') return false;
-  return !el.closest('article, section, aside, main, nav, [role="article"], [role="region"], [role="complementary"], [role="main"], [role="navigation"]');
+function looksLikeNav(el) {
+  const cls = el.getAttribute('class') || '';
+  const id = el.getAttribute('id') || '';
+  if (NAV_HINT.test(id)) return true;
+  return cls.split(/\s+/).some((c) => /nav(bar|igation)?([-_]|$)/i.test(c));
 }
 
-function isPageFooter(el) {
-  if (!el || el.tagName !== 'FOOTER') return false;
-  return !el.closest('article, section, aside, main, nav, [role="article"], [role="region"], [role="complementary"], [role="main"], [role="navigation"]');
+function isTopLevelBanner(el) {
+  if (!el) return false;
+  if (el.getAttribute('role') === 'banner') return true;
+  if (el.tagName === 'HEADER') {
+    return !el.closest(NON_TOP_ANCESTOR);
+  }
+  return false;
+}
+
+function isTopLevelFooter(el) {
+  if (!el) return false;
+  if (el.getAttribute('role') === 'contentinfo') return true;
+  if (el.tagName === 'FOOTER') {
+    return !el.closest(NON_TOP_ANCESTOR);
+  }
+  return false;
 }
 
 function hasBanner(doc) {
-  if (doc.querySelector('[role="banner"]')) return true;
-  for (const h of doc.querySelectorAll('header')) {
-    if (isPageHeader(h)) return true;
-  }
-  return false;
+  return [...doc.querySelectorAll('header, [role="banner"]')].some(isTopLevelBanner);
 }
 
 function hasContentinfo(doc) {
-  if (doc.querySelector('[role="contentinfo"]')) return true;
-  for (const f of doc.querySelectorAll('footer')) {
-    if (isPageFooter(f)) return true;
-  }
-  return false;
+  return [...doc.querySelectorAll('footer, [role="contentinfo"]')].some(isTopLevelFooter);
 }
 
 function hasMain(doc) {
-  return Boolean(doc.querySelector('main, [role="main"]'));
+  return doc.querySelector('main, [role="main"]') !== null;
 }
 
 function hasNavigation(doc) {
-  return Boolean(doc.querySelector('nav, [role="navigation"]'));
+  return doc.querySelector('nav, [role="navigation"]') !== null;
 }
 
-function isLandmark(el) {
-  if (!el || el.nodeType !== 1) return false;
-  const tag = el.tagName;
-  if (tag === 'MAIN' || tag === 'NAV' || tag === 'ASIDE') return true;
-  if (tag === 'HEADER' && isPageHeader(el)) return true;
-  if (tag === 'FOOTER' && isPageFooter(el)) return true;
-  const role = (el.getAttribute('role') || '').toLowerCase();
-  return ['main', 'banner', 'contentinfo', 'navigation', 'complementary'].includes(role);
-}
-
-function isInsideLandmark(el) {
-  let p = el.parentElement;
-  while (p && p !== el.ownerDocument.body && p !== el.ownerDocument.documentElement) {
-    if (isLandmark(p)) return true;
-    p = p.parentElement;
-  }
-  return false;
-}
-
-function containsPageLandmarks(el) {
-  if (el.querySelector('main, [role="main"], [role="banner"], [role="contentinfo"]')) return true;
-  for (const h of el.querySelectorAll('header')) {
-    if (isPageHeader(h)) return true;
-  }
-  for (const f of el.querySelectorAll('footer')) {
-    if (isPageFooter(f)) return true;
-  }
-  return false;
-}
-
-const MAIN_ID = /^(main|content|main-?content|primary|main-area)$/i;
-
-function isMainCandidate(el) {
-  if (!isDivOrSection(el)) return false;
-  if (el.getAttribute('role')) return false;
-  if (isInsideLandmark(el)) return false;
-  if (containsPageLandmarks(el)) return false;
-  const isNamed = MAIN_ID.test(el.id || '') || (el.classList && (el.classList.contains('main') || el.classList.contains('content')));
-  const textLen = el.textContent?.trim().length || 0;
-  if (!isNamed && textLen <= 100) return false;
-  if (isNamed && textLen <= 20) return false;
+function addBanner(s, doc) {
+  if (hasBanner(doc)) return false;
+  let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
+    if (el.getAttribute('role')) return false;
+    if (el.closest(NON_TOP_ANCESTOR)) return false;
+    if (el.closest('[role="banner"], [role="contentinfo"]')) return false;
+    if (el.querySelector('main, [role="main"]')) return false;
+    if (!hint(HEADER_HINT, el) || hint(NOT_HEADER, el)) return false;
+    if ((el.textContent?.trim().length || 0) >= 2000) return false;
+    return true;
+  });
+  candidates = candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el)));
+  if (candidates.length === 0) return false;
+  const target = candidates[0];
+  s.setAttr(target, 'role', 'banner');
   return true;
 }
 
-function findMain(doc) {
-  if (hasMain(doc)) return null;
-  const body = doc.body;
-  if (!body) return null;
+function addContentinfo(s, doc) {
+  if (hasContentinfo(doc)) return false;
+  let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
+    if (el.getAttribute('role')) return false;
+    if (el.closest(NON_TOP_ANCESTOR)) return false;
+    if (el.closest('[role="banner"], [role="contentinfo"]')) return false;
+    if (el.querySelector('main, [role="main"], nav, [role="navigation"], header, [role="banner"]')) return false;
+    if (!hint(FOOTER_HINT, el)) return false;
+    if ((el.textContent?.trim().length || 0) >= 1500) return false;
+    return true;
+  });
+  candidates = candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el)));
+  if (candidates.length === 0) return false;
+  const target = candidates[candidates.length - 1];
+  s.setAttr(target, 'role', 'contentinfo');
+  return true;
+}
 
-  let candidates = Array.from(body.children).filter(isMainCandidate);
+function addNavigation(s, doc) {
+  if (hasNavigation(doc)) return false;
+  let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
+    if (el.getAttribute('role')) return false;
+    if (el.closest('nav, [role="navigation"]')) return false;
+    if (!looksLikeNav(el)) return false;
+    const links = el.querySelectorAll('a').length;
+    const textLength = el.textContent?.trim().length || 1;
+    if (links < 3 || (links * 15) / textLength <= 0.5) return false;
+    return true;
+  });
+  candidates = candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el)));
+  if (candidates.length === 0) return false;
+  let count = 0;
+  for (const target of candidates) {
+    s.setAttr(target, 'role', 'navigation');
+    count++;
+  }
+  return count > 0;
+}
 
-  if (candidates.length === 0) {
-    const shell = Array.from(body.children).find((el) =>
-      isDivOrSection(el) &&
-      !isInsideLandmark(el) &&
-      (el.textContent?.trim().length || 0) > 100 &&
-      containsPageLandmarks(el)
-    );
-    if (shell) {
-      candidates = Array.from(shell.children).filter(isMainCandidate);
+function containsTopLevelBannerOrFooter(el) {
+  const headers = [...el.querySelectorAll('header, [role="banner"]')];
+  if (headers.some(isTopLevelBanner)) return true;
+  const footers = [...el.querySelectorAll('footer, [role="contentinfo"]')];
+  if (footers.some(isTopLevelFooter)) return true;
+  return false;
+}
+
+function addMain(s, doc) {
+  if (hasMain(doc)) return false;
+
+  const LANDMARK_ANCESTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+
+  let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
+    if (el.getAttribute('role')) return false;
+    if ((el.textContent?.trim().length || 0) <= 100) return false;
+    const closestLandmark = el.closest(LANDMARK_ANCESTOR);
+    if (closestLandmark) {
+      if (closestLandmark.tagName === 'HEADER' && !isTopLevelBanner(closestLandmark)) {
+        // Not a top-level landmark
+      } else if (closestLandmark.tagName === 'FOOTER' && !isTopLevelFooter(closestLandmark)) {
+        // Not a top-level landmark
+      } else {
+        return false;
+      }
     }
-  }
+    if (containsTopLevelBannerOrFooter(el)) return false;
+    if (el.querySelector('main, [role="main"]')) return false;
+    return true;
+  });
 
-  if (candidates.length === 0) {
-    const namedEls = Array.from(body.querySelectorAll('div, section')).filter(isMainCandidate);
-    candidates = namedEls.filter((el) =>
-      MAIN_ID.test(el.id || '') ||
-      (el.classList && (el.classList.contains('main') || el.classList.contains('content')))
-    );
-  }
+  candidates = candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el)));
+  if (candidates.length === 0) return false;
 
-  if (candidates.length === 0) return null;
+  const named = candidates.filter((el) => {
+    const id = el.getAttribute('id') || '';
+    if (MAIN_ID.test(id)) return true;
+    const cls = el.getAttribute('class') || '';
+    return cls.split(/\s+/).some((c) => /^(main|content)$/i.test(c));
+  });
 
-  const named = candidates.filter((el) =>
-    MAIN_ID.test(el.id || '') ||
-    (el.classList && (el.classList.contains('main') || el.classList.contains('content')))
-  );
   const pool = named.length > 0 ? named : candidates;
-  return pool.reduce((a, b) => ((a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b));
-}
+  const target = pool.reduce((a, b) =>
+    (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b
+  );
 
-const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar|site-header|page-header)\b/i;
-const NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo|modal|dialog/i;
-
-function findBanner(doc) {
-  if (hasBanner(doc)) return null;
-  const candidates = Array.from(doc.querySelectorAll('div, section'))
-    .filter(isDivOrSection)
-    .filter((e) => !e.getAttribute('role'))
-    .filter((e) => !isInsideLandmark(e))
-    .filter((e) => {
-      const hintStr = (e.className || '') + ' ' + (e.id || '');
-      return HEADER_HINT.test(hintStr) && !NOT_HEADER.test(hintStr);
-    })
-    .filter((e) => !e.querySelector('main, [role="main"]'))
-    .filter((e) => (e.textContent?.trim().length || 0) < 2500);
-
-  return candidates[0] || null;
-}
-
-const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon|site-info)\b/i;
-const COPYRIGHT_RE = /©|\(c\)\s*\d|copyright|all rights reserved/i;
-
-function findContentinfo(doc) {
-  if (hasContentinfo(doc)) return null;
-  const candidates = Array.from(doc.querySelectorAll('div, section'))
-    .filter(isDivOrSection)
-    .filter((e) => !e.getAttribute('role'))
-    .filter((e) => !isInsideLandmark(e))
-    .filter((e) => {
-      const hintStr = (e.className || '') + ' ' + (e.id || '');
-      if (/cookie|consent|banner|header/i.test(hintStr)) return false;
-      return FOOTER_HINT.test(hintStr) || COPYRIGHT_RE.test((e.textContent || '').slice(-400));
-    })
-    .filter((e) => !e.querySelector('main, [role="main"], nav, [role="navigation"]'))
-    .filter((e) => (e.textContent?.trim().length || 0) < 2500);
-
-  return candidates[candidates.length - 1] || null;
-}
-
-const NAV_HINT = /\b(nav|navbar|navigation|site-nav|main-nav|primary-nav|menu-bar)\b/i;
-
-function findNavigation(doc) {
-  if (hasNavigation(doc)) return null;
-  const candidates = Array.from(doc.querySelectorAll('div, section'))
-    .filter(isDivOrSection)
-    .filter((e) => !e.getAttribute('role'))
-    .filter((e) => !isInsideLandmark(e))
-    .filter((e) => {
-      const hintStr = (e.className || '') + ' ' + (e.id || '');
-      return NAV_HINT.test(hintStr) && !/unavailable|navigate/i.test(hintStr);
-    })
-    .filter((e) => {
-      const links = e.querySelectorAll('a').length;
-      if (links < 2) return false;
-      const textLen = e.textContent?.trim().length || 1;
-      return (links * 15) / textLen > 0.2 || Boolean(e.querySelector('ul, ol'));
-    });
-
-  return candidates[0] || null;
+  s.setAttr(target, 'role', 'main');
+  return true;
 }
 
 export default {
+  s: null,
+  options: null,
+  toolkit: null,
+  panel: null,
+  entryBtn: null,
+
   enable(options = {}, toolkit) {
     if (this.s && !this.s.ended) return;
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
+
     const s = (this.s = this.toolkit.session());
-
     const doc = document;
+
     let landmarksAdded = 0;
-
     if (this.options.landmarks !== false) {
-      const banner = findBanner(doc);
-      if (banner) {
-        s.setAttr(banner, 'role', 'banner');
-        landmarksAdded++;
-      }
-
-      const nav = findNavigation(doc);
-      if (nav) {
-        s.setAttr(nav, 'role', 'navigation');
-        landmarksAdded++;
-      }
-
-      const main = findMain(doc);
-      if (main) {
-        s.setAttr(main, 'role', 'main');
-        landmarksAdded++;
-      }
-
-      const footer = findContentinfo(doc);
-      if (footer) {
-        s.setAttr(footer, 'role', 'contentinfo');
-        landmarksAdded++;
-      }
+      if (addBanner(s, doc)) landmarksAdded++;
+      if (addContentinfo(s, doc)) landmarksAdded++;
+      if (addNavigation(s, doc)) landmarksAdded++;
+      if (addMain(s, doc)) landmarksAdded++;
     }
 
-    const maxLevel = typeof this.options.maxLevel === 'number' ? this.options.maxLevel : 6;
-    const initialHeadings = s.page.headings({ maxLevel });
+    const wantOutline = this.options.outline !== false;
+    const maxLevel = this.options.maxLevel || 6;
+    const headings = wantOutline ? this.toolkit.page.headings({ maxLevel }) : [];
 
-    if (landmarksAdded === 0 && initialHeadings.length === 0) {
+    if (landmarksAdded === 0 && (!wantOutline || headings.length === 0)) {
       this.disable();
       return false;
     }
 
-    if (this.options.outline !== false) {
-      s.css(
-        'ai4a11y-structure-styles',
-        `
+    if (wantOutline && headings.length > 0) {
+      s.css('structure-outline', `
 .ai4a11y-outline-list {
   list-style: none !important;
   margin: 0 !important;
   padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
 }
 .ai4a11y-outline-item {
-  margin: 2px 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   list-style: none !important;
 }
 .ai4a11y-outline-item[data-level="1"] { padding-left: 0 !important; }
@@ -280,146 +254,139 @@ export default {
 .ai4a11y-outline-item[data-level="4"] { padding-left: 36px !important; }
 .ai4a11y-outline-item[data-level="5"] { padding-left: 48px !important; }
 .ai4a11y-outline-item[data-level="6"] { padding-left: 60px !important; }
-
 .ai4a11y-outline-link {
-  all: revert !important;
   display: flex !important;
-  align-items: baseline !important;
+  align-items: center !important;
   gap: 8px !important;
-  min-height: 28px !important;
-  padding: 4px 6px !important;
-  color: #0b3d91 !important;
-  background: transparent !important;
-  text-decoration: underline !important;
+  min-height: 32px !important;
+  padding: 4px 8px !important;
   border-radius: 4px !important;
-  font: 500 14px/1.4 system-ui, -apple-system, sans-serif !important;
-  box-sizing: border-box !important;
+  color: inherit !important;
+  text-decoration: underline !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
 }
 .ai4a11y-outline-link:hover {
-  background: rgba(0, 0, 0, 0.05) !important;
-  text-decoration: none !important;
-}
-.ai4a11y-outline-link:focus-visible {
-  outline: 3px solid #1a5fb4 !important;
-  outline-offset: 2px !important;
+  background: rgba(0, 0, 0, 0.06) !important;
 }
 .ai4a11y-outline-level {
-  display: inline-block !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
   padding: 2px 5px !important;
-  background: #e2e8f0 !important;
-  color: #1e293b !important;
+  border: 1px solid currentColor !important;
   border-radius: 3px !important;
   flex-shrink: 0 !important;
-  text-decoration: none !important;
+  letter-spacing: 0.5px !important;
 }
 .ai4a11y-outline-text {
-  flex-grow: 1 !important;
   word-break: break-word !important;
 }
-.ai4a11y-outline-empty {
-  margin: 8px 0 !important;
-  font-style: italic !important;
-  color: #4b5563 !important;
-}
-`
-      );
+`);
 
-      const panel = s.panel({
+      this.panel = s.panel({
         kind: 'dialog',
         label: 'Page outline',
         corner: 'bottom-right',
-        width: 340,
-        theme: 'page',
+        width: 360,
       });
 
-      let headingIdSeq = 0;
-      const renderOutline = () => {
-        panel.body.replaceChildren();
-        const currentHeadings = s.page.headings({ maxLevel });
-        if (currentHeadings.length === 0) {
-          const empty = s.el('p', {
-            text: 'No headings on this page',
-            attrs: { class: 'ai4a11y-outline-empty' },
-          });
-          panel.body.append(empty);
-          return;
-        }
-
-        const list = s.el('ul', {
-          attrs: {
-            role: 'list',
-            class: 'ai4a11y-outline-list',
-          },
-        });
-
-        for (const h of currentHeadings) {
-          if (!h.el.id) {
-            let hid = `ai4a11y-heading-${++headingIdSeq}`;
-            while (doc.getElementById(hid)) {
-              hid = `ai4a11y-heading-${++headingIdSeq}`;
-            }
-            s.setAttr(h.el, 'id', hid);
-          }
-
-          const item = s.el('li', {
-            attrs: {
-              class: 'ai4a11y-outline-item',
-              'data-level': String(h.level),
-            },
-          });
-
-          const link = s.el('a', {
-            attrs: {
-              class: 'ai4a11y-outline-link',
-              href: `#${h.el.id}`,
-              'data-level': String(h.level),
-            },
-          });
-
-          const badge = s.el('span', {
-            text: `H${h.level}`,
-            attrs: { class: 'ai4a11y-outline-level' },
-          });
-
-          const textSpan = s.el('span', {
-            text: h.text || `Heading level ${h.level}`,
-            attrs: { class: 'ai4a11y-outline-text' },
-          });
-
-          link.append(badge, ' ', textSpan);
-
-          s.listen(link, 'click', (e) => {
-            e.preventDefault();
-            s.focus.region(h.el);
-            panel.close();
-          });
-
-          item.append(link);
-          list.append(item);
-        }
-
-        panel.body.append(list);
-      };
-
-      renderOutline();
-
-      const entryBtn = s.focus.entry({
+      this.entryBtn = s.focus.entry({
         label: 'Page outline',
-        onActivate: () => {
-          renderOutline();
-          panel.open(entryBtn);
-        },
+        onActivate: () => this.openOutline(),
       });
     }
+  },
 
-    return true;
+  openOutline() {
+    if (!this.panel) return;
+    if (this.panel.isOpen) {
+      this.panel.close();
+      return;
+    }
+    this.renderOutline();
+    this.panel.open(this.entryBtn);
+  },
+
+  renderOutline() {
+    const s = this.s;
+    if (!s || s.ended || !this.panel) return;
+    const doc = document;
+    const maxLevel = this.options.maxLevel || 6;
+    const headings = this.toolkit.page.headings({ maxLevel });
+
+    this.panel.body.replaceChildren();
+
+    if (headings.length === 0) {
+      const empty = s.el('p', { text: 'No headings on this page' });
+      this.panel.body.append(empty);
+      return;
+    }
+
+    const list = s.el('ul', {
+      attrs: {
+        class: 'ai4a11y-outline-list',
+        role: 'list',
+      },
+    });
+
+    let n = 0;
+    for (const h of headings) {
+      if (!h.el.id) {
+        let id;
+        do {
+          id = `ai4a11y-heading-${++n}`;
+        } while (doc.getElementById(id));
+        s.setAttr(h.el, 'id', id);
+      }
+
+      const item = s.el('li', {
+        attrs: {
+          class: 'ai4a11y-outline-item',
+          'data-level': String(h.level),
+        },
+      });
+
+      const link = s.el('a', {
+        attrs: {
+          href: `#${h.el.id}`,
+          class: 'ai4a11y-outline-link',
+          'data-level': String(h.level),
+        },
+      });
+
+      const badge = s.el('span', {
+        text: `H${h.level}`,
+        attrs: { class: 'ai4a11y-outline-level' },
+      });
+
+      const textSpan = s.el('span', {
+        text: h.text || h.el.textContent.replace(/\s+/g, ' ').trim(),
+        attrs: { class: 'ai4a11y-outline-text' },
+      });
+
+      link.append(badge, textSpan);
+
+      s.listen(link, 'click', (e) => {
+        e.preventDefault();
+        s.focus.region(h.el);
+        this.panel.close();
+      });
+
+      item.append(link);
+      list.append(item);
+    }
+
+    this.panel.body.append(list);
   },
 
   disable() {
     this.s?.end();
     this.s = null;
+    this.panel = null;
+    this.entryBtn = null;
   },
 };

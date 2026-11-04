@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal With Built-in Skip Link</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      color: #0f172a;
+      background: #ffffff;
+    }
+    a.skip-link {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    a.skip-link:focus {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      width: auto;
+      height: auto;
+      margin: 0;
+      padding: 10px 16px;
+      overflow: visible;
+      clip: auto;
+      clip-path: none;
+      background: #ffffff;
+      color: #1a5fb4;
+      border: 2px solid #1a5fb4;
+      border-radius: 4px;
+      font-weight: 600;
+      text-decoration: underline;
+      z-index: 10000;
+    }
+    header {
+      background: #1e293b;
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+    }
+    nav a {
+      color: #1d4ed8;
+      text-decoration: underline;
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    main {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+    }
+    button {
+      background: #1d4ed8;
+      color: #ffffff;
+      border: 2px solid transparent;
+      padding: 0.625rem 1.25rem;
+      min-height: 44px;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link" id="existing-skip-link">Skip to main content</a>
+
+  <header>
+    <h1>Organizational Hub</h1>
+  </header>
+
+  <div class="container">
+    <nav aria-label="Site Navigation">
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#documents">Documents</a></li>
+      </ul>
+    </nav>
+
+    <main id="main">
+      <h2>Main Workspace</h2>
+      <p id="prose-content">This page already features an accessible, working skip link as its first focusable control.</p>
+      <button type="button" id="btn-action">Perform Action</button>
+    </main>
+  </div>
+</body>
+</html>

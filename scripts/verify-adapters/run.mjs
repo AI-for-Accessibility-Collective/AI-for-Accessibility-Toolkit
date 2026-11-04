@@ -156,9 +156,10 @@ function rubricLines(b, whose) {
 // The success criteria whose rubric an agent read: a wcag_rubric call of
 // its own, one inside a script it ran (opencode lists those in the event's
 // metadata), or a rubric's text in what a call returned.
-const RUBRIC_READ = /Analyze compliance with WCAG SC ([0-9]+\.[0-9]+\.[0-9]+)/g;
+// (A function, not a constant: the agents start from code above this line.)
 function rubricsRead(e, read) {
   if (e.type !== 'tool_use') return;
+  const RUBRIC_READ = /Analyze compliance with WCAG SC ([0-9]+\.[0-9]+\.[0-9]+)/g;
   const st = e.part?.state || {};
   const done = (tool, call) => /wcag_rubric$/.test(String(tool)) && call.status === 'completed' && call.input?.sc;
   for (const m of String(st.output ?? '').matchAll(RUBRIC_READ)) read.add(m[1]);

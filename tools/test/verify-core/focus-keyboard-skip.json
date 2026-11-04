@@ -1,0 +1,19 @@
+{
+  "name": "focus-keyboard-skip",
+  "file": "tools/core-adapters/focus-keyboard.js",
+  "page": "focus-keyboard-skip.html",
+  "checks": [
+    {
+      "name": "on a page with its own skip link, enable() adds none",
+      "code": "\n        const entries = document.querySelector('[data-ai4a11y-entries]');\n        if (entries) return false;\n        const skipButtons = document.querySelectorAll('.ai4a11y-entry');\n        if (skipButtons.length > 0) return false;\n        const existing = document.getElementById('existing-skip-link');\n        if (!existing) return false;\n        return true;\n      "
+    },
+    {
+      "name": "focus ring still activates on focusable elements on page with existing skip link",
+      "code": "\n        const btn = document.getElementById('btn-action');\n        if (!btn) return false;\n        btn.focus();\n        const st = window.getComputedStyle(btn);\n        const hasOutline = parseFloat(st.outlineWidth) >= 2;\n        const hasShadow = st.boxShadow.includes('rgb(26, 95, 180)');\n        btn.blur();\n        return hasOutline || hasShadow;\n      "
+    },
+    {
+      "name": "page own skip link remains in place and functional",
+      "code": "\n        const existing = document.getElementById('existing-skip-link');\n        if (!existing) return false;\n        return existing.getAttribute('href') === '#main';\n      "
+    }
+  ]
+}
