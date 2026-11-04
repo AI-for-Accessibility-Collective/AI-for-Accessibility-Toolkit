@@ -24,15 +24,23 @@
 //     is typing, not an action; click, non-field keydown, and submit count as actions.
 //   • Announce only what reads as a message (role, class, id, or name says status, alert,
 //     error, notice, message, toast, warn, notification, snackbar) or content appearing within ACTION_MS of a user action.
-//   • Route changes announce the new view's heading (inspecting main for top-level view headings
-//     h1-h6 or role="heading" before falling back to document h1) or title, not its full content,
-//     and cancel any pending route announcement when a new route arrives.
+//     A class, id or name is read as words (errorMessage, form-errors, FormError2), never as a substring.
+//   • Route changes announce the new view's heading, not its content, and cancel any pending
+//     route announcement when a new route arrives. The view's heading is found from what changed:
+//     it remembers the headings shown at enable() and after each route, and takes one that was
+//     not shown then or whose text changed (in main first, then the highest level, then the first).
+//     A heading mounted again with text already shown counts only when nothing else changed and
+//     the title did not either. Otherwise it says the title. Headings drawn while no route change
+//     is pending count as shown. It never decides from container names.
 //   • Does not watch characterData: text changing inside existing content on its own is never announced.
 //   • Ignores content outside the viewport and inside iframes.
 //
 // What it cannot do:
 //   • Cannot observe or announce updates inside cross-origin iframes.
 //   • Cannot detect status conveyed purely through CSS styling, canvas, or video without DOM changes.
+//   • A view that draws its heading more than 100 ms after the address changes (after a fetch),
+//     or more than about 50 ms before it, is announced by its title. A heading whose text the
+//     page changes in place between two routes counts as changed at the next route.
 
 const ACTION_MS = 3000;
 const PAGE_SPOKE_MS = 2000;
@@ -42,7 +50,9 @@ const MAX_LINES = 3;
 
 const LIVE_SELECTOR = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"], [role="timer"], [role="marquee"], output';
 const INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
-const MESSAGE_REGEX = /(?:^|[^a-zA-Z0-9])(status(?:es)?|alerts?|errors?|notices?|messages?|toasts?|warn(?:ing)?s?|snackbars?|notifications?)(?:$|[^a-zA-Z0-9])/i;
+const HEADINGS = 'h1, h2, h3, h4, h5, h6, [role="heading" i]';
+// One word of a class, id or name that says message (singular or plural).
+const MESSAGE_WORD = /^(?:status(?:es)?|alerts?|errors?|notices?|messages?|toasts?|warn(?:ing)?s?|snackbars?|notifications?)$/;
 const CANDIDATE_SELECTOR = 'output, [role="status"], [role="alert"], [class*="status" i], [class*="alert" i], [class*="error" i], [class*="notice" i], [class*="message" i], [class*="toast" i], [class*="warn" i], [class*="notification" i], [class*="snackbar" i], [id*="status" i], [id*="alert" i], [id*="error" i], [id*="notice" i], [id*="message" i], [id*="toast" i], [id*="warn" i], [id*="notification" i], [id*="snackbar" i], [name*="status" i], [name*="alert" i], [name*="error" i], [name*="notice" i], [name*="message" i], [name*="toast" i], [name*="warn" i], [name*="notification" i], [name*="snackbar" i]';
 
 function isTextField(el) {
@@ -90,19 +100,29 @@ function inViewport(el) {
   return rect.bottom > 0 && rect.right > 0 && rect.top < vh && rect.left < vw;
 }
 
+// Whether a class, id or name has a message word in it, read as the words it
+// is written in: split at anything but letters and digits, at a lower-case
+// letter or digit before a capital (errorMessage, FormError), between
+// letters and digits (error2), so kebab, snake, camel and Pascal case and
+// plurals are one rule. A longer word that starts like one (noticeboard) is not.
+function saysMessage(str) {
+  if (!str) return false;
+  const words = String(str)
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/([a-zA-Z])([0-9])|([0-9])([a-zA-Z])/g, '$1$3 $2$4')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/);
+  return words.some((w) => MESSAGE_WORD.test(w));
+}
+
 function isMessageElement(el) {
   if (!el || el.nodeType !== 1) return false;
   const tag = el.tagName.toLowerCase();
   if (tag === 'output') return true;
   const role = (el.getAttribute('role') || '').toLowerCase().trim();
   if (role === 'status' || role === 'alert') return true;
-  const cls = el.getAttribute('class');
-  if (cls && MESSAGE_REGEX.test(cls)) return true;
-  const id = el.id;
-  if (id && MESSAGE_REGEX.test(id)) return true;
-  const name = el.getAttribute('name');
-  if (name && MESSAGE_REGEX.test(name)) return true;
-  return false;
+  return saysMessage(el.getAttribute('class')) || saysMessage(el.id) || saysMessage(el.getAttribute('name'));
 }
 
 function findMessage(el) {
@@ -155,119 +175,55 @@ function summarize(el, s) {
   return text;
 }
 
-function findRouteAnnouncement(s, state = {}) {
-  const isVisible = (el) => {
-    if (!el || el.nodeType !== 1) return false;
-    if (s?.page?.isOurs && s.page.isOurs(el)) return false;
-    if (el.closest('[hidden], [aria-hidden="true"], iframe')) return false;
-    if (typeof el.checkVisibility === 'function' && !el.checkVisibility()) return false;
-    return true;
+// The headings the person can read now, as the page marks them up (the
+// page block's headings(): visible, not the toolkit's): element → { text, level }.
+function shownHeadings(s) {
+  const out = new Map();
+  for (const h of s.page.headings()) {
+    const text = (h.text || '').replace(/\s+/g, ' ').trim();
+    if (text) out.set(h.el, { text, level: h.level });
+  }
+  return out;
+}
+
+// Headings drawn while no route change is pending belong to the view the
+// person is already on (an app that draws itself after enable(), more of a
+// feed): note the shown ones as seen, so the next route does not take them
+// for its view's heading.
+function noteHeadings(s, seen, el) {
+  // A long feed with no route change: forget the headings it took away.
+  if (seen.size > 1000) for (const h of seen.keys()) if (!h.isConnected) seen.delete(h);
+  const list = el.matches(HEADINGS) ? [el] : [];
+  list.push(...el.querySelectorAll(HEADINGS));
+  for (const h of list) {
+    if (!s.page.isVisible(h) || h.closest('[aria-hidden="true"]')) continue;
+    const text = (s.page.nameOf(h) || '').replace(/\s+/g, ' ').trim();
+    if (text) seen.set(h, { text, level: 0 });
+  }
+}
+
+// What a route change says. The new view's heading is found from what
+// changed since the last route (or enable()), not from what containers are
+// called: a heading that was not shown then (added, or no longer hidden) or
+// whose text changed. One whose text was already shown (a header mounted
+// again) counts only when nothing else changed and the title did not
+// either. Among them: those in the main landmark if any is, then the
+// highest level, then the first in the page. Otherwise the title.
+function routeAnnouncement(s, seen, lastTitle) {
+  const now = shownHeadings(s);
+  const seenTexts = new Set([...seen.values()].map((h) => h.text));
+  const changed = [...now].filter(([el, h]) => seen.get(el)?.text !== h.text);
+  const fresh = changed.filter(([, h]) => !seenTexts.has(h.text));
+  const main = [...document.querySelectorAll('main, [role="main" i]')].find((el) => s.page.isVisible(el) && !s.page.isOurs(el));
+  const pick = (list) => {
+    const inMain = main ? list.filter(([el]) => main.contains(el)) : [];
+    let best = null;
+    for (const entry of inMain.length ? inMain : list) if (!best || entry[1].level < best[1].level) best = entry;
+    return best ? best[1].text : '';
   };
-
-  const isViewContainer = (el) => Boolean(
-    el && el.closest?.('[id*="view" i], [class*="view" i], [id*="route" i], [class*="route" i], [id*="page" i], [class*="page" i], [data-view], [data-route]')
-  );
-
-  const clean = (str) => (str || '').replace(/\s+/g, ' ').trim();
-  const titleText = clean(document.title);
-
-  let lastMain = '';
-  let lastDoc = '';
-  let lastTitle = '';
-  let knownHeadings = null;
-  if (typeof state === 'object' && state !== null) {
-    lastMain = state.mainHeading || '';
-    lastDoc = state.docHeading || '';
-    lastTitle = state.title || '';
-    knownHeadings = state.knownHeadings || null;
-  } else if (typeof state === 'string') {
-    lastMain = state;
-    lastDoc = state;
-  }
-
-  const currentHeadings = new Set();
-
-  // Filter for visible headings in the main landmark or view container first:
-  // inspect main for top-level view headings (h1-h6 or [role="heading"])
-  const main = document.querySelector('main, [role="main"]');
-  let mainHeading = null;
-  if (main) {
-    const candidatesH1 = Array.from(main.querySelectorAll('h1, [role="heading"][aria-level="1"]')).filter(isVisible);
-    const candidatesOther = Array.from(main.querySelectorAll('h2, h3, h4, h5, h6, [role="heading"]')).filter(isVisible);
-
-    for (const c of candidatesH1) {
-      const t = clean(c.textContent);
-      if (t) currentHeadings.add(t);
-    }
-    for (const c of candidatesOther) {
-      const t = clean(c.textContent);
-      if (t) currentHeadings.add(t);
-    }
-
-    const pickHeading = (list) => {
-      // 1. Heading inside a view container that differs from lastMain
-      for (const c of list) {
-        const t = clean(c.textContent);
-        if (t && t !== lastMain && isViewContainer(c)) return c;
-      }
-      // 2. Heading whose text was not in knownHeadings (newly mounted)
-      if (knownHeadings && knownHeadings.size > 0) {
-        for (const c of list) {
-          const t = clean(c.textContent);
-          if (t && t !== lastMain && !knownHeadings.has(t)) return c;
-        }
-      }
-      return null;
-    };
-
-    mainHeading = pickHeading(candidatesH1);
-    if (!mainHeading) {
-      mainHeading = pickHeading(candidatesOther);
-    }
-
-    // Fallback if no heading differed: keep first visible heading
-    if (!mainHeading) {
-      mainHeading = candidatesH1[0] || candidatesOther[0] || null;
-    }
-  }
-
-  // Fallback visible h1 in document
-  let docH1 = null;
-  const docCandidates = Array.from(document.querySelectorAll('h1, [role="heading"][aria-level="1"]')).filter(isVisible);
-  for (const c of docCandidates) {
-    const t = clean(c.textContent);
-    if (t) currentHeadings.add(t);
-  }
-  for (const c of docCandidates) {
-    const t = clean(c.textContent);
-    if (t && t !== lastDoc) { docH1 = c; break; }
-  }
-  if (!docH1 && docCandidates.length) {
-    docH1 = docCandidates[0];
-  }
-
-  const mainHeadingText = mainHeading ? clean(mainHeading.textContent) : '';
-  const docH1Text = docH1 ? clean(docH1.textContent) : '';
-
-  let text = '';
-  if (mainHeadingText && mainHeadingText !== lastMain) {
-    text = mainHeadingText;
-  } else if (docH1Text && docH1Text !== lastDoc) {
-    text = docH1Text;
-  } else if (titleText && titleText !== lastTitle) {
-    text = titleText;
-  } else {
-    text = mainHeadingText || docH1Text || titleText;
-  }
-
-  return {
-    text,
-    heading: mainHeadingText || docH1Text,
-    mainHeading: mainHeadingText,
-    docHeading: docH1Text,
-    title: titleText,
-    headings: currentHeadings
-  };
+  const title = (document.title || '').replace(/\s+/g, ' ').trim();
+  const text = pick(fresh) || (title !== lastTitle ? title : '') || pick(changed) || title;
+  return { text, headings: now, title };
 }
 
 function joinTexts(items) {
@@ -305,19 +261,9 @@ export default {
     this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
-    this.knownHeadings = new Set();
-
-    const initial = findRouteAnnouncement(s, {
-      mainHeading: '',
-      docHeading: '',
-      title: '',
-      knownHeadings: new Set()
-    });
-    this.lastMainHeading = initial.mainHeading || '';
-    this.lastDocHeading = initial.docHeading || '';
-    this.lastRouteHeading = initial.heading || '';
-    this.lastRouteTitle = initial.title || '';
-    this.knownHeadings = initial.headings || new Set();
+    // What the page shows now: the next route's view heading is what changes.
+    this.seenHeadings = shownHeadings(s);
+    this.lastTitle = (document.title || '').replace(/\s+/g, ' ').trim();
 
     // Listen for actions: click, keydown (not in text fields), submit
     s.listen(document, 'submit', () => {
@@ -348,17 +294,9 @@ export default {
         this.routeTimer = null;
         if (!this.s || this.s.ended) return;
 
-        const res = findRouteAnnouncement(this.s, {
-          mainHeading: this.lastMainHeading,
-          docHeading: this.lastDocHeading,
-          title: this.lastRouteTitle,
-          knownHeadings: this.knownHeadings
-        });
-        if (res.mainHeading) this.lastMainHeading = res.mainHeading;
-        if (res.docHeading) this.lastDocHeading = res.docHeading;
-        if (res.heading) this.lastRouteHeading = res.heading;
-        if (res.title) this.lastRouteTitle = res.title;
-        if (res.headings) this.knownHeadings = res.headings;
+        const res = routeAnnouncement(this.s, this.seenHeadings, this.lastTitle);
+        this.seenHeadings = res.headings;
+        this.lastTitle = res.title;
         if (res.text) {
           this.s.announce(res.text, { politeness: 'polite' });
         }
@@ -376,6 +314,10 @@ export default {
     const list = Array.isArray(elements) ? elements : [elements];
     const now = Date.now();
     const answering = now - this.lastAction < ACTION_MS;
+
+    if (!this.routeTimer && this.seenHeadings) {
+      for (const el of list) if (el?.nodeType === 1 && el.isConnected) noteHeadings(this.s, this.seenHeadings, el);
+    }
 
     // Track affected containers in this batch to detect tickers
     const touchedContainers = new Set();
@@ -516,13 +458,10 @@ export default {
     this.pendingItems = [];
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
-    this.knownHeadings = null;
+    this.seenHeadings = null;
     this.lastAction = 0;
     this.pageSpokeAt = 0;
-    this.lastMainHeading = '';
-    this.lastDocHeading = '';
-    this.lastRouteHeading = '';
-    this.lastRouteTitle = '';
+    this.lastTitle = '';
     this.s.end();
     this.s = null;
   },
