@@ -12,11 +12,14 @@
 // - Prints the address to open on a phone.
 
 import http from 'node:http';
-import { createReadStream } from 'node:fs';
-import { stat, readdir } from 'node:fs/promises';
-import { networkInterfaces } from 'node:os';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { stat, readdir, mkdtemp, rm } from 'node:fs/promises';
+import { networkInterfaces, tmpdir } from 'node:os';
 import path from 'node:path';
+import { Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
+import { transcribeMedia, hasTranscriptionKey } from './transcribe.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '../..');
@@ -25,6 +28,24 @@ const PLAYER = '/examples/captionflow/player/';
 
 const argPort = process.argv.indexOf('--port');
 const PORT = Number(argPort > -1 ? process.argv[argPort + 1] : process.env.PORT) || 8080;
+
+const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
+const ALLOW_MOCK = process.env.CAPTIONFLOW_ALLOW_MOCK === '1';
+const LANGUAGES = new Set(['en', 'sw', 'auto']);
+let transcribing = false;
+
+class TooLargeError extends Error {}
+
+function sizeLimit(max) {
+  let seen = 0;
+  return new Transform({
+    transform(chunk, _encoding, done) {
+      seen += chunk.length;
+      if (seen > max) return done(new TooLargeError('This file is larger than 1 GB.'));
+      done(null, chunk);
+    },
+  });
+}
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
@@ -83,6 +104,41 @@ function notFound(res) {
   res.end('Not found');
 }
 
+function sendJson(res, status, body) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+  res.end(JSON.stringify(body));
+}
+
+async function handleTranscribe(req, res, url) {
+  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Send the video with POST.' });
+  const providerName = url.searchParams.get('provider') ?? (ALLOW_MOCK && !hasTranscriptionKey() ? 'mock' : 'auto');
+  const lang = LANGUAGES.has(url.searchParams.get('lang')) ? url.searchParams.get('lang') : 'auto';
+  if (providerName === 'mock' && !ALLOW_MOCK) return sendJson(res, 400, { error: 'The mock provider is off on this server.' });
+  if (providerName !== 'mock' && !hasTranscriptionKey()) {
+    return sendJson(res, 503, { error: 'Captions cannot be created yet: this server has no transcription key.' });
+  }
+  const fileName = path.basename(decodeURIComponent(req.headers['x-filename'] || 'video'));
+  const extension = path.extname(fileName).toLowerCase();
+  if (!VIDEO_EXT.has(extension)) return sendJson(res, 415, { error: 'Choose a video file.' });
+  if (transcribing) return sendJson(res, 429, { error: 'Another video is being captioned. Try again in a few minutes.' });
+
+  transcribing = true;
+  let dir;
+  try {
+    dir = await mkdtemp(path.join(tmpdir(), 'captionflow-upload-'));
+    const file = path.join(dir, `upload${extension}`);
+    await pipeline(req, sizeLimit(MAX_UPLOAD_BYTES), createWriteStream(file));
+    const transcript = await transcribeMedia(file, { providerName, lang });
+    sendJson(res, 200, transcript);
+  } catch (e) {
+    console.error(e);
+    sendJson(res, e instanceof TooLargeError ? 413 : 500, { error: e.message });
+  } finally {
+    transcribing = false;
+    if (dir) await rm(dir, { recursive: true, force: true });
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
@@ -90,6 +146,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(302, { Location: PLAYER });
       return res.end();
     }
+    if (url.pathname === '/api/transcribe') return handleTranscribe(req, res, url);
     if (url.pathname === '/api/media') {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
       return res.end(JSON.stringify(await listMedia()));
@@ -108,8 +165,14 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.requestTimeout = 0;
+server.timeout = 0;
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log('CaptionFlow demo running.\n');
+  console.log(hasTranscriptionKey()
+    ? '  Captions: transcription key found.\n'
+    : '  Captions: no transcription key. Set GEMINI_API_KEY (or WHISPER_API_KEY) to create captions.\n');
   console.log(`  On this laptop:  http://localhost:${PORT}${PLAYER}`);
   for (const list of Object.values(networkInterfaces())) {
     for (const a of list || []) {

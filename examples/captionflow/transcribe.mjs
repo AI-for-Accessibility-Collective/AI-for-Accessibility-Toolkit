@@ -36,6 +36,7 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { mergeChunks, splitLongSegments, makeTranscript, toVTT, parseVTT } from '../../tools/utils/timed-transcript.js';
 
 // ---------------------------------------------------------------------------
@@ -69,6 +70,11 @@ function run(cmd, argv) {
     p.on('error', (e) => reject(new Error(`${cmd} not found or failed to start: ${e.message}`)));
     p.on('close', (code) => code === 0 ? resolve(out) : reject(new Error(`${cmd} exited ${code}: ${err.slice(-400)}`)));
   });
+}
+
+async function requireAudio(file) {
+  const out = await run('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index', '-of', 'csv=p=0', file]);
+  if (!out.trim()) throw new Error('This file has no audio track to transcribe.');
 }
 
 async function mediaDuration(file) {
@@ -237,6 +243,57 @@ function pickProvider(name) {
 // main
 // ---------------------------------------------------------------------------
 
+export function hasTranscriptionKey() {
+  return Boolean(process.env.GEMINI_API_KEY || process.env.WHISPER_API_KEY);
+}
+
+export async function transcribeMedia(input, { providerName, lang = 'auto', chunk, overlap = 2 } = {}) {
+  const provider = pickProvider(providerName);
+  await requireAudio(input);
+  const duration = await mediaDuration(input);
+  const chunkSec = Number(chunk) || provider.defaultChunk;
+  const overlapSec = Number(overlap);
+  const chunks = planChunks(duration, chunkSec, overlapSec);
+  console.log(`Transcribing ${path.basename(input)} (${duration.toFixed(1)} s) with ${provider.name}, language ${lang}, ${chunks.length} chunk(s)`);
+
+  const tmp = await mkdtemp(path.join(tmpdir(), 'captionflow-'));
+  const results = new Array(chunks.length);
+  const failures = [];
+  let next = 0;
+  const started = Date.now();
+  async function worker() {
+    while (next < chunks.length) {
+      const i = next++;
+      const c = chunks[i];
+      const audio = path.join(tmp, `chunk-${i}.${provider.format}`);
+      await extractChunk(input, c.offset, c.duration, audio, provider.format);
+      try {
+        const segments = await withRetry(() => provider.transcribe(audio, { lang, clipSec: c.duration, offset: c.offset }), `chunk ${i + 1}`);
+        results[i] = { ...c, segments };
+        console.log(`  chunk ${i + 1}/${chunks.length} (${c.offset.toFixed(0)}–${(c.offset + c.duration).toFixed(0)} s): ${segments.length} segment(s)`);
+      } catch (e) {
+        // A failed chunk is reported, never silently dropped: the gap is
+        // written into the transcript so the viewer sees that words are missing.
+        failures.push({ ...c, error: e.message });
+        results[i] = { ...c, segments: [{ start: 0, end: Math.min(c.duration, 3), text: '[captions unavailable for this part]', confidence: 0 }] };
+        console.warn(`  chunk ${i + 1} FAILED: ${e.message.split('\n')[0]}`);
+      }
+    }
+  }
+  try {
+    await Promise.all(Array.from({ length: Math.min(2, chunks.length) }, worker));
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+
+  const merged = splitLongSegments(mergeChunks(results));
+  const transcript = makeTranscript(merged, { language: lang, source: provider.name });
+  transcript.media = { file: path.basename(input), durationSec: Math.round(duration * 1000) / 1000 };
+  transcript.pipeline = { chunkSec, overlapSec, chunks: chunks.length, failedChunks: failures.length, seconds: Math.round((Date.now() - started) / 100) / 10 };
+  if (failures.length) console.warn(`${failures.length} chunk(s) failed; they are marked in the captions.`);
+  return transcript;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const input = args._[0];
@@ -247,56 +304,12 @@ async function main() {
   }
   const lang = ['en', 'sw', 'auto'].includes(args.lang) ? args.lang : 'auto';
   const base = path.basename(input || args['import-vtt']).replace(/\.[^.]+$/, '');
-  // Default: next to the input, so a video dropped in examples/captionflow/media/
-  // gets its captions beside it and the player lists the pair.
   const outDir = path.resolve(args.out && args.out !== true ? args.out : path.dirname(path.resolve(input || args['import-vtt'])));
   await mkdir(outDir, { recursive: true });
 
-  let transcript;
-  if (args['import-vtt']) {
-    const vtt = await readFile(args['import-vtt'], 'utf8');
-    transcript = makeTranscript(splitLongSegments(parseVTT(vtt)), { language: lang, source: 'vtt-import' });
-  } else {
-    const provider = pickProvider(args.provider);
-    const duration = await mediaDuration(input);
-    const chunkSec = Number(args.chunk) || provider.defaultChunk;
-    const overlapSec = args.overlap != null ? Number(args.overlap) : 2;
-    const chunks = planChunks(duration, chunkSec, overlapSec);
-    console.log(`Transcribing ${path.basename(input)} (${duration.toFixed(1)} s) with ${provider.name}, language ${lang}, ${chunks.length} chunk(s)`);
-
-    const tmp = await mkdtemp(path.join(tmpdir(), 'captionflow-'));
-    const results = new Array(chunks.length);
-    const failures = [];
-    let next = 0;
-    const started = Date.now();
-    async function worker() {
-      while (next < chunks.length) {
-        const i = next++;
-        const c = chunks[i];
-        const audio = path.join(tmp, `chunk-${i}.${provider.format}`);
-        await extractChunk(input, c.offset, c.duration, audio, provider.format);
-        try {
-          const segments = await withRetry(() => provider.transcribe(audio, { lang, clipSec: c.duration, offset: c.offset }), `chunk ${i + 1}`);
-          results[i] = { ...c, segments };
-          console.log(`  chunk ${i + 1}/${chunks.length} (${c.offset.toFixed(0)}–${(c.offset + c.duration).toFixed(0)} s): ${segments.length} segment(s)`);
-        } catch (e) {
-          // A failed chunk is reported, never silently dropped: the gap is
-          // written into the transcript so the viewer sees that words are missing.
-          failures.push({ ...c, error: e.message });
-          results[i] = { ...c, segments: [{ start: 0, end: Math.min(c.duration, 3), text: '[captions unavailable for this part]', confidence: 0 }] };
-          console.warn(`  chunk ${i + 1} FAILED: ${e.message.split('\n')[0]}`);
-        }
-      }
-    }
-    await Promise.all(Array.from({ length: Math.min(2, chunks.length) }, worker));
-    await rm(tmp, { recursive: true, force: true });
-
-    const merged = splitLongSegments(mergeChunks(results));
-    transcript = makeTranscript(merged, { language: lang, source: provider.name });
-    transcript.media = { file: path.basename(input), durationSec: Math.round(duration * 1000) / 1000 };
-    transcript.pipeline = { chunkSec, overlapSec, chunks: chunks.length, failedChunks: failures.length, seconds: Math.round((Date.now() - started) / 100) / 10 };
-    if (failures.length) console.warn(`${failures.length} chunk(s) failed; they are marked in the captions.`);
-  }
+  const transcript = args['import-vtt']
+    ? makeTranscript(splitLongSegments(parseVTT(await readFile(args['import-vtt'], 'utf8'))), { language: lang, source: 'vtt-import' })
+    : await transcribeMedia(input, { providerName: args.provider, lang, chunk: args.chunk, overlap: args.overlap });
 
   const jsonPath = path.join(outDir, `${base}.transcript.json`);
   const vttPath = path.join(outDir, `${base}.vtt`);
@@ -307,4 +320,6 @@ async function main() {
   console.log(`  ${vttPath}`);
 }
 
-main().catch((e) => { console.error(`Error: ${e.message}`); process.exit(1); });
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => { console.error(`Error: ${e.message}`); process.exit(1); });
+}
