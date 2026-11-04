@@ -1691,10 +1691,10 @@
       }
       const playing = !el.paused || el.autoplay && !(el.played && el.played.length) && !el.currentTime;
       let personTouched = false;
-      const CONTROL = 'button, [role="button"], input[type="button"], input[type="submit"], summary';
+      const CONTROL2 = 'button, [role="button"], input[type="button"], input[type="submit"], summary';
       const mark = () => {
         const last = env.shared.lastInput;
-        const onControl = last && Date.now() - last.at < 1500 && last.target && last.target.closest && last.target.closest(CONTROL);
+        const onControl = last && Date.now() - last.at < 1500 && last.target && last.target.closest && last.target.closest(CONTROL2);
         if (s.watch.byPerson(el, { withinMs: 1500 }) || onControl) personTouched = true;
       };
       s.setAttr(el, "autoplay", null);
@@ -2199,6 +2199,32 @@
     return s;
   }
 
+  // toolkit/blocks/widget.js
+  var PART = '[aria-roledescription="slide" i], [role="tabpanel" i]';
+  var CONTROL = 'button, [role="button" i], [role="tab" i], [role="switch" i], input[type="button" i], input[type="submit" i], input[type="reset" i], input[type="image" i]';
+  function widgetParts(widget) {
+    if (!widget || widget.nodeType !== 1) return [];
+    const all = [...widget.querySelectorAll(PART)].filter((el) => !isOurs(el));
+    return all.filter((el) => !all.some((other) => other !== el && other.contains(el)));
+  }
+  function controlled(el) {
+    const doc = el.ownerDocument;
+    return (el.getAttribute("aria-controls") || "").split(/\s+/).filter(Boolean).map((id) => doc.getElementById(id)).filter(Boolean);
+  }
+  function ownControls(widget, { parts, selector = CONTROL } = {}) {
+    if (!widget || widget.nodeType !== 1) return [];
+    const ps = Array.isArray(parts) ? parts.filter((p) => p && p.nodeType === 1) : widgetParts(widget);
+    const inPart = (el) => ps.some((p) => p.contains(el));
+    const forWidget = (t) => t === widget || t.contains(widget) || ps.includes(t) || ps.some((p) => t.contains(p) && widget.contains(t));
+    const out = [];
+    for (const el of widget.querySelectorAll(selector)) {
+      if (isOurs(el)) continue;
+      const targets = controlled(el);
+      if (targets.length ? targets.some(forWidget) : !inPart(el)) out.push(el);
+    }
+    return out;
+  }
+
   // toolkit/blocks/page.js
   var SKIP_SELECTOR = [
     "script",
@@ -2416,7 +2442,9 @@
       isOurs: (el) => isOurs(el),
       background: (el) => backgroundOf(el, win),
       contrast,
-      textContrast
+      textContrast,
+      widgetParts,
+      ownControls
     };
   }
   function CSS_escape(s) {

@@ -1,0 +1,47 @@
+{
+  "name": "calm-page-slides",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page-slides.html",
+  "checks": [
+    {
+      "name": "a carousel whose only Play button is inside a slide (Play trailer) is held, not taken as stopped (review 9, line 7)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__held) { const ids = ['s1', 's3', 's4', 's5']; const shown = (id) => document.querySelector('#' + id + ' .track > .slide.active')?.id; const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const held = Object.fromEntries(ids.map((id) => [id, !!first[id]])); for (let i = 0; i < 13; i++) { await new Promise((r) => setTimeout(r, 100)); for (const id of ids) if (shown(id) !== first[id]) held[id] = false; } window.__held = held; } return window.__held['s1'] === true && (window.__counts['s1-trailer'] || 0) === 0;"
+    },
+    {
+      "name": "a Pause audio button inside a slide is never clicked, and the carousel is held (review 9, line 11)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__held) { const ids = ['s1', 's3', 's4', 's5']; const shown = (id) => document.querySelector('#' + id + ' .track > .slide.active')?.id; const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const held = Object.fromEntries(ids.map((id) => [id, !!first[id]])); for (let i = 0; i < 13; i++) { await new Promise((r) => setTimeout(r, 100)); for (const id of ids) if (shown(id) !== first[id]) held[id] = false; } window.__held = held; } return window.__held['s3'] === true && (window.__counts['s3-audio'] || 0) === 0;"
+    },
+    {
+      "name": "a disabled Stop audio button inside a slide does not stop the carousel being held (review 9, line 15)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__held) { const ids = ['s1', 's3', 's4', 's5']; const shown = (id) => document.querySelector('#' + id + ' .track > .slide.active')?.id; const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const held = Object.fromEntries(ids.map((id) => [id, !!first[id]])); for (let i = 0; i < 13; i++) { await new Promise((r) => setTimeout(r, 100)); for (const id of ids) if (shown(id) !== first[id]) held[id] = false; } window.__held = held; } return window.__held['s4'] === true;"
+    },
+    {
+      "name": "a Pause button outside the slides that controls a video (aria-controls) is not the carousel's; the carousel is held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__held) { const ids = ['s1', 's3', 's4', 's5']; const shown = (id) => document.querySelector('#' + id + ' .track > .slide.active')?.id; const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const held = Object.fromEntries(ids.map((id) => [id, !!first[id]])); for (let i = 0; i < 13; i++) { await new Promise((r) => setTimeout(r, 100)); for (const id of ids) if (shown(id) !== first[id]) held[id] = false; } window.__held = held; } return window.__held['s5'] === true && (window.__counts['s5-video-pause'] || 0) === 0;"
+    },
+    {
+      "name": "the carousel's own toggle is clicked, not the slide's Play trailer",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s2.playing === false && window.__carousels.s2.toggles === 1 && (window.__counts['s2-trailer'] || 0) === 0;"
+    },
+    {
+      "name": "slides marked only by class: the slide's Pause audio is not clicked, the carousel's own Pause after them is",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s6.playing === false && (window.__counts['s6-audio'] || 0) === 0;"
+    },
+    {
+      "name": "the APG rotation control (aria-controls names the slides) is clicked, the slide's Stop video is not",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s7.playing === false && (window.__counts['s7-video'] || 0) === 0;"
+    },
+    {
+      "name": "a slide's button that names the slides in aria-controls is the carousel's own and pauses it",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s9.playing === false && (window.__counts['s9-pause'] || 0) === 1;"
+    },
+    {
+      "name": "disable() restarts each carousel with its own control, never a slide's Play trailer or Play video (review 9, line 3)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const c = window.__carousels; const t0 = c.s2.toggles; adapter.disable(); await new Promise((r) => setTimeout(r, 150)); const ok = c.s2.playing && c.s6.playing && c.s7.playing && c.s8.playing && c.s9.playing && c.s2.toggles === t0 + 1 && (window.__counts['s2-trailer'] || 0) === 0 && (window.__counts['s8-video'] || 0) === 0 && (window.__counts['s1-trailer'] || 0) === 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await new Promise((r) => setTimeout(r, 150)); return ok && !c.s2.playing && !c.s8.playing;"
+    },
+    {
+      "name": "nothing is announced on load",
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
+    }
+  ]
+}

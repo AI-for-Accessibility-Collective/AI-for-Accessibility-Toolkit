@@ -28,7 +28,11 @@
 //     the person started or touched stays as they left it.
 //   • Listens for late-playing media; leaves media playing if the user activated that media or its controls.
 //   • Carousels: pauses via their own control only when inside the carousel, named Pause or Stop,
-//     button not in a form or submit, and carousel is playing. Restores via Play on disable().
+//     button not in a form or submit, and carousel is playing. Its own controls are the buttons
+//     that are not inside one of its slides, or that name the carousel or its slides in
+//     aria-controls (s.page.ownControls): a slide's "Play trailer" or "Pause audio" is the slide's.
+//     On disable(), restarts with its own separate Play button, or else the same button when it
+//     toggled (its name or aria-pressed changed since the click).
 //     A disabled Pause button means the carousel is not playing: leave it.
 //   • Scripted carousels without pause buttons: holds active slide state class, changing only track children.
 //     If page forces change more than 5 times without user input, ceases holding rather than fight the page.
@@ -241,73 +245,72 @@ export default {
       const handledCarousels = new WeakSet();
 
       const STATE_TOKEN_RE = /^(active|current|is-active|is-current|selected|is-selected|visible|show)$/i;
+      const BUTTONS = 'button, [role="button"], input[type="button"]';
+      const tokensOf = (el) => (el.getAttribute('class') || '').split(/\s+/).filter(Boolean);
+      const nameOf = (el) => (s.page.nameOf(el) || '').trim();
+      const isDisabled = (el) => el.disabled === true || el.getAttribute('aria-disabled') === 'true';
+      const stateOf = (el) => ({ name: nameOf(el), pressed: el.getAttribute('aria-pressed') });
 
-      const holdCarouselSlides = (carousel) => {
-        const candidates = [carousel, ...carousel.querySelectorAll('[class*="track"], [class*="slides"], [class*="list"], div, ul')];
-        let track = null;
-        let slides = [];
-        let stateClass = null;
-        let initialActiveSlide = null;
-
-        for (const cand of candidates) {
-          const children = Array.from(cand.children).filter((el) => el.nodeType === 1);
+      // The carousel's slides. Where the page marks them (aria-roledescription
+      // "slide", tab panels), the track is their parent; where it marks none,
+      // the first element whose children look like slides (role group, or a
+      // "slide" class). The slides are the track's own children, and the one
+      // shown carries a state class. Without such a track, the slides are the
+      // marked ones only (maybe none).
+      const findSlides = (carousel) => {
+        const marked = s.page.widgetParts(carousel);
+        const tracks = marked.length
+          ? [...new Set(marked.map((el) => el.parentElement).filter(Boolean))]
+          : [carousel, ...carousel.querySelectorAll('[class*="track"], [class*="slides"], [class*="list"], div, ul')];
+        for (const cand of tracks) {
+          const children = Array.from(cand.children);
           if (children.length < 2) continue;
-          const hasSlideAttrs = children.some((el) => {
+          if (!marked.length && !children.some((el) => {
             const role = (el.getAttribute('role') || '').toLowerCase();
-            const roledescription = (el.getAttribute('aria-roledescription') || '').toLowerCase();
-            const cls = el.getAttribute('class') || '';
-            return roledescription === 'slide' || role === 'tabpanel' || role === 'group' || /\bslide\b/i.test(cls);
-          });
-          if (!hasSlideAttrs) continue;
-
+            return role === 'group' || /\bslide\b/i.test(el.getAttribute('class') || '');
+          })) continue;
           for (const child of children) {
-            const cls = child.getAttribute('class') || '';
-            const tokens = cls.split(/\s+/).filter(Boolean);
-            const found = tokens.find((t) => STATE_TOKEN_RE.test(t));
-            if (found) {
-              stateClass = found;
-              initialActiveSlide = child;
-              break;
-            }
-          }
-
-          if (initialActiveSlide) {
-            track = cand;
-            slides = children;
-            break;
+            const stateClass = tokensOf(child).find((t) => STATE_TOKEN_RE.test(t));
+            if (stateClass) return { track: cand, slides: children, stateClass, active: child };
           }
         }
+        return { track: null, slides: marked };
+      };
 
-        if (!track || !initialActiveSlide || !stateClass) return;
+      // The carousel's own buttons (its pause, play, next), not those inside
+      // its slides ("Play trailer", "Pause audio"): from aria-controls and
+      // where they sit (s.page.ownControls), never from what they say. Of
+      // those, only buttons that are not submit buttons and not in a form.
+      const ownButtons = (carousel, slides) => s.page.ownControls(carousel, { parts: slides, selector: BUTTONS }).filter((btn) => {
+        if (btn.closest('form')) return false;
+        if (btn.tagName === 'BUTTON' && btn.getAttribute('type')?.toLowerCase() === 'submit') return false;
+        if (btn.tagName === 'INPUT' && (btn.type === 'submit' || btn.type === 'image')) return false;
+        return true;
+      });
 
-        let heldSlide = initialActiveSlide;
+      const holdCarouselSlides = (carousel, { track, slides, stateClass, active }) => {
+        let heldSlide = active;
         let revertCount = 0;
         const MAX_REVERTS = 5;
         let stoppedHolding = false;
         let isOurUpdate = false;
+        const shown = () => slides.find((sld) => tokensOf(sld).includes(stateClass));
 
         const observer = new MutationObserver(() => {
           if (stoppedHolding || isOurUpdate) return;
 
           // Check if person recently interacted inside this carousel
           if (wasUserActionIn(carousel, 1500)) {
-            for (const sld of slides) {
-              const cls = sld.getAttribute('class') || '';
-              const tokens = cls.split(/\s+/).filter(Boolean);
-              if (tokens.includes(stateClass)) {
-                heldSlide = sld;
-                revertCount = 0;
-                break;
-              }
+            const current = shown();
+            if (current) {
+              heldSlide = current;
+              revertCount = 0;
             }
             return;
           }
 
           // Automated page advance: check if active slide changed away from heldSlide
-          const currentActive = slides.find((sld) => {
-            const cls = sld.getAttribute('class') || '';
-            return cls.split(/\s+/).filter(Boolean).includes(stateClass);
-          });
+          const currentActive = shown();
 
           if (currentActive && currentActive !== heldSlide) {
             if (revertCount >= MAX_REVERTS) {
@@ -320,18 +323,15 @@ export default {
             isOurUpdate = true;
             try {
               for (const sld of slides) {
-                const cls = sld.getAttribute('class') || '';
-                const tokens = new Set(cls.split(/\s+/).filter(Boolean));
+                const tokens = new Set(tokensOf(sld));
                 if (sld === heldSlide) {
                   if (!tokens.has(stateClass)) {
                     tokens.add(stateClass);
                     s.setAttr(sld, 'class', Array.from(tokens).join(' '));
                   }
-                } else {
-                  if (tokens.has(stateClass)) {
-                    tokens.delete(stateClass);
-                    s.setAttr(sld, 'class', Array.from(tokens).join(' '));
-                  }
+                } else if (tokens.has(stateClass)) {
+                  tokens.delete(stateClass);
+                  s.setAttr(sld, 'class', Array.from(tokens).join(' '));
                 }
               }
             } finally {
@@ -361,56 +361,39 @@ export default {
         }
         handledCarousels.add(carousel);
 
-        // Find own pause/stop control
-        const buttons = carousel.querySelectorAll('button, [role="button"], input[type="button"]');
+        const found = findSlides(carousel);
         let pauseButton = null;
         let hasPlayButton = false;
 
-        for (const btn of buttons) {
-          if (btn.closest('form')) continue;
-          if (btn.tagName === 'BUTTON' && btn.getAttribute('type')?.toLowerCase() === 'submit') continue;
-          if (btn.tagName === 'INPUT' && (btn.type === 'submit' || btn.type === 'image')) continue;
-
-          const isDisabled = btn.disabled || btn.getAttribute('aria-disabled') === 'true';
-          const name = (s.page?.nameOf?.(btn) || btn.getAttribute('aria-label') || btn.textContent || '').trim();
+        // Its own pause or stop control, and whether it says the carousel plays.
+        for (const btn of ownButtons(carousel, found.slides)) {
+          const disabled = isDisabled(btn);
+          const name = nameOf(btn);
 
           if (/\b(pause|stop)\b/i.test(name)) {
-            if (isDisabled) {
-              // A disabled Pause button means the carousel is not playing: leave it.
-              return;
-            }
-
-            const pressed = btn.getAttribute('aria-pressed');
-            if (pressed === 'true') {
-              // Pause button is already pressed: the carousel is not playing: leave it.
-              return;
-            }
-
-            if (!pauseButton) {
-              pauseButton = btn;
-            }
-          } else if (/\bplay\b/i.test(name)) {
-            if (!isDisabled) {
-              hasPlayButton = true;
-            }
+            // A disabled Pause button, or one pressed already, means the
+            // carousel is not playing: leave it.
+            if (disabled || btn.getAttribute('aria-pressed') === 'true') return;
+            if (!pauseButton) pauseButton = btn;
+          } else if (/\bplay\b/i.test(name) && !disabled) {
+            hasPlayButton = true;
           }
         }
 
         if (pauseButton) {
+          const before = stateOf(pauseButton);
           try {
             pauseButton.click();
-            pausedCarousels.push({ carousel, button: pauseButton });
+            pausedCarousels.push({ carousel, button: pauseButton, before });
           } catch {}
           return;
         }
 
-        // Carousel currently stopped/paused with a Play button: leave it alone.
-        if (hasPlayButton) {
-          return;
-        }
+        // Carousel currently stopped/paused with its own Play button: leave it alone.
+        if (hasPlayButton) return;
 
         // Script-driven carousel without pause button
-        holdCarouselSlides(carousel);
+        if (found.track) holdCarouselSlides(carousel, found);
       };
 
       const findAndProcessCarousels = (root) => {
@@ -457,33 +440,25 @@ export default {
         }
       }
 
-      // Restore paused carousels on disable
+
+      // Restore paused carousels on disable: with the carousel's own separate
+      // Play button, or else the same button when it toggles (it says
+      // something else since it was clicked: its name or aria-pressed).
       s.onEnd(() => {
-        for (const { carousel, button } of pausedCarousels) {
+        for (const { carousel, button, before } of pausedCarousels) {
           if (!carousel.isConnected) continue;
           if (userInteractedCarousels.has(carousel)) continue;
 
-          const currentName = (s.page?.nameOf?.(button) || button.getAttribute('aria-label') || button.textContent || '').trim();
-          const pressed = button.getAttribute('aria-pressed');
-
-          // Look for an enabled Play button in the carousel
-          const playBtn = Array.from(carousel.querySelectorAll('button, [role="button"], input[type="button"]')).find((b) => {
-            if (b.closest('form')) return false;
-            if (b.tagName === 'BUTTON' && b.getAttribute('type')?.toLowerCase() === 'submit') return false;
-            if (b.tagName === 'INPUT' && (b.type === 'submit' || b.type === 'image')) return false;
-            if (b.disabled || b.getAttribute('aria-disabled') === 'true') return false;
-            const n = (s.page?.nameOf?.(b) || b.getAttribute('aria-label') || b.textContent || '').trim();
-            return /\bplay\b/i.test(n);
-          });
-
+          const playBtn = ownButtons(carousel, findSlides(carousel).slides)
+            .find((b) => b !== button && !isDisabled(b) && /\bplay\b/i.test(nameOf(b)));
           if (playBtn) {
             try { playBtn.click(); } catch {}
             continue;
           }
 
-          if (/\bplay\b/i.test(currentName) || pressed === 'true') {
+          const now = stateOf(button);
+          if (button.isConnected && !isDisabled(button) && (now.name !== before.name || now.pressed !== before.pressed)) {
             try { button.click(); } catch {}
-            continue;
           }
         }
       });
