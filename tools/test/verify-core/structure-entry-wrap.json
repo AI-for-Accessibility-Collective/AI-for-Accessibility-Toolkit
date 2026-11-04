@@ -1,0 +1,15 @@
+{
+  "name": "structure-entry-wrap",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-entry-wrap.html",
+  "checks": [
+    {
+      "name": "a story whose header, body and footer are divs: its entry-header and entry-footer are not made the site's banner or contentinfo",
+      "code": "return document.getElementById('entry-header').getAttribute('role') === null && document.getElementById('entry-footer').getAttribute('role') === null && document.querySelectorAll('[role=\"banner\"], [role=\"contentinfo\"]').length === 0;"
+    },
+    {
+      "name": "the story still gets one main region, holding its text",
+      "code": "const mains = document.querySelectorAll('[role=\"main\"]'); return mains.length === 1 && mains[0].contains(document.getElementById('entry-content'));"
+    }
+  ]
+}

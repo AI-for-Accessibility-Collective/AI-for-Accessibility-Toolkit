@@ -2497,6 +2497,99 @@
     return out;
   }
 
+  // toolkit/blocks/landmarks.js
+  var LANDMARK_ROLES = ["banner", "complementary", "contentinfo", "form", "main", "navigation", "region", "search"];
+  var LANDMARK = new Set(LANDMARK_ROLES);
+  var NEEDS_NAME = /* @__PURE__ */ new Set(["form", "region"]);
+  var ROLES = new Set("alert alertdialog application article banner blockquote button caption cell checkbox code columnheader combobox complementary contentinfo definition deletion dialog directory document emphasis feed figure form generic grid gridcell group heading img image insertion link list listbox listitem log main mark marquee math menu menubar menuitem menuitemcheckbox menuitemradio meter navigation none note option paragraph presentation progressbar radio radiogroup region row rowgroup rowheader scrollbar search searchbox separator slider spinbutton status strong subscript superscript switch tab table tablist tabpanel term textbox time timer toolbar tooltip tree treegrid treeitem".split(" "));
+  var GLOBAL_ARIA = [
+    "aria-atomic",
+    "aria-busy",
+    "aria-controls",
+    "aria-current",
+    "aria-describedby",
+    "aria-details",
+    "aria-dropeffect",
+    "aria-errormessage",
+    "aria-flowto",
+    "aria-grabbed",
+    "aria-haspopup",
+    "aria-invalid",
+    "aria-keyshortcuts",
+    "aria-label",
+    "aria-labelledby",
+    "aria-live",
+    "aria-owns",
+    "aria-relevant",
+    "aria-roledescription"
+  ];
+  var HEADER_SCOPE_TAGS = /* @__PURE__ */ new Set(["article", "aside", "main", "nav", "section"]);
+  var HEADER_SCOPE_ROLES = /* @__PURE__ */ new Set(["article", "complementary", "main", "navigation"]);
+  var ASIDE_SCOPE_TAGS = /* @__PURE__ */ new Set(["article", "aside", "nav", "section"]);
+  var ASIDE_SCOPE_ROLES = /* @__PURE__ */ new Set(["article", "complementary", "navigation"]);
+  var CANDIDATES = "header, footer, main, nav, aside, section, form, search, [role]";
+  function explicitRole(el) {
+    const tokens = (el.getAttribute("role") || "").trim().toLowerCase().split(/\s+/);
+    const role = tokens.find((t) => ROLES.has(t) || /^(doc|graphics)-[a-z]+$/.test(t)) || "";
+    if (role !== "none" && role !== "presentation") return role;
+    if (el.hasAttribute("tabindex") || GLOBAL_ARIA.some((a) => el.hasAttribute(a))) return "";
+    return role;
+  }
+  function hasName(el) {
+    const doc = el.ownerDocument;
+    const ids = (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean);
+    if (ids.some((id) => doc.getElementById(id))) return true;
+    return Boolean((el.getAttribute("aria-label") || "").trim() || (el.getAttribute("title") || "").trim());
+  }
+  function hidden(el) {
+    if (el.closest('[hidden], [aria-hidden="true" i]')) return true;
+    const win = el.ownerDocument.defaultView;
+    if (!win) return false;
+    if (win.getComputedStyle(el).visibility === "hidden") return true;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      if (win.getComputedStyle(n).display === "none") return true;
+    }
+    return false;
+  }
+  function inside(el, tags, roles) {
+    for (let n = el.parentElement; n; n = n.parentElement) {
+      const role = n.hasAttribute("role") ? explicitRole(n) : "";
+      if (role ? roles.has(role) : tags.has(n.localName)) return true;
+    }
+    return false;
+  }
+  function landmark(el) {
+    if (!el || el.nodeType !== 1 || isOurs(el) || hidden(el)) return null;
+    const role = el.hasAttribute("role") ? explicitRole(el) : "";
+    if (role && !(NEEDS_NAME.has(role) && !hasName(el))) return LANDMARK.has(role) ? role : null;
+    switch (el.localName) {
+      case "header":
+        return inside(el, HEADER_SCOPE_TAGS, HEADER_SCOPE_ROLES) ? null : "banner";
+      case "footer":
+        return inside(el, HEADER_SCOPE_TAGS, HEADER_SCOPE_ROLES) ? null : "contentinfo";
+      case "main":
+        return "main";
+      case "nav":
+        return "navigation";
+      case "search":
+        return "search";
+      case "aside":
+        return inside(el, ASIDE_SCOPE_TAGS, ASIDE_SCOPE_ROLES) && !hasName(el) ? null : "complementary";
+      case "section":
+        return hasName(el) ? "region" : null;
+      case "form":
+        return hasName(el) ? "form" : null;
+      default:
+        return null;
+    }
+  }
+  function landmarks(doc, role, { root } = {}) {
+    const from = root || doc.body || doc.documentElement;
+    if (!from) return [];
+    const all = [from, ...from.querySelectorAll(CANDIDATES)];
+    return all.filter((el) => el.matches(CANDIDATES) && (role ? landmark(el) === role : landmark(el) !== null));
+  }
+
   // toolkit/blocks/page.js
   var SKIP_SELECTOR = [
     "script",
@@ -2558,7 +2651,7 @@
       if (!root) return out;
       const skipSel = skip ? `${SKIP_SELECTOR}, ${skip}` : SKIP_SELECTOR;
       const hiddenCache = /* @__PURE__ */ new Map();
-      const hidden = (el) => {
+      const hidden2 = (el) => {
         if (hiddenCache.has(el)) return hiddenCache.get(el);
         let h = false;
         if (el.matches(skipSel) || el.hidden || el.getAttribute("aria-hidden") === "true") h = true;
@@ -2567,7 +2660,7 @@
           const st = win.getComputedStyle(el);
           h = st.display === "none" || st.visibility === "hidden";
         }
-        if (!h && el.parentElement && el !== root) h = hidden(el.parentElement);
+        if (!h && el.parentElement && el !== root) h = hidden2(el.parentElement);
         hiddenCache.set(el, h);
         return h;
       };
@@ -2579,7 +2672,7 @@
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {
         if (!n.nodeValue.trim()) continue;
         const parent = n.parentElement;
-        if (!parent || hidden(parent)) continue;
+        if (!parent || hidden2(parent)) continue;
         out.push(n);
       }
       return out;
@@ -2716,7 +2809,9 @@
       contrast,
       textContrast,
       widgetParts,
-      ownControls
+      ownControls,
+      landmark,
+      landmarks: (role, opts) => landmarks(doc, role, opts)
     };
   }
   function CSS_escape(s) {

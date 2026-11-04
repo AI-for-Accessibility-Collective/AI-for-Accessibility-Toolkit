@@ -1,0 +1,15 @@
+{
+  "name": "structure-footer-col",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-footer-col.html",
+  "checks": [
+    {
+      "name": "review 10 finding 2: with no site header, the site footer div holding a column header still becomes contentinfo",
+      "code": "return document.getElementById('colophon').getAttribute('role') === 'contentinfo' && document.getElementById('main').getAttribute('role') === 'main';"
+    },
+    {
+      "name": "no banner is added: the page already has one (the column's header, as the browser exposes it)",
+      "code": "return document.querySelectorAll('[role=\"banner\"]').length === 0;"
+    }
+  ]
+}

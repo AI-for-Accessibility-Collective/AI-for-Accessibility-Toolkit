@@ -1,0 +1,15 @@
+{
+  "name": "structure-entry",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-entry.html",
+  "checks": [
+    {
+      "name": "review 10 finding 1: with no site header or footer, the content div holding an entry-header div becomes main (the adapter's guess at a banner never stops it)",
+      "code": "return document.getElementById('main-content').getAttribute('role') === 'main';"
+    },
+    {
+      "name": "review 10 finding 1: the story's entry-header and entry-footer divs are not made the site's banner or contentinfo",
+      "code": "return document.getElementById('entry-header').getAttribute('role') === null && document.getElementById('entry-footer').getAttribute('role') === null && document.querySelectorAll('[role=\"banner\"], [role=\"contentinfo\"]').length === 0;"
+    }
+  ]
+}

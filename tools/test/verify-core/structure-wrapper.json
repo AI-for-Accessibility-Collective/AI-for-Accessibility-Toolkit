@@ -1,0 +1,15 @@
+{
+  "name": "structure-wrapper",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-wrapper.html",
+  "checks": [
+    {
+      "name": "a wrapper holding the site header div beside the story is not main; the story is",
+      "code": "return document.getElementById('page').getAttribute('role') === null && document.getElementById('story').getAttribute('role') === 'main';"
+    },
+    {
+      "name": "the site header and footer divs become banner and contentinfo; the story's entry-header, inside main, gets nothing",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('masthead') === 'banner' && g('colophon') === 'contentinfo' && g('story-header') === null;"
+    }
+  ]
+}

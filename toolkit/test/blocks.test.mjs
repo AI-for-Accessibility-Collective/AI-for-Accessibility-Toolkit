@@ -328,6 +328,54 @@ await test('page: main region, readable text without code, fields, live regions 
   assert.deepEqual(tk.page.headings({ maxLevel: 1 }).map((h) => h.text), ['Title']);
 });
 
+await test('page.landmark and landmarks: the role Chrome gives each element (header and footer scoping, names, role tokens, hidden)', async () => {
+  // The expected roles are what Chrome's accessibility tree reported for this markup.
+  const { tk, $, doc } = page(`
+    <header id="top">top</header>
+    <div role="region" aria-label="R"><header id="in-region">r</header></div>
+    <div role="main" id="rmain"><div><header id="in-rolemain">m</header></div><footer id="f-in-rolemain">m</footer><aside id="aside-in-main">x</aside></div>
+    <section id="s-unnamed"><header id="in-section">s</header><aside id="aside-in-section">x</aside><aside id="aside-named" aria-label="N">x</aside></section>
+    <section role="group"><header id="in-section-group">s</header></section>
+    <section role="none"><aside id="aside-in-section-none">x</aside></section>
+    <div role="foo article"><header id="in-foo-article">a</header></div>
+    <div role="navigation" id="rnav"><header id="in-rolenav">a</header></div>
+    <div role="contentinfo" id="rci"><header id="in-contentinfo">a</header></div>
+    <footer id="f-top"><header id="in-footer">a</header></footer>
+    <header id="pres" role="presentation">p</header>
+    <header id="pres-label" role="presentation" aria-label="L">p</header>
+    <header id="none-tab" role="none" tabindex="0">p</header>
+    <div id="foo-banner" role="foo banner">p</div>
+    <header id="region-unnamed" role="region">x</header>
+    <div id="d-region-unnamed" role="region">p</div>
+    <section id="s-named" aria-label="x">p</section><section id="s-title" title="T">p</section>
+    <form id="form-named" aria-label="x"><input></form><form id="form-unnamed"><input></form>
+    <div id="d-search" role="search">p</div>
+    <header id="hid" hidden>x</header><header id="none" style="display:none">x</header>
+    <header id="ahid" aria-hidden="true">x</header><div style="display:none"><header id="in-none">x</header></div>
+    <article><header id="explicit-in-article" role="banner">x</header></article>
+    <nav id="nav">n</nav><main id="main">m</main><div id="upper" role="MAIN">m</div><div id="plain" class="site-header">p</div>`);
+  const expect = {
+    top: 'banner', 'in-region': 'banner', rmain: 'main', 'in-rolemain': null, 'f-in-rolemain': null, 'aside-in-main': 'complementary',
+    's-unnamed': null, 'in-section': null, 'aside-in-section': null, 'aside-named': 'complementary', 'in-section-group': 'banner',
+    'aside-in-section-none': 'complementary', 'in-foo-article': null, rnav: 'navigation', 'in-rolenav': null, rci: 'contentinfo',
+    'in-contentinfo': 'banner', 'f-top': 'contentinfo', 'in-footer': 'banner', pres: null, 'pres-label': 'banner', 'none-tab': 'banner',
+    'foo-banner': 'banner', 'region-unnamed': 'banner', 'd-region-unnamed': null, 's-named': 'region', 's-title': 'region',
+    'form-named': 'form', 'form-unnamed': null, 'd-search': 'search', hid: null, none: null, ahid: null, 'in-none': null,
+    'explicit-in-article': 'banner', nav: 'navigation', main: 'main', upper: 'main', plain: null,
+  };
+  for (const [id, role] of Object.entries(expect)) assert.equal(tk.page.landmark($(`#${id}`)), role, id);
+  const ids = (els) => els.map((el) => el.id);
+  assert.deepEqual(ids(tk.page.landmarks('banner')), ['top', 'in-region', 'in-section-group', 'in-contentinfo', 'in-footer',
+    'pres-label', 'none-tab', 'foo-banner', 'region-unnamed', 'explicit-in-article']);
+  assert.deepEqual(ids(tk.page.landmarks('contentinfo', { root: $('#f-top') })), ['f-top']);
+  assert.ok(ids(tk.page.landmarks()).includes('s-named'));
+  // The toolkit's own elements are never the page's landmarks.
+  const ours = doc.createElement('header');
+  ours.setAttribute('data-ai4a11y-ui', 'ui');
+  doc.body.append(ours);
+  assert.equal(tk.page.landmark(ours), null);
+});
+
 await test("page.widgetParts and ownControls: a carousel's own buttons from roles and aria-controls, never a button inside a slide, whatever it says", async () => {
   const { tk, $, doc } = page(`
     <section id="c" aria-roledescription="carousel" aria-label="Shows">

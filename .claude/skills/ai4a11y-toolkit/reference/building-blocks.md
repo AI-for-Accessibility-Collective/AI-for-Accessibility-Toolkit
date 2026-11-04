@@ -139,6 +139,8 @@ toolkit.page.background(el) / toolkit.page.contrast(a, b)
 toolkit.page.textContrast(el)        // { color, background, ratio, min, large, overImage, fix }
 toolkit.page.widgetParts(widget)     // a carousel's slides or a tab set's panels, as ARIA marks them; [] when it does not
 toolkit.page.ownControls(widget, { parts })   // its own buttons (pause, next, pick a slide), not those inside its slides
+toolkit.page.landmark(el)            // the landmark role the browser gives it ('banner', 'main', ...), or null
+toolkit.page.landmarks(role, { root })   // the elements the browser exposes with that role (every landmark without one)
 ```
 
 | Config | Default | What it does |
@@ -150,6 +152,7 @@ Always, whatever the config:
 
 - Read-only.
 - ownControls() decides from roles and relationships, never from names or classes: a control that names what it controls (aria-controls) is the widget's only when that is the widget, one of its parts or what holds them; one that does not say is the widget's only when it is outside every part. A "Play trailer" button inside a slide is the slide's, not the carousel's.
+- landmark() and landmarks() follow HTML-AAM as Chrome computes it, from elements, roles and the tree, never from names or classes: an explicit role (its first valid token) wins; a header or footer inside article, aside, main, nav or section, or inside role article, complementary, main or navigation, is no banner or contentinfo (role region does not scope it); a section, form or role region needs a name; hidden elements are none. A div the page calls "header" is no banner: deciding that is the adapter's guess, not the page's word.
 
 ### Highlight (`highlight`)
 

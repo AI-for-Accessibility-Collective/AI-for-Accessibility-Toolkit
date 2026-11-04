@@ -13,6 +13,7 @@
 import { isOurs, hasLayout, UI_ATTR } from './shared.js';
 import { backgroundOf, contrast, parseColor, nearestWithContrast, hex } from './color.js';
 import { widgetParts, ownControls } from './widget.js';
+import { landmark, landmarks } from './landmarks.js';
 
 // Never read or rewritten: code, form fields, live regions (the page speaks
 // through them), and the toolkit's own controls.
@@ -224,6 +225,7 @@ export function pageBlock(env) {
     contrast,
     textContrast,
     widgetParts, ownControls,
+    landmark, landmarks: (role, opts) => landmarks(doc, role, opts),
   };
 }
 
