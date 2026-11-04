@@ -23,8 +23,9 @@
 //   • Distinguishes typing from actions: typing in text fields (Space and Enter included)
 //     is typing, not an action; click, non-field keydown, and submit count as actions.
 //   • Announce only what reads as a message (role, class, id, or name says status, alert,
-//     error, notice, message, toast) or content appearing within ACTION_MS of a user action.
-//   • Route changes announce the new view's heading or title, not its full content,
+//     error, notice, message, toast, warn, notification, snackbar) or content appearing within ACTION_MS of a user action.
+//   • Route changes announce the new view's heading (inspecting main for top-level view headings
+//     h1, h2, or role="heading" before falling back to document h1) or title, not its full content,
 //     and cancel any pending route announcement when a new route arrives.
 //   • Does not watch characterData: text changing inside existing content on its own is never announced.
 //   • Ignores content outside the viewport and inside iframes.
@@ -41,8 +42,8 @@ const MAX_LINES = 3;
 
 const LIVE_SELECTOR = '[aria-live]:not([aria-live="off"]), [role="alert"], [role="status"], [role="log"], [role="timer"], [role="marquee"], output';
 const INTERACTIVE = 'a[href], button, [role="button"], [role="link"], input, select, textarea';
-const MESSAGE_REGEX = /\b(status|alert|error|notice|message|toast|warn(?:ing)?|snackbar|notification)\b/i;
-const CANDIDATE_SELECTOR = 'output, [role="status"], [role="alert"], [class*="status" i], [class*="alert" i], [class*="error" i], [class*="notice" i], [class*="message" i], [class*="toast" i], [class*="warn" i], [class*="notification" i], [id*="status" i], [id*="alert" i], [id*="error" i], [id*="notice" i], [id*="message" i], [id*="toast" i]';
+const MESSAGE_REGEX = /(?:^|[^a-zA-Z0-9])(status|alert|error|notice|message|toast|warn(?:ing)?|snackbar|notification)(?:$|[^a-zA-Z0-9])/i;
+const CANDIDATE_SELECTOR = 'output, [role="status"], [role="alert"], [class*="status" i], [class*="alert" i], [class*="error" i], [class*="notice" i], [class*="message" i], [class*="toast" i], [class*="warn" i], [class*="notification" i], [class*="snackbar" i], [id*="status" i], [id*="alert" i], [id*="error" i], [id*="notice" i], [id*="message" i], [id*="toast" i], [id*="warn" i], [id*="notification" i], [id*="snackbar" i], [name*="status" i], [name*="alert" i], [name*="error" i], [name*="notice" i], [name*="message" i], [name*="toast" i], [name*="warn" i], [name*="notification" i], [name*="snackbar" i]';
 
 function isTextField(el) {
   if (!el || el.nodeType !== 1) return false;
@@ -67,6 +68,21 @@ function inViewport(el) {
       const cr = el.firstElementChild.getBoundingClientRect();
       if (cr.width > 0 && cr.height > 0) {
         return cr.bottom > 0 && cr.right > 0 && cr.top < vh && cr.left < vw;
+      }
+    }
+    const style = window.getComputedStyle?.(el);
+    const displayVal = el.style?.display || style?.getPropertyValue?.('display') || style?.display;
+    if (displayVal === 'contents') {
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const rr = range.getBoundingClientRect();
+        if (rr.width > 0 || rr.height > 0) {
+          return rr.bottom > 0 && rr.right > 0 && rr.top < vh && rr.left < vw;
+        }
+      } catch {}
+      if (el.parentElement) {
+        return inViewport(el.parentElement);
       }
     }
     return false;
@@ -106,7 +122,9 @@ function summarize(el, s) {
   const tag = el.tagName;
   if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE' || tag === 'IFRAME') return '';
   if (el.closest('[hidden], [aria-hidden="true"], iframe')) return '';
-  if (typeof el.checkVisibility === 'function' && !el.checkVisibility()) return '';
+  const displayVal = el.style?.display || window.getComputedStyle?.(el)?.getPropertyValue('display') || window.getComputedStyle?.(el)?.display;
+  const isContents = displayVal === 'contents';
+  if (!isContents && typeof el.checkVisibility === 'function' && !el.checkVisibility()) return '';
 
   const focused = document.activeElement;
   if (focused && focused !== document.body && el.contains(focused)) return '';
@@ -131,12 +149,13 @@ function summarize(el, s) {
     text = next;
   }
 
-  if (text.length < 3 && !(tag === 'OUTPUT' && text)) return '';
+  if (!text) return '';
+  if (text.length < 3 && !isMessageElement(el)) return '';
   if (text.length > MAX_ANNOUNCE_CHARS) text = text.slice(0, MAX_ANNOUNCE_CHARS - 1) + '…';
   return text;
 }
 
-function findRouteAnnouncement(s, lastHeading) {
+function findRouteAnnouncement(s, state = {}) {
   const isVisible = (el) => {
     if (!el || el.nodeType !== 1) return false;
     if (s?.page?.isOurs && s.page.isOurs(el)) return false;
@@ -148,33 +167,63 @@ function findRouteAnnouncement(s, lastHeading) {
   const clean = (str) => (str || '').replace(/\s+/g, ' ').trim();
   const titleText = clean(document.title);
 
-  // Filter for visible headings in the main landmark or view container first
+  let lastMain = '';
+  let lastDoc = '';
+  let lastTitle = '';
+  if (typeof state === 'object' && state !== null) {
+    lastMain = state.mainHeading || '';
+    lastDoc = state.docHeading || '';
+    lastTitle = state.title || '';
+  } else if (typeof state === 'string') {
+    lastMain = state;
+    lastDoc = state;
+  }
+
+  // Filter for visible headings in the main landmark or view container first:
+  // inspect main for top-level view headings (h1, h2, or [role="heading"])
   const main = document.querySelector('main, [role="main"]');
-  let h1 = null;
+  let mainHeading = null;
   if (main) {
     const candidates = main.querySelectorAll('h1, [role="heading"][aria-level="1"]');
     for (const c of candidates) {
-      if (isVisible(c)) { h1 = c; break; }
+      if (isVisible(c)) { mainHeading = c; break; }
+    }
+    if (!mainHeading) {
+      const candidates2 = main.querySelectorAll('h2, [role="heading"]');
+      for (const c of candidates2) {
+        if (isVisible(c)) { mainHeading = c; break; }
+      }
     }
   }
-  // Otherwise visible h1 in document
-  if (!h1) {
-    const candidates = document.querySelectorAll('h1, [role="heading"][aria-level="1"]');
-    for (const c of candidates) {
-      if (isVisible(c)) { h1 = c; break; }
-    }
+
+  // Fallback visible h1 in document
+  let docH1 = null;
+  const candidates = document.querySelectorAll('h1, [role="heading"][aria-level="1"]');
+  for (const c of candidates) {
+    if (isVisible(c)) { docH1 = c; break; }
   }
 
-  const headingText = h1 ? clean(h1.textContent) : '';
-  const headingChanged = Boolean(headingText && headingText !== lastHeading);
+  const mainHeadingText = mainHeading ? clean(mainHeading.textContent) : '';
+  const docH1Text = docH1 ? clean(docH1.textContent) : '';
 
-  if (headingChanged) {
-    return { text: headingText, heading: headingText };
+  let text = '';
+  if (mainHeadingText && mainHeadingText !== lastMain) {
+    text = mainHeadingText;
+  } else if (docH1Text && docH1Text !== lastDoc) {
+    text = docH1Text;
+  } else if (titleText && titleText !== lastTitle) {
+    text = titleText;
+  } else {
+    text = mainHeadingText || docH1Text || titleText;
   }
 
-  // When the main heading has not changed, announce document.title
-  const text = titleText || headingText;
-  return { text, heading: headingText };
+  return {
+    text,
+    heading: mainHeadingText || docH1Text,
+    mainHeading: mainHeadingText,
+    docHeading: docH1Text,
+    title: titleText
+  };
 }
 
 function joinTexts(items) {
@@ -213,8 +262,15 @@ export default {
     this.containerInfo = new WeakMap();
     this.tickers = new WeakSet();
 
-    const initial = findRouteAnnouncement(s, '');
+    const initial = findRouteAnnouncement(s, {
+      mainHeading: '',
+      docHeading: '',
+      title: ''
+    });
+    this.lastMainHeading = initial.mainHeading || '';
+    this.lastDocHeading = initial.docHeading || '';
     this.lastRouteHeading = initial.heading || '';
+    this.lastRouteTitle = initial.title || '';
 
     // Listen for actions: click, keydown (not in text fields), submit
     s.listen(document, 'submit', () => {
@@ -245,8 +301,15 @@ export default {
         this.routeTimer = null;
         if (!this.s || this.s.ended) return;
 
-        const res = findRouteAnnouncement(this.s, this.lastRouteHeading);
+        const res = findRouteAnnouncement(this.s, {
+          mainHeading: this.lastMainHeading,
+          docHeading: this.lastDocHeading,
+          title: this.lastRouteTitle
+        });
+        if (res.mainHeading) this.lastMainHeading = res.mainHeading;
+        if (res.docHeading) this.lastDocHeading = res.docHeading;
         if (res.heading) this.lastRouteHeading = res.heading;
+        if (res.title) this.lastRouteTitle = res.title;
         if (res.text) {
           this.s.announce(res.text, { politeness: 'polite' });
         }
@@ -373,8 +436,8 @@ export default {
     const activeItems = items.filter((item) => !item.container || !this.tickers.has(item.container));
     if (!activeItems.length) return;
 
-    const connected = activeItems.filter((item) => !item.el || item.el.isConnected);
-    const validItems = connected.length ? connected : activeItems;
+    const validItems = activeItems.filter((item) => !item.el || item.el.isConnected);
+    if (!validItems.length) return;
 
     const assertiveItems = validItems.filter((i) => i.politeness === 'assertive');
     const politeItems = validItems.filter((i) => i.politeness !== 'assertive');
@@ -406,6 +469,8 @@ export default {
     this.tickers = new WeakSet();
     this.lastAction = 0;
     this.pageSpokeAt = 0;
+    this.lastMainHeading = '';
+    this.lastDocHeading = '';
     this.lastRouteHeading = '';
     this.lastRouteTitle = '';
     this.s.end();

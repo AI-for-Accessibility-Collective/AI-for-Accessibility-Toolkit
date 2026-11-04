@@ -29,7 +29,7 @@
     },
     {
       "name": "at most the limit of AI calls on a page with many unnamed controls",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        window.__verifyAiCallLog = [];\n        const orig = globalThis.__verifyAi;\n        if (orig && !window.__origVerifyAiHooked) {\n          window.__origVerifyAiHooked = true;\n          globalThis.__verifyAi = (req) => {\n            window.__verifyAiCallLog.push(req);\n            return orig(req);\n          };\n        }\n        return true;\n      }\n\n      const count = window.__verifyAiCallLog?.length || 0;\n      if (count < 1 || count > 10) return false;\n\n      for (const req of window.__verifyAiCallLog) {\n        const input = String(req.input || '');\n        if (/btn-svg-title|btn-icon-class|btn-small-icon|link-path|input-placeholder|input-name|input-nearby|img-small-icon/i.test(input)) {\n          return false;\n        }\n      }\n      return true;\n    "
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) {\n        window.__verifyAiCallLog = [];\n        const orig = globalThis.__verifyAi;\n        if (orig && !window.__origVerifyAiHooked) {\n          window.__origVerifyAiHooked = true;\n          globalThis.__verifyAi = (req) => {\n            window.__verifyAiCallLog.push(req);\n            return orig(req);\n          };\n        }\n        return true;\n      }\n\n      const count = window.__verifyAiCallLog?.length || 0;\n      if (count < 1 || count > 10) return false;\n\n      for (const req of window.__verifyAiCallLog) {\n        const input = String(req.input || '');\n        if (/btn-svg-title|btn-icon-class|btn-small-icon|link-path|input-placeholder|input-name|input-nearby|img-small-icon|input-btn-icon|img-aria-hidden|img-nested-aria-hidden|btn-nested-aria-hidden/i.test(input)) {\n          return false;\n        }\n      }\n      return true;\n    "
     },
     {
       "name": "Font Awesome 6 icon classes assign icon name, filtering style variants",
@@ -50,6 +50,26 @@
     {
       "name": "AI control context includes container heading or section context",
       "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const log = window.__verifyAiCallLog || [];\n      const textCalls = log.filter(req => req.task === 'label');\n      if (!textCalls.length) return false;\n      return textCalls.some(req => String(req.input || '').includes('under heading: \"Elements Requiring AI\"'));\n    "
+    },
+    {
+      "name": "informative wide banners and tall rules are not marked as spacers",
+      "code": "\n      const wide = document.getElementById(\"img-wide-divider\");\n      const tall = document.getElementById(\"img-tall-rule\");\n      if (!wide || !tall) return false;\n      return wide.getAttribute(\"alt\") !== \"\" && tall.getAttribute(\"alt\") !== \"\";\n    "
+    },
+    {
+      "name": "buttons with utility classes are not assigned utility class words as accessible names",
+      "code": "\n      const colSm = document.getElementById(\"btn-col-sm\");\n      const flex = document.getElementById(\"btn-flex\");\n      if (!colSm || !flex) return false;\n      return colSm.getAttribute(\"aria-label\") !== \"Col sm\" &&\n             flex.getAttribute(\"aria-label\") !== \"Flex\" &&\n             flex.getAttribute(\"aria-label\") !== \"M\";\n    "
+    },
+    {
+      "name": "extractNameFromLinkPath does not assign non-http URI paths to mailto or tel links",
+      "code": "\n      const mailto = document.getElementById(\"link-mailto\");\n      const tel = document.getElementById(\"link-tel\");\n      if (!mailto || !tel) return false;\n      return mailto.getAttribute(\"aria-label\") !== \"Support@example.com\" &&\n             tel.getAttribute(\"aria-label\") !== \"+1\";\n    "
+    },
+    {
+      "name": "elements with aria-hidden are not modified or sent to AI",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const imgHidden = document.getElementById(\"img-aria-hidden\");\n      const nestedImg = document.getElementById(\"img-nested-aria-hidden\");\n      const nestedBtn = document.getElementById(\"btn-nested-aria-hidden\");\n      if (!imgHidden || !nestedImg || !nestedBtn) return false;\n      return !imgHidden.hasAttribute(\"alt\") &&\n             !nestedImg.hasAttribute(\"alt\") &&\n             !nestedBtn.hasAttribute(\"aria-label\");\n    "
+    },
+    {
+      "name": "input button with icon class is named via page-first rules",
+      "code": "\n      const inputBtn = document.getElementById(\"input-btn-icon\");\n      if (!inputBtn) return false;\n      return inputBtn.getAttribute(\"aria-label\") === \"Search\";\n    "
     }
   ],
   "ai": {

@@ -20,10 +20,11 @@
 //   • Never simplifies on load and never sends more than the single paragraph requested to AI.
 //   • Inserts a small 'Plain language' button after each long paragraph in the main content.
 //   • When there are more than 8 long paragraphs (or options.maxParagraphsBeforeSection),
-//     inserts one button per innermost section or article instead of after each paragraph.
+//     inserts one button per innermost section or article (including role="region" and role="article")
+//     instead of after each paragraph.
 //   • Paragraphs outside every section always get their own button after them.
 //   • Keeps names, numbers, dates (day-first and short months), acronyms (all capitals),
-//     and the meaning of links by extracting them into the keep prompt parameter.
+//     and the meaning of links by extracting them into the keep prompt parameter (at most 50 items, at most 80 chars each).
 //   • Does not keep a capitalized first word of a sentence as a name.
 //   • Replaces simplified paragraphs using s.text.replaceBlock with showOriginal: false,
 //     and updates the button text to 'Show original' to toggle back.
@@ -110,7 +111,7 @@ function extractKeepTerms(element, extraKeep = []) {
     }
   }
 
-  return [...terms].filter(Boolean);
+  return [...terms].filter((t) => t && typeof t === 'string' && t.length <= 80).slice(0, 50);
 }
 
 export default {
@@ -212,13 +213,14 @@ export default {
     const useSections = longParagraphs.length > maxParagraphsBeforeSection;
 
     if (useSections) {
-      // Group by innermost section or article
+      // Group by innermost section or article (including role="region" and role="article")
+      const sectionSelector = 'section, article, [role="region"], [role="article"]';
       const sectionMap = new Map();
       const outside = [];
 
       for (const p of longParagraphs) {
-        const sec = p.closest('section, article');
-        if (sec && (main.contains(sec) || document.body.contains(sec))) {
+        const sec = p.closest(sectionSelector);
+        if (sec && sec !== main && (main.contains(sec) || document.body.contains(sec))) {
           if (!sectionMap.has(sec)) sectionMap.set(sec, []);
           sectionMap.get(sec).push(p);
         } else {
@@ -233,7 +235,7 @@ export default {
           attrs: { type: 'button', class: 'ai4a11y-plain-btn ai4a11y-plain-section-btn' },
         });
 
-        const heading = sec.querySelector('h1, h2, h3, h4, h5, h6');
+        const heading = Array.from(sec.querySelectorAll('h1, h2, h3, h4, h5, h6')).find((h) => h.closest(sectionSelector) === sec);
         let insertTarget = null;
         if (heading) {
           let cur = heading;

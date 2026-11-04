@@ -28,6 +28,18 @@
     {
       "name": "text added after enable() is at the same size, never twice the size",
       "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const isEnabled = adapter && adapter.s && !adapter.s.ended;\n      if (!isEnabled) return true;\n\n      const container = document.getElementById('dynamic-container');\n      const p = document.createElement('p');\n      p.id = 'dynamic-para';\n      p.style.fontSize = '16px';\n      p.textContent = 'Dynamic text inserted inside container';\n      container.appendChild(p);\n\n      await new Promise(r => setTimeout(r, 220));\n\n      const sz = parseFloat(getComputedStyle(p).fontSize);\n      p.remove();\n\n      return Math.abs(sz - 24) < 0.5;\n      "
+    },
+    {
+      "name": "letter and word spacing are reset on icon fonts and toolkit UI",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      const iconMat = document.getElementById('icon-material');\n      const iconBi = document.getElementById('icon-bi');\n      const iconFa = document.getElementById('icon-fa');\n      const uiText = document.getElementById('toolkit-ui-text');\n\n      const matLs = getComputedStyle(iconMat).letterSpacing;\n      const biLs = getComputedStyle(iconBi).letterSpacing;\n      const faLs = getComputedStyle(iconFa).letterSpacing;\n      const uiLs = getComputedStyle(uiText).letterSpacing;\n      const uiWs = getComputedStyle(uiText).wordSpacing;\n\n      return (matLs === 'normal' || matLs === '0px') &&\n             (biLs === 'normal' || biLs === '0px') &&\n             (faLs === 'normal' || faLs === '0px') &&\n             (uiLs === 'normal' || uiLs === '0px') &&\n             (uiWs === 'normal' || uiWs === '0px');\n      "
+    },
+    {
+      "name": "semantic italic text receives WCAG text spacing",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      const italic = document.getElementById('semantic-italic');\n      const italicLh = parseFloat(getComputedStyle(italic).lineHeight);\n      const italicFs = parseFloat(getComputedStyle(italic).fontSize);\n      const italicLs = parseFloat(getComputedStyle(italic).letterSpacing);\n\n      const hasLh = italicLh >= (2 * italicFs) - 0.5;\n      const hasLs = italicLs >= (0.12 * italicFs) - 0.5;\n      return hasLh && hasLs;\n      "
+    },
+    {
+      "name": "radio and checkbox inputs do not have flex-shrink forced to zero",
+      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      const radio = document.getElementById('input-radio');\n      const checkbox = document.getElementById('input-checkbox');\n\n      return getComputedStyle(radio).flexShrink !== '0' &&\n             getComputedStyle(checkbox).flexShrink !== '0';\n      "
     }
   ]
 }

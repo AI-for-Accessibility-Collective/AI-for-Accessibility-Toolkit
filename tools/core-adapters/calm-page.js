@@ -29,11 +29,12 @@
 //   • Listens for late-playing media; leaves media playing if the user activated that media or its controls.
 //   • Carousels: pauses via their own control only when inside the carousel, named Pause or Stop,
 //     button not in a form or submit, and carousel is playing. Restores via Play on disable().
+//     A disabled Pause button means the carousel is not playing: leave it.
 //   • Scripted carousels without pause buttons: holds active slide state class, changing only track children.
 //     If page forces change more than 5 times without user input, ceases holding rather than fight the page.
 //   • Measure once: never reads scrollWidth across all elements on the page.
 //   • Says nothing on load to avoid noisy screen reader announcements.
-//   • If all features are turned off, cleans up and returns false.
+//   • If all features are turned off, cleans up and returns false. Explicit options take precedence.
 //
 // What it cannot do:
 //   • Cannot pause animations drawn directly on <canvas> without altering page scripts.
@@ -51,37 +52,26 @@ export default {
     const motionReducer = profile.motionReducer === true;
 
     // Feature toggles: options are separate for animations and transitions
-    const optAnimations = this.options.animations !== undefined
-      ? Boolean(this.options.animations)
-      : (this.options.stopAnimations !== undefined ? Boolean(this.options.stopAnimations) : true);
+    const resolveOption = (val1, val2) => {
+      if (val1 !== undefined) return Boolean(val1);
+      if (val2 !== undefined) return Boolean(val2);
+      return undefined;
+    };
 
-    const optTransitions = this.options.transitions !== undefined
-      ? Boolean(this.options.transitions)
-      : (this.options.stopTransitions !== undefined ? Boolean(this.options.stopTransitions) : true);
+    const optAnimations = resolveOption(this.options.animations, this.options.stopAnimations);
+    const optTransitions = resolveOption(this.options.transitions, this.options.stopTransitions);
+    const optSmoothScroll = resolveOption(this.options.smoothScroll, this.options.stopSmoothScroll);
+    const optVideos = resolveOption(this.options.videos, this.options.pauseVideos);
+    const optCarousels = resolveOption(this.options.carousels, this.options.pauseCarousels);
+    const optMarquees = resolveOption(this.options.marquees, this.options.stopMarquees);
 
-    const optSmoothScroll = this.options.smoothScroll !== undefined
-      ? Boolean(this.options.smoothScroll)
-      : (this.options.stopSmoothScroll !== undefined ? Boolean(this.options.stopSmoothScroll) : true);
-
-    const optVideos = this.options.videos !== undefined
-      ? Boolean(this.options.videos)
-      : (this.options.pauseVideos !== undefined ? Boolean(this.options.pauseVideos) : true);
-
-    const optCarousels = this.options.carousels !== undefined
-      ? Boolean(this.options.carousels)
-      : (this.options.pauseCarousels !== undefined ? Boolean(this.options.pauseCarousels) : true);
-
-    const optMarquees = this.options.marquees !== undefined
-      ? Boolean(this.options.marquees)
-      : (this.options.stopMarquees !== undefined ? Boolean(this.options.stopMarquees) : true);
-
-    // Profile setting motionReducer overrides options if enabled
-    const effectiveAnimations = motionReducer || optAnimations;
-    const effectiveTransitions = motionReducer || optTransitions;
-    const effectiveSmoothScroll = motionReducer || optSmoothScroll;
-    const effectiveVideos = motionReducer || optVideos;
-    const effectiveCarousels = motionReducer || optCarousels;
-    const effectiveMarquees = motionReducer || optMarquees;
+    // Explicit options take precedence over motionReducer; otherwise fallback to motionReducer or true
+    const effectiveAnimations = optAnimations !== undefined ? optAnimations : (motionReducer || true);
+    const effectiveTransitions = optTransitions !== undefined ? optTransitions : (motionReducer || true);
+    const effectiveSmoothScroll = optSmoothScroll !== undefined ? optSmoothScroll : (motionReducer || true);
+    const effectiveVideos = optVideos !== undefined ? optVideos : (motionReducer || true);
+    const effectiveCarousels = optCarousels !== undefined ? optCarousels : (motionReducer || true);
+    const effectiveMarquees = optMarquees !== undefined ? optMarquees : (motionReducer || true);
 
     // If every feature is off: nothing to do
     if (!effectiveAnimations && !effectiveTransitions && !effectiveSmoothScroll &&
@@ -158,7 +148,8 @@ export default {
         if (target === media || (typeof media.contains === 'function' && media.contains(target))) return true;
         const btn = target.closest ? target.closest('button, [role="button"], input[type="button"]') : null;
         if (!btn) return false;
-        if (btn.getAttribute('aria-controls') === media.id) return true;
+        const ariaControls = btn.getAttribute('aria-controls');
+        if (media.id && ariaControls && ariaControls.split(/\s+/).includes(media.id)) return true;
         const container = media.closest ? media.closest('figure, [role="region"], [class*="player"], [class*="video"]') : null;
         if (container && container.contains(btn) && container !== document.body && container !== document.documentElement) {
           return true;
@@ -373,12 +364,17 @@ export default {
 
         for (const btn of buttons) {
           if (btn.closest('form')) continue;
-          if (btn.tagName === 'BUTTON' && btn.type === 'submit') continue;
+          if (btn.tagName === 'BUTTON' && btn.getAttribute('type')?.toLowerCase() === 'submit') continue;
           if (btn.tagName === 'INPUT' && (btn.type === 'submit' || btn.type === 'image')) continue;
-          if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') continue;
 
           const name = (s.page?.nameOf?.(btn) || btn.getAttribute('aria-label') || btn.textContent || '').trim();
           if (!/\b(pause|stop)\b/i.test(name)) continue;
+
+          const isDisabled = btn.disabled || btn.getAttribute('aria-disabled') === 'true';
+          if (isDisabled) {
+            // A disabled Pause button means the carousel is not playing: leave it.
+            return;
+          }
 
           const pressed = btn.getAttribute('aria-pressed');
           if (pressed === 'true') continue;
@@ -455,11 +451,11 @@ export default {
             try { button.click(); } catch {}
             continue;
           }
-          if (/\b(pause|stop)\b/i.test(currentName) && pressed !== 'true') {
-            continue;
-          }
           const playBtn = Array.from(carousel.querySelectorAll('button, [role="button"], input[type="button"]')).find((b) => {
             if (b.closest('form')) return false;
+            if (b.tagName === 'BUTTON' && b.getAttribute('type')?.toLowerCase() === 'submit') return false;
+            if (b.tagName === 'INPUT' && (b.type === 'submit' || b.type === 'image')) return false;
+            if (b.disabled || b.getAttribute('aria-disabled') === 'true') return false;
             const n = (s.page?.nameOf?.(b) || b.getAttribute('aria-label') || b.textContent || '').trim();
             return /\bplay\b/i.test(n);
           });

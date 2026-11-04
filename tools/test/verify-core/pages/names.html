@@ -156,6 +156,28 @@
 
       <a href="/faq">FAQ</a>
       <input id="input-after-a" type="text">
+
+      <!-- Informative wide banner and tall divider (must not be marked alt="" spacers) -->
+      <img id="img-wide-divider" src="wide-divider.png" width="800" height="2" style="max-width: 100%">
+      <img id="img-tall-rule" src="tall-rule.png" width="2" height="600">
+
+      <!-- Buttons with layout and utility classes (must not be named from utility classes) -->
+      <button id="btn-col-sm" class="btn col-sm-6" type="button"></button>
+      <button id="btn-flex" class="btn flex m-2" type="button"></button>
+
+      <!-- Non-http links (must not be parsed as link path) -->
+      <a id="link-mailto" href="mailto:support@example.com"></a>
+      <a id="link-tel" href="tel:+1-800-555-1212"></a>
+
+      <!-- aria-hidden content (must not be modified or sent to AI) -->
+      <img id="img-aria-hidden" aria-hidden="true" src="photo.jpg" width="100" height="100">
+      <div aria-hidden="true">
+        <img id="img-nested-aria-hidden" src="another-photo.jpg" width="120" height="80">
+        <button id="btn-nested-aria-hidden" type="button"></button>
+      </div>
+
+      <!-- input[type=button] with icon class (must be named Search via page-first rules) -->
+      <input id="input-btn-icon" type="button" class="btn-search">
     </section>
   </main>
 

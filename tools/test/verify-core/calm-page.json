@@ -5,59 +5,75 @@
   "checks": [
     {
       "name": "computed animation and transition durations are none or 0 after enable()",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const badge = document.getElementById('badge-pulsing');\n      const box = document.getElementById('smooth-transition-box');\n      if (!badge || !box) return false;\n      const animDur = parseFloat(getComputedStyle(badge).animationDuration);\n      const transDur = parseFloat(getComputedStyle(box).transitionDuration);\n      return animDur === 0 && transDur === 0;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const badge = document.getElementById('badge-pulsing'); const box = document.getElementById('smooth-transition-box'); if (!badge || !box) return false; const animDur = parseFloat(getComputedStyle(badge).animationDuration); const transDur = parseFloat(getComputedStyle(box).transitionDuration); return animDur === 0 && transDur === 0;"
     },
     {
       "name": "an autoplaying video is paused, with controls; a muted looping one too",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const vAuto = document.getElementById('video-autoplay');\n      const vLoop = document.getElementById('video-looping');\n      if (!vAuto || !vLoop) return false;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return vAuto.paused === true && Boolean(vAuto.controls) &&\n             vLoop.paused === true && Boolean(vLoop.controls);\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; const vAuto = document.getElementById('video-autoplay'); const vLoop = document.getElementById('video-looping'); if (!vAuto || !vLoop) return false; if (!adapter || !adapter.s || adapter.s.ended) return true; return vAuto.paused === true && Boolean(vAuto.controls) && vLoop.paused === true && Boolean(vLoop.controls);"
     },
     {
       "name": "a carousel stops advancing (its slide stays the same for several seconds)",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const track = document.getElementById('auto-track');\n      if (!track) return false;\n      const slideStart = track.querySelector('.slide.active')?.id;\n      if (!slideStart) return false;\n      await new Promise(r => setTimeout(r, 2000));\n      const slideEnd = track.querySelector('.slide.active')?.id;\n      return slideStart === slideEnd;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const track = document.getElementById('auto-track'); if (!track) return false; const slideStart = track.querySelector('.slide.active')?.id; if (!slideStart) return false; await new Promise(r => setTimeout(r, 2000)); const slideEnd = track.querySelector('.slide.active')?.id; return slideStart === slideEnd;"
     },
     {
       "name": "content hidden by an animation start state is visible",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      const el = document.getElementById('anim-start-hidden');\n      if (!el) return false;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const style = getComputedStyle(el);\n      return parseFloat(style.opacity) === 1 && style.visibility !== 'hidden' && style.display !== 'none';\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; const el = document.getElementById('anim-start-hidden'); if (!el) return false; if (!adapter || !adapter.s || adapter.s.ended) return true; const style = getComputedStyle(el); return parseFloat(style.opacity) === 1 && style.visibility !== 'hidden' && style.display !== 'none';"
     },
     {
       "name": "disable() restarts only what was playing",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const vAuto = document.getElementById('video-autoplay');\n      const vLoop = document.getElementById('video-looping');\n      const vPaused = document.getElementById('video-paused');\n      if (!vAuto || !vLoop || !vPaused) return false;\n\n      // When enabled, autoplay and looping are paused\n      if (!vAuto.paused || !vLoop.paused || !vPaused.paused) return false;\n\n      // Disable adapter\n      adapter.disable();\n      await new Promise(r => setTimeout(r, 100));\n\n      const autoPlayingAfterDisable = !vAuto.paused;\n      const loopPlayingAfterDisable = !vLoop.paused;\n      const pausedStillPaused = vPaused.paused;\n\n      // Re-enable so following checks have adapter on\n      adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit);\n      await new Promise(r => setTimeout(r, 100));\n\n      return autoPlayingAfterDisable && loopPlayingAfterDisable && pausedStillPaused;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const vAuto = document.getElementById('video-autoplay'); const vLoop = document.getElementById('video-looping'); const vPaused = document.getElementById('video-paused'); if (!vAuto || !vLoop || !vPaused) return false; if (!vAuto.paused || !vLoop.paused || !vPaused.paused) return false; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const autoPlayingAfterDisable = !vAuto.paused; const loopPlayingAfterDisable = !vLoop.paused; const pausedStillPaused = vPaused.paused; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await new Promise(r => setTimeout(r, 100)); return autoPlayingAfterDisable && loopPlayingAfterDisable && pausedStillPaused;"
     },
     {
       "name": "a video the person plays after enable() keeps playing",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const vPaused = document.getElementById('video-paused');\n      const btnPlay = document.getElementById('btn-play-paused');\n      if (!vPaused || !btnPlay) return false;\n\n      // The person plays the paused video\n      await __verifyClick('#btn-play-paused');\n      await new Promise(r => setTimeout(r, 150));\n\n      if (vPaused.paused) return false;\n\n      // Disable adapter - the video the person played must keep playing\n      adapter.disable();\n      await new Promise(r => setTimeout(r, 100));\n\n      const keepsPlaying = !vPaused.paused;\n\n      // Re-enable and reset for next checks\n      vPaused.pause();\n      adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit);\n\n      return keepsPlaying;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const vPaused = document.getElementById('video-paused'); const btnPlay = document.getElementById('btn-play-paused'); if (!vPaused || !btnPlay) return false; await __verifyClick('#btn-play-paused'); await new Promise(r => setTimeout(r, 150)); if (vPaused.paused) return false; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const keepsPlaying = !vPaused.paused; vPaused.pause(); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return keepsPlaying;"
     },
     {
       "name": "no button outside a carousel is ever clicked, even one named Stop or Pause next to a slider",
-      "code": "\n      const count = window.__outsideStopClickedCount || 0;\n      return count === 0;\n    "
+      "code": "const count = window.__outsideStopClickedCount || 0; return count === 0;"
     },
     {
       "name": "nothing is announced on load",
-      "code": "\n      const spoken = globalThis.__verifyHost?.spoken || [];\n      return spoken.length === 0;\n    "
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
     },
     {
       "name": "content to leave alone is left alone and landmarks are intact",
-      "code": "\n      const h1 = document.querySelector('header h1');\n      const prose = document.getElementById('prose-policy');\n      const btn = document.getElementById('btn-standard');\n      const nav = document.querySelector('nav');\n      if (!h1 || !prose || !btn || !nav) return false;\n      if (!h1.textContent.includes('Calm Page Accessibility Verification')) return false;\n      const rect = btn.getBoundingClientRect();\n      if (rect.width < 24 || rect.height < 24) return false;\n      return true;\n    "
+      "code": "const h1 = document.querySelector('header h1'); const prose = document.getElementById('prose-policy'); const btn = document.getElementById('btn-standard'); const nav = document.querySelector('nav'); if (!h1 || !prose || !btn || !nav) return false; if (!h1.textContent.includes('Calm Page Accessibility Verification')) return false; const rect = btn.getBoundingClientRect(); if (rect.width < 24 || rect.height < 24) return false; return true;"
     },
     {
       "name": "animation without forwards remains visible (opacity 1) after enable()",
-      "code": "\n      const el = document.getElementById('anim-no-forwards');\n      if (!el) return false;\n      const op = parseFloat(getComputedStyle(el).opacity);\n      return op === 1;\n    "
+      "code": "const el = document.getElementById('anim-no-forwards'); if (!el) return false; const op = parseFloat(getComputedStyle(el).opacity); return op === 1;"
     },
     {
       "name": "dynamically added carousel element is processed and held",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const container = document.getElementById('dynamic-carousel-slot');\n      if (!container) return false;\n\n      let dynClicked = false;\n      const dynCarousel = document.createElement('section');\n      dynCarousel.setAttribute('aria-roledescription', 'carousel');\n      dynCarousel.setAttribute('aria-label', 'Dynamic Test Carousel');\n      dynCarousel.innerHTML = '<button id=\"btn-dyn-test-pause\" type=\"button\" aria-label=\"Pause carousel\">Pause carousel</button>';\n      const btn = dynCarousel.querySelector('#btn-dyn-test-pause');\n      btn.addEventListener('click', () => { dynClicked = true; });\n\n      container.appendChild(dynCarousel);\n      await new Promise(r => setTimeout(r, 400));\n      const result = dynClicked;\n      dynCarousel.remove();\n\n      return result === true;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const container = document.getElementById('dynamic-carousel-slot'); if (!container) return false; let dynClicked = false; const dynCarousel = document.createElement('section'); dynCarousel.setAttribute('aria-roledescription', 'carousel'); dynCarousel.setAttribute('aria-label', 'Dynamic Test Carousel'); dynCarousel.innerHTML = '<button id=\"btn-dyn-test-pause\" type=\"button\" aria-label=\"Pause carousel\">Pause carousel</button>'; const btn = dynCarousel.querySelector('#btn-dyn-test-pause'); btn.addEventListener('click', () => { dynClicked = true; }); container.appendChild(dynCarousel); await new Promise(r => setTimeout(r, 400)); const result = dynClicked; dynCarousel.remove(); return result === true;"
     },
     {
       "name": "user play on a paused carousel is not re-clicked on disable()",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n\n      await __verifyClick('#btn-sep-play');\n      await new Promise(r => setTimeout(r, 100));\n      const clicksAfterUser = window.__sepPlayClicks;\n\n      adapter.disable();\n      await new Promise(r => setTimeout(r, 100));\n      const clicksAfterDisable = window.__sepPlayClicks;\n\n      adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit);\n      return clicksAfterUser === 1 && clicksAfterDisable === 1;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const before = window.__sepPlayClicks || 0; await __verifyClick('#btn-sep-play'); await new Promise(r => setTimeout(r, 100)); const clicksAfterUser = window.__sepPlayClicks; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const clicksAfterDisable = window.__sepPlayClicks; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return clicksAfterUser === before + 1 && clicksAfterDisable === clicksAfterUser;"
     },
     {
       "name": "click on unrelated button in same div does not treat late video as user-started",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      const v = document.getElementById('video-in-generic-div');\n      const btnUnrelated = document.getElementById('btn-unrelated-action');\n      if (!v || !btnUnrelated) return false;\n\n      await __verifyClick('#btn-unrelated-action');\n      try { await v.play(); } catch {}\n      await new Promise(r => setTimeout(r, 200));\n\n      return v.paused === true;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const v = document.getElementById('video-in-generic-div'); const btnUnrelated = document.getElementById('btn-unrelated-action'); if (!v || !btnUnrelated) return false; await __verifyClick('#btn-unrelated-action'); try { await v.play(); } catch {} await new Promise(r => setTimeout(r, 200)); return v.paused === true;"
     },
     {
       "name": "pause control using input type button inside carousel is recognized and clicked",
-      "code": "\n      const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n      if (!adapter || !adapter.s || adapter.s.ended) return true;\n      return window.__inputPauseClicked === true;\n    "
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__inputPauseClicked === true;"
+    },
+    {
+      "name": "carousel with standard button pause control without type attribute is clicked",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__standardPauseClicked === true;"
+    },
+    {
+      "name": "carousel with separate play and pause buttons is resumed on disable without user input",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const before = window.__resumePlayClicks || 0; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const after = window.__resumePlayClicks || 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return after === before + 1;"
+    },
+    {
+      "name": "carousel with disabled pause button is left alone and not held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('dp-slide-1'); const s2 = document.getElementById('dp-slide-2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const notReverted = s2.classList.contains('active') && !s1.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return notReverted;"
+    },
+    {
+      "name": "button with empty aria-controls does not match media element without id",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const container = document.getElementById('media-no-id-container'); const v = container?.querySelector('video'); const btn = document.getElementById('btn-empty-controls'); if (!v || !btn) return false; await __verifyClick('#btn-empty-controls'); try { await v.play(); } catch {} await new Promise(r => setTimeout(r, 200)); return v.paused === true;"
     }
   ]
 }

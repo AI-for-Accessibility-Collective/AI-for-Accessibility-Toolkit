@@ -5,15 +5,15 @@
   "checks": [
     {
       "name": "finding 1: banner and contentinfo inside article do not block site banner, main, or footer",
-      "code": "\n        const masthead = document.getElementById('site-masthead');\n        const footer = document.getElementById('site-footer');\n        const main = document.getElementById('primary-area');\n        if (!masthead || !footer || !main) return false;\n        return masthead.getAttribute('role') === 'banner' &&\n               footer.getAttribute('role') === 'contentinfo' &&\n               main.getAttribute('role') === 'main';\n      "
+      "code": "const masthead = document.getElementById('site-masthead'); const footer = document.getElementById('site-footer'); const main = document.getElementById('primary-area'); if (!masthead || !footer || !main) return false; return masthead.getAttribute('role') === 'banner' && footer.getAttribute('role') === 'contentinfo' && main.getAttribute('role') === 'main';"
     },
     {
       "name": "finding 2: candidate footer containing nav is recognized as contentinfo",
-      "code": "\n        const footer = document.getElementById('site-footer');\n        if (!footer) return false;\n        const innerNav = footer.querySelector('nav');\n        return Boolean(innerNav) && footer.getAttribute('role') === 'contentinfo';\n      "
+      "code": "const footer = document.getElementById('site-footer'); if (!footer) return false; const innerNav = footer.querySelector('nav'); return Boolean(innerNav) && footer.getAttribute('role') === 'contentinfo';"
     },
     {
       "name": "finding 3: element with class main-content is prioritized over larger unnamed candidate",
-      "code": "\n        const main = document.getElementById('primary-area');\n        const other = document.getElementById('other-large-container');\n        if (!main || !other) return false;\n        return main.getAttribute('role') === 'main' && other.getAttribute('role') === null;\n      "
+      "code": "const main = document.getElementById('primary-area'); const other = document.getElementById('other-large-container'); if (!main || !other) return false; return main.getAttribute('role') === 'main' && other.getAttribute('role') === null;"
     }
   ]
 }

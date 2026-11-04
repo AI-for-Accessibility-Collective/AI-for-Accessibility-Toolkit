@@ -44,7 +44,7 @@ const HEADER_HINT = /\b(header|masthead|banner|topbar|top-bar)\b/i;
 const NOT_HEADER = /cookie|consent|gdpr|privacy|notice|alert|promo/i;
 const FOOTER_HINT = /\b(footer|site-?foot|page-?foot|colophon)\b/i;
 const NAV_HINT = /\b(nav|navbar|navigation)\b/i;
-const MAIN_ID = /^(main|content|main-?content|primary)$/i;
+const MAIN_ID = /^(main|content|main[-_]?content|primary)$/i;
 
 function hint(re, el) {
   const cls = el.getAttribute('class') || '';
@@ -62,13 +62,17 @@ function looksLikeNav(el) {
 function isTopLevelBanner(el) {
   if (!el || el.matches('article, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"]')) return false;
   if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
-  return el.getAttribute('role') === 'banner' || el.tagName === 'HEADER';
+  const role = el.getAttribute('role');
+  if (role) return role === 'banner';
+  return el.tagName === 'HEADER';
 }
 
 function isTopLevelFooter(el) {
   if (!el || el.matches('article, aside, main, nav, [role="article"], [role="complementary"], [role="main"], [role="navigation"]')) return false;
   if (el.parentElement?.closest(NON_TOP_ANCESTOR)) return false;
-  return el.getAttribute('role') === 'contentinfo' || el.tagName === 'FOOTER';
+  const role = el.getAttribute('role');
+  if (role) return role === 'contentinfo';
+  return el.tagName === 'FOOTER';
 }
 
 function hasBanner(doc) {
@@ -155,7 +159,7 @@ function containsTopLevelBannerOrFooter(el) {
 function addMain(s, doc) {
   if (hasMain(doc)) return false;
 
-  const LANDMARK_ANCESTOR = 'header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
+  const LANDMARK_ANCESTOR = 'article, [role="article"], header, footer, nav, aside, main, [role="banner"], [role="contentinfo"], [role="navigation"], [role="complementary"], [role="main"]';
 
   let candidates = [...doc.querySelectorAll('div, section')].filter((el) => {
     if (el.getAttribute('role')) return false;
@@ -171,11 +175,10 @@ function addMain(s, doc) {
       }
     }
     if (containsTopLevelBannerOrFooter(el)) return false;
-    if (el.querySelector('main, [role="main"]')) return false;
+    if (el.querySelector('main, [role="main"], nav, [role="navigation"]')) return false;
     return true;
   });
 
-  candidates = candidates.filter((el) => !candidates.some((other) => other !== el && other.contains(el)));
   if (candidates.length === 0) return false;
 
   const named = candidates.filter((el) => {
@@ -186,7 +189,10 @@ function addMain(s, doc) {
   });
 
   const pool = named.length > 0 ? named : candidates;
-  const target = pool.reduce((a, b) =>
+  const outermost = pool.filter((el) => !pool.some((other) => other !== el && other.contains(el)));
+  if (outermost.length === 0) return false;
+
+  const target = outermost.reduce((a, b) =>
     (a.textContent?.length || 0) >= (b.textContent?.length || 0) ? a : b
   );
 

@@ -1,0 +1,23 @@
+{
+  "name": "structure-review",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-review.html",
+  "checks": [
+    {
+      "name": "Finding 1: designated main element inside wrapper container is assigned role=main, wrapper is not",
+      "code": "const wrapper = document.getElementById('wrapper'); const main = document.getElementById('main_content'); if (!wrapper || !main) return false; return main.getAttribute('role') === 'main' && wrapper.getAttribute('role') === null;"
+    },
+    {
+      "name": "Finding 2: candidate inside article is excluded from main landmark",
+      "code": "const articleMain = document.getElementById('article-main'); if (!articleMain) return false; return articleMain.getAttribute('role') === null;"
+    },
+    {
+      "name": "Finding 3: presentation header and footer do not block banner and contentinfo landmarks",
+      "code": "const masthead = document.getElementById('masthead'); const colophon = document.getElementById('colophon'); if (!masthead || !colophon) return false; return masthead.getAttribute('role') === 'banner' && colophon.getAttribute('role') === 'contentinfo';"
+    },
+    {
+      "name": "Finding 4: snake_case main_content identifier is recognized by MAIN_ID",
+      "code": "const main = document.getElementById('main_content'); if (!main) return false; return main.getAttribute('role') === 'main';"
+    }
+  ]
+}

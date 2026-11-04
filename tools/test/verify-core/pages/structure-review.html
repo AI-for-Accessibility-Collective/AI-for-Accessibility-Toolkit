@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Structure Review Fix Verification</title>
+</head>
+<body>
+  <!-- Finding 3: Top-level header with role="presentation" should not count as banner landmark -->
+  <header role="presentation">
+    <p>Decorative top bar</p>
+  </header>
+
+  <div id="masthead" class="site-header">
+    <h1>Site Header</h1>
+    <p>Actual header text</p>
+  </div>
+
+  <!-- Finding 1, 4: Wrapper container containing navigation and snake_case main_content element -->
+  <div id="wrapper">
+    <div id="nav" class="navbar">
+      <a href="#link1">Section 1</a>
+      <a href="#link2">Section 2</a>
+      <a href="#link3">Section 3</a>
+    </div>
+
+    <div id="main_content" class="main_section">
+      <h2>Main Content Section</h2>
+      <p>This is the primary content area designated by author id main_content in snake_case. It contains sufficient text to exceed the one hundred characters threshold required for main candidates.</p>
+    </div>
+  </div>
+
+  <!-- Finding 2: Element inside article must not be assigned role="main" -->
+  <article id="news-article">
+    <div id="article-main" class="main-content">
+      <h3>Article Story</h3>
+      <p>This is story content inside an article element with class main-content exceeding one hundred characters in total length to ensure it would be candidate if not excluded.</p>
+    </div>
+  </article>
+
+  <!-- Finding 3: Top-level footer with role="presentation" should not count as contentinfo landmark -->
+  <footer role="presentation">
+    <p>Decorative footer bar</p>
+  </footer>
+
+  <div id="colophon" class="site-footer">
+    <p>© 2026 Test Site. All rights reserved.</p>
+  </div>
+</body>
+</html>

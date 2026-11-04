@@ -15,15 +15,16 @@
 //     has an accessible name, images included. Controls with their own HTML title
 //     attribute already have an accessible name via s.page.nameOf and are left as-is.
 //   • Names from the page first without AI: SVG titles, icon class words, small icon image
-//     file names, link URL last path parts, placeholder attributes, input names, and
-//     nearby label text.
-//   • Decorative images (tiny spacers <= 2px, role presentation/none) are left alone
-//     or marked clearly with alt="" if spacers, never sent to AI.
+//     file names, link URL last path parts, placeholder attributes, input names (an explicit
+//     extension for form fields), and nearby label text.
+//   • Decorative images (tiny spacers <= 2px in both dimensions, role presentation/none)
+//     are left alone or marked clearly with alt="" if spacers, never sent to AI.
+//   • Elements with aria-hidden="true" or inside aria-hidden subtrees are skipped.
 //   • A file name's words name only a small icon (48 by 48 pixels or smaller); photos
 //     and illustrations are never named from file names (on null from AI, left untouched).
 //   • Words from class or file name match whole words; style words (primary, secondary,
 //     btn, icon, large) are filtered out and not treated as names.
-//   • A link to '#...' or '?...' is never named from the page's path.
+//   • A link to '#...', '?...', or non-http(s) schemes (mailto:, tel:) is never named from the path.
 //   • A nearby label names a field only when it sits right before it and labels nothing else.
 //   • Marks an image inside a named control alt="" only when it is small (<= 48px)
 //     or clearly decorative.
@@ -50,7 +51,8 @@ const STYLE_WORDS = new Set([
   'material', 'symbols', 'svg', 'img', 'nav', 'link',
   'solid', 'regular', 'brands', 'duotone', 'thin', 'sharp', 'outline',
   'outlined', 'ui', 'js', 'filled', 'round', 'rounded', 'glyph',
-  'classic', 'mini', 'micro', 'feather', 'lucide', 'ion', 'ionicons'
+  'classic', 'mini', 'micro', 'feather', 'lucide', 'ion', 'ionicons',
+  'xs', 'sm', 'md', 'lg', 'xl', 'xxl', 'danger', 'warning', 'success', 'info'
 ]);
 
 const JUNK_NAME_RE = /^(q|s|utf8|token|id|csrf.*|_csrf.*|authenticity_token|__RequestVerificationToken)$/i;
@@ -85,8 +87,8 @@ function getImageDimensions(img) {
   try {
     const rect = img.getBoundingClientRect?.();
     if (rect && (rect.width > 0 || rect.height > 0)) {
-      if (w === null) w = rect.width;
-      if (h === null) h = rect.height;
+      if (w === null && rect.width > 0) w = rect.width;
+      if (h === null && rect.height > 0) h = rect.height;
     }
   } catch {}
 
@@ -98,9 +100,9 @@ function getImageDimensions(img) {
 
 function isSpacerImage(img) {
   const { w, h } = getImageDimensions(img);
-  if (w !== null && w <= 2) return true;
-  if (h !== null && h <= 2) return true;
-  return false;
+  if (w === null || h === null) return false;
+  if (w > 48 || h > 48) return false;
+  return w <= 2 && h <= 2;
 }
 
 function isSmallIcon(img) {
@@ -216,9 +218,8 @@ function extractWordsFromClass(el) {
     }
   }
 
-  const ICON_TOKEN_RE = /^(?:fa|bi|glyphicon|feather|lucide|ion|material)[-_]|[-_]icon(?:[-_]|$)/i;
+  const ICON_TOKEN_RE = /^(?:fa|bi|glyphicon|feather|lucide|ion|material|icon|btn)[-_]|[-_]icon(?:[-_]|$)/i;
 
-  // Pass 1: Icon-specific tokens (e.g. fa-play, bi-trash, icon-search)
   for (const token of allTokens) {
     if (ICON_TOKEN_RE.test(token)) {
       const parts = token
@@ -234,37 +235,23 @@ function extractWordsFromClass(el) {
     }
   }
 
-  // Pass 2: Other class tokens
-  for (const token of allTokens) {
-    if (ICON_TOKEN_RE.test(token)) continue;
-    const parts = token
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .split(/[-_\s]+/)
-      .map(w => w.toLowerCase().trim())
-      .filter(Boolean);
-
-    const filtered = parts.filter(w => !STYLE_WORDS.has(w) && !/^\d+$/.test(w));
-    if (filtered.length) {
-      return sentenceCase(filtered);
-    }
-  }
-
   return null;
 }
 
 function extractNameFromLinkPath(link) {
   const rawHref = link.getAttribute('href') || '';
   const trimmed = rawHref.trim();
-  if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('?') || trimmed.startsWith('javascript:')) {
+  if (!trimmed || trimmed.charAt(0) === '#' || trimmed.charAt(0) === '?' || trimmed.startsWith('javascript:')) {
     return null;
   }
 
   let pathname = '';
   try {
     const url = new URL(trimmed, 'http://dummy.local');
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
     pathname = url.pathname;
   } catch {
-    pathname = trimmed.split('?')[0].split('#')[0];
+    return null;
   }
 
   const segments = pathname.split('/').filter(Boolean);
@@ -361,7 +348,7 @@ function getControlContext(el) {
 
 export default {
   async enable(options = {}, toolkit) {
-    if (this.s && !this.s.ended) return;
+    if (this.s && !this.s.ended) return true;
     this.options = options || {};
     this.toolkit = toolkit || this.toolkit;
     if (!this.toolkit) return false;
@@ -388,6 +375,7 @@ export default {
     const processElementPageFirst = (el) => {
       if (!s.alive()) return false;
       if (!s.page.isVisible(el)) return false;
+      if (el.closest('[aria-hidden="true"]')) return false;
       if (s.page.isOurs(el) || el.closest('[data-ai4a11y-ui]')) return false;
 
       const tag = el.tagName;
@@ -452,7 +440,11 @@ export default {
 
       // 3. Class words on control or child icon
       const classWords = extractWordsFromClass(el);
-      if (classWords && (/^(BUTTON|A)$/.test(tag) || el.getAttribute('role') === 'button' || el.getAttribute('role') === 'link')) {
+      const isButtonOrLink = /^(BUTTON|A)$/.test(tag) ||
+                             (tag === 'INPUT' && /^(button|submit|reset)$/.test(type)) ||
+                             el.getAttribute('role') === 'button' ||
+                             el.getAttribute('role') === 'link';
+      if (classWords && isButtonOrLink) {
         s.setAttr(el, 'aria-label', classWords);
         changesCount++;
         markSmallImagesInNamedControl(el);
@@ -512,6 +504,7 @@ export default {
         if (!s.alive()) break;
         if (aiCallsMade >= maxAiCalls) break;
         if (!s.page.isVisible(el)) continue;
+        if (el.closest('[aria-hidden="true"]')) continue;
         if (hasAccessibleName(el, s)) continue;
         if (aiAsked.has(el)) continue;
 
@@ -552,7 +545,7 @@ export default {
       const stillNameless = [];
       for (const el of elements) {
         if (!processElementPageFirst(el)) {
-          if (!hasAccessibleName(el, s) && s.page.isVisible(el)) {
+          if (!hasAccessibleName(el, s) && s.page.isVisible(el) && !el.closest('[aria-hidden="true"]')) {
             stillNameless.push(el);
           }
         }
@@ -585,8 +578,9 @@ export default {
     // If nothing was done and session is still ours, disable and return false
     if (changesCount === 0) {
       if (this.s === s) {
-        this.disable();
+        this.s = null;
       }
+      s.end();
       return false;
     }
 

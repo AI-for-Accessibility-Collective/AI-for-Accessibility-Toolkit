@@ -297,6 +297,30 @@
         <a href="#test" id="link-dyn-target">Options</a>
       </div>
 
+      <div id="section-chk-adj" style="display: flex; gap: 8px; align-items: center; margin: 1rem 0;">
+        <input type="checkbox" id="chk-adj" style="width: 13px; height: 13px; margin: 0;">
+        <button type="button" id="btn-chk-adj" style="width: 20px; height: 20px; padding: 0;">OK</button>
+      </div>
+
+      <div id="section-edge" style="position: relative; height: 30px; margin: 1rem 0;">
+        <input type="text" id="input-edge" style="position: absolute; right: 0; top: 0; width: 18px; height: 18px;" aria-label="Edge filter">
+        <svg role="button" tabindex="0" id="svg-edge" style="position: absolute; right: 30px; top: 0; width: 16px; height: 16px;" viewBox="0 0 16 16" aria-label="Edge help"><circle cx="8" cy="8" r="7" fill="#64748b"/></svg>
+      </div>
+
+      <div id="scrolled-box" style="width: 200px; height: 60px; overflow-y: scroll; border: 1px solid #cbd5e1; margin: 1rem 0;">
+        <div style="height: 40px;">Padding top</div>
+        <a href="#scroll-target" id="link-in-scroll" style="display: inline-block; width: 16px; height: 16px;">Go</a>
+        <div style="height: 100px;">Padding bottom</div>
+      </div>
+
+      <div id="section-margins" style="margin: 1rem 0;">
+        <button type="button" id="btn-margins" style="width: 20px; height: 20px; margin: 6px 14px 8px 10px; padding: 0;">M</button>
+      </div>
+
+      <div id="section-inert" style="margin: 1rem 0;">
+        <a href="#inert" id="inert-item" style="pointer-events: none; width: 15px; height: 15px; display: inline-block;">Inert</a>
+      </div>
+
       <div id="dynamic-container"></div>
     </article>
   </main>

@@ -25,6 +25,7 @@
 //     element layout, allowing the shortcut to adjust size on the page.
 //   • Spacing follows WCAG 1.4.12: line height up to 2, letter spacing up to 0.12 em, word spacing 0.16 em,
 //     and paragraph spacing 2 em when any spacing setting is active.
+//   • Explicitly resets letter and word spacing on icon fonts and toolkit UI to prevent ligature breakage and styling leaks.
 //   • Spacing is one stylesheet applied through s.text.fit(() => s.css(...)), which grows only boxes
 //     the spacing made cut text off, leaving intentionally truncated boxes alone.
 //   • Size is applied first, then spacing.
@@ -127,12 +128,15 @@ export default {
 
       const rules = [];
       if (textProps.length) {
-        rules.push(`body, body *:not(svg):not(svg *):not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *):not(i):not([class*="icon"]):not([class*="material-"]):not([class*="fa-"]) {\n  ${textProps.join('\n  ')}\n}`);
+        rules.push(`body, body *:not(svg):not(svg *):not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *):not([class*="icon"]):not([class*="material-"]):not([class*="fa-"]):not([class*="bi-"]):not([class~="bi"]) {\n  ${textProps.join('\n  ')}\n}`);
+      }
+
+      if (hasLetterSpacing) {
+        rules.push(`[data-ai4a11y-ui], [data-ai4a11y-ui] *, [class*="icon"], [class*="icon"] *, [class*="material-"], [class*="material-"] *, [class*="fa-"], [class*="fa-"] *, [class*="bi-"], [class*="bi-"] *, [class~="bi"], [class~="bi"] * {\n  letter-spacing: normal !important;\n  word-spacing: normal !important;\n}`);
       }
 
       // Paragraph spacing comes with any spacing setting
       rules.push(`p:not([data-ai4a11y-ui]):not([data-ai4a11y-ui] *) {\n  margin-bottom: 2em !important;\n}`);
-      rules.push(`input[type="radio"], input[type="checkbox"] {\n  flex-shrink: 0 !important;\n}`);
 
       const cssText = rules.join('\n');
       spacingGroup.text.fit(() => spacingGroup.css('text-spacing', cssText));
