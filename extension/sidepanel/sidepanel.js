@@ -737,7 +737,14 @@ function checkWords(a, kind) {
     case 'running': return { state: 'running', text: kind === 'review' ? 'Full review running: the background check, then an independent reviewer. This can take up to an hour.' : 'Checking in the background: on test pages and copies of real sites, narrow and with reduced motion. This takes a few minutes.' };
     case 'cancelled': return { state: 'idle', text: c.why === 'changed' ? `${what} stopped: the assistant is changing the adapter. Its next version is checked.` : `${what} stopped.` };
     case 'failed': return { state: 'failed', text: `${what} could not run: ${c.error}` };
-    case 'passed': return { state: 'passed', text: kind === 'review' ? 'Full review: no issues found.' : `Background check passed: ${runs(c.passed)} passed${c.skipped ? `, ${c.skipped} skipped` : ''}; it applied on ${c.appliedOn} of ${c.testPages} test pages.` };
+    case 'passed': {
+      if (kind === 'review') return { state: 'passed', text: 'Full review: no issues found.' };
+      const broke = `Background check passed: nothing broke in ${runs(c.passed)}${c.skipped ? ` (${c.skipped} skipped: a site could not be reached)` : ''}.`;
+      if (c.appliedOn) return { state: 'passed', text: `${broke} It made its change on ${c.appliedOn} of its ${c.testPages} test pages.` };
+      // Made for one site: the test pages do not have what it changes.
+      const site = (a.runsOn || []).filter(p => p !== '*://*/*').map(hostOf).filter(Boolean);
+      return { state: 'passed', text: `${broke} None of its ${c.testPages} test pages has what it changes${site.length ? ` (it is made for ${[...new Set(site)].join(', ')})` : ''}, so this shows it does no harm on other pages, not that it works. Its preview on your page is what showed it working.` };
+    }
     case 'problems': {
       const fix = a.gaveUp ? ` The assistant could not fix ${kind === 'review' ? 'them' : 'all of them'} after ${a.fixes} tries: ask it, or use this version as it is.`
         : a.fixing ? (isBusy() ? ' The assistant is fixing them.' : ' The assistant tried to fix them: see its reply.') : '';
@@ -778,7 +785,9 @@ function renderReady() {
     li.append(title, el('p', 'about', a.about), el('p', 'where', `Runs on ${a.pageTypes?.length ? `${a.pageTypes.map(t => pageTypeById(t)?.name || t).join(', ')} on ` : ''}${a.runsOn.map(p => (p === '*://*/*' ? 'all websites' : p)).join(', ')}`));
     for (const kind of ['check', 'review']) { const w = checkWords(a, kind); if (w) li.append(statusNode(w)); }
     const mine = added[addedKey(a)];
-    if (mine) li.append(el('p', 'where', mine.version >= (a.version || 1) ? 'In your account. A newer version that passes its background check replaces it there.' : `Your account has version ${mine.version}: it is updated once this version passes its background check.`));
+    if (mine) li.append(el('p', 'where', mine.version >= (a.version || 1)
+      ? 'In your account: it runs in this browser on the pages above. If the assistant improves it in this chat, your account gets the new version by itself once that version passes its background check.'
+      : `Your account still has version ${mine.version}. It switches to version ${a.version} by itself once this version passes its background check.`));
     const row = el('div', 'row');
     const reviewing = ['queued', 'running'].includes(a.review?.status);
     const review = button(a.review && !reviewing ? 'Full review again' : 'Full review', 'secondary', () => askReview(a, review));

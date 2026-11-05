@@ -235,7 +235,7 @@ try {
     assert.match(shown, /Changed: yes\./, 'the preview counted what enable() changed in the page');
     assert.ok(!/export const|```/.test(shown), 'no code in the sidebar');
     // Usable at once, then checked in the background; the full review when asked.
-    await panel.locator('#ready-list', { hasText: 'Background check passed: 3 runs passed, 1 skipped; it applied on 1 of 14 test pages.' }).waitFor();
+    await panel.locator('#ready-list', { hasText: 'Background check passed: nothing broke in 3 runs (1 skipped: a site could not be reached). It made its change on 1 of its 14 test pages.' }).waitFor();
     await panel.getByRole('button', { name: 'Full review', exact: true }).click();
     await panel.locator('#ready-list', { hasText: 'Full review: no issues found.' }).waitFor();
     // What a screen reader heard: each change once.
@@ -324,7 +324,7 @@ try {
     await until(async () => (await toggle.getAttribute('aria-checked')) === 'false', 'the switch off once installed');
     assert.match(await panel.locator('#preview-label').innerText(), /Previews go on the page when you say so/);
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the installed adapter on the page');
-    await panel.locator('#ready-list', { hasText: 'In your account.' }).waitFor();
+    await panel.locator('#ready-list', { hasText: 'In your account: it runs in this browser' }).waitFor();
 
     // A newer version replaces it in the account once it passes its background check.
     // The switch on with nothing to put back: the next preview goes on without asking.
@@ -335,7 +335,7 @@ try {
     const chatNow = async () => (await (await fetch(`${base}/v1/agent/chats/${await panel.locator('#chat-select').inputValue()}`, { headers: { authorization: `Bearer ${token}` } })).json()).chat;
     const latest = await until(async () => { const c = await chatNow(); const a = c.adapters[0]; return !c.busy && a.check?.status === 'passed' && a.version > 2 && a.version; }, 'the newest version checked', 30000);
     await panel.locator('#status', { hasText: `Updated “Bigger buttons” in your account to version ${latest}.` }).waitFor({ timeout: 30000 });
-    await panel.locator('#ready-list', { hasText: 'In your account.' }).waitFor();
+    await panel.locator('#ready-list', { hasText: 'In your account: it runs in this browser' }).waitFor();
 
     // Chats keep their history: a new one starts empty, the old one comes back.
     const firstChat = await panel.locator('#chat-select').inputValue();
