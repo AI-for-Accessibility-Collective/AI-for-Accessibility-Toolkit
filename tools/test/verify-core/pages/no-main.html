@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library hours over the holidays</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 0; color: #1a1a1a; background: #fff; }
+    .top, .bottom { padding: 0.5em 1em; background: #f2f2f2; }
+    .top a { margin-right: 1em; color: #0b4f8a; }
+    .wrap { display: flex; gap: 2em; max-width: 60em; margin: 0 auto; padding: 1em; }
+    #col-a { flex: 2; }
+    #content { flex: 1; border-left: 1px solid #ccc; padding-left: 1em; }
+    a { color: #0b4f8a; }
+  </style>
+</head>
+<body>
+  <!-- The page marks no main content: no main, no role main, no article. Its header, menu and
+       footer are plain divs. The story is in a column with a name that says nothing (col-a); a box
+       of events beside it is the one named "content". Only what they contain tells which is the
+       main content. -->
+  <div class="top">
+    <a href="#home">Riverside Library</a>
+    <a href="#books">Books</a>
+    <a href="#events">Events</a>
+    <a href="#visit">Visit</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="wrap">
+    <div id="col-a">
+      <h1>Library hours over the holidays</h1>
+      <p id="story-1">All three branches of the library close early on 24 December and stay closed on 25 and 26 December. The main branch on River Street opens again at 9 in the morning on 27 December, and the two smaller branches open at noon that day.</p>
+      <p id="story-2">Books that are due while the library is closed are not late. Their due date moves to the first day the branch is open again, and no fines are charged for those days. You can still return books through the drop box at the River Street door.</p>
+      <p id="story-3">The online catalogue stays open the whole time. You can renew books, place holds and borrow e-books and audiobooks with your library card number and your PIN. If you have forgotten your PIN, the help desk can reset it when the library opens again.</p>
+      <p id="story-4">Over the new year, every branch keeps its usual hours, except on 31 December and 1 January.</p>
+    </div>
+    <div id="content" class="content">
+      <h2>Coming up</h2>
+      <p id="promo-1">Winter story time for children aged three to six, every Saturday morning in January in the children's room at the main branch, with songs, puppets and a craft to take home afterwards.</p>
+      <p id="promo-2">A free workshop for adults on using e-books and audiobooks on a phone or tablet, on the second Tuesday of January. Bring your device and your library card, and staff will help you set it up.</p>
+      <p><a href="#events">All events</a></p>
+    </div>
+  </div>
+  <div class="bottom">
+    <p>Riverside Library, 12 River Street. Call 555 0100 for help with your account or with finding a book.</p>
+    <a href="#privacy">Privacy</a> <a href="#access">Accessibility</a>
+  </div>
+</body>
+</html>

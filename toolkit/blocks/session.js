@@ -25,6 +25,7 @@ import { panelBlock } from './panel.js';
 import { focusBlock, keysBlock } from './focus.js';
 import { textBlock } from './text.js';
 import { aiBlock } from './ai.js';
+import { findMainBlock } from './main.js';
 import { speechBlock } from './speech.js';
 import { mediaBlock } from './media.js';
 import { profileBlock } from './profile.js';
@@ -279,6 +280,7 @@ export function createSession(env, config = {}) {
   s.media = mediaBlock(s, env);
   s.profile = profileBlock(s, env);
   s.zoom = zoomBlock(s, env);
-  s.page = env.page;
+  // toolkit.page, with findMain(), which asks this session's model.
+  s.page = Object.freeze({ ...env.page, findMain: findMainBlock(s, env) });
   return s;
 }

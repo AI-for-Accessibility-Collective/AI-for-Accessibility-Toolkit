@@ -19,6 +19,12 @@
 // Decisions:
 //   • Never simplifies on load and never sends more than the single paragraph requested to AI.
 //   • Inserts a small 'Plain language' button after each long paragraph in the main content.
+//   • The main content is what the page marks (main, role main, or its one article: page.main()),
+//     with no wait. Where it marks none, enable() asks the toolkit's model which part is
+//     (s.page.findMain()), once per page, and only when the page has long paragraphs: then only
+//     that part's paragraphs get buttons. When the model cannot tell, or there is none, no
+//     buttons are added and enable() returns false: no part is guessed (ids and classes like
+//     #content are not the page saying), and buttons all over the page land on its boilerplate.
 //   • When there are more than 8 long paragraphs (or options.maxParagraphsBeforeSection),
 //     inserts one button per innermost section or article (including role="region" and role="article")
 //     instead of after each paragraph.
@@ -130,7 +136,6 @@ export default {
     }
 
     const minChars = this.options.minChars ?? 150;
-    const maxParagraphsBeforeSection = this.options.maxParagraphsBeforeSection ?? 8;
     const isVisible = (el) => {
       if (this.toolkit.page && typeof this.toolkit.page.isVisible === 'function') {
         return this.toolkit.page.isVisible(el);
@@ -152,6 +157,32 @@ export default {
       this.disable();
       return false;
     }
+
+    // The page marks its main content: the buttons go in it, now.
+    const body = document.body || document.documentElement;
+    if (main !== body || !s.page || typeof s.page.findMain !== 'function') {
+      this._addButtons(s, main, longParagraphs);
+      return true;
+    }
+    // It does not: the toolkit's model may tell which part is (s.page.findMain()). With an
+    // answer, only that part's paragraphs get buttons. Without one, none do: buttons all over the
+    // page would land on its boilerplate too (a status line, a copyright), and there is no model
+    // to simplify with when there is none to ask.
+    const none = () => {
+      if (this.s === s) this.disable();
+      return false;
+    };
+    return s.page.findMain().then((found) => {
+      if (this.s !== s || !s.alive() || !found) return none();
+      const inMain = longParagraphs.filter((p) => found.contains(p));
+      if (inMain.length === 0) return none();
+      this._addButtons(s, found, inMain);
+      return true;
+    }, none);
+  },
+
+  _addButtons(s, main, longParagraphs) {
+    const maxParagraphsBeforeSection = this.options.maxParagraphsBeforeSection ?? 8;
 
     // Styles for button
     s.css('plain-language', `
@@ -347,8 +378,6 @@ export default {
         this._setupSingleParagraphButton(s, p);
       }
     }
-
-    return true;
   },
 
   _setupSingleParagraphButton(s, p) {

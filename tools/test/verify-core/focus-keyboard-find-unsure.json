@@ -1,0 +1,20 @@
+{
+  "name": "focus-keyboard-find-unsure",
+  "file": "tools/core-adapters/focus-keyboard.js",
+  "page": "no-main.html",
+  "ai": {
+    "choose": {
+      "main content": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model cannot tell: no skip link: the page does not say where its main content is, and the box named \"content\" is not taken for it",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        return document.querySelectorAll('.ai4a11y-entry').length === 0;\n      "
+    },
+    {
+      "name": "when the model cannot tell: the focus ring is on",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const a = document.querySelector('.top a');\n        a.focus();\n        const st = getComputedStyle(a);\n        const on = parseFloat(st.outlineWidth) >= 2 || st.boxShadow !== 'none';\n        a.blur();\n        return on;\n      "
+    }
+  ]
+}

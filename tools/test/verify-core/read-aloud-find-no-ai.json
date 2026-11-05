@@ -1,0 +1,11 @@
+{
+  "name": "read-aloud-find-no-ai",
+  "file": "tools/core-adapters/read-aloud.js",
+  "page": "no-main.html",
+  "checks": [
+    {
+      "name": "with no model: Play reads the whole page from its top: no part is guessed, so the story is read with the rest",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        await __verifyClick('[data-action=\"play\"]');\n        await new Promise((r) => setTimeout(r, 80));\n        const first = (globalThis.__verifyHost?.spoken || [])[0]?.text || '';\n        const source = adapter.currentSource;\n        adapter.stop();\n        return source === document.body && first.startsWith('Riverside Library');\n      "
+    }
+  ]
+}

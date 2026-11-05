@@ -782,6 +782,87 @@ await test('ai prompts: choose asks for the number of an option, or 0, and needs
   assert.throws(() => buildPrompt('choose', 'x', { question: 'q?', choices: 2, template: '{text}' }), /no template/);
 });
 
+// ── page.main and findMain ──────────────────────────────────────────────────
+
+const LONG = (what) => `${what} is a long paragraph of running text, with enough words in it to read as a sentence a person came to the page to read.`;
+
+await test('page.main: what the page marks (main, else its one article), else the body; never a guess from ids or classes', async () => {
+  const at = (body) => { const p = page(body); const m = p.tk.page.main(); return m === p.doc.body ? 'body' : m.id; };
+  assert.equal(at('<main hidden id="h"></main><div role="main" id="m">x</div><article id="a">y</article>'), 'm', 'the first visible main');
+  assert.equal(at('<div id="main">x</div><article id="a"><article id="c">comment</article></article>'), 'a', 'its one article, with an article inside it');
+  assert.equal(at('<article id="a">one</article><article id="b">two</article>'), 'body', 'several articles: a list, not the main content');
+  assert.equal(at('<aside><article id="a">related</article></aside><nav><article id="b">x</article></nav><div id="main">x</div>'), 'body', 'articles in sidebars and menus do not count');
+  assert.equal(at('<article role="presentation" id="a">x</article>'), 'body', 'a role of its own takes the article away');
+  assert.equal(at('<div id="main">x</div><div id="content">y</div><div class="content">z</div>'), 'body', 'ids and classes are names, not the page saying');
+});
+
+await test('page.findMain: where the page does not say, the model picks among the boxes of running text outside its menus, header and footer; null when it cannot tell', async () => {
+  const requests = [];
+  let reply = '1';
+  const body = `
+    <div id="masthead"><a href="/">Site</a> <a href="/news">News</a> <a href="/about">About</a></div>
+    <nav id="menu"><p>${LONG('The menu')}</p><p>${LONG('A menu')}</p></nav>
+    <div id="sidebar"><h1>Story</h1><p id="p1">${LONG('This')}</p><p>${LONG('That')}</p><p>${LONG('Another')}</p></div>
+    <div class="content" id="main"><p>${LONG('A promo')}</p><p>${LONG('A second promo')}</p></div>
+    <div id="cookies" style="position: fixed"><p>${LONG('A notice')}</p><p>${LONG('Its details')}</p></div>
+    <footer><p>${LONG('The footer')}</p><p>${LONG('More footer')}</p></footer>`;
+  const p = page(body, { ai: async (r) => { requests.push(r); return { text: reply }; }, url: 'https://example.com/story' });
+  p.doc.title = 'A story';
+  const s = p.tk.session();
+  assert.equal(p.tk.page.main(), p.doc.body, 'the page does not say');
+  assert.equal(await s.page.findMain(), p.$('#sidebar'));
+  assert.equal(requests.length, 1);
+  const r = requests[0];
+  assert.equal(r.task, 'choose');
+  assert.match(r.options.question, /main content/);
+  assert.equal(r.options.choices, 2, 'the two boxes of running text: not the menu, the footer, the fixed notice or the links');
+  assert.match(r.input, /Option 1:\n<div> \(id "sidebar"\)[^]*Option 2:\n<div> \(id "main", class "content"\)/);
+  assert.match(r.options.context, /A story/);
+  assert.equal(s.page.main, p.tk.page.main, 's.page is toolkit.page, with findMain');
+  assert.equal(p.tk.page.findMain, undefined, 'findMain needs a session: it asks its model');
+
+  // Once per page: another session, another call, the same answer, no new question.
+  const t = p.tk.session();
+  assert.equal(await t.page.findMain(), p.$('#sidebar'));
+  assert.equal(await s.page.findMain(), p.$('#sidebar'));
+  assert.equal(requests.length, 1, 'asked once');
+
+  // The model cannot tell (the service gates 0 to no answer): null, and still asked once.
+  const q = page(body, { ai: async (x) => { requests.push(x); return { text: null, reason: 'cannot tell' }; } });
+  const u = q.tk.session();
+  const before = requests.length;
+  assert.equal(await u.page.findMain(), null);
+  assert.equal(await q.tk.session().page.findMain(), null);
+  assert.equal(requests.length, before + 1, '"cannot tell" is the answer for the page');
+  s.end(); t.end(); u.end();
+});
+
+await test('page.findMain: never asks where the page says, nor with nothing to choose or no model; another session gets the answer when the asker ends', async () => {
+  const requests = [];
+  const ai = async (r) => { requests.push(r); await tick(5); return { text: '1' }; };
+  const marked = page(`<div><p>${LONG('Outside')}</p><p>${LONG('More')}</p></div><main id="m"><p>x</p></main>`, { ai });
+  assert.equal(await marked.tk.session().page.findMain(), marked.$('#m'));
+  const article = page(`<div><p>${LONG('Outside')}</p><p>${LONG('More')}</p></div><article id="a"><p>x</p></article>`, { ai });
+  assert.equal(await article.tk.session().page.findMain(), article.$('#a'));
+  const little = page('<div><p>Short.</p><a href="/x">A link with a long name that is not running text at all, only a link</a></div>', { ai });
+  assert.equal(await little.tk.session().page.findMain(), null, 'no running text: nothing to choose from');
+  assert.equal(requests.length, 0, 'none of these asked');
+  const story = `<div id="story"><p>${LONG('This')}</p><p>${LONG('That')}</p></div>`;
+  assert.equal(await page(story).tk.session().page.findMain(), null, 'no model');
+
+  const p = page(story, { ai });
+  const a = p.tk.session(), b = p.tk.session();
+  const first = a.page.findMain();
+  const second = b.page.findMain();
+  a.end();
+  assert.equal(await first, null, 'nothing after end()');
+  assert.equal(await second, p.$('#story'), 'the other session still gets an answer');
+  // The page says meanwhile (another adapter marks main): that wins.
+  b.setAttr(p.$('#story'), 'role', 'main');
+  assert.equal(await b.page.findMain(), p.$('#story'));
+  b.end();
+});
+
 // ── speech ──────────────────────────────────────────────────────────────────
 
 function fakeSpeech(win, { active = true } = {}) {
