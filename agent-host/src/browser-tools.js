@@ -403,16 +403,52 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       try { code = readFileSync(path.join(workDir(uid), file), 'utf8'); } catch { continue; }
       const rec = chats.previewOf(uid, chatId, file);
       const v = verdict(rec, code);
-      if (v.ok) {
-        const chat = chats.get(uid, chatId);
-        if (chat.adapters.some(a => a.file === file && a.hash === rec.hash) || !rec.runsOn?.length) continue;
-        const id = (chat.adapters.find(a => a.file === file)?.id) || path.basename(file).replace(/\.m?js$/, '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'adapter';
-        offer(uid, chatId, { file, code }, v, { id, name: rec.name || id, about: '', runsOn: rec.runsOn, supportAreas: chat.supportAreas || [], pageTypes: chat.pageTypes });
-        log?.info('adapter.offered-after-run', { uid, chatId });
-        continue;
-      }
+      if (v.ok) { offerPassing(uid, chatId, file, code, rec, v); continue; }
       const name = rec?.name || path.basename(file).replace(/\.m?js$/, '');
       chats.addEntry(uid, chatId, { kind: 'warning', text: `Not checked: “${name}” ${v.why}. Try it on your page yourself before you rely on it.` });
+    }
+  }
+
+  /** The website the chat's page was shared from (its page data), as a pattern, or null. */
+  function sharedSite(uid, chatId) {
+    const dir = path.join(workDir(uid), '..', 'page-data', chatId);
+    let names = [];
+    try { names = readdirSync(dir).filter(n => n.endsWith('-page.json')).sort().reverse(); } catch { return null; }
+    for (const n of names) {
+      try {
+        const d = JSON.parse(readFileSync(path.join(dir, n), 'utf8'));
+        const origin = d.origin || (d.url ? new URL(d.url).origin : null);
+        if (/^https?:\/\//.test(origin || '')) return `${origin}/*`;
+      } catch { /* the next one */ }
+    }
+    return null;
+  }
+
+  /** Offer an adapter whose latest preview of this code passed, unless it is offered already. */
+  function offerPassing(uid, chatId, file, code, rec, v) {
+    const chat = chats.get(uid, chatId);
+    if (chat.adapters.some(a => a.file === file && a.hash === rec.hash)) return false;
+    // A preview from before previews kept their pages: the website it was previewed on.
+    const runsOn = rec.runsOn?.length ? rec.runsOn : [sharedSite(uid, chatId)].filter(Boolean);
+    if (!runsOn.length) return false;
+    const id = (chat.adapters.find(a => a.file === file)?.id) || path.basename(file).replace(/\.m?js$/, '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'adapter';
+    offer(uid, chatId, { file, code }, v, { id, name: rec.name || id, about: '', runsOn, supportAreas: chat.supportAreas || [], pageTypes: chat.pageTypes });
+    log?.info('adapter.offered-after-run', { uid, chatId });
+    return true;
+  }
+
+  /**
+   * A chat that ended before the host offered passing previews itself (or
+   * while it was down): offer what passed now. Not while it runs; afterRun
+   * does that when the run ends.
+   */
+  function offerFinished(uid, chatId) {
+    if (chats.activeChat(uid) === chatId) return;
+    for (const rec of Object.values(chats.previews(uid, chatId))) {
+      let code;
+      try { code = readFileSync(path.join(workDir(uid), rec.file), 'utf8'); } catch { continue; }
+      const v = verdict(rec, code);
+      if (v.ok) offerPassing(uid, chatId, rec.file, code, rec, v);
     }
   }
 
@@ -425,6 +461,7 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
   }
 
   handle.afterRun = afterRun;
+  handle.offerFinished = offerFinished;
   return handle;
 
   async function handle(req, res) {

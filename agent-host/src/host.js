@@ -111,7 +111,11 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     if (m === 'GET' && p === '/agent/events') return events.subscribe(uid, res, requests.pendingFor(uid));
     if (m === 'GET' && p === '/agent/chats') return send(res, 200, { chats: chats.list(uid) });
     if (m === 'POST' && p === '/agent/chats') return send(res, 201, { chat: chats.create(uid) });
-    if ((r = /^\/agent\/chats\/([^/]+)$/.exec(p)) && m === 'GET') return send(res, 200, { chat: chats.get(uid, r[1]) });
+    if ((r = /^\/agent\/chats\/([^/]+)$/.exec(p)) && m === 'GET') {
+      // A chat that ended before passing previews were offered by the host gets them now.
+      try { tools.offerFinished(uid, r[1]); } catch (e) { log.warn('adapter.offer-finished-failed', { uid, error: e.message }); }
+      return send(res, 200, { chat: chats.get(uid, r[1]) });
+    }
     if ((r = /^\/agent\/chats\/([^/]+)$/.exec(p)) && m === 'DELETE') {
       log.info('chat.deleted', { uid, chatId: r[1] });
       const out = chats.remove(uid, r[1]);

@@ -5,7 +5,7 @@
 // chat titles from the model, deleting a chat, and the agent's questions.
 
 import assert from 'node:assert/strict';
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -383,6 +383,30 @@ await test('a preview that passes makes the adapter the person\'s, even when the
   chat = await until(async () => { const c = await chatNow(id); return !c.busy && !c.pageTypes && c; });
   assert.equal(chat.allSites, false);
   sb.close();
+});
+
+await test('a chat that ended before the host offered passing previews gets its adapter when it is opened', async () => {
+  const sb = sidebar('ada', { preview: previewOk });
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  await until(async () => (await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'previewonly please' } })).status !== 409);
+  await until(async () => { const c = await chatNow(id); return !c.busy && c.adapters.length && c; });
+  sb.close();
+  // As such a chat was kept: a passing preview with no pages recorded, nothing offered.
+  const file = path.join(dataDir, `accounts/ada/chats/${id}.json`);
+  const kept = JSON.parse(readFileSync(file, 'utf8'));
+  kept.adapters = [];
+  kept.entries = kept.entries.filter(e => e.kind !== 'notice');
+  for (const p of Object.values(kept.previews)) delete p.runsOn;
+  writeFileSync(file, JSON.stringify(kept));
+  // The website its page was shared from.
+  const shared = path.join(dataDir, `accounts/ada/page-data/${id}`);
+  mkdirSync(shared, { recursive: true });
+  writeFileSync(path.join(shared, '2026-11-05T04-40-00-000Z-page.json'), JSON.stringify({ kind: 'page', level: 'url', url: 'https://scholar.example/citations?user=1', origin: 'https://scholar.example' }));
+  const chat = await chatNow(id);
+  assert.deepEqual(chat.adapters.map(a => [a.id, a.runsOn]), [['tea-cosy', ['https://scholar.example/*']]]);
+  assert.ok(chat.entries.some(e => e.kind === 'notice' && /“Tea cosy” is ready/.test(e.text)));
+  // Opened again: offered once.
+  assert.equal((await chatNow(id)).adapters.length, 1);
 });
 
 await test('the model proxy: sandbox token in, real key out, one model, a rate limit', async () => {
