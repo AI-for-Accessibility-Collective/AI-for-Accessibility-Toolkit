@@ -18,8 +18,8 @@ async function tool(name, args) {
 }
 
 out({ type: 'step_start', part: { type: 'step-start' } });
-if (/hang/.test(message)) { await new Promise(() => {}); }
-if (/build/.test(message)) {
+if (/^hang/.test(message)) { await new Promise(() => {}); }
+if (/^build/.test(message)) {
   // Two reads in a row: the sidebar folds them into one line.
   for (const id of ['p1', 'p1b']) out({ type: 'tool_use', part: { id, type: 'tool', tool: 'read', state: { status: 'completed', input: { filePath: '/toolkit/.claude/skills/ai4a11y-toolkit/SKILL.md' }, output: 'SECRET FILE TEXT' } } });
   const page = await tool('browser_page', { reason: 'To see which buttons are small.' });
@@ -41,14 +41,42 @@ if (/build/.test(message)) {
   const done = await ready();
   const verdict = (r) => (r.isError ? 'refused' : 'allowed');
   out({ type: 'text', part: { id: 'p4', type: 'text', text: `Done.\n\`\`\`js\nexport const BiggerButtons = {}\n\`\`\`\nEarly: ${verdict(early)}. Outside: ${verdict(outside)}. Everywhere: ${verdict(everywhere)}. Unchecked: ${verdict(unchecked)}. Escape: ${verdict(escape)}. Preview: ${preview.content[0].text.split('\n')[0]} Changed: ${/enable\(\) made \d+ changes/.test(preview.content[0].text) ? 'yes' : 'no'}. Axe: ${/added no problems axe-core finds/.test(preview.content[0].text) ? 'clean' : /The adapter added \d+ problems/.test(preview.content[0].text) ? 'problems' : 'none'}. Ready: ${done.isError ? 'no' : 'yes'}.` } });
-} else if (/questions/.test(message)) {
+} else if (/^(checkfails|slowcheck|allsites)/.test(message)) {
+  // An adapter offered for the background check: one it fails, one that is
+  // rebuilt while its check runs, or one for every site.
+  const runsOn = [/^allsites/.test(message) ? '*://*/*' : 'https://example.com/*'];
+  const checks = [{ name: 'the page is marked big', code: 'return document.body.dataset.big === "1";' }];
+  const offer = async (id, body) => {
+    mkdirSync('adapters', { recursive: true });
+    writeFileSync(`adapters/${id}.js`, `export const A = { enable() { document.body.dataset.big = "1"; /* ${body} */ }, disable() { delete document.body.dataset.big; } };\n`);
+    const preview = await tool('browser_preview', { file: `adapters/${id}.js`, name: id, runs_on: runsOn, checks });
+    if (preview.isError) return `preview refused: ${preview.content[0].text.slice(0, 60)}`;
+    return (await tool('adapter_ready', { file: `adapters/${id}.js`, id, name: id, about: 'For the test.', runs_on: runsOn })).isError ? 'refused' : 'offered';
+  };
+  let said;
+  if (/^checkfails/.test(message)) said = await offer('flaky', 'CHECKFAILS');
+  else if (/^allsites/.test(message)) said = await offer('everywhere', 'v1');
+  else {
+    said = await offer('slow', 'SLOWCHECK');
+    await new Promise(r => setTimeout(r, 400));
+    said += ', then ' + await offer('slow', 'v2');
+  }
+  out({ type: 'text', part: { id: 'v1', type: 'text', text: `Verify: ${said}.` } });
+} else if (/^kinds/.test(message)) {
+  // The two questions the sidebar lays out itself.
+  const asked = await tool('ask_questions', { questions: [
+    { kind: 'pages', page_type: { label: 'Product pages', pattern: 'https://example.com/products/*' } },
+    { kind: 'areas', options: [{ label: 'Motor (Recommended)' }, { label: 'Vision' }] },
+  ] });
+  out({ type: 'text', part: { id: 'k1', type: 'text', text: `Asked kinds: ${asked.isError ? 'no' : 'yes'}.` } });
+} else if (/^questions/.test(message)) {
   const asked = await tool('ask_questions', { questions: [
     { question: 'Which pages?', options: [{ label: 'This page (Recommended)' }, { label: 'The whole site' }] },
     { question: 'Who does it help?', options: [{ label: 'Vision' }, { label: 'Motor' }, { label: 'Other' }], multi_select: true },
   ] });
   const bad = await tool('ask_questions', { questions: [{ question: 'Only one?', options: [{ label: 'Yes' }] }] });
   out({ type: 'text', part: { id: 'p1', type: 'text', text: `Asked: ${asked.isError ? 'no' : 'yes'}. Bad: ${bad.isError ? 'refused' : 'allowed'}.` } });
-} else if (/sketch/.test(message)) {
+} else if (/^sketch/.test(message)) {
   // Writes an adapter and stops without previewing it.
   mkdirSync('adapters', { recursive: true });
   writeFileSync('adapters/sketch.js', 'export const Sketch = { enable() {}, disable() {} };\n');

@@ -25,6 +25,10 @@
 //     review/    the reviewer's report (removed once read)
 // in/, out/ and review/ are removed when the job ends; job.json is kept for
 // a week. Logged: who, which job, how long, how it came out; never code.
+//
+// A job can be cancelled (the sidebar's background check of an adapter the
+// agent is changing): a queued one leaves the queue, a running one's
+// container is stopped. onChange hears every change of a job's status.
 
 import { spawn, execFile } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, renameSync, chmodSync, statSync, existsSync } from 'node:fs';
@@ -70,15 +74,20 @@ function trimReport(r) {
   };
 }
 
-/** Run a command to the end or until its time is up: { code, timedOut, stderr }. */
-function runProcess(cmd, args, { env, cwd, timeoutMs, onTimeout }) {
+/** Run a command to the end, until its time is up, or until `signal` aborts: { code, timedOut, stderr }. */
+function runProcess(cmd, args, { env, cwd, timeoutMs, onTimeout, signal }) {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { env, cwd, stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = '', timedOut = false;
+    const kill = () => (onTimeout || (() => child.kill('SIGKILL')))(child);
     child.stderr.on('data', (d) => { stderr = (stderr + d).slice(-4000); });
-    const timer = setTimeout(() => { timedOut = true; (onTimeout || (() => child.kill('SIGKILL')))(child); }, timeoutMs);
-    child.on('error', (e) => { clearTimeout(timer); resolve({ code: -1, timedOut, stderr: e.message }); });
-    child.on('close', (code) => { clearTimeout(timer); resolve({ code, timedOut, stderr }); });
+    const timer = setTimeout(() => { timedOut = true; kill(); }, timeoutMs);
+    const abort = () => kill();
+    signal?.addEventListener('abort', abort);
+    if (signal?.aborted) kill();
+    const end = () => { clearTimeout(timer); signal?.removeEventListener('abort', abort); };
+    child.on('error', (e) => { end(); resolve({ code: -1, timedOut, stderr: e.message }); });
+    child.on('close', (code) => { end(); resolve({ code, timedOut, stderr }); });
   });
 }
 
@@ -104,14 +113,14 @@ export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, ru
 
   return {
     kind: 'docker',
-    check({ id, dir, file, timeoutMs }) {
+    check({ id, dir, file, timeoutMs, signal }) {
       return runProcess('docker', ['run', '--rm', '--name', name(id, 'check'), ...limits, '--network', 'none',
         '-v', `${path.join(dir, 'in')}:/job:ro`, '-v', `${path.join(dir, 'out')}:/out`, '-v', `${sitesDir}:/sites:ro`,
         '-e', 'VERIFY_SITES=offline', '-e', 'VERIFY_SITE_CACHE=/sites',
         image, 'node', 'scripts/verify-adapters/run.mjs', '--check', `/job/${file}`, '--out', '/out/report.json'],
-      { env: baseEnv(), timeoutMs, onTimeout: stop(id, 'check') });
+      { env: baseEnv(), timeoutMs, onTimeout: stop(id, 'check'), signal });
     },
-    review({ id, dir, file, token, timeoutMs }) {
+    review({ id, dir, file, token, timeoutMs, signal }) {
       // The job's token reaches the container by name (-e GEMINI_API_KEY), never on the command line.
       return runProcess('docker', ['run', '--rm', '--name', name(id, 'review'), ...limits, '--network', network,
         '-v', `${path.join(dir, 'in')}:/job:ro`, '-v', `${path.join(dir, 'review')}:/review`, '-v', `${sitesDir}:/sites:ro`,
@@ -120,7 +129,7 @@ export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, ru
         '-e', 'GEMINI_API_KEY', '-e', `VERIFY_MODEL_BASE_URL=${modelUrl}`, '-e', `VERIFY_AGENT_TIMEOUT_MIN=${Math.max(1, Math.floor(timeoutMs / 60_000) - 1)}`,
         image, 'node', 'scripts/verify-adapters/run.mjs', '--agent', '--sandboxed', '--skills', '/opt/agent/skills',
         '--review-file', `/job/${file}`, '--about', '/job/about.txt', '--check-report', '/job/report.json', '--logs', '/review'],
-      { env: baseEnv({ GEMINI_API_KEY: token }), timeoutMs, onTimeout: stop(id, 'review') });
+      { env: baseEnv({ GEMINI_API_KEY: token }), timeoutMs, onTimeout: stop(id, 'review'), signal });
     },
     /** Containers a host that stopped left behind. */
     cleanup() {
@@ -144,13 +153,13 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
   const env = (extra) => baseEnv({ VERIFY_SITES: 'offline', VERIFY_SITE_CACHE: sitesDir, INTERA11Y_DIR: rubricsDir, ...extra });
   return {
     kind: 'local',
-    check({ dir, file, timeoutMs }) {
-      return runProcess(node, [run, '--check', path.join(dir, 'in', file), '--out', path.join(dir, 'out', 'report.json')], { cwd: repoDir, env: env(), timeoutMs });
+    check({ dir, file, timeoutMs, signal }) {
+      return runProcess(node, [run, '--check', path.join(dir, 'in', file), '--out', path.join(dir, 'out', 'report.json')], { cwd: repoDir, env: env(), timeoutMs, signal });
     },
-    review({ dir, file, token, timeoutMs }) {
+    review({ dir, file, token, timeoutMs, signal }) {
       return runProcess(node, [run, '--agent', '--sandboxed', '--review-file', path.join(dir, 'in', file), '--about', path.join(dir, 'in', 'about.txt'),
         '--check-report', path.join(dir, 'in', 'report.json'), '--logs', path.join(dir, 'review')],
-      { cwd: repoDir, env: env({ GEMINI_API_KEY: token, VERIFY_MODEL_BASE_URL: modelUrl, VERIFY_OPENCODE_BIN: opencodeBin, VERIFY_AGENT_TIMEOUT_MIN: String(Math.max(1, Math.floor(timeoutMs / 60_000) - 1)) }), timeoutMs });
+      { cwd: repoDir, env: env({ GEMINI_API_KEY: token, VERIFY_MODEL_BASE_URL: modelUrl, VERIFY_OPENCODE_BIN: opencodeBin, VERIFY_AGENT_TIMEOUT_MIN: String(Math.max(1, Math.floor(timeoutMs / 60_000) - 1)) }), timeoutMs, signal });
     },
     cleanup: async () => {},
   };
@@ -164,12 +173,14 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
  * @param {Function} [o.fetchRubrics] (dir) => { have, missing }
  */
 export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async () => ({ have: [], missing: [] }), log,
-  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, parallel = 1, now = () => Date.now() }) {
+  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, parallel = 1, now = () => Date.now(), onChange }) {
   const root = path.join(dataDir, 'checks');
   mkdirSync(root, { recursive: true });
   const queue = [];         // checkIds waiting
   const running = new Set(); // checkIds running, at most `parallel`
   const tokens = new Map();  // job token -> { uid, checkId }
+  const stops = new Map();   // checkId -> AbortController, while it runs
+  const listeners = new Set(onChange ? [onChange] : []);
 
   const dirOf = (id) => {
     if (!CHECK_ID.test(String(id))) throw httpError(400, 'bad-check-id', 'Not a check id.');
@@ -177,7 +188,10 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
   };
   const jobFile = (id) => path.join(dirOf(id), 'job.json');
   const readJob = (id) => readJson(jobFile(id));
-  const saveJob = (job) => writeJson(jobFile(job.checkId), job);
+  const saveJob = (job) => {
+    writeJson(jobFile(job.checkId), job);
+    for (const l of listeners) { try { l(view(job)); } catch (e) { log?.warn('check.listener-failed', { checkId: job.checkId, error: e.message }); } }
+  };
 
   function position(id) {
     const i = queue.indexOf(id);
@@ -249,13 +263,16 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     if (!job || job.status !== 'queued') return;
     const dir = dirOf(id);
     const started = now();
+    const ctl = new AbortController();
+    stops.set(id, ctl);
     job.status = 'running';
     job.startedAt = new Date(started).toISOString();
     saveJob(job);
     log?.info('check.started', { uid: job.uid, checkId: id, review: job.review });
     try {
       for (const sub of ['out', 'review']) { mkdirSync(path.join(dir, sub), { recursive: true }); chmodSync(path.join(dir, sub), 0o777); }
-      const c = await runner.check({ id: id.slice(4), dir, file: job.file, timeoutMs: checkTimeoutMs });
+      const c = await runner.check({ id: id.slice(4), dir, file: job.file, timeoutMs: checkTimeoutMs, signal: ctl.signal });
+      if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
       const report = readJson(path.join(dir, 'out', 'report.json'));
       if (!report) {
         log?.warn('check.no-report', { uid: job.uid, checkId: id, code: c.code, timedOut: c.timedOut, stderr: c.stderr.slice(-600) });
@@ -264,28 +281,36 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
           : 'The check could not finish: the verifier wrote no report. If the adapter loads, this is the checker\'s problem; try again later.' });
       }
       job.result = { check: trimReport(report) };
-      if (job.review) job.result.review = await runReview(job, dir, report);
+      if (job.review) job.result.review = await runReview(job, dir, report, ctl.signal);
+      if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
       job.status = 'done';
       log?.info('check.done', { uid: job.uid, checkId: id, ms: now() - started, failed: job.result.check.summary?.failed, verdict: job.result.review?.verdict });
     } catch (e) {
-      job.status = 'failed';
-      job.error = e.plain || 'The check could not run. Try again later.';
-      if (!e.plain) log?.error('check.failed', { uid: job.uid, checkId: id, error: e.message });
+      if (e.cancelled || ctl.signal.aborted) {
+        job.status = 'cancelled';
+        delete job.result;
+        log?.info('check.cancelled', { uid: job.uid, checkId: id, ms: now() - started });
+      } else {
+        job.status = 'failed';
+        job.error = e.plain || 'The check could not run. Try again later.';
+        if (!e.plain) log?.error('check.failed', { uid: job.uid, checkId: id, error: e.message });
+      }
     } finally {
+      stops.delete(id);
       job.finishedAt = new Date(now()).toISOString();
       saveJob(job);
       for (const sub of ['in', 'out', 'review']) rmSync(path.join(dir, sub), { recursive: true, force: true });
     }
   }
 
-  async function runReview(job, dir, report) {
+  async function runReview(job, dir, report, signal) {
     const got = await fetchRubrics(rubricsDir).catch((e) => ({ have: [], missing: [{ reason: e.message }] }));
     if (got.missing?.length) log?.warn('check.rubrics-missing', { checkId: job.checkId, missing: got.missing.map((m) => m.sc).filter(Boolean) });
     writeFileSync(path.join(dir, 'in', 'report.json'), JSON.stringify(report));
     const token = `chk_${randomBytes(24).toString('hex')}`;
     tokens.set(token, { uid: job.uid, checkId: job.checkId });
     let r;
-    try { r = await runner.review({ id: job.checkId.slice(4), dir, file: job.file, token, timeoutMs: reviewTimeoutMs }); } finally { tokens.delete(token); }
+    try { r = await runner.review({ id: job.checkId.slice(4), dir, file: job.file, token, timeoutMs: reviewTimeoutMs, signal }); } finally { tokens.delete(token); }
     const out = readJson(path.join(dir, 'review', 'review.json'), 2_000_000);
     if (!out?.report || /^\(no report;/.test(out.report)) {
       log?.warn('check.review-no-report', { uid: job.uid, checkId: job.checkId, code: r.code, timedOut: r.timedOut, stderr: r.stderr.slice(-600) });
@@ -296,6 +321,21 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       rubricsRead: (Array.isArray(out.rubricsRead) ? out.rubricsRead : []).map((s) => clip(s, 10)).slice(0, 20),
       report: clip(out.report, MAX_REVIEW_TEXT),
     };
+  }
+
+  /** Stop a job: a queued one leaves the queue, a running one's container is stopped. Whether it was waiting or running. */
+  function cancel(uid, id) {
+    const job = readJob(id);
+    if (!job || job.uid !== uid) return false;
+    if (job.status === 'running') { stops.get(id)?.abort(); return true; }
+    if (job.status !== 'queued') return false;
+    const i = queue.indexOf(id);
+    if (i >= 0) queue.splice(i, 1);
+    Object.assign(job, { status: 'cancelled', finishedAt: new Date(now()).toISOString() });
+    saveJob(job);
+    for (const sub of ['in', 'out', 'review']) rmSync(path.join(dirOf(id), sub), { recursive: true, force: true });
+    log?.info('check.cancelled', { uid, checkId: id, queued: true });
+    return true;
   }
 
   /** The model proxy's side: the account a review's token names, while its review runs. */
@@ -330,5 +370,5 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     setImmediate(pump);
   }
 
-  return { submit, get, uidForToken, recover, idle: () => !running.size && !queue.length };
+  return { submit, get, cancel, uidForToken, recover, onChange: (l) => listeners.add(l), idle: () => !running.size && !queue.length };
 }

@@ -22,7 +22,7 @@
 // When a run ends with an adapter that was not checked that way, the person
 // is told so (afterRun).
 
-import { readFileSync, statSync, realpathSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, statSync, realpathSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { lintWebModule, urlPatternError, SUPPORT_AREAS, MAX_PACKAGE_CODE } from '../../toolkit/protocol/adapter/index.js';
@@ -101,19 +101,35 @@ export function shiftText(shift) {
 
 const MAX_QUESTIONS = 4, MAX_OPTIONS = 5;
 
-/** The agent's questions, checked and trimmed for the sidebar. */
+/**
+ * The agent's questions, checked and trimmed for the sidebar. Two kinds the
+ * sidebar lays out itself: `pages` (this type of page, this website with its
+ * address, all websites) and `areas` (the support areas, the agent's picks
+ * first, the rest under "Other").
+ */
 export function questionsOf(list) {
-  const questions = (Array.isArray(list) ? list : []).slice(0, MAX_QUESTIONS).map((q) => ({
-    question: String(q?.question || '').trim().slice(0, 300),
-    options: (Array.isArray(q?.options) ? q.options : []).slice(0, MAX_OPTIONS)
-      .map(o => ({ label: String(o?.label ?? o ?? '').trim().slice(0, 80), ...(o?.description ? { description: String(o.description).trim().slice(0, 200) } : {}) }))
-      .filter(o => o.label && !/^other\b/i.test(o.label)),
-    multiSelect: q?.multi_select === true,
-  }));
+  const optionsOf = (q) => (Array.isArray(q?.options) ? q.options : []).slice(0, MAX_OPTIONS)
+    .map(o => ({ label: String(o?.label ?? o ?? '').trim().slice(0, 80), ...(o?.description ? { description: String(o.description).trim().slice(0, 200) } : {}) }))
+    .filter(o => o.label && !/^other\b/i.test(o.label));
+  const questions = (Array.isArray(list) ? list : []).slice(0, MAX_QUESTIONS).map((q) => {
+    if (q?.kind === 'pages') {
+      const t = q.page_type;
+      const label = String(t?.label || '').trim().slice(0, 80);
+      const pattern = String(t?.pattern || '').trim().slice(0, 300);
+      return { kind: 'pages', question: String(q.question || 'Which pages should this apply to?').trim().slice(0, 300), options: [], multiSelect: false,
+        ...(label ? { pageType: { label, ...(pattern && !urlPatternError(pattern) ? { pattern } : {}) } } : {}) };
+    }
+    if (q?.kind === 'areas') {
+      const picks = optionsOf(q).map(o => o.label.toLowerCase().replace(/\s*\(recommended\)$/, '')).filter((a, i, all) => SUPPORT_AREAS.includes(a) && all.indexOf(a) === i);
+      if (!picks.length) throw new Error(`An areas question's options are among: ${SUPPORT_AREAS.join(', ')}.`);
+      return { kind: 'areas', question: String(q.question || 'Who does this change help most?').trim().slice(0, 300), options: picks.map(label => ({ label })), multiSelect: true };
+    }
+    return { question: String(q?.question || '').trim().slice(0, 300), options: optionsOf(q), multiSelect: q?.multi_select === true };
+  });
   if (!questions.length) throw new Error('Give at least one question.');
   for (const q of questions) {
     if (!q.question) throw new Error('Each question needs its words.');
-    if (q.options.length < 2) throw new Error(`"${q.question}" needs at least two options besides "Other".`);
+    if (!q.kind && q.options.length < 2) throw new Error(`"${q.question}" needs at least two options besides "Other".`);
   }
   return questions;
 }
@@ -121,17 +137,22 @@ export function questionsOf(list) {
 const TOOLS = [
   {
     name: 'ask_questions',
-    description: 'Ask the person what you need to know, as multiple choice: the sidebar shows each question with your options, and always adds "Other" where they can type their own answer. Put the option you would choose first, ending its label with "(Recommended)". After calling this, end your turn with one short sentence: the person\'s answers come as their next message.',
+    description: 'Ask the person what you need to know, as multiple choice: the sidebar shows each question with your options, and always adds "Other" where they can type their own answer. Put the option you would choose first, ending its label with "(Recommended)". Two kinds of question the sidebar lays out itself: kind "pages" (which pages it runs on: the type of page you name in page_type, this website with its address, or all websites) and kind "areas" (who it helps most, more than one allowed: your options are support areas, the most likely first; the rest are under Other). After calling this, end your turn with one short sentence: the person\'s answers come as their next message.',
     inputSchema: { type: 'object', properties: {
       questions: { type: 'array', minItems: 1, maxItems: MAX_QUESTIONS, items: { type: 'object', properties: {
-        question: { type: 'string', description: 'The whole question in plain words, ending with a question mark.' },
-        options: { type: 'array', minItems: 2, maxItems: MAX_OPTIONS, description: 'The choices. Do not add "Other": the sidebar does.',
+        kind: { type: 'string', enum: ['pages', 'areas'], description: 'pages or areas for those two questions; leave out for any other.' },
+        question: { type: 'string', description: 'The whole question in plain words, ending with a question mark. Optional for pages and areas.' },
+        page_type: { type: 'object', description: 'pages only: the type of page this one is, when the adapter could run on all pages of that type.', properties: {
+          label: { type: 'string', description: 'The type in 1 to 4 words, e.g. "Product pages".' },
+          pattern: { type: 'string', description: 'The URL pattern for that type on this site, when its addresses show it, e.g. https://shop.example.com/products/*. Leave out when they do not.' },
+        }, required: ['label'], additionalProperties: false },
+        options: { type: 'array', maxItems: MAX_OPTIONS, description: 'The choices (at least two; none for pages; for areas, one or more of ' + SUPPORT_AREAS.join(', ') + '). Do not add "Other": the sidebar does.',
           items: { type: 'object', properties: {
             label: { type: 'string', description: 'The choice, in 1 to 6 words.' },
             description: { type: 'string', description: 'Optional: what choosing it means, in one short sentence.' },
           }, required: ['label'], additionalProperties: false } },
         multi_select: { type: 'boolean', description: 'true when the person may choose more than one.' },
-      }, required: ['question', 'options'], additionalProperties: false } },
+      }, additionalProperties: false } },
     }, required: ['questions'], additionalProperties: false },
   },
   {
@@ -148,7 +169,7 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: {
       file: { type: 'string', description: 'The adapter file, e.g. adapters/bigger-buttons.js (relative to /work).' },
       name: { type: 'string', description: 'The adapter\'s name, as the person will see it.' },
-      runs_on: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'URL patterns for the site it is for, e.g. https://example.com/*. Never every site.' },
+      runs_on: { type: 'array', items: { type: 'string' }, minItems: 1, description: 'URL patterns for the pages the person chose, e.g. https://example.com/* or https://example.com/products/*. Every site (*://*/*) only when they chose All websites.' },
       checks: { type: 'array', minItems: 1, maxItems: MAX_CHECKS, description: 'How you know it works. Each check is the body of an async function run in the page, before enable() and again after it, that returns true when the page is as it should be: for example that the elements the adapter changes exist, that they changed, and that using what it adds (type into its box, click its button, then wait a moment) has the effect it should. Put the page back at the end of a check that uses the page. Only pass or fail comes back, never page content.',
         items: { type: 'object', properties: {
           name: { type: 'string', description: 'What it checks, in a few plain words.' },
@@ -180,7 +201,7 @@ const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const NO_ANSWER = 'The person has not answered in the sidebar (it may be closed, or they are away). Stop here: tell them in one sentence what is waiting for them, and wait for their reply.';
 const fail = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
 
-export function createBrowserTools({ uidForToken, chats, requests, pageData, workDir, log }) {
+export function createBrowserTools({ uidForToken, chats, requests, pageData, workDir, log, verification }) {
   /** Read an adapter file from the account's /work, refusing anything outside it. */
   function readAdapter(uid, file) {
     const root = realpathSync(workDir(uid));
@@ -196,14 +217,14 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     return { code, file: path.relative(root, full) };
   }
 
-  function patternsOf(list) {
+  function patternsOf(list, { allSites = false } = {}) {
     const patterns = (Array.isArray(list) ? list : []).map(String).filter(Boolean);
     if (!patterns.length) throw new Error('Give at least one URL pattern in runs_on.');
     for (const p of patterns) {
       const e = urlPatternError(p);
       if (e) throw new Error(`runs_on "${p}": ${e}`);
       // An adapter is for a site: one that runs everywhere is never what was asked.
-      if (p === '*' || /^[^:]+:\/\/\*(\/|:|$)/.test(p)) throw new Error(`runs_on "${p}" covers every site. Name the site the adapter is for, such as https://example.com/*. If a preview was skipped, the page this chat works on is another site: ask the person.`);
+      if (!allSites && (p === '*' || /^[^:]+:\/\/\*(\/|:|$)/.test(p))) throw new Error(`runs_on "${p}" covers every site. Name the site the adapter is for, such as https://example.com/*. If a preview was skipped, the page this chat works on is another site: ask the person.`);
     }
     return patterns;
   }
@@ -279,9 +300,11 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
 
     async browser_preview(uid, chatId, args) {
       let adapter, patterns, checks;
-      try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on); checks = checksOf(args.checks); } catch (e) { return fail(e.message); }
+      try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on, { allSites: chats.get(uid, chatId).allSites }); checks = checksOf(args.checks); } catch (e) { return fail(e.message); }
       const name = String(args.name || adapter.file).slice(0, 80);
       const record = (fields) => chats.recordPreview(uid, chatId, { file: adapter.file, name, hash: hashOf(adapter.code), ...fields });
+      // Changed code: the agent is rebuilding, so the background checks of the old code stop.
+      verification?.codeChanged(uid, chatId, adapter.file, hashOf(adapter.code));
       const step = chats.addEntry(uid, chatId, { kind: 'step', text: `Previewing “${name}” on your page`, state: 'running' });
       const a = await requests.ask(uid, chatId, { kind: 'preview', name, file: adapter.file, code: adapter.code, runsOn: patterns, checks,
         parameters: args.parameters && typeof args.parameters === 'object' ? args.parameters : {} });
@@ -342,17 +365,22 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
 
     async adapter_ready(uid, chatId, args) {
       let adapter, patterns;
-      try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on); } catch (e) { return fail(e.message); }
+      try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on, { allSites: chats.get(uid, chatId).allSites }); } catch (e) { return fail(e.message); }
       const v = verdict(chats.previewOf(uid, chatId, adapter.file), adapter.code);
       if (!v.ok) return fail(`Not ready: the adapter ${v.why}. Preview it with browser_preview and checks that show it works, fix what fails, and offer it once every check passes.`);
       const id = String(args.id || '');
       if (!SLUG.test(id)) return fail('id must be lowercase letters, digits and dashes, starting with a letter or digit.');
       const areas = (args.support_areas || []).filter(a => SUPPORT_AREAS.includes(a));
       const name = String(args.name || id).slice(0, 80);
-      chats.markReady(uid, chatId, { id, file: adapter.file, name, about: String(args.about || '').slice(0, 600), runsOn: patterns, supportAreas: areas });
+      // The version offered, as it is now: what "Add to my account" and Export get, whatever the agent writes next.
+      const kept = path.join(workDir(uid), '..', 'offered', chatId);
+      mkdirSync(kept, { recursive: true });
+      writeFileSync(path.join(kept, `${id}.js`), adapter.code);
+      const rec = chats.markReady(uid, chatId, { id, file: adapter.file, hash: hashOf(adapter.code), name, about: String(args.about || '').slice(0, 600), runsOn: patterns, supportAreas: areas });
+      try { verification?.start(uid, chatId, rec.id); } catch (e) { log?.warn('verify.start-failed', { uid, chatId, error: e.message }); }
       chats.addEntry(uid, chatId, { kind: 'notice', text: `“${name}” is ready. You can add it to your account or export it.` });
       if (v.concern) chats.addEntry(uid, chatId, { kind: 'warning', text: `“${name}” ${v.concern}. Check it on your page before you rely on it.` });
-      return text('The sidebar now offers it to the person with "Add to my account" and "Export". Tell them in one or two sentences what it does; do not publish it yourself.'
+      return text('The sidebar now offers it to the person with "Add to my account" and "Export". Tell them in one or two sentences what it does; do not publish it yourself. A fuller check of this version now runs in the background; if it finds problems, they come to you as a message to fix.'
         + (v.concern ? ` The sidebar also told them it ${v.concern}: say in a sentence why that is left.` : ''));
     },
   };

@@ -16,7 +16,7 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { mkdtemp, readdir } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
@@ -46,8 +46,23 @@ const agent = REMOTE ? null : createHost({
   opencodeBin: REAL ? 'opencode' : path.join(ROOT, 'agent-host/test/fake-opencode.mjs'),
   apiKey: REAL ? (process.env.GEMINI_API_KEY || readEnv('GEMINI_API_KEY')) : 'unused', log: REAL ? undefined : quiet,
   modelsJson: path.join(process.env.HOME, '.cache/opencode/models.json'),
-  // The stand-in names chats without a model.
-  ...(REAL ? {} : { titler: async ({ message }) => `Stand-in title: ${message.split(' ')[0]}` }),
+  // The stand-in names chats without a model, and its background checks pass at once.
+  ...(REAL ? {} : {
+    titler: async ({ message }) => `Stand-in title: ${message.split(' ')[0]}`,
+    fetchRubrics: async () => ({ have: [], missing: [] }),
+    checkRunner: {
+      kind: 'local',
+      async check({ dir }) {
+        writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [{ name: 'buttons.html', status: 'pass', result: 'applied', problems: [] }], summary: { passed: 3, failed: 0, skipped: 1, appliedOnTestPages: 1, testPages: 14 }, notes: [] }));
+        return { code: 0, timedOut: false, stderr: '' };
+      },
+      async review({ dir }) {
+        writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Nothing to fix.', rubricsRead: [] }));
+        return { code: 0, timedOut: false, stderr: '' };
+      },
+      cleanup: async () => {},
+    },
+  }),
 });
 const agentServers = REMOTE ? [] : [await listen(agent.sandboxHandler, `127.0.0.1:${sandboxListen}`), await listen(agent.apiHandler, `127.0.0.1:${apiListen}`)];
 
@@ -127,6 +142,21 @@ try {
     return hits;
   });
   const before = await heightOfBuy();
+  // What the sidebar's live regions say, in order.
+  const listen = () => panel.evaluate(() => {
+    window.__said = [];
+    for (const id of ['live', 'alert']) {
+      const node = document.getElementById(id);
+      new MutationObserver(() => { if (node.textContent) window.__said.push(node.textContent); }).observe(node, { childList: true, characterData: true, subtree: true });
+    }
+  });
+  const said = () => panel.evaluate(() => window.__said.join('\n'));
+  // The steps, opened: they are folded by default.
+  const transcriptOpen = async () => {
+    for (const b of await panel.locator('#transcript .steps-head button', { hasText: 'Show steps' }).all()) await b.click();
+    return panel.locator('#transcript').innerText();
+  };
+  await listen();
 
   if (!REAL) {
     // ── the stand-in agent: deterministic steps ───────────────────────────────
@@ -144,13 +174,31 @@ try {
     await panel.locator('#preview-label', { hasText: 'Previewing “Bigger buttons”' }).waitFor();
     await panel.locator('#ready-list', { hasText: 'Bigger buttons' }).waitFor();
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
-    const shown = await panel.locator('#transcript').innerText();
+    // The steps are one folded line until opened.
+    assert.ok(await panel.locator('#transcript ol.steps[hidden]').count() > 0, 'the steps are folded');
+    assert.doesNotMatch(await panel.locator('#transcript').innerText(), /Looking at the page/);
+    assert.match(await panel.locator('#transcript').innerText(), /\d+ steps/);
+    const toggleSteps = panel.locator('#transcript .steps-head button').first();
+    assert.equal(await toggleSteps.getAttribute('aria-expanded'), 'false');
+    const shown = await transcriptOpen();
+    assert.equal(await toggleSteps.getAttribute('aria-expanded'), 'true');
     assert.match(shown, /Looking at the page/);
     assert.match(shown, /“Bigger buttons” is previewing on your page · 1 of 1 checks pass · no new accessibility problems/);
     assert.match(shown, /Axe: clean\./, 'axe-core ran in the page before and after enable()');
     assert.match(shown, /Reading the toolkit’s guides and code \(2 times\)/, 'a repeated step is one line');
     assert.match(shown, /Changed: yes\./, 'the preview counted what enable() changed in the page');
     assert.ok(!/export const|```/.test(shown), 'no code in the sidebar');
+    // Usable at once, then checked in the background; the full review when asked.
+    await panel.locator('#ready-list', { hasText: 'Background check passed: 3 runs passed, 1 skipped; it applied on 1 of 14 test pages.' }).waitFor();
+    await panel.getByRole('button', { name: 'Full review', exact: true }).click();
+    await panel.locator('#ready-list', { hasText: 'Full review: no issues found.' }).waitFor();
+    // What a screen reader heard: each change once.
+    await until(async () => /“Bigger buttons” passed the full review\./.test(await said()), 'the review said');
+    const heard = await said();
+    for (const line of ['The assistant is working.', 'The assistant asks to see this page.', 'The assistant asks to preview “Bigger buttons”.', 'Previewing “Bigger buttons” on this page.', '“Bigger buttons” is ready.', 'The assistant is done.', '“Bigger buttons” passed the background check.']) {
+      assert.ok(heard.includes(line), `said: ${line}\n--- heard ---\n${heard}`);
+    }
+    assert.ok(!/Looking at the page/.test(heard), 'steps are not read out one by one');
     await shot(panel, '3-ready');
 
     // The page data stays on the agent host's disk, screenshot included.
@@ -218,6 +266,15 @@ try {
     assert.ok(installed.adapters.some(a => a.adapter.appId === 'assistant' && a.adapter.id === 'bigger-buttons'));
     assert.equal(await panel.locator('#preview-bar').isHidden(), true, 'the preview gives way to the installed adapter');
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the installed adapter on the page');
+    await panel.locator('#ready-list', { hasText: 'In your account.' }).waitFor();
+
+    // A newer version replaces it in the account once it passes its background check.
+    await ask('build it again');
+    // (The stand-in offers it twice in a run that changes nothing: the last version is the one kept.)
+    const chatNow = async () => (await (await fetch(`${base}/v1/agent/chats/${await panel.locator('#chat-select').inputValue()}`, { headers: { authorization: `Bearer ${token}` } })).json()).chat;
+    const latest = await until(async () => { const c = await chatNow(); const a = c.adapters[0]; return !c.busy && a.check?.status === 'passed' && a.version > 2 && a.version; }, 'the newest version checked', 30000);
+    await panel.locator('#status', { hasText: `Updated “Bigger buttons” in your account to version ${latest}.` }).waitFor({ timeout: 30000 });
+    await panel.locator('#ready-list', { hasText: 'In your account.' }).waitFor();
 
     // Chats keep their history: a new one starts empty, the old one comes back.
     const firstChat = await panel.locator('#chat-select').inputValue();
@@ -255,13 +312,40 @@ try {
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
     await shot(panel, '4-questions');
     await panel.getByRole('radio', { name: 'This page (Recommended)' }).check();
-    await panel.getByRole('textbox', { name: 'Your own answer: Who does it help?' }).fill('people who use a stylus');
-    assert.equal(await panel.getByRole('group', { name: 'Who does it help?' }).getByRole('checkbox', { name: 'Other' }).isChecked(), true, 'typing chooses Other');
+    // Other opens a box for their own words.
+    const ownWords = panel.getByRole('textbox', { name: 'Your own answer: Who does it help?' });
+    assert.equal(await ownWords.isVisible(), false);
+    await panel.getByRole('group', { name: 'Who does it help?' }).getByRole('checkbox', { name: 'Other' }).check();
+    await ownWords.fill('people who use a stylus');
     await panel.getByRole('checkbox', { name: 'Vision' }).check();
     await panel.getByRole('button', { name: 'Send answers' }).click();
     await panel.locator('#transcript .msg.you', { hasText: '→ Vision; people who use a stylus' }).waitFor();
     await panel.locator('#questions form').waitFor({ state: 'detached' });
     assert.match(await panel.locator('#transcript').innerText(), /Which pages\?\n→ This page \(Recommended\)/);
+
+    // Which pages: a type of page, this website with its address, all websites. Who it helps:
+    // more than one, the other areas under Other.
+    await ask('kinds please');
+    const pagesQ = panel.getByRole('group', { name: 'Which pages should this apply to?' });
+    await pagesQ.waitFor();
+    await panel.locator('#state', { hasText: 'Ready' }).waitFor();
+    const host = new URL(shop).host;
+    for (const name of ['This type of page: Product pages', `This website: ${host}`, 'All websites', 'Other']) await pagesQ.getByRole('radio', { name }).waitFor();
+    assert.match(await pagesQ.innerText(), /https:\/\/example\.com\/products\/\*/);
+    assert.match(await pagesQ.innerText(), new RegExp(`http://${host.replace(/[.]/g, '\\.')}/`));
+    const areasQ = panel.getByRole('group', { name: 'Who does this change help most?' });
+    assert.equal(await areasQ.getByRole('checkbox', { name: 'Hearing' }).isVisible(), false, 'the other areas wait under Other');
+    await areasQ.getByRole('checkbox', { name: 'Other' }).check();
+    await areasQ.getByRole('checkbox', { name: 'Hearing' }).check();
+    await areasQ.getByRole('checkbox', { name: 'Motor' }).check();
+    await pagesQ.getByRole('radio', { name: 'All websites' }).check();
+    await shot(panel, '4b-kinds');
+    await panel.getByRole('button', { name: 'Send answers' }).click();
+    await panel.locator('#transcript .msg.you', { hasText: '→ All websites' }).waitFor();
+    assert.match(await panel.locator('#transcript').innerText(), /Who does this change help most\?\n→ Motor; Hearing/);
+    const kindsChat = await panel.locator('#chat-select').inputValue();
+    const agentApi2 = (p) => fetch(`${base}/v1/agent${p}`, { headers: { authorization: `Bearer ${token}` } });
+    assert.equal((await (await agentApi2(`/chats/${kindsChat}`)).json()).chat.allSites, true, 'all websites, as the person chose');
 
     // Deleting a chat asks once more, then opens another.
     const doomed = await panel.locator('#chat-select').inputValue();
@@ -272,7 +356,7 @@ try {
     await panel.locator('#status', { hasText: 'Deleted' }).waitFor();
     assert.equal(await panel.locator(`#chat-select option[value="${doomed}"]`).count(), 0);
     assert.notEqual(await panel.locator('#chat-select').inputValue(), doomed);
-    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, reconnecting after the stream drops, the preview switch, chat titles, multiple-choice questions, deleting a chat.');
+    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, reconnecting after the stream drops, the preview switch, chat titles, multiple-choice questions (pages, areas, Other), steps folded, what a screen reader hears, background check and full review, the account updated to a newer checked version, deleting a chat.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
     // Send, then answer what the agent asks (share everything, preview) until its run ends;

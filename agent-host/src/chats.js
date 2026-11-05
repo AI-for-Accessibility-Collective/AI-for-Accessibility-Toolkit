@@ -21,7 +21,7 @@ export const SHARE_LEVELS = LEVELS;
 
 const httpError = (status, message, code) => Object.assign(new Error(message), { status, code });
 
-export function createChats({ accounts, runner, events, requests, log, afterRun, titler }) {
+export function createChats({ accounts, runner, events, requests, log, afterRun, titler, onIdle }) {
   const runs = new Map(); // uid -> {chatId, stop}
 
   const fileOf = (uid, id) => {
@@ -47,7 +47,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     id: chat.id, title: chat.title, createdAt: chat.createdAt, updatedAt: chat.updatedAt,
     busy: runs.get(uid)?.chatId === chat.id,
   });
-  const full = (uid, chat) => ({ ...summary(uid, chat), consent: chat.consent, entries: chat.entries, adapters: chat.adapters });
+  const full = (uid, chat) => ({ ...summary(uid, chat), consent: chat.consent, entries: chat.entries, adapters: chat.adapters, allSites: chat.allSites === true });
 
   function list(uid) {
     accounts.ensure(uid);
@@ -104,11 +104,26 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
   const previews = (uid, chatId) => read(uid, chatId).previews || {};
   const previewOf = (uid, chatId, file) => previews(uid, chatId)[file] || null;
 
+  /** The agent offers an adapter: a new version of it, if it offered one with this id before. */
   function markReady(uid, chatId, adapter) {
     const chat = read(uid, chatId);
-    chat.adapters = [...chat.adapters.filter(a => a.id !== adapter.id), { ...adapter, at: new Date().toISOString() }];
+    const old = chat.adapters.find(a => a.id === adapter.id);
+    const rec = { ...adapter, version: (old?.version || 0) + 1, fixes: old?.fixes || 0, at: new Date().toISOString() };
+    chat.adapters = [...chat.adapters.filter(a => a.id !== adapter.id), rec];
     save(uid, chat);
-    events.publish(uid, { type: 'adapter', chatId, adapter });
+    events.publish(uid, { type: 'adapter', chatId, adapter: rec });
+    return rec;
+  }
+
+  /** Change what is kept about an offered adapter (its background check, its review). */
+  function updateAdapter(uid, chatId, adapterId, patch) {
+    const chat = read(uid, chatId);
+    const i = chat.adapters.findIndex(a => a.id === adapterId);
+    if (i < 0) return null;
+    chat.adapters[i] = { ...chat.adapters[i], ...patch };
+    save(uid, chat);
+    events.publish(uid, { type: 'adapter', chatId, adapter: chat.adapters[i] });
+    return chat.adapters[i];
   }
 
   const activeChat = (uid) => runs.get(uid)?.chatId || null;
@@ -132,18 +147,22 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
 
   /**
    * The person's message. `answers` names the questions entry it answers
-   * (ask_questions), which is then shown as answered.
+   * (ask_questions), which is then shown as answered; `pages` is their
+   * answer to a pages question (all: the adapter may run on every site).
+   * With `shown`, the message is the host's (verification.js): the person
+   * sees that line instead.
    */
-  async function send(uid, chatId, text, { answers } = {}) {
+  async function send(uid, chatId, text, { answers, pages, shown } = {}) {
     const message = String(text || '').trim();
     if (!message) throw httpError(400, 'Say something first.');
     if (message.length > 20_000) throw httpError(400, 'That message is too long.');
     if (runs.has(uid)) throw httpError(409, runs.get(uid).chatId === chatId ? 'The assistant is still working on this chat. Wait, or stop it.' : 'Another chat is still working. Wait, or stop it.', 'busy');
     const chat = read(uid, chatId);
-    if (chat.title === 'New chat') { chat.title = fallbackTitle(message); save(uid, chat); }
+    if (chat.title === 'New chat' && !shown) { chat.title = fallbackTitle(message); save(uid, chat); }
+    if (['all', 'site', 'type'].includes(pages)) { chat.allSites = pages === 'all'; save(uid, chat); }
     const asked = answers && chat.entries.find(e => e.id === answers && e.kind === 'questions' && !e.answered);
     if (asked) addEntry(uid, chatId, { id: asked.id, answered: true });
-    addEntry(uid, chatId, { kind: 'you', text: message });
+    addEntry(uid, chatId, shown ? { kind: 'notice', text: String(shown).slice(0, 300) } : { kind: 'you', text: message });
     const run = { chatId, stop: null, stopped: false, since: new Date().toISOString() };
     runs.set(uid, run);
     events.publish(uid, { type: 'chat', chat: summary(uid, read(uid, chatId)) });
@@ -177,6 +196,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
         requests.cancelChat(uid, chatId);
         try { events.publish(uid, { type: 'chat', chat: summary(uid, read(uid, chatId)) }); } catch { /* deleted */ }
       }
+      try { onIdle?.(uid); } catch (e) { log?.warn('chat.on-idle-failed', { uid, error: e.message }); }
       if (!run.deleted) await nameChat(uid, chatId).catch(e => log?.warn('chat.title-failed', { uid, chatId, error: e.message }));
     })();
     return { ok: true };
@@ -203,5 +223,5 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     return { deleted: true };
   }
 
-  return { list, create, get, remove, addEntry, setConsent, recordPreview, previews, previewOf, markReady, activeChat, send, stop };
+  return { list, create, get, remove, addEntry, setConsent, recordPreview, previews, previewOf, markReady, updateAdapter, activeChat, send, stop };
 }

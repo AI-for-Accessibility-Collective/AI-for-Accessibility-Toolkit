@@ -23,6 +23,7 @@ import { createRequests } from './requests.js';
 import { createChats } from './chats.js';
 import { createModelProxy } from './model-proxy.js';
 import { createTitler } from './titles.js';
+import { createVerification } from './verification.js';
 import { createBrowserTools } from './browser-tools.js';
 import { createPageData } from './page-data.js';
 import { dockerRunner, localRunner } from './runner.js';
@@ -56,7 +57,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     : dockerRunner({ accounts, image, network, dns, hostUrl: sandboxUrl, log }));
   // tools is made below; a run only ends after both exist.
   const titler = givenTitler || createTitler({ apiKey, upstream, ...(fetch ? { fetch } : {}), log });
-  const chats = createChats({ accounts, runner, events, requests, log, titler, afterRun: (...a) => tools.afterRun(...a) });
+  const chats = createChats({ accounts, runner, events, requests, log, titler, afterRun: (...a) => tools.afterRun(...a), onIdle: (uid) => verification.afterRun(uid) });
   const pageData = createPageData({ accounts });
   // Checks of published adapters: one-shot containers (or, with the local runner, plain processes).
   const rubricsDir = path.join(dataDir, 'intera11y');
@@ -69,7 +70,10 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;
   // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
   const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, perMinute, log });
-  const tools = createBrowserTools({ uidForToken: accounts.uidForToken, chats, requests, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });
+  // After adapter_ready: the background check, the full review on request, and fixes of what they find.
+  const verification = createVerification({ checks, chats, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });
+  checks?.onChange(verification.onChange);
+  const tools = createBrowserTools({ uidForToken: accounts.uidForToken, chats, requests, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log, verification });
 
   function sandboxHandler(req, res) {
     const p = new URL(req.url, 'http://sandbox').pathname;
@@ -110,12 +114,14 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     if ((r = /^\/agent\/chats\/([^/]+)$/.exec(p)) && m === 'GET') return send(res, 200, { chat: chats.get(uid, r[1]) });
     if ((r = /^\/agent\/chats\/([^/]+)$/.exec(p)) && m === 'DELETE') {
       log.info('chat.deleted', { uid, chatId: r[1] });
-      return send(res, 200, chats.remove(uid, r[1]));
+      const out = chats.remove(uid, r[1]);
+      verification.forgetChat(uid, r[1]);
+      return send(res, 200, out);
     }
     if ((r = /^\/agent\/chats\/([^/]+)\/messages$/.exec(p)) && m === 'POST') {
       const b = await body(req);
       log.info('chat.message', { uid, chatId: r[1], chars: String(b.text || '').length });
-      return send(res, 202, await chats.send(uid, r[1], b.text, { answers: typeof b.answers === 'string' ? b.answers : undefined }));
+      return send(res, 202, await chats.send(uid, r[1], b.text, { answers: typeof b.answers === 'string' ? b.answers : undefined, pages: typeof b.pages === 'string' ? b.pages : undefined }));
     }
     if ((r = /^\/agent\/chats\/([^/]+)\/stop$/.exec(p)) && m === 'POST') return send(res, 200, chats.stop(uid, r[1]));
     if ((r = /^\/agent\/chats\/([^/]+)\/consent$/.exec(p)) && m === 'POST') {
@@ -127,8 +133,16 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
       const chat = chats.get(uid, r[1]);
       const adapter = chat.adapters.find(a => a.id === r[2]);
       if (!adapter) return send(res, 404, { error: 'no such adapter in this chat' });
-      const code = readFileSync(path.join(accounts.dirOf(uid), 'work', adapter.file), 'utf8');
+      // The version offered (browser-tools.js keeps it), else the file as it is.
+      let code;
+      try { code = readFileSync(path.join(accounts.dirOf(uid), 'offered', r[1], `${adapter.id}.js`), 'utf8'); } catch { code = readFileSync(path.join(accounts.dirOf(uid), 'work', adapter.file), 'utf8'); }
       return send(res, 200, { adapter: { ...adapter, code } });
+    }
+    // The person asks for the full review of an offered adapter.
+    if ((r = /^\/agent\/chats\/([^/]+)\/adapters\/([^/]+)\/review$/.exec(p)) && m === 'POST') {
+      log.info('verify.review-asked', { uid, chatId: r[1] });
+      verification.start(uid, r[1], r[2], { review: true });
+      return send(res, 202, { ok: true });
     }
     if (p === '/checks' || p.startsWith('/checks/')) {
       if (!checks) return send(res, 503, { error: 'checks-unavailable', message: 'Checks are not set up on this host.' });

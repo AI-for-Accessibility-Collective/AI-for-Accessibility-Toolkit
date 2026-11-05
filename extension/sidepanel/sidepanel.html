@@ -33,13 +33,15 @@
       </div>
     </section>
 
-    <ol id="transcript" class="transcript" aria-label="Conversation" aria-live="polite"></ol>
-    <div id="questions" class="requests"></div>
-    <div id="requests" class="requests"></div>
-    <section id="ready" class="ready" hidden aria-labelledby="ready-heading">
-      <h2 id="ready-heading">Ready to use</h2>
-      <ul id="ready-list"></ul>
-    </section>
+    <div id="conversation" class="conversation">
+      <ol id="transcript" class="transcript" aria-label="Conversation"></ol>
+      <div id="questions" class="requests"></div>
+      <div id="requests" class="requests"></div>
+      <section id="ready" class="ready" hidden aria-labelledby="ready-heading">
+        <h2 id="ready-heading">Ready to use</h2>
+        <ul id="ready-list"></ul>
+      </section>
+    </div>
 
     <div id="preview-bar" class="preview-bar" hidden>
       <span id="preview-label"></span>
@@ -48,7 +50,7 @@
 
     <form id="composer" class="composer">
       <label for="message" class="visually-hidden">Message to the assistant</label>
-      <textarea id="message" rows="3" placeholder="What gets in your way on this page?"></textarea>
+      <textarea id="message" rows="3" placeholder="Additional requests?"></textarea>
       <div class="composer-actions">
         <label class="check"><input id="auto-preview" type="checkbox"> Apply previews automatically</label>
         <button id="stop" class="secondary" type="button" hidden>Stop</button>
@@ -58,5 +60,8 @@
   </main>
 
   <p id="status" role="status" aria-live="polite"></p>
+  <!-- What changes, said once: the conversation itself is not a live region. -->
+  <div id="live" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="alert" class="visually-hidden" role="alert" aria-atomic="true"></div>
 </body>
 </html>

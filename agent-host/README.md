@@ -60,7 +60,23 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   `browser_page`, `browser_preview`, `browser_remove_preview`, `adapter_ready`.
   One does not wait: `ask_questions` puts the agent's questions in the chat,
   and the sidebar shows them as multiple choice, each with "Other" for the
-  person's own words; the answers come as the person's next message.
+  person's own words; the answers come as the person's next message. Two
+  kinds the sidebar lays out itself: `pages` (a type of page the agent
+  names, this website with its address, or all websites; an adapter may run
+  on every site only after the person chose that) and `areas` (who it helps,
+  more than one allowed, the other support areas under "Other").
+- **Offered, then checked in the background**
+  ([src/verification.js](src/verification.js)). An adapter is usable as
+  soon as `adapter_ready` accepts it; the host keeps that version's code
+  (`offered/<chat>/<id>.js`, what Add to my account and Export get) and
+  runs the server check on it (below) without the person asking. The person
+  can ask for the full review too. The sidebar shows how each stands. When
+  either finds problems in the version still offered, the agent gets a
+  message with what failed, once no run is going, at most twice per
+  adapter; its next `adapter_ready` is a new version, checked again. A
+  preview of changed code stops the check of the old version. A version
+  that passes replaces an earlier one the person added to their account
+  (by the sidebar, while it is open).
   The agent's standing instructions, including how to load, preview and
   review an adapter, are [sandbox/AGENTS.md](sandbox/AGENTS.md).
 - **An adapter is checked before it is offered.** Every preview carries the

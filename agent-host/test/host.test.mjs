@@ -5,7 +5,7 @@
 // chat titles from the model, deleting a chat, and the agent's questions.
 
 import assert from 'node:assert/strict';
-import { mkdtempSync, readdirSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,6 +47,15 @@ await test('the agent\'s questions: each with at least two options, and "Other" 
   assert.throws(() => questionsOf([]), /at least one question/);
   assert.throws(() => questionsOf([{ question: 'Which?', options: [{ label: 'One' }, { label: 'Other' }] }]), /at least two options/);
   assert.equal(questionsOf(Array(6).fill({ question: 'Q?', options: ['a', 'b'] })).length, 4);
+  // The two kinds the sidebar lays out itself.
+  const [pages, areas] = questionsOf([
+    { kind: 'pages', page_type: { label: 'Product pages', pattern: 'https://shop.example.com/products/*' } },
+    { kind: 'areas', options: [{ label: 'Motor (Recommended)' }, { label: 'vision' }, { label: 'Patience' }] },
+  ]);
+  assert.deepEqual(pages, { kind: 'pages', question: 'Which pages should this apply to?', options: [], multiSelect: false, pageType: { label: 'Product pages', pattern: 'https://shop.example.com/products/*' } });
+  assert.deepEqual(areas, { kind: 'areas', question: 'Who does this change help most?', options: [{ label: 'motor' }, { label: 'vision' }], multiSelect: true });
+  assert.equal(questionsOf([{ kind: 'pages', page_type: { label: 'Articles', pattern: 'not a pattern' } }])[0].pageType.pattern, undefined);
+  assert.throws(() => questionsOf([{ kind: 'areas', options: ['patience'] }]), /among: vision/);
 });
 
 // ── the host ─────────────────────────────────────────────────────────────────
@@ -61,11 +70,33 @@ const fakeFetch = async (url, init) => {
   upstreamCalls.push({ url: String(url), key: init.headers['x-goog-api-key'] });
   return new Response('{"candidates":[]}', { status: 200, headers: { 'content-type': 'application/json' } });
 };
+// Stands in for the verifier: passes, fails ("CHECKFAILS"), or runs until stopped ("SLOWCHECK").
+const checkRuns = [];
+const checkRunner = {
+  kind: 'local',
+  async check({ dir, file, signal }) {
+    const code = readFileSync(path.join(dir, 'in', file), 'utf8');
+    checkRuns.push(code);
+    if (/SLOWCHECK/.test(code)) await new Promise(r => { const t = setTimeout(r, 20_000); signal?.addEventListener('abort', () => { clearTimeout(t); r(); }); });
+    if (signal?.aborted) return { code: 137, timedOut: false, stderr: '' };
+    const failed = /CHECKFAILS/.test(code) ? 1 : 0;
+    writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [
+      { name: 'buttons.html', status: 'pass', result: 'applied', problems: [] },
+      ...(failed ? [{ name: 'buttons.html (narrow)', status: 'fail', result: 'applied', problems: ['adds color-contrast (WCAG 1.4.3) on 2'] }] : []),
+    ], summary: { passed: 1, failed, skipped: 0, appliedOnTestPages: 1, testPages: 1 }, notes: [] }));
+    return { code: failed, timedOut: false, stderr: '' };
+  },
+  async review({ dir }) {
+    writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Nothing to fix.', rubricsRead: [] }));
+    return { code: 0, timedOut: false, stderr: '' };
+  },
+  cleanup: async () => {},
+};
 const lines = [];
 const sandboxPort = 18790 + Math.floor(Math.random() * 500), apiPort = sandboxPort + 1000;
 const host = createHost({
   dataDir, secret: SECRET, apiKey: 'REAL-KEY', sandboxUrl: `http://127.0.0.1:${sandboxPort}`, runnerKind: 'local',
-  opencodeBin: path.join(here, 'fake-opencode.mjs'), repoDir: path.resolve(here, '../..'), fetch: fakeFetch, perMinute: 3,
+  opencodeBin: path.join(here, 'fake-opencode.mjs'), repoDir: path.resolve(here, '../..'), fetch: fakeFetch, perMinute: 3, checkRunner, fetchRubrics: async () => ({ have: [], missing: [] }),
   log: { info: (e, f) => lines.push({ e, ...f }), warn: (e, f) => lines.push({ e, ...f }), error: (e, f) => lines.push({ e, ...f }) },
 });
 const servers = [await listen(host.sandboxHandler, `127.0.0.1:${sandboxPort}`), await listen(host.apiHandler, `127.0.0.1:${apiPort}`)];
@@ -263,6 +294,66 @@ await test('the agent asks multiple-choice questions; the answers come back as a
   await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages?\n→ This page', answers: asked.id } });
   chat = await until(async () => { const c = (await (await api(`/agent/chats/${id}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'you' && /This page/.test(e.text)) && c; });
   assert.equal(chat.entries.find(e => e.id === asked.id).answered, true);
+});
+
+// ── after adapter_ready: the background check ───────────────────────────────
+const previewOk = () => ({ status: 'applied', changes: 1, shift: 0, checks: [{ before: false, after: true }], axe: { version: '4.12.1', added: [], fixed: [], remaining: 0 } });
+const chatNow = async (id) => (await (await api(`/agent/chats/${id}`)).json()).chat;
+const adapterNow = async (id, a) => (await chatNow(id)).adapters.find(x => x.id === a);
+
+await test('an offered adapter is checked in the background, and its state kept with it', async () => {
+  const a = await until(async () => { const x = await adapterNow(chatId, 'bigger-buttons'); return x?.check?.status === 'passed' && x; });
+  assert.equal(a.check.failed, 0);
+  assert.equal(a.check.hash, a.hash);
+  assert.ok(a.version >= 1);
+});
+
+await test('when the background check finds problems, the agent is asked to fix them; the person sees one line', async () => {
+  const sb = sidebar('ada', { preview: previewOk });
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'checkfails please' } });
+  const chat = await until(async () => { const c = await chatNow(id); return !c.busy && c.adapters[0]?.fixes === 1 && c.entries.some(e => e.kind === 'agent' && /^You said: The background check of “flaky”/.test(e.text)) && c; });
+  const a = chat.adapters[0];
+  assert.equal(a.check.status, 'problems');
+  assert.deepEqual(a.check.failing, [{ name: 'buttons.html (narrow)', problems: ['adds color-contrast (WCAG 1.4.3) on 2'] }]);
+  const asked = chat.entries.find(e => /^You said: The background check/.test(e.text || '')).text;
+  assert.match(asked, /buttons\.html \(narrow\): adds color-contrast/);
+  assert.ok(chat.entries.some(e => e.kind === 'notice' && e.text === 'The background check found problems in “flaky”. The assistant is fixing them.'));
+  assert.ok(!chat.entries.some(e => e.kind === 'you' && /background check/.test(e.text)), 'not shown as the person\'s message');
+  sb.close();
+});
+
+await test('a rebuild stops the check of the old code; the new version is checked', async () => {
+  const sb = sidebar('ada', { preview: previewOk });
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  const before = checkRuns.length;
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'slowcheck please' } });
+  const a = await until(async () => { const x = await adapterNow(id, 'slow'); return x?.version === 2 && x.check?.status === 'passed' && x; }, 15_000);
+  const ran = checkRuns.slice(before);
+  assert.ok(ran.some(c => /SLOWCHECK/.test(c)) && ran.some(c => /v2/.test(c)), 'both versions went to the checker');
+  assert.ok(lines.some(l => l.e === 'check.cancelled'), 'the old check was stopped');
+  assert.match((await chatNow(id)).entries.findLast(e => e.kind === 'agent').text, /Verify: offered, then offered\./);
+
+  // The full review, when the person asks.
+  assert.equal((await api(`/agent/chats/${id}/adapters/slow/review`, { method: 'POST' })).status, 202);
+  const r = await until(async () => { const x = await adapterNow(id, 'slow'); return x?.review?.status === 'passed' && x.review; });
+  assert.equal(r.verdict, 'ok');
+  assert.equal(r.report, 'Nothing to fix.');
+  assert.equal((await api(`/agent/chats/${id}/adapters/nope/review`, { method: 'POST' })).status, 404);
+  sb.close();
+});
+
+await test('an adapter runs on every site only when the person chose All websites', async () => {
+  const sb = sidebar('ada', { preview: previewOk });
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'allsites please' } });
+  await until(async () => { const c = await chatNow(id); return !c.busy && /Verify: preview refused: runs_on "\*:\/\/\*\/\*" covers every site/.test(c.entries.findLast(e => e.kind === 'agent')?.text || ''); });
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages should this apply to?\n→ All websites', pages: 'all' } });
+  await until(async () => { const c = await chatNow(id); return !c.busy && c.allSites && c.entries.some(e => /You said: Which pages/.test(e.text || '')); });
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'allsites again' } });
+  const a = await until(async () => adapterNow(id, 'everywhere'));
+  assert.deepEqual(a.runsOn, ['*://*/*']);
+  sb.close();
 });
 
 await test('the model proxy: sandbox token in, real key out, one model, a rate limit', async () => {

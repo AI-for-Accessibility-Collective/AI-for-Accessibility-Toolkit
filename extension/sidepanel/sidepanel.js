@@ -21,6 +21,13 @@
 // the conversation, without asking the agent. The agent's questions
 // (ask_questions) are a chat entry, shown as multiple choice with "Other" for
 // the person's own words; the answers go back as the person's next message.
+// The agent's steps fold into one line ("Working…" while it runs) that opens
+// with a button. A finished adapter is usable at once; its background check
+// and, on request, its full review run on the agent host
+// (agent-host/src/verification.js), and the card shows how they stand. One
+// the person added to their account is updated there when a newer version
+// passes its background check. What changes is said in a live region, not
+// by reading out the whole conversation.
 //
 // Finished adapters can be added to the account (published privately and
 // installed into this browser's runtime) or exported as a file.
@@ -42,6 +49,29 @@ let chat = null;            // the open chat, in full
 const requests = new Map(); // id -> request, for the open chat
 let previewing = null;      // {name, tabId, origin, request, on}
 let streamAbort = null;
+const ADDED_KEY = 'assistantAdded'; // "<chat>/<adapter>" -> the version added to the account
+
+// ── what a screen reader hears ───────────────────────────────────────────────
+
+// Changes are said once, through one polite region (errors through an
+// assertive one); lines that arrive together are said together.
+const pendingSaid = { polite: [], urgent: [] };
+let saidTimer = null;
+function announce(text, urgent = false) {
+  if (!text) return;
+  pendingSaid[urgent ? 'urgent' : 'polite'].push(text);
+  clearTimeout(saidTimer);
+  saidTimer = setTimeout(() => {
+    for (const [kind, id] of [['polite', 'live'], ['urgent', 'alert']]) {
+      if (!pendingSaid[kind].length) continue;
+      const node = $(id);
+      node.textContent = '';
+      const words = pendingSaid[kind].join(' ');
+      pendingSaid[kind] = [];
+      setTimeout(() => { node.textContent = words; }, 30);
+    }
+  }, 150);
+}
 
 function say(text, error = false) {
   $('status').textContent = text;
@@ -237,6 +267,7 @@ async function runPreview(request) {
   }
   const result = await applyPreview(request, tab);
   if (result.status === 'applied') showPreview({ name: request.name, tabId: tab.id, origin: hostOf(tab.url), request, on: true });
+  announce(result.status === 'applied' ? `Previewing “${request.name}” on this page.` : result.status === 'skipped' ? `“${request.name}” found nothing to change on this page.` : `The preview of “${request.name}” did not work.`);
   // The page afterwards, at what the person shares on this site in this chat.
   const level = chat?.consent?.[originOf(tab.url)];
   let after;
@@ -317,6 +348,7 @@ async function handleRequest(request) {
   }
   requests.set(request.id, request);
   renderRequests();
+  announce(request.kind === 'page' ? (request.again ? 'The assistant asks for a screenshot of this page.' : 'The assistant asks to see this page.') : request.kind === 'preview' ? `The assistant asks to preview “${request.name}”.` : '');
 }
 
 function renderRequests() {
@@ -345,7 +377,7 @@ function renderRequests() {
           button('The address, the source and a screenshot', 'primary', () => sharePage(request, 'screenshot', true)),
           button('Don’t share', 'text-button', () => sharePage(request, 'none', true)));
       }
-      card.append(choices, el('p', 'note', 'The assistant needs the page source and a screenshot to build the best adapter. What you share stays on the toolkit’s server for this research and is not used to identify you.'));
+      card.append(choices, el('p', 'note', 'The assistant needs the page source and a screenshot to build the best adapter. What you share is not used to identify you.'));
     } else if (request.kind === 'preview') {
       const where = el('strong');
       workingTab().then(t => { where.textContent = t ? hostOf(t.url) : 'the page'; });
@@ -364,6 +396,8 @@ function renderRequests() {
 
 // ── the agent's questions ────────────────────────────────────────────────────
 
+const AREA_NAMES = { vision: 'Vision', motor: 'Motor', hearing: 'Hearing', cognitive: 'Cognitive', sensory: 'Sensory', reading: 'Reading' };
+
 /** The questions waiting for answers: the last questions entry, if the person has not written since. */
 function openQuestions() {
   const entries = chat?.entries || [];
@@ -372,37 +406,87 @@ function openQuestions() {
   return entries[i];
 }
 
+/**
+ * One question: its options, then "Other", which opens what else there is
+ * (a box for their own words; for areas, the other areas too). Each option
+ * says what it answers with `answer`.
+ */
+function questionSet(q, i, site) {
+  const set = el('fieldset');
+  set.append(el('legend', '', q.question));
+  if (q.multiSelect) set.append(el('p', 'note', 'Choose any that apply.'));
+  const type = q.multiSelect ? 'checkbox' : 'radio';
+  const option = (label, about, answer) => {
+    const row = el('label', 'option');
+    const input = Object.assign(document.createElement('input'), { type, name: `q${i}`, value: label });
+    input.dataset.answer = answer ?? label;
+    row.append(input, el('span', '', label));
+    if (about) row.append(el('span', 'about', about));
+    return { row, input };
+  };
+  if (q.kind === 'pages') {
+    if (q.pageType) {
+      const o = option(`This type of page: ${q.pageType.label}`, q.pageType.pattern || 'Pages like this one on this site.', `This type of page: ${q.pageType.label}${q.pageType.pattern ? ` (${q.pageType.pattern})` : ''}`);
+      o.input.dataset.pages = 'type';
+      set.append(o.row);
+    }
+    const origin = originOf(site?.url);
+    if (origin) {
+      const o = option(`This website: ${hostOf(site.url)}`, `${origin}/`, `This website (${origin}/*)`);
+      o.input.dataset.pages = 'site';
+      set.append(o.row);
+    }
+    const all = option('All websites', 'Every site you visit.');
+    all.input.dataset.pages = 'all';
+    set.append(all.row);
+  } else {
+    for (const o of q.options) set.append(option(q.kind === 'areas' ? AREA_NAMES[o.label] || o.label : o.label, o.description).row);
+  }
+  const other = option('Other');
+  other.input.dataset.other = '1';
+  if (q.kind === 'pages') other.input.dataset.pages = 'other';
+  const more = el('div', 'more');
+  more.id = `q${i}-more`;
+  more.hidden = true;
+  other.input.setAttribute('aria-controls', more.id);
+  if (q.kind === 'areas') {
+    const picked = new Set(q.options.map(o => o.label));
+    for (const [area, name] of Object.entries(AREA_NAMES)) {
+      if (picked.has(area)) continue;
+      const row = el('label', 'option');
+      const input = Object.assign(document.createElement('input'), { type: 'checkbox', name: `q${i}-more`, value: name });
+      row.append(input, el('span', '', name));
+      more.append(row);
+    }
+  }
+  const words = Object.assign(document.createElement('input'), { type: 'text', name: `q${i}-other` });
+  words.setAttribute('aria-label', q.kind === 'areas' ? 'Someone else' : `Your own answer: ${q.question}`);
+  words.placeholder = q.kind === 'areas' ? 'Someone else' : q.kind === 'pages' ? 'Which pages, in your words' : 'Your own answer';
+  more.append(words);
+  const otherBox = el('div', 'other-box');
+  otherBox.append(other.row, more);
+  set.append(otherBox);
+  // "Other" opens its part; choosing another option (one of radios) closes it.
+  set.addEventListener('change', () => {
+    const open = other.input.checked;
+    if (more.hidden === open) { more.hidden = !open; if (open) words.focus(); }
+  });
+  return set;
+}
+
 let shownQuestions = null; // the entry id the form shows, so a re-render keeps what the person chose
-function renderQuestions() {
+async function renderQuestions() {
   const entry = openQuestions();
   const box = $('questions');
   if (!entry) { shownQuestions = null; box.replaceChildren(); return; }
   if (shownQuestions === entry.id) return renderBusy();
   shownQuestions = entry.id;
+  // The pages question names this website: the chat's page, or the tab beside the sidebar.
+  const site = entry.questions.some(q => q.kind === 'pages') ? (await workingTab() || await activeTab()) : null;
+  if (shownQuestions !== entry.id) return;
   const form = el('form', 'card questions');
   form.setAttribute('aria-label', 'The assistant asks');
-  entry.questions.forEach((q, i) => {
-    const set = el('fieldset');
-    set.append(el('legend', '', q.question));
-    if (q.multiSelect) set.append(el('p', 'note', 'Choose any that apply.'));
-    const type = q.multiSelect ? 'checkbox' : 'radio';
-    const option = (label, about) => {
-      const row = el('label', 'option');
-      const input = Object.assign(document.createElement('input'), { type, name: `q${i}`, value: label });
-      row.append(input, el('span', '', label));
-      if (about) row.append(el('span', 'about', about));
-      return { row, input };
-    };
-    for (const o of q.options) set.append(option(o.label, o.description).row);
-    const other = option('Other');
-    other.input.dataset.other = '1';
-    const words = Object.assign(document.createElement('input'), { type: 'text', name: `q${i}-other` });
-    words.setAttribute('aria-label', `Your own answer: ${q.question}`);
-    words.addEventListener('input', () => { if (words.value.trim()) other.input.checked = true; });
-    other.row.append(words);
-    set.append(other.row);
-    form.append(set);
-  });
+  entry.questions.forEach((q, i) => form.append(questionSet(q, i, isWebPage(site) ? site : null)));
   const row = el('div', 'row');
   const send = el('button', 'primary', 'Send answers');
   send.type = 'submit';
@@ -411,18 +495,22 @@ function renderQuestions() {
   form.append(row);
   form.addEventListener('submit', (e) => { e.preventDefault(); sendAnswers(entry, form); });
   box.replaceChildren(form);
+  $('conversation').scrollTop = $('conversation').scrollHeight;
   renderBusy();
 }
 
 async function sendAnswers(entry, form) {
   const parts = [];
-  let answered = 0;
+  let answered = 0, pages;
   entry.questions.forEach((q, i) => {
-    const chosen = [...form.querySelectorAll(`input[name="q${i}"]:checked`)].map((input) => {
-      if (!input.dataset.other) return input.value;
+    const chosen = [];
+    for (const input of form.querySelectorAll(`input[name="q${i}"]:checked`)) {
+      if (q.kind === 'pages') pages = input.dataset.pages;
+      if (!input.dataset.other) { chosen.push(input.dataset.answer); continue; }
+      for (const extra of form.querySelectorAll(`input[name="q${i}-more"]:checked`)) chosen.push(extra.value);
       const words = form.querySelector(`input[name="q${i}-other"]`).value.trim();
-      return words || null;
-    }).filter(Boolean);
+      if (words) chosen.push(words);
+    }
     if (chosen.length) answered++;
     parts.push(`${q.question}\n→ ${chosen.length ? chosen.join('; ') : '(no answer)'}`);
   });
@@ -430,7 +518,7 @@ async function sendAnswers(entry, form) {
   $('send-answers').disabled = true;
   try {
     await ensureWorkingTab({ replaceClosed: true });
-    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text: parts.join('\n\n'), answers: entry.id } });
+    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text: parts.join('\n\n'), answers: entry.id, ...(pages ? { pages } : {}) } });
     say('');
   } catch (err) {
     say(err.message, true);
@@ -482,7 +570,57 @@ function foldedEntries(entries) {
   return out;
 }
 
-// Only the lines that changed are replaced, so a screen reader hears each new line once.
+const isBusy = () => !!chats.find(c => c.id === chat?.id)?.busy;
+const openSteps = new Set(); // the groups of steps the person opened, by their first step's id
+
+/**
+ * What the transcript shows: messages, and each run of steps as one group,
+ * shut unless the person opened it. While the agent works, the last line
+ * says so.
+ */
+function transcriptItems(entries, busy) {
+  const items = [];
+  for (const f of foldedEntries(entries)) {
+    if (f.entry.kind !== 'step') { items.push(f); continue; }
+    const last = items.at(-1);
+    if (last?.steps) last.steps.push(f); else items.push({ steps: [f], key: f.entry.id });
+  }
+  if (busy) { const last = items.at(-1); if (last?.steps) last.working = true; else items.push({ working: true }); }
+  return items;
+}
+
+function stepsNode(item) {
+  const li = el('li', 'steps-group');
+  const open = openSteps.has(item.key);
+  const failed = item.steps.filter(s => s.entry.state === 'failed').length;
+  const n = item.steps.reduce((sum, s) => sum + s.count, 0);
+  const head = el('div', `steps-head${item.working ? ' running' : ''}`);
+  head.append(el('span', '', item.working ? 'Working…' : `${n} step${n === 1 ? '' : 's'}${failed ? ` · ${failed} did not work` : ''}`));
+  const list = el('ol', 'steps');
+  list.id = `steps-${item.key}`;
+  list.hidden = !open;
+  list.append(...item.steps.map(({ entry, count }) => entryNode(entry, count)));
+  const toggle = button(open ? 'Hide steps' : 'Show steps', 'text-button', () => {
+    const now = !openSteps.has(item.key);
+    if (now) openSteps.add(item.key); else openSteps.delete(item.key);
+    list.hidden = !now;
+    toggle.textContent = now ? 'Hide steps' : 'Show steps';
+    toggle.setAttribute('aria-expanded', String(now));
+    li.dataset.sig = itemSig(item);
+  });
+  toggle.setAttribute('aria-expanded', String(open));
+  toggle.setAttribute('aria-controls', list.id);
+  head.append(toggle);
+  li.append(head, list);
+  return li;
+}
+
+const itemSig = (item) => item.steps
+  ? JSON.stringify(['steps', item.key, openSteps.has(item.key), !!item.working, item.steps.map(s => [s.entry.id, s.entry.text, s.entry.state, s.count])])
+  : item.working ? '["working"]'
+    : JSON.stringify([item.entry.id, item.entry.kind, item.entry.text, item.entry.state, item.entry.answered, item.count]);
+
+// Only the lines that changed are replaced.
 function renderTranscript() {
   const list = $('transcript');
   if (!chat?.entries.length) {
@@ -492,25 +630,87 @@ function renderTranscript() {
   }
   list.querySelector('.empty')?.remove();
   const shown = [...list.children];
-  const folded = foldedEntries(chat.entries);
-  folded.forEach(({ entry, count }, i) => {
-    const sig = JSON.stringify([entry.id, entry.kind, entry.text, entry.state, entry.answered, count]);
+  const items = transcriptItems(chat.entries, isBusy());
+  items.forEach((item, i) => {
+    const sig = itemSig(item);
     if (shown[i]?.dataset.sig === sig) return;
-    const node = entryNode(entry, count);
+    const node = item.steps ? stepsNode(item) : item.working ? el('li', 'steps-group working', 'Working…') : entryNode(item.entry, item.count);
     node.dataset.sig = sig;
+    // Keep the person's place: a toggle they are on stays focused.
+    const focused = shown[i]?.contains(document.activeElement) && document.activeElement.matches('.steps-head button');
     if (shown[i]) shown[i].replaceWith(node); else list.append(node);
+    if (focused) node.querySelector('.steps-head button')?.focus();
   });
-  for (const extra of shown.slice(folded.length)) extra.remove();
-  list.scrollTop = list.scrollHeight;
+  for (const extra of shown.slice(items.length)) extra.remove();
+  $('conversation').scrollTop = $('conversation').scrollHeight;
   renderQuestions();
 }
 
+/** An entry from the event stream: shown, and what is new about it said. */
 function addEntry(entry) {
   const i = chat.entries.findIndex(e => e.id === entry.id);
+  const before = i >= 0 ? chat.entries[i] : null;
   if (i >= 0) chat.entries[i] = { ...chat.entries[i], ...entry };
   else chat.entries.push(entry);
+  const e = i >= 0 ? chat.entries[i] : entry;
+  if (!before) {
+    if (e.kind === 'agent') announce(`Assistant: ${e.text}`);
+    else if (e.kind === 'notice' || e.kind === 'warning') announce(e.text);
+    else if (e.kind === 'error') announce(e.text, true);
+    else if (e.kind === 'questions') { const n = e.questions?.length || 0; announce(`The assistant asks ${n === 1 ? 'a question' : `${n} questions`}. Answer them below the conversation.`); }
+  }
+  if (e.kind === 'step' && e.state === 'failed' && before?.state !== 'failed') announce(`Did not work: ${e.text}`);
   renderTranscript();
 }
+
+// ── finished adapters: the card ──────────────────────────────────────────────
+
+function ordinal(n) {
+  const teen = n % 100 >= 11 && n % 100 <= 13;
+  return `${n}${teen ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th')}`;
+}
+
+/** How the background check, or the full review, stands, in a sentence; with what failed. */
+function checkWords(a, kind) {
+  const c = a[kind];
+  if (!c) return null;
+  const what = kind === 'review' ? 'Full review' : 'Background check';
+  const runs = (n) => `${n} run${n === 1 ? '' : 's'}`;
+  switch (c.status) {
+    case 'unavailable': return { state: 'idle', text: kind === 'review' ? 'This toolkit has no full review.' : 'This toolkit does not check adapters in the background.' };
+    case 'queued': return { state: 'running', text: `${what}: waiting${c.position ? `, ${ordinal(c.position)} in line` : ''}.` };
+    case 'running': return { state: 'running', text: kind === 'review' ? 'Full review running: the background check, then an independent reviewer. This can take up to an hour.' : 'Checking in the background: on test pages and copies of real sites, narrow and with reduced motion. This takes a few minutes.' };
+    case 'cancelled': return { state: 'idle', text: c.why === 'changed' ? `${what} stopped: the assistant is changing the adapter. Its next version is checked.` : `${what} stopped.` };
+    case 'failed': return { state: 'failed', text: `${what} could not run: ${c.error}` };
+    case 'passed': return { state: 'passed', text: kind === 'review' ? 'Full review: no issues found.' : `Background check passed: ${runs(c.passed)} passed${c.skipped ? `, ${c.skipped} skipped` : ''}; it applied on ${c.appliedOn} of ${c.testPages} test pages.` };
+    case 'problems': {
+      const fix = a.gaveUp ? ` The assistant could not fix ${kind === 'review' ? 'them' : 'all of them'} after ${a.fixes} tries: ask it, or use this version as it is.`
+        : a.fixing ? (isBusy() ? ' The assistant is fixing them.' : ' The assistant tried to fix them: see its reply.') : '';
+      return { state: 'problems', text: `${kind === 'review' ? 'Full review found issues' : `Background check found problems in ${runs(c.failed)}`}.${fix}`, failing: c.failing, report: c.report };
+    }
+    default: return null;
+  }
+}
+
+function statusNode(w) {
+  const box = el('div', `check-status ${w.state}`);
+  box.append(el('p', '', w.text));
+  if (w.failing?.length || w.report) {
+    const more = el('details');
+    more.append(el('summary', '', 'What it found'));
+    if (w.failing?.length) {
+      const ul = el('ul');
+      for (const f of w.failing) ul.append(el('li', '', `${f.name}: ${f.problems.join('; ') || 'failed'}`));
+      more.append(ul);
+    }
+    if (w.report) more.append(el('p', 'report', w.report));
+    box.append(more);
+  }
+  return box;
+}
+
+let added = {}; // ADDED_KEY, loaded at start
+const addedKey = (a) => `${chat?.id}/${a.id}`;
 
 function renderReady() {
   const list = $('ready-list');
@@ -518,16 +718,63 @@ function renderReady() {
   $('ready').hidden = !adapters.length;
   list.replaceChildren(...adapters.map(a => {
     const li = el('li');
-    li.append(el('strong', '', a.name), el('p', 'about', a.about), el('p', 'where', `Runs on ${a.runsOn.join(', ')}`));
+    const title = el('strong', '', a.name);
+    if (a.version > 1) title.append(el('span', 'version', ` · version ${a.version}`));
+    li.append(title, el('p', 'about', a.about), el('p', 'where', `Runs on ${a.runsOn.map(p => (p === '*://*/*' ? 'all websites' : p)).join(', ')}`));
+    for (const kind of ['check', 'review']) { const w = checkWords(a, kind); if (w) li.append(statusNode(w)); }
+    const mine = added[addedKey(a)];
+    if (mine) li.append(el('p', 'where', mine.version >= (a.version || 1) ? 'In your account. A newer version that passes its background check replaces it there.' : `Your account has version ${mine.version}: it is updated once this version passes its background check.`));
     const row = el('div', 'row');
-    row.append(button('Add to my account', 'primary', (e) => addToAccount(a, e.currentTarget)), button('Export', 'secondary', () => exportAdapter(a)));
+    const reviewing = ['queued', 'running'].includes(a.review?.status);
+    const review = button(a.review && !reviewing ? 'Full review again' : 'Full review', 'secondary', () => askReview(a, review));
+    review.disabled = reviewing || a.review?.status === 'unavailable';
+    row.append(button(mine ? 'Add this version' : 'Add to my account', 'primary', (e) => addToAccount(a, e.currentTarget)), button('Export', 'secondary', () => exportAdapter(a)), review);
     li.append(row);
     return li;
   }));
 }
 
+async function askReview(a, btn) {
+  btn.disabled = true;
+  try {
+    await api(`/chats/${chat.id}/adapters/${a.id}/review`, { method: 'POST' });
+    say(`Started the full review of “${a.name}”. It runs in the background.`);
+  } catch (e) {
+    btn.disabled = false;
+    say(`Could not start the review: ${e.message}`, true);
+  }
+}
+
+/** An adapter's news, said: a new version, and how its checks went. */
+function adapterNews(before, a) {
+  if (!before) return;
+  if (a.version > before.version) announce(`“${a.name}” version ${a.version} is ready to use.`);
+  for (const kind of ['check', 'review']) {
+    const was = before.version === a.version ? before[kind]?.status : undefined;
+    const now = a[kind]?.status;
+    if (!now || now === was) continue;
+    const what = kind === 'review' ? 'full review' : 'background check';
+    const said = {
+      running: was === 'queued' ? null : `Checking “${a.name}”: the ${what} started.`,
+      queued: `The ${what} of “${a.name}” is waiting to start.`,
+      passed: `“${a.name}” passed the ${what}.`,
+      problems: `The ${what} found problems in “${a.name}”.`,
+      failed: `The ${what} of “${a.name}” could not run.`,
+    }[now];
+    announce(said);
+  }
+}
+
+/** One the person added that has a newer version which passed its background check: update their account. */
+function updateAdded() {
+  for (const a of chat?.adapters || []) {
+    const mine = added[addedKey(a)];
+    if (mine && a.version > mine.version && ['passed', 'unavailable'].includes(a.check?.status)) addToAccount(a, null, { auto: true });
+  }
+}
+
 function renderBusy() {
-  const busy = !!chats.find(c => c.id === chat?.id)?.busy;
+  const busy = isBusy();
   $('stop').hidden = !busy;
   $('send').disabled = busy;
   if ($('send-answers')) $('send-answers').disabled = busy;
@@ -542,6 +789,7 @@ async function openChat(id) {
   requests.clear();
   $('transcript').replaceChildren();
   renderChats(); renderTranscript(); renderReady(); renderRequests(); renderBusy(); renderWorking();
+  updateAdded();
   try { await chrome.storage.local.set({ assistantChat: id }); } catch { /* fine */ }
 }
 
@@ -605,7 +853,7 @@ async function stream() {
   const ctl = new AbortController();
   streamAbort = ctl;
   let wait = 1000;
-  let first = true;
+  let first = true, dropped = false;
   while (!ctl.signal.aborted) {
     const conn = new AbortController();
     const stop = () => conn.abort();
@@ -619,7 +867,9 @@ async function stream() {
       wait = 1000;
       // Open requests come again at the start of the stream; the rest is fetched.
       if (!first) { requests.clear(); renderRequests(); catchUp().catch(e => say(e.message, true)); }
+      if (dropped) announce('Connected to the assistant again.');
       first = false;
+      dropped = false;
       renderBusy();
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -641,6 +891,8 @@ async function stream() {
       ctl.signal.removeEventListener('abort', stop);
     }
     if (ctl.signal.aborted) return;
+    if (!dropped) announce('Lost the connection to the assistant. Reconnecting.');
+    dropped = true;
     $('state').textContent = 'Reconnecting';
     $('state').className = 'badge warn';
     await new Promise(r => setTimeout(r, wait));
@@ -658,13 +910,19 @@ async function catchUp() {
   if (fresh.id !== chat?.id) return;
   chat = fresh;
   renderTranscript(); renderReady(); renderBusy();
+  updateAdded();
 }
 
 function onEvent(event) {
   if (event.type === 'chat') {
     const i = chats.findIndex(c => c.id === event.chat.id);
+    const was = i >= 0 ? chats[i].busy : undefined;
     if (i >= 0) chats[i] = event.chat; else chats.unshift(event.chat);
     renderChats(); renderBusy();
+    if (event.chat.id === chat?.id && was !== undefined && was !== event.chat.busy) {
+      announce(event.chat.busy ? 'The assistant is working.' : 'The assistant is done.');
+      renderTranscript(); renderReady();
+    }
     return;
   }
   if (event.type === 'chat-deleted') { chatGone(event.chatId).catch(e => say(e.message, true)); return; }
@@ -673,14 +931,24 @@ function onEvent(event) {
   else if (event.type === 'request') handleRequest(event.request);
   else if (event.type === 'request-closed') { requests.delete(event.id); renderRequests(); }
   else if (event.type === 'consent') chat.consent = event.consent;
-  else if (event.type === 'adapter') { chat.adapters = [...chat.adapters.filter(a => a.id !== event.adapter.id), event.adapter]; renderReady(); }
+  else if (event.type === 'adapter') {
+    const i = chat.adapters.findIndex(a => a.id === event.adapter.id);
+    adapterNews(i >= 0 ? chat.adapters[i] : null, event.adapter);
+    if (i >= 0) chat.adapters[i] = event.adapter; else chat.adapters.push(event.adapter);
+    renderReady();
+    updateAdded();
+  }
 }
 
 // ── finished adapters ────────────────────────────────────────────────────────
 
-async function addToAccount(a, btn) {
-  btn.disabled = true;
-  say(`Adding “${a.name}” to your account…`);
+const updating = new Set();
+async function addToAccount(a, btn, { auto = false } = {}) {
+  const key = addedKey(a);
+  if (updating.has(key)) return;
+  updating.add(key);
+  if (btn) btn.disabled = true;
+  if (!auto) say(`Adding “${a.name}” to your account…`);
   try {
     const { adapter } = await api(`/chats/${chat.id}/adapters/${a.id}`);
     const registry = createRegistryClient({ url: connection.url, token: connection.token });
@@ -692,11 +960,15 @@ async function addToAccount(a, btn) {
     // The installed copy takes over from the preview.
     if (previewing) await removePreview();
     await chrome.runtime.sendMessage({ type: 'sync' }).catch(() => {});
-    say(`“${a.name}” is in your account (revision ${r.revision}), private to you, and runs in this browser on the pages it targets.`);
+    added = { ...added, [key]: { version: a.version || 1 } };
+    try { await chrome.storage.local.set({ [ADDED_KEY]: added }); } catch { /* fine */ }
+    say(auto ? `Updated “${a.name}” in your account to version ${a.version}.` : `“${a.name}” is in your account (revision ${r.revision}), private to you, and runs in this browser on the pages it targets.`);
+    renderReady();
   } catch (e) {
-    say(`Could not add it: ${e.message}`, true);
+    say(`Could not ${auto ? 'update' : 'add'} it: ${e.message}`, true);
   } finally {
-    btn.disabled = false;
+    updating.delete(key);
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -768,6 +1040,7 @@ async function start() {
   $('main').hidden = !connection;
   if (!connection) { $('state').textContent = 'Not connected'; return; }
   $('auto-preview').checked = !!(await chrome.storage.local.get(AUTO_KEY))[AUTO_KEY];
+  added = (await chrome.storage.local.get(ADDED_KEY).catch(() => ({})))[ADDED_KEY] || {};
   try {
     await api('/status');
     await loadChats();
