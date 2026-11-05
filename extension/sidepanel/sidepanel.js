@@ -1235,18 +1235,46 @@ async function start() {
   if (!connection) { $('state').textContent = 'Not connected'; return; }
   pageTypes = createPageTypes({ storage: chrome.storage.local, ask: askToolkit(connection) });
   added = (await chrome.storage.local.get(ADDED_KEY).catch(() => ({})))[ADDED_KEY] || {};
-  try {
-    await api('/status');
-    await loadChats();
-    stream();
-  } catch (e) {
-    $('state').textContent = 'Unavailable';
-    $('state').className = 'badge warn';
-    // Said in the Builder tab: the status line belongs to whichever tab is open.
-    $('main').hidden = true;
-    $('builder-unavailable').textContent = e.code === 'agent-unavailable' ? 'The assistant is not set up on this toolkit.' : `The assistant is unavailable: ${e.message}`;
-    $('builder-unavailable').hidden = false;
+  // Until the assistant answers: tried again 1 s, 2 s, 4 s, then every 5 s
+  // (every 30 s while the toolkit has no assistant set up), or at once on
+  // Try now, the panel shown again, or back online. Not for a token it refuses.
+  const turn = ++startTurn;
+  let wait = 1000;
+  for (;;) {
+    try {
+      await api('/status');
+      if (turn !== startTurn) return;
+      $('builder-unavailable').hidden = true;
+      $('main').hidden = false;
+      $('reconnect').hidden = true;
+      await loadChats();
+      stream();
+      return;
+    } catch (e) {
+      if (turn !== startTurn) return;
+      $('state').className = 'badge warn';
+      // Said in the Builder tab: the status line belongs to whichever tab is open.
+      $('main').hidden = true;
+      $('builder-unavailable').textContent = e.code === 'agent-unavailable' ? 'The assistant is not set up on this toolkit.' : `The assistant is unavailable: ${e.message}`;
+      $('builder-unavailable').hidden = false;
+      if (e.status === 401 || e.status === 403) { $('state').textContent = 'Unavailable'; return; }
+      const pause = e.code === 'agent-unavailable' ? 30_000 : wait;
+      $('reconnect').hidden = false;
+      $('reconnect').disabled = false;
+      const until = Date.now() + pause;
+      const tick = () => { $('state').textContent = `Trying again in ${Math.max(1, Math.ceil((until - Date.now()) / 1000))} s`; };
+      tick();
+      const counter = setInterval(tick, 1000);
+      await new Promise(r => { wakeStream = r; setTimeout(r, pause); });
+      clearInterval(counter);
+      wakeStream = null;
+      if (turn !== startTurn) return;
+      $('state').textContent = 'Connecting…';
+      $('reconnect').disabled = true;
+      wait = Math.min(wait * 2, RETRY_MAX_MS);
+    }
   }
 }
+let startTurn = 0;
 chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.connection) start(); });
 start();

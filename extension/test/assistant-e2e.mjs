@@ -392,6 +392,17 @@ try {
     assert.equal(await panel.getByRole('button', { name: 'Try now' }).isHidden(), true);
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
 
+    // Opened while the assistant cannot be reached (a dropped tunnel to its host): it keeps trying, and comes back by itself.
+    await panel.route('**/v1/agent/status', (route) => route.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ error: 'agent-unreachable', message: 'The assistant is not answering. Try again in a minute.' }) }));
+    await panel.reload();
+    await panel.locator('#builder-unavailable', { hasText: 'The assistant is unavailable: The assistant is not answering.' }).waitFor();
+    await panel.locator('#state', { hasText: /Trying again in \d+ s/ }).waitFor();
+    await panel.getByRole('button', { name: 'Try now' }).waitFor();
+    await panel.unroute('**/v1/agent/status');
+    await panel.locator('#state', { hasText: 'Ready' }).waitFor({ timeout: 10000 });
+    assert.equal(await panel.locator('#builder-unavailable').isHidden(), true);
+    await panel.locator('#chat-select').waitFor();
+
     // The agent's questions are multiple choice, each with Other for the person's own words.
     await panel.getByRole('button', { name: 'New chat' }).click();
     await panel.locator('#transcript', { hasText: 'Say what gets in your way' }).waitFor();
