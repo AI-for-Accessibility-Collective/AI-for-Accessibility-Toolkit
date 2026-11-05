@@ -19,6 +19,7 @@ Librarian instead, use `run-toolkit.mjs` (Role 5, see
 ```bash
 node captionflow/scripts/run-toolkit.mjs --user=alice --set-text-size=1.3
 node captionflow/scripts/run-toolkit.mjs --user=alice   # loads the saved value back
+node captionflow/scripts/run-toolkit.mjs --user=alice --undo-text-size  # reverts to the prior choice
 ```
 
 No extra npm dependencies or API credentials are required. Stdout contains JSON for a future player; stderr contains a mock-only disclaimer.

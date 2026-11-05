@@ -11,11 +11,16 @@ import { createFixtureCaptionProcessor } from '../src/mocks/fixture-caption-proc
 import { createToolkitPreferenceProvider } from '../src/toolkit-preferences.mjs';
 
 const flag = (name, fallback) => process.argv.find(s => s.startsWith(`--${name}=`))?.split('=').slice(1).join('=') ?? fallback;
+const hasFlag = (name) => process.argv.includes(`--${name}`);
 const storageDir = flag('storage-dir', new URL('../.captionflow-storage', import.meta.url).pathname);
 const actingUserId = flag('user', null);
 const setTextSize = flag('set-text-size', undefined);
+const undo = hasFlag('undo-text-size');
 
-const { librarian } = createToolkit({ kv: fileKV(storageDir) });
+const kv = fileKV(storageDir); // one durable KV root; the Librarian and the
+// undo history below share it under different area names, so both survive a
+// process restart without colliding (see TOOLKIT_PREFERENCES.md "Real undo").
+const { librarian } = createToolkit({ kv });
 if (actingUserId !== null) {
   const switched = await librarian.setActingUser(actingUserId);
   if (!switched.ok) {
@@ -24,10 +29,16 @@ if (actingUserId !== null) {
   }
 }
 
-const preferenceProvider = createToolkitPreferenceProvider({ librarian, actingUserId });
+const preferenceProvider = createToolkitPreferenceProvider({ librarian, actingUserId, historyKV: kv });
 if (setTextSize !== undefined) {
   await preferenceProvider.setTextSize({ value: Number(setTextSize), unit: 'ratio' });
   console.error(`Saved textSize=${setTextSize} for acting user ${JSON.stringify(actingUserId)} under ${storageDir}`);
+}
+if (undo) {
+  const result = await preferenceProvider.undoTextSize();
+  console.error(result.undone
+    ? `Undid the last text-size choice; restored to ${JSON.stringify(result.restoredTo)}.`
+    : `Nothing to undo (${result.reason}).`);
 }
 
 const pipeline = createCaptionFlowPipeline({

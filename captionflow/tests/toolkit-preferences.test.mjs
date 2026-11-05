@@ -8,14 +8,15 @@ import { createToolkitPreferenceProvider, ActingUserMismatchError } from '../src
 
 // Shared in-memory port tests persistence across toolkit instances, not restarts.
 function memoryKV() {
-  const areas = { local: {}, sync: {} };
+  const areas = {};
   return {
     async get(area, key) { return structuredClone(areas[area]?.[key]); },
     async set(area, key, value) {
+      areas[area] = areas[area] || {};
       if (value === undefined) delete areas[area][key];
       else areas[area][key] = structuredClone(value);
     },
-    async getAll(area) { return structuredClone(areas[area]); },
+    async getAll(area) { return structuredClone(areas[area] || {}); },
   };
 }
 
@@ -151,4 +152,88 @@ test('strongest text-size need wins when the profile contains multiple entries',
     { dimension: 'textSize', value: 1.8, strength: 'floor' },
   ]);
   assert.equal((await createToolkitPreferenceProvider({ librarian }).getPreferences({})).fontScale, 1.8);
+});
+
+test('undo restores the previous choice, distinct from clearing to the default', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  const provider = createToolkitPreferenceProvider({ librarian });
+  await provider.setTextSize({ value: 1.2 });
+  await provider.setTextSize({ value: 1.4 });
+  assert.equal((await provider.getPreferences({})).fontScale, 1.4);
+  const result = await provider.undoTextSize();
+  assert.equal(result.undone, true);
+  assert.equal((await provider.getPreferences({})).fontScale, 1.2, 'undo restores the prior choice, not a blank/default');
+});
+
+test('undoing the first-ever choice removes the entry instead of inventing a default', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  const provider = createToolkitPreferenceProvider({ librarian });
+  await provider.setTextSize({ value: 1.6 });
+  const result = await provider.undoTextSize();
+  assert.equal(result.undone, true);
+  assert.deepEqual(result.restoredTo, null);
+  assert.deepEqual((await provider.getPreferences({})), {}, 'back to no textSize need at all, not a guessed default');
+});
+
+test('undo with nothing to undo is a reported no-op, not an error', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  const provider = createToolkitPreferenceProvider({ librarian });
+  const result = await provider.undoTextSize();
+  assert.deepEqual(result, { undone: false, reason: 'no-history' });
+});
+
+test('undo walks back through multiple choices in order', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  const provider = createToolkitPreferenceProvider({ librarian });
+  await provider.setTextSize({ value: 1.1 });
+  await provider.setTextSize({ value: 1.3 });
+  await provider.setTextSize({ value: 1.5 });
+  assert.equal((await provider.getPreferences({})).fontScale, 1.5);
+  await provider.undoTextSize();
+  assert.equal((await provider.getPreferences({})).fontScale, 1.3);
+  await provider.undoTextSize();
+  assert.equal((await provider.getPreferences({})).fontScale, 1.1);
+  await provider.undoTextSize();
+  assert.deepEqual((await provider.getPreferences({})), {});
+  assert.deepEqual(await provider.undoTextSize(), { undone: false, reason: 'no-history' });
+});
+
+test('undo does not touch another source\'s textSize floor or another acting user\'s history', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  const historyKV = memoryKV();
+  await librarian.setActingUser('alice');
+  await librarian.setProfileField('fields.needs', [{ dimension: 'textSize', value: 2.0, strength: 'floor' }]);
+  const alice = createToolkitPreferenceProvider({ librarian, actingUserId: 'alice', historyKV });
+  await alice.setTextSize({ value: 1.2 });
+  assert.equal((await alice.getPreferences({})).fontScale, 2.0, 'floor still wins the effective value');
+
+  await librarian.setActingUser('bob');
+  const bob = createToolkitPreferenceProvider({ librarian, actingUserId: 'bob', historyKV });
+  assert.deepEqual(await bob.undoTextSize(), { undone: false, reason: 'no-history' }, "bob has no history of his own");
+
+  await librarian.setActingUser('alice');
+  const aliceAgain = createToolkitPreferenceProvider({ librarian, actingUserId: 'alice', historyKV });
+  const result = await aliceAgain.undoTextSize();
+  assert.equal(result.undone, true);
+  assert.deepEqual(result.restoredTo, null, "alice's own first-ever choice undoes to nothing");
+  assert.ok((await librarian.getAbilityModel()).needs.some(n => n.dimension === 'textSize' && n.strength === 'floor'), 'the floor need is untouched');
+});
+
+test('undo acting-user guard refuses when the declared user does not match the toolkit', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  await librarian.setActingUser('alice');
+  const provider = createToolkitPreferenceProvider({ librarian, actingUserId: 'alice' });
+  await provider.setTextSize({ value: 1.3 });
+  await librarian.setActingUser('mallory');
+  await assert.rejects(provider.undoTextSize(), ActingUserMismatchError);
+});
+
+test('undo history survives through a durable historyKV across fresh provider instances', async () => {
+  const kv = memoryKV();
+  const { librarian } = createToolkit({ kv });
+  const historyKV = memoryKV();
+  await createToolkitPreferenceProvider({ librarian, historyKV }).setTextSize({ value: 1.7 });
+  const result = await createToolkitPreferenceProvider({ librarian, historyKV }).undoTextSize();
+  assert.equal(result.undone, true);
+  assert.deepEqual(result.restoredTo, null);
 });

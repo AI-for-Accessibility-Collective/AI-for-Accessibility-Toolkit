@@ -57,6 +57,36 @@ then `node captionflow/scripts/run-toolkit.mjs --user=alice` (no
 `--set-text-size`) to see the second, separate process load the saved value
 from `captionflow/.captionflow-storage/` (gitignored, synthetic data only).
 
+## Real undo (2026-11-05)
+
+`provider.undoTextSize()` reverses the most recent `setTextSize()` call made
+through this adapter -- it is not the same as the earlier "restore by writing
+`[]`" used in ad hoc testing, and it is not a general undo/redo framework.
+
+- Each `setTextSize()` push the value it just replaced (or `null` if there was
+  no earlier captionflow-user choice) onto a per-acting-user stack, capped at
+  the last 20 entries.
+- `undoTextSize()` pops one entry and restores exactly that: a prior value, or
+  `null`, in which case undo **removes** the captionflow-user need entirely
+  rather than inventing a default. Calling it with nothing to undo returns
+  `{ undone: false, reason: 'no-history' }` instead of throwing -- that state
+  is expected, not an error.
+- The stack is kept outside the shared `fields.needs` array, under its own KV
+  area (`captionflow-undo`, see `src/toolkit-preferences.mjs`) so it never
+  leaks into the AbilityModel or another app's cross-app read of it. It is
+  scoped by `actingUserId` the same way the acting-user guard is.
+- It only ever touches the `captionflow-user` entry it owns; a `floor`-strength
+  need from another source (or another app's own `textSize` entry) is left
+  alone, same as `setTextSize()`.
+- Durability is the caller's choice: `createToolkitPreferenceProvider`'s
+  `historyKV` parameter defaults to a fresh, **non-durable** in-process
+  `memoryKV()` -- a new provider instance with no `historyKV` passed gets a
+  blank history, same pitfall as forgetting to pass the same `librarian`.
+  `run-toolkit.mjs` passes the same `fileKV(dir)` already backing the
+  Librarian (different area, same file root), so undo survives a process
+  restart: `node captionflow/scripts/run-toolkit.mjs --user=alice
+  --undo-text-size`.
+
 Text size is stored as a shared, modality-neutral toolkit need, so a change may
 also affect other surfaces. Whether a CaptionFlow-only control should propagate
 this way requires an explicit product and consent decision.
