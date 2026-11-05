@@ -2,6 +2,14 @@
   "name": "structure",
   "file": "tools/core-adapters/structure.js",
   "page": "structure.html",
+  "ai": {
+    "choose": {
+      "site's menu": "1",
+      "page's main content:": "3",
+      "whole site's header": "1",
+      "whole site's footer": "1"
+    }
+  },
   "checks": [
     {
       "name": "landmarks added only where missing; axe-core region and landmark problems go down, none added",

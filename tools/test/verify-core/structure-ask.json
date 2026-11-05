@@ -4,8 +4,8 @@
   "page": "structure-ask.html",
   "ai": {
     "choose": {
-      "header": "2",
-      "footer": "2"
+      "This header is the only one": "2",
+      "This footer is the only one": "2"
     }
   },
   "checks": [

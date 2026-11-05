@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opening hours this winter</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; margin: 0; color: #1a1a1a; background: #fff; }
+    .bar-a, .bar-b, .bar-c, .bar-d, main { max-width: 40em; margin: 0 auto; padding: 1em; }
+    .bar-a nav ul { display: flex; flex-wrap: wrap; gap: 1em; list-style: none; padding: 0; margin: 0; }
+    .bar-b { background: #fff8d6; }
+    a { color: #0645ad; }
+  </style>
+</head>
+<body>
+  <!-- A main element, and no header or footer elements: the site's header and footer are divs with
+       names that say nothing (bar-a, bar-d). Before main there is also a notice, after it a box of
+       related links. Only what they contain tells which is the site's header and which its footer. -->
+  <div id="top-a" class="bar-a">
+    <p><strong>Riverside Library</strong></p>
+    <nav aria-label="Site">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#catalog">Catalog</a></li>
+        <li><a href="#events">Events</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div id="top-b" class="bar-b">
+    <p>The library is closed on the twenty-fifth of December.</p>
+  </div>
+  <main>
+    <h1>Opening hours this winter</h1>
+    <p>From the first of December the library opens an hour later on weekdays and closes at six. Saturday hours stay the same, and the reading room is open on Sundays from noon.</p>
+  </main>
+  <div id="end-c" class="bar-c">
+    <h2>Related</h2>
+    <p><a href="#holidays">Holiday hours</a> · <a href="#reading-room">The reading room</a></p>
+  </div>
+  <div id="end-d" class="bar-d">
+    <p>Riverside Library · 12 River Street · 555 0100 · <a href="#contact">Contact us</a></p>
+    <p>© 2026 Riverside Library.</p>
+  </div>
+</body>
+</html>

@@ -2,17 +2,24 @@
   "name": "structure-findings",
   "file": "tools/core-adapters/structure.js",
   "page": "structure-findings.html",
+  "ai": {
+    "choose": {
+      "page's main content:": "1",
+      "whole site's header": "1",
+      "whole site's footer": "2"
+    }
+  },
   "checks": [
     {
-      "name": "finding 1: banner and contentinfo inside article do not block site banner, main, or footer",
+      "name": "finding 1: a banner and contentinfo inside an article do not stop the site's banner, main or footer (here as the model answers)",
       "code": "const masthead = document.getElementById('site-masthead'); const footer = document.getElementById('site-footer'); const main = document.getElementById('primary-area'); if (!masthead || !footer || !main) return false; return masthead.getAttribute('role') === 'banner' && footer.getAttribute('role') === 'contentinfo' && main.getAttribute('role') === 'main';"
     },
     {
-      "name": "finding 2: candidate footer containing nav is recognized as contentinfo",
+      "name": "finding 2: a footer div holding a nav can become contentinfo (when the model says it is the site footer)",
       "code": "const footer = document.getElementById('site-footer'); if (!footer) return false; const innerNav = footer.querySelector('nav'); return Boolean(innerNav) && footer.getAttribute('role') === 'contentinfo';"
     },
     {
-      "name": "finding 3: element with class main-content is prioritized over larger unnamed candidate",
+      "name": "finding 3: when the model says the main-content div is main, the larger other div is not (no name decides it)",
       "code": "const main = document.getElementById('primary-area'); const other = document.getElementById('other-large-container'); if (!main || !other) return false; return main.getAttribute('role') === 'main' && other.getAttribute('role') === null;"
     }
   ]

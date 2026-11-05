@@ -1,0 +1,17 @@
+{
+  "name": "structure-ask-chrome-swap",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-chrome.html",
+  "ai": {
+    "choose": {
+      "whole site's header": "2",
+      "whole site's footer": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model picks the others, those get the roles: the adapter follows the answer",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('top-a') === null && g('top-b') === 'banner' && g('end-c') === 'contentinfo' && g('end-d') === null;"
+    }
+  ]
+}

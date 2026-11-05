@@ -1,0 +1,17 @@
+{
+  "name": "structure-ask-chrome",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-chrome.html",
+  "ai": {
+    "choose": {
+      "whole site's header": "1",
+      "whole site's footer": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model names the site's header and footer divs, they become banner and contentinfo; the notice and the related links get nothing",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('top-a') === 'banner' && g('top-b') === null && g('end-c') === null && g('end-d') === 'contentinfo';"
+    }
+  ]
+}

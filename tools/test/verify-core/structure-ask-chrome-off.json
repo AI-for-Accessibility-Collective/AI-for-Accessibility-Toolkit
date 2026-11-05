@@ -1,0 +1,20 @@
+{
+  "name": "structure-ask-chrome-off",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-chrome.html",
+  "options": {
+    "ai": false
+  },
+  "ai": {
+    "choose": {
+      "whole site's header": "1",
+      "whole site's footer": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "with ai: false the model is never asked (its answers here would name the header and footer divs), so no div becomes banner or contentinfo",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('top-a') === null && g('top-b') === null && g('end-c') === null && g('end-d') === null;"
+    }
+  ]
+}

@@ -2,13 +2,19 @@
   "name": "structure-scoped",
   "file": "tools/core-adapters/structure.js",
   "page": "structure-scoped.html",
+  "ai": {
+    "choose": {
+      "This footer is the only one": "2",
+      "whole site's footer": "1"
+    }
+  },
   "checks": [
     {
-      "name": "review 9 finding 1: a content div holding its own header and footer becomes main (the browser then scopes them to it), while the page's own header stays its banner",
+      "name": "review 9 finding 1: a content div holding its own header and footer becomes main when the model says the footer is the story's (the browser then scopes them to it), while the page's own header stays its banner",
       "code": "const main = document.getElementById('main-content'); const site = document.getElementById('site-header'); return main.getAttribute('role') === 'main' && site.getAttribute('role') === null && document.querySelectorAll('[role=\"banner\"]').length === 0;"
     },
     {
-      "name": "review 9 finding 3: a footer div holding a column header nested in a div becomes contentinfo, since the page's banner is outside it",
+      "name": "review 9 finding 3: a footer div holding a column header nested in a div becomes contentinfo when the model says it is the site's footer, since the page's banner is outside it",
       "code": "const el = document.getElementById('colophon'); return el.getAttribute('role') === 'contentinfo' && !el.contains(document.getElementById('site-header'));"
     }
   ]

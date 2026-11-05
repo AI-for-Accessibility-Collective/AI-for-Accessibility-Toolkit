@@ -1,0 +1,16 @@
+{
+  "name": "structure-ask-nav-other",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-nav.html",
+  "ai": {
+    "choose": {
+      "site's menu": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model picks the second list, that one becomes navigation and the first does not",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('links-a') === null && g('links-b') === 'navigation';"
+    }
+  ]
+}

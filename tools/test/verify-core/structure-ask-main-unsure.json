@@ -1,0 +1,16 @@
+{
+  "name": "structure-ask-main-unsure",
+  "file": "tools/core-adapters/structure.js",
+  "page": "structure-ask-main.html",
+  "ai": {
+    "choose": {
+      "page's main content:": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model cannot tell, nothing is made main: the adapter does less",
+      "code": "const g = (id) => document.getElementById(id).getAttribute('role'); return g('story') === null && g('content') === null && document.querySelector('.cols').getAttribute('role') === null;"
+    }
+  ]
+}
