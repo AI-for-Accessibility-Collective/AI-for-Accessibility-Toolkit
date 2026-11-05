@@ -43,8 +43,18 @@ in the console: running, failed (with the error), or switched off. Each
 publish is a new revision, which replaces the running one without a reload.
 **Edit** on a card changes an adapter in the console.
 
-The extension's popup lists the installed adapters that target the current
-page, what happened when they ran, and a switch to turn one off on this site.
+The toolbar button opens the side panel, with three tabs:
+
+- **Profile**: your profile on the toolkit (the preset it started from,
+  support areas, what pages should do, plain language, your own words),
+  editable; then your adapters: **Applied** (the installed ones that target
+  the page beside the panel, what happened when they ran, and a switch to
+  turn one off on this site), **Recommended** (adapters for your profile's
+  support areas that are not in this browser yet, with **Add**), and **All**
+  (every adapter this browser can run, by the application it came from).
+- **Builder**: the assistant (below).
+- **Settings**: connect to a toolkit, allow user scripts, the shortcut, sync
+  and disconnect.
 
 You can also run adapters other developers shared on the same toolkit:
 **Shared with you → Run in my browser**. Those stay on the revision you
@@ -80,7 +90,7 @@ repository, without its built-in adapters, agents, voice or Librarian.
 
 ## The assistant sidebar
 
-**Open the assistant** in the popup opens a sidebar beside the page. Say what
+The **Builder** tab is an assistant beside the page. Say what
 gets in your way there; an AI agent (opencode with Gemini 3.8 Flash, run for
 your account on the toolkit's server, see
 [agent-host/](../agent-host/README.md)) asks a few questions, builds an
@@ -99,8 +109,9 @@ step shows as one line.
   **Work on this page instead** to move the chat to the tab you are on.
   Nothing changes the chat's page unless you choose it.
 - **Previews.** A preview runs the adapter on the chat's page only, without
-  installing it, until you remove it or reload the page. You are asked
-  first, unless you tick **Apply previews automatically**. The agent's checks
+  installing it. **Apply previews** is a switch: on while a preview is on
+  the page, and then the agent's next previews go on without asking; off,
+  you are asked first. It stays on after a reload of the page or the panel. The agent's checks
   run with it and say whether it works. axe-core (`vendor/axe-core.min.js`,
   the copy the CLI pins) checks the page against WCAG A and AA rules before
   and after, and the preview measures how far the page moved. The agent

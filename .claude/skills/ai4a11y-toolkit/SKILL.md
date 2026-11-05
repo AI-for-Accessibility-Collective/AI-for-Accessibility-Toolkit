@@ -234,7 +234,7 @@ their own. All of an account's state is partitioned by its `uid`.
    `{uid, label, kind}` (`kind` is `default` or `app`).
 
 The browser extensions do **not** use `.env`. The adapter runtime
-(`extension/` here) connects from its popup ("Connect with this console")
+(`extension/` here) connects from its side panel's Settings ("Connect with this console")
 and keeps the address and token in `chrome.storage.local`. The personalized
 extension lives in its own repository and keeps them in `chrome.storage.sync`
 (`toolkitServerUrl` / `toolkitServerToken`), written by its Options page.

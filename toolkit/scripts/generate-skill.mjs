@@ -169,7 +169,7 @@ ${profileTools}
 
 ${accessTools}
 
-**The browser runtime** (\`extension/\`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app \`${BROWSER_RUNTIME_APP}\` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its popup, and reports applied / failed (with the error) / skipped per page origin with \`adapter_report\`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console → popup → **Connect with this console** (the skill's \`adapter.mjs extension\` walks a person through it, and \`adapter.mjs check\` confirms it). On connecting, the runtime checks in with an empty \`adapter_report\`, so \`adapter_status\` lists it before it runs anything. Adapters are built in code with a coding agent (the console's **+ New adapter** is a guide to that); the console's **Adapters** page edits them (live lint), saves revisions, runs them in the browser, shares them, installs others' and shows the runtime's reports.
+**The browser runtime** (\`extension/\`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app \`${BROWSER_RUNTIME_APP}\` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its side panel (the toolbar button opens it: Profile, Builder, Settings), and reports applied / failed (with the error) / skipped per page origin with \`adapter_report\`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console → the side panel's **Settings** → **Connect with this console** (the skill's \`adapter.mjs extension\` walks a person through it, and \`adapter.mjs check\` confirms it). On connecting, the runtime checks in with an empty \`adapter_report\`, so \`adapter_status\` lists it before it runs anything. Adapters are built in code with a coding agent (the console's **+ New adapter** is a guide to that); the console's **Adapters** page edits them (live lint), saves revisions, runs them in the browser, shares them, installs others' and shows the runtime's reports.
 
 SDK helpers: ${helpers.map((h) => `\`${h}\``).join(', ')}.
 
@@ -546,7 +546,7 @@ their own. All of an account's state is partitioned by its \`uid\`.
    \`{uid, label, kind}\` (\`kind\` is \`default\` or \`app\`).
 
 The browser extensions do **not** use \`.env\`. The adapter runtime
-(\`extension/\` here) connects from its popup ("Connect with this console")
+(\`extension/\` here) connects from its side panel's Settings ("Connect with this console")
 and keeps the address and token in \`chrome.storage.local\`. The personalized
 extension lives in its own repository and keeps them in \`chrome.storage.sync\`
 (\`toolkitServerUrl\` / \`toolkitServerToken\`), written by its Options page.

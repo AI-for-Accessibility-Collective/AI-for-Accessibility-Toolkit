@@ -1145,8 +1145,9 @@ address and token) and keeps the browser in step with the app
 - it syncs on start, every 30 seconds, on the registry's notifications while
   the worker is awake, and right after a save in the console (a small bridge
   script on the connected toolkit's `/developer` page only);
-- its popup shows the installed adapters that target the current page, what
-  happened when they ran, and a per-site switch.
+- its side panel (the toolbar button opens it) shows, on its Profile tab, the
+  installed adapters that target the current page, what happened when they
+  ran, and a per-site switch.
 
 Chrome asks the developer to turn on **Allow User Scripts** for the extension.
 The runtime runs only adapters the signed-in account installed, sends its token

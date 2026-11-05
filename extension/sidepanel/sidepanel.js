@@ -1,4 +1,8 @@
-// The assistant sidebar: chats with the account's opencode agent on the
+// The side panel (the toolbar button opens it) has three tabs: Profile
+// (profile.js), Builder (this file) and Settings (settings.js, what the
+// toolbar popup held).
+//
+// The Builder: chats with the account's opencode agent on the
 // toolkit (through /v1/agent, see agent-host/README.md), shows its replies
 // without code and one line per step (repeats folded into one), and does what
 // its browser tools ask on the page the chat works on. That is the tab beside
@@ -12,9 +16,9 @@
 //                   again for a screenshot.
 //   preview         run an adapter on the page without installing it
 //                   (runtime/scripts.js buildPreviewScript), after the person
-//                   says yes, or at once if they chose "Apply previews
-//                   automatically"; with axe-core's WCAG check before and
-//                   after (vendor/axe-core.min.js, injected first)
+//                   says yes, or at once while the "Apply previews" switch
+//                   is on; with axe-core's WCAG check before and after
+//                   (vendor/axe-core.min.js, injected first)
 //   remove-preview  take it off again
 //
 // The person turns the last preview off and on again with the switch under
@@ -40,7 +44,9 @@ import { pageTypeById } from '../vendor/protocol/adapter/index.js';
 import { createRegistryClient } from '../vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP } from '../vendor/protocol/adapter/index.js';
 
-const $ = (id) => document.getElementById(id);
+import { $, say, el, button, activeTab, isWebPage, originOf, hostOf } from './ui.js';
+import { initSettings, renderSettings } from './settings.js';
+import { initProfile, renderProfile, refreshAdapters } from './profile.js';
 const LEVELS = ['none', 'url', 'source', 'screenshot'];
 const APP = { appId: 'assistant', appName: 'Browser assistant' };
 const PREVIEW_STATE = 'assistantPreview'; // the last preview, for this browser session: {chatId, tabId, name, origin, request, on}
@@ -76,22 +82,6 @@ function announce(text, urgent = false) {
   }, 150);
 }
 
-function say(text, error = false) {
-  $('status').textContent = text;
-  $('status').classList.toggle('error', error);
-}
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
-function button(text, className, onClick) {
-  const b = el('button', className, text);
-  b.type = 'button';
-  b.addEventListener('click', onClick);
-  return b;
-}
 
 async function api(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${connection.url}/v1/agent${path}`, {
@@ -107,23 +97,6 @@ async function api(path, { method = 'GET', body } = {}) {
 // ── the page each chat works on ──────────────────────────────────────────────
 
 const PAGES_KEY = 'assistantPages'; // chat id -> tab id, for this browser session
-// The window this sidebar belongs to, or that of a tab named with ?tab=<id>
-// (how a test opens the sidebar as a page of its own).
-const namedTab = Number(new URLSearchParams(location.search).get('tab'));
-async function sidebarWindowId() {
-  if (namedTab) return chrome.tabs.get(namedTab).then(t => t.windowId, () => null);
-  return (await chrome.windows.getCurrent()).id;
-}
-/** The tab the person is looking at beside the sidebar. */
-async function activeTab() {
-  const windowId = await sidebarWindowId();
-  if (windowId == null) return null;
-  const [tab] = await chrome.tabs.query({ active: true, windowId });
-  return tab || null;
-}
-const isWebPage = (tab) => /^https?:/.test(tab?.url || '');
-const originOf = (url) => { try { return new URL(url).origin; } catch { return null; } };
-const hostOf = (url) => { try { return new URL(url).host; } catch { return url || ''; } };
 
 async function pages() {
   try { return (await chrome.storage.session.get(PAGES_KEY))[PAGES_KEY] || {}; } catch { return {}; }
@@ -346,12 +319,16 @@ async function previewOnPage(tabId) {
 }
 
 /** Put the last preview back on its page (after a reload of either); the switch goes off if it does not apply there. */
+let previewTurn = 0; // each press of the switch and each putting-back; only the latest decides
 async function reapplyPreview({ quiet = false } = {}) {
   const p = previewing;
   if (!p?.request) return false;
+  const turn = ++previewTurn;
   const tab = await chrome.tabs.get(p.tabId).catch(() => null);
   if (!tab) { showPreview({ ...p, on: false }); if (!quiet) say('That tab is closed.', true); return false; }
   const result = await applyPreview(p.request, tab, { audit: false });
+  // Switched off while it went on (after a reload): off it stays.
+  if (turn !== previewTurn) { if (!applyOn) await takePreviewOff(); return applyOn; }
   const on = result.status === 'applied';
   showPreview({ ...p, origin: hostOf(tab.url), on });
   if (!on && !quiet) say(`It did not apply on this page: ${result.message || result.status}.`, true);
@@ -364,6 +341,7 @@ async function togglePreview() {
   button.disabled = true;
   try {
     if (applyOn) {
+      previewTurn++;
       await takePreviewOff();
       showPreview(previewing ? { ...previewing, on: false } : null);
       say('Previews are off the page. The assistant asks before its next one.');
@@ -1107,10 +1085,59 @@ chrome.tabs.onActivated.addListener(renderWorkingSoon);
 chrome.tabs.onRemoved.addListener((tabId) => { if (previewing?.tabId === tabId) showPreview({ ...previewing, on: false }); renderWorkingSoon(); });
 chrome.windows.onFocusChanged.addListener(renderWorkingSoon);
 
+// ── the tabs: Profile, Builder, Settings ─────────────────────────────────────
+
+const TABS = ['profile', 'builder', 'settings'];
+const TAB_SUB = { profile: 'Your profile and adapters', builder: 'Build adapters', settings: 'Connection and shortcut' };
+const TAB_KEY = 'panelTab'; // the tab last open, for this browser session
+let shownTab = null;
+
+function showTab(name, { focus = false } = {}) {
+  shownTab = name;
+  for (const t of TABS) {
+    const tab = $(`tab-${t}`);
+    tab.setAttribute('aria-selected', String(t === name));
+    tab.tabIndex = t === name ? 0 : -1;
+    $(`panel-${t}`).hidden = t !== name;
+  }
+  $('tab-sub').textContent = TAB_SUB[name];
+  if (focus) $(`tab-${name}`).focus();
+  chrome.storage.session.set({ [TAB_KEY]: name }).catch(() => {});
+  if (name === 'profile') renderProfile().catch(e => say(e.message, true));
+  if (name === 'settings') renderSettings().catch(e => say(e.message, true));
+}
+for (const t of TABS) {
+  $(`tab-${t}`).addEventListener('click', () => showTab(t));
+  $(`tab-${t}`).addEventListener('keydown', (e) => {
+    const i = TABS.indexOf(t);
+    const to = { ArrowRight: TABS[(i + 1) % TABS.length], ArrowLeft: TABS[(i + TABS.length - 1) % TABS.length], Home: TABS[0], End: TABS[TABS.length - 1] }[e.key];
+    if (!to) return;
+    e.preventDefault();
+    showTab(to, { focus: true });
+  });
+}
+initSettings({ refresh: () => renderSettings() });
+initProfile();
+// What the Profile and Settings tabs show depends on the page beside the panel and the runtime.
+const refreshSide = () => {
+  if (shownTab === 'profile') refreshAdapters();
+  if (shownTab === 'settings') renderSettings().catch(() => {});
+};
+chrome.tabs.onActivated.addListener(refreshSide);
+chrome.tabs.onUpdated.addListener((tabId, info) => { if (info.status === 'complete') refreshSide(); });
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'session' && changes.runtimeState && shownTab === 'settings') renderSettings().catch(() => {});
+  if (area === 'session' && changes.runtimeState && shownTab === 'profile' && document.querySelector('input[name=adapter-filter]:checked')?.value === 'applied') refreshAdapters();
+});
+
 async function start() {
   connection = await readConnection();
   $('not-connected').hidden = !!connection;
   $('main').hidden = !connection;
+  $('builder-unavailable').hidden = true;
+  // Connecting happens in Settings; afterwards the tab last open, or Profile.
+  const last = (await chrome.storage.session.get(TAB_KEY).catch(() => ({})))[TAB_KEY];
+  showTab(!connection ? 'settings' : TABS.includes(last) ? last : 'profile');
   if (!connection) { $('state').textContent = 'Not connected'; return; }
   pageTypes = createPageTypes({ storage: chrome.storage.local, ask: askToolkit(connection) });
   added = (await chrome.storage.local.get(ADDED_KEY).catch(() => ({})))[ADDED_KEY] || {};
@@ -1121,7 +1148,10 @@ async function start() {
   } catch (e) {
     $('state').textContent = 'Unavailable';
     $('state').className = 'badge warn';
-    say(e.code === 'agent-unavailable' ? 'The assistant is not set up on this toolkit.' : e.message, true);
+    // Said in the Builder tab: the status line belongs to whichever tab is open.
+    $('main').hidden = true;
+    $('builder-unavailable').textContent = e.code === 'agent-unavailable' ? 'The assistant is not set up on this toolkit.' : `The assistant is unavailable: ${e.message}`;
+    $('builder-unavailable').hidden = false;
   }
 }
 chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes.connection) start(); });

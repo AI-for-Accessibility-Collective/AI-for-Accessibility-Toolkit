@@ -116,7 +116,7 @@ try {
   // Connecting refuses a bad address and a bad token before it accepts the real one.
   await assert.rejects(runtime(([url, token]) => globalThis.ai4a11yRuntime.handlers.connect({ url, token }), ['http://toolkit.example', dev.token]), /https/);
   await assert.rejects(runtime(([url]) => globalThis.ai4a11yRuntime.handlers.connect({ url, token: 'aat_wrong' }), [base]), /did not accept/);
-  // The workshop path: sign in to the console, then one click in the popup.
+  // The workshop path: sign in to the console, then one click in the side panel.
   const signedIn = await context.newPage();
   await signedIn.goto(`${base}/developer`);
   await signedIn.fill('#signin-username', 'dev');
@@ -125,12 +125,14 @@ try {
   await signedIn.waitForFunction(() => document.getElementById('sidebar-token-value').textContent.startsWith('aat_'));
   const consoleTabId = await runtime((url) => chrome.tabs.query({ url: `${url}/developer*` }).then(t => t[0].id), base);
   const connectPopup = await context.newPage();
-  await connectPopup.goto(`chrome-extension://${extId}/popup/popup.html?tab=${consoleTabId}`);
+  // The side panel opens on Settings while not connected (opened as a page, named ?tab=).
+  await connectPopup.goto(`chrome-extension://${extId}/sidepanel/sidepanel.html?tab=${consoleTabId}`);
+  assert.equal(await connectPopup.getByRole('tab', { name: 'Settings' }).getAttribute('aria-selected'), 'true');
   await connectPopup.locator('#use-console').waitFor();
   assert.equal(await connectPopup.locator('#console-origin').innerText(), base);
   await connectPopup.getByRole('button', { name: 'Connect with this console' }).click();
   await connectPopup.locator('#connected').waitFor();
-  assert.match(await connectPopup.locator('#status').innerText(), /^Connected as dev\./);
+  await connectPopup.locator('#status', { hasText: /^Connected as dev\./ }).waitFor();
   await connectPopup.close();
   await signedIn.close();
   const connected = (await runtime(() => globalThis.ai4a11yRuntime.handlers.status())).connection;
@@ -203,21 +205,27 @@ try {
   assert.match(failed.message, /enable\(\) threw: .*null/);
   assert.equal(await page.evaluate(() => document.body.dataset.bigButtons), 'r2:60');
 
-  // ── the popup shows the connection and what is installed ──
+  // ── the side panel: the Profile tab shows what is applied here, Settings the connection ──
   const shopTabId = await runtime((url) => chrome.tabs.query({ url: `${url}/*` }).then(t => t[0].id), shop);
   const popup = await context.newPage();
-  await popup.goto(`chrome-extension://${extId}/popup/popup.html?tab=${shopTabId}`);
-  await popup.locator('#connected').waitFor();
-  await popup.locator('#page-adapters li').nth(2).waitFor();
-  const onPage = await popup.locator('#page-adapters li').allInnerTexts();
-  assert.ok(onPage.some(t => /Big buttons[\s\S]*Developer console · yours · revision 2[\s\S]*Running on this page/.test(t)), onPage.join('\n---\n'));
+  await popup.goto(`chrome-extension://${extId}/sidepanel/sidepanel.html?tab=${shopTabId}`);
+  await popup.getByRole('tab', { name: 'Profile' }).click();
+  await popup.locator('#adapter-lists li').nth(2).waitFor();
+  const onPage = await popup.locator('#adapter-lists li').allInnerTexts();
+  assert.ok(onPage.some(t => /Big buttons[\s\S]*Developer console · yours[\s\S]*Running on this page/.test(t)), onPage.join('\n---\n'));
   assert.ok(onPage.some(t => /Button labels[\s\S]*shared by other/.test(t)), onPage.join('\n---\n'));
   assert.ok(onPage.some(t => /Broken[\s\S]*Failed: enable\(\) threw/.test(t)), onPage.join('\n---\n'));
-  // The popup's switch turns one off for this site.
+  // Its switch turns one off for this site.
   await popup.getByRole('switch', { name: `Big buttons on ${shop}` }).uncheck();
   await page.waitForFunction(() => document.body.dataset.bigButtons === undefined, null, background);
   await popup.getByRole('switch', { name: `Big buttons on ${shop}` }).check();
   await page.waitForFunction(() => document.body.dataset.bigButtons === 'r2:60', null, background);
+  // All: every adapter this browser can run, by application.
+  await popup.getByRole('radio', { name: 'All' }).check();
+  await popup.getByRole('heading', { name: /^Developer console \(\d+\)$/ }).waitFor();
+  assert.match(await popup.locator('#adapter-lists').innerText(), /Big buttons[\s\S]*In this browser/);
+  await popup.getByRole('radio', { name: 'Applied' }).check();
+  await popup.getByRole('tab', { name: 'Settings' }).click();
   assert.match(await popup.locator('.who').innerText(), /Connected to 127\.0\.0\.1:\d+ as dev/);
   assert.match(await popup.locator('#installed-count').innerText(), /^3 adapters installed/);
   assert.equal(await popup.locator('#user-scripts').isHidden(), true);
@@ -326,12 +334,12 @@ try {
   await page.reload();
   await page.waitForFunction(() => document.body.dataset.personal === '{"fontScale":150,"textSizeMethod":"zoom"}', null, background);
   assert.equal(await zoomNow(), 1.5, 'Chrome kept the zoom for the site');
-  // ── the shortcut: off until the person gives it to an adapter, in the popup ──
+  // ── the shortcut: off until the person gives it to an adapter, in Settings ──
   const shortcutPopup = await context.newPage();
-  await shortcutPopup.goto(`chrome-extension://${extId}/popup/popup.html?tab=${shopTabId}`);
+  await shortcutPopup.goto(`chrome-extension://${extId}/sidepanel/sidepanel.html?tab=${shopTabId}`);
+  await shortcutPopup.getByRole('tab', { name: 'Settings' }).click();
   await shortcutPopup.locator('#connected').waitFor();
-  await shortcutPopup.locator('#enabled-adapters li', { hasText: 'Text size' }).waitFor();
-  assert.match(await shortcutPopup.locator('#enabled-adapters').innerText(), /Big buttons[\s\S]*Runs on http:\/\/localhost\/\*/);
+  await shortcutPopup.locator('#shortcut-adapter option', { hasText: 'Text size' }).waitFor({ state: 'attached' });
   assert.equal(await shortcutPopup.locator('#shortcut-adapter').inputValue(), '', 'off by default');
   await page.bringToFront();
   await page.keyboard.press('Alt+Shift+ArrowUp');
@@ -387,7 +395,7 @@ try {
   await page.waitForFunction(() => document.body.dataset.bigButtons === undefined, null, background);
   assert.deepEqual(await runtime(() => chrome.userScripts.getScripts().then(s => s.length)), 0);
   assert.deepEqual(pageErrors, [], 'the adapters raised no page errors');
-  console.log('Adapter runtime browser workflow passed: user-scripts switch, connect checks, run on target pages with parameters, live edit without reload, exact scope, per-site off and on, a shared pinned adapter, a failing adapter reported, popup, console bridge wake-up, uninstall, an adapter a coding agent published running here and reporting back to the console, the blocks\' profile, zoom and speech through the browser, disconnect.');
+  console.log('Adapter runtime browser workflow passed: user-scripts switch, connect checks, run on target pages with parameters, live edit without reload, exact scope, per-site off and on, a shared pinned adapter, a failing adapter reported, the side panel’s Profile (applied, all by application) and Settings tabs, console bridge wake-up, uninstall, an adapter a coding agent published running here and reporting back to the console, the blocks\' profile, zoom and speech through the browser, disconnect.');
 } finally {
   await context?.close().catch(() => {});
   app.registry.closeAll();

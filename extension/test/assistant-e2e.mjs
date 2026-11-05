@@ -124,6 +124,25 @@ try {
   panel.on('pageerror', (e) => console.log('sidebar error:', e.message));
   failureReport = async () => console.log('--- sidebar ---\n' + await panel.locator('body').innerText());
   await panel.waitForLoadState();
+  // The panel opens on Profile: the profile, editable, then the adapters.
+  assert.equal(await panel.getByRole('tab', { name: 'Profile' }).getAttribute('aria-selected'), 'true');
+  await panel.locator('#profile-view', { hasText: 'Support areas' }).waitFor();
+  await shot(panel, '0a-profile');
+  await panel.getByRole('button', { name: 'Edit' }).click();
+  await panel.locator('#profile-form').getByRole('checkbox', { name: 'Motor' }).check();
+  await panel.locator('#profile-form').getByRole('checkbox', { name: 'Text size' }).check();
+  await panel.getByRole('spinbutton', { name: 'Text size value' }).fill('1.5');
+  await shot(panel, '0b-profile-edit');
+  await panel.getByRole('button', { name: 'Save profile' }).click();
+  await panel.locator('#profile-view', { hasText: 'Text size 150%' }).waitFor();
+  const saved = await (await fetch(`${base}/v1/librarian/getProfile`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }) })).json();
+  assert.ok(saved.result.supportAreas.includes('motor'), 'the support area saved');
+  assert.deepEqual(saved.result.fields.needs.find(n => n.dimension === 'textSize'), { dimension: 'textSize', value: 1.5, strength: 'preference', source: 'person' });
+  await panel.getByRole('radio', { name: 'Recommended' }).check();
+  await panel.locator('#adapters-about', { hasText: 'Adapters for motor' }).waitFor();
+  await panel.locator('#adapter-lists li').first().waitFor();
+  await shot(panel, '0c-recommended');
+  await panel.getByRole('tab', { name: 'Builder' }).click();
   await panel.locator('#state', { hasText: 'Ready' }).waitFor({ timeout: 30000 });
   assert.match(await panel.locator('#transcript').innerText(), /Say what gets in your way/);
 

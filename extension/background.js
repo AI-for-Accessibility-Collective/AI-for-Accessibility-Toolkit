@@ -48,7 +48,7 @@ let resyncRequested = false;
 const pendingReports = [];
 let reportTimer = null;
 
-// ── state the popup reads ────────────────────────────────────────────────────
+// ── state the side panel reads ──────────────────────────────────────────────
 // Kept in storage.session so it survives the worker sleeping, not a browser restart.
 async function readState() {
   const { runtimeState } = await chrome.storage.session.get('runtimeState');
@@ -173,7 +173,7 @@ async function syncOnce(reason) {
   }
   const state = await readState();
   try {
-    // Without user scripts nothing can run, but the popup still lists what is installed.
+    // Without user scripts nothing can run, but the side panel still lists what is installed.
     const scripts = userScriptsStatus();
     // The etag only stands for scripts that are really registered: none while
     // user scripts are off, and not after Chrome dropped them (an extension
@@ -206,7 +206,7 @@ async function syncOnce(reason) {
     const shortcut = assigned ? { ...shortcutSetting, name: assigned.name || assigned.adapter.id } : null;
     const outcome = await reconcile(answer.adapters, personal, explicit, shortcut);
     await applyToOpenTabs(answer.adapters, outcome, personal, explicit, personalChanged, shortcut);
-    // The popup needs no code.
+    // The side panel needs no code.
     const listed = answer.adapters.map(({ package: pkg, descriptor, ...a }) => ({ ...a, portable: !!pkg }));
     const next = await writeState({
       etag: scripts.available ? answer.etag : null, registered: outcome.registered,
@@ -364,7 +364,7 @@ async function profileCall(message, sender) {
   return { saved: true };
 }
 
-// keys.adjust: what an adapter adjusts, for the popup, where the person
+// keys.adjust: what an adapter adjusts, for the side panel, where the person
 // chooses which adapter their shortcut goes to.
 async function adjustableCall(message) {
   const key = String(message.key || '');
@@ -377,7 +377,7 @@ async function adjustableCall(message) {
 }
 
 // The shortcut's first key, for an adapter with nothing to adjust: on or off
-// on this site, as the popup's switch. Only for the adapter the person gave
+// on this site, as the Profile tab's switch. Only for the adapter the person gave
 // their shortcut to.
 async function toggleCall(message, sender) {
   const key = String(message.key || '');
@@ -586,7 +586,7 @@ async function registerBridge() {
   }
 }
 
-// ── messages from the popup and the bridge ───────────────────────────────────
+// ── messages from the side panel and the bridge ───────────────────────────────────
 
 const handlers = {
   async status() {
@@ -665,7 +665,7 @@ const handlers = {
     await sync('profile');
     return { values };
   },
-  /** For the popup: does this URL fall inside an installed adapter's patterns? */
+  /** For the side panel: does this URL fall inside an installed adapter's patterns? */
   async forUrl({ url }) {
     const state = await readState();
     let here;
@@ -678,7 +678,7 @@ const handlers = {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const handler = handlers[message?.type];
   if (!handler) return false;
-  // The extension's own pages (the popup) may ask anything. The bridge may
+  // The extension's own pages (the side panel) may ask anything. The bridge may
   // only ask for a sync or the status, and only from the connected toolkit's
   // own console: it runs in a web page.
   const ownPage = typeof sender.url === 'string' && sender.url.startsWith(chrome.runtime.getURL(''));
@@ -695,6 +695,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // ── wake-ups ─────────────────────────────────────────────────────────────────
+
+// The toolbar button opens the side panel (Profile, Builder, Settings); there is no popup.
+chrome.sidePanel?.setPanelBehavior?.({ openPanelOnActionClick: true }).catch(() => {});
 
 chrome.alarms.onAlarm.addListener((alarm) => { if (alarm.name === SYNC_ALARM) sync('alarm'); });
 async function start(reason) {

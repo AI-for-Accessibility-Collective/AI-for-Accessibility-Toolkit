@@ -181,7 +181,7 @@ ${PREAMBLE}
 export function personalScript({ personal = {}, explicit = null, shortcut = null } = {}) {
   // The person's shortcut (toolkit/blocks/shortcut.js): with nothing to
   // adjust, its first key turns the adapter on or off on this site, as the
-  // popup's switch does.
+  // Profile tab's switch does.
   return `(() => {
   const B = globalThis.__ai4a11yBlocks;
   if (!B || typeof B.setPersonal !== 'function') return;
