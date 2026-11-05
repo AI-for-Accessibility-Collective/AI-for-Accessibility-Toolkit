@@ -1,0 +1,47 @@
+{
+  "name": "calm-page-ask-stopped",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page-ask.html",
+  "ai": {
+    "choose": {
+      "pauses or stops": "4",
+      "starts it moving": "2",
+      "while nobody was using the page": "2",
+      "started playing just after": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "the model says A1 is paused already: nothing in it is pressed and it is not held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return (await moves('a1', 1200)) && !n('a1-toggle') && !n('a1-prev') && !n('a1-next');"
+    },
+    {
+      "name": "the same for A2",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return (await moves('a2', 1200)) && !n('a2-pause') && !n('a2-play');"
+    },
+    {
+      "name": "A3 is left alone: not held, nothing pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const s1 = document.getElementById('a3-1'); const s2 = document.getElementById('a3-2'); s1.classList.remove('shown'); s2.classList.add('shown'); await sleep(150); const back = s1.classList.contains('shown') && !s2.classList.contains('shown'); s2.classList.remove('shown'); s1.classList.add('shown'); await sleep(50); return !back && !n('a3-pause');"
+    },
+    {
+      "name": "R1 moves by itself, and the model says it is not a slideshow: not held, nothing pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return (await moves('r1', 1500)) && window.__c.r1.playing && !n('r1-toggle') && !n('r1-prev') && !n('r1-next');"
+    },
+    {
+      "name": "the live prices (R2) move on",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return await moves('r2', 1500);"
+    },
+    {
+      "name": "the person pressed Play, and the model says Share is the video's control: the video is paused",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const v = document.getElementById('m1-video'); await __verifyClick('#m1-play'); await sleep(400); const paused = v.paused; v.pause(); return paused;"
+    },
+    {
+      "name": "the person pressed Share, and the model says Share is its control: the video keeps playing",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const v = document.getElementById('m2-video'); await __verifyClick('#m2-share'); await sleep(500); const playing = !v.paused; v.pause(); return playing;"
+    },
+    {
+      "name": "nothing is announced on load",
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
+    }
+  ]
+}
