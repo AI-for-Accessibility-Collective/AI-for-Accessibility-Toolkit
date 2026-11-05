@@ -11,7 +11,8 @@
 //
 // Options:
 //   to: An element or CSS selector string identifying the main content target
-//       for the skip link. Defaults to undefined (resolving via s.page.main()).
+//       for the skip link. Defaults to undefined (what the page marks, s.page.main(), else
+//       the part the toolkit's model picks, s.page.findMain()).
 //   label: Text label for the skip link. Defaults to 'Skip to main content'.
 //   color: Ring color for the focus indicator ('auto' or CSS color). Defaults to 'auto'.
 //   width: Outline width in pixels for the focus ring (2 to 8). Defaults to 3.
@@ -22,12 +23,18 @@
 //     type=hidden, tabindex < 0, non-control elements with contenteditable="false", and the
 //     toolkit's own UI elements; counts SVG links, and details without summary).
 //   • Parses tabindex numerically: any value below 0 is negative and not sequentially focusable.
-//   • Detects whether a valid main content region exists (or resolves options.to if given).
+//   • The skip link's target: options.to if it resolves, else the main content the page marks
+//     (main, role main, or its one article: s.page.main()), with no wait. Ids and classes like
+//     #content are not the page saying. Where the page marks none, enable() asks the toolkit's
+//     model which part is (s.page.findMain()), once per page; the focus ring is on meanwhile.
+//     When the model cannot tell, or there is none, no skip link is added: a skip link to a
+//     guessed place sends people to the wrong place.
 //   • If the page has no focusable elements and no main content, ends the session and returns false.
 //   • Applies a high-contrast focus indicator (s.highlight.focusRing) with >= 3:1 contrast
 //     against both dark and light backgrounds, placed outside the element so it covers nothing.
 //   • Injects a skip link (s.focus.skipLink) as the first item in the tab order, unless
-//     the page already has a working skip link that reaches the main content.
+//     the page already has a working skip link that reaches the main content. One added after the
+//     model answers goes after the toolkit's other entries (still before the page's controls).
 //   • Keeps focused elements visible from under fixed or sticky bars (s.focus.keepVisible)
 //     in one scroll, never two (WCAG 2.4.11).
 //   • Never modifies the page's natural tab order or introduces positive tabindex values (> 0).
@@ -121,25 +128,49 @@ export default {
     const doc = document;
 
     const focusableCount = countFocusable(doc);
-    const mainTarget = getMainContent(doc, s, this.options.to);
+    // options.to, else what the page marks as its main content.
+    const mainTarget = getMainContent(doc, s, this.options.to) || getMainContent(doc, s);
+    const ring = () => {
+      s.highlight.focusRing({
+        color: this.options.color,
+        width: this.options.width,
+      });
+      s.focus.keepVisible({
+        margin: this.options.margin,
+      });
+    };
+    const skipTo = (target) => s.focus.skipLink({ to: target, label: this.options.label });
 
-    if (focusableCount === 0 && !mainTarget) {
-      this.disable();
-      return false;
+    if (mainTarget) {
+      ring();
+      skipTo(mainTarget);
+      return;
     }
 
-    s.highlight.focusRing({
-      color: this.options.color,
-      width: this.options.width,
-    });
-
-    s.focus.skipLink({
-      to: mainTarget || undefined,
-      label: this.options.label,
-    });
-
-    s.focus.keepVisible({
-      margin: this.options.margin,
+    // The page marks no main content: the toolkit's model may tell which part is
+    // (s.page.findMain()). Without an answer there is no skip link: a skip link to a guessed
+    // place sends people to the wrong place.
+    if (focusableCount > 0) ring();
+    const asking = s.page && typeof s.page.findMain === 'function' ? s.page.findMain() : Promise.resolve(null);
+    return asking.then((found) => {
+      if (this.s !== s || !s.alive()) return false;
+      if (found && found !== doc.body && found !== doc.documentElement) {
+        if (focusableCount === 0) ring();
+        skipTo(found);
+        return true;
+      }
+      if (focusableCount === 0) {
+        this.disable();
+        return false;
+      }
+      return true;
+    }, () => {
+      if (this.s !== s || !s.alive()) return false;
+      if (focusableCount === 0) {
+        this.disable();
+        return false;
+      }
+      return true;
     });
   },
 

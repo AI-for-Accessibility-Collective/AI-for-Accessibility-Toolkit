@@ -1,0 +1,16 @@
+{
+  "name": "plain-language-find",
+  "file": "tools/core-adapters/plain-language.js",
+  "page": "no-main.html",
+  "ai": {
+    "choose": {
+      "main content": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model picks the story column: buttons go after the story's long paragraphs only: none in the events box",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const after = (id) => document.getElementById(id).nextElementSibling?.classList.contains('ai4a11y-plain-btn');\n        return ['story-1', 'story-2', 'story-3'].every(after) && !after('promo-1') && !after('promo-2') && !after('story-4');\n      "
+    }
+  ]
+}

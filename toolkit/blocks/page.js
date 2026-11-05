@@ -1,6 +1,7 @@
 // Block 4, page: read what is on the page. Nothing here changes it.
 //
-//   page.main()                     the main content region
+//   page.main()                     the main content the page marks (main, or its one article), else the body
+//   s.page.findMain()               where it marks none, the one the session's model picks, or null (main.js)
 //   page.readableText(el, opts)     the text a person reads, without code, fields or hidden text
 //   page.textNodes(el, opts)        the text nodes behind it
 //   page.headings({ maxLevel })     visible headings with their levels
@@ -25,7 +26,21 @@ export const SKIP_SELECTOR = [
   `[${UI_ATTR}="ui"]`,
 ].join(', ');
 
-const BLOCK = /^(address|article|aside|blockquote|dd|div|dl|dt|figcaption|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|section|table|td|th|tr|ul|br|summary|details)$/i;
+// Landmarks that are not the content, as the browser exposes them.
+export const CHROME_LANDMARKS = new Set(['navigation', 'banner', 'contentinfo', 'complementary', 'search']);
+const MAY_BE_LANDMARK = 'header, footer, nav, aside, search, section, form, [role]';
+const ARTICLE = 'article, [role="article" i]';
+
+/** Whether el is a landmark that is not the content. */
+export const isChrome = (el) => el.matches(MAY_BE_LANDMARK) && CHROME_LANDMARKS.has(landmark(el));
+
+/** Whether el is, or is inside, a landmark that is not the content. */
+export function inChrome(el) {
+  for (let n = el; n && n.nodeType === 1; n = n.parentElement) if (isChrome(n)) return true;
+  return false;
+}
+
+export const BLOCK = /^(address|article|aside|blockquote|dd|div|dl|dt|figcaption|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|section|table|td|th|tr|ul|br|summary|details)$/i;
 
 const INTERACTIVE = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="option"], [tabindex]:not([tabindex="-1"])';
 
@@ -54,13 +69,24 @@ export function pageBlock(env) {
     return r.width > 0 && r.height > 0;
   }
 
+  // What the page says is its main content: its first visible main landmark
+  // (main, role main), else its one article (not inside another, nor in its
+  // navigation, header, footer, sidebars or search). Several articles (a list
+  // of stories) or none: the page does not say, and this is the body. Never a
+  // guess from ids or classes: where the page does not say, the session's
+  // model may tell (s.page.findMain(), main.js).
   function main() {
-    const visible = (list) => [...list].filter((el) => isVisible(el) && !isOurs(el));
+    // A box of its own, or none at all (display: contents, as MDN's main is): its content shows.
+    const shown = (el) => isVisible(el) || (win.getComputedStyle(el).display === 'contents' && [...el.children].some((c) => isVisible(c)));
+    const visible = (list) => [...list].filter((el) => shown(el) && !isOurs(el));
     const marked = visible(doc.querySelectorAll('main, [role="main" i]'));
     if (marked.length) return marked[0];
-    const articles = visible(doc.querySelectorAll('article'));
-    if (articles.length) return articles.sort((a, b) => b.textContent.length - a.textContent.length)[0];
-    return visible(doc.querySelectorAll('#main, #content, .content'))[0] || doc.body || doc.documentElement;
+    const articles = visible(doc.querySelectorAll(ARTICLE)).filter((el) => {
+      const role = (el.getAttribute('role') || '').trim().toLowerCase();
+      return (!role || role === 'article') && !(el.parentElement && el.parentElement.closest(ARTICLE)) && !inChrome(el);
+    });
+    if (articles.length === 1) return articles[0];
+    return doc.body || doc.documentElement;
   }
 
   /** The readable text nodes under root, in order. With `includeReplaced`

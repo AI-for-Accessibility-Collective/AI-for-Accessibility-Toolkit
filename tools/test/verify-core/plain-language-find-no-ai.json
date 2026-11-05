@@ -1,0 +1,16 @@
+{
+  "name": "plain-language-find-no-ai",
+  "file": "tools/core-adapters/plain-language.js",
+  "page": "no-main.html",
+  "ai": {
+    "choose": {
+      "main content": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when there is then no model: enable() again adds no buttons and returns false: no part is guessed, and the box named \"content\" is not taken for the main content",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        // The model answered for the first enable(); now ask again, with unavailable.\n        const toolkit = adapter.toolkit;\n        const shared = globalThis.__ai4a11yBlocksShared;\n        const forget = () => { shared.mainAsked = null; shared.cache.clear(); };\n        adapter.disable();\n        forget();\n        const orig = globalThis.__verifyAi;\n        globalThis.__verifyAi = async () => ({ text: null, reason: 'unavailable' });\n        let result;\n        try { result = await adapter.enable({}, toolkit); } finally { globalThis.__verifyAi = orig; }\n        const none = document.querySelectorAll('.ai4a11y-plain-btn').length === 0 && (!adapter.s || adapter.s.ended);\n        forget();\n        await adapter.enable({}, toolkit);\n        return result === false && none;\n      "
+    }
+  ]
+}

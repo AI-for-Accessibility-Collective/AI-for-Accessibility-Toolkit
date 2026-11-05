@@ -1700,13 +1700,13 @@ ${String(o.about).trim().slice(0, each)}`).join("\n\n");
   }
   async function captureInPage(el, win) {
     const doc = el.ownerDocument;
-    const MAX = 1024;
+    const MAX2 = 1024;
     const toPayload = (dataUrl) => {
       const m = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/.exec(dataUrl || "");
       return m ? { mimeType: m[1], data: m[2] } : null;
     };
     const draw = (source, w, h) => {
-      const scale = Math.min(1, MAX / Math.max(w, h));
+      const scale = Math.min(1, MAX2 / Math.max(w, h));
       const canvas = doc.createElement("canvas");
       canvas.width = Math.max(1, Math.round(w * scale));
       canvas.height = Math.max(1, Math.round(h * scale));
@@ -1730,6 +1730,466 @@ ${String(o.about).trim().slice(0, each)}`).join("\n\n");
     } catch {
     }
     return null;
+  }
+
+  // toolkit/blocks/widget.js
+  var PART = '[aria-roledescription="slide" i], [role="tabpanel" i]';
+  var CONTROL = 'button, [role="button" i], [role="tab" i], [role="switch" i], input[type="button" i], input[type="submit" i], input[type="reset" i], input[type="image" i]';
+  function widgetParts(widget) {
+    if (!widget || widget.nodeType !== 1) return [];
+    const all = [...widget.querySelectorAll(PART)].filter((el) => !isOurs(el));
+    return all.filter((el) => !all.some((other) => other !== el && other.contains(el)));
+  }
+  function controlled(el) {
+    const doc = el.ownerDocument;
+    return (el.getAttribute("aria-controls") || "").split(/\s+/).filter(Boolean).map((id) => doc.getElementById(id)).filter(Boolean);
+  }
+  function ownControls(widget, { parts, selector = CONTROL } = {}) {
+    if (!widget || widget.nodeType !== 1) return [];
+    const ps = Array.isArray(parts) ? parts.filter((p) => p && p.nodeType === 1) : widgetParts(widget);
+    const inPart = (el) => ps.some((p) => p.contains(el));
+    const forWidget = (t) => t === widget || t.contains(widget) || ps.includes(t) || ps.some((p) => t.contains(p) && widget.contains(t));
+    const out = [];
+    for (const el of widget.querySelectorAll(selector)) {
+      if (isOurs(el)) continue;
+      const targets = controlled(el);
+      if (targets.length ? targets.some(forWidget) : !inPart(el)) out.push(el);
+    }
+    return out;
+  }
+
+  // toolkit/blocks/landmarks.js
+  var LANDMARK_ROLES = ["banner", "complementary", "contentinfo", "form", "main", "navigation", "region", "search"];
+  var LANDMARK = new Set(LANDMARK_ROLES);
+  var NEEDS_NAME = /* @__PURE__ */ new Set(["form", "region"]);
+  var ROLES = new Set("alert alertdialog application article banner blockquote button caption cell checkbox code columnheader combobox complementary contentinfo definition deletion dialog directory document emphasis feed figure form generic grid gridcell group heading img image insertion link list listbox listitem log main mark marquee math menu menubar menuitem menuitemcheckbox menuitemradio meter navigation none note option paragraph presentation progressbar radio radiogroup region row rowgroup rowheader scrollbar search searchbox separator slider spinbutton status strong subscript superscript switch tab table tablist tabpanel term textbox time timer toolbar tooltip tree treegrid treeitem".split(" "));
+  var GLOBAL_ARIA = [
+    "aria-atomic",
+    "aria-busy",
+    "aria-controls",
+    "aria-current",
+    "aria-describedby",
+    "aria-details",
+    "aria-dropeffect",
+    "aria-errormessage",
+    "aria-flowto",
+    "aria-grabbed",
+    "aria-haspopup",
+    "aria-invalid",
+    "aria-keyshortcuts",
+    "aria-label",
+    "aria-labelledby",
+    "aria-live",
+    "aria-owns",
+    "aria-relevant",
+    "aria-roledescription"
+  ];
+  var HEADER_SCOPE_TAGS = /* @__PURE__ */ new Set(["article", "aside", "main", "nav", "section"]);
+  var HEADER_SCOPE_ROLES = /* @__PURE__ */ new Set(["article", "complementary", "main", "navigation"]);
+  var ASIDE_SCOPE_TAGS = /* @__PURE__ */ new Set(["article", "aside", "nav", "section"]);
+  var ASIDE_SCOPE_ROLES = /* @__PURE__ */ new Set(["article", "complementary", "navigation"]);
+  var CANDIDATES = "header, footer, main, nav, aside, section, form, search, [role]";
+  function explicitRole(el) {
+    const tokens = (el.getAttribute("role") || "").trim().toLowerCase().split(/\s+/);
+    const role = tokens.find((t) => ROLES.has(t) || /^(doc|graphics)-[a-z]+$/.test(t)) || "";
+    if (role !== "none" && role !== "presentation") return role;
+    if (el.hasAttribute("tabindex") || GLOBAL_ARIA.some((a) => el.hasAttribute(a))) return "";
+    return role;
+  }
+  function hasName(el) {
+    const doc = el.ownerDocument;
+    const ids = (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean);
+    if (ids.some((id) => doc.getElementById(id))) return true;
+    return Boolean((el.getAttribute("aria-label") || "").trim() || (el.getAttribute("title") || "").trim());
+  }
+  function hidden(el) {
+    if (el.closest('[hidden], [aria-hidden="true" i]')) return true;
+    const win = el.ownerDocument.defaultView;
+    if (!win) return false;
+    if (win.getComputedStyle(el).visibility === "hidden") return true;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      if (win.getComputedStyle(n).display === "none") return true;
+    }
+    return false;
+  }
+  function inside(el, tags, roles) {
+    for (let n = el.parentElement; n; n = n.parentElement) {
+      const role = n.hasAttribute("role") ? explicitRole(n) : "";
+      if (role ? roles.has(role) : tags.has(n.localName)) return true;
+    }
+    return false;
+  }
+  function landmark(el) {
+    if (!el || el.nodeType !== 1 || isOurs(el) || hidden(el)) return null;
+    const role = el.hasAttribute("role") ? explicitRole(el) : "";
+    if (role && !(NEEDS_NAME.has(role) && !hasName(el))) return LANDMARK.has(role) ? role : null;
+    switch (el.localName) {
+      case "header":
+        return inside(el, HEADER_SCOPE_TAGS, HEADER_SCOPE_ROLES) ? null : "banner";
+      case "footer":
+        return inside(el, HEADER_SCOPE_TAGS, HEADER_SCOPE_ROLES) ? null : "contentinfo";
+      case "main":
+        return "main";
+      case "nav":
+        return "navigation";
+      case "search":
+        return "search";
+      case "aside":
+        return inside(el, ASIDE_SCOPE_TAGS, ASIDE_SCOPE_ROLES) && !hasName(el) ? null : "complementary";
+      case "section":
+        return hasName(el) ? "region" : null;
+      case "form":
+        return hasName(el) ? "form" : null;
+      default:
+        return null;
+    }
+  }
+  function landmarks(doc, role, { root } = {}) {
+    const from = root || doc.body || doc.documentElement;
+    if (!from) return [];
+    const all = [from, ...from.querySelectorAll(CANDIDATES)];
+    return all.filter((el) => el.matches(CANDIDATES) && (role ? landmark(el) === role : landmark(el) !== null));
+  }
+
+  // toolkit/blocks/page.js
+  var SKIP_SELECTOR = [
+    "script",
+    "style",
+    "noscript",
+    "template",
+    "svg",
+    "math",
+    "canvas",
+    "iframe",
+    "object",
+    "textarea",
+    "input",
+    "select",
+    "option",
+    "code",
+    "pre",
+    "kbd",
+    "samp",
+    "var",
+    '[contenteditable=""]',
+    '[contenteditable="true"]',
+    "[aria-live]",
+    '[role="status"]',
+    '[role="alert"]',
+    '[role="log"]',
+    '[role="timer"]',
+    '[role="marquee"]',
+    `[${UI_ATTR}="ui"]`
+  ].join(", ");
+  var CHROME_LANDMARKS = /* @__PURE__ */ new Set(["navigation", "banner", "contentinfo", "complementary", "search"]);
+  var MAY_BE_LANDMARK = "header, footer, nav, aside, search, section, form, [role]";
+  var ARTICLE = 'article, [role="article" i]';
+  var isChrome = (el) => el.matches(MAY_BE_LANDMARK) && CHROME_LANDMARKS.has(landmark(el));
+  function inChrome(el) {
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) if (isChrome(n)) return true;
+    return false;
+  }
+  var BLOCK = /^(address|article|aside|blockquote|dd|div|dl|dt|figcaption|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|section|table|td|th|tr|ul|br|summary|details)$/i;
+  var INTERACTIVE = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="option"], [tabindex]:not([tabindex="-1"])';
+  var NAME_FROM_CONTENT = /^(a|button|summary|h[1-6]|label|legend|caption|figcaption|option|td|th|li|dt)$/i;
+  var CONTENT_ROLES = /* @__PURE__ */ new Set(["button", "link", "menuitem", "menuitemcheckbox", "menuitemradio", "tab", "checkbox", "radio", "switch", "option", "treeitem", "cell", "columnheader", "rowheader", "heading", "tooltip"]);
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var squash = (t) => String(t || "").replace(/\s+/g, " ").trim();
+  function pageBlock(env) {
+    const { doc, win } = env;
+    const layout = () => hasLayout(doc);
+    function isVisible(el, { size = true } = {}) {
+      if (!el || el.nodeType !== 1 || !el.isConnected) return false;
+      if (el.closest("[hidden]")) return false;
+      const style = win.getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" || parseFloat(style.opacity) === 0) return false;
+      if (!layout()) return true;
+      if (typeof el.checkVisibility === "function" && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false;
+      if (!size) return true;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    }
+    function main() {
+      const shown = (el) => isVisible(el) || win.getComputedStyle(el).display === "contents" && [...el.children].some((c) => isVisible(c));
+      const visible = (list) => [...list].filter((el) => shown(el) && !isOurs(el));
+      const marked = visible(doc.querySelectorAll('main, [role="main" i]'));
+      if (marked.length) return marked[0];
+      const articles = visible(doc.querySelectorAll(ARTICLE)).filter((el) => {
+        const role = (el.getAttribute("role") || "").trim().toLowerCase();
+        return (!role || role === "article") && !(el.parentElement && el.parentElement.closest(ARTICLE)) && !inChrome(el);
+      });
+      if (articles.length === 1) return articles[0];
+      return doc.body || doc.documentElement;
+    }
+    function textNodes(root, { skip = "", includeReplaced = true } = {}) {
+      const out = [];
+      if (!root) return out;
+      const skipSel = skip ? `${SKIP_SELECTOR}, ${skip}` : SKIP_SELECTOR;
+      const hiddenCache = /* @__PURE__ */ new Map();
+      const hidden2 = (el) => {
+        if (hiddenCache.has(el)) return hiddenCache.get(el);
+        let h = false;
+        if (el.matches(skipSel) || el.hidden || el.getAttribute("aria-hidden") === "true") h = true;
+        else if (el.getAttribute(UI_ATTR) === "content" && !includeReplaced) h = true;
+        else {
+          const st = win.getComputedStyle(el);
+          h = st.display === "none" || st.visibility === "hidden";
+        }
+        if (!h && el.parentElement && el !== root) h = hidden2(el.parentElement);
+        hiddenCache.set(el, h);
+        return h;
+      };
+      const walker = doc.createTreeWalker(
+        root,
+        4
+        /* SHOW_TEXT */
+      );
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!n.nodeValue.trim()) continue;
+        const parent = n.parentElement;
+        if (!parent || hidden2(parent)) continue;
+        out.push(n);
+      }
+      return out;
+    }
+    function readableText(root, { blockPause = "\n", skip = "", includeReplaced = true } = {}) {
+      let text = "";
+      let lastBlock = null;
+      for (const node of textNodes(root, { skip, includeReplaced })) {
+        let block = node.parentElement;
+        while (block && block !== root && !BLOCK.test(block.tagName)) block = block.parentElement;
+        if (text && block !== lastBlock) text = text.replace(/\s+$/, "") + blockPause;
+        lastBlock = block;
+        text += node.nodeValue.replace(/\s+/g, " ");
+      }
+      return text.replace(/[ \t]+/g, " ").trim();
+    }
+    function headings({ maxLevel = 6, root = doc.body } = {}) {
+      const out = [];
+      if (!root) return out;
+      for (const el of root.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading" i]')) {
+        if (isOurs(el) || !isVisible(el) || el.closest('[aria-hidden="true"]')) continue;
+        if (/^(presentation|none)$/i.test((el.getAttribute("role") || "").trim())) continue;
+        const aria = parseInt(el.getAttribute("aria-level"), 10);
+        const level = /^H[1-6]$/.test(el.tagName) && !el.hasAttribute("aria-level") ? +el.tagName[1] : aria >= 1 ? aria : 2;
+        if (level > maxLevel) continue;
+        out.push({ el, level, text: nameOf(el) });
+      }
+      return out;
+    }
+    function contentText(el) {
+      let t = "";
+      for (const n of el.childNodes) {
+        if (n.nodeType === 3) t += n.nodeValue;
+        else if (n.nodeType === 1) {
+          if (n.hidden || n.getAttribute("aria-hidden") === "true" || /^(script|style|template|input|textarea|select)$/i.test(n.tagName)) continue;
+          if (n.tagName === "IMG") t += " " + (n.getAttribute("alt") || "") + " ";
+          else t += " " + contentText(n) + " ";
+        }
+      }
+      return t;
+    }
+    function labelledBy(el) {
+      const ids = (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean);
+      return ids.map((id) => doc.getElementById(id)).filter(Boolean).map((ref) => squash(ref.getAttribute("aria-label")) || squash(contentText(ref)) || squash(ref.getAttribute("title"))).join(" ");
+    }
+    function labelFor(el) {
+      const labels = el.labels ? [...el.labels] : [];
+      if (!labels.length && el.id) labels.push(...doc.querySelectorAll(`label[for="${CSS_escape(el.id)}"]`));
+      const wrap = el.closest("label");
+      if (wrap && !labels.includes(wrap)) labels.push(wrap);
+      return labels.map((l) => squash(contentText(l))).filter(Boolean).join(" ");
+    }
+    function svgTitleOf(el) {
+      if (el.namespaceURI !== SVG_NS) return "";
+      for (const child of el.children) if (child.localName === "title" && child.namespaceURI === SVG_NS) return child.textContent;
+      return "";
+    }
+    function nameOf(el) {
+      if (!el || el.nodeType !== 1) return "";
+      const tag = el.tagName;
+      const type = (el.getAttribute("type") || "").toLowerCase();
+      const isField = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
+      const role = (el.getAttribute("role") || "").toLowerCase().split(/\s+/)[0];
+      const candidates = [
+        labelledBy(el),
+        el.getAttribute("aria-label"),
+        svgTitleOf(el),
+        tag === "IMG" || tag === "INPUT" && type === "image" || tag === "AREA" ? el.getAttribute("alt") : "",
+        isField ? labelFor(el) : "",
+        tag === "INPUT" && /^(button|submit|reset)$/.test(type) ? el.getAttribute("value") : "",
+        NAME_FROM_CONTENT.test(tag) || CONTENT_ROLES.has(role) ? contentText(el) : "",
+        tag === "FIELDSET" ? el.querySelector("legend")?.textContent : "",
+        tag === "TABLE" ? el.querySelector("caption")?.textContent : "",
+        el.getAttribute("title"),
+        isField ? el.getAttribute("placeholder") : "",
+        tag === "INPUT" && type === "submit" ? "Submit" : tag === "INPUT" && type === "reset" ? "Reset" : ""
+      ];
+      return candidates.map(squash).find(Boolean) || "";
+    }
+    function find(name, { within = doc.body, selector = INTERACTIVE } = {}) {
+      const want = squash(name).toLowerCase();
+      if (!want || !within) return null;
+      let best = null, bestScore = 0;
+      for (const el of within.querySelectorAll(selector)) {
+        if (isOurs(el) || !isVisible(el)) continue;
+        const have = nameOf(el).toLowerCase();
+        if (!have) continue;
+        const score = have === want ? 3 : have.startsWith(want) ? 2 : have.includes(want) ? 1 : 0;
+        if (score > bestScore) {
+          best = el;
+          bestScore = score;
+          if (score === 3) break;
+        }
+      }
+      return best;
+    }
+    function textContrast(el) {
+      const cs = win.getComputedStyle(el);
+      const layers = [];
+      let overImage = false;
+      const box = layout() ? el.getBoundingClientRect() : null;
+      const cx = box && box.left + box.width / 2, cy = box && box.top + box.height / 2;
+      const under = (n) => {
+        if (!box || n === el || !(box.width || box.height)) return true;
+        const r = n.getBoundingClientRect();
+        return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+      };
+      for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+        if (!under(n)) continue;
+        const ns = n === el ? cs : win.getComputedStyle(n);
+        const c2 = parseColor(ns.backgroundColor);
+        if (ns.backgroundImage && ns.backgroundImage !== "none") {
+          overImage = true;
+          break;
+        }
+        if (c2 && c2[3] > 0) layers.push(c2);
+        if (c2 && c2[3] >= 0.999) break;
+      }
+      let bg = [255, 255, 255];
+      for (const [r, g, b, a] of layers.reverse()) bg = [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)];
+      const c = parseColor(cs.color) || [0, 0, 0, 1];
+      const fg = [0, 1, 2].map((i) => c[i] * c[3] + bg[i] * (1 - c[3]));
+      const size = parseFloat(cs.fontSize) || 16;
+      const large = size >= 24 || size >= 18.66 && (parseInt(cs.fontWeight, 10) || 400) >= 700;
+      const min = large ? 3 : 4.5;
+      const ratio = Math.round(contrast(fg, bg) * 100) / 100;
+      const fix = overImage || ratio >= min ? null : hex(nearestWithContrast(fg, bg, min + 0.05));
+      return { color: hex(fg), background: hex(bg), ratio, min, large, overImage, fix };
+    }
+    return {
+      main,
+      textNodes,
+      readableText,
+      headings,
+      nameOf,
+      find,
+      isVisible,
+      isOurs: (el) => isOurs(el),
+      background: (el) => backgroundOf(el, win),
+      contrast,
+      textContrast,
+      widgetParts,
+      ownControls,
+      landmark,
+      landmarks: (role, opts) => landmarks(doc, role, opts)
+    };
+  }
+  function CSS_escape(s) {
+    return String(s).replace(/["\\]/g, "\\$&");
+  }
+
+  // toolkit/blocks/main.js
+  var MAIN_QUESTION = "Which of these is the page's main content: what a person comes to this page to read or use, not its menus, sidebars, header or footer?";
+  var NOT_RUNNING = 'a[href], button, label, summary, select, option, [role="link" i], [role="button" i], [role="menuitem" i], [role="tab" i], [role="option" i]';
+  var PARAGRAPH_TAGS = /^(p|h[1-6]|li|dt|dd|blockquote|figcaption|caption|summary|address)$/i;
+  var PARAGRAPH = 60;
+  var MIN_TOTAL = 200;
+  var SHARE = 0.2;
+  var ONE_BLOCK = 500;
+  var TIGHT = 0.85;
+  var MAX = 6;
+  function mainCandidates(env) {
+    const { doc, win, page } = env;
+    const body = doc.body;
+    if (!body) return [];
+    const blocked = /* @__PURE__ */ new Map();
+    const excluded = (el) => {
+      if (!el || el === body || el === doc.documentElement) return false;
+      if (blocked.has(el)) return blocked.get(el);
+      let x = isOurs(el) || el.localName === "dialog" || /^(dialog|alertdialog)$/i.test((el.getAttribute("role") || "").trim()) || isChrome(el);
+      if (!x) {
+        try {
+          x = win.getComputedStyle(el).position === "fixed";
+        } catch {
+          x = false;
+        }
+      }
+      if (!x) x = excluded(el.parentElement);
+      blocked.set(el, x);
+      return x;
+    };
+    const blockOf = (node) => {
+      let b = node.parentElement;
+      while (b && b !== body && !BLOCK.test(b.tagName)) b = b.parentElement;
+      return b || body;
+    };
+    const own = /* @__PURE__ */ new Map();
+    for (const node of page.textNodes(body)) {
+      const parent = node.parentElement;
+      if (excluded(parent) || parent.closest(NOT_RUNNING)) continue;
+      const n = node.nodeValue.replace(/\s+/g, " ").trim().length;
+      if (!n) continue;
+      const b = blockOf(node);
+      own.set(b, (own.get(b) || 0) + n);
+    }
+    const paragraphs = [...own].filter(([b, n]) => n >= PARAGRAPH && !/^h[1-6]$/i.test(b.tagName));
+    const total = paragraphs.reduce((t, [, n]) => t + n, 0);
+    if (total < MIN_TOTAL) return [];
+    const held = /* @__PURE__ */ new Map();
+    for (const [b, n] of paragraphs) {
+      for (let a = b; a && a !== body && a !== doc.documentElement; a = a.parentElement) {
+        const h = held.get(a) || { text: 0, count: 0 };
+        h.text += n;
+        h.count++;
+        held.set(a, h);
+      }
+    }
+    let found = [...held].filter(([el, h]) => h.text >= SHARE * total && (h.count >= 2 || h.text >= ONE_BLOCK) && !PARAGRAPH_TAGS.test(el.tagName) && page.isVisible(el));
+    found = found.filter(([el, h]) => !found.some(([d, dh]) => d !== el && el.contains(d) && dh.text >= TIGHT * h.text));
+    return found.sort((a, b) => b[1].text - a[1].text).slice(0, MAX).map(([el]) => el).sort((a, b) => a.compareDocumentPosition(b) & 4 ? -1 : 1);
+  }
+  var sameList = (a, b) => a.length === b.length && a.every((el, i) => el === b[i]);
+  function findMainBlock(s, env) {
+    const { doc, win, shared } = env;
+    const said = () => {
+      const m = env.page.main();
+      return m && m !== doc.body && m !== doc.documentElement ? m : null;
+    };
+    return async function findMain() {
+      if (!s.alive()) return null;
+      const first = said();
+      if (first) return first;
+      if (!s.ai.available) return null;
+      const options = mainCandidates(env);
+      if (!options.length) return null;
+      const href = String(win.location && win.location.href || "");
+      for (; ; ) {
+        let asked = shared.mainAsked;
+        if (!asked || asked.href !== href || !sameList(asked.options, options)) {
+          const title = String(doc.title || "").replace(/\s+/g, " ").trim().slice(0, 200);
+          asked = { href, options, asker: s, answer: s.ai.choose(MAIN_QUESTION, options, title ? { context: `The page's title: "${title}"` } : {}) };
+          shared.mainAsked = asked;
+        }
+        const el = await asked.answer;
+        if (!s.alive()) return null;
+        if (el === null && asked.asker !== s && !asked.asker.alive() && shared.mainAsked === asked) {
+          shared.mainAsked = null;
+          continue;
+        }
+        return said() || (el && el.isConnected ? el : null);
+      }
+    };
   }
 
   // toolkit/blocks/speech.js
@@ -2582,363 +3042,8 @@ ${String(o.about).trim().slice(0, each)}`).join("\n\n");
     s.media = mediaBlock(s, env);
     s.profile = profileBlock(s, env);
     s.zoom = zoomBlock(s, env);
-    s.page = env.page;
+    s.page = Object.freeze({ ...env.page, findMain: findMainBlock(s, env) });
     return s;
-  }
-
-  // toolkit/blocks/widget.js
-  var PART = '[aria-roledescription="slide" i], [role="tabpanel" i]';
-  var CONTROL = 'button, [role="button" i], [role="tab" i], [role="switch" i], input[type="button" i], input[type="submit" i], input[type="reset" i], input[type="image" i]';
-  function widgetParts(widget) {
-    if (!widget || widget.nodeType !== 1) return [];
-    const all = [...widget.querySelectorAll(PART)].filter((el) => !isOurs(el));
-    return all.filter((el) => !all.some((other) => other !== el && other.contains(el)));
-  }
-  function controlled(el) {
-    const doc = el.ownerDocument;
-    return (el.getAttribute("aria-controls") || "").split(/\s+/).filter(Boolean).map((id) => doc.getElementById(id)).filter(Boolean);
-  }
-  function ownControls(widget, { parts, selector = CONTROL } = {}) {
-    if (!widget || widget.nodeType !== 1) return [];
-    const ps = Array.isArray(parts) ? parts.filter((p) => p && p.nodeType === 1) : widgetParts(widget);
-    const inPart = (el) => ps.some((p) => p.contains(el));
-    const forWidget = (t) => t === widget || t.contains(widget) || ps.includes(t) || ps.some((p) => t.contains(p) && widget.contains(t));
-    const out = [];
-    for (const el of widget.querySelectorAll(selector)) {
-      if (isOurs(el)) continue;
-      const targets = controlled(el);
-      if (targets.length ? targets.some(forWidget) : !inPart(el)) out.push(el);
-    }
-    return out;
-  }
-
-  // toolkit/blocks/landmarks.js
-  var LANDMARK_ROLES = ["banner", "complementary", "contentinfo", "form", "main", "navigation", "region", "search"];
-  var LANDMARK = new Set(LANDMARK_ROLES);
-  var NEEDS_NAME = /* @__PURE__ */ new Set(["form", "region"]);
-  var ROLES = new Set("alert alertdialog application article banner blockquote button caption cell checkbox code columnheader combobox complementary contentinfo definition deletion dialog directory document emphasis feed figure form generic grid gridcell group heading img image insertion link list listbox listitem log main mark marquee math menu menubar menuitem menuitemcheckbox menuitemradio meter navigation none note option paragraph presentation progressbar radio radiogroup region row rowgroup rowheader scrollbar search searchbox separator slider spinbutton status strong subscript superscript switch tab table tablist tabpanel term textbox time timer toolbar tooltip tree treegrid treeitem".split(" "));
-  var GLOBAL_ARIA = [
-    "aria-atomic",
-    "aria-busy",
-    "aria-controls",
-    "aria-current",
-    "aria-describedby",
-    "aria-details",
-    "aria-dropeffect",
-    "aria-errormessage",
-    "aria-flowto",
-    "aria-grabbed",
-    "aria-haspopup",
-    "aria-invalid",
-    "aria-keyshortcuts",
-    "aria-label",
-    "aria-labelledby",
-    "aria-live",
-    "aria-owns",
-    "aria-relevant",
-    "aria-roledescription"
-  ];
-  var HEADER_SCOPE_TAGS = /* @__PURE__ */ new Set(["article", "aside", "main", "nav", "section"]);
-  var HEADER_SCOPE_ROLES = /* @__PURE__ */ new Set(["article", "complementary", "main", "navigation"]);
-  var ASIDE_SCOPE_TAGS = /* @__PURE__ */ new Set(["article", "aside", "nav", "section"]);
-  var ASIDE_SCOPE_ROLES = /* @__PURE__ */ new Set(["article", "complementary", "navigation"]);
-  var CANDIDATES = "header, footer, main, nav, aside, section, form, search, [role]";
-  function explicitRole(el) {
-    const tokens = (el.getAttribute("role") || "").trim().toLowerCase().split(/\s+/);
-    const role = tokens.find((t) => ROLES.has(t) || /^(doc|graphics)-[a-z]+$/.test(t)) || "";
-    if (role !== "none" && role !== "presentation") return role;
-    if (el.hasAttribute("tabindex") || GLOBAL_ARIA.some((a) => el.hasAttribute(a))) return "";
-    return role;
-  }
-  function hasName(el) {
-    const doc = el.ownerDocument;
-    const ids = (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean);
-    if (ids.some((id) => doc.getElementById(id))) return true;
-    return Boolean((el.getAttribute("aria-label") || "").trim() || (el.getAttribute("title") || "").trim());
-  }
-  function hidden(el) {
-    if (el.closest('[hidden], [aria-hidden="true" i]')) return true;
-    const win = el.ownerDocument.defaultView;
-    if (!win) return false;
-    if (win.getComputedStyle(el).visibility === "hidden") return true;
-    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
-      if (win.getComputedStyle(n).display === "none") return true;
-    }
-    return false;
-  }
-  function inside(el, tags, roles) {
-    for (let n = el.parentElement; n; n = n.parentElement) {
-      const role = n.hasAttribute("role") ? explicitRole(n) : "";
-      if (role ? roles.has(role) : tags.has(n.localName)) return true;
-    }
-    return false;
-  }
-  function landmark(el) {
-    if (!el || el.nodeType !== 1 || isOurs(el) || hidden(el)) return null;
-    const role = el.hasAttribute("role") ? explicitRole(el) : "";
-    if (role && !(NEEDS_NAME.has(role) && !hasName(el))) return LANDMARK.has(role) ? role : null;
-    switch (el.localName) {
-      case "header":
-        return inside(el, HEADER_SCOPE_TAGS, HEADER_SCOPE_ROLES) ? null : "banner";
-      case "footer":
-        return inside(el, HEADER_SCOPE_TAGS, HEADER_SCOPE_ROLES) ? null : "contentinfo";
-      case "main":
-        return "main";
-      case "nav":
-        return "navigation";
-      case "search":
-        return "search";
-      case "aside":
-        return inside(el, ASIDE_SCOPE_TAGS, ASIDE_SCOPE_ROLES) && !hasName(el) ? null : "complementary";
-      case "section":
-        return hasName(el) ? "region" : null;
-      case "form":
-        return hasName(el) ? "form" : null;
-      default:
-        return null;
-    }
-  }
-  function landmarks(doc, role, { root } = {}) {
-    const from = root || doc.body || doc.documentElement;
-    if (!from) return [];
-    const all = [from, ...from.querySelectorAll(CANDIDATES)];
-    return all.filter((el) => el.matches(CANDIDATES) && (role ? landmark(el) === role : landmark(el) !== null));
-  }
-
-  // toolkit/blocks/page.js
-  var SKIP_SELECTOR = [
-    "script",
-    "style",
-    "noscript",
-    "template",
-    "svg",
-    "math",
-    "canvas",
-    "iframe",
-    "object",
-    "textarea",
-    "input",
-    "select",
-    "option",
-    "code",
-    "pre",
-    "kbd",
-    "samp",
-    "var",
-    '[contenteditable=""]',
-    '[contenteditable="true"]',
-    "[aria-live]",
-    '[role="status"]',
-    '[role="alert"]',
-    '[role="log"]',
-    '[role="timer"]',
-    '[role="marquee"]',
-    `[${UI_ATTR}="ui"]`
-  ].join(", ");
-  var BLOCK = /^(address|article|aside|blockquote|dd|div|dl|dt|figcaption|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|section|table|td|th|tr|ul|br|summary|details)$/i;
-  var INTERACTIVE = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="option"], [tabindex]:not([tabindex="-1"])';
-  var NAME_FROM_CONTENT = /^(a|button|summary|h[1-6]|label|legend|caption|figcaption|option|td|th|li|dt)$/i;
-  var CONTENT_ROLES = /* @__PURE__ */ new Set(["button", "link", "menuitem", "menuitemcheckbox", "menuitemradio", "tab", "checkbox", "radio", "switch", "option", "treeitem", "cell", "columnheader", "rowheader", "heading", "tooltip"]);
-  var SVG_NS = "http://www.w3.org/2000/svg";
-  var squash = (t) => String(t || "").replace(/\s+/g, " ").trim();
-  function pageBlock(env) {
-    const { doc, win } = env;
-    const layout = () => hasLayout(doc);
-    function isVisible(el, { size = true } = {}) {
-      if (!el || el.nodeType !== 1 || !el.isConnected) return false;
-      if (el.closest("[hidden]")) return false;
-      const style = win.getComputedStyle(el);
-      if (style.display === "none" || style.visibility === "hidden" || parseFloat(style.opacity) === 0) return false;
-      if (!layout()) return true;
-      if (typeof el.checkVisibility === "function" && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false;
-      if (!size) return true;
-      const r = el.getBoundingClientRect();
-      return r.width > 0 && r.height > 0;
-    }
-    function main() {
-      const visible = (list) => [...list].filter((el) => isVisible(el) && !isOurs(el));
-      const marked = visible(doc.querySelectorAll('main, [role="main" i]'));
-      if (marked.length) return marked[0];
-      const articles = visible(doc.querySelectorAll("article"));
-      if (articles.length) return articles.sort((a, b) => b.textContent.length - a.textContent.length)[0];
-      return visible(doc.querySelectorAll("#main, #content, .content"))[0] || doc.body || doc.documentElement;
-    }
-    function textNodes(root, { skip = "", includeReplaced = true } = {}) {
-      const out = [];
-      if (!root) return out;
-      const skipSel = skip ? `${SKIP_SELECTOR}, ${skip}` : SKIP_SELECTOR;
-      const hiddenCache = /* @__PURE__ */ new Map();
-      const hidden2 = (el) => {
-        if (hiddenCache.has(el)) return hiddenCache.get(el);
-        let h = false;
-        if (el.matches(skipSel) || el.hidden || el.getAttribute("aria-hidden") === "true") h = true;
-        else if (el.getAttribute(UI_ATTR) === "content" && !includeReplaced) h = true;
-        else {
-          const st = win.getComputedStyle(el);
-          h = st.display === "none" || st.visibility === "hidden";
-        }
-        if (!h && el.parentElement && el !== root) h = hidden2(el.parentElement);
-        hiddenCache.set(el, h);
-        return h;
-      };
-      const walker = doc.createTreeWalker(
-        root,
-        4
-        /* SHOW_TEXT */
-      );
-      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-        if (!n.nodeValue.trim()) continue;
-        const parent = n.parentElement;
-        if (!parent || hidden2(parent)) continue;
-        out.push(n);
-      }
-      return out;
-    }
-    function readableText(root, { blockPause = "\n", skip = "", includeReplaced = true } = {}) {
-      let text = "";
-      let lastBlock = null;
-      for (const node of textNodes(root, { skip, includeReplaced })) {
-        let block = node.parentElement;
-        while (block && block !== root && !BLOCK.test(block.tagName)) block = block.parentElement;
-        if (text && block !== lastBlock) text = text.replace(/\s+$/, "") + blockPause;
-        lastBlock = block;
-        text += node.nodeValue.replace(/\s+/g, " ");
-      }
-      return text.replace(/[ \t]+/g, " ").trim();
-    }
-    function headings({ maxLevel = 6, root = doc.body } = {}) {
-      const out = [];
-      if (!root) return out;
-      for (const el of root.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading" i]')) {
-        if (isOurs(el) || !isVisible(el) || el.closest('[aria-hidden="true"]')) continue;
-        if (/^(presentation|none)$/i.test((el.getAttribute("role") || "").trim())) continue;
-        const aria = parseInt(el.getAttribute("aria-level"), 10);
-        const level = /^H[1-6]$/.test(el.tagName) && !el.hasAttribute("aria-level") ? +el.tagName[1] : aria >= 1 ? aria : 2;
-        if (level > maxLevel) continue;
-        out.push({ el, level, text: nameOf(el) });
-      }
-      return out;
-    }
-    function contentText(el) {
-      let t = "";
-      for (const n of el.childNodes) {
-        if (n.nodeType === 3) t += n.nodeValue;
-        else if (n.nodeType === 1) {
-          if (n.hidden || n.getAttribute("aria-hidden") === "true" || /^(script|style|template|input|textarea|select)$/i.test(n.tagName)) continue;
-          if (n.tagName === "IMG") t += " " + (n.getAttribute("alt") || "") + " ";
-          else t += " " + contentText(n) + " ";
-        }
-      }
-      return t;
-    }
-    function labelledBy(el) {
-      const ids = (el.getAttribute("aria-labelledby") || "").split(/\s+/).filter(Boolean);
-      return ids.map((id) => doc.getElementById(id)).filter(Boolean).map((ref) => squash(ref.getAttribute("aria-label")) || squash(contentText(ref)) || squash(ref.getAttribute("title"))).join(" ");
-    }
-    function labelFor(el) {
-      const labels = el.labels ? [...el.labels] : [];
-      if (!labels.length && el.id) labels.push(...doc.querySelectorAll(`label[for="${CSS_escape(el.id)}"]`));
-      const wrap = el.closest("label");
-      if (wrap && !labels.includes(wrap)) labels.push(wrap);
-      return labels.map((l) => squash(contentText(l))).filter(Boolean).join(" ");
-    }
-    function svgTitleOf(el) {
-      if (el.namespaceURI !== SVG_NS) return "";
-      for (const child of el.children) if (child.localName === "title" && child.namespaceURI === SVG_NS) return child.textContent;
-      return "";
-    }
-    function nameOf(el) {
-      if (!el || el.nodeType !== 1) return "";
-      const tag = el.tagName;
-      const type = (el.getAttribute("type") || "").toLowerCase();
-      const isField = /^(INPUT|TEXTAREA|SELECT)$/.test(tag);
-      const role = (el.getAttribute("role") || "").toLowerCase().split(/\s+/)[0];
-      const candidates = [
-        labelledBy(el),
-        el.getAttribute("aria-label"),
-        svgTitleOf(el),
-        tag === "IMG" || tag === "INPUT" && type === "image" || tag === "AREA" ? el.getAttribute("alt") : "",
-        isField ? labelFor(el) : "",
-        tag === "INPUT" && /^(button|submit|reset)$/.test(type) ? el.getAttribute("value") : "",
-        NAME_FROM_CONTENT.test(tag) || CONTENT_ROLES.has(role) ? contentText(el) : "",
-        tag === "FIELDSET" ? el.querySelector("legend")?.textContent : "",
-        tag === "TABLE" ? el.querySelector("caption")?.textContent : "",
-        el.getAttribute("title"),
-        isField ? el.getAttribute("placeholder") : "",
-        tag === "INPUT" && type === "submit" ? "Submit" : tag === "INPUT" && type === "reset" ? "Reset" : ""
-      ];
-      return candidates.map(squash).find(Boolean) || "";
-    }
-    function find(name, { within = doc.body, selector = INTERACTIVE } = {}) {
-      const want = squash(name).toLowerCase();
-      if (!want || !within) return null;
-      let best = null, bestScore = 0;
-      for (const el of within.querySelectorAll(selector)) {
-        if (isOurs(el) || !isVisible(el)) continue;
-        const have = nameOf(el).toLowerCase();
-        if (!have) continue;
-        const score = have === want ? 3 : have.startsWith(want) ? 2 : have.includes(want) ? 1 : 0;
-        if (score > bestScore) {
-          best = el;
-          bestScore = score;
-          if (score === 3) break;
-        }
-      }
-      return best;
-    }
-    function textContrast(el) {
-      const cs = win.getComputedStyle(el);
-      const layers = [];
-      let overImage = false;
-      const box = layout() ? el.getBoundingClientRect() : null;
-      const cx = box && box.left + box.width / 2, cy = box && box.top + box.height / 2;
-      const under = (n) => {
-        if (!box || n === el || !(box.width || box.height)) return true;
-        const r = n.getBoundingClientRect();
-        return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
-      };
-      for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
-        if (!under(n)) continue;
-        const ns = n === el ? cs : win.getComputedStyle(n);
-        const c2 = parseColor(ns.backgroundColor);
-        if (ns.backgroundImage && ns.backgroundImage !== "none") {
-          overImage = true;
-          break;
-        }
-        if (c2 && c2[3] > 0) layers.push(c2);
-        if (c2 && c2[3] >= 0.999) break;
-      }
-      let bg = [255, 255, 255];
-      for (const [r, g, b, a] of layers.reverse()) bg = [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)];
-      const c = parseColor(cs.color) || [0, 0, 0, 1];
-      const fg = [0, 1, 2].map((i) => c[i] * c[3] + bg[i] * (1 - c[3]));
-      const size = parseFloat(cs.fontSize) || 16;
-      const large = size >= 24 || size >= 18.66 && (parseInt(cs.fontWeight, 10) || 400) >= 700;
-      const min = large ? 3 : 4.5;
-      const ratio = Math.round(contrast(fg, bg) * 100) / 100;
-      const fix = overImage || ratio >= min ? null : hex(nearestWithContrast(fg, bg, min + 0.05));
-      return { color: hex(fg), background: hex(bg), ratio, min, large, overImage, fix };
-    }
-    return {
-      main,
-      textNodes,
-      readableText,
-      headings,
-      nameOf,
-      find,
-      isVisible,
-      isOurs: (el) => isOurs(el),
-      background: (el) => backgroundOf(el, win),
-      contrast,
-      textContrast,
-      widgetParts,
-      ownControls,
-      landmark,
-      landmarks: (role, opts) => landmarks(doc, role, opts)
-    };
-  }
-  function CSS_escape(s) {
-    return String(s).replace(/["\\]/g, "\\$&");
   }
 
   // toolkit/blocks/announce.js
@@ -3011,7 +3116,7 @@ ${String(o.about).trim().slice(0, each)}`).join("\n\n");
   }
 
   // toolkit/blocks/names.js
-  var BLOCKS_VERSION = "2026-11-04.2";
+  var BLOCKS_VERSION = "2026-11-04.3";
   var BLOCK_NAMES = Object.freeze(["session", "styles", "watch", "page", "highlight", "targets", "announce", "tooltip", "panel", "focus", "text", "ai.text", "ai.vision", "ai.choose", "speech.out", "speech.in", "media", "profile", "zoom"]);
 
   // toolkit/blocks/shortcut.js

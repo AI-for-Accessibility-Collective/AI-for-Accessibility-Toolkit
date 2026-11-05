@@ -1,0 +1,20 @@
+{
+  "name": "focus-keyboard-find",
+  "file": "tools/core-adapters/focus-keyboard.js",
+  "page": "no-main.html",
+  "ai": {
+    "choose": {
+      "main content": "2"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model picks the story column: the skip link goes to the part the model picked, and moves focus there",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const skip = [...document.querySelectorAll('.ai4a11y-entry')].find((b) => /skip to main content/i.test(b.textContent));\n        if (!skip) return false;\n        skip.click();\n        await new Promise((r) => setTimeout(r, 60));\n        const col = document.getElementById('col-a');\n        return col.contains(document.activeElement) || document.activeElement === col;\n      "
+    },
+    {
+      "name": "when the model picks the story column: the focus ring is on",
+      "code": "\n        const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter;\n        if (!adapter || !adapter.s || adapter.s.ended) return true;\n        const a = document.querySelector('.top a');\n        a.focus();\n        const st = getComputedStyle(a);\n        const on = parseFloat(st.outlineWidth) >= 2 || st.boxShadow !== 'none';\n        a.blur();\n        return on;\n      "
+    }
+  ]
+}

@@ -83,9 +83,10 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
   {
     name: 'page',
     title: 'Page (read-only)',
-    summary: 'What is on the page. toolkit.page and s.page are the same object; nothing in it changes the page.',
+    summary: 'What is on the page. s.page is toolkit.page with findMain(), which asks the session\'s model; nothing in it changes the page.',
     api: [
-      'toolkit.page.main()                   // the main content region',
+      'toolkit.page.main()                   // the main content the page marks: its main landmark, else its one article; else the body (it does not say)',
+      'const main = await s.page.findMain()  // the same where the page says (no question); where it does not, the box of running text the model picks, or null',
       'toolkit.page.readableText(el, { blockPause, skip })',
       'toolkit.page.textNodes(el, { skip })',
       'toolkit.page.headings({ maxLevel })   // [{ el, level, text }]',
@@ -106,6 +107,9 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     },
     invariants: [
       'Read-only.',
+      'main() is what the page says, never a guess: its first visible main or role main (display: contents counts when its content shows), else its one article (or role article) that is not inside another or in its navigation, banner, contentinfo, complementary or search landmarks. With several articles (a list of stories) or none it is the body: compare with document.body to know the page did not say. Ids and classes (#main, .content) are names, not the page saying, and never count.',
+      'findMain() asks only where main() is the body, and only with something to choose: the boxes that hold a fifth or more of the page\'s running text (blocks of words that are not links or controls) in two paragraphs or more, or in one block of 500 characters or more, outside the landmarks above, dialogs and fixed layers, the tightest box for the same text, at most six. Found from layout and the tree, never from names. One question per page, through ai.choose with the page\'s title, and every session in the page shares the answer, "cannot tell" included; it counts against the asking session\'s budget once.',
+      'findMain() is null when the model cannot tell, there is none (no model, the budget spent) or nothing to choose, and after end(). On null, do less, and never fall back to a part you guess: no skip link, no buttons put in the page; what the person asks for (Play) can take the whole page. A page that says meanwhile (main marked by another adapter) wins.',
       'ownControls() decides from roles and relationships, never from names or classes: a control that names what it controls (aria-controls) is the widget\'s only when that is the widget, one of its parts or what holds them; one that does not say is the widget\'s only when it is outside every part. A "Play trailer" button inside a slide is the slide\'s, not the carousel\'s.',
       'landmark() and landmarks() follow HTML-AAM as Chrome computes it, from elements, roles and the tree, never from names or classes: an explicit role (its first valid token) wins; a header or footer inside article, aside, main, nav or section, or inside role article, complementary, main or navigation, is no banner or contentinfo (role region does not scope it); a section, form or role region needs a name; hidden elements are none. A div the page calls "header" is no banner: deciding that is the adapter\'s guess, not the page\'s word.',
     ],
@@ -311,7 +315,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
   {
     name: 'ai.choose',
     title: 'AI choice: where your rules run out',
-    summary: 'When the page does not say (no role, no native element) and only what its parts contain could tell, ask the model which of the options you found answers your question. It picks one, or says the page does not make it clear: then null, and your adapter does less. Use it instead of a rule that guesses from class names, ids or position.',
+    summary: 'When the page does not say (no role, no native element) and only what its parts contain could tell, ask the model which of the options you found answers your question. It picks one, or says the page does not make it clear: then null, and your adapter does less. Use it instead of a rule that guesses from class names, ids or position. For the page\'s main content, s.page.findMain() asks it for you, once per page.',
     api: [
       "const main = await s.ai.choose('Which of these is the page\\'s main content?', [boxA, boxB])",
       "const whose = await s.ai.choose('Whose header is this?', [{ value: 'site', about: 'The whole site\\'s: its name or logo, a menu for the whole site' }, { value: 'content', about: 'The content\\'s it is in: a title, an author, a date' }], { context: s.ai.outline(header) })",

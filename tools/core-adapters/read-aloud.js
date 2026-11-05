@@ -15,6 +15,12 @@
 //
 // Decisions:
 //   • Reads main content (or text the person selected) aloud on request, never on load.
+//   • The main content is what the page marks (main, role main, or its one article:
+//     page.main()), read with no wait. Where it marks none, enable() asks the toolkit's model
+//     which part is (s.page.findMain()), once per page, without holding the page up; Play pressed
+//     before it answers reads when it does. When the model cannot tell, or there is none, Play
+//     reads the whole page: no part is guessed (ids and classes like #content are not the page
+//     saying).
 //   • Highlights each word as it is spoken using s.speech.say with onWord and s.highlight.range.
 //   • Starts only from its own Play button; Escape stops reading immediately.
 //   • Injects a small control bar (Play/Pause, Stop, Slower, Faster) fixed at the bottom.
@@ -22,7 +28,8 @@
 //     is covered when scrolled to the end.
 //   • Uses s.focus.keepVisible() so focused elements are never hidden behind the bar.
 //   • Speech uses the browser's own in the runtime (via s.speech.say).
-//   • Skips navigation, the toolkit's UI, and hidden text automatically.
+//   • Skips the toolkit's UI and hidden text; the main content leaves the page's navigation out
+//     (the whole page, on no answer, does not).
 //   • No 'every site' button: the person chooses that in the extension popup.
 //   • Rate changes restart speech once from the current word (s.speech.say(el, { from }))
 //     in s.profile.onChange; a rate changed while paused is used when playback resumes.
@@ -49,6 +56,20 @@ export default {
       this.disable();
       return false;
     }
+
+    // What Play reads: the main content the page marks, with no wait. Where it marks none, the
+    // toolkit's model is asked now which part is (s.page.findMain()), once per page, so the
+    // answer is there by the time the person presses Play.
+    const whole = document.body || document.documentElement;
+    this.found = main !== whole ? main : undefined;
+    if (this.found === undefined) {
+      const asking = s.page && typeof s.page.findMain === 'function' ? s.page.findMain() : Promise.resolve(null);
+      this.finding = asking.then((el) => el, () => null).then((el) => {
+        if (this.s === s) { this.found = el; this.finding = null; }
+        return el;
+      });
+    }
+    this._playToken = 0;
 
     this.currentOffset = 0;
     this.currentSource = null;
@@ -221,6 +242,8 @@ export default {
     this.bar = null;
     this.btnPlay = null;
     this.currentSource = null;
+    this.found = undefined;
+    this.finding = null;
   },
 
   getRate() {
@@ -300,16 +323,33 @@ export default {
     this._updateButtons(true, false);
   },
 
+  // The main content to read: what the page marks now, else the part the model picked; on no
+  // answer, the whole page (no part is guessed). undefined while the model is still answering.
+  _mainSource() {
+    const body = document.body || document.documentElement;
+    const said = this.toolkit?.page?.main();
+    if (said && said !== body) return said;
+    if (this.found === undefined) return undefined;
+    return (this.found && this.found.isConnected ? this.found : null) || body;
+  },
+
   play() {
     const sel = (typeof window !== 'undefined' && window.getSelection) ? window.getSelection() : null;
     const hasSelection = sel && !sel.isCollapsed && sel.toString().trim().length > 0;
-    this.currentSource = hasSelection
-      ? (sel.rangeCount ? sel.getRangeAt(0).cloneRange() : sel)
-      : (this.toolkit?.page?.main() || document.body);
-    this.currentOffset = 0;
-    this._paused = false;
-    this._rateChangedWhilePaused = false;
-    this._startSpeaking(0);
+    const token = ++this._playToken;
+    const start = (source) => {
+      if (token !== this._playToken || !this.s || !this.s.alive()) return;
+      this.currentSource = source;
+      this.currentOffset = 0;
+      this._paused = false;
+      this._rateChangedWhilePaused = false;
+      this._startSpeaking(0);
+    };
+    if (hasSelection) return start(sel.rangeCount ? sel.getRangeAt(0).cloneRange() : sel);
+    const source = this._mainSource();
+    if (source !== undefined || !this.finding) return start(source || document.body);
+    // Pressed before the model answered: read when it does.
+    this.finding.then(() => start(this._mainSource() || document.body));
   },
 
   pause() {
@@ -346,6 +386,7 @@ export default {
   },
 
   stop() {
+    this._playToken = (this._playToken || 0) + 1;
     this._paused = false;
     this._rateChangedWhilePaused = false;
     this.currentOffset = 0;
