@@ -361,8 +361,22 @@ try {
     assert.equal((await agentApi(`/chats/${openId}/messages`, { method: 'POST', body: JSON.stringify({ text: 'sent while away' }) })).status, 202);
     await until(async () => { const c = (await (await agentApi(`/chats/${openId}`)).json()).chat; return !c.busy && c.entries.some(e => e.text === 'You said: sent while away'); }, 'the reply on the host');
     assert.ok(!/sent while away/.test(await panel.locator('#transcript').innerText()), 'the sidebar did not hear it');
+    // While it is down it says when it tries next, and offers Try now.
+    await panel.locator('#state', { hasText: /Reconnecting in \d+ s/ }).waitFor();
+    await panel.getByRole('button', { name: 'Try now' }).waitFor();
+    // An attempt that gets no answer (a connection a sleeping laptop left behind) is given up.
     await panel.unroute('**/v1/agent/events');
-    await panel.locator('#transcript', { hasText: 'You said: sent while away' }).waitFor();
+    await panel.route('**/v1/agent/events', () => { /* never answered */ });
+    await panel.getByRole('button', { name: 'Try now' }).click();
+    await panel.locator('#state', { hasText: 'Reconnecting…' }).waitFor();
+    const hungAt = Date.now();
+    await panel.locator('#state', { hasText: /Reconnecting in \d+ s/ }).waitFor({ timeout: 20000 });
+    assert.ok(Date.now() - hungAt < 15000, 'the unanswered attempt was given up within about 10 s');
+    // Try now reconnects at once, without waiting out the timer.
+    await panel.unroute('**/v1/agent/events');
+    await panel.getByRole('button', { name: 'Try now' }).click();
+    await panel.locator('#transcript', { hasText: 'You said: sent while away' }).waitFor({ timeout: 3000 });
+    assert.equal(await panel.getByRole('button', { name: 'Try now' }).isHidden(), true);
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
 
     // The agent's questions are multiple choice, each with Other for the person's own words.

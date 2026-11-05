@@ -904,7 +904,22 @@ async function loadChats() {
 
 // The host writes a heartbeat every 25 s: a stream silent for longer has gone
 // away without saying so (a sleeping laptop, a dropped tunnel).
-const SILENT_MS = 60_000;
+// The host sends a comment every 25 s (agent-host/src/events.js): this long
+// with nothing means the connection died without closing (a laptop that slept,
+// a proxy that dropped it).
+const SILENT_MS = 45_000;
+// An attempt with no answer this long is given up, and the next one starts.
+const CONNECT_MS = 10_000;
+// Between attempts: 1 s, 2 s, 4 s, then every 5 s.
+const RETRY_MAX_MS = 5_000;
+let wakeStream = null; // ends the wait before the next attempt (Try now, the panel shown again, back online)
+function reconnectNow() { wakeStream?.(); }
+
+// Back on screen, focused or online: do not wait out the timer.
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reconnectNow(); });
+window.addEventListener('focus', reconnectNow);
+window.addEventListener('online', reconnectNow);
+$('reconnect').addEventListener('click', reconnectNow);
 
 async function stream() {
   streamAbort?.abort();
@@ -917,12 +932,15 @@ async function stream() {
     const stop = () => conn.abort();
     ctl.signal.addEventListener('abort', stop);
     let silence = null;
-    const listen = () => { clearTimeout(silence); silence = setTimeout(stop, SILENT_MS); };
+    const listen = (ms = SILENT_MS) => { clearTimeout(silence); silence = setTimeout(stop, ms); };
     try {
-      listen();
+      listen(CONNECT_MS);
+      if (dropped) { $('state').textContent = 'Reconnecting…'; $('reconnect').disabled = true; }
       const res = await fetch(`${connection.url}/v1/agent/events`, { headers: { authorization: `Bearer ${connection.token}` }, signal: conn.signal });
       if (!res.ok) throw new Error(`The toolkit answered ${res.status}.`);
+      listen();
       wait = 1000;
+      $('reconnect').hidden = true;
       // Open requests come again at the start of the stream; the rest is fetched.
       if (!first) { requests.clear(); renderRequests(); catchUp().catch(e => say(e.message, true)); }
       if (dropped) announce('Connected to the assistant again.');
@@ -951,10 +969,18 @@ async function stream() {
     if (ctl.signal.aborted) return;
     if (!dropped) announce('Lost the connection to the assistant. Reconnecting.');
     dropped = true;
-    $('state').textContent = 'Reconnecting';
     $('state').className = 'badge warn';
-    await new Promise(r => setTimeout(r, wait));
-    wait = Math.min(wait * 2, 30_000);
+    $('reconnect').hidden = false;
+    $('reconnect').disabled = false;
+    // Wait, saying when the next attempt is; Try now (or the panel shown again) ends the wait.
+    const until = Date.now() + wait;
+    const tick = () => { $('state').textContent = `Reconnecting in ${Math.max(1, Math.ceil((until - Date.now()) / 1000))} s`; };
+    tick();
+    const counter = setInterval(tick, 1000);
+    await new Promise(r => { wakeStream = r; setTimeout(r, wait); ctl.signal.addEventListener('abort', r, { once: true }); });
+    clearInterval(counter);
+    wakeStream = null;
+    wait = Math.min(wait * 2, RETRY_MAX_MS);
   }
 }
 
