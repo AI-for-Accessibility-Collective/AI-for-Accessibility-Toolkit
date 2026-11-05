@@ -13,7 +13,7 @@
   "checks": [
     {
       "name": "A1, A2 and R1 are paused with the buttons the model chose",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 40 && window.__c.r1.playing; i++) await sleep(100); return !window.__c.a1.playing && !window.__c.a2.playing && !window.__c.r1.playing && n('a1-toggle') === 1 && n('a2-pause') === 1 && n('r1-toggle') === 1;"
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 650 && window.__c.r1.playing; i++) await sleep(100); return !window.__c.a1.playing && !window.__c.a2.playing && !window.__c.r1.playing && n('a1-toggle') === 1 && n('a2-pause') === 1 && n('r1-toggle') === 1;"
     },
     {
       "name": "when the model cannot tell which button starts them, disable() restarts the toggles that show they toggled (A1, R1) and not A2, whose Pause is now disabled",

@@ -183,7 +183,12 @@ The verifier's tools, as for the catalog adapters (pass `file` as
   adapter there, with its default keys: `await
   __verifyPress('Alt+Shift+ArrowUp')` and `'Alt+Shift+ArrowDown'` call your
   `keys.adjust` up and down, and `__verifyHost.adjustable` is what you
-  said it adjusts.
+  said it adjusts. Where your adapter asks the model (`s.ai.choose`,
+  `s.ai.text`), a check that depends on the answer waits for it with
+  `await aiSettled()`, never a fixed timeout: the model takes from one
+  second to several. Time waiting on the model does not count against a
+  check's 5 seconds (up to 60 seconds of it), and the audit after
+  `enable()` waits for the model too.
 - `verify_on_sites` runs it on the robustness pages and on popular real
   sites (news, shopping, documentation, government). It reports what must
   hold on any page.

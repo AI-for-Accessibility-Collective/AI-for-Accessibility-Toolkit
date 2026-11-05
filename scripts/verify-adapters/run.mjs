@@ -122,8 +122,13 @@ async function judge(v, name, spec, live, { keyboard = false, skipOk = false } =
   if (r.leftovers?.length && spec.restores !== false) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
   // On a live page, a check that already failed before enable() is the site's
   // (Mars has its own tabindex above 0); on a test page it must pass after.
-  const bad = (r.checks || []).map((c, i) => (!c.after && !(live && !c.before) ? spec.checks[i]?.name : null)).filter(Boolean);
+  // A check that ran out of model time says nothing about the adapter: it is the model that did not answer.
+  const silent = (c) => /^the model did not answer/.test(c.error || '');
+  const unanswered = (r.checks || []).map((c, i) => (!c.after && silent(c) ? spec.checks[i]?.name : null)).filter(Boolean);
+  if (unanswered.length) console.log(`WARN: ${name}: the model did not answer in time, so these checks say nothing: ${unanswered.join('; ')}`);
+  const bad = (r.checks || []).map((c, i) => (!c.after && !silent(c) && !(live && !c.before) ? spec.checks[i]?.name : null)).filter(Boolean);
   if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
+  if (r.aiSettled === false) console.log(`WARN: ${name}: the model was still being asked after 60 seconds when the page was audited`);
   if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
   let added = r.axe?.added || [];
   if (live && added.length) {

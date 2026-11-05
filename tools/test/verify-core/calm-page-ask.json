@@ -29,7 +29,7 @@
     },
     {
       "name": "R1 moves by itself and the model says it is a slideshow: it is paused with the button the model chose, and nothing else is pressed",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 40 && window.__c.r1.playing; i++) await sleep(100); return window.__c.r1.playing === false && n('r1-toggle') === 1 && !n('r1-prev') && !n('r1-next');"
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 650 && window.__c.r1.playing; i++) await sleep(100); return window.__c.r1.playing === false && n('r1-toggle') === 1 && !n('r1-prev') && !n('r1-next');"
     },
     {
       "name": "a video the person started with the button the model says is its control keeps playing",
@@ -45,7 +45,7 @@
     },
     {
       "name": "disable() restarts A1 and R1 with their toggles and A2 with its Play (the buttons the model says start them), presses nothing in A3 and A4; enable() pauses A1 and A2 again",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 40 && window.__c.r1.playing; i++) await sleep(100); const c = window.__c; adapter.disable(); await sleep(150); const ok = c.a1.playing && c.a2.playing && c.r1.playing && n('a1-toggle') === 2 && n('a2-play') === 1 && n('r1-toggle') === 2 && !c.a3.playing && !c.a4.playing && !n('a3-pause') && !n('a4-toggle'); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await sleep(600); return ok && !c.a1.playing && !c.a2.playing;"
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 650 && window.__c.r1.playing; i++) await sleep(100); const c = window.__c; adapter.disable(); await sleep(150); const ok = c.a1.playing && c.a2.playing && c.r1.playing && n('a1-toggle') === 2 && n('a2-play') === 1 && n('r1-toggle') === 2 && !c.a3.playing && !c.a4.playing && !n('a3-pause') && !n('a4-toggle'); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await sleep(600); return ok && !c.a1.playing && !c.a2.playing;"
     },
     {
       "name": "nothing is announced on load",

@@ -26,7 +26,7 @@ function page(href) {
     location: { href, origin: u.origin, protocol: u.protocol, hostname: u.hostname, port: u.port, pathname: u.pathname },
     chrome: { runtime: { sendMessage: (m) => reports.push(m) } },
     log: (x) => log.push(x),
-    Promise, RegExp, Object, JSON, String, Error, setTimeout, clearTimeout,
+    Promise, RegExp, Object, JSON, String, Error, setTimeout, clearTimeout, setInterval, clearInterval,
   });
   return { run: (code) => vm.runInContext(code, context), reports, log, context };
 }
@@ -288,6 +288,39 @@ await test('with the blocks bundle, an adapter builds on toolkit.session() and i
   assert.match(w.document.body.textContent, /Plain words about the loan\./);
   w.eval(teardownScript('ada/console/big-buttons'));
   assert.equal(w.document.body.innerHTML, before);
+});
+
+await test('a check waits for the model, not a guess at how long it takes: model time is not check time, up to its own limit', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { createRequire } = await import('node:module');
+  const { JSDOM } = createRequire(import.meta.url)('jsdom');
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
+  const dom = new JSDOM('<!doctype html><html><body><main><p>Text.</p></main></body></html>', { url: 'https://shop.example/', runScripts: 'outside-only' });
+  const w = dom.window;
+  // The model answers in 600 ms, longer than a check's 300 ms here; 'forever' never.
+  w.chrome = { runtime: { sendMessage: (m) => (m.type !== 'ai4a11y:ai' ? Promise.resolve({ ok: true })
+    : m.request.input === 'forever' ? new Promise(() => {})
+    : new Promise((r) => setTimeout(() => r({ ok: true, result: { text: 'Answer.' } }), 600))) } };
+  w.log = () => {};
+  w.eval(readFileSync(path.join(root, 'extension', 'vendor', 'blocks.js'), 'utf8'));
+  const code = `export default {
+    enable(options, toolkit) {
+      this.s = toolkit.session();
+      window.__ask = () => this.s.ai.text('simplify', 'slow').then((t) => { document.body.dataset.answered = t ? '1' : '0'; });
+      window.__askForever = () => this.s.ai.text('simplify', 'forever');
+    },
+    disable() { this.s.end(); },
+  };`;
+  const checks = [
+    { name: 'waits for a slow answer', code: "if (!window.__ask) return false; window.__ask(); await aiSettled(); return document.body.dataset.answered === '1';" },
+    { name: 'a hang with no model still stops', code: 'await new Promise(() => {});' },
+    { name: 'a model that never answers', code: "if (!window.__askForever) return false; window.__askForever(); await new Promise((r) => setTimeout(r, 5000)); return true;" },
+  ];
+  const r = await w.eval(buildPreviewScript({ code, urlPatterns: ['https://shop.example/*'], checks, limits: { checkMs: 300, aiWaitMs: 1500, aiQuietMs: 50 } }));
+  const after = JSON.parse(JSON.stringify(r.checks));
+  assert.deepEqual(after.map((c) => c.after), [true, false, false]);
+  assert.match(after[1].error, /took over 0\.3 seconds/);
+  assert.match(after[2].error, /the model did not answer within 1\.5 seconds/);
 });
 
 await test("registrations inject the blocks and the person's settings before the adapter", () => {

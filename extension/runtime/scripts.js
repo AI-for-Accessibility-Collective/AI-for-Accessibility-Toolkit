@@ -233,11 +233,18 @@ export const AXE_ADVICE_TAGS = ['best-practice', 'wcag2aaa'];
 // with the person's text size.
 export const MIN_TEXT_PX = 16;
 const CHECK_MS = 5000;
+// Waiting on the model is not the adapter being slow: a check's 5 seconds leave it out, up to
+// this much model time, which only catches a model that never answers.
+const AI_WAIT_MS = 60000;
+// The model has settled once no request has been out this long (a second question may follow an answer).
+const AI_QUIET_MS = 400;
 const SETTLE_MS = 400;
 const AXE_MS = 30000;
 
 /** @param {{code: string, urlPatterns: string[], parameters?: object, checks?: {name: string, code: string}[], audit?: boolean, personal?: object, explicit?: object}} preview */
-export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [], audit = false, personal = {}, explicit = null }) {
+export function buildPreviewScript({ code, urlPatterns, parameters = {}, checks = [], audit = false, personal = {}, explicit = null, limits = {} }) {
+  // limits: shorter waits for tests only.
+  const L = { checkMs: CHECK_MS, aiWaitMs: AI_WAIT_MS, aiQuietMs: AI_QUIET_MS, ...limits };
   const factory = moduleFactorySource(code);
   const scope = (urlPatterns || []).map(urlPatternRegExpSource);
   const checkList = (checks || []).map(c => `async function () {\n${c.code}\n}`).join(',\n');
@@ -264,6 +271,19 @@ ${PREVIEW_SPEAK}
   let aiOut = 0, aiSince = 0, aiWaited = 0;
   const aiWaitMs = () => aiWaited + (aiOut ? Date.now() - aiSince : 0);
   const aiTimed = (p) => { if (aiOut++ === 0) aiSince = Date.now(); return p.finally(() => { if (--aiOut === 0) aiWaited += Date.now() - aiSince; }); };
+  // For checks (await aiSettled()) and the audit after enable(): wait for the model's answers, not
+  // a guess at how long they take. False when it is still asking after maxMs.
+  const aiSettled = async ({ quietMs = ${L.aiQuietMs}, maxMs = ${L.aiWaitMs} } = {}) => {
+    const until = Date.now() + maxMs;
+    let quietSince = aiOut ? 0 : Date.now();
+    while (Date.now() < until) {
+      await new Promise((r) => setTimeout(r, 50));
+      if (aiOut) quietSince = 0;
+      else if (!quietSince) quietSince = Date.now();
+      if (quietSince && Date.now() - quietSince >= quietMs) return true;
+    }
+    return false;
+  };
   const blocks = B && typeof B.create === 'function' ? B.create({ adapter: 'preview', personal: ${JSON.stringify(personal || {})}, explicit: ${JSON.stringify(explicit || null)},
     ai: (request) => aiTimed(ask({ type: 'ai4a11y:ai', request }).catch(() => ({ text: null, reason: 'unavailable' }))),
     ...(viaWorker ? { profile: (request) => ask({ type: 'ai4a11y:profile', request }), zoom: (request) => ask({ type: 'ai4a11y:zoom', request }), speak: speakVia(KEY),
@@ -294,11 +314,18 @@ ${PREVIEW_SPEAK}
     const out = [];
     for (const check of CHECKS) {
       let timer;
+      const started = Date.now(), aiAt = aiWaitMs();
       try {
-        const value = await Promise.race([check(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('took over ${CHECK_MS / 1000} seconds')), ${CHECK_MS}); })]);
+        const value = await Promise.race([check(), new Promise((_, reject) => {
+          timer = setInterval(() => {
+            const ai = aiWaitMs() - aiAt;
+            if (ai > ${L.aiWaitMs}) reject(new Error('the model did not answer within ${L.aiWaitMs / 1000} seconds'));
+            else if (Date.now() - started - ai > ${L.checkMs}) reject(new Error('took over ${L.checkMs / 1000} seconds'));
+          }, 100);
+        })]);
         out.push({ ok: !!value });
       } catch (e) { out.push({ ok: false, error: errorText(e).slice(0, 160) }); }
-      clearTimeout(timer);
+      clearInterval(timer);
     }
     return out;
   };
@@ -431,6 +458,8 @@ ${PREVIEW_SPEAK}
   const stopWatching = () => { if (watch) watch.disconnect(); if (shifts) shifts.disconnect(); };
   const report = async (result) => {
     await new Promise((r) => setTimeout(r, ${SETTLE_MS}));
+    // An adapter may still be asking the model (enable() need not wait): audit the page it ends with.
+    if (aiOut || aiWaitMs()) result.aiSettled = await aiSettled();
     if (watch) { records += watch.takeRecords().length; result.changes = records; }
     if (shifts) { for (const e of shifts.takeRecords()) if (!e.hadRecentInput) shift += e.value; result.shift = Math.round(shift * 1000) / 1000; }
     stopWatching();

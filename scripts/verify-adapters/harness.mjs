@@ -41,7 +41,9 @@
 // await __verifyPress('Escape'). The toolkit's shortcut is given to the
 // adapter, with the default keys (Alt+Shift+ArrowUp and ArrowDown): what it
 // adjusts (keys.adjust) is in __verifyHost.adjustable, and a press with
-// nothing to adjust counts in __verifyHost.toggles.
+// nothing to adjust counts in __verifyHost.toggles. A check that depends on a
+// model answer waits for it with await aiSettled() (no request out for a short
+// moment); model time does not count against the check's 5 seconds, up to 60.
 
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
