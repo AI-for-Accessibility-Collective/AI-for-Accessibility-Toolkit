@@ -596,22 +596,38 @@ async function loadChats() {
 
 // ── the event stream ─────────────────────────────────────────────────────────
 
+// The host writes a heartbeat every 25 s: a stream silent for longer has gone
+// away without saying so (a sleeping laptop, a dropped tunnel).
+const SILENT_MS = 60_000;
+
 async function stream() {
   streamAbort?.abort();
   const ctl = new AbortController();
   streamAbort = ctl;
   let wait = 1000;
+  let first = true;
   while (!ctl.signal.aborted) {
+    const conn = new AbortController();
+    const stop = () => conn.abort();
+    ctl.signal.addEventListener('abort', stop);
+    let silence = null;
+    const listen = () => { clearTimeout(silence); silence = setTimeout(stop, SILENT_MS); };
     try {
-      const res = await fetch(`${connection.url}/v1/agent/events`, { headers: { authorization: `Bearer ${connection.token}` }, signal: ctl.signal });
+      listen();
+      const res = await fetch(`${connection.url}/v1/agent/events`, { headers: { authorization: `Bearer ${connection.token}` }, signal: conn.signal });
       if (!res.ok) throw new Error(`The toolkit answered ${res.status}.`);
       wait = 1000;
+      // Open requests come again at the start of the stream; the rest is fetched.
+      if (!first) { requests.clear(); renderRequests(); catchUp().catch(e => say(e.message, true)); }
+      first = false;
+      renderBusy();
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buf = '';
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
+        listen();
         buf += decoder.decode(value, { stream: true });
         let i;
         while ((i = buf.indexOf('\n\n')) >= 0) {
@@ -620,14 +636,28 @@ async function stream() {
           if (data) onEvent(JSON.parse(data.slice(6)));
         }
       }
-    } catch (e) {
-      if (ctl.signal.aborted) return;
-      $('state').textContent = 'Reconnecting';
-      $('state').className = 'badge warn';
+    } catch { /* reconnect below */ } finally {
+      clearTimeout(silence);
+      ctl.signal.removeEventListener('abort', stop);
     }
+    if (ctl.signal.aborted) return;
+    $('state').textContent = 'Reconnecting';
+    $('state').className = 'badge warn';
     await new Promise(r => setTimeout(r, wait));
     wait = Math.min(wait * 2, 30_000);
   }
+}
+
+/** After a reconnect: what changed while the stream was down. */
+async function catchUp() {
+  chats = (await api('/chats')).chats;
+  renderChats();
+  if (!chat) return renderBusy();
+  if (!chats.some(c => c.id === chat.id)) return chatGone(chat.id);
+  const fresh = (await api(`/chats/${chat.id}`)).chat;
+  if (fresh.id !== chat?.id) return;
+  chat = fresh;
+  renderTranscript(); renderReady(); renderBusy();
 }
 
 function onEvent(event) {

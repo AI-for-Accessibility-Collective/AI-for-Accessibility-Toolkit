@@ -228,6 +228,25 @@ try {
     await panel.reload();
     await panel.locator('#transcript', { hasText: 'build them again' }).waitFor();
 
+    // The event stream drops: the sidebar says so, reconnects, says Ready again, and has
+    // what happened meanwhile (a message sent elsewhere, and its reply).
+    await panel.locator('#state', { hasText: 'Ready' }).waitFor();
+    const openId = await panel.locator('#chat-select').inputValue();
+    server.closeAllConnections();
+    await panel.locator('#state', { hasText: 'Reconnecting' }).waitFor();
+    await panel.locator('#state', { hasText: 'Ready' }).waitFor();
+    // Kept from reconnecting while the chat gets a message and its reply.
+    await panel.route('**/v1/agent/events', (route) => route.abort());
+    server.closeAllConnections();
+    await panel.locator('#state', { hasText: 'Reconnecting' }).waitFor();
+    const agentApi = (p, init = {}) => fetch(`${base}/v1/agent${p}`, { ...init, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' } });
+    assert.equal((await agentApi(`/chats/${openId}/messages`, { method: 'POST', body: JSON.stringify({ text: 'sent while away' }) })).status, 202);
+    await until(async () => { const c = (await (await agentApi(`/chats/${openId}`)).json()).chat; return !c.busy && c.entries.some(e => e.text === 'You said: sent while away'); }, 'the reply on the host');
+    assert.ok(!/sent while away/.test(await panel.locator('#transcript').innerText()), 'the sidebar did not hear it');
+    await panel.unroute('**/v1/agent/events');
+    await panel.locator('#transcript', { hasText: 'You said: sent while away' }).waitFor();
+    await panel.locator('#state', { hasText: 'Ready' }).waitFor();
+
     // The agent's questions are multiple choice, each with Other for the person's own words.
     await panel.getByRole('button', { name: 'New chat' }).click();
     await panel.locator('#transcript', { hasText: 'Say what gets in your way' }).waitFor();
@@ -253,7 +272,7 @@ try {
     await panel.locator('#status', { hasText: 'Deleted' }).waitFor();
     assert.equal(await panel.locator(`#chat-select option[value="${doomed}"]`).count(), 0);
     assert.notEqual(await panel.locator('#chat-select').inputValue(), doomed);
-    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, the preview switch, chat titles, multiple-choice questions, deleting a chat.');
+    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, reconnecting after the stream drops, the preview switch, chat titles, multiple-choice questions, deleting a chat.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
     // Send, then answer what the agent asks (share everything, preview) until its run ends;
