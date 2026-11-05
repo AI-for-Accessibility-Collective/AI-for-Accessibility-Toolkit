@@ -296,7 +296,7 @@ const pageCopies = new Set(); // "chat address": copies sent from this sidebar
 async function savePageCopy(tab) {
   const chatId = chat?.id;
   const key = `${chatId} ${tab.url}`;
-  if (!chatId || pageCopies.has(key) || typeof chrome.pageCapture?.saveAsMHTML !== 'function') return null;
+  if (!chatId || pageCopies.has(key)) return null;
   try {
     if (previewing?.on && previewing.tabId === tab.id) await takePreviewOff();
     const blob = await chrome.pageCapture.saveAsMHTML({ tabId: tab.id });
