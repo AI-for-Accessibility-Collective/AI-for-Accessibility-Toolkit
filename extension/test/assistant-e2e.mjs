@@ -113,7 +113,19 @@ try {
   assert.match(await panel.locator('#transcript').innerText(), /Say what gets in your way/);
 
   const ask = async (text) => { await panel.fill('#message', text); await panel.press('#message', 'Enter'); };
-  const heightOfBuy = () => page.evaluate(() => document.getElementById('buy').getBoundingClientRect().height);
+  // How tall the Buy button is to a press: the points down its middle where a press reaches it,
+  // through the button itself, its pseudo-elements, or a hit-area ring right after it (blocks/targets.js).
+  const heightOfBuy = () => page.evaluate(() => {
+    const buy = document.getElementById('buy');
+    const r = buy.getBoundingClientRect();
+    const x = r.left + r.width / 2;
+    let hits = 0;
+    for (let y = Math.max(0, r.top - 40); y < r.bottom + 40; y++) {
+      const el = document.elementFromPoint(x, y);
+      if (el && (el === buy || buy.contains(el) || el === buy.nextElementSibling && el.getAttribute('aria-hidden') === 'true')) hits++;
+    }
+    return hits;
+  });
   const before = await heightOfBuy();
 
   if (!REAL) {
@@ -244,26 +256,43 @@ try {
     console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, the preview switch, chat titles, multiple-choice questions, deleting a chat.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
-    // Send, then answer what the agent asks (share everything, preview) until its run ends.
-    const turn = async (text) => {
-      await ask(text);
+    // Send, then answer what the agent asks (share everything, preview) until its run ends;
+    // its multiple-choice questions get the first (its recommended) choice of each.
+    let questionsAsked = 0;
+    const run = async () => {
       await until(async () => (await panel.locator('#state').innerText()) === 'Working', 'the agent to start', 30000);
       await until(async () => {
-        const card = panel.locator('.card button.primary').first();
+        const card = panel.locator('#requests .card button.primary').first();
         if (await card.count()) await card.click().catch(() => {});
         return (await panel.locator('#state').innerText()) === 'Ready';
       }, 'the agent to finish', 600000).catch(async (e) => { console.log(await panel.locator('#transcript').innerText()); throw e; });
     };
+    const answerQuestions = async () => {
+      const form = panel.locator('#questions form');
+      if (!(await form.count())) return false;
+      for (const set of await form.locator('fieldset').all()) await set.locator('input[type=radio], input[type=checkbox]').first().check();
+      if (!questionsAsked) await shot(panel, 'real-questions');
+      questionsAsked++;
+      await form.getByRole('button', { name: 'Send answers' }).click();
+      return true;
+    };
+    const turn = async (text) => {
+      await ask(text);
+      await run();
+      for (let i = 0; i < 3 && await answerQuestions(); i++) await run();
+    };
     await panel.check('#auto-preview');
-    await turn('The Buy and Save for later buttons on this shop are too small for me to tap. Please make an adapter that makes them at least 44 pixels tall. It helps motor. Go ahead with defaults, no questions.');
+    await turn('The Buy and Save for later buttons on this shop are too small for me to tap. Please make an adapter that makes them easier to tap.');
+    console.log(`The agent asked ${questionsAsked} set${questionsAsked === 1 ? '' : 's'} of multiple-choice questions.`);
+    assert.ok(questionsAsked > 0, 'the agent asked its questions as multiple choice');
     for (let i = 0; i < 2 && !(await panel.locator('#ready-list li').count()); i++) {
       await turn('That looks right on my page. Please offer it to me so I can add it to my account.');
     }
     const shown = await panel.locator('#transcript').innerText();
     console.log('--- what the sidebar showed ---\n' + shown + '\n---');
     const after = await heightOfBuy();
-    console.log(`Buy button height: ${before}px before, ${after}px with the preview.`);
-    assert.ok(after >= 44, 'the previewed adapter made the button at least 44px tall');
+    console.log(`Buy button height to a press: ${before}px before, ${after}px with the preview.`);
+    assert.ok(after >= 44, 'the previewed adapter made the button at least 44px tall to a press');
     assert.ok(await panel.locator('#ready-list li').count(), 'the agent offered the adapter');
     await shot(panel, 'real-ready');
     await panel.getByRole('button', { name: 'Add to my account' }).first().click();
@@ -271,9 +300,9 @@ try {
     const mine = await createRegistryClient({ url: base, token }).installed('browser-runtime');
     assert.ok(mine.adapters.some(a => a.adapter.appId === 'assistant'), 'added to the account and installed in this browser');
     await until(async () => (await heightOfBuy()) >= 44, 'the installed adapter on the page');
-    console.log(`Installed from the account: ${mine.adapters.filter(a => a.adapter.appId === 'assistant').map(a => a.adapter.id).join(', ')}; the Buy button is ${await heightOfBuy()}px.`);
+    console.log(`Installed from the account: ${mine.adapters.filter(a => a.adapter.appId === 'assistant').map(a => a.adapter.id).join(', ')}; the Buy button is ${await heightOfBuy()}px tall to a press.`);
     assert.ok(!/```/.test(shown), 'no code blocks in the sidebar');
-    console.log('Assistant browser workflow passed with real opencode and Gemini 3.8 Flash: asked, shared the page, built, previewed, reviewed, offered, added to the account.');
+    console.log('Assistant browser workflow passed with real opencode and Gemini 3.8 Flash: asked multiple choice, shared the page, built, previewed, reviewed, offered, added to the account.');
   }
 } catch (e) {
   await failureReport().catch(() => {});
