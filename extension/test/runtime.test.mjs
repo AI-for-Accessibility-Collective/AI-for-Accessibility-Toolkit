@@ -394,5 +394,58 @@ await test('page types: the markup first, else the model once per address, kept'
   assert.equal(pageKey('https://a.example/p?q=1#f'), 'https://a.example/p?q=1');
 });
 
+await test('the console bridge steps aside when the extension is reloaded under it, and the new one takes over', async () => {
+  const { readFileSync } = await import('node:fs');
+  const code = readFileSync(new URL('../bridge.js', import.meta.url), 'utf8');
+  const window = new EventTarget();
+  const posted = [];
+  window.postMessage = (data) => posted.push(data);
+  const location = { origin: 'http://localhost:8080' };
+  const extension = (version) => {
+    const sent = [];
+    const chrome = { runtime: {
+      id: 'ext', getManifest: () => ({ version }),
+      sendMessage: async (m) => { sent.push(m.type); return { ok: true, result: { connection: { uid: 'dev' }, state: { adapters: [] } } }; },
+    } };
+    // What Chrome does to a cut-off content script: no id, and every call throws.
+    const invalidate = () => {
+      chrome.runtime.id = undefined;
+      chrome.runtime.getManifest = chrome.runtime.sendMessage = () => { throw new Error('Extension context invalidated.'); };
+    };
+    return { chrome, sent, invalidate };
+  };
+  const fromConsole = (type) => { const e = new Event('message'); Object.assign(e, { source: window, origin: location.origin, data: { source: 'ai4a11y-console', type } }); window.dispatchEvent(e); };
+  const settle = () => new Promise(r => setTimeout(r, 20));
+  const unhandled = [];
+  const onUnhandled = (e) => unhandled.push(e);
+  process.on('unhandledRejection', onUnhandled);
+  try {
+    const old = extension('0.1.0');
+    vm.runInNewContext(code, { window, location, chrome: old.chrome, Promise });
+    await settle();
+    assert.equal(posted.at(-1).version, '0.1.0');
+    fromConsole('profile-changed');
+    await settle();
+    assert.deepEqual(old.sent, ['status', 'sync', 'status']);
+    // The extension reloads: the old bridge must not throw, and steps aside.
+    old.invalidate();
+    const before = posted.length;
+    fromConsole('adapters-changed');
+    fromConsole('ping');
+    await settle();
+    assert.equal(posted.length, before, 'the cut-off bridge says nothing');
+    assert.equal(window.__ai4a11yBridge, undefined);
+    // The reloaded extension injects its bridge into the same page: it takes over.
+    const fresh = extension('0.1.1');
+    vm.runInNewContext(code, { window, location, chrome: fresh.chrome, Promise });
+    await settle();
+    assert.equal(posted.at(-1).version, '0.1.1');
+    fromConsole('adapters-changed');
+    await settle();
+    assert.deepEqual(fresh.sent, ['status', 'sync', 'status']);
+    assert.deepEqual(unhandled, []);
+  } finally { process.off('unhandledRejection', onUnhandled); }
+});
+
 console.log(`\nAdapter runtime: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);
