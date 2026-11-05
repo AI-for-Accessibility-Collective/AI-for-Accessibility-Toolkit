@@ -20,24 +20,24 @@
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; if (!window.__held) { const ids = ['s1', 's3', 's4', 's5']; const shown = (id) => document.querySelector('#' + id + ' .track > .slide.active')?.id; const first = Object.fromEntries(ids.map((id) => [id, shown(id)])); const held = Object.fromEntries(ids.map((id) => [id, !!first[id]])); for (let i = 0; i < 13; i++) { await new Promise((r) => setTimeout(r, 100)); for (const id of ids) if (shown(id) !== first[id]) held[id] = false; } window.__held = held; } return window.__held['s5'] === true && (window.__counts['s5-video-pause'] || 0) === 0;"
     },
     {
-      "name": "the carousel's own toggle is clicked, not the slide's Play trailer",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s2.playing === false && window.__carousels.s2.toggles === 1 && (window.__counts['s2-trailer'] || 0) === 0;"
+      "name": "with no model, the carousel's own toggle (named Pause) is not pressed, nor the slide's Play trailer: its slides are held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const first = document.querySelector('#s2 .track > .slide.active')?.id; await new Promise((r) => setTimeout(r, 1100)); return window.__carousels.s2.toggles === 0 && (window.__counts['s2-trailer'] || 0) === 0 && document.querySelector('#s2 .track > .slide.active')?.id === first;"
     },
     {
-      "name": "slides marked only by class: the slide's Pause audio is not clicked, the carousel's own Pause after them is",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s6.playing === false && (window.__counts['s6-audio'] || 0) === 0;"
+      "name": "a region named \"News slideshow\" that moves by itself but is not marked as a carousel: with no model nothing says it is one, so nothing in it is pressed and it moves on",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const first = document.querySelector('#s6 .track > .slide.active')?.id; let moved = false; for (let i = 0; i < 12 && !moved; i++) { await new Promise((r) => setTimeout(r, 100)); moved = document.querySelector('#s6 .track > .slide.active')?.id !== first; } return moved && window.__carousels.s6.playing === true && window.__carousels.s6.toggles === 0 && (window.__counts['s6-audio'] || 0) === 0;"
     },
     {
-      "name": "the APG rotation control (aria-controls names the slides) is clicked, the slide's Stop video is not",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s7.playing === false && (window.__counts['s7-video'] || 0) === 0;"
+      "name": "with no model, the APG rotation control is not pressed (its name is all that says it stops rotation), nor the slide's Stop video: its slides are held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const first = document.querySelector('#s7 .track > .slide.active')?.id; await new Promise((r) => setTimeout(r, 1100)); return window.__carousels.s7.toggles === 0 && (window.__counts['s7-video'] || 0) === 0 && document.querySelector('#s7 .track > .slide.active')?.id === first;"
     },
     {
-      "name": "a slide's button that names the slides in aria-controls is the carousel's own and pauses it",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s9.playing === false && (window.__counts['s9-pause'] || 0) === 1;"
+      "name": "with no model, a slide's button that names the slides in aria-controls is not pressed: the carousel is held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const first = document.querySelector('#s9 .track > .slide.active')?.id; await new Promise((r) => setTimeout(r, 1100)); return (window.__counts['s9-pause'] || 0) === 0 && document.querySelector('#s9 .track > .slide.active')?.id === first;"
     },
     {
-      "name": "disable() restarts each carousel with its own control, never a slide's Play trailer or Play video (review 9, line 3)",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const c = window.__carousels; const t0 = c.s2.toggles; adapter.disable(); await new Promise((r) => setTimeout(r, 150)); const ok = c.s2.playing && c.s6.playing && c.s7.playing && c.s8.playing && c.s9.playing && c.s2.toggles === t0 + 1 && (window.__counts['s2-trailer'] || 0) === 0 && (window.__counts['s8-video'] || 0) === 0 && (window.__counts['s1-trailer'] || 0) === 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await new Promise((r) => setTimeout(r, 150)); return ok && !c.s2.playing && !c.s8.playing;"
+      "name": "with no model nothing was paused: disable() presses nothing, and the held carousels move on",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const c = window.__carousels; const counts = JSON.stringify(window.__counts); const shown = () => document.querySelector('#s2 .track > .slide.active')?.id; const first = shown(); adapter.disable(); let moved = false; for (let i = 0; i < 24 && !moved; i++) { await new Promise((r) => setTimeout(r, 50)); moved = shown() !== first; } const ok = moved && c.s2.toggles === 0 && c.s7.toggles === 0 && c.s8.toggles === 0 && JSON.stringify(window.__counts) === counts; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await new Promise((r) => setTimeout(r, 150)); return ok;"
     },
     {
       "name": "nothing is announced on load",

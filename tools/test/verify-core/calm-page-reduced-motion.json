@@ -24,8 +24,8 @@
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const vAuto = document.getElementById('video-autoplay'); const vLoop = document.getElementById('video-looping'); const vPaused = document.getElementById('video-paused'); if (!vAuto || !vLoop || !vPaused) return false; if (!vAuto.paused || !vLoop.paused || !vPaused.paused) return false; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const autoPlayingAfterDisable = !vAuto.paused; const loopPlayingAfterDisable = !vLoop.paused; const pausedStillPaused = vPaused.paused; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await new Promise(r => setTimeout(r, 100)); return autoPlayingAfterDisable && loopPlayingAfterDisable && pausedStillPaused;"
     },
     {
-      "name": "a video the person plays after enable() keeps playing",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const vPaused = document.getElementById('video-paused'); const btnPlay = document.getElementById('btn-play-paused'); if (!vPaused || !btnPlay) return false; await __verifyClick('#btn-play-paused'); await new Promise(r => setTimeout(r, 150)); if (vPaused.paused) return false; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const keepsPlaying = !vPaused.paused; vPaused.pause(); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return keepsPlaying;"
+      "name": "a video the person plays after enable(), on the video itself, keeps playing (with no model, a button near it that does not name it is not taken as its control: see calm-page-ask)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const vPaused = document.getElementById('video-paused'); if (!vPaused) return false; await __verifyClick('#video-paused'); try { await vPaused.play(); } catch {} await new Promise(r => setTimeout(r, 150)); if (vPaused.paused) return false; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const keepsPlaying = !vPaused.paused; vPaused.pause(); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return keepsPlaying;"
     },
     {
       "name": "no button outside a carousel is ever clicked, even one named Stop or Pause next to a slider",
@@ -44,8 +44,8 @@
       "code": "const el = document.getElementById('anim-no-forwards'); if (!el) return false; const op = parseFloat(getComputedStyle(el).opacity); return op === 1;"
     },
     {
-      "name": "dynamically added carousel element is processed and held",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const container = document.getElementById('dynamic-carousel-slot'); if (!container) return false; let dynClicked = false; const dynCarousel = document.createElement('section'); dynCarousel.setAttribute('aria-roledescription', 'carousel'); dynCarousel.setAttribute('aria-label', 'Dynamic Test Carousel'); dynCarousel.innerHTML = '<button id=\"btn-dyn-test-pause\" type=\"button\" aria-label=\"Pause carousel\">Pause carousel</button>'; const btn = dynCarousel.querySelector('#btn-dyn-test-pause'); btn.addEventListener('click', () => { dynClicked = true; }); container.appendChild(dynCarousel); await new Promise(r => setTimeout(r, 400)); const result = dynClicked; dynCarousel.remove(); return result === true;"
+      "name": "a carousel added later: with no model, its only button (named Pause) is not pressed, as only its name says it pauses (see calm-page-ask)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const container = document.getElementById('dynamic-carousel-slot'); if (!container) return false; let dynClicked = false; const dynCarousel = document.createElement('section'); dynCarousel.setAttribute('aria-roledescription', 'carousel'); dynCarousel.setAttribute('aria-label', 'Dynamic Test Carousel'); dynCarousel.innerHTML = '<button id=\"btn-dyn-test-pause\" type=\"button\" aria-label=\"Pause carousel\">Pause carousel</button>'; const btn = dynCarousel.querySelector('#btn-dyn-test-pause'); btn.addEventListener('click', () => { dynClicked = true; }); container.appendChild(dynCarousel); await new Promise(r => setTimeout(r, 400)); dynCarousel.remove(); return dynClicked === false;"
     },
     {
       "name": "user play on a paused carousel is not re-clicked on disable()",
@@ -56,40 +56,40 @@
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const v = document.getElementById('video-in-generic-div'); const btnUnrelated = document.getElementById('btn-unrelated-action'); if (!v || !btnUnrelated) return false; await __verifyClick('#btn-unrelated-action'); try { await v.play(); } catch {} await new Promise(r => setTimeout(r, 200)); return v.paused === true;"
     },
     {
-      "name": "pause control using input type button inside carousel is recognized and clicked",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__inputPauseClicked === true;"
+      "name": "with no model, a Pause input[type=button] inside a carousel is not pressed (see calm-page-ask)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__inputPauseClicked === false;"
     },
     {
-      "name": "carousel with standard button pause control without type attribute is clicked",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__standardPauseClicked === true;"
+      "name": "with no model, a Pause button without a type inside a carousel is not pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__standardPauseClicked === false;"
     },
     {
-      "name": "carousel with separate play and pause buttons is resumed on disable without user input",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const before = window.__resumePlayClicks || 0; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const after = window.__resumePlayClicks || 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return after === before + 1;"
+      "name": "with no model nothing was paused, so disable() presses no Play button",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const before = window.__resumePlayClicks || 0; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const after = window.__resumePlayClicks || 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return after === before;"
     },
     {
-      "name": "carousel with disabled pause button is left alone and not held",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('dp-slide-1'); const s2 = document.getElementById('dp-slide-2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const notReverted = s2.classList.contains('active') && !s1.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return notReverted;"
+      "name": "a carousel whose only button is disabled: with no model nothing says it is stopped, so its slides are held when the page moves them with no input (and the button is not pressed)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('dp-slide-1'); const s2 = document.getElementById('dp-slide-2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const held = s1.classList.contains('active') && !s2.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return held;"
     },
     {
       "name": "button with empty aria-controls does not match media element without id",
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const container = document.getElementById('media-no-id-container'); const v = container?.querySelector('video'); const btn = document.getElementById('btn-empty-controls'); if (!v || !btn) return false; await __verifyClick('#btn-empty-controls'); try { await v.play(); } catch {} await new Promise(r => setTimeout(r, 200)); return v.paused === true;"
     },
     {
-      "name": "carousel with aria-pressed=true on pause button is left alone and not held",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('c8-s1'); const s2 = document.getElementById('c8-s2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const notReverted = s2.classList.contains('active') && !s1.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return notReverted;"
+      "name": "a carousel whose only button is pressed (aria-pressed): with no model nothing says that button is its pause, so its slides are held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('c8-s1'); const s2 = document.getElementById('c8-s2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const held = s1.classList.contains('active') && !s2.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return held;"
     },
     {
-      "name": "separate play button is clicked on disable() even when pause button set aria-pressed=true",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const before = window.__c9PlayClicks || 0; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const after = window.__c9PlayClicks || 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return after === before + 1;"
+      "name": "with no model the APG-style carousel was not paused, so disable() presses neither of its buttons",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const before = window.__c9PlayClicks || 0; adapter.disable(); await new Promise(r => setTimeout(r, 100)); const after = window.__c9PlayClicks || 0; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); return after === before && document.getElementById('btn-sep-pause-apg').getAttribute('aria-pressed') !== 'true';"
     },
     {
       "name": "unrelated button in role=region does not cause late autoplay video to be treated as user-started",
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const v = document.getElementById('video-in-region'); const btn = document.getElementById('btn-region-unrelated'); if (!v || !btn) return false; await __verifyClick('#btn-region-unrelated'); try { await v.play(); } catch {} await new Promise(r => setTimeout(r, 200)); return v.paused === true;"
     },
     {
-      "name": "carousel currently paused with play button is left alone and not held",
-      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('c10-s1'); const s2 = document.getElementById('c10-s2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const notReverted = s2.classList.contains('active') && !s1.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return notReverted;"
+      "name": "a carousel whose only button says Play: with no model nothing says it is stopped, so its slides are held when the page moves them; the button is not pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s1 = document.getElementById('c10-s1'); const s2 = document.getElementById('c10-s2'); if (!s1 || !s2) return false; s1.classList.remove('active'); s2.classList.add('active'); await new Promise(r => setTimeout(r, 100)); const held = s1.classList.contains('active') && !s2.classList.contains('active'); s2.classList.remove('active'); s1.classList.add('active'); return held;"
     }
   ],
   "reducedMotion": "reduce"

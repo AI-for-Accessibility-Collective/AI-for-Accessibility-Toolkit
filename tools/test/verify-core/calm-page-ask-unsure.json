@@ -1,0 +1,55 @@
+{
+  "name": "calm-page-ask-unsure",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page-ask.html",
+  "ai": {
+    "choose": {
+      "pauses or stops": "0",
+      "starts it moving": "0",
+      "while nobody was using the page": "0",
+      "started playing just after": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "when the model cannot tell: A1's buttons are not pressed, not even its slide's Play video, and its slides are held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return !(await moves('a1', 1200)) && !n('a1-toggle') && !n('a1-prev') && !n('a1-next') && !n('a1-slide-video');"
+    },
+    {
+      "name": "when the model cannot tell: A2's Pause is not pressed and its slides are held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return !(await moves('a2', 1200)) && !n('a2-pause') && !n('a2-play') && !n('a2-prev');"
+    },
+    {
+      "name": "when the model cannot tell: A3 (its Pause disabled) is not known to be stopped: its slides are held, nothing is pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const s1 = document.getElementById('a3-1'); const s2 = document.getElementById('a3-2'); s1.classList.remove('shown'); s2.classList.add('shown'); await sleep(150); const back = s1.classList.contains('shown') && !s2.classList.contains('shown'); s2.classList.remove('shown'); s1.classList.add('shown'); await sleep(50); return back && !n('a3-pause') && !n('a3-prev') && !n('a3-next');"
+    },
+    {
+      "name": "when the model cannot tell: R1 moves by itself but nobody said it is a slideshow: it is not held and nothing in it is pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return (await moves('r1', 1500)) && window.__c.r1.playing && !n('r1-toggle') && !n('r1-prev') && !n('r1-next');"
+    },
+    {
+      "name": "when the model cannot tell: the live prices (R2) move on as the page moves them",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; return await moves('r2', 1500);"
+    },
+    {
+      "name": "when the model cannot tell: a video started just after the person pressed a button near it that does not name it is paused (nobody said that button is its control)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const v = document.getElementById('m1-video'); await __verifyClick('#m1-play'); await sleep(400); const paused = v.paused; v.pause(); return paused;"
+    },
+    {
+      "name": "when the model cannot tell: a video the page started after the person pressed Share is paused",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const v = document.getElementById('m2-video'); await __verifyClick('#m2-share'); await sleep(500); const paused = v.paused; v.pause(); return paused;"
+    },
+    {
+      "name": "when the model cannot tell: a carousel added later gets none of its buttons pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const slot = document.getElementById('dynamic-slot'); const c = document.createElement('section'); c.setAttribute('aria-roledescription', 'carousel'); c.setAttribute('aria-label', 'New arrivals'); c.innerHTML = '<h2>New arrivals</h2><div class=\"track\"><div class=\"slide shown\" aria-roledescription=\"slide\">Books</div><div class=\"slide\" aria-roledescription=\"slide\">Films</div></div><button type=\"button\" data-count=\"d-prev\">Previous</button><button type=\"button\" data-count=\"d-pause\">Pause</button><button type=\"button\" data-count=\"d-next\">Next</button>'; slot.appendChild(c); await sleep(600); c.remove(); return !n('d-pause') && !n('d-prev') && !n('d-next');"
+    },
+    {
+      "name": "when the model cannot tell: disable() presses nothing, and A1 and A2 move on again",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const shownOf = (id) => [...document.querySelectorAll('#' + id + ' .track > .shown, #' + id + ' .track > .on, #' + id + ' tr.changed')].map((el) => [...el.parentElement.children].indexOf(el)).join(','); const moves = async (id, ms) => { const first = shownOf(id); for (let t = 0; t < ms; t += 50) { await sleep(50); if (shownOf(id) !== first) return true; } return false; }; const before = JSON.stringify(window.__counts); adapter.disable(); await sleep(100); const pressed = JSON.stringify(window.__counts) !== before; const a1 = await moves('a1', 900); const a2 = await moves('a2', 900); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await sleep(300); return !pressed && a1 && a2;"
+    },
+    {
+      "name": "nothing is announced on load",
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
+    }
+  ]
+}

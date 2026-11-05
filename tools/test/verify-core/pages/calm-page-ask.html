@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calm Page: where only the model can tell</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; background: #fff; }
+    main { padding: 1rem 1.5rem; max-width: 60rem; }
+    section, .promo, .player { margin: 1rem 0; padding: 1rem; border: 1px solid #c8d1dc; border-radius: 6px; }
+    .track { list-style: none; margin: 0.5rem 0; padding: 0; min-height: 3rem; }
+    .slide, .item { display: none; padding: 0.5rem; background: #f3f6f9; }
+    .slide.shown, .item.on { display: block; }
+    button { font-size: 1rem; min-width: 44px; min-height: 44px; padding: 0.5rem 1rem; margin: 0.25rem; background: #f6f8fa; color: #1a1a1a; border: 1px solid #57606a; border-radius: 4px; }
+    button:disabled { color: #57606a; }
+    button:focus-visible { outline: 3px solid #0969da; outline-offset: 2px; }
+    table { border-collapse: collapse; }
+    td { padding: 0.25rem 0.75rem; border: 1px solid #c8d1dc; }
+    tr.changed td { background: #fff4ce; }
+    video { display: block; background: #000; margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Carousels and players that say little about their buttons</h1>
+    <p>The carousels below mark themselves (aria-roledescription), but their buttons say what they do only in their names. One more moves by itself without saying it is a carousel.</p>
+
+    <!-- A1: playing; its middle button is a toggle renamed Play when paused; a slide has its own Play video. -->
+    <section id="a1" class="carousel" aria-roledescription="carousel" aria-label="Garden news" data-carousel data-playing="true">
+      <h2>Garden news</h2>
+      <div class="track">
+        <div class="slide shown" aria-roledescription="slide" aria-label="1 of 3">Spring planting starts <button type="button" data-count="a1-slide-video">Play video</button></div>
+        <div class="slide" aria-roledescription="slide" aria-label="2 of 3">New raised beds</div>
+        <div class="slide" aria-roledescription="slide" aria-label="3 of 3">Seed swap on Saturday</div>
+      </div>
+      <button type="button" data-act="prev" data-count="a1-prev">Previous</button><button type="button" data-act="toggle" data-count="a1-toggle">Pause</button><button type="button" data-act="next" data-count="a1-next">Next</button>
+    </section>
+
+    <!-- A2: playing; separate Pause and Play, and Play is disabled while it plays (and Pause while it is paused). -->
+    <section id="a2" class="carousel" aria-roledescription="carousel" aria-label="Library events" data-carousel data-playing="true">
+      <h2>Library events</h2>
+      <div class="track">
+        <div class="slide shown" aria-roledescription="slide" aria-label="1 of 2">Story time</div>
+        <div class="slide" aria-roledescription="slide" aria-label="2 of 2">Computer help desk</div>
+      </div>
+      <button type="button" data-act="prev" data-count="a2-prev">Previous</button><button type="button" data-act="pause" data-count="a2-pause">Pause</button><button type="button" data-act="play" data-count="a2-play" disabled>Play</button>
+    </section>
+
+    <!-- A3: not playing: its Pause is disabled. -->
+    <section id="a3" class="carousel" aria-roledescription="carousel" aria-label="Bus routes" data-carousel data-playing="false">
+      <h2>Bus routes</h2>
+      <div class="track">
+        <div class="slide shown" id="a3-1" aria-roledescription="slide" aria-label="1 of 2">Route 8</div>
+        <div class="slide" id="a3-2" aria-roledescription="slide" aria-label="2 of 2">Route 44</div>
+      </div>
+      <button type="button" data-act="prev" data-count="a3-prev">Previous</button><button type="button" data-act="pause" data-count="a3-pause" disabled>Pause</button><button type="button" data-act="next" data-count="a3-next">Next</button>
+    </section>
+
+    <!-- A4: not playing: its Pause is pressed. -->
+    <section id="a4" class="carousel" aria-roledescription="carousel" aria-label="Pool hours" data-carousel data-playing="false">
+      <h2>Pool hours</h2>
+      <div class="track">
+        <div class="slide shown" id="a4-1" aria-roledescription="slide" aria-label="1 of 2">Weekdays</div>
+        <div class="slide" id="a4-2" aria-roledescription="slide" aria-label="2 of 2">Weekends</div>
+      </div>
+      <button type="button" data-act="prev" data-count="a4-prev">Previous</button><button type="button" data-act="toggle" data-pressed-toggle data-count="a4-toggle" aria-pressed="true">Pause</button><button type="button" data-act="next" data-count="a4-next">Next</button>
+    </section>
+
+    <!-- R1: moves by itself, and says nothing: no roledescription, no slide marks, a class "on". -->
+    <div id="r1" class="promo" data-carousel data-playing="true">
+      <h2>This week</h2>
+      <ul class="track">
+        <li class="item on">Free flu shots at the clinic</li>
+        <li class="item">Farmers market opens</li>
+        <li class="item">Road works on Main Street</li>
+      </ul>
+      <div class="nav"><button type="button" data-act="prev" data-count="r1-prev">Previous</button><button type="button" data-act="toggle" data-count="r1-toggle">Pause</button><button type="button" data-act="next" data-count="r1-next">Next</button></div>
+    </div>
+
+    <!-- R2: moves by itself too, but it is live data: the row last updated is marked. -->
+    <section id="r2">
+      <h2>Market prices</h2>
+      <table>
+        <tbody id="r2-rows">
+          <tr class="changed"><td>Apples</td><td>2.10</td></tr>
+          <tr><td>Pears</td><td>2.45</td></tr>
+          <tr><td>Plums</td><td>3.05</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- M1: a player whose Play button does not name its video. -->
+    <div id="m1" class="player">
+      <h2>Garden tour video</h2>
+      <video id="m1-video" width="320" height="180" muted playsinline title="Garden tour"></video>
+      <div class="bar"><button type="button" id="m1-play">Play</button><button type="button" id="m1-share">Share</button></div>
+    </div>
+
+    <!-- M2: the same, but the page starts the video when any of its buttons is pressed (Share). -->
+    <div id="m2" class="player">
+      <h2>Market day video</h2>
+      <video id="m2-video" width="320" height="180" muted playsinline title="Market day"></video>
+      <div class="bar"><button type="button" id="m2-play">Play</button><button type="button" id="m2-share">Share</button></div>
+    </div>
+
+    <div id="dynamic-slot"></div>
+  </main>
+
+  <script>
+    window.__counts = {};
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-count]');
+      if (b) window.__counts[b.dataset.count] = (window.__counts[b.dataset.count] || 0) + 1;
+    });
+    // Each carousel moves on every 400 ms while it plays; window.__c[id] says whether it plays.
+    window.__c = {};
+    window.__setupCarousel = (c) => {
+      const slides = [...c.querySelectorAll('.track > *')];
+      const mark = c.querySelector('.track > .item') ? 'on' : 'shown';
+      const st = (window.__c[c.id] = { playing: false, timer: null });
+      const show = (i) => slides.forEach((s, n) => s.classList.toggle(mark, n === i));
+      const at = () => Math.max(0, slides.findIndex((s) => s.classList.contains(mark)));
+      const step = (d) => show((at() + d + slides.length) % slides.length);
+      const btn = (act) => c.querySelector('[data-act="' + act + '"]');
+      const start = () => { st.playing = true; clearInterval(st.timer); st.timer = setInterval(() => step(1), 400); };
+      const stop = () => { st.playing = false; clearInterval(st.timer); st.timer = null; };
+      if (c.dataset.playing === 'true') start();
+      btn('prev')?.addEventListener('click', () => step(-1));
+      btn('next')?.addEventListener('click', () => step(1));
+      const t = btn('toggle');
+      t?.addEventListener('click', () => {
+        if (st.playing) stop(); else start();
+        if (t.hasAttribute('data-pressed-toggle')) t.setAttribute('aria-pressed', st.playing ? 'false' : 'true');
+        else t.textContent = st.playing ? 'Pause' : 'Play';
+      });
+      const p = btn('pause');
+      const q = btn('play');
+      p?.addEventListener('click', () => { stop(); p.disabled = true; if (q) q.disabled = false; });
+      q?.addEventListener('click', () => { start(); q.disabled = true; if (p) p.disabled = false; });
+    };
+    document.querySelectorAll('[data-carousel]').forEach(window.__setupCarousel);
+
+    // R2: a price changes every 400 ms, and its row is marked.
+    {
+      const rows = [...document.querySelectorAll('#r2-rows tr')];
+      let i = 0;
+      setInterval(() => {
+        rows[i].classList.remove('changed');
+        i = (i + 1) % rows.length;
+        const cell = rows[i].cells[1];
+        cell.textContent = (Number(cell.textContent) + 0.01).toFixed(2);
+        rows[i].classList.add('changed');
+      }, 400);
+    }
+
+    // Videos: a local stream (no network).
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64; canvas.height = 36;
+      canvas.getContext('2d').fillRect(0, 0, 64, 36);
+      const stream = canvas.captureStream(25);
+      for (const v of document.querySelectorAll('video')) v.srcObject = stream;
+    } catch (e) {}
+    document.getElementById('m1-play').addEventListener('click', () => { document.getElementById('m1-video').play().catch(() => {}); });
+    // M2: any of its buttons "unlocks" the video, which the page then starts.
+    for (const id of ['m2-play', 'm2-share']) {
+      document.getElementById(id).addEventListener('click', () => setTimeout(() => document.getElementById('m2-video').play().catch(() => {}), 50));
+    }
+  </script>
+</body>
+</html>

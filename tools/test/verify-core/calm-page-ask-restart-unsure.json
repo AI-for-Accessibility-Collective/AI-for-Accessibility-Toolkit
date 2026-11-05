@@ -1,0 +1,27 @@
+{
+  "name": "calm-page-ask-restart-unsure",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page-ask.html",
+  "ai": {
+    "choose": {
+      "pauses or stops": "2",
+      "starts it moving": "0",
+      "while nobody was using the page": "1",
+      "started playing just after": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "A1, A2 and R1 are paused with the buttons the model chose",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 40 && window.__c.r1.playing; i++) await sleep(100); return !window.__c.a1.playing && !window.__c.a2.playing && !window.__c.r1.playing && n('a1-toggle') === 1 && n('a2-pause') === 1 && n('r1-toggle') === 1;"
+    },
+    {
+      "name": "when the model cannot tell which button starts them, disable() restarts the toggles that show they toggled (A1, R1) and not A2, whose Pause is now disabled",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const c = window.__c; adapter.disable(); await sleep(150); const ok = c.a1.playing && c.r1.playing && !c.a2.playing && n('a1-toggle') === 2 && n('r1-toggle') === 2 && !n('a2-play'); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await sleep(300); return ok;"
+    },
+    {
+      "name": "nothing is announced on load",
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
+    }
+  ]
+}

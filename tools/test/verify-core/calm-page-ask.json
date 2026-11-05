@@ -1,0 +1,55 @@
+{
+  "name": "calm-page-ask",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page-ask.html",
+  "ai": {
+    "choose": {
+      "pauses or stops": "2",
+      "starts it moving": "2",
+      "while nobody was using the page": "1",
+      "started playing just after": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "the model says the middle button pauses A1: that one is pressed once, never Previous, Next or the slide's Play video",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; return window.__c.a1.playing === false && n('a1-toggle') === 1 && !n('a1-prev') && !n('a1-next') && !n('a1-slide-video');"
+    },
+    {
+      "name": "A2 is paused with its Pause, and its Play is not pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; return window.__c.a2.playing === false && n('a2-pause') === 1 && !n('a2-play') && !n('a2-prev');"
+    },
+    {
+      "name": "A3: the button the model chose is disabled, so it is not playing: nothing is pressed and it is not held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const s1 = document.getElementById('a3-1'); const s2 = document.getElementById('a3-2'); s1.classList.remove('shown'); s2.classList.add('shown'); await sleep(150); const back = s1.classList.contains('shown') && !s2.classList.contains('shown'); s2.classList.remove('shown'); s1.classList.add('shown'); await sleep(50); return !back && !n('a3-pause') && !n('a3-prev') && !n('a3-next');"
+    },
+    {
+      "name": "A4: the button the model chose is pressed (aria-pressed), so it is not playing: nothing is pressed and it is not held",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const s1 = document.getElementById('a4-1'); const s2 = document.getElementById('a4-2'); s1.classList.remove('shown'); s2.classList.add('shown'); await sleep(150); const back = s1.classList.contains('shown') && !s2.classList.contains('shown'); s2.classList.remove('shown'); s1.classList.add('shown'); await sleep(50); return !back && !n('a4-toggle') && !n('a4-prev') && !n('a4-next');"
+    },
+    {
+      "name": "R1 moves by itself and the model says it is a slideshow: it is paused with the button the model chose, and nothing else is pressed",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 40 && window.__c.r1.playing; i++) await sleep(100); return window.__c.r1.playing === false && n('r1-toggle') === 1 && !n('r1-prev') && !n('r1-next');"
+    },
+    {
+      "name": "a video the person started with the button the model says is its control keeps playing",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const v = document.getElementById('m1-video'); await __verifyClick('#m1-play'); await sleep(400); const playing = !v.paused; v.pause(); return playing;"
+    },
+    {
+      "name": "a video the page started just after the person pressed Share (not its control, the model says) is paused",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const v = document.getElementById('m2-video'); await __verifyClick('#m2-share'); await sleep(500); const paused = v.paused; v.pause(); return paused;"
+    },
+    {
+      "name": "a carousel added later is paused with the button the model chose, and only that one",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; const slot = document.getElementById('dynamic-slot'); const c = document.createElement('section'); c.setAttribute('aria-roledescription', 'carousel'); c.setAttribute('aria-label', 'New arrivals'); c.innerHTML = '<h2>New arrivals</h2><div class=\"track\"><div class=\"slide shown\" aria-roledescription=\"slide\">Books</div><div class=\"slide\" aria-roledescription=\"slide\">Films</div></div><button type=\"button\" data-count=\"d-prev\">Previous</button><button type=\"button\" data-count=\"d-pause\">Pause</button><button type=\"button\" data-count=\"d-next\">Next</button>'; slot.appendChild(c); await sleep(600); c.remove(); return n('d-pause') === 1 && !n('d-prev') && !n('d-next');"
+    },
+    {
+      "name": "disable() restarts A1 and R1 with their toggles and A2 with its Play (the buttons the model says start them), presses nothing in A3 and A4; enable() pauses A1 and A2 again",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const n = (k) => window.__counts[k] || 0; for (let i = 0; i < 40 && window.__c.r1.playing; i++) await sleep(100); const c = window.__c; adapter.disable(); await sleep(150); const ok = c.a1.playing && c.a2.playing && c.r1.playing && n('a1-toggle') === 2 && n('a2-play') === 1 && n('r1-toggle') === 2 && !c.a3.playing && !c.a4.playing && !n('a3-pause') && !n('a4-toggle'); adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await sleep(600); return ok && !c.a1.playing && !c.a2.playing;"
+    },
+    {
+      "name": "nothing is announced on load",
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
+    }
+  ]
+}
