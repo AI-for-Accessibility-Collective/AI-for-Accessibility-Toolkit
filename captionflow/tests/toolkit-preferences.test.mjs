@@ -237,3 +237,49 @@ test('undo history survives through a durable historyKV across fresh provider in
   assert.equal(result.undone, true);
   assert.deepEqual(result.restoredTo, null);
 });
+
+test('a failed undo (acting-user switch after the stack peek) does not lose the history entry', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  await librarian.setActingUser('alice');
+  const historyKV = memoryKV();
+  const provider = createToolkitPreferenceProvider({ librarian, actingUserId: 'alice', historyKV });
+  await provider.setTextSize({ value: 1.2 });
+  await provider.setTextSize({ value: 1.5 });
+
+  // Simulate the user switching away between the stack peek and the profile write.
+  const realGetProfile = librarian.getProfile.bind(librarian);
+  librarian.getProfile = async () => {
+    const result = await realGetProfile();
+    await librarian.setActingUser('mallory');
+    return result;
+  };
+  await assert.rejects(provider.undoTextSize(), ActingUserMismatchError);
+  librarian.getProfile = realGetProfile;
+
+  // The refused undo must not have consumed the history entry: a retry
+  // (once back on the right acting user) still undoes to the same place.
+  await librarian.setActingUser('alice');
+  assert.equal((await provider.getPreferences({})).fontScale, 1.5, 'the failed undo did not change the profile');
+  const retry = await provider.undoTextSize();
+  assert.equal(retry.undone, true);
+  assert.equal(retry.restoredTo.value, 1.2, 'the history entry survived the earlier failed attempt');
+});
+
+test('undo history for a real user id does not collide with the default-partition sentinel', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  const historyKV = memoryKV();
+  // A user id that looks like the sentinel used internally for the default partition.
+  await librarian.setActingUser('__default__');
+  const namedUser = createToolkitPreferenceProvider({ librarian, actingUserId: '__default__', historyKV });
+  await namedUser.setTextSize({ value: 1.3 });
+
+  await librarian.setActingUser(null);
+  const defaultUser = createToolkitPreferenceProvider({ librarian, actingUserId: null, historyKV });
+  assert.deepEqual(await defaultUser.undoTextSize(), { undone: false, reason: 'no-history' },
+    "the default partition's history must stay empty, not borrow __default__'s entry");
+
+  await librarian.setActingUser('__default__');
+  const result = await namedUser.undoTextSize();
+  assert.equal(result.undone, true);
+  assert.deepEqual(result.restoredTo, null, "__default__'s own history is untouched by the default partition");
+});

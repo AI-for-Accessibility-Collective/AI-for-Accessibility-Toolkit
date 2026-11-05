@@ -14,14 +14,27 @@ is deferred until this boundary has been exercised on synthetic data.
 The guard: every call into `createToolkitPreferenceProvider` must declare
 `actingUserId` (the host's current user, `null` for the toolkit's default
 partition — never inferred). Internally the adapter calls `librarian.getActingUser()`
-before each toolkit call and again immediately after the one `await` in that
-operation, and refuses with `ActingUserMismatchError` if the toolkit's real
-acting user doesn't match the declared one, or if the toolkit exposes no
-`getActingUser()` at all. This stops a read or write from silently landing
-under the wrong partition when the host hands over a stale or wrong user
-context, or when the acting user changes mid-operation. It does **not**
-enforce cross-app grants, the sharing pause, or any consent boundary — those
-remain Option B's job, deferred.
+before each toolkit call and again immediately after each await whose result
+this adapter directly reads (`getProfile`, `getAbilityModel`), and refuses with
+`ActingUserMismatchError` if the toolkit's real acting user doesn't match the
+declared one, or if the toolkit exposes no `getActingUser()` at all. This stops
+a read or write from silently landing under the wrong partition when the host
+hands over a stale or wrong user context, or when the acting user changes
+mid-operation -- for the operations this adapter directly controls.
+
+**Known residual gap, found in a 2026-11-05 code review (see below):** the
+guard does not reach inside `librarian.setProfileField()` itself. That call's
+own read-modify-write (`Datastore.patch` in `toolkit/core/datastore.js`: a
+separate `get`, then the caller's function, then a separate `set`, each
+re-resolving the active partition at call time) has its own internal
+switch window this adapter cannot see or close without editing toolkit core,
+which is out of scope here (team rule: toolkit fixes are separate PRs, not
+folded into this adapter). So the earlier claim that the guard covers "the
+one await in that operation" was imprecise for `setTextSize`/`undoTextSize`,
+which make **two** toolkit-level calls (`getProfile` then `setProfileField`);
+the guard covers the gap this file controls between them, not the write
+itself. It does **not** enforce cross-app grants, the sharing pause, or any
+consent boundary — those remain Option B's job, deferred.
 
 Remaining, not fixed by this guard:
 
@@ -86,6 +99,44 @@ through this adapter -- it is not the same as the earlier "restore by writing
   Librarian (different area, same file root), so undo survives a process
   restart: `node captionflow/scripts/run-toolkit.mjs --user=alice
   --undo-text-size`.
+- `undoTextSize()` peeks the history stack, writes the restored profile, and
+  only then removes the entry from the stack -- if the acting-user guard or
+  the write itself fails in between, the entry is left in place so the same
+  undo can be retried instead of silently disappearing.
+- The history key encodes `actingUserId` with `JSON.stringify`, not a plain
+  template string, so a real user id that happens to look like the internal
+  default-partition sentinel (e.g. a user literally named `__default__`)
+  cannot collide with the default partition's own history.
+
+## Code review (2026-11-05)
+
+Reviewed via a Nous-hosted model (`deepseek/deepseek-v4.1-flash:US`, through
+`hermes chat --provider nous`) against the 3-commit diff for the guard,
+durable storage, and undo. Findings and disposition:
+
+- **Fixed:** `undoTextSize()` previously removed the history entry before the
+  profile write landed, so a guard failure or write error between those two
+  steps silently lost the undo. Reordered to peek-then-write-then-pop (see
+  above); covered by a new test that forces a mid-undo acting-user switch and
+  confirms the entry survives for a retry.
+- **Fixed:** the undo history key for `actingUserId` used a template string
+  with a `'__default__'` fallback for `null`, which a real user literally
+  named `__default__` could collide with. Switched to `JSON.stringify`
+  encoding; covered by a new test.
+- **Documented, not changed here:** the guard's actual coverage is narrower
+  than the original wording claimed -- see "Known residual gap" above. Closing
+  it needs a change inside the toolkit's own `Datastore.patch`, which is
+  explicitly out of scope for this adapter.
+- **Open product question, not resolved here:** if another app has already
+  written an out-of-range or unsupported-unit `textSize` floor,
+  `getPreferences()` currently throws (fails closed) rather than falling back
+  to CaptionFlow's own default, which means one bad foreign floor can block
+  captions entirely for that user. Worth an explicit team decision before
+  real-profile use; flagged, not decided unilaterally.
+- Not reproduced here: a question about whether `getAbilityModel()`'s needs
+  array preserves insertion order (the tie-break assumes "latest wins" on
+  equal strength) -- noted for follow-up, not confirmed against toolkit
+  internals in this pass.
 
 Text size is stored as a shared, modality-neutral toolkit need, so a change may
 also affect other surfaces. Whether a CaptionFlow-only control should propagate
