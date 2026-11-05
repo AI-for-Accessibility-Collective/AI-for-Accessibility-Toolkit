@@ -4,7 +4,7 @@ import { createToolkit } from '../../toolkit/index.js';
 import { createCaptionFlowPipeline } from '../src/pipeline.mjs';
 import { createFixtureTranscriber } from '../src/mocks/fixture-transcriber.mjs';
 import { createFixtureCaptionProcessor } from '../src/mocks/fixture-caption-processor.mjs';
-import { createToolkitPreferenceProvider } from '../src/toolkit-preferences.mjs';
+import { createToolkitPreferenceProvider, ActingUserMismatchError } from '../src/toolkit-preferences.mjs';
 
 // Shared in-memory port tests persistence across toolkit instances, not restarts.
 function memoryKV() {
@@ -100,6 +100,43 @@ test('unsupported units and invalid or out-of-range text sizes fail without sile
     await librarian.setProfileField('fields.needs', [need]);
     await assert.rejects(provider.getPreferences({}), /textSize/);
   }
+});
+
+test('acting-user guard refuses a read or write when the declared user does not match the toolkit', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  await librarian.setActingUser('alice');
+  const provider = createToolkitPreferenceProvider({ librarian, actingUserId: 'bob' });
+  await assert.rejects(provider.getPreferences({}), ActingUserMismatchError);
+  await assert.rejects(provider.setTextSize({ value: 1.3 }), ActingUserMismatchError);
+  // Nothing was written under the wrong partition.
+  await librarian.setActingUser('bob');
+  assert.deepEqual((await librarian.getAbilityModel()).needs.filter(n => n.dimension === 'textSize'), []);
+});
+
+test('acting-user guard allows a matching declared user and refuses a mid-operation switch', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  await librarian.setActingUser('alice');
+  const provider = createToolkitPreferenceProvider({ librarian, actingUserId: 'alice' });
+  await provider.setTextSize({ value: 1.3 });
+  assert.equal((await provider.getPreferences({})).fontScale, 1.3);
+
+  // Simulate the user switching away between the provider's read and write.
+  const realGetProfile = librarian.getProfile.bind(librarian);
+  librarian.getProfile = async () => {
+    const result = await realGetProfile();
+    await librarian.setActingUser('mallory');
+    return result;
+  };
+  await assert.rejects(provider.setTextSize({ value: 1.9 }), ActingUserMismatchError);
+  await librarian.setActingUser('alice');
+  assert.equal((await provider.getPreferences({})).fontScale, 1.3, 'alice profile unchanged by the refused write');
+});
+
+test('acting-user guard refuses when the host toolkit exposes no getActingUser()', async () => {
+  const { librarian } = createToolkit({ kv: memoryKV() });
+  const bareLibrarian = { getAbilityModel: librarian.getAbilityModel.bind(librarian), getProfile: librarian.getProfile.bind(librarian), setProfileField: librarian.setProfileField.bind(librarian) };
+  const provider = createToolkitPreferenceProvider({ librarian: bareLibrarian });
+  await assert.rejects(provider.getPreferences({}), ActingUserMismatchError);
 });
 
 test('strongest text-size need wins when the profile contains multiple entries', async () => {

@@ -2,12 +2,33 @@
 
 **Prototype only:** Use synthetic profiles in a trusted, single-user host. Do
 not integrate this adapter with real profiles yet. Direct Librarian access does
-not check the toolkit's cross-app grants, sharing pause or audit boundary. The
-setter reads and later writes the active profile; an acting-user switch between
-those steps can copy or overwrite another person's needs. Concurrent profile
-edits can also be lost. A real host must enforce the correct consent boundary
-and serialize both profile edits and user switches, or use a safe transactional
-API; this prototype does neither.
+not check the toolkit's cross-app grants, sharing pause or audit boundary.
+
+## Trust-boundary decision (2026-11-05)
+
+**Option A + guard.** CaptionFlow is a trusted-host component: it runs inside a
+host that already authenticated the user and reads/writes that user's profile
+directly, with no per-request consent prompt. Full cross-app consent (Option B)
+is deferred until this boundary has been exercised on synthetic data.
+
+The guard: every call into `createToolkitPreferenceProvider` must declare
+`actingUserId` (the host's current user, `null` for the toolkit's default
+partition — never inferred). Internally the adapter calls `librarian.getActingUser()`
+before each toolkit call and again immediately after the one `await` in that
+operation, and refuses with `ActingUserMismatchError` if the toolkit's real
+acting user doesn't match the declared one, or if the toolkit exposes no
+`getActingUser()` at all. This stops a read or write from silently landing
+under the wrong partition when the host hands over a stale or wrong user
+context, or when the acting user changes mid-operation. It does **not**
+enforce cross-app grants, the sharing pause, or any consent boundary — those
+remain Option B's job, deferred.
+
+Remaining, not fixed by this guard:
+
+- Concurrent edits from a *different caller* writing the same profile at the
+  same time can still be lost; the guard only covers the acting-user identity,
+  not locking. A real host must still serialize profile edits or use a safe
+  transactional API.
 
 Text size is stored as a shared, modality-neutral toolkit need, so a change may
 also affect other surfaces. Whether a CaptionFlow-only control should propagate
@@ -34,9 +55,11 @@ method for CaptionFlow edits; directly calling Librarian bypasses validation.
 unrecognised unit tags. This adapter cannot distinguish a stripped invalid unit
 from a genuinely omitted unit, which the toolkit documents as a ratio. Validation
 of CaptionFlow writes does not repair or validate profiles created elsewhere.
-The setter reads the needs and then writes the whole array, so concurrent edits
-can be lost; use only when the host serializes profile edits. No toolkit core was
-changed. Investigate an upstream validation fix separately.
+The setter reads the needs and then writes the whole array; the acting-user
+guard (above) stops a user switch between those two steps from landing the
+write under the wrong partition, but a second caller editing the same profile
+at the same time can still lose an edit. No toolkit core was changed.
+Investigate an upstream validation fix separately.
 
 Run `node --test captionflow/tests/*.test.mjs` from the repository root.
 The test creates a sample profile, sends it through the actual fixture pipeline,
