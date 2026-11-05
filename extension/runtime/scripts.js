@@ -7,7 +7,9 @@
 //     in this page, so an update never stacks two copies;
 //   - checks the page exactly against the adapter's URL patterns (Chrome's
 //     match patterns are only a first, broader filter) and the sites the
-//     developer switched it off on;
+//     developer switched it off on; for an adapter that runs on some kinds
+//     of page only (pageTypes), asks the service worker what kind this one
+//     is (runtime/page-type.js: its markup, else the toolkit's model, kept);
 //   - calls enable(parameters, toolkit) and reports applied / failed /
 //     skipped to the service worker, with the page origin only. `toolkit`
 //     reaches the toolkit through the service worker, as this adapter:
@@ -30,8 +32,9 @@
 // chrome.userScripts.execute can find and disable a running adapter.
 
 import {
-  moduleFactorySource, chromeMatchPatterns, urlPatternRegExpSource,
+  moduleFactorySource, chromeMatchPatterns, urlPatternRegExpSource, pageTypeById,
 } from '../vendor/protocol/adapter/index.js';
+import { pageFacts } from './page-type.js';
 
 export const SCRIPT_PREFIX = 'rt-';
 /** The building blocks, bundled (npm run build:extension); injected before each adapter. */
@@ -95,13 +98,16 @@ export function buildUserScript(entry) {
   const factory = moduleFactorySource(entry.package.code);
   const scope = (entry.urlPatterns || []).map(urlPatternRegExpSource);
   const off = Object.entries(entry.sites || {}).filter(([, on]) => on === false).map(([origin]) => origin);
-  return `(() => {
+  const kinds = entry.pageTypes || entry.descriptor?.pageTypes || [];
+  const kindNames = kinds.map((k) => pageTypeById(k)?.name || k).join(', ');
+  return `(async () => {
   const KEY = ${JSON.stringify(key)};
   const REVISION = ${JSON.stringify(entry.revision)};
   const SCOPE = ${JSON.stringify(scope)}.map((s) => new RegExp(s));
   const OFF_ON = ${JSON.stringify(off)};
   const PARAMETERS = ${JSON.stringify(entry.parameters || {})};
   const ENTRY = ${JSON.stringify(entry.package.entry || null)};
+  const KINDS = ${JSON.stringify(kinds)};
 ${PREAMBLE}
   const ask = (message) => chrome.runtime.sendMessage({ ...message, key: KEY }).then((r) => {
     if (!r || !r.ok) throw new Error((r && r.error) || 'the toolkit did not answer');
@@ -123,6 +129,11 @@ ${PREAMBLE}
   const here = location.protocol + '//' + location.hostname.toLowerCase() + ':' + port + location.pathname;
   if (!SCOPE.some((r) => r.test(here))) { if (wasRunning) report('removed'); return; }
   if (OFF_ON.includes(location.origin)) { report(wasRunning ? 'removed' : 'skipped', 'switched off on this site'); return; }
+  if (KINDS.length) {
+    let kind = null;
+    try { kind = await chrome.runtime.sendMessage({ type: 'ai4a11y:pagetype', key: KEY, facts: (${pageFacts})() }); } catch (e) { kind = null; }
+    if (!kind || !KINDS.includes(kind.type)) { report(wasRunning ? 'removed' : 'skipped', ${JSON.stringify(`not one of its kinds of page (${kindNames})`)}); return; }
+  }
   let adapter;
   try {
     const exports = ${factory}();

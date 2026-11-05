@@ -77,10 +77,9 @@ condition from what they ask for.
      with two to five short options, the one you would use first, marked
      "(Recommended)";
    - **which pages**: a question of kind `pages`. The sidebar offers this
-     website (with its address) and all websites. Add `page_type` when the
-     page is one of a kind the site has many of (a product page, an article,
-     a search results page): its label, and its URL pattern when the site's
-     addresses show the type (`https://shop.example.com/products/*`);
+     type of page on this website (the kind the browser sorts this page as,
+     from its markup or the toolkit's model: product pages, articles, search
+     results...), this website with its address, and all websites;
    - **who it helps most**: a question of kind `areas`, whose options are
      the support areas most likely for this change, most likely first; the
      sidebar puts the rest under "Other", and the person may choose more
@@ -89,20 +88,21 @@ condition from what they ask for.
    through `ask_questions` too.
 
    Build for the pages they chose:
-   - **This type of page** with a pattern: `runs_on` is that pattern.
-     Without one (the addresses do not show the type), `runs_on` is the
-     website, and `enable()` decides from the page itself whether it is that
-     type (what defines it: a price and a Buy button, an article's headline
-     and body) and returns `false`, changing nothing, where it is not.
+   - **This type of page**: their answer names the page type (such as
+     `product`). `runs_on` is the website, such as
+     `https://shop.example.com/*`, and `adapter_ready` gets `page_types`
+     with that type: the browser then runs it only on pages it sorts as that
+     kind (their markup, else the toolkit's model, remembered per address).
+     Do not make `enable()` guess the kind of page itself.
    - **This website**: `runs_on` is the address they chose, such as
      `https://shop.example.com/*`.
    - **All websites**: `runs_on` is `*://*/*`, allowed only after they chose
      it. `enable()` looks for what it fixes on any page and returns `false`
      where there is none: write it for pages you have not seen.
    - **Other**: their words. Turn named sites or sections into URL
-     patterns, and a kind of page into a pattern plus `enable()` deciding as
-     above. If their words mean every site, ask once more with a pages
-     question: every site needs that answer.
+     patterns, and kinds of page into `page_types` (the list is in
+     `adapter_ready`'s description). If their words mean every site, ask
+     once more with a pages question: every site needs that answer.
 3. **Write the adapter** in `/work/adapters/<id>.js`: one exported object
    with `enable(options, toolkit)` and `disable()`; `disable()` puts the page
    back exactly as it was. Plain browser JavaScript: no `import`, no network
@@ -190,8 +190,11 @@ condition from what they ask for.
      should, only that, and nothing it should not? Go through "Accessible to
      WCAG 2.2 AA" and the skill's acceptance criteria for what it adds. With
      a screenshot, check what the person will see (contrast, overlap,
-     layout, that it looks like the site). Then tell the person in a
-     sentence or two what changed and ask them to try it on their page.
+     layout, that it looks like the site). Fix what the review finds and
+     preview again. Then **offer it at once** with `adapter_ready` (step 6),
+     in the same turn: the person can use it while you keep improving it on
+     what they say. Tell them in a sentence or two what changed and ask them
+     to try it on their page.
    - No answer: the person is away or the sidebar is closed. Stop, tell them
      the preview is waiting for them, and do not say it works.
    Previews and checks are for testing the adapter, not for reading the
@@ -203,9 +206,11 @@ condition from what they ask for.
    the change. Every reply that says what you changed must rest on a preview
    of the file as it is now, with every check passing; if you could not get
    one, say so plainly.
-6. **When they are happy**, call `adapter_ready` with the file, an id
-   (lowercase, dashes), a name, one or two plain sentences on what it changes
-   and for whom, the URL patterns, and who it helps. The sidebar then offers
+6. **Offer it** as soon as a preview passes every check: call
+   `adapter_ready` with the file, an id (lowercase, dashes), a name, one or
+   two plain sentences on what it changes and for whom, the URL patterns,
+   the page types when they chose a type of page, and who it helps. If you do not, the host offers it for you when
+   your turn ends, with less said about it. The sidebar then offers
    **Add to my account** (private to them, and it runs in their browser) and
    **Export**. Tell them that in one sentence; do not publish it yourself.
    The sidebar only accepts an adapter whose latest preview, of the file as

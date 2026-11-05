@@ -16,6 +16,7 @@ const TOOLKIT_FILES = [
   'protocol/adapter/descriptor.js',
   'protocol/adapter/schema.js',
   'protocol/adapter/canonical.js',
+  'protocol/adapter/page-types.js',
   'protocol/adapter/match.js',
   'protocol/adapter/wire.js',
   'protocol/adapter/package.js',

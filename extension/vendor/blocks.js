@@ -1540,6 +1540,27 @@ ${[...rules.values()].join("\n")}
     return { wrap, set, replaceBlock, scale, fit, nodes: (root, opts) => env.page.textNodes(root, opts) };
   }
 
+  // toolkit/protocol/adapter/page-types.js
+  var PAGE_TYPES = Object.freeze([
+    { id: "article", name: "Articles", about: "a news story, blog post or other long read", schema: ["Article", "NewsArticle", "BlogPosting", "Report", "ScholarlyArticle", "OpinionNewsArticle", "ReportageNewsArticle", "LiveBlogPosting"], og: ["article"] },
+    { id: "reference", name: "Reference and documentation pages", about: "an encyclopedia entry, manual or technical documentation", schema: ["TechArticle", "APIReference", "HowTo"], og: [] },
+    { id: "product", name: "Product pages", about: "one product or service for sale, with its price and a way to buy it", schema: ["Product", "ProductGroup", "IndividualProduct", "ProductModel", "Car", "Vehicle"], og: ["product", "og:product", "product.item"] },
+    { id: "product-list", name: "Shop listings", about: "a category, collection or list of many products", schema: ["OfferCatalog", "ProductCollection"], og: ["product.group"] },
+    { id: "search-results", name: "Search results", about: "results for a search the person made", schema: ["SearchResultsPage"], og: [] },
+    { id: "checkout", name: "Cart and checkout pages", about: "a shopping cart, checkout, payment or order page", schema: ["CheckoutPage"], og: [] },
+    { id: "sign-in", name: "Sign-in pages", about: "signing in, signing up or resetting a password", schema: [], og: [] },
+    { id: "form", name: "Forms", about: "a page that is mainly a form to fill in: contact, application, booking or survey", schema: ["ContactPage"], og: [] },
+    { id: "video", name: "Video pages", about: "a page built around one video or stream", schema: ["VideoObject", "VideoGallery", "BroadcastEvent"], og: ["video", "video.movie", "video.episode", "video.tv_show", "video.other"] },
+    { id: "recipe", name: "Recipes", about: "a recipe with ingredients and steps", schema: ["Recipe"], og: [] },
+    { id: "event", name: "Event pages", about: "one event with its date and place", schema: ["Event", "MusicEvent", "SportsEvent", "TheaterEvent", "BusinessEvent", "EducationEvent", "Festival"], og: [] },
+    { id: "profile", name: "Profile pages", about: "a person, account or organisation's profile", schema: ["ProfilePage", "Person"], og: ["profile"] },
+    { id: "discussion", name: "Discussions and Q&A", about: "a forum thread, comments, social posts or questions and answers", schema: ["QAPage", "FAQPage", "DiscussionForumPosting", "SocialMediaPosting", "Question"], og: [] },
+    { id: "listing", name: "Listings and directories", about: "a list of places, jobs, homes or other items that are not products", schema: ["RealEstateListing", "JobPosting", "ItemList", "CollectionPage"], og: [] },
+    { id: "home", name: "Home pages", about: "a site's front page that leads to its sections", schema: [], og: [] },
+    { id: "app", name: "Web apps", about: "an inbox, editor, map, dashboard or other tool used in the page", schema: ["WebApplication", "SoftwareApplication"], og: [] }
+  ]);
+  var PAGE_TYPE_IDS = Object.freeze(PAGE_TYPES.map((t) => t.id));
+
   // toolkit/blocks/ai/prompts.js
   var STR = (max) => ({ type: "string", maxLength: max });
   var PROMPT_FIELDS = Object.freeze({
@@ -1570,6 +1591,7 @@ ${[...rules.values()].join("\n")}
     label: { kind: "text", input: "what is known about the control: its type, its current text, nearby text", gate: "short", maxChars: 60, summary: "A short accessible name (1-4 words) for a control." },
     linkText: { kind: "text", input: "the link's text, its address and the sentence around it", gate: "short", maxChars: 60, summary: "Link text (2-8 words) that says where a link goes." },
     columnHeader: { kind: "text", input: "the column's cells, one per line", gate: "short", maxChars: 60, summary: "A short header (1-4 words) for a table column." },
+    pageType: { kind: "text", input: "what the page shows: its address, title, headings, landmarks and some of its text", gate: "choice", model: "lite", internal: true, summary: "Which kind of page this is, of the toolkit's page types (protocol/adapter/page-types.js), or none of them. The runtime asks, for adapters that run on one kind of page; adapters do not." },
     choose: { kind: "text", input: "the options, numbered, each with what the page shows of it", gate: "choice", summary: "Which of the options the adapter found answers its question, judged from what the page shows of each; or that the page does not make it clear." },
     describe: { kind: "vision", input: "an image of the element", gate: "description", maxChars: 150, summary: "Describe an image for a person who cannot see it (alt text, or a longer description)." },
     chart: { kind: "vision", input: "an image of a chart", gate: "description", maxChars: 1200, summary: "Describe a chart: its type, axes, trend, and the highest and lowest values." }

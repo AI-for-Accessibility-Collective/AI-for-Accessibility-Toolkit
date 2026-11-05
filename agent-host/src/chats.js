@@ -14,6 +14,7 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { translate } from './updates.js';
 import { fallbackTitle } from './titles.js';
+import { PAGE_TYPE_IDS, SUPPORT_AREAS } from '../../toolkit/protocol/adapter/index.js';
 
 const MAX_ENTRIES = 600;
 const LEVELS = ['none', 'url', 'source', 'screenshot'];
@@ -47,7 +48,8 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     id: chat.id, title: chat.title, createdAt: chat.createdAt, updatedAt: chat.updatedAt,
     busy: runs.get(uid)?.chatId === chat.id,
   });
-  const full = (uid, chat) => ({ ...summary(uid, chat), consent: chat.consent, entries: chat.entries, adapters: chat.adapters, allSites: chat.allSites === true });
+  const full = (uid, chat) => ({ ...summary(uid, chat), consent: chat.consent, entries: chat.entries, adapters: chat.adapters, allSites: chat.allSites === true,
+    ...(chat.pageTypes ? { pageTypes: chat.pageTypes } : {}), ...(chat.supportAreas ? { supportAreas: chat.supportAreas } : {}) });
 
   function list(uid) {
     accounts.ensure(uid);
@@ -148,18 +150,24 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
   /**
    * The person's message. `answers` names the questions entry it answers
    * (ask_questions), which is then shown as answered; `pages` is their
-   * answer to a pages question (all: the adapter may run on every site).
+   * answer to a pages question (all: the adapter may run on every site;
+   * type: on the kind of page `pageType` only), `areas` to an areas one.
    * With `shown`, the message is the host's (verification.js): the person
    * sees that line instead.
    */
-  async function send(uid, chatId, text, { answers, pages, shown } = {}) {
+  async function send(uid, chatId, text, { answers, pages, pageType, areas, shown } = {}) {
     const message = String(text || '').trim();
     if (!message) throw httpError(400, 'Say something first.');
     if (message.length > 20_000) throw httpError(400, 'That message is too long.');
     if (runs.has(uid)) throw httpError(409, runs.get(uid).chatId === chatId ? 'The assistant is still working on this chat. Wait, or stop it.' : 'Another chat is still working. Wait, or stop it.', 'busy');
     const chat = read(uid, chatId);
     if (chat.title === 'New chat' && !shown) { chat.title = fallbackTitle(message); save(uid, chat); }
-    if (['all', 'site', 'type'].includes(pages)) { chat.allSites = pages === 'all'; save(uid, chat); }
+    if (['all', 'site', 'type', 'other'].includes(pages)) {
+      chat.allSites = pages === 'all';
+      if (pages === 'type' && PAGE_TYPE_IDS.includes(pageType)) chat.pageTypes = [pageType]; else delete chat.pageTypes;
+      save(uid, chat);
+    }
+    if (Array.isArray(areas)) { chat.supportAreas = areas.filter(a => SUPPORT_AREAS.includes(a)); save(uid, chat); }
     const asked = answers && chat.entries.find(e => e.id === answers && e.kind === 'questions' && !e.answered);
     if (asked) addEntry(uid, chatId, { id: asked.id, answered: true });
     addEntry(uid, chatId, shown ? { kind: 'notice', text: String(shown).slice(0, 300) } : { kind: 'you', text: message });

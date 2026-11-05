@@ -363,7 +363,7 @@ export function buildBlocksReference() {
       ...b.invariants.map((i) => `- ${i}`),
     ].join('\n');
   }).join('\n\n');
-  const tasks = Object.entries(TASKS).map(([k, t]) => `| \`${k}\` | ${t.kind === 'vision' ? '`s.ai.vision`' : '`s.ai.text`'} | ${cell(t.input)} | ${cell(t.summary)} |`).join('\n');
+  const tasks = Object.entries(TASKS).filter(([, t]) => !t.internal).map(([k, t]) => `| \`${k}\` | ${t.kind === 'vision' ? '`s.ai.vision`' : '`s.ai.text`'} | ${cell(t.input)} | ${cell(t.summary)} |`).join('\n');
   const fields = Object.entries(PROMPT_FIELDS).map(([k, f]) => `| \`${k}\` | ${cell(f.description)}${f.personal ? ' (personal)' : ''} |`).join('\n');
   const personal = Object.entries(PERSONAL_KEYS).map(([k, d]) => `| \`${k}\` | ${cell(d)} |`).join('\n');
   return `# Building blocks for adapters

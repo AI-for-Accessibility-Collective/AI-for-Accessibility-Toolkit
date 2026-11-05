@@ -92,11 +92,12 @@ export function gateAnswer(task, answer, input, options = {}) {
  * @param {(uid: string, fn: () => Promise<any>) => Promise<any>} o.withUserLock
  * @param {(req: any) => Promise<any>} o.authenticate
  * @param {((prompt: string, opts?: {images?: object[]}) => Promise<string>)|null} o.caller  the model; null when the service has no key
+ * @param {Function|null} [o.liteCaller]  a smaller model, for the tasks that say `model: 'lite'` (else `caller`)
  * @param {number} [o.dailyBudgetUsd]  US dollars per account per day (UTC)
  * @param {number} [o.dailyPerAdapter]  calls per adapter per day
  * @param {(model: string) => {input: number, output: number}} [o.price]  dollars per million tokens
  */
-export function createAiRoutes({ store, withUserLock, authenticate, caller, log, dailyBudgetUsd = 200, dailyPerAdapter = 200, price, now = () => Date.now() }) {
+export function createAiRoutes({ store, withUserLock, authenticate, caller: mainCaller, liteCaller = null, log, dailyBudgetUsd = 200, dailyPerAdapter = 200, price, now = () => Date.now() }) {
   const usage = new Map();   // uid -> promise of its usage record
   const timers = new Map();  // uid -> flush timer
   const held = new Map();    // uid -> dollars held for calls still out
@@ -172,6 +173,7 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller, log,
       images = [{ mimeType: img.mimeType, data: img.data }];
     }
     const adapter = typeof body.adapter === 'string' ? body.adapter.slice(0, 200) : '';
+    const caller = TASKS[task].model === 'lite' && liteCaller ? liteCaller : mainCaller;
     let built;
     try {
       built = buildPrompt(task, input, body.options || {});
@@ -214,7 +216,7 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller, log,
       if (method === 'POST' && pathname === `${AI_PREFIX}/vision`) return await ask(req, res, rec, 'vision');
       if (method === 'GET' && pathname === `${AI_PREFIX}/usage`) {
         const u = await load(rec.uid);
-        return sendJSON(res, 200, { day: u.day, spentUsd: u.spentUsd, budgetUsd: dailyBudgetUsd, calls: u.calls, perAdapterLimit: dailyPerAdapter, byAdapter: u.byAdapter, enabled: u.enabled, available: !!caller });
+        return sendJSON(res, 200, { day: u.day, spentUsd: u.spentUsd, budgetUsd: dailyBudgetUsd, calls: u.calls, perAdapterLimit: dailyPerAdapter, byAdapter: u.byAdapter, enabled: u.enabled, available: !!mainCaller });
       }
       if (method === 'PUT' && pathname === `${AI_PREFIX}/settings`) {
         // A token bound to one app speaks for that app, not for the account.

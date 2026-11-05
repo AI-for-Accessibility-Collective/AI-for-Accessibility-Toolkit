@@ -49,12 +49,11 @@ await test('the agent\'s questions: each with at least two options, and "Other" 
   assert.equal(questionsOf(Array(6).fill({ question: 'Q?', options: ['a', 'b'] })).length, 4);
   // The two kinds the sidebar lays out itself.
   const [pages, areas] = questionsOf([
-    { kind: 'pages', page_type: { label: 'Product pages', pattern: 'https://shop.example.com/products/*' } },
+    { kind: 'pages' },
     { kind: 'areas', options: [{ label: 'Motor (Recommended)' }, { label: 'vision' }, { label: 'Patience' }] },
   ]);
-  assert.deepEqual(pages, { kind: 'pages', question: 'Which pages should this apply to?', options: [], multiSelect: false, pageType: { label: 'Product pages', pattern: 'https://shop.example.com/products/*' } });
+  assert.deepEqual(pages, { kind: 'pages', question: 'Which pages should this apply to?', options: [], multiSelect: false }, 'the sidebar fills in the kind of page, the site and all websites');
   assert.deepEqual(areas, { kind: 'areas', question: 'Who does this change help most?', options: [{ label: 'motor' }, { label: 'vision' }], multiSelect: true });
-  assert.equal(questionsOf([{ kind: 'pages', page_type: { label: 'Articles', pattern: 'not a pattern' } }])[0].pageType.pattern, undefined);
   assert.throws(() => questionsOf([{ kind: 'areas', options: ['patience'] }]), /among: vision/);
 });
 
@@ -353,6 +352,27 @@ await test('an adapter runs on every site only when the person chose All website
   await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'allsites again' } });
   const a = await until(async () => adapterNow(id, 'everywhere'));
   assert.deepEqual(a.runsOn, ['*://*/*']);
+  sb.close();
+});
+
+await test('a preview that passes makes the adapter the person\'s, even when the agent does not offer it; a type of page goes with it', async () => {
+  const sb = sidebar('ada', { preview: previewOk });
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  // The last test's chat may still be finishing its run.
+  await until(async () => (await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages?\n→ This type of page: Product pages', pages: 'type', pageType: 'product', areas: ['motor', 'nonsense'] } })).status !== 409);
+  let chat = await until(async () => { const c = await chatNow(id); return !c.busy && c.pageTypes && c; });
+  assert.deepEqual([chat.pageTypes, chat.supportAreas, chat.allSites], [['product'], ['motor'], false]);
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'previewonly please' } });
+  chat = await until(async () => { const c = await chatNow(id); return !c.busy && c.adapters.length && c; });
+  const a = chat.adapters[0];
+  assert.deepEqual([a.id, a.name, a.runsOn, a.pageTypes, a.supportAreas, a.version], ['tea-cosy', 'Tea cosy', ['https://example.com/*'], ['product'], ['motor'], 1]);
+  assert.ok(chat.entries.some(e => e.kind === 'notice' && e.text === '“Tea cosy” is ready. You can add it to your account or export it.'));
+  // Its page types reach the account with it: Add to my account gets them from the adapter.
+  const got = await (await api(`/agent/chats/${id}/adapters/tea-cosy`)).json();
+  assert.deepEqual(got.adapter.pageTypes, ['product']);
+  // The agent's own page_types win; unknown kinds are dropped.
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages?\n→ This website', pages: 'site' } });
+  chat = await until(async () => { const c = await chatNow(id); return !c.busy && !c.pageTypes && c; });
   sb.close();
 });
 

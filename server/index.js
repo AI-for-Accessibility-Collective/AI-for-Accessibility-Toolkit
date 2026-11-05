@@ -36,7 +36,7 @@ import path from 'node:path';
 
 import { createApp } from './src/app.js';
 import { createStore } from './src/store.js';
-import { createGeminiCaller, GEMINI_MODEL } from './src/gemini.js';
+import { createGeminiCaller, GEMINI_MODEL, GEMINI_LITE_MODEL } from './src/gemini.js';
 import { createToolkitHost } from './src/toolkit-host.js';
 import { createLogger } from './src/log.js';
 
@@ -81,6 +81,7 @@ function boot() {
   // The building blocks' AI sends page content: never logged, whatever LOG_CONTENT says.
   const ai = {
     caller: geminiApiKey ? createGeminiCaller({ apiKey: geminiApiKey, model: geminiModel, log, logContent: false }) : null,
+    liteCaller: geminiApiKey ? createGeminiCaller({ apiKey: geminiApiKey, model: process.env.GEMINI_LITE_MODEL || GEMINI_LITE_MODEL, log, logContent: false }) : null,
     dailyBudgetUsd: Number(process.env.AI_DAILY_BUDGET_USD) || undefined,
     dailyPerAdapter: Number(process.env.AI_DAILY_CALLS_PER_ADAPTER) || undefined,
     price: process.env.AI_PRICE_INPUT_PER_MTOK && process.env.AI_PRICE_OUTPUT_PER_MTOK

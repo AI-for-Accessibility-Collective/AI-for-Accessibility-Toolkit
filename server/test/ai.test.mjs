@@ -179,6 +179,27 @@ await test('gateAnswer: short values are cleaned and checked; descriptions rejec
   assert.equal(gateAnswer('simplify', '```\nPlain text that is long enough to keep.\n```', 'Original text that is long enough to keep.').text, 'Plain text that is long enough to keep.');
 });
 
+await test('pageType goes to the small model, its price counts, and only the number of a kind comes back', async () => {
+  const asked = [];
+  const lite = Object.assign(async (prompt, { onUsage } = {}) => {
+    asked.push(prompt);
+    onUsage?.({ model: 'lite-model', promptTokens: 1000, outputTokens: 2 });
+    return asked.length === 1 ? '3' : 'It looks like a product page.';
+  }, { model: 'lite-model' });
+  const s2 = await boot({ ai: { caller, liteCaller: lite, price } });
+  const t2 = await s2.mint('bea');
+  const ask = () => fetch(s2.base + '/v1/ai/text', { method: 'POST', headers: { authorization: `Bearer ${t2}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ task: 'pageType', input: 'Address: https://shop.example/p/1\nTitle: Blue tea pot', adapter: 'toolkit/page-type' }) }).then(r => r.json());
+  const before = prompts.length;
+  assert.equal((await ask()).text, '3');
+  assert.equal(prompts.length, before, 'the main model was not asked');
+  assert.match(asked[0], /3\. Product pages: one product or service for sale/);
+  assert.match(asked[0], /answer 0/);
+  const second = await ask();
+  assert.deepEqual([second.text, second.reason], [null, 'not the number of an option']);
+  s2.stop();
+});
+
 svc.stop();
 console.log(`\n/v1/ai: ${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

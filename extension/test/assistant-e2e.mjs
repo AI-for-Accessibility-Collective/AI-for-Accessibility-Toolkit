@@ -77,7 +77,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
 // A shop with small buttons.
 const site = http.createServer((req, res) => {
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-  res.end(`<!doctype html><html lang="en"><head><title>${req.url.startsWith('/other') ? 'Other' : 'Shop'}</title><style>button{height:20px;font-size:11px}</style></head><body><main><h1>Shop</h1><p>Tea, 4 dollars.</p><button id="buy">Buy</button> <button id="later">Save for later</button></main></body></html>`);
+  res.end(`<!doctype html><html lang="en"><head><title>${req.url.startsWith('/other') ? 'Other' : 'Shop'}</title><script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Tea","offers":{"@type":"Offer","price":"4"}}</script><style>button{height:20px;font-size:11px}</style></head><body><main><h1>Shop</h1><p>Tea, 4 dollars.</p><button id="buy">Buy</button> <button id="later">Save for later</button></main></body></html>`);
 });
 await new Promise(r => site.listen(0, '127.0.0.1', r));
 const shop = `http://localhost:${site.address().port}/`;
@@ -212,15 +212,22 @@ try {
     await panel.locator('#chat-select option', { hasText: 'Stand-in title: build' }).waitFor({ state: 'attached' });
 
     // The switch takes the preview off the page, and puts it back, without the agent.
-    const toggle = panel.getByRole('switch', { name: 'Preview' });
+    const toggle = panel.getByRole('switch', { name: 'Apply previews' });
     await until(async () => (await toggle.getAttribute('aria-checked')) === 'true', 'the switch on');
     await toggle.click();
     await until(() => page.evaluate(() => !document.body.dataset.big), 'the preview off');
     await until(async () => (await toggle.getAttribute('aria-checked')) === 'false', 'the switch off');
-    assert.match(await panel.locator('#preview-label').innerText(), /“Bigger buttons” is off/);
+    assert.match(await panel.locator('#preview-label').innerText(), /“Bigger buttons” is not on the page/);
     await toggle.click();
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the preview on again');
     await until(async () => (await toggle.getAttribute('aria-checked')) === 'true', 'the switch on');
+    // On stays on: after a reload of the page, and of the sidebar.
+    await page.reload();
+    await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the preview back after the page reloads');
+    await panel.reload();
+    await until(async () => (await panel.getByRole('switch', { name: 'Apply previews' }).getAttribute('aria-checked')) === 'true', 'the switch on after the sidebar reloads');
+    await page.reload();
+    await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the preview back after both reload');
     await toggle.click();
     await until(() => page.evaluate(() => !document.body.dataset.big), 'the preview off again');
 
@@ -236,7 +243,10 @@ try {
 
     // Automatic previews, and the site's answer remembered in this chat: no cards this time,
     // and the preview goes to the shop, not the tab on screen.
-    await panel.check('#auto-preview');
+    // The switch on: the next preview goes on without asking.
+    await toggle.click();
+    await until(async () => (await toggle.getAttribute('aria-checked')) === 'true', 'the switch on');
+    await page.evaluate(() => { delete document.body.dataset.big; });
     await ask('build them again');
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the automatic preview on the shop');
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
@@ -264,11 +274,16 @@ try {
     await panel.locator('#status', { hasText: 'is in your account' }).waitFor();
     const installed = await createRegistryClient({ url: base, token }).installed('browser-runtime');
     assert.ok(installed.adapters.some(a => a.adapter.appId === 'assistant' && a.adapter.id === 'bigger-buttons'));
-    assert.equal(await panel.locator('#preview-bar').isHidden(), true, 'the preview gives way to the installed adapter');
+    // The preview gives way to the installed adapter: the switch goes off.
+    await until(async () => (await toggle.getAttribute('aria-checked')) === 'false', 'the switch off once installed');
+    assert.match(await panel.locator('#preview-label').innerText(), /Previews go on the page when you say so/);
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the installed adapter on the page');
     await panel.locator('#ready-list', { hasText: 'In your account.' }).waitFor();
 
     // A newer version replaces it in the account once it passes its background check.
+    // The switch on with nothing to put back: the next preview goes on without asking.
+    await toggle.click();
+    await panel.locator('#preview-label', { hasText: 'The assistant’s next preview goes on the page.' }).waitFor();
     await ask('build it again');
     // (The stand-in offers it twice in a run that changes nothing: the last version is the one kept.)
     const chatNow = async () => (await (await fetch(`${base}/v1/agent/chats/${await panel.locator('#chat-select').inputValue()}`, { headers: { authorization: `Bearer ${token}` } })).json()).chat;
@@ -330,8 +345,7 @@ try {
     await pagesQ.waitFor();
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
     const host = new URL(shop).host;
-    for (const name of ['This type of page: Product pages', `This website: ${host}`, 'All websites', 'Other']) await pagesQ.getByRole('radio', { name }).waitFor();
-    assert.match(await pagesQ.innerText(), /https:\/\/example\.com\/products\/\*/);
+    for (const name of [`This type of page: Product pages on ${host}`, `This website: ${host}`, 'All websites', 'Other']) await pagesQ.getByRole('radio', { name }).waitFor();
     assert.match(await pagesQ.innerText(), new RegExp(`http://${host.replace(/[.]/g, '\\.')}/`));
     const areasQ = panel.getByRole('group', { name: 'Who does this change help most?' });
     assert.equal(await areasQ.getByRole('checkbox', { name: 'Hearing' }).isVisible(), false, 'the other areas wait under Other');
@@ -384,7 +398,8 @@ try {
       await run();
       for (let i = 0; i < 3 && await answerQuestions(); i++) await run();
     };
-    await panel.check('#auto-preview');
+    const applyPreviews = panel.getByRole('switch', { name: 'Apply previews' });
+    if ((await applyPreviews.getAttribute('aria-checked')) !== 'true') await applyPreviews.click();
     await turn('The Buy and Save for later buttons on this shop are too small for me to tap. Please make an adapter that makes them easier to tap.');
     console.log(`The agent asked ${questionsAsked} set${questionsAsked === 1 ? '' : 's'} of multiple-choice questions.`);
     assert.ok(questionsAsked > 0, 'the agent asked its questions as multiple choice');
@@ -405,6 +420,10 @@ try {
     await until(async () => (await heightOfBuy()) >= 44, 'the installed adapter on the page');
     console.log(`Installed from the account: ${mine.adapters.filter(a => a.adapter.appId === 'assistant').map(a => a.adapter.id).join(', ')}; the Buy button is ${await heightOfBuy()}px tall to a press.`);
     assert.ok(!/```/.test(shown), 'no code blocks in the sidebar');
+    // The background check, on the host's verifier: it ends one way or the other.
+    const checked = await until(async () => { const t = await panel.locator('#ready-list').innerText(); return /Background check (passed|found problems|could not run)[^\n]*/.exec(t)?.[0]; }, 'the background check', 20 * 60_000);
+    console.log(`Background check: ${checked}`);
+    await shot(panel, 'real-checked');
     console.log('Assistant browser workflow passed with real opencode and Gemini 3.8 Flash: asked multiple choice, shared the page, built, previewed, reviewed, offered, added to the account.');
   }
 } catch (e) {

@@ -18,6 +18,9 @@
 //                every script; profile.set records a setting the person
 //                chose (/v1/librarian/recordScopedSettings), zoom is the
 //                browser's own (chrome.tabs.setZoom) and speech is chrome.tts
+//   page types   an adapter for some kinds of page only asks what kind its
+//                page is (runtime/page-type.js: the page's markup, else the
+//                toolkit's pageType task, kept by address)
 //   wake-ups     install/startup, a 30-second alarm, the registry's
 //                notification stream while the worker is awake, and the
 //                developer console page itself (bridge.js) right after a save
@@ -32,6 +35,7 @@ import { registrationFor, runnable, teardownScript, buildUserScript, personalScr
 import { personalFromProfile, explicitFromMemories, personalFromSettings, siteOf, SETTABLE_KEYS } from './vendor/blocks/personal.js';
 import { shortcutFromProfile, shortcutKeysFromProfile, checkCombo, normalCombo, SHORTCUT_FIELD } from './vendor/blocks/shortcut.js';
 import { isAllowedServerUrl, readConnection, writeConnection, instanceId, runtimeLabel } from './runtime/config.js';
+import { createPageTypes, askToolkit } from './runtime/page-type.js';
 
 const APP = BROWSER_RUNTIME_APP;
 const SYNC_ALARM = 'sync';
@@ -294,6 +298,18 @@ async function aiCall(message, sender) {
   if (!res.ok) return { text: null, reason: body.error || `http-${res.status}` };
   return { text: typeof body.text === 'string' ? body.text : null, ...(body.reason ? { reason: body.reason } : {}) };
 }
+
+// What kind of page an adapter that runs on some kinds only is on: the
+// address is the tab's, not what the page says it is.
+const pageTypes = createPageTypes({ storage: chrome.storage.local, ask: async (input) => askToolkit(await readConnection())(input) });
+chrome.runtime.onUserScriptMessage?.addListener((message, sender, sendResponse) => {
+  if (message?.type !== 'ai4a11y:pagetype') return false;
+  (async () => {
+    if (!(await knownAdapter(String(message.key || '')))) throw new Error('This adapter is not installed in this browser.');
+    return pageTypes.classify({ ...(message.facts || {}), url: String(sender.url || sender.tab?.url || '').split('#')[0] });
+  })().then((r) => sendResponse(r), () => sendResponse(null));
+  return true;
+});
 
 // The person's Librarian on the toolkit, with the token, for what the MCP
 // tools do not cover: the settings they set themselves.

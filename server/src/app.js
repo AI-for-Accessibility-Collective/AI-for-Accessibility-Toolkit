@@ -109,7 +109,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   const metaPayload = buildMeta({ version });
   const agentProxy = createAgentProxy({ authenticate: (req) => authenticate(req), hostUrl: agentHost.url, secret: agentHost.secret, fetch: agentHost.fetch, log });
   // The model behind the building blocks' AI (toolkit/blocks), for adapters.
-  const aiRoutes = createAiRoutes({ store, withUserLock, authenticate: (req) => authenticate(req), caller: ai.caller || null, log, ...(ai.dailyBudgetUsd ? { dailyBudgetUsd: ai.dailyBudgetUsd } : {}), ...(ai.dailyPerAdapter ? { dailyPerAdapter: ai.dailyPerAdapter } : {}), ...(ai.price ? { price: ai.price } : {}) });
+  const aiRoutes = createAiRoutes({ store, withUserLock, authenticate: (req) => authenticate(req), caller: ai.caller || null, liteCaller: ai.liteCaller || null, log, ...(ai.dailyBudgetUsd ? { dailyBudgetUsd: ai.dailyBudgetUsd } : {}), ...(ai.dailyPerAdapter ? { dailyPerAdapter: ai.dailyPerAdapter } : {}), ...(ai.price ? { price: ai.price } : {}) });
   const adaptersRouter = createAdaptersRouter({ store, adminPassword, withUserLock });
   // Checks of published adapters, on request, run by the agent host.
   const adapterChecks = createAdapterChecks({ store, withUserLock, authenticate: (req) => authenticate(req), registry: () => registry,

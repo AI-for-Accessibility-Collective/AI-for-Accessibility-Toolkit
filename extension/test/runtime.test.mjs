@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { buildUserScript, teardownScript, registrationFor, personalScript, runnable, scriptId, buildPreviewScript, previewTeardownScript, AXE_TAGS, AXE_ADVICE_TAGS } from '../runtime/scripts.js';
 import { isAllowedServerUrl } from '../runtime/config.js';
+import { createPageTypes, pageKey } from '../runtime/page-type.js';
 
 let pass = 0, fail = 0;
 async function test(name, fn) {
@@ -333,6 +334,64 @@ await test("registrations inject the blocks and the person's settings before the
 await test('extension/vendor matches the toolkit modules', () => {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
   execFileSync(process.execPath, [path.join(root, 'scripts', 'build-extension.mjs'), '--check'], { stdio: 'pipe' });
+});
+
+await test('an adapter for some kinds of page asks what kind this one is, and runs only there', async () => {
+  const run = async (kinds, answer) => {
+    const p = page('https://shop.example/p/1');
+    const asked = [];
+    p.context.document = { querySelectorAll: () => [], querySelector: () => null, forms: [], links: [], title: 'Tea pot', body: { innerText: 'Tea pot $4' } };
+    p.context.chrome.runtime.sendMessage = (m) => { if (m.type === 'ai4a11y:pagetype') { asked.push(m); return Promise.resolve(answer); } p.reports.push(m); };
+    p.run(buildUserScript(entry({ pageTypes: kinds })));
+    for (let i = 0; i < 5; i++) await settle();
+    return { p, asked };
+  };
+  const yes = await run(['product'], { type: 'product', source: 'page' });
+  assert.deepEqual(yes.p.log, ['enable r1 {}']);
+  assert.equal(yes.asked.length, 1);
+  assert.equal(yes.asked[0].key, 'ada/console/big-buttons');
+  assert.equal(yes.asked[0].facts.title, 'Tea pot');
+  const no = await run(['article'], { type: 'product', source: 'model' });
+  assert.deepEqual(no.p.log, []);
+  assert.deepEqual(no.p.reports.map(r => [r.status, r.message]), [['skipped', 'not one of its kinds of page (Articles)']]);
+  const unknown = await run(['product'], null);
+  assert.deepEqual(unknown.p.log, [], 'no answer: it does not run');
+  const plainOne = page('https://shop.example/p/1');
+  plainOne.run(buildUserScript(entry()));
+  await settle();
+  assert.deepEqual(plainOne.log, ['enable r1 {}'], 'one without kinds asks nothing');
+});
+
+await test('page types: the markup first, else the model once per address, kept', async () => {
+  const store = {};
+  const storage = { get: async (k) => ({ [k]: store[k] }), set: async (o) => Object.assign(store, JSON.parse(JSON.stringify(o))) };
+  const asked = [];
+  let answer = { text: '6' };
+  let clock = 1_000;
+  const types = createPageTypes({ storage, ask: async (input) => { asked.push(input); return answer; }, now: () => clock });
+  const facts = (url, declared = {}) => ({ url, title: 'T', declared, headings: [], counts: {}, text: 'x' });
+  assert.deepEqual(await types.classify(facts('https://shop.example/p/1#top', { types: ['WebSite', 'Product', 'BreadcrumbList'] })), { type: 'product', source: 'page' });
+  assert.equal(asked.length, 0, 'the page said so: no model');
+  assert.deepEqual(await types.classify(facts('https://shop.example/cart')), { type: 'checkout', source: 'model' });
+  assert.match(asked[0], /Address: https:\/\/shop\.example\/cart/);
+  assert.deepEqual(await types.classify(facts('https://shop.example/cart#x')), { type: 'checkout', source: 'model', cached: true });
+  assert.equal(asked.length, 1, 'kept by address, without the fragment');
+  // Two adapters on one page ask once.
+  answer = { text: '1' };
+  const both = await Promise.all([types.classify(facts('https://news.example/a')), types.classify(facts('https://news.example/a'))]);
+  assert.deepEqual(both.map(b => b.type), ['article', 'article']);
+  assert.equal(asked.length, 2);
+  // Not answered at all: not kept. Cannot tell: kept a day.
+  answer = { text: null, reason: 'http-503' };
+  assert.equal((await types.classify(facts('https://x.example/'))).type, null);
+  answer = { text: null, reason: 'cannot tell' };
+  await types.classify(facts('https://x.example/'));
+  await types.classify(facts('https://x.example/'));
+  assert.equal(asked.length, 4);
+  clock += 25 * 3600_000;
+  await types.classify(facts('https://x.example/'));
+  assert.equal(asked.length, 5, 'asked again after a day');
+  assert.equal(pageKey('https://a.example/p?q=1#f'), 'https://a.example/p?q=1');
 });
 
 console.log(`\nAdapter runtime: ${pass} passed, ${fail} failed`);

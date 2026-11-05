@@ -109,6 +109,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
       name: rec.name, description: rec.description, appName: rec.appName, owner,
       shared: rec.shared === true, revision: rec.revision, version: rec.version,
       supportAreas: rec.supportAreas || [], urlPatterns: rec.urlPatterns || [],
+      ...(rec.pageTypes ? { pageTypes: rec.pageTypes } : {}),
       portable: !!rec.format, format: rec.format || null, visibility: rec.visibility || 'user',
       createdAt: rec.createdAt, updatedAt: rec.updatedAt,
     };
@@ -245,6 +246,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
       const rec = {
         appId, id, appName, name: descriptor.name, description: descriptor.description || '',
         version: descriptor.version, supportAreas: descriptor.supportAreas || [],
+        ...(descriptor.pageTypes ? { pageTypes: descriptor.pageTypes } : {}),
         ...(descriptor.visibility && descriptor.visibility !== 'user' ? { visibility: descriptor.visibility } : {}),
         urlPatterns: webUrlPatterns(descriptor.targets), format: pkg ? pkg.format : null,
         shared: sharedNow, sharedAt: sharedNow ? (existing?.shared ? existing.sharedAt : at) : null,
@@ -398,6 +400,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
         ...base, available: true, name: rec.name, appName: rec.appName, owner: key.owner, mine: key.owner === caller,
         revision: rev, latestRevision: rec.revision, updateAvailable: inst.revision !== 'latest' && rec.revision > rev,
         urlPatterns: webUrlPatterns(doc.descriptor.targets), descriptorDigest: doc.descriptor.descriptorDigest,
+        ...(doc.descriptor.pageTypes ? { pageTypes: doc.descriptor.pageTypes } : {}),
         artifactDigest: doc.artifactDigest || null, format: doc.package?.format || null,
         descriptor: doc.descriptor,
         ...(args.includeCode && doc.package ? { package: doc.package } : {}),

@@ -8,6 +8,7 @@ export {
   MUTATION_STATUSES, QUERY_STATUSES, REASON_CODES, SUPPORT_AREAS, SLUG, VISIBILITY, APP_VISIBILITY,
   checkApplication, checkDescriptor, summarizeDescriptor, adapterRefOf, defineDescriptor,
 } from './descriptor.js';
+export { PAGE_TYPES, PAGE_TYPE_IDS, pageTypeById, declaredPageType } from './page-types.js';
 export { checkSchema, validate, formatErrors, jsonEqual } from './schema.js';
 export { canonicalize, sha256Hex, descriptorDigest, digestInput, DIGEST_FIELDS } from './canonical.js';
 export {

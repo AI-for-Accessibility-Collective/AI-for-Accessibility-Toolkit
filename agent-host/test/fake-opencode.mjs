@@ -62,10 +62,16 @@ if (/^build/.test(message)) {
     said += ', then ' + await offer('slow', 'v2');
   }
   out({ type: 'text', part: { id: 'v1', type: 'text', text: `Verify: ${said}.` } });
+} else if (/^previewonly/.test(message)) {
+  // Previews an adapter that passes, and ends without adapter_ready.
+  mkdirSync('adapters', { recursive: true });
+  writeFileSync('adapters/tea-cosy.js', 'export const A = { enable() { document.body.dataset.cosy = "1"; }, disable() { delete document.body.dataset.cosy; } };\n');
+  const p = await tool('browser_preview', { file: 'adapters/tea-cosy.js', name: 'Tea cosy', runs_on: ['https://example.com/*'], checks: [{ name: 'cosy', code: 'return document.body.dataset.cosy === "1";' }] });
+  out({ type: 'text', part: { id: 'po', type: 'text', text: `Previewed: ${p.content[0].text.split('\n')[0]}` } });
 } else if (/^kinds/.test(message)) {
   // The two questions the sidebar lays out itself.
   const asked = await tool('ask_questions', { questions: [
-    { kind: 'pages', page_type: { label: 'Product pages', pattern: 'https://example.com/products/*' } },
+    { kind: 'pages' },
     { kind: 'areas', options: [{ label: 'Motor (Recommended)' }, { label: 'Vision' }] },
   ] });
   out({ type: 'text', part: { id: 'k1', type: 'text', text: `Asked kinds: ${asked.isError ? 'no' : 'yes'}.` } });

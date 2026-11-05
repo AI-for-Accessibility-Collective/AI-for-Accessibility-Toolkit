@@ -26,6 +26,8 @@ import { aiContext } from './ai-context.js';
 import { silentLogger, loggedContent } from './log.js';
 
 export const GEMINI_MODEL = 'gemini-3.8-flash';
+// For quick sorting the runtime does on many pages (the pageType task).
+export const GEMINI_LITE_MODEL = 'gemini-3.5-flash-lite';
 
 // What a call costs, in US dollars per million tokens, from Google's Gemini
 // API pricing page (standard tier, paid; checked 2026-11-03:
@@ -38,6 +40,8 @@ export const GEMINI_PRICES = {
     { until: '2027-01-01', input: 0.75, output: 3.75 }, // introductory rate
     { input: 1.5, output: 7.5 },
   ],
+  // checked 2026-11-05
+  'gemini-3.5-flash-lite': [{ input: 0.3, output: 2.5 }],
 };
 
 /** {input, output} dollars per million tokens for `model` at `when`. A model

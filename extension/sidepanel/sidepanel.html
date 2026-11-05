@@ -43,16 +43,15 @@
       </section>
     </div>
 
-    <div id="preview-bar" class="preview-bar" hidden>
+    <div id="preview-bar" class="preview-bar">
       <span id="preview-label"></span>
-      <button id="preview-toggle" class="switch" type="button" role="switch" aria-checked="true" aria-describedby="preview-label">Preview</button>
+      <button id="preview-toggle" class="switch" type="button" role="switch" aria-checked="false" aria-describedby="preview-label">Apply previews</button>
     </div>
 
     <form id="composer" class="composer">
       <label for="message" class="visually-hidden">Message to the assistant</label>
       <textarea id="message" rows="3" placeholder="Additional requests?"></textarea>
       <div class="composer-actions">
-        <label class="check"><input id="auto-preview" type="checkbox"> Apply previews automatically</label>
         <button id="stop" class="secondary" type="button" hidden>Stop</button>
         <button id="send" class="primary" type="submit">Send</button>
       </div>

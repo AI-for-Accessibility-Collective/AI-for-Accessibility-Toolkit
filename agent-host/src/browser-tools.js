@@ -25,7 +25,7 @@
 import { readFileSync, writeFileSync, mkdirSync, statSync, realpathSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { lintWebModule, urlPatternError, SUPPORT_AREAS, MAX_PACKAGE_CODE } from '../../toolkit/protocol/adapter/index.js';
+import { lintWebModule, urlPatternError, SUPPORT_AREAS, MAX_PACKAGE_CODE, PAGE_TYPES, PAGE_TYPE_IDS } from '../../toolkit/protocol/adapter/index.js';
 
 const MAX_OUTLINE = 40_000;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -112,13 +112,8 @@ export function questionsOf(list) {
     .map(o => ({ label: String(o?.label ?? o ?? '').trim().slice(0, 80), ...(o?.description ? { description: String(o.description).trim().slice(0, 200) } : {}) }))
     .filter(o => o.label && !/^other\b/i.test(o.label));
   const questions = (Array.isArray(list) ? list : []).slice(0, MAX_QUESTIONS).map((q) => {
-    if (q?.kind === 'pages') {
-      const t = q.page_type;
-      const label = String(t?.label || '').trim().slice(0, 80);
-      const pattern = String(t?.pattern || '').trim().slice(0, 300);
-      return { kind: 'pages', question: String(q.question || 'Which pages should this apply to?').trim().slice(0, 300), options: [], multiSelect: false,
-        ...(label ? { pageType: { label, ...(pattern && !urlPatternError(pattern) ? { pattern } : {}) } } : {}) };
-    }
+    // The sidebar fills it in: this type of page (as the toolkit sorts this one), this website, all websites.
+    if (q?.kind === 'pages') return { kind: 'pages', question: String(q.question || 'Which pages should this apply to?').trim().slice(0, 300), options: [], multiSelect: false };
     if (q?.kind === 'areas') {
       const picks = optionsOf(q).map(o => o.label.toLowerCase().replace(/\s*\(recommended\)$/, '')).filter((a, i, all) => SUPPORT_AREAS.includes(a) && all.indexOf(a) === i);
       if (!picks.length) throw new Error(`An areas question's options are among: ${SUPPORT_AREAS.join(', ')}.`);
@@ -137,15 +132,11 @@ export function questionsOf(list) {
 const TOOLS = [
   {
     name: 'ask_questions',
-    description: 'Ask the person what you need to know, as multiple choice: the sidebar shows each question with your options, and always adds "Other" where they can type their own answer. Put the option you would choose first, ending its label with "(Recommended)". Two kinds of question the sidebar lays out itself: kind "pages" (which pages it runs on: the type of page you name in page_type, this website with its address, or all websites) and kind "areas" (who it helps most, more than one allowed: your options are support areas, the most likely first; the rest are under Other). After calling this, end your turn with one short sentence: the person\'s answers come as their next message.',
+    description: 'Ask the person what you need to know, as multiple choice: the sidebar shows each question with your options, and always adds "Other" where they can type their own answer. Put the option you would choose first, ending its label with "(Recommended)". Two kinds of question the sidebar lays out itself: kind "pages" (which pages it runs on: this type of page, as the toolkit sorts this one, on this website; this website, with its address; or all websites) and kind "areas" (who it helps most, more than one allowed: your options are support areas, the most likely first; the rest are under Other). After calling this, end your turn with one short sentence: the person\'s answers come as their next message.',
     inputSchema: { type: 'object', properties: {
       questions: { type: 'array', minItems: 1, maxItems: MAX_QUESTIONS, items: { type: 'object', properties: {
         kind: { type: 'string', enum: ['pages', 'areas'], description: 'pages or areas for those two questions; leave out for any other.' },
         question: { type: 'string', description: 'The whole question in plain words, ending with a question mark. Optional for pages and areas.' },
-        page_type: { type: 'object', description: 'pages only: the type of page this one is, when the adapter could run on all pages of that type.', properties: {
-          label: { type: 'string', description: 'The type in 1 to 4 words, e.g. "Product pages".' },
-          pattern: { type: 'string', description: 'The URL pattern for that type on this site, when its addresses show it, e.g. https://shop.example.com/products/*. Leave out when they do not.' },
-        }, required: ['label'], additionalProperties: false },
         options: { type: 'array', maxItems: MAX_OPTIONS, description: 'The choices (at least two; none for pages; for areas, one or more of ' + SUPPORT_AREAS.join(', ') + '). Do not add "Other": the sidebar does.',
           items: { type: 'object', properties: {
             label: { type: 'string', description: 'The choice, in 1 to 6 words.' },
@@ -193,6 +184,7 @@ const TOOLS = [
       about: { type: 'string', description: 'One or two plain sentences: what it changes, and for whom.' },
       runs_on: { type: 'array', items: { type: 'string' }, minItems: 1 },
       support_areas: { type: 'array', items: { type: 'string', enum: [...SUPPORT_AREAS] } },
+      page_types: { type: 'array', items: { type: 'string', enum: [...PAGE_TYPE_IDS] }, description: 'When the person chose a type of page: the kinds of page it runs on, among those runs_on matches (' + PAGE_TYPES.map(t => `${t.id}: ${t.name}`).join('; ') + '). The browser runs it only where the page is one of them.' },
     }, required: ['file', 'id', 'name', 'about', 'runs_on'], additionalProperties: false },
   },
 ];
@@ -295,14 +287,16 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       chats.addEntry(uid, chatId, { id: step.id, text: a.level === 'url' ? 'Got the page’s address' : 'Looking at the page', state: 'done' });
       const what = { url: 'only the address', source: 'the address and the page source', screenshot: 'the address, the page source and a screenshot' }[a.level] || 'part of the page';
       const skipped = a.level === 'screenshot' && !a.screenshot ? ' The screenshot was left out: the page is not the tab on screen right now.' : '';
-      return { content: pageContent(`The person shared ${what}.${skipped}`, a) };
+      const kind = PAGE_TYPES.find(t => t.id === a.pageType?.type);
+      const sorted = kind ? ` The toolkit sorts this page as: ${kind.name} (${a.pageType.source === 'page' ? 'its own markup says so' : 'as its model judged'}).` : '';
+      return { content: pageContent(`The person shared ${what}.${skipped}${sorted}`, a) };
     },
 
     async browser_preview(uid, chatId, args) {
       let adapter, patterns, checks;
       try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on, { allSites: chats.get(uid, chatId).allSites }); checks = checksOf(args.checks); } catch (e) { return fail(e.message); }
       const name = String(args.name || adapter.file).slice(0, 80);
-      const record = (fields) => chats.recordPreview(uid, chatId, { file: adapter.file, name, hash: hashOf(adapter.code), ...fields });
+      const record = (fields) => chats.recordPreview(uid, chatId, { file: adapter.file, name, hash: hashOf(adapter.code), runsOn: patterns, ...fields });
       // Changed code: the agent is rebuilding, so the background checks of the old code stop.
       verification?.codeChanged(uid, chatId, adapter.file, hashOf(adapter.code));
       const step = chats.addEntry(uid, chatId, { kind: 'step', text: `Previewing “${name}” on your page`, state: 'running' });
@@ -370,24 +364,33 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       if (!v.ok) return fail(`Not ready: the adapter ${v.why}. Preview it with browser_preview and checks that show it works, fix what fails, and offer it once every check passes.`);
       const id = String(args.id || '');
       if (!SLUG.test(id)) return fail('id must be lowercase letters, digits and dashes, starting with a letter or digit.');
-      const areas = (args.support_areas || []).filter(a => SUPPORT_AREAS.includes(a));
-      const name = String(args.name || id).slice(0, 80);
-      // The version offered, as it is now: what "Add to my account" and Export get, whatever the agent writes next.
-      const kept = path.join(workDir(uid), '..', 'offered', chatId);
-      mkdirSync(kept, { recursive: true });
-      writeFileSync(path.join(kept, `${id}.js`), adapter.code);
-      const rec = chats.markReady(uid, chatId, { id, file: adapter.file, hash: hashOf(adapter.code), name, about: String(args.about || '').slice(0, 600), runsOn: patterns, supportAreas: areas });
-      try { verification?.start(uid, chatId, rec.id); } catch (e) { log?.warn('verify.start-failed', { uid, chatId, error: e.message }); }
-      chats.addEntry(uid, chatId, { kind: 'notice', text: `“${name}” is ready. You can add it to your account or export it.` });
-      if (v.concern) chats.addEntry(uid, chatId, { kind: 'warning', text: `“${name}” ${v.concern}. Check it on your page before you rely on it.` });
+      const kinds = (args.page_types || []).filter(k => PAGE_TYPE_IDS.includes(k));
+      offer(uid, chatId, adapter, v, { id, name: String(args.name || id).slice(0, 80), about: String(args.about || '').slice(0, 600), runsOn: patterns,
+        supportAreas: (args.support_areas || []).filter(a => SUPPORT_AREAS.includes(a)), pageTypes: kinds.length ? kinds : chats.get(uid, chatId).pageTypes });
       return text('The sidebar now offers it to the person with "Add to my account" and "Export". Tell them in one or two sentences what it does; do not publish it yourself. A fuller check of this version now runs in the background; if it finds problems, they come to you as a message to fix.'
         + (v.concern ? ` The sidebar also told them it ${v.concern}: say in a sentence why that is left.` : ''));
     },
   };
 
+  /** Offer a version the latest preview showed working: kept, then checked in the background. */
+  function offer(uid, chatId, adapter, v, { id, name, about, runsOn, supportAreas, pageTypes }) {
+    // The version offered, as it is now: what "Add to my account" and Export get, whatever the agent writes next.
+    const kept = path.join(workDir(uid), '..', 'offered', chatId);
+    mkdirSync(kept, { recursive: true });
+    writeFileSync(path.join(kept, `${id}.js`), adapter.code);
+    const rec = chats.markReady(uid, chatId, { id, file: adapter.file, hash: hashOf(adapter.code), name, about, runsOn, supportAreas,
+      ...(pageTypes?.length ? { pageTypes } : {}) });
+    try { verification?.start(uid, chatId, rec.id); } catch (e) { log?.warn('verify.start-failed', { uid, chatId, error: e.message }); }
+    chats.addEntry(uid, chatId, { kind: 'notice', text: `“${name}” is ready. You can add it to your account or export it.` });
+    if (v.concern) chats.addEntry(uid, chatId, { kind: 'warning', text: `“${name}” ${v.concern}. Check it on your page before you rely on it.` });
+    return rec;
+  }
+
   /**
-   * After a run: the adapters it wrote or previewed that are not shown to
-   * work (verdict), as a warning to the person. Never says it works.
+   * After a run: an adapter whose latest preview, of the file as it is now,
+   * passed every check is the person's to use, so one the agent did not
+   * offer is offered here. The adapters the run wrote or previewed that are
+   * not shown to work (verdict) get a warning. Never says one works.
    */
   function afterRun(uid, chatId, since) {
     const dir = path.join(workDir(uid), 'adapters');
@@ -400,7 +403,14 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       try { code = readFileSync(path.join(workDir(uid), file), 'utf8'); } catch { continue; }
       const rec = chats.previewOf(uid, chatId, file);
       const v = verdict(rec, code);
-      if (v.ok) continue;
+      if (v.ok) {
+        const chat = chats.get(uid, chatId);
+        if (chat.adapters.some(a => a.file === file && a.hash === rec.hash) || !rec.runsOn?.length) continue;
+        const id = (chat.adapters.find(a => a.file === file)?.id) || path.basename(file).replace(/\.m?js$/, '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'adapter';
+        offer(uid, chatId, { file, code }, v, { id, name: rec.name || id, about: '', runsOn: rec.runsOn, supportAreas: chat.supportAreas || [], pageTypes: chat.pageTypes });
+        log?.info('adapter.offered-after-run', { uid, chatId });
+        continue;
+      }
       const name = rec?.name || path.basename(file).replace(/\.m?js$/, '');
       chats.addEntry(uid, chatId, { kind: 'warning', text: `Not checked: “${name}” ${v.why}. Try it on your page yourself before you rely on it.` });
     }

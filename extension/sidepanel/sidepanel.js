@@ -34,20 +34,23 @@
 
 import { readConnection } from '../runtime/config.js';
 import { pageOutline } from '../runtime/page.js';
-import { buildPreviewScript, previewTeardownScript, AXE_FILE, BLOCKS_FILE } from '../runtime/scripts.js';
+import { buildPreviewScript, previewTeardownScript, AXE_FILE, BLOCKS_FILE, PREVIEW_KEY } from '../runtime/scripts.js';
+import { createPageTypes, askToolkit, pageFacts } from '../runtime/page-type.js';
+import { pageTypeById } from '../vendor/protocol/adapter/index.js';
 import { createRegistryClient } from '../vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP } from '../vendor/protocol/adapter/index.js';
 
 const $ = (id) => document.getElementById(id);
 const LEVELS = ['none', 'url', 'source', 'screenshot'];
 const APP = { appId: 'assistant', appName: 'Browser assistant' };
-const AUTO_KEY = 'assistantAutoPreview';
+const PREVIEW_STATE = 'assistantPreview'; // the last preview, for this browser session: {chatId, tabId, name, origin, request, on}
 
 let connection = null;
 let chats = [];
 let chat = null;            // the open chat, in full
 const requests = new Map(); // id -> request, for the open chat
-let previewing = null;      // {name, tabId, origin, request, on}
+let previewing = null;      // the last preview: {chatId, tabId, name, origin, request, on}
+let applyOn = false;        // the switch: previews are on the page
 let streamAbort = null;
 const ADDED_KEY = 'assistantAdded'; // "<chat>/<adapter>" -> the version added to the account
 
@@ -200,6 +203,20 @@ async function screenshotOf(tab, interactive) {
   try { return await capture(); } finally { if (shown) await chrome.tabs.update(shown.id, { active: true }).catch(() => {}); }
 }
 
+// ── what kind of page ────────────────────────────────────────────────────────
+
+let pageTypes = null; // runtime/page-type.js, made once connected
+/** What kind of page the tab is (its markup, else the toolkit's model; kept by address), or null. */
+async function pageTypeOf(tab) {
+  if (!pageTypes || !isWebPage(tab)) return null;
+  try {
+    const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: pageFacts });
+    if (!res?.result) return null;
+    const kind = await pageTypes.classify({ ...res.result, url: tab.url.split('#')[0] });
+    return kind?.type ? kind : null;
+  } catch { return null; }
+}
+
 /** What the person agreed to share of this tab, at this level. */
 async function collect(tab, level, { interactive = false } = {}) {
   const shared = { level, url: tab.url, title: tab.title };
@@ -235,7 +252,9 @@ async function sharePage(request, level, remember, interactive = true) {
   }
   try {
     const shared = level === 'none' ? { level: 'none' } : await collect(tab, level, { interactive });
-    await answer(request, { ...shared, origin: originOf(tab.url), remember });
+    // The kind of page, as the browser will judge it for "this type of page".
+    const kind = level === 'none' ? null : await pageTypeOf(tab);
+    await answer(request, { ...shared, origin: originOf(tab.url), remember, ...(kind ? { pageType: kind } : {}) });
   } catch (e) {
     await answer(request, { level: 'none', unavailable: `the page could not be read (${e.message})` });
   }
@@ -266,7 +285,7 @@ async function runPreview(request) {
     return answer(request, { status: 'failed', message: 'User scripts are off in this browser: ask the person to turn on "Allow User Scripts" on the extension’s details page.' });
   }
   const result = await applyPreview(request, tab);
-  if (result.status === 'applied') showPreview({ name: request.name, tabId: tab.id, origin: hostOf(tab.url), request, on: true });
+  showPreview({ chatId: chat?.id, name: request.name, tabId: tab.id, origin: hostOf(tab.url), request, on: result.status === 'applied' });
   announce(result.status === 'applied' ? `Previewing “${request.name}” on this page.` : result.status === 'skipped' ? `“${request.name}” found nothing to change on this page.` : `The preview of “${request.name}” did not work.`);
   // The page afterwards, at what the person shares on this site in this chat.
   const level = chat?.consent?.[originOf(tab.url)];
@@ -295,48 +314,88 @@ async function takePreviewOff() {
   } catch { return false; /* the tab is gone */ }
 }
 
-/** Take it off and forget it: the agent asked, or the adapter is now installed. */
+/** Take it off and forget it: the adapter is now installed, or the chat is gone. */
 async function removePreview() {
   const removed = await takePreviewOff();
   showPreview(null);
   return removed;
 }
 
+/**
+ * The last preview, and the switch: on while a preview is on the page (and
+ * then the agent's next previews go on without asking), off otherwise. Kept
+ * for this browser session, so a reload of the sidebar or the page keeps it.
+ */
 function showPreview(p) {
   previewing = p;
-  $('preview-bar').hidden = !p;
-  $('preview-label').textContent = !p ? '' : p.on ? `Previewing “${p.name}” on ${p.origin}.` : `“${p.name}” is off on ${p.origin}.`;
-  $('preview-toggle').setAttribute('aria-checked', String(!!p?.on));
+  applyOn = !!p?.on;
+  const label = !p ? 'Previews go on the page when you say so.' : !p.request ? 'The assistant’s next preview goes on the page.'
+    : p.on ? `Previewing “${p.name}” on ${p.origin}.` : `“${p.name}” is not on the page.`;
+  $('preview-label').textContent = label;
+  $('preview-toggle').setAttribute('aria-checked', String(applyOn));
+  chrome.storage.session.set({ [PREVIEW_STATE]: p }).catch(() => {});
 }
 
-/** The switch: the last preview off, or on again as it was, without asking the agent. */
-async function togglePreview() {
+/** Whether the preview is running in the tab now. */
+async function previewOnPage(tabId) {
+  try {
+    const [res] = await chrome.userScripts.execute({ target: { tabId }, world: 'USER_SCRIPT', injectImmediately: true,
+      js: [{ code: `!!(globalThis.__ai4a11yRuntime && globalThis.__ai4a11yRuntime.adapters[${JSON.stringify(PREVIEW_KEY)}])` }] });
+    return res?.result === true;
+  } catch { return false; }
+}
+
+/** Put the last preview back on its page (after a reload of either); the switch goes off if it does not apply there. */
+async function reapplyPreview({ quiet = false } = {}) {
   const p = previewing;
-  if (!p) return;
+  if (!p?.request) return false;
+  const tab = await chrome.tabs.get(p.tabId).catch(() => null);
+  if (!tab) { showPreview({ ...p, on: false }); if (!quiet) say('That tab is closed.', true); return false; }
+  const result = await applyPreview(p.request, tab, { audit: false });
+  const on = result.status === 'applied';
+  showPreview({ ...p, origin: hostOf(tab.url), on });
+  if (!on && !quiet) say(`It did not apply on this page: ${result.message || result.status}.`, true);
+  return on;
+}
+
+/** The switch, pressed. */
+async function togglePreview() {
   const button = $('preview-toggle');
   button.disabled = true;
   try {
-    if (p.on) {
+    if (applyOn) {
       await takePreviewOff();
-      showPreview({ ...p, on: false });
-      say('The preview is off the page.');
+      showPreview(previewing ? { ...previewing, on: false } : null);
+      say('Previews are off the page. The assistant asks before its next one.');
       return;
     }
-    const tab = await chrome.tabs.get(p.tabId).catch(() => null);
-    if (!tab) { showPreview(null); return say('That tab is closed.', true); }
-    const result = await applyPreview(p.request, tab, { audit: false });
-    if (result.status !== 'applied') return say(`It did not apply: ${result.message || result.status}.`, true);
-    showPreview({ ...p, on: true });
-    say('The preview is on the page again.');
+    if (!previewing?.request) {
+      // Nothing to put on yet: the next preview goes on without asking.
+      showPreview({ chatId: chat?.id, on: true });
+      return say('The next preview goes on the page without asking.');
+    }
+    if (await reapplyPreview()) say('The preview is on the page again.');
   } finally {
     button.disabled = false;
   }
 }
 
+/** After the sidebar opens: the last preview of this chat, put back if the switch was on and the page lost it. */
+async function restorePreview() {
+  const saved = (await chrome.storage.session.get(PREVIEW_STATE).catch(() => ({})))[PREVIEW_STATE];
+  if (!saved || saved.chatId !== chat?.id) { showPreview(null); return; }
+  showPreview(saved);
+  if (saved.on && saved.request && !(await previewOnPage(saved.tabId))) await reapplyPreview({ quiet: true });
+}
+
 async function handleRequest(request) {
   if (request.chatId !== chat?.id) return;
-  if (request.kind === 'remove-preview') return answer(request, { removed: await removePreview() });
-  if (request.kind === 'preview' && $('auto-preview').checked) return runPreview(request);
+  if (request.kind === 'remove-preview') {
+    const removed = await takePreviewOff();
+    showPreview(previewing ? { ...previewing, on: false } : null);
+    return answer(request, { removed });
+  }
+  if (request.kind === 'preview' && applyOn) return runPreview(request);
   if (request.kind === 'page') {
     const tab = await ensureWorkingTab();
     if (!tab) return answer(request, { level: 'none', unavailable: CLOSED });
@@ -411,7 +470,7 @@ function openQuestions() {
  * (a box for their own words; for areas, the other areas too). Each option
  * says what it answers with `answer`.
  */
-function questionSet(q, i, site) {
+function questionSet(q, i, site, kind) {
   const set = el('fieldset');
   set.append(el('legend', '', q.question));
   if (q.multiSelect) set.append(el('p', 'note', 'Choose any that apply.'));
@@ -425,12 +484,15 @@ function questionSet(q, i, site) {
     return { row, input };
   };
   if (q.kind === 'pages') {
-    if (q.pageType) {
-      const o = option(`This type of page: ${q.pageType.label}`, q.pageType.pattern || 'Pages like this one on this site.', `This type of page: ${q.pageType.label}${q.pageType.pattern ? ` (${q.pageType.pattern})` : ''}`);
+    const origin = originOf(site?.url);
+    const type = kind && pageTypeById(kind.type);
+    if (type && origin) {
+      const o = option(`This type of page: ${type.name} on ${hostOf(site.url)}`, `Pages the browser finds are ${type.about}.`,
+        `This type of page: ${type.name} on ${origin} (page type: ${type.id}; runs on ${origin}/* where the page is that type)`);
       o.input.dataset.pages = 'type';
+      o.input.dataset.pageType = type.id;
       set.append(o.row);
     }
-    const origin = originOf(site?.url);
     if (origin) {
       const o = option(`This website: ${hostOf(site.url)}`, `${origin}/`, `This website (${origin}/*)`);
       o.input.dataset.pages = 'site';
@@ -440,7 +502,11 @@ function questionSet(q, i, site) {
     all.input.dataset.pages = 'all';
     set.append(all.row);
   } else {
-    for (const o of q.options) set.append(option(q.kind === 'areas' ? AREA_NAMES[o.label] || o.label : o.label, o.description).row);
+    for (const o of q.options) {
+      const made = option(q.kind === 'areas' ? AREA_NAMES[o.label] || o.label : o.label, o.description);
+      if (q.kind === 'areas') made.input.dataset.area = o.label;
+      set.append(made.row);
+    }
   }
   const other = option('Other');
   other.input.dataset.other = '1';
@@ -455,6 +521,7 @@ function questionSet(q, i, site) {
       if (picked.has(area)) continue;
       const row = el('label', 'option');
       const input = Object.assign(document.createElement('input'), { type: 'checkbox', name: `q${i}-more`, value: name });
+      input.dataset.area = area;
       row.append(input, el('span', '', name));
       more.append(row);
     }
@@ -481,12 +548,14 @@ async function renderQuestions() {
   if (!entry) { shownQuestions = null; box.replaceChildren(); return; }
   if (shownQuestions === entry.id) return renderBusy();
   shownQuestions = entry.id;
-  // The pages question names this website: the chat's page, or the tab beside the sidebar.
+  // The pages question names this website (the chat's page, or the tab beside
+  // the sidebar) and the kind of page it is, as the browser will judge it.
   const site = entry.questions.some(q => q.kind === 'pages') ? (await workingTab() || await activeTab()) : null;
+  const kind = isWebPage(site) ? await Promise.race([pageTypeOf(site), new Promise(r => setTimeout(() => r(null), 10_000))]) : null;
   if (shownQuestions !== entry.id) return;
   const form = el('form', 'card questions');
   form.setAttribute('aria-label', 'The assistant asks');
-  entry.questions.forEach((q, i) => form.append(questionSet(q, i, isWebPage(site) ? site : null)));
+  entry.questions.forEach((q, i) => form.append(questionSet(q, i, isWebPage(site) ? site : null, kind)));
   const row = el('div', 'row');
   const send = el('button', 'primary', 'Send answers');
   send.type = 'submit';
@@ -501,13 +570,15 @@ async function renderQuestions() {
 
 async function sendAnswers(entry, form) {
   const parts = [];
-  let answered = 0, pages;
+  let answered = 0, pages, pageType, areas;
   entry.questions.forEach((q, i) => {
     const chosen = [];
+    if (q.kind === 'areas') areas = [];
     for (const input of form.querySelectorAll(`input[name="q${i}"]:checked`)) {
-      if (q.kind === 'pages') pages = input.dataset.pages;
+      if (q.kind === 'pages') { pages = input.dataset.pages; pageType = input.dataset.pageType; }
+      if (input.dataset.area) areas.push(input.dataset.area);
       if (!input.dataset.other) { chosen.push(input.dataset.answer); continue; }
-      for (const extra of form.querySelectorAll(`input[name="q${i}-more"]:checked`)) chosen.push(extra.value);
+      for (const extra of form.querySelectorAll(`input[name="q${i}-more"]:checked`)) { chosen.push(extra.value); if (extra.dataset.area) areas.push(extra.dataset.area); }
       const words = form.querySelector(`input[name="q${i}-other"]`).value.trim();
       if (words) chosen.push(words);
     }
@@ -518,7 +589,7 @@ async function sendAnswers(entry, form) {
   $('send-answers').disabled = true;
   try {
     await ensureWorkingTab({ replaceClosed: true });
-    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text: parts.join('\n\n'), answers: entry.id, ...(pages ? { pages } : {}) } });
+    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text: parts.join('\n\n'), answers: entry.id, ...(pages ? { pages } : {}), ...(pageType ? { pageType } : {}), ...(areas ? { areas } : {}) } });
     say('');
   } catch (err) {
     say(err.message, true);
@@ -720,7 +791,7 @@ function renderReady() {
     const li = el('li');
     const title = el('strong', '', a.name);
     if (a.version > 1) title.append(el('span', 'version', ` · version ${a.version}`));
-    li.append(title, el('p', 'about', a.about), el('p', 'where', `Runs on ${a.runsOn.map(p => (p === '*://*/*' ? 'all websites' : p)).join(', ')}`));
+    li.append(title, el('p', 'about', a.about), el('p', 'where', `Runs on ${a.pageTypes?.length ? `${a.pageTypes.map(t => pageTypeById(t)?.name || t).join(', ')} on ` : ''}${a.runsOn.map(p => (p === '*://*/*' ? 'all websites' : p)).join(', ')}`));
     for (const kind of ['check', 'review']) { const w = checkWords(a, kind); if (w) li.append(statusNode(w)); }
     const mine = added[addedKey(a)];
     if (mine) li.append(el('p', 'where', mine.version >= (a.version || 1) ? 'In your account. A newer version that passes its background check replaces it there.' : `Your account has version ${mine.version}: it is updated once this version passes its background check.`));
@@ -790,6 +861,9 @@ async function openChat(id) {
   $('transcript').replaceChildren();
   renderChats(); renderTranscript(); renderReady(); renderRequests(); renderBusy(); renderWorking();
   updateAdded();
+  // A preview belongs to its chat: another chat's comes off the page.
+  if (previewing?.on && previewing.chatId !== id) await takePreviewOff();
+  await restorePreview();
   try { await chrome.storage.local.set({ assistantChat: id }); } catch { /* fine */ }
 }
 
@@ -954,7 +1028,7 @@ async function addToAccount(a, btn, { auto = false } = {}) {
     const registry = createRegistryClient({ url: connection.url, token: connection.token });
     const r = await registry.publish({
       appName: APP.appName, code: adapter.code,
-      descriptor: { appId: APP.appId, id: a.id, name: a.name, description: a.about, targets: [{ platforms: ['*'], urls: a.runsOn }], supportAreas: a.supportAreas || [] },
+      descriptor: { appId: APP.appId, id: a.id, name: a.name, description: a.about, targets: [{ platforms: ['*'], urls: a.runsOn }], supportAreas: a.supportAreas || [], ...(a.pageTypes?.length ? { pageTypes: a.pageTypes } : {}) },
     });
     await registry.install(BROWSER_RUNTIME_APP, { appId: APP.appId, id: a.id });
     // The installed copy takes over from the preview.
@@ -1022,16 +1096,15 @@ $('new-chat').addEventListener('click', async () => {
 $('chat-select').addEventListener('change', (e) => openChat(e.target.value).catch(err => say(err.message, true)));
 $('preview-toggle').addEventListener('click', () => togglePreview().catch(e => say(e.message, true)));
 $('delete-chat').addEventListener('click', () => deleteChat());
-$('auto-preview').addEventListener('change', (e) => chrome.storage.local.set({ [AUTO_KEY]: e.target.checked }));
 $('go-to-page').addEventListener('click', () => goToPage().catch(e => say(e.message, true)));
 $('switch-page').addEventListener('click', () => switchPage().catch(e => say(e.message, true)));
-// A navigation clears the page, and with it the preview.
+// A reload or a new page in the preview's tab drops it; with the switch on, it goes back on.
 chrome.tabs.onUpdated.addListener((tabId, info) => {
-  if (previewing?.tabId === tabId && info.status === 'loading') showPreview(null);
+  if (previewing?.tabId === tabId && previewing.on && info.status === 'complete') reapplyPreview({ quiet: true }).then((on) => { if (!on) announce(`“${previewing?.name}” does not apply on this page.`); });
   if (info.url || info.title || info.status === 'complete') renderWorkingSoon();
 });
 chrome.tabs.onActivated.addListener(renderWorkingSoon);
-chrome.tabs.onRemoved.addListener((tabId) => { if (previewing?.tabId === tabId) showPreview(null); renderWorkingSoon(); });
+chrome.tabs.onRemoved.addListener((tabId) => { if (previewing?.tabId === tabId) showPreview({ ...previewing, on: false }); renderWorkingSoon(); });
 chrome.windows.onFocusChanged.addListener(renderWorkingSoon);
 
 async function start() {
@@ -1039,7 +1112,7 @@ async function start() {
   $('not-connected').hidden = !!connection;
   $('main').hidden = !connection;
   if (!connection) { $('state').textContent = 'Not connected'; return; }
-  $('auto-preview').checked = !!(await chrome.storage.local.get(AUTO_KEY))[AUTO_KEY];
+  pageTypes = createPageTypes({ storage: chrome.storage.local, ask: askToolkit(connection) });
   added = (await chrome.storage.local.get(ADDED_KEY).catch(() => ({})))[ADDED_KEY] || {};
   try {
     await api('/status');

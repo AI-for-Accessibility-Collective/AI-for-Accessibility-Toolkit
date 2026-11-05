@@ -5,6 +5,7 @@
 // cannot drift apart. `checkDescriptor` returns every problem at once, as
 // `{path, message}` pairs, so a developer fixes a descriptor in one pass.
 
+import { PAGE_TYPE_IDS } from './page-types.js';
 import { checkSchema } from './schema.js';
 import { checkTargetRules, checkPlatformRecords } from './match.js';
 
@@ -148,6 +149,9 @@ export function checkDescriptor(d, { application } = {}) {
   if (d.supportAreas !== undefined && (!Array.isArray(d.supportAreas) || d.supportAreas.some(a => !SUPPORT_AREAS.includes(a)))) {
     err('/supportAreas', `must be a list of ${SUPPORT_AREAS.join(', ')}`);
   }
+  if (d.pageTypes !== undefined && (!Array.isArray(d.pageTypes) || !d.pageTypes.length || d.pageTypes.some(t => !PAGE_TYPE_IDS.includes(t)))) {
+    err('/pageTypes', `must be a non-empty list of ${PAGE_TYPE_IDS.join(', ')} (page-types.js): the kinds of page, among those its targets match, it runs on`);
+  }
   if (d.visibility !== undefined && !VISIBILITY.includes(d.visibility)) err('/visibility', `must be ${VISIBILITY.join(', ')}`);
   return errors;
 }
@@ -160,6 +164,7 @@ export function summarizeDescriptor(d) {
     operations: d.operations, capabilities: (d.capabilities || []).map(c => c.id),
   };
   if (d.supportAreas) summary.supportAreas = d.supportAreas;
+  if (d.pageTypes) summary.pageTypes = d.pageTypes;
   return summary;
 }
 
