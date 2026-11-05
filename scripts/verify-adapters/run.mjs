@@ -233,18 +233,30 @@ async function check(file) {
   const v = await openVerifier();
   const report = { adapter: path.basename(file), at: new Date().toISOString(), runs: [] };
   let failed = 0, skipped = 0, applied = 0, keyboards = 0, ownApplied = 0, ownFailed = 0;
+  // Several runs at once (each in its own browser context): most of a run is
+  // waiting for the page to settle. The report keeps the runs' order.
+  const parallel = Math.max(1, Number(process.env.VERIFY_CHECK_PARALLEL) || 3);
+  const done = new Array(runs.length);
+  let next = 0, auditing = 0;
+  async function one(i) {
+    const [name, spec, live, first] = runs[i];
+    // InterA11y's keyboard audit on the first five test pages it applies on (counting the audits under way).
+    const keyboard = first === true && keyboards + auditing < 5;
+    if (keyboard) auditing++;
+    let out;
+    try { out = await judge(v, name, spec, live, { skipOk: true, keyboard }); } finally { if (keyboard) auditing--; }
+    const { r, problems } = out;
+    if (first === true && r.status === 'applied') { applied++; if (keyboard) keyboards++; }
+    const status = r.status === 'unreachable' ? 'skip' : problems.length ? 'fail' : 'pass';
+    if (spec.copy) { if (first === 'copy' && r.status === 'applied') ownApplied++; if (status === 'fail') ownFailed++; }
+    if (status === 'skip') skipped++;
+    if (status === 'fail') failed++;
+    done[i] = { name, status, result: r.status, problems, ...(r.axe?.advice?.length ? { advice: r.axe.advice.map((a) => `${a.id} on ${a.count}`) } : {}), ...(r.copy ? { copy: r.copy } : {}) };
+    console.log(`${status.toUpperCase()}: ${name}${r.status === 'skipped' ? ' (enable() returned false: nothing for it here)' : r.status === 'applied' ? ` (shift ${r.shift ?? '-'})` : r.message ? ` (${r.message})` : ''}${problems.length ? `\n  ${problems.join('\n  ')}` : ''}`);
+  }
   try {
-    for (const [name, spec, live, first] of runs) {
-      // InterA11y's keyboard audit on the first five test pages it applies on.
-      const { r, problems } = await judge(v, name, spec, live, { skipOk: true, keyboard: first === true && keyboards < 5 });
-      if (first === true && r.status === 'applied') { applied++; keyboards++; }
-      const status = r.status === 'unreachable' ? 'skip' : problems.length ? 'fail' : 'pass';
-      if (spec.copy) { if (first === 'copy' && r.status === 'applied') ownApplied++; if (status === 'fail') ownFailed++; }
-      if (status === 'skip') skipped++;
-      if (status === 'fail') failed++;
-      report.runs.push({ name, status, result: r.status, problems, ...(r.axe?.advice?.length ? { advice: r.axe.advice.map((a) => `${a.id} on ${a.count}`) } : {}), ...(r.copy ? { copy: r.copy } : {}) });
-      console.log(`${status.toUpperCase()}: ${name}${r.status === 'skipped' ? ' (enable() returned false: nothing for it here)' : r.status === 'applied' ? ` (shift ${r.shift ?? '-'})` : r.message ? ` (${r.message})` : ''}${problems.length ? `\n  ${problems.join('\n  ')}` : ''}`);
-    }
+    await Promise.all(Array.from({ length: Math.min(parallel, runs.length) }, async () => { while (next < runs.length) await one(next++); }));
+    report.runs.push(...done);
   } finally {
     await v.close();
     rmSync(copy, { force: true });
@@ -335,7 +347,9 @@ function fileReviewTask(name, rel) {
     '', `WCAG criteria with InterA11y's rubrics (wcag_rubric): choose the ones that apply to what this adapter creates, changes or styles. Read each you choose with wcag_rubric before you judge it, and give a verdict for each in your report. Say in one line which you left out and why.`,
     ...RUBRIC_SCS.map((sc) => `- ${sc} ${rubric.load(sc).title}: the tools its rules name are ${rubric.toolsOf(sc).join(', ')}.`),
     '', 'The automated check already ran (steps 2 to 8 of docs/verification.md: the test pages, each also narrow and with reduced motion, and the recorded copies of real sites). Do not run it all again; confirm what it found where it matters, and look for what it cannot find.',
-    s ? `Its result: ${s.passed} passed, ${s.failed} failed, ${s.skipped} skipped; it applied on ${s.appliedOnTestPages} of ${s.testPages} test pages.` : 'Its report could not be read.',
+    !s ? 'Its report could not be read.'
+      : s.narrow ? `Its result: ${s.passed} passed, ${s.failed} failed, ${s.skipped} skipped. It is made for some sites only, so it ran on ${s.ownPages} cop${s.ownPages === 1 ? 'y' : 'ies'} of the person's own pages there (with the checks its preview passed; it applied on ${s.appliedOnOwnPages}) and on the recorded sites it matches, not on the test pages.`
+      : `Its result: ${s.passed} passed, ${s.failed} failed, ${s.skipped} skipped; it applied on ${s.appliedOnTestPages} of ${s.testPages} test pages.`,
     ...failing.slice(0, 40).map((r) => `- ${r.name}: ${r.problems.join('; ').slice(0, 400)}`),
     ...(failing.length > 40 ? [`- … and ${failing.length - 40} more failing runs.`] : []),
     ...(report?.notes || []).map((n) => `Note: ${n}`),

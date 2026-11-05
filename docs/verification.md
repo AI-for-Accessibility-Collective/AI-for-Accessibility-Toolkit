@@ -77,6 +77,10 @@ Steps 1 to 8 need Chromium (`npx playwright install chromium`).
   checks must pass after `enable()`. The assistant sidebar saves such a
   copy when the person shares the page source and an adapter is previewed
   on the page (`agent-host/src/page-data.js`).
+
+  The runs go three at a time, each in its own browser context
+  (`VERIFY_CHECK_PARALLEL`; 1 runs them one by one). The report keeps
+  their order.
 - **The core adapters**, with their own checks:
   `node scripts/verify-adapters/run.mjs --replay --core [id ...]`.
 - **Step 9 in a coding agent**: the `ai4a11y-toolkit` skill does it after an

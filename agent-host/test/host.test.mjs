@@ -71,11 +71,13 @@ const fakeFetch = async (url, init) => {
 };
 // Stands in for the verifier: passes, fails ("CHECKFAILS"), or runs until stopped ("SLOWCHECK").
 const checkRuns = [], checkSpecs = [];
+let holdChecks = null;
 const checkRunner = {
   kind: 'local',
   async check({ dir, file, signal }) {
     const code = readFileSync(path.join(dir, 'in', file), 'utf8');
     checkRuns.push(code);
+    await holdChecks; // a test keeps the check running
     // What run.mjs --spec would read, and the copies beside it.
     checkSpecs.push({ code, spec: JSON.parse(readFileSync(path.join(dir, 'in', 'check.json'), 'utf8')),
       copies: existsSync(path.join(dir, 'in', 'copies')) ? readdirSync(path.join(dir, 'in', 'copies')).map(f => readFileSync(path.join(dir, 'in', 'copies', f), 'utf8')) : [] });
@@ -336,10 +338,13 @@ await test('a rebuild stops the check of the old code; the new version is checke
   assert.ok(lines.some(l => l.e === 'check.cancelled'), 'the old check was stopped');
   assert.match((await chatNow(id)).entries.findLast(e => e.kind === 'agent').text, /Verify: offered, then offered\./);
 
-  // The full review, when the person asks.
+  // The full review, when the person asks: the reviewer starts at once, with the background check of this code.
+  const checked = checkRuns.length;
   assert.equal((await api(`/agent/chats/${id}/adapters/slow/review`, { method: 'POST' })).status, 202);
   const r = await until(async () => { const x = await adapterNow(id, 'slow'); return x?.review?.status === 'passed' && x.review; });
   assert.equal(r.verdict, 'ok');
+  assert.equal(checkRuns.length, checked, 'not checked a second time');
+  assert.equal(r.passed, 1, 'the background check\'s result goes with it');
   assert.equal(r.report, 'Nothing to fix.');
   assert.equal((await api(`/agent/chats/${id}/adapters/nope/review`, { method: 'POST' })).status, 404);
   sb.close();
@@ -434,6 +439,24 @@ await test('an adapter for one site is checked on the copies of the person\'s pa
   assert.equal(got.copies.length, 1);
   assert.match(got.copies[0], /SHOP/);
   assert.deepEqual(got.spec.checks, [{ name: 'cosy', code: 'return document.body.dataset.cosy === "1";' }]);
+  sb.close();
+});
+
+await test('a full review asked for while the background check runs waits for it, and the code is checked once', async () => {
+  const sb = sidebar('ada', { preview: previewOk });
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  let release;
+  holdChecks = new Promise(r => { release = r; });
+  const before = checkRuns.length;
+  await until(async () => (await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'previewonly please' } })).status !== 409);
+  await until(async () => { const x = await adapterNow(id, 'tea-cosy'); return x?.check?.status === 'running' && x; });
+  assert.equal((await api(`/agent/chats/${id}/adapters/tea-cosy/review`, { method: 'POST' })).status, 202);
+  assert.deepEqual(['queued', 'check'], await until(async () => { const r = (await adapterNow(id, 'tea-cosy')).review; return r?.status === 'queued' && [r.status, r.after]; }));
+  holdChecks = null;
+  release();
+  const r = await until(async () => { const x = await adapterNow(id, 'tea-cosy'); return x?.review?.status === 'passed' && x.review; });
+  assert.equal(r.verdict, 'ok');
+  assert.equal(checkRuns.length - before, 1, 'checked once, for both');
   sb.close();
 });
 

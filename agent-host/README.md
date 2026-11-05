@@ -165,6 +165,11 @@ reach it) and asks `GET /checks/<id>` for the result
   (GPL-3.0) is fetched by the host from InterA11y at the vendored commit,
   checked against its hash, into `<data>/intera11y/`, and mounted read-only
   (`INTERA11Y_DIR`). It is stopped after 45 minutes (`AGENT_REVIEW_MINUTES`).
+  A full review the sidebar asks for reuses the background check of the
+  same code: when it has finished, the reviewer starts at once with its
+  report; while it runs, the review waits for it. So the code is checked
+  once. Within a check, `run.mjs` runs three runs at a time
+  (`VERIFY_CHECK_PARALLEL`), each in its own browser context.
 - **After a restart**, checks that were waiting or running start again.
 
 **Status:** the checks and the review find some bugs in code. They do not

@@ -207,7 +207,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
 
   function view(job) {
     return {
-      checkId: job.checkId, status: job.status, review: job.review, adapter: job.adapter,
+      checkId: job.checkId, status: job.status, review: job.review, adapter: job.adapter, ...(job.reused ? { reused: true } : {}),
       submittedAt: job.submittedAt, startedAt: job.startedAt || null, finishedAt: job.finishedAt || null,
       ...(job.status === 'queued' ? { position: position(job.checkId) } : {}),
       ...(job.error ? { error: job.error } : {}),
@@ -218,7 +218,9 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
   /**
    * A job from the toolkit service: { checkId, review, adapter: { key, revision, name, description, urlPatterns, supportAreas, code } }.
    * From this host only (never from a request body): `own`, the person's own
-   * pages to check it on, { copies: [{url, file}] (saved MHTML on this host), checks: [{name, code}] }.
+   * pages to check it on, { copies: [{url, file}] (saved MHTML on this host), checks: [{name, code}] },
+   * and `report`, the report of a check of the same code that already ran:
+   * a review then starts its reviewer at once instead of checking it again.
    */
   function submit(uid, body, own = {}) {
     assertUid(uid);
@@ -252,8 +254,10 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       copies: copies.map((c, i) => ({ url: clip(c.url, 2000), file: `copies/${i}.mhtml` })),
       checks: (Array.isArray(own.checks) ? own.checks : []).slice(0, MAX_OWN_CHECKS).filter((c) => typeof c?.code === 'string').map((c) => ({ name: clip(c.name, 100), code: c.code.slice(0, 3000) })),
     }));
+    const reuse = body.review === true && own.report && typeof own.report === 'object';
+    if (reuse) writeFileSync(path.join(dir, 'in', 'check-report.json'), JSON.stringify(trimReport(own.report)));
     const job = {
-      checkId: id, uid, review: body.review === true, file, spec: 'check.json', copies: copies.length, status: 'queued', submittedAt: new Date(now()).toISOString(),
+      checkId: id, uid, review: body.review === true, file, spec: 'check.json', copies: copies.length, ...(reuse ? { reused: true } : {}), status: 'queued', submittedAt: new Date(now()).toISOString(),
       adapter: { key: clip(a.key, 200), revision: Number(a.revision) || null, name: clip(a.name, 200) },
     };
     saveJob(job);
@@ -292,9 +296,10 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     log?.info('check.started', { uid: job.uid, checkId: id, review: job.review });
     try {
       for (const sub of ['out', 'review']) { mkdirSync(path.join(dir, sub), { recursive: true }); chmodSync(path.join(dir, sub), 0o777); }
-      const c = await runner.check({ id: id.slice(4), dir, file: job.file, spec: job.spec, timeoutMs: checkTimeoutMs, signal: ctl.signal });
+      // The check of this code already ran: its report, not a second run.
+      const c = job.reused ? null : await runner.check({ id: id.slice(4), dir, file: job.file, spec: job.spec, timeoutMs: checkTimeoutMs, signal: ctl.signal });
       if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
-      const report = readJson(path.join(dir, 'out', 'report.json'));
+      const report = readJson(path.join(dir, job.reused ? 'in' : 'out', job.reused ? 'check-report.json' : 'report.json'));
       if (!report) {
         log?.warn('check.no-report', { uid: job.uid, checkId: id, code: c.code, timedOut: c.timedOut, stderr: c.stderr.slice(-600) });
         throw Object.assign(new Error('no report'), { plain: c.timedOut

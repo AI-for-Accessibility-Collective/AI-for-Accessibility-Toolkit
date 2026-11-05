@@ -36,7 +36,7 @@ const MAX_LISTED = 15;
 export function stateOf(view, kind, hash) {
   const base = { checkId: view.checkId, hash, at: new Date().toISOString() };
   if (view.status === 'queued') return { ...base, status: 'queued', position: view.position || null };
-  if (view.status === 'running') return { ...base, status: 'running', startedAt: view.startedAt };
+  if (view.status === 'running') return { ...base, status: 'running', startedAt: view.startedAt, ...(view.reused ? { reused: true } : {}) };
   if (view.status === 'cancelled') return { ...base, status: 'cancelled' };
   if (view.status === 'failed') return { ...base, status: 'failed', error: view.error || 'The check could not run.' };
   const check = view.result?.check || {};
@@ -71,6 +71,7 @@ function fixMessage(adapter, state, kind) {
 export function createVerification({ checks, chats, pageData, workDir, log, maxFixes = 2 }) {
   const jobs = new Map();    // checkId -> {uid, chatId, adapterId, hash, kind}
   const waiting = new Map(); // uid -> [{chatId, adapterId, hash, kind, text, shown}] fixes to ask for once no run is going
+  const reviewsAfter = new Map(); // checkId of a running background check -> {uid, chatId, adapterId, hash, kind: 'review'}, a review that starts when it ends
 
   const adapterOf = (uid, chatId, adapterId) => {
     try { return chats.get(uid, chatId).adapters.find(a => a.id === adapterId) || null; } catch { return null; }
@@ -84,6 +85,11 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
       jobs.delete(checkId);
       checks?.cancel(j.uid, checkId);
       set(j.uid, j.chatId, j.adapterId, { [j.kind]: { checkId, hash: j.hash, status: 'cancelled', why, at: new Date().toISOString() } });
+    }
+    for (const [checkId, j] of reviewsAfter) {
+      if (!predicate(j)) continue;
+      reviewsAfter.delete(checkId);
+      set(j.uid, j.chatId, j.adapterId, { review: { hash: j.hash, status: 'cancelled', why, at: new Date().toISOString() } });
     }
   }
 
@@ -102,6 +108,12 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
       set(uid, chatId, adapterId, { [kind]: { status: 'cancelled', why: 'changed', at: new Date().toISOString() } });
       return;
     }
+    // A review asked for while the background check of this code runs waits for it, rather than checking it a second time.
+    if (review && adapter.check?.hash === adapter.hash && LIVE.has(adapter.check.status) && jobs.has(adapter.check.checkId)) {
+      reviewsAfter.set(adapter.check.checkId, { uid, chatId, adapterId, hash: adapter.hash, kind: 'review' });
+      set(uid, chatId, adapterId, { review: { hash: adapter.hash, status: 'queued', after: 'check', at: new Date().toISOString() } });
+      return;
+    }
     const checkId = `chk_${randomBytes(12).toString('hex')}`;
     jobs.set(checkId, { uid, chatId, adapterId, hash: adapter.hash, kind });
     // The job's first change (queued) comes through onChange.
@@ -111,8 +123,13 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
     const copies = pageData?.copies ? pageData.copies(uid, chatId, { matches: (url) => runsOn.some(p => matchUrlPattern(p, url)) }) : [];
     let own = [];
     try { own = JSON.parse(readFileSync(path.join(workDir(uid), '..', 'previews', chatId, `${adapter.hash}.checks.json`), 'utf8')); } catch { /* previewed before checks were kept */ }
+    // A review of code whose background check finished: the reviewer starts at once, with that check's report.
+    let report = null;
+    if (review && adapter.check?.hash === adapter.hash && ['passed', 'problems'].includes(adapter.check.status)) {
+      try { report = checks.get(uid, adapter.check.checkId).result?.check || null; } catch { report = null; }
+    }
     checks.submit(uid, { checkId, review, adapter: { key: `assistant/${adapter.id}`, name: adapter.name, description: adapter.about, urlPatterns: runsOn, supportAreas: adapter.supportAreas, code } },
-      { copies, checks: Array.isArray(own) ? own : [] });
+      { copies, checks: Array.isArray(own) ? own : [], report });
   }
 
   function onChange(view) {
@@ -123,6 +140,12 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
     if (state.status === 'cancelled') return; // stop() said why
     set(j.uid, j.chatId, j.adapterId, { [j.kind]: state });
     log?.info('verify.state', { uid: j.uid, chatId: j.chatId, kind: j.kind, status: state.status });
+    // The review that waited for this check starts now, with its report (or, if it could not run, with its own check).
+    const after = !LIVE.has(state.status) && reviewsAfter.get(view.checkId);
+    if (after) {
+      reviewsAfter.delete(view.checkId);
+      try { start(after.uid, after.chatId, after.adapterId, { review: true }); } catch (e) { log?.warn('verify.review-not-started', { uid: after.uid, chatId: after.chatId, error: e.message }); }
+    }
     if (state.status !== 'problems') return;
     const adapter = adapterOf(j.uid, j.chatId, j.adapterId);
     if (!adapter || adapter.hash !== j.hash) return; // an older version
@@ -166,6 +189,7 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
     /** The chat was deleted. */
     forgetChat(uid, chatId) {
       for (const [checkId, j] of jobs) if (j.uid === uid && j.chatId === chatId) { jobs.delete(checkId); checks?.cancel(uid, checkId); }
+      for (const [checkId, j] of reviewsAfter) if (j.uid === uid && j.chatId === chatId) reviewsAfter.delete(checkId);
       const list = waiting.get(uid);
       if (list) waiting.set(uid, list.filter(w => w.chatId !== chatId));
     },

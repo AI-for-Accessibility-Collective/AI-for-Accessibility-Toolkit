@@ -775,8 +775,11 @@ function checkWords(a, kind) {
   const sites = madeFor(a);
   switch (c.status) {
     case 'unavailable': return { state: 'idle', text: kind === 'review' ? 'This toolkit has no full review.' : 'This toolkit does not check adapters in the background.' };
-    case 'queued': return { state: 'running', text: `${what}: waiting${c.position ? `, ${ordinal(c.position)} in line` : ''}.` };
-    case 'running': return { state: 'running', text: kind === 'review' ? 'Full review running: the background check, then an independent reviewer. This can take up to an hour.'
+    case 'queued': return { state: 'running', text: c.after === 'check' ? 'Full review: the reviewer starts as soon as the background check finishes, with what it found.'
+      : `${what}: waiting${c.position ? `, ${ordinal(c.position)} in line` : ''}.` };
+    case 'running': return { state: 'running', text: kind === 'review' ? (c.reused
+        ? 'Full review running: an independent reviewer reads and tries it, with what the background check found. This usually takes 10 to 20 minutes.'
+        : 'Full review running: the background check, then an independent reviewer. This usually takes 15 to 25 minutes.')
       : sites.length ? `Checking in the background: on the copies of your pages on ${sites.join(', ')}, narrow and with reduced motion. This takes a few minutes.`
       : 'Checking in the background: on test pages and copies of real sites, narrow and with reduced motion. This takes a few minutes.' };
     case 'cancelled': return { state: 'idle', text: c.why === 'changed' ? `${what} stopped: the assistant is changing the adapter. Its next version is checked.` : `${what} stopped.` };
