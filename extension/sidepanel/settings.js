@@ -23,7 +23,7 @@ export async function renderSettings() {
   if (!connection) return renderConnect();
   $('who-url').textContent = new URL(connection.url).host;
   $('who-uid').textContent = connection.uid;
-  $('open-console').href = `${connection.url}/developer#/adapters`;
+  $('open-console').href = `${connection.url}/developer`;
   renderShortcut(state);
   const total = state.adapters.length;
   $('installed-count').textContent = `${total} adapter${total === 1 ? '' : 's'} installed in this browser${state.lastSync ? ` · checked ${new Date(state.lastSync).toLocaleTimeString()}` : ''}.`;

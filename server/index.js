@@ -103,7 +103,7 @@ function boot() {
   const tokenSecret = process.env.TOKEN_SECRET || undefined;
   // The extension's assistant sidebar: the agent host on its own VM (agent-host/).
   const agentHost = { url: process.env.AGENT_HOST_URL || null, secret: process.env.AGENT_HOST_SECRET || null };
-  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log, logContent, agentHost, ai });
+  const listener = createApp({ store, adminPassword, toolkitHost, version: pkg.version, corsOrigins, tokenSecret, log, logContent, agentHost, ai, builtinAdapters: true });
   const server = http.createServer(listener);
   server.listen(port, () => {
     log.info('server.started', {

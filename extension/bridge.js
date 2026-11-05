@@ -1,6 +1,7 @@
 // Runs on the connected toolkit's developer console (/developer) only.
 //
-// The console says "adapters changed" right after a save, which wakes the
+// The console says "adapters changed" right after a save, and "profile
+// changed" after it writes the profile (Load profile, Apply), which wakes the
 // runtime to sync now rather than at its next 30-second alarm. The runtime
 // answers with whether it is connected, as whom, and whether user scripts
 // are allowed, so the console can show this browser's runtime state. Nothing
@@ -33,7 +34,7 @@ window.addEventListener('message', (event) => {
   if (event.source !== window || event.origin !== location.origin) return;
   const message = event.data;
   if (!message || message.source !== 'ai4a11y-console') return;
-  if (message.type === 'adapters-changed') {
+  if (message.type === 'adapters-changed' || message.type === 'profile-changed') {
     chrome.runtime.sendMessage({ type: 'sync' }).catch(() => {}).finally(announce);
   } else if (message.type === 'ping') {
     announce();

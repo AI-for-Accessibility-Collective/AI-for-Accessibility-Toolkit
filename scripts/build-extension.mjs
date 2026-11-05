@@ -33,6 +33,7 @@ const FILES = [
   'blocks/personal.js',
   'blocks/personal-sites.js',
   'blocks/shortcut.js',
+  'blocks/profile-words.js',
   'core/ability.js',
   'core/strength.js',
   'core/units.js',

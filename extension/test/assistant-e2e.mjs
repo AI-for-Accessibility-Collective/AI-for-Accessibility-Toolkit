@@ -69,7 +69,14 @@ const agentServers = REMOTE ? [] : [await listen(agent.sandboxHandler, `127.0.0.
 // The toolkit service, forwarding /v1/agent to it.
 const store = fileStore(await mkdtemp(path.join(tmpdir(), 'assistant-e2e-')));
 const toolkitHost = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
-const app = createApp({ store, adminPassword: ADMIN, toolkitHost, agentHost: REMOTE || { url: `http://127.0.0.1:${apiListen}`, secret: SECRET } });
+// The toolkit's model, stood in: what the Profile tab's words mean (the `profile` task).
+const profileModel = Object.assign(async (prompt, { onUsage } = {}) => {
+  await new Promise(r => setTimeout(r, 400)); // long enough to see it working
+  onUsage?.({ model: 'stand-in', promptTokens: 100, outputTokens: 50, thoughtsTokens: 0 });
+  if (/their own abilities/.test(prompt)) return JSON.stringify({ supportAreas: ['motor', 'vision'], needs: { textSize: 1.5, labelControls: true, nonsense: true }, plainLanguage: false, summary: 'Pages will use larger text and name unlabeled buttons.' });
+  return 'NO_ANSWER';
+}, { model: 'stand-in' });
+const app = createApp({ store, adminPassword: ADMIN, toolkitHost, ai: { caller: profileModel, price: () => ({ input: 0, output: 0 }) }, agentHost: REMOTE || { url: `http://127.0.0.1:${apiListen}`, secret: SECRET } });
 const server = http.createServer(app);
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -124,24 +131,44 @@ try {
   panel.on('pageerror', (e) => console.log('sidebar error:', e.message));
   failureReport = async () => console.log('--- sidebar ---\n' + await panel.locator('body').innerText());
   await panel.waitForLoadState();
-  // The panel opens on Profile: the profile, editable, then the adapters.
+  // The panel opens on Profile: the person's words, what pages will do, then the adapters.
   assert.equal(await panel.getByRole('tab', { name: 'Profile' }).getAttribute('aria-selected'), 'true');
-  await panel.locator('#profile-view', { hasText: 'Support areas' }).waitFor();
+  await panel.getByRole('textbox', { name: 'Describe your abilities' }).waitFor();
+  assert.match(await panel.locator('#words-hint').innerText(), /^For example:/);
+  await panel.getByRole('button', { name: 'Speak' }).waitFor();
   await shot(panel, '0a-profile');
-  await panel.getByRole('button', { name: 'Edit' }).click();
-  await panel.locator('#profile-form').getByRole('checkbox', { name: 'Motor' }).check();
-  await panel.locator('#profile-form').getByRole('checkbox', { name: 'Text size' }).check();
-  await panel.getByRole('spinbutton', { name: 'Text size value' }).fill('1.5');
-  await shot(panel, '0b-profile-edit');
-  await panel.getByRole('button', { name: 'Save profile' }).click();
-  await panel.locator('#profile-view', { hasText: 'Text size 150%' }).waitFor();
-  const saved = await (await fetch(`${base}/v1/librarian/getProfile`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }) })).json();
-  assert.ok(saved.result.supportAreas.includes('motor'), 'the support area saved');
-  assert.deepEqual(saved.result.fields.needs.find(n => n.dimension === 'textSize'), { dimension: 'textSize', value: 1.5, strength: 'preference', source: 'person' });
-  await panel.getByRole('radio', { name: 'Recommended' }).check();
-  await panel.locator('#adapters-about', { hasText: 'Adapters for motor' }).waitFor();
-  await panel.locator('#adapter-lists li').first().waitFor();
-  await shot(panel, '0c-recommended');
+  await panel.getByRole('textbox', { name: 'Describe your abilities' }).fill('Small text tires my eyes and my hands shake, so small buttons are hard to press.');
+  await panel.getByRole('button', { name: 'Save' }).click();
+  await panel.locator('#profile-working', { hasText: 'Understanding what you wrote' }).waitFor();
+  await shot(panel, '0b-profile-working');
+  await panel.locator('#profile-working').waitFor({ state: 'hidden' });
+  // Only what is on shows; the rest is folded.
+  const selected = await panel.locator('#profile-selected').innerText();
+  for (const line of ['Support for movement and dexterity', 'Support for vision', 'Larger text', 'Name unlabeled buttons and fields']) assert.ok(selected.includes(line), `${line} in ${selected}`);
+  assert.equal(await panel.getByRole('spinbutton', { name: /Larger text/ }).inputValue(), '1.5');
+  assert.match(await panel.locator('#profile-summary').innerText(), /larger text/);
+  assert.equal(await panel.locator('#profile-others').isVisible(), false, 'the rest is folded');
+  let saved = await (await fetch(`${base}/v1/librarian/getProfile`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }) })).json();
+  assert.deepEqual(saved.result.supportAreas, ['motor', 'vision']);
+  assert.match(saved.result.freeText, /hands shake/);
+  assert.deepEqual(saved.result.fields.needs.map(n => n.dimension).sort(), ['labelControls', 'textSize'], 'only known needs');
+  // One more, from what is folded.
+  await panel.getByText('More options').click();
+  await panel.getByRole('checkbox', { name: 'Less motion and animation' }).check();
+  await panel.locator('#status', { hasText: 'On: Less motion and animation.' }).waitFor();
+  saved = await (await fetch(`${base}/v1/librarian/getProfile`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }) })).json();
+  assert.ok(saved.result.fields.needs.some(n => n.dimension === 'reduceMotion' && n.value === true));
+  await shot(panel, '0c-profile-saved');
+  // A preset chosen elsewhere (the console) shows here at once.
+  await fetch(`${base}/v1/profile/select`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ id: 'wai-2' }) });
+  await panel.locator('#profile-started', { hasText: 'started from Profile 2' }).waitFor({ state: 'attached' });
+  // The adapters: Applied open, Recommended and All folded until opened.
+  await panel.getByRole('heading', { name: 'Applied on this page' }).waitFor();
+  assert.equal(await panel.locator('#recommended-box').getAttribute('open'), null);
+  assert.equal(await panel.locator('#all-box').getAttribute('open'), null);
+  await panel.locator('#recommended-box summary').click();
+  await panel.locator('#recommended-list li').first().waitFor();
+  await shot(panel, '0d-recommended');
   await panel.getByRole('tab', { name: 'Builder' }).click();
   await panel.locator('#state', { hasText: 'Ready' }).waitFor({ timeout: 30000 });
   assert.match(await panel.locator('#transcript').innerText(), /Say what gets in your way/);
@@ -358,20 +385,21 @@ try {
     assert.match(await panel.locator('#transcript').innerText(), /Which pages\?\n→ This page \(Recommended\)/);
 
     // Which pages: a type of page, this website with its address, all websites. Who it helps:
-    // more than one, the other areas under Other.
+    // more than one, the other areas under Other. (After the reply to the answers has finished.)
+    await until(async () => !(await (await fetch(`${base}/v1/agent/chats/${await panel.locator('#chat-select').inputValue()}`, { headers: { authorization: `Bearer ${token}` } })).json()).chat.busy, 'the reply to the answers');
     await ask('kinds please');
     const pagesQ = panel.getByRole('group', { name: 'Which pages should this apply to?' });
     await pagesQ.waitFor();
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
     const host = new URL(shop).host;
-    for (const name of [`This type of page: Product pages on ${host}`, `This website: ${host}`, 'All websites', 'Other']) await pagesQ.getByRole('radio', { name }).waitFor();
+    for (const name of [`This type of page: Product pages on ${host}`, 'This type of page: Product pages on all websites', `This website: ${host}`, /^All websites/, /^Other/]) await pagesQ.getByRole('radio', { name }).waitFor();
     assert.match(await pagesQ.innerText(), new RegExp(`http://${host.replace(/[.]/g, '\\.')}/`));
     const areasQ = panel.getByRole('group', { name: 'Who does this change help most?' });
     assert.equal(await areasQ.getByRole('checkbox', { name: 'Hearing' }).isVisible(), false, 'the other areas wait under Other');
     await areasQ.getByRole('checkbox', { name: 'Other' }).check();
     await areasQ.getByRole('checkbox', { name: 'Hearing' }).check();
     await areasQ.getByRole('checkbox', { name: 'Motor' }).check();
-    await pagesQ.getByRole('radio', { name: 'All websites' }).check();
+    await pagesQ.getByRole('radio', { name: /^All websites/ }).check();
     await shot(panel, '4b-kinds');
     await panel.getByRole('button', { name: 'Send answers' }).click();
     await panel.locator('#transcript .msg.you', { hasText: '→ All websites' }).waitFor();

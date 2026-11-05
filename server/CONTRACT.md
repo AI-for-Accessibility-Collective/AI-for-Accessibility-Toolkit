@@ -207,6 +207,15 @@ share adapters ([docs/design/adapter-mcp.md](../docs/design/adapter-mcp.md)
   Publishing checks the descriptor and any `web-module@1` package (including
   its lint) and computes both digests; an unchanged publish is not a new
   revision. The newest 20 revisions are kept.
+- Built-in adapters: the service (`server/index.js`) publishes the toolkit's
+  core set (`tools/core-adapters/`, one per major barrier, built on the
+  building blocks) at start, as `{owner: "toolkit", appId: "toolkit"}`, app
+  name "Toolkit", shared and targeting every web page
+  (`server/src/builtin-adapters.js`). They are found, installed and run like
+  any shared adapter; a restart publishes a new revision only when a file
+  changed. No account can be named `toolkit`. Like every adapter, they are
+  unvalidated: they are a starting point to check, not a guarantee that a
+  page works.
 - Installing your own adapter follows `"latest"`; installing someone else's
   pins the current revision. Sites are origins; only sites switched off are
   stored.

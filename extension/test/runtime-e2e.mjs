@@ -210,8 +210,8 @@ try {
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${extId}/sidepanel/sidepanel.html?tab=${shopTabId}`);
   await popup.getByRole('tab', { name: 'Profile' }).click();
-  await popup.locator('#adapter-lists li').nth(2).waitFor();
-  const onPage = await popup.locator('#adapter-lists li').allInnerTexts();
+  await popup.locator('#applied-list li').nth(2).waitFor();
+  const onPage = await popup.locator('#applied-list li').allInnerTexts();
   assert.ok(onPage.some(t => /Big buttons[\s\S]*Developer console · yours[\s\S]*Running on this page/.test(t)), onPage.join('\n---\n'));
   assert.ok(onPage.some(t => /Button labels[\s\S]*shared by other/.test(t)), onPage.join('\n---\n'));
   assert.ok(onPage.some(t => /Broken[\s\S]*Failed: enable\(\) threw/.test(t)), onPage.join('\n---\n'));
@@ -221,10 +221,9 @@ try {
   await popup.getByRole('switch', { name: `Big buttons on ${shop}` }).check();
   await page.waitForFunction(() => document.body.dataset.bigButtons === 'r2:60', null, background);
   // All: every adapter this browser can run, by application.
-  await popup.getByRole('radio', { name: 'All' }).check();
+  await popup.locator('#all-box summary').click();
   await popup.getByRole('heading', { name: /^Developer console \(\d+\)$/ }).waitFor();
-  assert.match(await popup.locator('#adapter-lists').innerText(), /Big buttons[\s\S]*In this browser/);
-  await popup.getByRole('radio', { name: 'Applied' }).check();
+  assert.match(await popup.locator('#all-list').innerText(), /Big buttons[\s\S]*In this browser/);
   await popup.getByRole('tab', { name: 'Settings' }).click();
   assert.match(await popup.locator('.who').innerText(), /Connected to 127\.0\.0\.1:\d+ as dev/);
   assert.match(await popup.locator('#installed-count').innerText(), /^3 adapters installed/);

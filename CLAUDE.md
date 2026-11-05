@@ -48,7 +48,8 @@ in `docs/architecture.md`. This section is the code map.
   per major barrier, built only on `toolkit/blocks/` by agents with
   `scripts/verify-adapters/run.mjs --create`; briefs in
   `scripts/verify-adapters/core-adapters.json`, specs in
-  `tools/test/verify-core/`).
+  `tools/test/verify-core/`). The service publishes them at start as the
+  built-in adapters (owner `toolkit`, app "Toolkit"; `server/src/builtin-adapters.js`).
 - `server/` — hosted HTTP service exposing the Librarian methods to any
   language/runtime. Also: developer accounts (`src/accounts.js`; `/admin` is
   the admin console, `/developer` the developer console), the **adapter

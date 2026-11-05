@@ -34,11 +34,13 @@ function ago(iso) {
 const keyOf = (a) => `${a.owner}/${a.appId}/${a.id}`;
 
 const RESULT_TEXT = { applied: 'Running', failed: 'Failed', skipped: 'Not running', removed: 'Switched off' };
+// The owner of the toolkit's own adapters (server/src/builtin-adapters.js).
+const BUILTIN_OWNER = 'toolkit';
 
 export function createAdaptersPage({ getClient, getAppToken = () => null, status, run }) {
   let registry = null;     // for the current connection
   let uid = null;
-  let mine = [], shared = [], installed = new Map(), results = [], instances = [], apps = [];
+  let mine = [], shared = [], builtin = [], installed = new Map(), results = [], instances = [], apps = [];
   let checks = new Map();       // adapter key -> this account's latest server check of it
   let restrictions = new Map(); // adapter key -> the level the person narrowed it to
   let tab = 'mine';
@@ -62,7 +64,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
   async function refresh() {
     const r = registryFor(getClient());
     if (!r) {
-      mine = []; shared = []; installed = new Map(); results = []; instances = []; apps = []; restrictions = new Map();
+      mine = []; shared = []; builtin = []; installed = new Map(); results = []; instances = []; apps = []; restrictions = new Map();
       closeEditor();
       render();
       return;
@@ -81,7 +83,9 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
       restrictions = new Map(visibility.adapters.map(x => [keyOf(x.adapter), x.restricted]));
       uid = who.uid;
       mine = a.adapters;
-      shared = b.adapters.filter(x => !x.mine);
+      // The toolkit's own adapters (server/src/builtin-adapters.js) have a tab of their own.
+      shared = b.adapters.filter(x => !x.mine && x.owner !== BUILTIN_OWNER);
+      builtin = b.adapters.filter(x => x.owner === BUILTIN_OWNER).sort((x, y) => x.name.localeCompare(y.name));
       installed = new Map((inst.adapters || []).map(x => [keyOf(x.adapter), x]));
       results = st.results;
       instances = st.instances;
@@ -136,15 +140,17 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
       return;
     }
     const search = $('ws-search').value.trim().toLowerCase();
-    const list = (tab === 'mine' ? mine : shared)
+    const list = (tab === 'mine' ? mine : tab === 'toolkit' ? builtin : shared)
       .filter(a => !search || `${a.name} ${a.description} ${a.appName} ${a.adapter.id} ${a.owner} ${(a.urlPatterns || []).join(' ')}`.toLowerCase().includes(search));
     $('ws-count').textContent = String(list.length);
     if (!list.length) {
       groups.append(element('p', 'empty', tab === 'mine'
         ? (mine.length ? 'None of your adapters match.' : 'You have no adapters yet. Choose + New adapter to write one, or publish one from your app with the SDK.')
+        : tab === 'toolkit' ? (builtin.length ? 'None of the toolkit’s adapters match.' : 'This toolkit has no built-in adapters.')
         : (shared.length ? 'No shared adapters match.' : 'Nobody has shared an adapter on this toolkit yet.')));
       return;
     }
+    if (tab === 'toolkit') groups.append(element('p', 'muted', 'Built into the toolkit: one adapter per major barrier, built on its building blocks. Like every adapter here they are unvalidated, so check that one works for you before relying on it.'));
     const byApp = new Map();
     for (const a of list) {
       const k = a.adapter.appId;
@@ -257,7 +263,7 @@ export function createAdaptersPage({ getClient, getAppToken = () => null, status
     if (inst) badges.push(['connected', `In your browser · revision ${inst.revision}`]);
     if (!a.portable) badges.push(['offline', 'Description only']);
     const card = cardTop(a, badges);
-    details(card, a, `${a.appName} · by ${a.owner} · revision ${a.revision} · updated ${ago(a.updatedAt)}`);
+    details(card, a, `${a.owner === BUILTIN_OWNER ? 'Built into the toolkit' : `${a.appName} · by ${a.owner}`} · revision ${a.revision} · updated ${ago(a.updatedAt)}`);
     runtimeLines(card, a);
     card.append(visibilityOf(a));
     const actions = element('div', 'card-actions');

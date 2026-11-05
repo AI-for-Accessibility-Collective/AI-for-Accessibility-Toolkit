@@ -1073,6 +1073,15 @@ notification stream sends `notifications/resources/list_changed`, with the
 reason in `params._meta["ai4a11y/registry"]`, whenever an adapter the account
 can see changes, its installs change, or one of its runtimes reports.
 
+**Built-in adapters.** The service publishes the toolkit's core set
+(`tools/core-adapters/`, one adapter per major barrier, built on the building
+blocks) at start, under the reserved owner `toolkit` (`appId` `toolkit`, app
+"Toolkit"), shared and targeting every web page
+(`server/src/builtin-adapters.js`). Every account finds and installs them like
+any shared adapter, and the developer console lists them under its
+**Toolkit** tab. They are unvalidated, like every adapter: a starting point a
+person checks on their own pages, not a guarantee.
+
 **Revisions and trust.** Installing your own adapter follows the latest
 revision, so a saved edit reaches your runtime in seconds. Installing someone
 else's pins the revision you chose; when the owner publishes a new one, the

@@ -48,7 +48,8 @@ export const MyAdapter = {
 const dir = await mkdtemp(path.join(tmpdir(), 'workspace-e2e-'));
 const store = fileStore(dir);
 const host = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
-const app = createApp({ store, adminPassword: ADMIN, toolkitHost: host });
+const app = createApp({ store, adminPassword: ADMIN, toolkitHost: host, builtinAdapters: true });
+await app.builtins;
 const server = http.createServer(app);
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -232,6 +233,19 @@ try {
   await boPage.waitForFunction(() => document.getElementById('connection-state').textContent.includes('Signed in'));
   await boPage.click('[data-ws-tab="shared"]');
   await boPage.waitForFunction(() => /Nobody has shared|No shared adapters/.test(document.getElementById('ws-groups').textContent));
+  // ── the toolkit's own adapters: their own tab, not under Shared with you ──
+  await boPage.click('[data-ws-tab="toolkit"]');
+  assert.equal(await boPage.locator('[data-ws-tab="toolkit"]').getAttribute('aria-pressed'), 'true');
+  await boPage.locator('.adapter-group h3', { hasText: 'Toolkit' }).waitFor();
+  assert.equal(await boPage.locator('#ws-count').innerText(), '11');
+  assert.equal(await boPage.locator('.adapter-card[data-adapter^="toolkit/toolkit/"]').count(), 11);
+  assert.match(await boPage.locator('#ws-groups').innerText(), /unvalidated/);
+  const builtinCard = boPage.locator('.adapter-card[data-adapter="toolkit/toolkit/text-size"]');
+  assert.match(await builtinCard.innerText(), /Built into the toolkit · revision 1/);
+  await builtinCard.getByRole('button', { name: 'Run Text size and spacing in my browser' }).click();
+  await statusStartsWith(boPage, 'Text size and spacing runs in your browser runtime');
+  const boInstalled = await createRegistryClient({ url: base, token: bo.token }).installed('browser-runtime');
+  assert.ok(boInstalled.adapters.some(a => a.adapter.owner === 'toolkit' && a.adapter.id === 'text-size'));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.click('#ws-new');
   const guide = await page.locator('#ws-guide').boundingBox();
@@ -240,7 +254,7 @@ try {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'the Adapters page fits a phone');
   await page.screenshot({ path: path.join(tmpdir(), 'toolkit-adapters-mobile.png'), fullPage: true });
   assert.deepEqual(errors, [], 'browser must not raise JS errors');
-  console.log('Adapters workspace browser workflow passed: the coding-agent guide, publishing with the skill helper from .env, lint and blocking errors with focus in the editor, runtime reports and badge, share, a second developer installing pinned, edit to revision 2, unchanged save, update offered and applied, Apps page registry counts, delete, phone layout.');
+  console.log('Adapters workspace browser workflow passed: the coding-agent guide, publishing with the skill helper from .env, lint and blocking errors with focus in the editor, runtime reports and badge, share, a second developer installing pinned, edit to revision 2, unchanged save, update offered and applied, Apps page registry counts, delete, the toolkit’s built-in adapters under Toolkit, phone layout.');
 } finally {
   await browser?.close();
   app.registry.closeAll();

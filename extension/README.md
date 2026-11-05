@@ -45,13 +45,19 @@ publish is a new revision, which replaces the running one without a reload.
 
 The toolbar button opens the side panel, with three tabs:
 
-- **Profile**: your profile on the toolkit (the preset it started from,
-  support areas, what pages should do, plain language, your own words),
-  editable; then your adapters: **Applied** (the installed ones that target
-  the page beside the panel, what happened when they ran, and a switch to
-  turn one off on this site), **Recommended** (adapters for your profile's
-  support areas that are not in this browser yet, with **Add**), and **All**
-  (every adapter this browser can run, by the application it came from).
+- **Profile**: describe your abilities in your own words, typed or spoken
+  (the browser's speech recognition; the first time, a tab asks for the
+  microphone). Saving asks the toolkit's model what that means for web
+  pages and lists it in plain words: what is on first, the rest folded
+  under More options, each one a switch you can change. A preset from the
+  developer console can replace it all. A profile chosen in the console
+  shows here, and reaches the adapters, at once. Then your adapters:
+  **Applied on this page** (the installed ones that target the page beside
+  the panel, what happened when they ran, and a switch to turn one off on
+  this site), **Recommended** (adapters for your profile's support areas
+  that are not in this browser yet, with **Add**) and **All** (every
+  adapter this browser can run, by the application it came from, the
+  toolkit's built-in ones under Toolkit); the last two are folded.
 - **Builder**: the assistant (below).
 - **Settings**: connect to a toolkit, allow user scripts, the shortcut, sync
   and disconnect.

@@ -102,6 +102,9 @@
     },
     "./blocks/ai/prompts.js": {
       "default": "./blocks/ai/prompts.js"
+    },
+    "./blocks/profile-words.js": {
+      "default": "./blocks/profile-words.js"
     }
   },
   "files": [

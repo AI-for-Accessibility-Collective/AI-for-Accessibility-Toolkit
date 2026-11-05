@@ -77,6 +77,9 @@ export async function signIn(baseUrl, username, password, fetcher = fetch) {
   return payload;
 }
 
+// Librarian calls that change the profile (server/src/profile-events.js PROFILE_WRITES).
+const PROFILE_WRITES = new Set(['replaceProfile', 'setProfileField', 'setProfileFields', 'respondToProposal', 'resetToProfile']);
+
 export function createClient(baseUrl, token, fetcher = fetch) {
   const base = instanceBase(baseUrl);
   if (!token.trim()) throw new Error('Enter a toolkit access token.');
@@ -100,7 +103,10 @@ export function createClient(baseUrl, token, fetcher = fetch) {
     token: token.trim(),
     whoami: () => request('/v1/whoami'),
     async call(method, ...args) {
-      return (await request(`/v1/librarian/${method}`, { args })).result;
+      const result = (await request(`/v1/librarian/${method}`, { args })).result;
+      // The browser runtime (its bridge on this page) follows a profile change at once.
+      if (PROFILE_WRITES.has(method) && typeof window !== 'undefined') window.postMessage({ source: 'ai4a11y-console', type: 'profile-changed' }, location.origin);
+      return result;
     },
     // Which preset is selected, and whether it has been edited since (CONTRACT.md "Profile selection").
     selection: () => request('/v1/profile/selection'),

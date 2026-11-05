@@ -10,6 +10,11 @@ WORKDIR /app
 # no `npm install` step needed for either.
 COPY toolkit/ ./toolkit/
 COPY server/ ./server/
+# What server/ reads from elsewhere in the repo: the AI answer gates
+# (src/ai.js) and the built-in adapters with their briefs (src/builtin-adapters.js).
+COPY tools/utils/ai-output.js ./tools/utils/ai-output.js
+COPY tools/core-adapters/ ./tools/core-adapters/
+COPY scripts/verify-adapters/core-adapters.json ./scripts/verify-adapters/core-adapters.json
 
 WORKDIR /app/server
 

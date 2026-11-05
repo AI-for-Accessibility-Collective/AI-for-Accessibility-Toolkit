@@ -24,6 +24,7 @@ import { sendJSON, sendHttpError, readJSON, HttpError } from './http.js';
 import { withAiContext } from './ai-context.js';
 import { priceFor, costOf } from './gemini.js';
 import { buildPrompt, TASKS, NO_ANSWER, PROMPT_VERSION } from '../../toolkit/blocks/ai/prompts.js';
+import { cleanProfileReading } from '../../toolkit/blocks/profile-words.js';
 import { rejectRewrite, rejectShortText, cleanShortText, startsWithRefusal, opensWithFirstPersonRefusal, containsUncertainty } from '../../tools/utils/ai-output.js';
 
 export const AI_PREFIX = '/v1/ai';
@@ -72,6 +73,13 @@ export function gateAnswer(task, answer, input, options = {}) {
         : containsUncertainty(text) && text.length < 200 ? 'reads as uncertain'
         : null;
       break;
+    case 'profile': {
+      // JSON in the shape blocks/profile-words.js reads, cleaned to the known areas and needs.
+      const reading = cleanProfileReading(text);
+      reason = !reading ? 'not a profile' : null;
+      if (reading) text = JSON.stringify(reading);
+      break;
+    }
     case 'choice': {
       // The number of one option, and nothing else; 0 is the model saying the page does not make it clear.
       const m = /^(\d{1,2})\.?$/.exec(text);

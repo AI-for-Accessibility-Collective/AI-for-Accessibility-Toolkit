@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Allow the microphone</title>
+  <link rel="stylesheet" href="sidepanel.css">
+  <script type="module" src="microphone.js"></script>
+</head>
+<body class="page">
+  <h1>Allow the microphone</h1>
+  <p>The side panel cannot ask for the microphone itself, so this page asks once for the extension. Choose <strong>Allow</strong> when Chrome asks.</p>
+  <p id="mic-state" role="status" aria-live="polite">Asking…</p>
+  <button id="mic-again" class="secondary" type="button" hidden>Ask again</button>
+</body>
+</html>

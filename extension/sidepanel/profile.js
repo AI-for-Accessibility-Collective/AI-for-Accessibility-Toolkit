@@ -1,57 +1,44 @@
 // The side panel's Profile tab: the person's profile on the toolkit (one
-// record per account, toolkit/core/librarian.js) and the preset it started
-// from (/v1/profile/selection), editable here; then adapters, shown three ways:
+// record per account, toolkit/core/librarian.js), then their adapters.
 //
-//   Applied      the installed adapters that target the page beside the
-//                panel, what happened when they ran, and a switch for this
-//                site (what the toolbar popup showed)
-//   Recommended  adapters the account can use that are not in this browser
-//                yet, for the profile's support areas (adapter_search,
-//                one area at a time), most areas in common first
-//   All          every adapter the browser can run, by application
+// The person describes their abilities in their own words (typed, or spoken
+// with the browser's speech recognition). Saving asks the toolkit's model
+// (the `profile` task on /v1/ai, Gemini Flash) what that means for web
+// pages: support areas, needs (blocks/profile-words.js) and plain language,
+// and writes them with the words in one setProfileFields. What pages will do
+// is then listed in plain words, what is on first; everything else is folded
+// under More options, and each can be turned on or off there. A preset (the
+// developer console's, /v1/profile/presets) can replace it all.
 //
-// Saving the profile syncs the runtime, so the adapters follow it at once.
+// Adapters, three sections:
+//   Applied on this page  the installed adapters that target the page beside
+//                         the panel, what happened when they ran, and a
+//                         switch for this site
+//   Recommended (folded)  adapters the account can use that are not in this
+//                         browser yet, for the profile's support areas
+//                         (adapter_search, one area at a time), most areas
+//                         in common first
+//   All (folded)          every adapter the browser can run, by application
+//
+// A change of profile anywhere (this tab, the console, another app) comes
+// through /v1/profile/events: the tab redraws and the runtime syncs.
 
 import { readConnection } from '../runtime/config.js';
 import { createRegistryClient } from '../vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP } from '../vendor/protocol/adapter/index.js';
+import { PROFILE_AREAS, PROFILE_NEEDS, cleanProfileReading } from '../vendor/blocks/profile-words.js';
 import { $, say, el, button, ask, pageTab, keyOf } from './ui.js';
 
-const AREAS = [
-  ['vision', 'Vision'], ['hearing', 'Hearing'], ['motor', 'Motor'],
-  ['cognitive', 'Cognitive'], ['reading', 'Reading'], ['sensory', 'Sensory'],
-];
-// The neutral needs a web page can meet (platforms/chrome/web-surface.js WEB_DERIVATION).
-const NEEDS = [
-  { id: 'textSize', name: 'Text size', kind: 'number', min: 1, max: 3, step: 0.1, start: 1.25, show: (v) => `${Math.round(v * 100)}%` },
-  { id: 'lineSpacing', name: 'Line spacing', kind: 'number', min: 1, max: 3, step: 0.1, start: 1.5, show: (v) => `${v}` },
-  { id: 'letterSpacing', name: 'Letter spacing', kind: 'number', min: 0, max: 0.5, step: 0.02, start: 0.12, show: (v) => `${v} em` },
-  { id: 'readAloudRate', name: 'Reading-aloud speed', kind: 'number', min: 0.5, max: 2, step: 0.1, start: 1, show: (v) => `${v}×` },
-  { id: 'reduceMotion', name: 'Less motion' },
-  { id: 'darkTheme', name: 'Dark pages' },
-  { id: 'contrast', name: 'More contrast' },
-  { id: 'captions', name: 'Captions' },
-  { id: 'simplify', name: 'Simpler words' },
-  { id: 'readAloud', name: 'Read pages aloud' },
-  { id: 'describeImages', name: 'Describe images' },
-  { id: 'labelControls', name: 'Name unlabeled buttons and fields' },
-  { id: 'keyboardAccess', name: 'Work by keyboard' },
-  { id: 'skipLinks', name: 'Skip links' },
-  { id: 'pageStructure', name: 'Page outline' },
-  { id: 'repairLandmarks', name: 'Repair page regions' },
-  { id: 'announceUpdates', name: 'Announce changes on the page' },
-  { id: 'spaAnnounce', name: 'Announce new views in web apps' },
-];
 const RESULT_TEXT = { applied: 'Running on this page', failed: 'Failed', skipped: 'Not running', removed: 'Switched off' };
-const FILTER_KEY = 'profileFilter';
+const PLAIN = { id: 'plainLanguage', name: 'Plain language' };
 
 let connection = null;
 let registry = null;
 let profile = null;   // the record
 let selection = null; // {id, name, edited} or null
 let presets = [];
-let editing = false;
-let generation = 0;
+let events = null;    // AbortController of /v1/profile/events
+let lastRevision = null;
 
 async function service(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${connection.url}${path}`, {
@@ -67,6 +54,10 @@ const librarian = async (method, args = []) => (await service(`/v1/librarian/${m
 
 // ── the profile ──────────────────────────────────────────────────────────────
 
+const needsOf = (p) => (Array.isArray(p?.fields?.needs) ? p.fields.needs : []);
+const areasOf = (p) => (Array.isArray(p?.supportAreas) ? p.supportAreas : []);
+const plainOf = (p) => p?.metaPreferences?.language === 'plain';
+
 async function loadProfile() {
   const [p, sel, pre] = await Promise.all([
     librarian('getProfile'),
@@ -78,190 +69,205 @@ async function loadProfile() {
   presets = pre?.presets || [];
 }
 
-const needsOf = (p) => (Array.isArray(p?.fields?.needs) ? p.fields.needs : []);
-const areasOf = (p) => (Array.isArray(p?.supportAreas) ? p.supportAreas : []);
-
-function renderProfileView() {
-  const view = $('profile-view');
-  const items = [];
-  const started = selection ? `${selection.name}${selection.edited ? ', changed since' : ''}` : 'Your own';
-  items.push(['Started from', started]);
-  const areas = areasOf(profile).map(a => AREAS.find(([id]) => id === a)?.[1] || a);
-  items.push(['Support areas', areas.length ? areas.join(', ') : 'None chosen']);
-  const needs = needsOf(profile).map((n) => {
-    const d = NEEDS.find(x => x.id === n.dimension);
-    if (!d) return null;
-    return d.kind === 'number' ? `${d.name} ${d.show(Number(n.value))}` : n.value ? d.name : null;
-  }).filter(Boolean);
-  items.push(['What pages should do', needs.length ? needs.join(', ') : 'Nothing yet']);
-  if (profile?.metaPreferences?.language === 'plain') items.push(['Language', 'Plain language']);
-  if (profile?.freeText) items.push(['In your words', profile.freeText]);
-  const list = el('ul', 'profile-list');
-  for (const [label, value] of items) {
-    const li = el('li');
-    li.append(el('strong', '', label), el('span', 'value', value));
-    list.append(li);
-  }
-  view.replaceChildren(list);
+function renderProfile() {
+  // What the person is typing or saying stays.
+  if (document.activeElement !== $('profile-words') && !listening) $('profile-words').value = profile?.freeText || '';
+  renderUnderstood();
+  renderPresets();
 }
 
-function renderProfileForm() {
-  const form = $('profile-form');
-  const parts = [];
-
-  // A preset replaces the whole profile; loading one is a separate action.
-  if (presets.length) {
-    const field = el('div', 'field');
-    const label = el('label', '', 'Start again from a preset');
-    label.htmlFor = 'profile-preset';
-    const select = el('select');
-    select.id = 'profile-preset';
-    select.append(Object.assign(el('option', '', 'Choose a preset'), { value: '' }));
-    for (const p of presets) select.append(Object.assign(el('option', '', p.description ? `${p.name}: ${p.description}` : p.name), { value: p.id }));
-    const row = el('div', 'row');
-    row.append(button('Use this preset', 'secondary', () => usePreset(select.value)));
-    field.append(label, select, el('p', 'hint', 'This replaces what is below.'), row);
-    parts.push(field);
+/** One line of what pages will do: a switch, and a value where it takes one. */
+function itemRow(kind, d, on, value) {
+  const li = el('li', 'profile-item');
+  const id = `pi-${kind}-${d.id}`;
+  const box = Object.assign(document.createElement('input'), { type: 'checkbox', id, checked: on });
+  const label = el('label', '', d.name);
+  label.htmlFor = id;
+  li.append(box, label);
+  let number = null;
+  if (d.kind === 'number') {
+    number = Object.assign(document.createElement('input'), { type: 'number', min: d.min, max: d.max, step: d.step, value: value ?? d.start, disabled: !on });
+    number.setAttribute('aria-label', `${d.name}, ${d.unit}`);
+    number.addEventListener('change', () => saveItem(kind, d, box.checked, Number(number.value)));
+    li.append(number);
   }
-
-  const areas = el('fieldset');
-  areas.append(el('legend', '', 'Support areas'));
-  for (const [id, name] of AREAS) {
-    const row = el('label', 'option');
-    const box = Object.assign(document.createElement('input'), { type: 'checkbox', name: 'area', value: id, checked: areasOf(profile).includes(id) });
-    row.append(box, document.createTextNode(name));
-    areas.append(row);
-  }
-  parts.push(areas);
-
-  const needs = el('fieldset');
-  needs.append(el('legend', '', 'What pages should do'));
-  const have = new Map(needsOf(profile).map(n => [n.dimension, n]));
-  for (const d of NEEDS) {
-    const n = have.get(d.id);
-    const row = el('div', 'option');
-    const box = Object.assign(document.createElement('input'), { type: 'checkbox', id: `need-${d.id}`, checked: d.kind === 'number' ? !!n : !!n?.value });
-    box.dataset.need = d.id;
-    const label = el('label', '', d.name);
-    label.htmlFor = box.id;
-    row.append(box, label);
-    if (d.kind === 'number') {
-      const value = Object.assign(document.createElement('input'), { type: 'number', min: d.min, max: d.max, step: d.step, value: n ? Number(n.value) : d.start });
-      value.id = `need-${d.id}-value`;
-      value.dataset.needValue = d.id;
-      value.setAttribute('aria-label', `${d.name} value`);
-      value.disabled = !box.checked;
-      box.addEventListener('change', () => { value.disabled = !box.checked; });
-      row.append(value);
-    }
-    needs.append(row);
-  }
-  parts.push(needs);
-
-  const plain = el('label', 'option');
-  plain.append(Object.assign(document.createElement('input'), { type: 'checkbox', id: 'profile-plain', checked: profile?.metaPreferences?.language === 'plain' }), document.createTextNode('Plain language'));
-  parts.push(plain);
-
-  const words = el('div', 'field');
-  const wordsLabel = el('label', '', 'In your own words (optional)');
-  wordsLabel.htmlFor = 'profile-words';
-  const area = Object.assign(document.createElement('textarea'), { id: 'profile-words', rows: 3, value: profile?.freeText || '' });
-  words.append(wordsLabel, area);
-  parts.push(words);
-
-  const actions = el('div', 'row');
-  const save = el('button', 'primary', 'Save profile');
-  save.type = 'submit';
-  actions.append(save, button('Cancel', 'secondary', () => setEditing(false)));
-  parts.push(actions);
-  form.replaceChildren(...parts);
+  box.addEventListener('change', () => { if (number) number.disabled = !box.checked; saveItem(kind, d, box.checked, number ? Number(number.value) : true); });
+  return li;
 }
 
-function setEditing(on) {
-  editing = on;
-  $('profile-edit').setAttribute('aria-expanded', String(on));
-  $('profile-edit').textContent = on ? 'Close' : 'Edit';
-  $('profile-form').hidden = !on;
-  $('profile-view').hidden = on;
-  if (on) { renderProfileForm(); $('profile-form').querySelector('input, select')?.focus(); }
+function renderUnderstood() {
+  const areas = areasOf(profile);
+  const needs = new Map(needsOf(profile).map(n => [n.dimension, n]));
+  const on = [], off = [];
+  for (const a of PROFILE_AREAS) (areas.includes(a.id) ? on : off).push(itemRow('area', { ...a, name: `Support for ${a.name.toLowerCase()}` }, areas.includes(a.id)));
+  for (const d of PROFILE_NEEDS) {
+    const n = needs.get(d.id);
+    const isOn = !!n && (d.kind === 'number' ? Number.isFinite(Number(n.value)) : n.value === true);
+    (isOn ? on : off).push(itemRow('need', d, isOn, n ? Number(n.value) : undefined));
+  }
+  (plainOf(profile) ? on : off).push(itemRow('plain', PLAIN, plainOf(profile)));
+  $('profile-understood').hidden = false;
+  $('profile-selected').replaceChildren(...(on.length ? on : [el('li', 'empty', 'Nothing yet. Describe your abilities above, or turn something on under More options.')]));
+  $('profile-others').replaceChildren(...off);
+  $('profile-summary').textContent = profile?.fields?.wordsSummary || '';
 }
 
-async function saveProfile(event) {
-  event.preventDefault();
-  const form = $('profile-form');
-  const have = new Map(needsOf(profile).map(n => [n.dimension, n]));
-  const needs = [];
-  for (const d of NEEDS) {
-    const on = form.querySelector(`[data-need="${d.id}"]`)?.checked;
-    if (!on) continue;
-    const value = d.kind === 'number' ? Number(form.querySelector(`[data-need-value="${d.id}"]`).value) : true;
-    if (d.kind === 'number' && !(value >= d.min && value <= d.max)) { say(`${d.name}: choose a value from ${d.min} to ${d.max}.`, true); return; }
-    // What the person did not change keeps where it came from.
-    const before = have.get(d.id);
-    needs.push(before && before.value === value ? before : { dimension: d.id, value, strength: before?.strength || 'preference', source: 'person' });
-  }
-  // Needs this form does not show stay as they were.
-  for (const n of needsOf(profile)) if (!NEEDS.some(d => d.id === n.dimension)) needs.push(n);
-  const fields = {
-    supportAreas: [...form.querySelectorAll('input[name=area]:checked')].map(b => b.value),
-    'fields.needs': needs,
-    'metaPreferences.language': $('profile-plain').checked ? 'plain' : 'standard',
-    freeText: $('profile-words').value.trim(),
-  };
+function renderPresets() {
+  $('profile-started').textContent = selection ? `Your profile started from ${selection.name}${selection.edited ? ' and has changed since' : ''}.` : 'Your profile did not start from a preset.';
+  $('profile-presets').hidden = !presets.length;
+  const select = $('profile-preset');
+  if (document.activeElement === select) return;
+  select.replaceChildren(Object.assign(el('option', '', 'Choose a preset'), { value: '' }),
+    ...presets.map(p => Object.assign(el('option', '', p.description ? `${p.name}: ${p.description}` : p.name), { value: p.id })));
+}
+
+/** One switch or value changed: write just that, keep the rest. */
+async function saveItem(kind, d, on, value) {
   try {
-    profile = await librarian('setProfileFields', [fields]);
-    selection = (await service('/v1/profile/selection').catch(() => null))?.selected || selection;
-    setEditing(false);
-    renderProfileView();
-    say('Saved your profile. Your adapters follow it now.');
+    if (kind === 'area') {
+      const areas = new Set(areasOf(profile));
+      if (on) areas.add(d.id); else areas.delete(d.id);
+      profile = await librarian('setProfileFields', [{ supportAreas: PROFILE_AREAS.map(a => a.id).filter(a => areas.has(a)) }]);
+    } else if (kind === 'plain') {
+      profile = await librarian('setProfileFields', [{ 'metaPreferences.language': on ? 'plain' : 'standard' }]);
+    } else {
+      if (d.kind === 'number' && on && !(value >= d.min && value <= d.max)) { say(`${d.name}: choose a value from ${d.min} to ${d.max}.`, true); return; }
+      const needs = needsOf(profile).filter(n => n.dimension !== d.id);
+      if (on) needs.push({ dimension: d.id, value: d.kind === 'number' ? value : true, strength: 'preference', source: 'person' });
+      profile = await librarian('setProfileFields', [{ 'fields.needs': needs }]);
+    }
+    say(`${on ? 'On' : 'Off'}: ${d.name}${on && d.kind === 'number' ? ` ${d.show(value)}` : ''}.`);
     ask('sync').catch(() => {});
-    renderAdapters();
   } catch (e) { say(e.message, true); }
 }
 
-async function usePreset(id) {
+/** Save the words: the toolkit's model reads them, then all of it is written at once. */
+async function saveWords(event) {
+  event.preventDefault();
+  stopListening();
+  const words = $('profile-words').value.trim();
+  if (!words) { say('Describe your abilities first, in a sentence or two.', true); return; }
+  const save = $('words-save');
+  save.disabled = true;
+  $('profile-working').hidden = false;
+  say('Understanding what you wrote…');
+  try {
+    const res = await fetch(`${connection.url}/v1/ai/text`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${connection.token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ task: 'profile', input: words, adapter: 'toolkit/profile' }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.message || body.error || `The toolkit answered ${res.status}.`);
+    const reading = cleanProfileReading(body.text);
+    if (!reading) {
+      // Keep the words, so nothing said is lost.
+      profile = await librarian('setProfileFields', [{ freeText: words }]);
+      renderProfile();
+      say(body.reason === 'no-answer' ? 'Saved your words. Say a little more about what gets in your way, like the example, and save again.' : 'Saved your words, but the toolkit could not work out what pages should do. Turn things on under More options, or save again.', true);
+      return;
+    }
+    // Needs this tab does not show stay as they were.
+    const kept = needsOf(profile).filter(n => !PROFILE_NEEDS.some(d => d.id === n.dimension));
+    profile = await librarian('setProfileFields', [{
+      freeText: words,
+      supportAreas: reading.supportAreas,
+      'fields.needs': [...reading.needs.map(n => ({ ...n, strength: 'preference', source: 'person-words' })), ...kept],
+      'fields.wordsSummary': reading.summary,
+      'metaPreferences.language': reading.plainLanguage ? 'plain' : 'standard',
+    }]);
+    renderProfile();
+    say(`Saved. ${reading.summary || 'Your adapters follow it now.'}`);
+    ask('sync').catch(() => {});
+    refreshAdapters();
+  } catch (e) {
+    say(e.message, true);
+  } finally {
+    save.disabled = false;
+    $('profile-working').hidden = true;
+  }
+}
+
+async function usePreset() {
+  const id = $('profile-preset').value;
   if (!id) { say('Choose a preset first.', true); return; }
   try {
     const got = await service('/v1/profile/select', { method: 'POST', body: { id } });
     profile = got.profile || await librarian('getProfile');
     selection = got.selected || null;
-    setEditing(false);
-    renderProfileView();
+    renderProfile();
     say(`Your profile now starts from ${selection?.name || 'that preset'}.`);
     ask('sync').catch(() => {});
-    renderAdapters();
+    refreshAdapters();
   } catch (e) { say(e.message, true); }
+}
+
+// ── speaking instead of typing ───────────────────────────────────────────────
+
+let recognition = null;
+let listening = false;
+function stopListening() { if (listening) recognition?.stop(); }
+function toggleVoice() {
+  const Recognition = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
+  if (!Recognition) { say('Speaking needs a browser with speech recognition. Type instead.', true); return; }
+  if (listening) { stopListening(); return; }
+  const area = $('profile-words');
+  const before = area.value.trim();
+  recognition = new Recognition();
+  recognition.lang = navigator.language || 'en-US';
+  recognition.interimResults = true;
+  recognition.continuous = true;
+  recognition.onresult = (e) => {
+    const heard = [...e.results].map(r => r[0].transcript).join(' ').replace(/\s+/g, ' ').trim();
+    area.value = [before, heard].filter(Boolean).join(' ');
+  };
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      // A side panel cannot ask for the microphone itself: a page of the extension asks once.
+      say('Allow the microphone in the tab that opened, then press Speak again.', true);
+      chrome.tabs.create({ url: chrome.runtime.getURL('sidepanel/microphone.html') });
+    } else if (e.error !== 'aborted' && e.error !== 'no-speech') say(`Speaking stopped: ${e.error}.`, true);
+  };
+  recognition.onend = () => {
+    listening = false;
+    $('words-voice').setAttribute('aria-pressed', 'false');
+    $('words-voice').textContent = 'Speak';
+  };
+  recognition.start();
+  listening = true;
+  $('words-voice').setAttribute('aria-pressed', 'true');
+  $('words-voice').textContent = 'Stop speaking';
+  say('Listening. Describe your abilities, then press Stop speaking.');
 }
 
 // ── adapters ─────────────────────────────────────────────────────────────────
 
-function filter() { return document.querySelector('input[name=adapter-filter]:checked')?.value || 'applied'; }
+const empty = (text) => { const ul = el('ul', 'adapters'); ul.append(el('li', 'empty', text)); return ul; };
+const SECTIONS = {
+  applied: { about: 'applied-about', list: 'applied-list', make: appliedList },
+  recommended: { about: 'recommended-about', list: 'recommended-list', make: recommendedList, box: 'recommended-box' },
+  all: { about: 'all-about', list: 'all-list', make: allList, box: 'all-box' },
+};
+const generations = {};
 
-let shownFilter = null;
-async function renderAdapters() {
-  const mine = ++generation;
-  const which = filter();
-  const box = $('adapter-lists');
-  // A new view says so until its list arrives; the same view redraws in place.
-  if (which !== shownFilter) {
-    shownFilter = which;
-    $('adapters-about').textContent = '';
-    box.replaceChildren(el('p', 'hint', 'Looking…'));
-  }
+/** Draw one section (a folded one only while it is open). */
+async function renderSection(name) {
+  const sec = SECTIONS[name];
+  if (sec.box && !$(sec.box).open) return;
+  const mine = generations[name] = (generations[name] || 0) + 1;
+  const box = $(sec.list);
+  if (!box.childElementCount) box.replaceChildren(el('p', 'hint', 'Looking…'));
   try {
     const { state } = await ask('status');
-    if (mine !== generation) return;
-    const { about, parts } = which === 'applied' ? await appliedList(state) : which === 'recommended' ? await recommendedList(state) : await allList(state);
-    if (mine !== generation) return;
-    $('adapters-about').textContent = about;
+    const { about, parts } = await sec.make(state);
+    if (mine !== generations[name]) return;
+    $(sec.about).textContent = about;
     box.replaceChildren(...parts);
   } catch (e) {
-    if (mine !== generation) return;
+    if (mine !== generations[name]) return;
     box.replaceChildren(el('p', 'hint', `Could not list adapters: ${e.message}`));
   }
 }
-
-const empty = (text) => { const ul = el('ul', 'adapters'); ul.append(el('li', 'empty', text)); return ul; };
 
 async function appliedList(state) {
   const tab = await pageTab();
@@ -269,7 +275,7 @@ async function appliedList(state) {
     return { about: 'The installed adapters that run on the page beside this panel.', parts: [empty('Adapters run on web pages (http and https).')] };
   }
   const { adapters, origin } = await ask('forUrl', { url: tab.url });
-  const about = `On ${new URL(origin).host}: the installed adapters for this page.`;
+  const about = `On ${new URL(origin).host}.`;
   if (!adapters.length) return { about, parts: [empty('None of your adapters runs on this page. Recommended and All show more.')] };
   const results = state.tabs?.[tab.id] || {};
   // What runs first, then the rest.
@@ -295,7 +301,7 @@ function appliedItem(a, state, origin, r) {
       await ask('setSite', { key, origin, on: box.checked });
       say(box.checked ? `${a.name} is on for ${origin}.` : `${a.name} is off for ${origin}.`);
     } catch (e) { say(e.message, true); box.checked = !box.checked; }
-    renderAdapters();
+    renderSection('applied');
   });
   label.append(box, document.createTextNode('This site'));
   top.append(label);
@@ -320,12 +326,13 @@ function appliedItem(a, state, origin, r) {
 }
 
 const installedKeys = (state) => new Set((state.adapters || []).map(keyOf));
+const areaName = (id) => PROFILE_AREAS.find(a => a.id === id)?.name || id;
 
 async function recommendedList(state) {
   const areas = areasOf(profile);
   const about = areas.length
-    ? `Adapters for ${areas.map(a => AREAS.find(([id]) => id === a)?.[1].toLowerCase() || a).join(', ')} that are not in this browser yet.`
-    : 'Choose support areas in your profile to see adapters for them.';
+    ? `For ${areas.map(a => areaName(a).toLowerCase()).join(', ')}, not in this browser yet.`
+    : 'Describe your abilities above to see adapters for you.';
   if (!areas.length) return { about, parts: [empty('No support areas in your profile yet.')] };
   const found = new Map();
   for (const area of areas) {
@@ -346,7 +353,7 @@ async function recommendedList(state) {
 }
 
 async function allList(state) {
-  const about = 'Every adapter this browser can run, yours and those shared with you, by the application it came from.';
+  const about = 'Every adapter this browser can run, by the application it came from.';
   const { adapters } = await registry.search({ portable: true });
   if (!adapters.length) return { about, parts: [empty('No adapters yet. Build one in the Builder tab.')] };
   const have = installedKeys(state);
@@ -381,7 +388,7 @@ function registryItem(a, installed) {
         await registry.install(BROWSER_RUNTIME_APP, a.adapter);
         await ask('sync');
         say(`Added ${a.name || a.adapter.id} to this browser.`);
-        renderAdapters();
+        refreshAdapters();
       } catch (e) { say(e.message, true); add.disabled = false; }
     });
     add.setAttribute('aria-label', `Add ${a.name || a.adapter.id}`);
@@ -389,41 +396,79 @@ function registryItem(a, installed) {
   }
   item.append(top);
   if (a.description) item.append(el('span', 'about', a.description));
-  const areas = (a.supportAreas || []).map(x => AREAS.find(([id]) => id === x)?.[1] || x);
+  const areas = (a.supportAreas || []).map(areaName);
   const where = (a.urlPatterns || []).slice(0, 2).join(', ') + ((a.urlPatterns || []).length > 2 ? ', …' : '');
   item.append(el('span', 'from', [a.appName || a.adapter.appId, a.mine ? 'yours' : `shared by ${a.owner}`, areas.length ? areas.join(', ') : null, where ? `runs on ${where}` : null].filter(Boolean).join(' · ')));
   return item;
 }
 
+// ── a change of profile elsewhere ────────────────────────────────────────────
+
+/** Follow /v1/profile/events while the panel is open: redraw, and have the runtime sync. */
+async function follow() {
+  events?.abort();
+  const mine = events = new AbortController();
+  let wait = 1000;
+  while (!mine.signal.aborted) {
+    try {
+      const res = await fetch(`${connection.url}/v1/profile/events`, { headers: { authorization: `Bearer ${connection.token}`, accept: 'text/event-stream' }, signal: mine.signal });
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      wait = 1000;
+      const reader = res.body.getReader(), decoder = new TextDecoder();
+      let buffer = '';
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let cut;
+        while ((cut = buffer.indexOf('\n\n')) >= 0) {
+          const block = buffer.slice(0, cut);
+          buffer = buffer.slice(cut + 2);
+          const data = block.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5).trim()).join('\n');
+          let event = null;
+          try { event = JSON.parse(data); } catch { continue; }
+          if (event?.revision == null || event.revision === lastRevision) continue;
+          const first = lastRevision === null;
+          lastRevision = event.revision;
+          if (first) continue; // the stream's opening state
+          await loadProfile().catch(() => {});
+          renderProfile();
+          refreshAdapters();
+          ask('sync').catch(() => {});
+        }
+      }
+    } catch { if (mine.signal.aborted) return; }
+    await new Promise(r => setTimeout(r, wait));
+    wait = Math.min(wait * 2, 30_000);
+  }
+}
+
 // ── wiring ───────────────────────────────────────────────────────────────────
 
-export async function renderProfile() {
+export async function renderProfileTab() {
   connection = await readConnection();
   $('profile-not-connected').hidden = !!connection;
   $('profile-main').hidden = !connection;
-  if (!connection) return;
+  if (!connection) { events?.abort(); events = null; return; }
   registry = createRegistryClient({ url: connection.url, token: connection.token });
   try {
     await loadProfile();
-    if (!editing) renderProfileView();
-  } catch (e) { $('profile-view').replaceChildren(el('p', 'hint', `Could not read your profile: ${e.message}`)); }
-  await renderAdapters();
+    renderProfile();
+  } catch (e) { say(`Could not read your profile: ${e.message}`, true); }
+  if (!events) follow();
+  refreshAdapters();
 }
 
 /** Redraw what depends on the page beside the panel or the runtime's state. */
-export const refreshAdapters = () => { if (connection) renderAdapters(); };
+export function refreshAdapters({ appliedOnly = false } = {}) {
+  if (!connection) return;
+  renderSection('applied');
+  if (!appliedOnly) { renderSection('recommended'); renderSection('all'); }
+}
 
 export function initProfile() {
-  $('profile-edit').addEventListener('click', () => setEditing(!editing));
-  $('profile-form').addEventListener('submit', saveProfile);
-  for (const radio of document.querySelectorAll('input[name=adapter-filter]')) {
-    radio.addEventListener('change', () => {
-      try { localStorage.setItem(FILTER_KEY, radio.value); } catch { /* storage off */ }
-      renderAdapters();
-    });
-  }
-  let saved = null;
-  try { saved = localStorage.getItem(FILTER_KEY); } catch { /* storage off */ }
-  const radio = saved && document.querySelector(`input[name=adapter-filter][value="${saved}"]`);
-  if (radio) radio.checked = true;
+  $('words-form').addEventListener('submit', saveWords);
+  $('words-voice').addEventListener('click', toggleVoice);
+  $('profile-use-preset').addEventListener('click', usePreset);
+  for (const name of ['recommended', 'all']) $(SECTIONS[name].box).addEventListener('toggle', () => renderSection(name));
 }

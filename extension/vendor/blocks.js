@@ -1561,6 +1561,33 @@ ${[...rules.values()].join("\n")}
   ]);
   var PAGE_TYPE_IDS = Object.freeze(PAGE_TYPES.map((t) => t.id));
 
+  // toolkit/core/ability.js
+  var SUPPORT_AREAS = Object.freeze(["vision", "hearing", "motor", "cognitive", "reading", "sensory"]);
+
+  // toolkit/blocks/profile-words.js
+  var AREA_NAMES = { vision: "Vision", hearing: "Hearing", motor: "Movement and dexterity", cognitive: "Memory and attention", reading: "Reading", sensory: "Sensory sensitivity" };
+  var PROFILE_AREAS = Object.freeze(SUPPORT_AREAS.map((id) => ({ id, name: AREA_NAMES[id] || id })));
+  var PROFILE_NEEDS = Object.freeze([
+    { id: "textSize", name: "Larger text", kind: "number", min: 1, max: 3, step: 0.1, start: 1.25, unit: "times the page’s size", show: (v) => `${Math.round(v * 100)}%` },
+    { id: "lineSpacing", name: "More space between lines", kind: "number", min: 1, max: 3, step: 0.1, start: 1.5, unit: "times the text height", show: (v) => `${v}` },
+    { id: "letterSpacing", name: "More space between letters", kind: "number", min: 0, max: 0.5, step: 0.02, start: 0.12, unit: "em", show: (v) => `${v} em` },
+    { id: "contrast", name: "More contrast", kind: "on" },
+    { id: "darkTheme", name: "Dark pages", kind: "on" },
+    { id: "reduceMotion", name: "Less motion and animation", kind: "on" },
+    { id: "simplify", name: "Simpler words", kind: "on" },
+    { id: "readAloud", name: "Read pages aloud", kind: "on" },
+    { id: "readAloudRate", name: "Reading-aloud speed", kind: "number", min: 0.5, max: 2, step: 0.1, start: 1, unit: "times normal speed", show: (v) => `${v}×` },
+    { id: "captions", name: "Captions on videos", kind: "on" },
+    { id: "describeImages", name: "Describe images", kind: "on" },
+    { id: "labelControls", name: "Name unlabeled buttons and fields", kind: "on" },
+    { id: "keyboardAccess", name: "Use pages by keyboard", kind: "on" },
+    { id: "skipLinks", name: "Skip to the main content", kind: "on" },
+    { id: "pageStructure", name: "An outline of each page", kind: "on" },
+    { id: "repairLandmarks", name: "Repair page regions for screen readers", kind: "on" },
+    { id: "announceUpdates", name: "Announce changes on the page", kind: "on" },
+    { id: "spaAnnounce", name: "Announce new views in web apps", kind: "on" }
+  ]);
+
   // toolkit/blocks/ai/prompts.js
   var STR = (max) => ({ type: "string", maxLength: max });
   var PROMPT_FIELDS = Object.freeze({
@@ -1592,6 +1619,7 @@ ${[...rules.values()].join("\n")}
     linkText: { kind: "text", input: "the link's text, its address and the sentence around it", gate: "short", maxChars: 60, summary: "Link text (2-8 words) that says where a link goes." },
     columnHeader: { kind: "text", input: "the column's cells, one per line", gate: "short", maxChars: 60, summary: "A short header (1-4 words) for a table column." },
     pageType: { kind: "text", input: "what the page shows: its address, title, headings, landmarks and some of its text", gate: "choice", model: "lite", internal: true, summary: "Which kind of page this is, of the toolkit's page types (protocol/adapter/page-types.js), or none of them. The runtime asks, for adapters that run on one kind of page; adapters do not." },
+    profile: { kind: "text", input: "the person's own description of their abilities and what gets in their way", gate: "profile", internal: true, summary: "What a person's own description of their abilities means for their profile: support areas, the needs pages should meet, plain language (blocks/profile-words.js). The extension's Profile tab asks; adapters do not." },
     choose: { kind: "text", input: "the options, numbered, each with what the page shows of it", gate: "choice", summary: "Which of the options the adapter found answers its question, judged from what the page shows of each; or that the page does not make it clear." },
     describe: { kind: "vision", input: "an image of the element", gate: "description", maxChars: 150, summary: "Describe an image for a person who cannot see it (alt text, or a longer description)." },
     chart: { kind: "vision", input: "an image of a chart", gate: "description", maxChars: 1200, summary: "Describe a chart: its type, axes, trend, and the highest and lowest values." }

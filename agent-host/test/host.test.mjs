@@ -373,6 +373,15 @@ await test('a preview that passes makes the adapter the person\'s, even when the
   // The agent's own page_types win; unknown kinds are dropped.
   await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages?\n→ This website', pages: 'site' } });
   chat = await until(async () => { const c = await chatNow(id); return !c.busy && !c.pageTypes && c; });
+  assert.equal(chat.allSites, false);
+  // The type of page on all websites: every site, only that kind.
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages?\n→ This type of page: Product pages on all websites', pages: 'type-all', pageType: 'product' } });
+  chat = await until(async () => { const c = await chatNow(id); return !c.busy && c.pageTypes && c; });
+  assert.deepEqual([chat.allSites, chat.pageTypes], [true, ['product']]);
+  // Without a known kind it is not every site.
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages?\n→ ?', pages: 'type-all', pageType: 'nonsense' } });
+  chat = await until(async () => { const c = await chatNow(id); return !c.busy && !c.pageTypes && c; });
+  assert.equal(chat.allSites, false);
   sb.close();
 });
 

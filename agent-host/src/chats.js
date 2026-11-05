@@ -162,9 +162,10 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     if (runs.has(uid)) throw httpError(409, runs.get(uid).chatId === chatId ? 'The assistant is still working on this chat. Wait, or stop it.' : 'Another chat is still working. Wait, or stop it.', 'busy');
     const chat = read(uid, chatId);
     if (chat.title === 'New chat' && !shown) { chat.title = fallbackTitle(message); save(uid, chat); }
-    if (['all', 'site', 'type', 'other'].includes(pages)) {
-      chat.allSites = pages === 'all';
-      if (pages === 'type' && PAGE_TYPE_IDS.includes(pageType)) chat.pageTypes = [pageType]; else delete chat.pageTypes;
+    if (['all', 'site', 'type', 'type-all', 'other'].includes(pages)) {
+      // A type of page on all websites runs everywhere, only on pages of that kind.
+      chat.allSites = pages === 'all' || (pages === 'type-all' && PAGE_TYPE_IDS.includes(pageType));
+      if ((pages === 'type' || pages === 'type-all') && PAGE_TYPE_IDS.includes(pageType)) chat.pageTypes = [pageType]; else delete chat.pageTypes;
       save(uid, chat);
     }
     if (Array.isArray(areas)) { chat.supportAreas = areas.filter(a => SUPPORT_AREAS.includes(a)); save(uid, chat); }

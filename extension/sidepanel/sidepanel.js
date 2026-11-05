@@ -46,7 +46,7 @@ import { BROWSER_RUNTIME_APP } from '../vendor/protocol/adapter/index.js';
 
 import { $, say, el, button, activeTab, isWebPage, originOf, hostOf } from './ui.js';
 import { initSettings, renderSettings } from './settings.js';
-import { initProfile, renderProfile, refreshAdapters } from './profile.js';
+import { initProfile, renderProfileTab, refreshAdapters } from './profile.js';
 const LEVELS = ['none', 'url', 'source', 'screenshot'];
 const APP = { appId: 'assistant', appName: 'Browser assistant' };
 const PREVIEW_STATE = 'assistantPreview'; // the last preview, for this browser session: {chatId, tabId, name, origin, request, on}
@@ -470,6 +470,12 @@ function questionSet(q, i, site, kind) {
       o.input.dataset.pages = 'type';
       o.input.dataset.pageType = type.id;
       set.append(o.row);
+      // The same kind of page anywhere: the browser sorts each page as it is visited.
+      const anywhere = option(`This type of page: ${type.name} on all websites`, `Wherever the browser finds ${type.about}.`,
+        `This type of page: ${type.name} on all websites (page type: ${type.id}; runs on every website where the page is that type)`);
+      anywhere.input.dataset.pages = 'type-all';
+      anywhere.input.dataset.pageType = type.id;
+      set.append(anywhere.row);
     }
     if (origin) {
       const o = option(`This website: ${hostOf(site.url)}`, `${origin}/`, `This website (${origin}/*)`);
@@ -1103,7 +1109,7 @@ function showTab(name, { focus = false } = {}) {
   $('tab-sub').textContent = TAB_SUB[name];
   if (focus) $(`tab-${name}`).focus();
   chrome.storage.session.set({ [TAB_KEY]: name }).catch(() => {});
-  if (name === 'profile') renderProfile().catch(e => say(e.message, true));
+  if (name === 'profile') renderProfileTab().catch(e => say(e.message, true));
   if (name === 'settings') renderSettings().catch(e => say(e.message, true));
 }
 for (const t of TABS) {
@@ -1127,7 +1133,7 @@ chrome.tabs.onActivated.addListener(refreshSide);
 chrome.tabs.onUpdated.addListener((tabId, info) => { if (info.status === 'complete') refreshSide(); });
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'session' && changes.runtimeState && shownTab === 'settings') renderSettings().catch(() => {});
-  if (area === 'session' && changes.runtimeState && shownTab === 'profile' && document.querySelector('input[name=adapter-filter]:checked')?.value === 'applied') refreshAdapters();
+  if (area === 'session' && changes.runtimeState && shownTab === 'profile') refreshAdapters({ appliedOnly: true });
 });
 
 async function start() {

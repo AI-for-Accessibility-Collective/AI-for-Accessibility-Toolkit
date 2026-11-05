@@ -45,6 +45,8 @@ import { assertSafeUid } from './store.js';
 const scrypt = promisify(crypto.scrypt);
 const ACCOUNTS_DOC = 'admin/accounts.json';
 export const USERNAME = /^[a-z0-9][a-z0-9._-]{1,63}$/;
+// Owners no person can be: `toolkit` owns the built-in adapters (builtin-adapters.js).
+export const RESERVED_USERNAMES = new Set(['toolkit']);
 export const MIN_PASSWORD = 8;
 export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 const SCRYPT = { N: 1 << 15, r: 8, p: 1, keylen: 32, maxmem: 64 * 1024 * 1024 };
@@ -115,6 +117,7 @@ export function normalizeUsername(value) {
 function requireUsername(value) {
   const uid = normalizeUsername(value);
   if (!USERNAME.test(uid)) throw new AccountError(400, 'invalid-username', 'A username is 2–64 lowercase letters, digits, dots, dashes or underscores, starting with a letter or digit.');
+  if (RESERVED_USERNAMES.has(uid)) throw new AccountError(400, 'reserved-username', `“${uid}” is reserved by the toolkit. Choose another username.`);
   assertSafeUid(uid);
   return uid;
 }

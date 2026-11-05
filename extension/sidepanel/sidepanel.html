@@ -24,21 +24,50 @@
     <p id="profile-not-connected" class="connect-notice" hidden>Connect to your toolkit in Settings first.</p>
     <div id="profile-main" class="tab-scroll">
       <section class="block" aria-labelledby="profile-heading">
-        <div class="block-head"><h2 id="profile-heading">Your profile</h2><button id="profile-edit" class="text-button" type="button" aria-expanded="false" aria-controls="profile-form">Edit</button></div>
-        <p class="hint">A starting point the adapters follow, not a description of you. Change it whenever it does not fit.</p>
-        <div id="profile-view"></div>
-        <form id="profile-form" class="profile-form" hidden></form>
-      </section>
-      <section class="block" aria-labelledby="adapters-heading">
-        <h2 id="adapters-heading">Adapters</h2>
-        <div class="filters" role="radiogroup" aria-label="Show adapters">
-          <label><input type="radio" name="adapter-filter" value="applied" checked> Applied</label>
-          <label><input type="radio" name="adapter-filter" value="recommended"> Recommended</label>
-          <label><input type="radio" name="adapter-filter" value="all"> All</label>
+        <h2 id="profile-heading">Your profile</h2>
+        <form id="words-form" class="words-form">
+          <label for="profile-words">Describe your abilities</label>
+          <p id="words-hint" class="hint">For example: “Small, crowded text tires my eyes, and my hands shake, so small buttons are hard to press.”</p>
+          <textarea id="profile-words" rows="4" aria-describedby="words-hint"></textarea>
+          <div class="row">
+            <button id="words-voice" class="secondary" type="button" aria-pressed="false">Speak</button>
+            <button id="words-save" class="primary" type="submit">Save</button>
+          </div>
+        </form>
+        <p id="profile-working" class="working-line" hidden>Understanding what you wrote…</p>
+        <div id="profile-understood" hidden>
+          <h3 id="understood-heading">What pages will do for you</h3>
+          <p id="profile-summary" class="hint"></p>
+          <ul id="profile-selected" class="profile-items" aria-labelledby="understood-heading"></ul>
+          <details id="profile-more">
+            <summary>More options</summary>
+            <ul id="profile-others" class="profile-items" aria-label="More options"></ul>
+          </details>
         </div>
-        <p id="adapters-about" class="hint"></p>
-        <div id="adapter-lists"></div>
+        <details id="profile-presets">
+          <summary>Start from a preset</summary>
+          <p id="profile-started" class="hint"></p>
+          <label for="profile-preset">Preset</label>
+          <select id="profile-preset"></select>
+          <p class="hint">This replaces your description and what pages do for you.</p>
+          <button id="profile-use-preset" class="secondary" type="button">Use this preset</button>
+        </details>
       </section>
+      <section class="block" aria-labelledby="applied-heading">
+        <h2 id="applied-heading">Applied on this page</h2>
+        <p id="applied-about" class="hint"></p>
+        <div id="applied-list"></div>
+      </section>
+      <details id="recommended-box" class="block fold">
+        <summary><h2>Recommended</h2></summary>
+        <p id="recommended-about" class="hint"></p>
+        <div id="recommended-list"></div>
+      </details>
+      <details id="all-box" class="block fold">
+        <summary><h2>All</h2></summary>
+        <p id="all-about" class="hint"></p>
+        <div id="all-list"></div>
+      </details>
     </div>
   </section>
 
@@ -130,7 +159,7 @@
       <button id="reset-keys" class="text-button" type="button">Use the default keys</button>
       <p id="installed-count" class="hint"></p>
       <div class="actions">
-        <a id="open-console" href="#" target="_blank" rel="noreferrer">Manage adapters in the console <!-- arrow-up-right-from-square, Font Awesome Free 6.7.2 (CC BY 4.0, https://fontawesome.com/license/free) --><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l82.7 0L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3l0 82.7c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160c0-17.7-14.3-32-32-32L320 0zM80 32C35.8 32 0 67.8 0 112L0 432c0 44.2 35.8 80 80 80l320 0c44.2 0 80-35.8 80-80l0-112c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 112c0 8.8-7.2 16-16 16L80 448c-8.8 0-16-7.2-16-16l0-320c0-8.8 7.2-16 16-16l112 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 32z"/></svg></a>
+        <a id="open-console" href="#" target="_blank" rel="noreferrer">Open developer console <!-- arrow-up-right-from-square, Font Awesome Free 6.7.2 (CC BY 4.0, https://fontawesome.com/license/free) --><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l82.7 0L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3l0 82.7c0 17.7 14.3 32 32 32s32-14.3 32-32l0-160c0-17.7-14.3-32-32-32L320 0zM80 32C35.8 32 0 67.8 0 112L0 432c0 44.2 35.8 80 80 80l320 0c44.2 0 80-35.8 80-80l0-112c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 112c0 8.8-7.2 16-16 16L80 448c-8.8 0-16-7.2-16-16l0-320c0-8.8 7.2-16 16-16l112 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 32z"/></svg></a>
         <button id="sync" class="text-button" type="button">Sync now</button>
         <button id="disconnect" class="text-button" type="button">Disconnect</button>
       </div>

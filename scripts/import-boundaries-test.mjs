@@ -83,6 +83,10 @@ const KNOWN_EDGES = {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'the adapter registry checks published descriptors and web-module packages, computes their digests and validates tool arguments with the same contract code apps use',
   },
+  'server/src/builtin-adapters.js': {
+    to: ['toolkit/protocol/adapter/index.js'],
+    why: 'the toolkit\'s built-in adapters are published as web-module packages, in the package format the contract names (WEB_MODULE)',
+  },
   'server/src/access.js': {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'the app_declare, access_* and adapter_data_* MCP tools use the contract\'s schemas, descriptions and visibility levels, so the server checks them exactly as apps see them',
@@ -96,8 +100,8 @@ const KNOWN_EDGES = {
     why: 'marketplace listings may carry an Adapter MCP descriptor, validated and digested with the same contract code',
   },
   'server/src/ai.js': {
-    to: ['toolkit/blocks/ai/prompts.js', 'tools/utils/ai-output.js'],
-    why: "the building blocks' AI route builds its prompts with the toolkit's own and gates the answers with the catalog's checks, so adapters get exactly what the blocks document",
+    to: ['toolkit/blocks/ai/prompts.js', 'toolkit/blocks/profile-words.js', 'tools/utils/ai-output.js'],
+    why: "the building blocks' AI route builds its prompts with the toolkit's own and gates the answers with the catalog's checks, so adapters get exactly what the blocks document; the profile task's answer is checked against the profile's own vocabulary",
   },
   'server/src/meta.js': {
     to: ['toolkit/index.js', 'toolkit/platforms/node/kv.js'],

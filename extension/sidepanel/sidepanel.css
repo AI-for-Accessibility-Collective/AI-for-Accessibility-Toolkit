@@ -134,27 +134,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .block-head { display: flex; align-items: center; gap: 8px; }
 .block-head h2 { flex: 1; }
 
-/* Profile: what it says, and its form. */
-.profile-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.profile-list li { display: grid; gap: 2px; }
-.profile-list .value { font-size: .8rem; color: var(--muted); }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { border-radius: 14px; background: var(--wash); color: var(--green); font-size: .75rem; font-weight: 600; padding: 2px 10px; }
-.profile-form { display: grid; gap: 10px; }
-.profile-form fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 4px; }
-.profile-form legend { font-weight: 600; padding: 0 0 4px; }
-.profile-form .field { display: grid; gap: 4px; }
-.profile-form .option { display: flex; align-items: center; gap: 8px; }
-.profile-form input, .profile-form select { accent-color: var(--green); }
-.profile-form select, .profile-form input[type=number] { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: white; }
-.profile-form .row { display: flex; gap: 8px; flex-wrap: wrap; }
-
 /* Adapters: applied, recommended, all (by application). */
-.filters { display: flex; gap: 6px; flex-wrap: wrap; }
-.filters label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 16px; padding: 4px 10px; font-size: .8rem; font-weight: 600; cursor: pointer; }
-.filters label:has(input:checked) { border-color: var(--green); background: var(--wash); color: var(--green); }
-.filters input { accent-color: var(--green); margin: 0; }
-.filters label:has(input:focus-visible) { outline: 3px solid #3d7fd9; outline-offset: 2px; }
 .app-group { display: grid; gap: 6px; }
 .app-group h3 { font-size: .8rem; margin: 4px 0 0; color: var(--muted); }
 .adapters { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -186,3 +166,36 @@ kbd { font: .78rem ui-monospace, SFMono-Regular, Menlo, monospace; background: w
 .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
 .actions a { color: var(--green); font-weight: 600; flex: 1; }
 .icon { width: .8em; height: .8em; fill: currentColor; vertical-align: -0.05em; }
+
+/* Profile: the person's words, what pages will do, presets. */
+.words-form { display: grid; gap: 6px; }
+.words-form label { font-weight: 600; }
+.words-form textarea { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; resize: vertical; }
+.words-form .row, .block .row { display: flex; gap: 8px; flex-wrap: wrap; }
+#words-voice[aria-pressed="true"] { background: #fde8e8; color: var(--red); border-color: var(--red); }
+.working-line { font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.working-line::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #d39b00; animation: pulse 1.2s ease-in-out infinite; flex: none; }
+@media (prefers-reduced-motion: reduce) { .working-line::before { animation: none; } }
+#profile-understood { display: grid; gap: 6px; }
+#profile-understood h3 { font-size: .82rem; margin: 4px 0 0; }
+.profile-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.profile-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.profile-item input[type=checkbox] { accent-color: var(--green); margin: 0; }
+.profile-item label { flex: 1; min-width: 0; }
+.profile-item input[type=number] { width: 5.5em; font: inherit; padding: 2px 6px; border: 1px solid var(--line); border-radius: 6px; }
+.profile-items .empty { color: var(--muted); font-size: .8rem; }
+.block details > summary { cursor: pointer; color: var(--green); font-weight: 600; font-size: .82rem; }
+.block details[open] > summary { margin-bottom: 6px; }
+#profile-presets { display: grid; gap: 4px; }
+#profile-presets label { font-weight: 600; font-size: .78rem; }
+/* A long preset description must not widen the panel. */
+#profile-preset { width: 100%; max-width: 100%; min-width: 0; font: inherit; min-height: 36px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: white; text-overflow: ellipsis; }
+#profile-presets .secondary { justify-self: start; }
+/* The folded sections: Recommended and All. */
+details.fold > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: "▸"; color: var(--green); }
+details.fold[open] > summary::before { content: "▾"; }
+details.fold > summary h2 { display: inline; }
+details.fold[open] { gap: 8px; }
+body.page { max-width: 560px; margin: 40px auto; display: grid; gap: 12px; }

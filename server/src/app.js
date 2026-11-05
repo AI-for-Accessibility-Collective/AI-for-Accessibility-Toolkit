@@ -25,6 +25,7 @@ import { sendJSON, sendHttpError, bearerFrom, readJSON as readBody } from './htt
 import { silentLogger, safeErrorText, loggedContent, MAX_LOGGED_CHARS } from './log.js';
 import { createActivityLog } from './activity.js';
 import { createRegistry, REGISTRY_PATH } from './registry.js';
+import { seedBuiltinAdapters } from './builtin-adapters.js';
 import { createLearning, pausedFor, librarianObservation } from './learning.js';
 import { createAccess } from './access.js';
 import { withAiContext } from './ai-context.js';
@@ -58,9 +59,10 @@ const SDK_PREFIX = '/sdk/';
  *  @param {string} [config.tokenSecret]  HMAC key for account default tokens (defaults to adminPassword)
  *  @param {ReturnType<typeof createRelay>} [config.relay]
  *  @param {ReturnType<import('./log.js').createLogger>} [config.log]  structured logger (silent by default)
+ *  @param {boolean} [config.builtinAdapters]  publish the toolkit's own adapters (builtin-adapters.js) at start; server/index.js turns it on
  *  @returns {((req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) & {relay: ReturnType<typeof createRelay>, accounts: ReturnType<typeof createAccounts>, activity: ReturnType<typeof createActivityLog>}}
  */
-export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {} }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {}, builtinAdapters = false }) {
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
@@ -196,6 +198,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   listener.accounts = accounts;
   listener.activity = activity;
   listener.registry = registry;
+  // The toolkit's own adapters (builtin-adapters.js), published once at start; resolves when they are in.
+  listener.builtins = builtinAdapters ? seedBuiltinAdapters(registry, { log }) : Promise.resolve(null);
   return listener;
 
   // One entry per request, after it ends: method, path (never the query

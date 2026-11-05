@@ -77,9 +77,10 @@ condition from what they ask for.
      with two to five short options, the one you would use first, marked
      "(Recommended)";
    - **which pages**: a question of kind `pages`. The sidebar offers this
-     type of page on this website (the kind the browser sorts this page as,
-     from its markup or the toolkit's model: product pages, articles, search
-     results...), this website with its address, and all websites;
+     type of page on this website and on all websites (the kind the browser
+     sorts this page as, from its markup or the toolkit's model: product
+     pages, articles, search results...), this website with its address,
+     and all websites;
    - **who it helps most**: a question of kind `areas`, whose options are
      the support areas most likely for this change, most likely first; the
      sidebar puts the rest under "Other", and the person may choose more
@@ -94,6 +95,10 @@ condition from what they ask for.
      with that type: the browser then runs it only on pages it sorts as that
      kind (their markup, else the toolkit's model, remembered per address).
      Do not make `enable()` guess the kind of page itself.
+   - **This type of page on all websites**: `runs_on` is `*://*/*` and
+     `adapter_ready` gets `page_types` with that type. The browser sorts
+     each page as it is visited and runs the adapter only on that kind.
+     Write `enable()` for that kind of page on sites you have not seen.
    - **This website**: `runs_on` is the address they chose, such as
      `https://shop.example.com/*`.
    - **All websites**: `runs_on` is `*://*/*`, allowed only after they chose
