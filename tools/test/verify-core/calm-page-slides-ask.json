@@ -31,6 +31,10 @@
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; return window.__carousels.s2.playing === false && window.__carousels.s2.toggles === 1 && (window.__counts['s2-trailer'] || 0) === 0;"
     },
     {
+      "name": "wait (at most 4.5 s) for the two answers S6 needs, one after the other: is it a slideshow, then which button pauses it",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; for (let i = 0; i < 45 && window.__carousels.s6.playing; i++) await new Promise((r) => setTimeout(r, 100)); return true;"
+    },
+    {
       "name": "a region that moves by itself, not marked as a carousel, that the model says is a slideshow: its own Pause after the slides is pressed, not the slide's Pause audio",
       "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; for (let i = 0; i < 30 && window.__carousels.s6.playing; i++) await new Promise((r) => setTimeout(r, 100)); return window.__carousels.s6.playing === false && (window.__counts['s6-audio'] || 0) === 0;"
     },

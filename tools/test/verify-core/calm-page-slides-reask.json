@@ -1,0 +1,30 @@
+{
+  "name": "calm-page-slides-reask",
+  "file": "tools/core-adapters/calm-page.js",
+  "page": "calm-page-slides.html",
+  "ai": {
+    "choose": {
+      "pauses or stops": "1",
+      "starts it moving": "1",
+      "while nobody was using the page": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "S8 and S9 are paused with their own toggles",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; for (let i = 0; i < 20 && (window.__carousels.s8.playing || window.__carousels.s9.playing); i++) await new Promise((r) => setTimeout(r, 100)); return !window.__carousels.s8.playing && !window.__carousels.s9.playing;"
+    },
+    {
+      "name": "S9's toggle repeated in each slide is one button: after its press there is no other to ask about, so no restart question (it restarts by its toggle)",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; await new Promise((r) => setTimeout(r, 300)); return !adapter.memory.restart.get(document.getElementById('s9'));"
+    },
+    {
+      "name": "disable() then enable(): S8's toggle, which the page marks aria-pressed false only once it was clicked, is the same question: no new one, and S8 is paused again at once",
+      "code": "const adapter = globalThis.__ai4a11yRuntime?.adapters?.preview?.adapter; if (!adapter || !adapter.s || adapter.s.ended) return true; const s8 = document.getElementById('s8'); const before = adapter.memory.pause.get(s8); adapter.disable(); await new Promise((r) => setTimeout(r, 150)); const restarted = window.__carousels.s8.playing && document.getElementById('s8-toggle').getAttribute('aria-pressed') === 'false'; adapter.enable(globalThis.__verifyHost?.options, globalThis.__ai4a11yRuntime?.toolkit); await new Promise((r) => setTimeout(r, 150)); return !!before && restarted && adapter.memory.pause.get(s8) === before && !window.__carousels.s8.playing;"
+    },
+    {
+      "name": "nothing is announced on load",
+      "code": "const spoken = globalThis.__verifyHost?.spoken || []; return spoken.length === 0;"
+    }
+  ]
+}

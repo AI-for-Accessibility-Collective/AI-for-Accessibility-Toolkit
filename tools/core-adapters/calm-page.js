@@ -43,7 +43,9 @@
 //     or its slides in aria-controls (s.page.ownControls), and not in a form or submit buttons.
 //     Which of them pauses it only their names can tell, so the adapter asks the model (once per
 //     carousel and set of buttons): the buttons (those it would see as the same, as a toggle
-//     repeated in each slide, once), and "it is paused already". It presses only the
+//     repeated in each slide, once; aria-pressed "false" is told as no aria-pressed, so a toggle
+//     the page marks only once clicked is the same question after disable() and enable()), and
+//     "it is paused already". It presses only the
 //     button chosen, and only when that button is enabled and not pressed (aria-pressed "true"); a
 //     chosen button that is disabled or pressed, or "paused already", means it is not playing:
 //     it is left alone. When the carousel has other buttons, it then asks which of them starts it
@@ -221,9 +223,9 @@ export default {
     const describeButton = (btn) => {
       const name = nameOf(btn);
       const bits = [name ? `A button named "${name.slice(0, 100)}"` : 'A button with no name'];
-      const pressed = btn.getAttribute('aria-pressed');
-      if (pressed === 'true') bits.push('shown as pressed');
-      if (pressed === 'false') bits.push('shown as not pressed');
+      // Pressed or not: aria-pressed "false" says no more than none (many toggles are marked only
+      // once clicked), and the same button is the same question.
+      if (btn.getAttribute('aria-pressed') === 'true') bits.push('shown as pressed');
       if (isDisabled(btn)) bits.push('disabled');
       const title = (btn.getAttribute('title') || '').trim();
       if (title && title !== name) bits.push(`its title "${title.slice(0, 100)}"`);
@@ -493,17 +495,15 @@ export default {
       };
 
       // Buttons as options for the model. Buttons it would see as the same (a toggle repeated in
-      // each slide) are one option, the first of them: it could not choose between them.
+      // each slide) are one option: the one the adapter pressed, else the first. It could not
+      // choose between them.
       const buttonOptions = (buttons, pressed = null) => {
-        const seen = new Set();
-        const out = [];
+        const byAbout = new Map();
         for (const b of buttons) {
-          const about = `${describeButton(b)}${b === pressed ? '\nThe adapter pressed this button.' : ''}`;
-          if (seen.has(about)) continue;
-          seen.add(about);
-          out.push({ value: b, about });
+          const about = describeButton(b);
+          if (!byAbout.has(about) || b === pressed) byAbout.set(about, b);
         }
-        return out;
+        return [...byAbout].map(([about, b]) => ({ value: b, about: `${about}${b === pressed ? '\nThe adapter pressed this button.' : ''}` }));
       };
 
       // Press the button the model chose; then, when the carousel has other buttons, ask which
