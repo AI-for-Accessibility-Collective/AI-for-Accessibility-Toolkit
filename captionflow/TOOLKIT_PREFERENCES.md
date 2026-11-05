@@ -30,6 +30,33 @@ Remaining, not fixed by this guard:
   not locking. A real host must still serialize profile edits or use a safe
   transactional API.
 
+## Durable storage (2026-11-05)
+
+`captionflow/scripts/run-toolkit.mjs` wires the provider to the toolkit's own
+Node KV port, `fileKV(dir)` (`toolkit/platforms/node/kv.js`), instead of the
+in-memory `memoryKV()` the unit tests use. `fileKV` persists one JSON file per
+storage area under `dir`; data outlives both the JS object and the process.
+Verified in `captionflow/tests/durable-storage.test.mjs`:
+
+- a value written through one `fileKV(dir)`/toolkit instance is read back
+  through a brand-new `fileKV(dir)`/toolkit instance pointed at the same
+  directory (no shared JS reference);
+- two different acting users under the same `dir` stay on separate partitions
+  on disk, matching the in-memory guard behaviour;
+- an explicit restore to empty needs is itself durable;
+- a value written by one OS process is read back by a separate OS process
+  (`node --test` spawns `tests/fixtures/durable-storage-{writer,reader}.mjs`
+  as child processes) -- the strongest evidence available that this is real
+  disk persistence, not a same-process illusion.
+
+`fileKV` is a prototype adapter (per its own header comment): no file locking,
+no atomic rename-on-write, no concurrent-writer safety. It is adequate for a
+single-user synthetic-data demo host, not for concurrent real users. Run
+`node captionflow/scripts/run-toolkit.mjs --user=alice --set-text-size=1.3`
+then `node captionflow/scripts/run-toolkit.mjs --user=alice` (no
+`--set-text-size`) to see the second, separate process load the saved value
+from `captionflow/.captionflow-storage/` (gitignored, synthetic data only).
+
 Text size is stored as a shared, modality-neutral toolkit need, so a change may
 also affect other surfaces. Whether a CaptionFlow-only control should propagate
 this way requires an explicit product and consent decision.

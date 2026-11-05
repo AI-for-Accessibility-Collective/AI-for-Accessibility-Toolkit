@@ -11,6 +11,16 @@ node captionflow/scripts/run-mock.mjs --lang=en --mode=original
 node --test captionflow/tests/*.test.mjs
 ```
 
+`run-mock.mjs` uses fixed fixture preferences (`--lang`/`--mode`/`--font-scale`
+flags). To see preferences actually read from and persisted to the toolkit's
+Librarian instead, use `run-toolkit.mjs` (Role 5, see
+[`TOOLKIT_PREFERENCES.md`](TOOLKIT_PREFERENCES.md)):
+
+```bash
+node captionflow/scripts/run-toolkit.mjs --user=alice --set-text-size=1.3
+node captionflow/scripts/run-toolkit.mjs --user=alice   # loads the saved value back
+```
+
 No extra npm dependencies or API credentials are required. Stdout contains JSON for a future player; stderr contains a mock-only disclaimer.
 
 ## What you will see
