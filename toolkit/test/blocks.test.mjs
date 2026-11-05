@@ -817,6 +817,22 @@ await test("speech.say: the profile's rate, words as DOM ranges, one voice page-
   s.end(); other.end();
 });
 
+await test('speech.say: a heading, a paragraph and list items are separate sentences to the voice; inline text runs on', async () => {
+  const { tk, $, win } = page('<div id="a"><h2>The Search for Water</h2><p>Recent rovers <em>found</em> clay in <b>crater</b>s.</p><ul><li>Clay</li><li>Salt!</li><li>Ice</li></ul></div>');
+  const spoken = fakeSpeech(win);
+  const s = tk.session();
+  const words = [];
+  await s.speech.say($('#a'), { onWord: (range) => { if (range) words.push(range.toString()); } }).done;
+  const said = spoken.map((u) => u.text).join('');
+  assert.match(said, /The Search for Water\. Recent rovers found clay in craters\. Clay\. Salt! Ice/);
+  assert.equal(words[0], 'The');
+  // After an added full stop, the text still maps to the page: start at "Recent".
+  await s.speech.say($('#a'), { from: said.indexOf('Recent'), onWord: (range) => { if (range) words.push(range.toString()); } }).done;
+  assert.equal(words.at(-1), 'Rec');
+  assert.equal(spoken.at(-1).text.trim().slice(0, 6), 'Recent');
+  s.end();
+});
+
 await test('speech.say: from starts at an offset onWord gave, and the words still map to the page', async () => {
   const { tk, $, win } = page('<p id="p">One two. Three four.</p>');
   const spoken = fakeSpeech(win);

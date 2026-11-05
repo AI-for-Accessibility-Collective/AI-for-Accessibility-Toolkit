@@ -37,6 +37,19 @@ export function speechBlock(s, env) {
     if (!root || root.nodeType !== 1) return { text: String(input ?? ''), map: null };
     let text = '';
     const map = [];
+    // The block each text is in (a heading, a paragraph, a list item, a cell): a new one is a
+    // new sentence to the voice, so a heading is not read into the text after it.
+    const blocks = new Map();
+    const blockOf = (node) => {
+      let el = node.parentElement;
+      while (el && el !== root) {
+        if (!blocks.has(el)) blocks.set(el, !/^(inline|contents|ruby)/.test(win.getComputedStyle(el).display || 'inline'));
+        if (blocks.get(el)) return el;
+        el = el.parentElement;
+      }
+      return root;
+    };
+    let lastBlock = null;
     for (const node of env.page.textNodes(root)) {
       let base = 0, stop = node.nodeValue.length;
       if (range) {
@@ -45,7 +58,11 @@ export function speechBlock(s, env) {
         if (node === range.endContainer) stop = range.endOffset;
         if (stop <= base) continue;
       }
-      if (text && !/\s$/.test(text)) text += ' ';
+      // Within a block the text runs on as the page shows it (<em>found</em>s is one word);
+      // between blocks, a space, and a full stop where the last one has no punctuation of its own.
+      const block = blockOf(node);
+      if (text && block !== lastBlock) text = /[^\s.!?:;。！？]\s*$/.test(text) ? text.replace(/\s*$/, '. ') : text.replace(/\s*$/, ' ');
+      lastBlock = block;
       map.push({ node, base, start: text.length, end: text.length + stop - base });
       text += node.nodeValue.slice(base, stop);
     }
