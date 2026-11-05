@@ -22,6 +22,7 @@ import { createEvents } from './events.js';
 import { createRequests } from './requests.js';
 import { createChats } from './chats.js';
 import { createModelProxy } from './model-proxy.js';
+import { createTitler } from './titles.js';
 import { createBrowserTools } from './browser-tools.js';
 import { createPageData } from './page-data.js';
 import { dockerRunner, localRunner } from './runner.js';
@@ -45,7 +46,7 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  */
 export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
   opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, perMinute, requestTimeoutMs, log = createLogger(), runner: givenRunner,
-  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkParallel, checkRunner: givenCheckRunner, fetchRubrics, checkScript }) {
+  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkParallel, checkRunner: givenCheckRunner, fetchRubrics, checkScript, titler: givenTitler }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
   const events = createEvents();
@@ -54,7 +55,8 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     ? localRunner({ accounts, hostUrl: sandboxUrl, bin: opencodeBin, repoDir, modelsJson, skillDirs })
     : dockerRunner({ accounts, image, network, dns, hostUrl: sandboxUrl, log }));
   // tools is made below; a run only ends after both exist.
-  const chats = createChats({ accounts, runner, events, requests, log, afterRun: (...a) => tools.afterRun(...a) });
+  const titler = givenTitler || createTitler({ apiKey, upstream, ...(fetch ? { fetch } : {}), log });
+  const chats = createChats({ accounts, runner, events, requests, log, titler, afterRun: (...a) => tools.afterRun(...a) });
   const pageData = createPageData({ accounts });
   // Checks of published adapters: one-shot containers (or, with the local runner, plain processes).
   const rubricsDir = path.join(dataDir, 'intera11y');
@@ -106,10 +108,14 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     if (m === 'GET' && p === '/agent/chats') return send(res, 200, { chats: chats.list(uid) });
     if (m === 'POST' && p === '/agent/chats') return send(res, 201, { chat: chats.create(uid) });
     if ((r = /^\/agent\/chats\/([^/]+)$/.exec(p)) && m === 'GET') return send(res, 200, { chat: chats.get(uid, r[1]) });
+    if ((r = /^\/agent\/chats\/([^/]+)$/.exec(p)) && m === 'DELETE') {
+      log.info('chat.deleted', { uid, chatId: r[1] });
+      return send(res, 200, chats.remove(uid, r[1]));
+    }
     if ((r = /^\/agent\/chats\/([^/]+)\/messages$/.exec(p)) && m === 'POST') {
       const b = await body(req);
       log.info('chat.message', { uid, chatId: r[1], chars: String(b.text || '').length });
-      return send(res, 202, await chats.send(uid, r[1], b.text));
+      return send(res, 202, await chats.send(uid, r[1], b.text, { answers: typeof b.answers === 'string' ? b.answers : undefined }));
     }
     if ((r = /^\/agent\/chats\/([^/]+)\/stop$/.exec(p)) && m === 'POST') return send(res, 200, chats.stop(uid, r[1]));
     if ((r = /^\/agent\/chats\/([^/]+)\/consent$/.exec(p)) && m === 'POST') {

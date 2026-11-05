@@ -99,7 +99,41 @@ export function shiftText(shift) {
   return `Layout shift: ${shift} (0 is steady; 0.1 or more is a lot). ${shift >= 0.1 ? 'Unless the person asked for things to change size or place, the page moved more than it should: see "Keep the page steady and familiar" in your instructions.' : 'Make sure only what the person asked to change moved.'}`;
 }
 
+const MAX_QUESTIONS = 4, MAX_OPTIONS = 5;
+
+/** The agent's questions, checked and trimmed for the sidebar. */
+export function questionsOf(list) {
+  const questions = (Array.isArray(list) ? list : []).slice(0, MAX_QUESTIONS).map((q) => ({
+    question: String(q?.question || '').trim().slice(0, 300),
+    options: (Array.isArray(q?.options) ? q.options : []).slice(0, MAX_OPTIONS)
+      .map(o => ({ label: String(o?.label ?? o ?? '').trim().slice(0, 80), ...(o?.description ? { description: String(o.description).trim().slice(0, 200) } : {}) }))
+      .filter(o => o.label && !/^other\b/i.test(o.label)),
+    multiSelect: q?.multi_select === true,
+  }));
+  if (!questions.length) throw new Error('Give at least one question.');
+  for (const q of questions) {
+    if (!q.question) throw new Error('Each question needs its words.');
+    if (q.options.length < 2) throw new Error(`"${q.question}" needs at least two options besides "Other".`);
+  }
+  return questions;
+}
+
 const TOOLS = [
+  {
+    name: 'ask_questions',
+    description: 'Ask the person what you need to know, as multiple choice: the sidebar shows each question with your options, and always adds "Other" where they can type their own answer. Put the option you would choose first, ending its label with "(Recommended)". After calling this, end your turn with one short sentence: the person\'s answers come as their next message.',
+    inputSchema: { type: 'object', properties: {
+      questions: { type: 'array', minItems: 1, maxItems: MAX_QUESTIONS, items: { type: 'object', properties: {
+        question: { type: 'string', description: 'The whole question in plain words, ending with a question mark.' },
+        options: { type: 'array', minItems: 2, maxItems: MAX_OPTIONS, description: 'The choices. Do not add "Other": the sidebar does.',
+          items: { type: 'object', properties: {
+            label: { type: 'string', description: 'The choice, in 1 to 6 words.' },
+            description: { type: 'string', description: 'Optional: what choosing it means, in one short sentence.' },
+          }, required: ['label'], additionalProperties: false } },
+        multi_select: { type: 'boolean', description: 'true when the person may choose more than one.' },
+      }, required: ['question', 'options'], additionalProperties: false } },
+    }, required: ['questions'], additionalProperties: false },
+  },
   {
     name: 'browser_page',
     description: 'See the web page the person has the sidebar open on. The person chooses what to share: the address only, the page source (structure, text and some styles), or also a screenshot. They decide once per site per chat; pass screenshot: true to ask for a screenshot again. Returns what they shared, or that they chose not to.',
@@ -214,6 +248,12 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
   }
 
   const handlers = {
+    async ask_questions(uid, chatId, args) {
+      const questions = questionsOf(args.questions);
+      chats.addEntry(uid, chatId, { kind: 'questions', questions });
+      return text(`The sidebar shows your ${questions.length === 1 ? 'question' : `${questions.length} questions`} with your options and "Other". End your turn now with one short sentence; do not answer for the person or go on building. Their answers come as their next message.`);
+    },
+
     async browser_page(uid, chatId, args) {
       const step = chats.addEntry(uid, chatId, { kind: 'step', text: 'Asking to see your page', state: 'running' });
       const a = await requests.ask(uid, chatId, { kind: 'page', reason: String(args.reason || '').slice(0, 300), screenshot: args.screenshot === true });

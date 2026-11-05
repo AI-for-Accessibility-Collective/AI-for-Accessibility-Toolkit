@@ -58,6 +58,9 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   account's sidebar and waits for the person (up to 4 minutes, under
   opencode's own limit on a tool call, so the agent hears "no answer"):
   `browser_page`, `browser_preview`, `browser_remove_preview`, `adapter_ready`.
+  One does not wait: `ask_questions` puts the agent's questions in the chat,
+  and the sidebar shows them as multiple choice, each with "Other" for the
+  person's own words; the answers come as the person's next message.
   The agent's standing instructions, including how to load, preview and
   review an adapter, are [sandbox/AGENTS.md](sandbox/AGENTS.md).
 - **An adapter is checked before it is offered.** Every preview carries the
@@ -83,7 +86,11 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
 - **What the person sees has no code**: replies with code left out, and one
   plain line per step ([src/updates.js](src/updates.js)).
 - **Chats keep their history** on the host (`chats/`), each continuing its
-  own opencode session. One chat runs at a time per account.
+  own opencode session. One chat runs at a time per account. After the first
+  reply the host asks the model (with its own key, outside any sandbox) for
+  a few words to title the chat ([src/titles.js](src/titles.js)). The person
+  can delete a chat; that stops its run and removes `chats/<chat>.json`, but
+  not what they shared of pages (`page-data/<chat>/`).
 
 ## What is kept, and where
 
@@ -93,6 +100,7 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
 | Page address, source outline, screenshots the person shared | host: `accounts/<uid>/page-data/<chat>/` | **no**: the service leaves `/v1/agent/requests/…` bodies out of its log; the host logs only sizes |
 | Adapters the agent wrote | host: `accounts/<uid>/work/adapters/` | no |
 | Model calls | sent to Gemini through the proxy | account, size and time only |
+| Chat titles | the first message and reply, sent to Gemini by the host | only whether it failed |
 | Adapter checks: who asked, the adapter's name and revision, the result | host: `checks/<checkId>/job.json`, a week | who, which check, how long, how it came out; never code |
 | The adapter's code, during a check | host: `checks/<checkId>/in/`, removed when the check ends | no |
 

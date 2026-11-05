@@ -41,6 +41,13 @@ if (/build/.test(message)) {
   const done = await ready();
   const verdict = (r) => (r.isError ? 'refused' : 'allowed');
   out({ type: 'text', part: { id: 'p4', type: 'text', text: `Done.\n\`\`\`js\nexport const BiggerButtons = {}\n\`\`\`\nEarly: ${verdict(early)}. Outside: ${verdict(outside)}. Everywhere: ${verdict(everywhere)}. Unchecked: ${verdict(unchecked)}. Escape: ${verdict(escape)}. Preview: ${preview.content[0].text.split('\n')[0]} Changed: ${/enable\(\) made \d+ changes/.test(preview.content[0].text) ? 'yes' : 'no'}. Axe: ${/added no problems axe-core finds/.test(preview.content[0].text) ? 'clean' : /The adapter added \d+ problems/.test(preview.content[0].text) ? 'problems' : 'none'}. Ready: ${done.isError ? 'no' : 'yes'}.` } });
+} else if (/questions/.test(message)) {
+  const asked = await tool('ask_questions', { questions: [
+    { question: 'Which pages?', options: [{ label: 'This page (Recommended)' }, { label: 'The whole site' }] },
+    { question: 'Who does it help?', options: [{ label: 'Vision' }, { label: 'Motor' }, { label: 'Other' }], multi_select: true },
+  ] });
+  const bad = await tool('ask_questions', { questions: [{ question: 'Only one?', options: [{ label: 'Yes' }] }] });
+  out({ type: 'text', part: { id: 'p1', type: 'text', text: `Asked: ${asked.isError ? 'no' : 'yes'}. Bad: ${bad.isError ? 'refused' : 'allowed'}.` } });
 } else if (/sketch/.test(message)) {
   // Writes an adapter and stops without previewing it.
   mkdirSync('adapters', { recursive: true });

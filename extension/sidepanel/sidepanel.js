@@ -17,6 +17,11 @@
 //                   after (vendor/axe-core.min.js, injected first)
 //   remove-preview  take it off again
 //
+// The person turns the last preview off and on again with the switch under
+// the conversation, without asking the agent. The agent's questions
+// (ask_questions) are a chat entry, shown as multiple choice with "Other" for
+// the person's own words; the answers go back as the person's next message.
+//
 // Finished adapters can be added to the account (published privately and
 // installed into this browser's runtime) or exported as a file.
 
@@ -35,7 +40,7 @@ let connection = null;
 let chats = [];
 let chat = null;            // the open chat, in full
 const requests = new Map(); // id -> request, for the open chat
-let previewing = null;      // {name, tabId, origin}
+let previewing = null;      // {name, tabId, origin, request, on}
 let streamAbort = null;
 
 function say(text, error = false) {
@@ -206,6 +211,22 @@ async function sharePage(request, level, remember, interactive = true) {
   }
 }
 
+/** Run a preview's adapter on the tab; with `audit`, its checks and axe-core too. */
+async function applyPreview(request, tab, { audit = true } = {}) {
+  try {
+    // axe-core and the building blocks first, in the same world. The
+    // blocks follow the person's settings as of the runtime's last sync.
+    const { runtimeState } = await chrome.storage.session.get('runtimeState').catch(() => ({}));
+    const personal = runtimeState?.personal || {};
+    const explicit = runtimeState?.explicit || null;
+    const [res] = await chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', injectImmediately: true,
+      js: [...(audit ? [{ file: AXE_FILE }] : []), { file: BLOCKS_FILE }, { code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: audit ? request.checks : [], audit, personal, explicit }) }] });
+    return res?.result || { status: 'failed', message: res?.error || 'the page gave no result' };
+  } catch (e) {
+    return { status: 'failed', message: e.message };
+  }
+}
+
 async function runPreview(request) {
   const tab = await ensureWorkingTab();
   if (!tab) return answer(request, { unavailable: CLOSED });
@@ -214,20 +235,8 @@ async function runPreview(request) {
     say('Previews need user scripts: turn on Allow User Scripts on this extension’s details page.', true);
     return answer(request, { status: 'failed', message: 'User scripts are off in this browser: ask the person to turn on "Allow User Scripts" on the extension’s details page.' });
   }
-  let result;
-  try {
-    // axe-core and the building blocks first, in the same world. The
-    // blocks follow the person's settings as of the runtime's last sync.
-    const { runtimeState } = await chrome.storage.session.get('runtimeState').catch(() => ({}));
-    const personal = runtimeState?.personal || {};
-    const explicit = runtimeState?.explicit || null;
-    const [res] = await chrome.userScripts.execute({ target: { tabId: tab.id }, world: 'USER_SCRIPT', injectImmediately: true,
-      js: [{ file: AXE_FILE }, { file: BLOCKS_FILE }, { code: buildPreviewScript({ code: request.code, urlPatterns: request.runsOn, parameters: request.parameters, checks: request.checks, audit: true, personal, explicit }) }] });
-    result = res?.result || { status: 'failed', message: res?.error || 'the page gave no result' };
-  } catch (e) {
-    result = { status: 'failed', message: e.message };
-  }
-  if (result.status === 'applied') showPreview({ name: request.name, tabId: tab.id, origin: hostOf(tab.url) });
+  const result = await applyPreview(request, tab);
+  if (result.status === 'applied') showPreview({ name: request.name, tabId: tab.id, origin: hostOf(tab.url), request, on: true });
   // The page afterwards, at what the person shares on this site in this chat.
   const level = chat?.consent?.[originOf(tab.url)];
   let after;
@@ -245,15 +254,19 @@ async function runPreview(request) {
   await answer(request, { ...result, ...(after ? { after } : {}), ...(site ? { site } : {}) });
 }
 
-async function removePreview() {
+/** Take the preview's adapter off its page (its disable()); whether one was on. */
+async function takePreviewOff() {
   const tabId = previewing?.tabId ?? (await workingTab())?.id;
-  let removed = false;
-  if (tabId != null && typeof chrome.userScripts?.execute === 'function') {
-    try {
-      const [res] = await chrome.userScripts.execute({ target: { tabId }, world: 'USER_SCRIPT', injectImmediately: true, js: [{ code: previewTeardownScript() }] });
-      removed = res?.result === true;
-    } catch { /* the tab is gone */ }
-  }
+  if (tabId == null || typeof chrome.userScripts?.execute !== 'function') return false;
+  try {
+    const [res] = await chrome.userScripts.execute({ target: { tabId }, world: 'USER_SCRIPT', injectImmediately: true, js: [{ code: previewTeardownScript() }] });
+    return res?.result === true;
+  } catch { return false; /* the tab is gone */ }
+}
+
+/** Take it off and forget it: the agent asked, or the adapter is now installed. */
+async function removePreview() {
+  const removed = await takePreviewOff();
   showPreview(null);
   return removed;
 }
@@ -261,7 +274,32 @@ async function removePreview() {
 function showPreview(p) {
   previewing = p;
   $('preview-bar').hidden = !p;
-  $('preview-label').textContent = p ? `Previewing “${p.name}” on ${p.origin}.` : '';
+  $('preview-label').textContent = !p ? '' : p.on ? `Previewing “${p.name}” on ${p.origin}.` : `“${p.name}” is off on ${p.origin}.`;
+  $('preview-toggle').setAttribute('aria-checked', String(!!p?.on));
+}
+
+/** The switch: the last preview off, or on again as it was, without asking the agent. */
+async function togglePreview() {
+  const p = previewing;
+  if (!p) return;
+  const button = $('preview-toggle');
+  button.disabled = true;
+  try {
+    if (p.on) {
+      await takePreviewOff();
+      showPreview({ ...p, on: false });
+      say('The preview is off the page.');
+      return;
+    }
+    const tab = await chrome.tabs.get(p.tabId).catch(() => null);
+    if (!tab) { showPreview(null); return say('That tab is closed.', true); }
+    const result = await applyPreview(p.request, tab, { audit: false });
+    if (result.status !== 'applied') return say(`It did not apply: ${result.message || result.status}.`, true);
+    showPreview({ ...p, on: true });
+    say('The preview is on the page again.');
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function handleRequest(request) {
@@ -324,6 +362,82 @@ function renderRequests() {
   $('requests').replaceChildren(...cards);
 }
 
+// ── the agent's questions ────────────────────────────────────────────────────
+
+/** The questions waiting for answers: the last questions entry, if the person has not written since. */
+function openQuestions() {
+  const entries = chat?.entries || [];
+  const i = entries.findLastIndex(e => e.kind === 'questions');
+  if (i < 0 || entries[i].answered || entries.slice(i + 1).some(e => e.kind === 'you')) return null;
+  return entries[i];
+}
+
+let shownQuestions = null; // the entry id the form shows, so a re-render keeps what the person chose
+function renderQuestions() {
+  const entry = openQuestions();
+  const box = $('questions');
+  if (!entry) { shownQuestions = null; box.replaceChildren(); return; }
+  if (shownQuestions === entry.id) return renderBusy();
+  shownQuestions = entry.id;
+  const form = el('form', 'card questions');
+  form.setAttribute('aria-label', 'The assistant asks');
+  entry.questions.forEach((q, i) => {
+    const set = el('fieldset');
+    set.append(el('legend', '', q.question));
+    if (q.multiSelect) set.append(el('p', 'note', 'Choose any that apply.'));
+    const type = q.multiSelect ? 'checkbox' : 'radio';
+    const option = (label, about) => {
+      const row = el('label', 'option');
+      const input = Object.assign(document.createElement('input'), { type, name: `q${i}`, value: label });
+      row.append(input, el('span', '', label));
+      if (about) row.append(el('span', 'about', about));
+      return { row, input };
+    };
+    for (const o of q.options) set.append(option(o.label, o.description).row);
+    const other = option('Other');
+    other.input.dataset.other = '1';
+    const words = Object.assign(document.createElement('input'), { type: 'text', name: `q${i}-other` });
+    words.setAttribute('aria-label', `Your own answer: ${q.question}`);
+    words.addEventListener('input', () => { if (words.value.trim()) other.input.checked = true; });
+    other.row.append(words);
+    set.append(other.row);
+    form.append(set);
+  });
+  const row = el('div', 'row');
+  const send = el('button', 'primary', 'Send answers');
+  send.type = 'submit';
+  send.id = 'send-answers';
+  row.append(send);
+  form.append(row);
+  form.addEventListener('submit', (e) => { e.preventDefault(); sendAnswers(entry, form); });
+  box.replaceChildren(form);
+  renderBusy();
+}
+
+async function sendAnswers(entry, form) {
+  const parts = [];
+  let answered = 0;
+  entry.questions.forEach((q, i) => {
+    const chosen = [...form.querySelectorAll(`input[name="q${i}"]:checked`)].map((input) => {
+      if (!input.dataset.other) return input.value;
+      const words = form.querySelector(`input[name="q${i}-other"]`).value.trim();
+      return words || null;
+    }).filter(Boolean);
+    if (chosen.length) answered++;
+    parts.push(`${q.question}\n→ ${chosen.length ? chosen.join('; ') : '(no answer)'}`);
+  });
+  if (!answered) return say('Choose an answer, or write your own under Other.', true);
+  $('send-answers').disabled = true;
+  try {
+    await ensureWorkingTab({ replaceClosed: true });
+    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text: parts.join('\n\n'), answers: entry.id } });
+    say('');
+  } catch (err) {
+    say(err.message, true);
+    $('send-answers').disabled = false;
+  }
+}
+
 // ── chats ────────────────────────────────────────────────────────────────────
 
 function renderChats() {
@@ -342,6 +456,12 @@ function entryNode(entry, count = 1) {
     const words = el('span', '', entry.text);
     if (count > 1) words.append(el('span', 'times', ` (${count} times)`));
     li.append(words);
+    li.dataset.id = entry.id;
+    return li;
+  }
+  if (entry.kind === 'questions') {
+    const n = entry.questions?.length || 0;
+    const li = el('li', 'step done', `${entry.answered ? 'Answered' : 'The assistant asks'} ${n === 1 ? 'a question' : `${n} questions`}`);
     li.dataset.id = entry.id;
     return li;
   }
@@ -366,6 +486,7 @@ function foldedEntries(entries) {
 function renderTranscript() {
   const list = $('transcript');
   if (!chat?.entries.length) {
+    renderQuestions();
     list.replaceChildren(el('li', 'empty', 'Say what gets in your way on the page beside this sidebar, for example “the buttons are too small to tap” or “I can’t read the gray text”. The assistant asks a few questions, then builds an adapter and previews it here.'));
     return;
   }
@@ -373,7 +494,7 @@ function renderTranscript() {
   const shown = [...list.children];
   const folded = foldedEntries(chat.entries);
   folded.forEach(({ entry, count }, i) => {
-    const sig = JSON.stringify([entry.id, entry.kind, entry.text, entry.state, count]);
+    const sig = JSON.stringify([entry.id, entry.kind, entry.text, entry.state, entry.answered, count]);
     if (shown[i]?.dataset.sig === sig) return;
     const node = entryNode(entry, count);
     node.dataset.sig = sig;
@@ -381,6 +502,7 @@ function renderTranscript() {
   });
   for (const extra of shown.slice(folded.length)) extra.remove();
   list.scrollTop = list.scrollHeight;
+  renderQuestions();
 }
 
 function addEntry(entry) {
@@ -408,16 +530,61 @@ function renderBusy() {
   const busy = !!chats.find(c => c.id === chat?.id)?.busy;
   $('stop').hidden = !busy;
   $('send').disabled = busy;
+  if ($('send-answers')) $('send-answers').disabled = busy;
   $('state').textContent = busy ? 'Working' : 'Ready';
   $('state').className = `badge ${busy ? 'busy' : 'ok'}`;
 }
 
 async function openChat(id) {
+  resetDelete();
   chat = (await api(`/chats/${id}`)).chat;
+  shownQuestions = null;
   requests.clear();
   $('transcript').replaceChildren();
   renderChats(); renderTranscript(); renderReady(); renderRequests(); renderBusy(); renderWorking();
   try { await chrome.storage.local.set({ assistantChat: id }); } catch { /* fine */ }
+}
+
+let confirmTimer = null;
+function resetDelete() {
+  clearTimeout(confirmTimer);
+  $('delete-chat').textContent = 'Delete';
+  delete $('delete-chat').dataset.confirm;
+}
+
+/** Delete the open chat: the first press asks, a second within a few seconds deletes. */
+async function deleteChat() {
+  if (!chat) return;
+  const b = $('delete-chat');
+  if (!b.dataset.confirm) {
+    b.dataset.confirm = '1';
+    b.textContent = 'Confirm delete';
+    say(`Press Confirm delete to delete “${chat.title}”. This cannot be undone.`);
+    confirmTimer = setTimeout(() => { resetDelete(); say(''); }, 6000);
+    return;
+  }
+  resetDelete();
+  const { id, title } = chat;
+  try {
+    await api(`/chats/${id}`, { method: 'DELETE' });
+    await chatGone(id);
+    say(`Deleted “${title}”.`);
+  } catch (e) {
+    say(`Could not delete it: ${e.message}`, true);
+  }
+}
+
+/** A chat deleted here or in another sidebar: open the next one, or a new one. */
+async function chatGone(id) {
+  // Here and from the event stream: the second call finds it gone already.
+  const wasOpen = chat?.id === id;
+  chats = chats.filter(c => c.id !== id);
+  if (wasOpen) chat = null;
+  try { const all = await pages(); delete all[id]; await chrome.storage.session.set({ [PAGES_KEY]: all }); } catch { /* fine */ }
+  if (!wasOpen) return renderChats();
+  if (previewing) await removePreview();
+  if (!chats.length) chats = [(await api('/chats', { method: 'POST' })).chat];
+  await openChat(chats[0].id);
 }
 
 async function loadChats() {
@@ -470,6 +637,7 @@ function onEvent(event) {
     renderChats(); renderBusy();
     return;
   }
+  if (event.type === 'chat-deleted') { chatGone(event.chatId).catch(e => say(e.message, true)); return; }
   if (event.chatId !== chat?.id) return;
   if (event.type === 'entry') addEntry(event.entry);
   else if (event.type === 'request') handleRequest(event.request);
@@ -550,7 +718,8 @@ $('new-chat').addEventListener('click', async () => {
   $('message').focus();
 });
 $('chat-select').addEventListener('change', (e) => openChat(e.target.value).catch(err => say(err.message, true)));
-$('remove-preview').addEventListener('click', async () => { await removePreview(); say('The preview is off the page.'); });
+$('preview-toggle').addEventListener('click', () => togglePreview().catch(e => say(e.message, true)));
+$('delete-chat').addEventListener('click', () => deleteChat());
 $('auto-preview').addEventListener('change', (e) => chrome.storage.local.set({ [AUTO_KEY]: e.target.checked }));
 $('go-to-page').addEventListener('click', () => goToPage().catch(e => say(e.message, true)));
 $('switch-page').addEventListener('click', () => switchPage().catch(e => say(e.message, true)));

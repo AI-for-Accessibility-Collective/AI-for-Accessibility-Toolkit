@@ -46,6 +46,8 @@ const agent = REMOTE ? null : createHost({
   opencodeBin: REAL ? 'opencode' : path.join(ROOT, 'agent-host/test/fake-opencode.mjs'),
   apiKey: REAL ? (process.env.GEMINI_API_KEY || readEnv('GEMINI_API_KEY')) : 'unused', log: REAL ? undefined : quiet,
   modelsJson: path.join(process.env.HOME, '.cache/opencode/models.json'),
+  // The stand-in names chats without a model.
+  ...(REAL ? {} : { titler: async ({ message }) => `Stand-in title: ${message.split(' ')[0]}` }),
 });
 const agentServers = REMOTE ? [] : [await listen(agent.sandboxHandler, `127.0.0.1:${sandboxListen}`), await listen(agent.apiHandler, `127.0.0.1:${apiListen}`)];
 
@@ -146,9 +148,21 @@ try {
     assert.ok(files.some(f => f.endsWith('-page.jpg')), 'the screenshot was kept');
     assert.match(readFileSync(path.join(chatDir, chatId, files.find(f => f.endsWith('-page.json'))), 'utf8'), /Save for later/);
 
-    // Removing the preview puts the page back.
-    await panel.getByRole('button', { name: 'Remove preview' }).click();
-    await until(() => page.evaluate(() => !document.body.dataset.big), 'the preview removed');
+    // The chat is named after its first reply.
+    await panel.locator('#chat-select option', { hasText: 'Stand-in title: build' }).waitFor({ state: 'attached' });
+
+    // The switch takes the preview off the page, and puts it back, without the agent.
+    const toggle = panel.getByRole('switch', { name: 'Preview' });
+    await until(async () => (await toggle.getAttribute('aria-checked')) === 'true', 'the switch on');
+    await toggle.click();
+    await until(() => page.evaluate(() => !document.body.dataset.big), 'the preview off');
+    await until(async () => (await toggle.getAttribute('aria-checked')) === 'false', 'the switch off');
+    assert.match(await panel.locator('#preview-label').innerText(), /“Bigger buttons” is off/);
+    await toggle.click();
+    await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the preview on again');
+    await until(async () => (await toggle.getAttribute('aria-checked')) === 'true', 'the switch on');
+    await toggle.click();
+    await until(() => page.evaluate(() => !document.body.dataset.big), 'the preview off again');
 
     // The person moves to another tab: the chat still works on the shop.
     const windowId = await runtime((id) => chrome.tabs.get(id).then(t => t.windowId), tabId);
@@ -201,7 +215,33 @@ try {
     await panel.locator('#transcript', { hasText: 'build them again' }).waitFor();
     await panel.reload();
     await panel.locator('#transcript', { hasText: 'build them again' }).waitFor();
-    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history.');
+
+    // The agent's questions are multiple choice, each with Other for the person's own words.
+    await panel.getByRole('button', { name: 'New chat' }).click();
+    await panel.locator('#transcript', { hasText: 'Say what gets in your way' }).waitFor();
+    await ask('questions please');
+    await panel.getByRole('group', { name: 'Which pages?' }).waitFor();
+    await panel.locator('#state', { hasText: 'Ready' }).waitFor();
+    await shot(panel, '4-questions');
+    await panel.getByRole('radio', { name: 'This page (Recommended)' }).check();
+    await panel.getByRole('textbox', { name: 'Your own answer: Who does it help?' }).fill('people who use a stylus');
+    assert.equal(await panel.getByRole('group', { name: 'Who does it help?' }).getByRole('checkbox', { name: 'Other' }).isChecked(), true, 'typing chooses Other');
+    await panel.getByRole('checkbox', { name: 'Vision' }).check();
+    await panel.getByRole('button', { name: 'Send answers' }).click();
+    await panel.locator('#transcript .msg.you', { hasText: '→ Vision; people who use a stylus' }).waitFor();
+    await panel.locator('#questions form').waitFor({ state: 'detached' });
+    assert.match(await panel.locator('#transcript').innerText(), /Which pages\?\n→ This page \(Recommended\)/);
+
+    // Deleting a chat asks once more, then opens another.
+    const doomed = await panel.locator('#chat-select').inputValue();
+    await panel.locator('#state', { hasText: 'Ready' }).waitFor();
+    await panel.getByRole('button', { name: 'Delete' }).click();
+    await panel.locator('#status', { hasText: 'Press Confirm delete' }).waitFor();
+    await panel.getByRole('button', { name: 'Confirm delete' }).click();
+    await panel.locator('#status', { hasText: 'Deleted' }).waitFor();
+    assert.equal(await panel.locator(`#chat-select option[value="${doomed}"]`).count(), 0);
+    assert.notEqual(await panel.locator('#chat-select').inputValue(), doomed);
+    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, the preview switch, chat titles, multiple-choice questions, deleting a chat.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
     // Send, then answer what the agent asks (share everything, preview) until its run ends.

@@ -3,15 +3,17 @@
 // per step), the opencode session that continues it, which sites the person
 // agreed to share in it, the latest preview of each adapter file (its result
 // and checks, and a hash of the code it ran), and the adapters the agent
-// finished.
+// finished. Its title is the start of the first message until the model
+// names it (titles.js), after the first reply.
 //
 // One chat runs at a time per account: the browser tools act on the tab the
 // person's sidebar is open on, so two runs would share one page.
 
-import { readFileSync, writeFileSync, readdirSync, renameSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, renameSync, existsSync, unlinkSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { translate } from './updates.js';
+import { fallbackTitle } from './titles.js';
 
 const MAX_ENTRIES = 600;
 const LEVELS = ['none', 'url', 'source', 'screenshot'];
@@ -19,7 +21,7 @@ export const SHARE_LEVELS = LEVELS;
 
 const httpError = (status, message, code) => Object.assign(new Error(message), { status, code });
 
-export function createChats({ accounts, runner, events, requests, log, afterRun }) {
+export function createChats({ accounts, runner, events, requests, log, afterRun, titler }) {
   const runs = new Map(); // uid -> {chatId, stop}
 
   const fileOf = (uid, id) => {
@@ -111,13 +113,36 @@ export function createChats({ accounts, runner, events, requests, log, afterRun 
 
   const activeChat = (uid) => runs.get(uid)?.chatId || null;
 
-  async function send(uid, chatId, text) {
+  /** The model's title, from the first message and the first reply; once per chat, when it answers. */
+  async function nameChat(uid, chatId) {
+    if (!titler) return;
+    let chat = read(uid, chatId);
+    if (chat.titledByModel) return;
+    const message = chat.entries.find(e => e.kind === 'you')?.text;
+    const reply = chat.entries.find(e => e.kind === 'agent')?.text;
+    if (!message) return;
+    const title = await titler({ message, reply });
+    if (!title) return;
+    chat = read(uid, chatId);
+    chat.title = title;
+    chat.titledByModel = true;
+    save(uid, chat);
+    events.publish(uid, { type: 'chat', chat: summary(uid, chat) });
+  }
+
+  /**
+   * The person's message. `answers` names the questions entry it answers
+   * (ask_questions), which is then shown as answered.
+   */
+  async function send(uid, chatId, text, { answers } = {}) {
     const message = String(text || '').trim();
     if (!message) throw httpError(400, 'Say something first.');
     if (message.length > 20_000) throw httpError(400, 'That message is too long.');
     if (runs.has(uid)) throw httpError(409, runs.get(uid).chatId === chatId ? 'The assistant is still working on this chat. Wait, or stop it.' : 'Another chat is still working. Wait, or stop it.', 'busy');
     const chat = read(uid, chatId);
-    if (chat.title === 'New chat') { chat.title = message.replace(/\s+/g, ' ').slice(0, 60); save(uid, chat); }
+    if (chat.title === 'New chat') { chat.title = fallbackTitle(message); save(uid, chat); }
+    const asked = answers && chat.entries.find(e => e.id === answers && e.kind === 'questions' && !e.answered);
+    if (asked) addEntry(uid, chatId, { id: asked.id, answered: true });
     addEntry(uid, chatId, { kind: 'you', text: message });
     const run = { chatId, stop: null, stopped: false, since: new Date().toISOString() };
     runs.set(uid, run);
@@ -142,13 +167,17 @@ export function createChats({ accounts, runner, events, requests, log, afterRun 
           addEntry(uid, chatId, { kind: 'error', text: 'The assistant stopped before it could answer. Try again.' });
         }
       } catch (e) {
-        log?.error('chat.run-error', { uid, chatId, error: e.message });
-        addEntry(uid, chatId, { kind: 'error', text: 'The assistant could not start. Try again in a moment.' });
+        // A chat deleted while it ran: nothing left to write to.
+        if (!run.deleted) {
+          log?.error('chat.run-error', { uid, chatId, error: e.message });
+          try { addEntry(uid, chatId, { kind: 'error', text: 'The assistant could not start. Try again in a moment.' }); } catch { /* deleted */ }
+        }
       } finally {
         runs.delete(uid);
         requests.cancelChat(uid, chatId);
         try { events.publish(uid, { type: 'chat', chat: summary(uid, read(uid, chatId)) }); } catch { /* deleted */ }
       }
+      if (!run.deleted) await nameChat(uid, chatId).catch(e => log?.warn('chat.title-failed', { uid, chatId, error: e.message }));
     })();
     return { ok: true };
   }
@@ -162,5 +191,17 @@ export function createChats({ accounts, runner, events, requests, log, afterRun 
     return { stopped: true };
   }
 
-  return { list, create, get, addEntry, setConsent, recordPreview, previews, previewOf, markReady, activeChat, send, stop };
+  /** Delete a chat: stop its run first. What the person shared of pages (page-data/) stays. */
+  function remove(uid, chatId) {
+    const file = fileOf(uid, chatId);
+    if (!existsSync(file)) throw httpError(404, 'no such chat');
+    const run = runs.get(uid);
+    if (run?.chatId === chatId) { run.deleted = run.stopped = true; run.stop?.(); }
+    requests.cancelChat(uid, chatId);
+    unlinkSync(file);
+    events.publish(uid, { type: 'chat-deleted', chatId });
+    return { deleted: true };
+  }
+
+  return { list, create, get, remove, addEntry, setConsent, recordPreview, previews, previewOf, markReady, activeChat, send, stop };
 }

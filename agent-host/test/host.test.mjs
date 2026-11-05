@@ -1,7 +1,8 @@
 // The agent host end to end, with a stand-in for opencode (fake-opencode.mjs):
 // chats and their history, the event stream without code, the browser tools
 // asking the "sidebar" (this test) and waiting for its answers, page data
-// kept on disk, adapters offered, the model proxy, and who may call what.
+// kept on disk, adapters offered, the model proxy, and who may call what;
+// chat titles from the model, deleting a chat, and the agent's questions.
 
 import assert from 'node:assert/strict';
 import { mkdtempSync, readdirSync, readFileSync, existsSync } from 'node:fs';
@@ -10,6 +11,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHost, listen } from '../src/host.js';
 import { withoutCode, translate } from '../src/updates.js';
+import { cleanTitle, fallbackTitle } from '../src/titles.js';
+import { questionsOf } from '../src/browser-tools.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SECRET = 'test-secret-that-is-long-enough-1234';
@@ -30,10 +33,31 @@ await test('tool steps become plain lines without their input or output', () => 
   assert.match(translate({ type: 'tool_use', part: { tool: 'edit', state: { status: 'error', input: { filePath: '/work/adapters/a.js' } } } }).entry.text, /Writing the adapter: that did not work/);
 });
 
+await test('a title from the model is one plain line', () => {
+  assert.equal(cleanTitle('"Bigger buttons on the shop."\nmore'), 'Bigger buttons on the shop');
+  assert.equal(cleanTitle('Title: **Calmer news page**'), 'Calmer news page');
+  assert.equal(cleanTitle('  \n '), null);
+  assert.equal(fallbackTitle('  the   buttons are\ntoo small '), 'the buttons are too small');
+  assert.equal(fallbackTitle('x'.repeat(100)).length, 60);
+});
+
+await test('the agent\'s questions: each with at least two options, and "Other" is the sidebar\'s', () => {
+  const [q] = questionsOf([{ question: 'Which pages?', options: [{ label: 'This page (Recommended)' }, { label: 'The whole site', description: 'Every page on it.' }, { label: 'Other' }], multi_select: true }]);
+  assert.deepEqual(q, { question: 'Which pages?', options: [{ label: 'This page (Recommended)' }, { label: 'The whole site', description: 'Every page on it.' }], multiSelect: true });
+  assert.throws(() => questionsOf([]), /at least one question/);
+  assert.throws(() => questionsOf([{ question: 'Which?', options: [{ label: 'One' }, { label: 'Other' }] }]), /at least two options/);
+  assert.equal(questionsOf(Array(6).fill({ question: 'Q?', options: ['a', 'b'] })).length, 4);
+});
+
 // ── the host ─────────────────────────────────────────────────────────────────
 const dataDir = mkdtempSync(path.join(tmpdir(), 'agent-host-'));
-const upstreamCalls = [];
+const upstreamCalls = [], titleCalls = [];
 const fakeFetch = async (url, init) => {
+  // The host's own call for a chat's title.
+  if (/Write a title for this chat/.test(String(init.body))) {
+    titleCalls.push({ url: String(url), key: init.headers['x-goog-api-key'], body: JSON.parse(init.body) });
+    return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: '"Saying hello."' }] } }] }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }
   upstreamCalls.push({ url: String(url), key: init.headers['x-goog-api-key'] });
   return new Response('{"candidates":[]}', { status: 200, headers: { 'content-type': 'application/json' } });
 };
@@ -95,7 +119,13 @@ await test('a chat keeps its history: a message and the reply', async () => {
   const chat = await until(async () => { const c = (await (await api(`/agent/chats/${chatId}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
   assert.deepEqual(chat.entries.map(e => e.kind), ['you', 'agent']);
   assert.equal(chat.entries[1].text, 'You said: hello there');
-  assert.equal(chat.title, 'hello there');
+  // The start of the message, then the model's title from the message and the reply.
+  assert.ok(['hello there', 'Saying hello'].includes(chat.title));
+  await until(async () => (await (await api(`/agent/chats/${chatId}`)).json()).chat.title === 'Saying hello');
+  const asked = titleCalls.at(-1);
+  assert.equal(asked.key, 'REAL-KEY');
+  assert.match(asked.url, /\/models\/gemini-3\.8-flash:generateContent$/);
+  assert.match(asked.body.contents[0].parts[0].text, /hello there[\s\S]*You said: hello there/);
   const list = (await (await api('/agent/chats')).json()).chats;
   assert.equal(list[0].id, chatId);
   // Another account sees none of it.
@@ -200,6 +230,39 @@ await test('one run at a time per account, and stop ends it', async () => {
   assert.equal((await (await api(`/agent/chats/${other}/stop`, { method: 'POST' })).json()).stopped, true);
   const chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c; });
   assert.equal(chat.entries.at(-1).text, 'Stopped.');
+});
+
+await test('a chat can be deleted, even while it runs; another sidebar is told', async () => {
+  const bar = sidebar('ada', {});
+  const doomed = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  await api(`/agent/chats/${doomed}/messages`, { method: 'POST', body: { text: 'hang please' } });
+  await until(async () => (await (await api(`/agent/chats/${doomed}`)).json()).chat.busy);
+  assert.equal((await api(`/agent/chats/${doomed}`, { method: 'DELETE', uid: 'bob' })).status, 404, 'another account cannot');
+  const res = await api(`/agent/chats/${doomed}`, { method: 'DELETE' });
+  assert.equal(res.status, 200);
+  assert.equal((await api(`/agent/chats/${doomed}`)).status, 404);
+  assert.ok(!(await (await api('/agent/chats')).json()).chats.some(c => c.id === doomed));
+  await until(() => bar.seen.some(e => e.type === 'chat-deleted' && e.chatId === doomed));
+  // Its run ended: the account can run another chat.
+  await until(async () => (await api(`/agent/chats/${chatId}/messages`, { method: 'POST', body: { text: 'still here?' } })).status === 202);
+  await until(async () => { const c = (await (await api(`/agent/chats/${chatId}`)).json()).chat; return !c.busy && c.entries.some(e => e.text === 'You said: still here?'); });
+  assert.equal((await api(`/agent/chats/${doomed}`, { method: 'DELETE' })).status, 404);
+  assert.ok(!lines.some(l => l.e === 'chat.run-error' && l.chatId === doomed), 'nothing failed writing to the deleted chat');
+  bar.close();
+});
+
+await test('the agent asks multiple-choice questions; the answers come back as a message', async () => {
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'questions please' } });
+  let chat = await until(async () => { const c = (await (await api(`/agent/chats/${id}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
+  const asked = chat.entries.find(e => e.kind === 'questions');
+  assert.equal(asked.questions.length, 2);
+  assert.deepEqual(asked.questions[1].options.map(o => o.label), ['Vision', 'Motor']);
+  assert.equal(asked.questions[1].multiSelect, true);
+  assert.match(chat.entries.findLast(e => e.kind === 'agent').text, /Asked: yes\. Bad: refused\./);
+  await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'Which pages?\n→ This page', answers: asked.id } });
+  chat = await until(async () => { const c = (await (await api(`/agent/chats/${id}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'you' && /This page/.test(e.text)) && c; });
+  assert.equal(chat.entries.find(e => e.id === asked.id).answered, true);
 });
 
 await test('the model proxy: sandbox token in, real key out, one model, a rate limit', async () => {

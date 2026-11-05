@@ -10,7 +10,7 @@
 <body>
   <header>
     <img class="mark" src="../icons/icon-48.png" alt="" width="28" height="28">
-    <div><h1>Assistant</h1><p class="sub">Builds adapters for the page you are on · pre-alpha</p></div>
+    <div><h1>Assistant</h1><p class="sub">Build adapters</p></div>
     <span id="state" class="badge">Starting</span>
   </header>
 
@@ -21,8 +21,8 @@
 
   <main id="main" hidden>
     <div class="chat-bar">
-      <label for="chat-select">Chat</label>
-      <select id="chat-select"></select>
+      <select id="chat-select" aria-label="Chat"></select>
+      <button id="delete-chat" class="secondary" type="button">Delete</button>
       <button id="new-chat" class="secondary" type="button">New chat</button>
     </div>
     <section id="working" class="working-bar" aria-label="The page this chat works on" hidden>
@@ -32,9 +32,9 @@
         <button id="switch-page" class="secondary" type="button" hidden>Work on this page instead</button>
       </div>
     </section>
-    <p class="framing">A research prototype. The adapters it makes are unvalidated and are not a replacement for assistive technology: check every change yourself.</p>
 
     <ol id="transcript" class="transcript" aria-label="Conversation" aria-live="polite"></ol>
+    <div id="questions" class="requests"></div>
     <div id="requests" class="requests"></div>
     <section id="ready" class="ready" hidden aria-labelledby="ready-heading">
       <h2 id="ready-heading">Ready to use</h2>
@@ -43,7 +43,7 @@
 
     <div id="preview-bar" class="preview-bar" hidden>
       <span id="preview-label"></span>
-      <button id="remove-preview" class="text-button" type="button">Remove preview</button>
+      <button id="preview-toggle" class="switch" type="button" role="switch" aria-checked="true" aria-describedby="preview-label">Preview</button>
     </div>
 
     <form id="composer" class="composer">

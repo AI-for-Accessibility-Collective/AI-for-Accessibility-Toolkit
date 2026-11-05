@@ -39,7 +39,7 @@ export function stepLabel(tool, input = {}) {
   if (name === 'task') return 'Handing part of the work to a helper';
   // Browser tools, directly or through opencode's code mode: the host
   // announces those itself when the call reaches it.
-  if (name.startsWith('browser') || name === 'adapter_ready' || name === 'execute') return null;
+  if (name.startsWith('browser') || name === 'adapter_ready' || name === 'ask_questions' || name === 'execute') return null;
   return 'Working';
 }
 
