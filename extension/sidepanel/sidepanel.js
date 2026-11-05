@@ -13,7 +13,9 @@
 //   page            share the page: the address, the page source (an
 //                   outline, runtime/page.js) or also a screenshot. The
 //                   person chooses once per site per chat; the agent may ask
-//                   again for a screenshot.
+//                   again for a screenshot. With the page source, the first
+//                   preview on a page also saves a copy of it (MHTML) for
+//                   the background check of an adapter made for that site.
 //   preview         run an adapter on the page without installing it
 //                   (runtime/scripts.js buildPreviewScript), after the person
 //                   says yes, or at once while the "Apply previews" switch
@@ -257,11 +259,15 @@ async function runPreview(request) {
     say('Previews need user scripts: turn on Allow User Scripts on this extension’s details page.', true);
     return answer(request, { status: 'failed', message: 'User scripts are off in this browser: ask the person to turn on "Allow User Scripts" on the extension’s details page.' });
   }
+  // What the person shares on this site in this chat.
+  const level = chat?.consent?.[originOf(tab.url)];
+  // Where they share the page source: a copy of the page as it is, before the
+  // preview changes it, for the background check of an adapter made for this site.
+  const copied = level === 'source' || level === 'screenshot' ? await savePageCopy(tab) : null;
   const result = await applyPreview(request, tab);
   showPreview({ chatId: chat?.id, name: request.name, tabId: tab.id, origin: hostOf(tab.url), request, on: result.status === 'applied' });
   announce(result.status === 'applied' ? `Previewing “${request.name}” on this page.` : result.status === 'skipped' ? `“${request.name}” found nothing to change on this page.` : `The preview of “${request.name}” did not work.`);
   // The page afterwards, at what the person shares on this site in this chat.
-  const level = chat?.consent?.[originOf(tab.url)];
   let after;
   if (result.status === 'applied' && (level === 'source' || level === 'screenshot')) {
     await new Promise(r => setTimeout(r, 300));
@@ -274,7 +280,34 @@ async function runPreview(request) {
   if (result.axe?.added && level !== 'source' && level !== 'screenshot') {
     result.axe = { ...result.axe, added: result.axe.added.map(({ targets, summary, ...rule }) => rule) };
   }
+  // The copy is on the host before the agent can offer the adapter.
+  await copied?.sending;
   await answer(request, { ...result, ...(after ? { after } : {}), ...(site ? { site } : {}) });
+}
+
+const MAX_PAGE_COPY = 8_000_000; // bytes; the host takes no more
+const pageCopies = new Set(); // "chat address": copies sent from this sidebar
+
+/**
+ * Save the tab's page as MHTML (with its styles and images) and send it to
+ * the host, once per chat and address; a preview on it comes off first.
+ * Resolves once the page is saved, to {sending} (the upload), or null. Never fails the preview.
+ */
+async function savePageCopy(tab) {
+  const chatId = chat?.id;
+  const key = `${chatId} ${tab.url}`;
+  if (!chatId || pageCopies.has(key) || typeof chrome.pageCapture?.saveAsMHTML !== 'function') return null;
+  try {
+    if (previewing?.on && previewing.tabId === tab.id) await takePreviewOff();
+    const blob = await chrome.pageCapture.saveAsMHTML({ tabId: tab.id });
+    if (!blob || blob.size > MAX_PAGE_COPY) return null;
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    pageCopies.add(key);
+    return { sending: api(`/chats/${chatId}/page-copy`, { method: 'POST', body: { url: tab.url, mhtml: btoa(bin) } })
+      .catch(() => { pageCopies.delete(key); }) };
+  } catch { return null; }
 }
 
 /** Take the preview's adapter off its page (its disable()); whether one was on. */
@@ -414,7 +447,7 @@ function renderRequests() {
           button('The address, the source and a screenshot', 'primary', () => sharePage(request, 'screenshot', true)),
           button('Don’t share', 'text-button', () => sharePage(request, 'none', true)));
       }
-      card.append(choices, el('p', 'note', 'The assistant needs the page source and a screenshot to build the best adapter. What you share is not used to identify you.'));
+      card.append(choices, el('p', 'note', 'The assistant needs the page source and a screenshot to build the best adapter. With the page source, a copy of the page is also kept, to check its adapters on later. What you share is not used to identify you.'));
     } else if (request.kind === 'preview') {
       const where = el('strong');
       workingTab().then(t => { where.textContent = t ? hostOf(t.url) : 'the page'; });
@@ -726,24 +759,40 @@ function ordinal(n) {
 }
 
 /** How the background check, or the full review, stands, in a sentence; with what failed. */
+/** The sites an adapter is made for, or [] when it runs on every site. */
+function madeFor(a) {
+  const patterns = a.runsOn || [];
+  if (!patterns.length || patterns.some(p => p === '*' || p === '<all_urls>' || /^[^:]+:\/\/\*(\/|:|$)/.test(p))) return [];
+  return [...new Set(patterns.map(hostOf).filter(Boolean))];
+}
+
 function checkWords(a, kind) {
   const c = a[kind];
   if (!c) return null;
   const what = kind === 'review' ? 'Full review' : 'Background check';
   const runs = (n) => `${n} run${n === 1 ? '' : 's'}`;
+  // Made for some sites only: checked on copies of the person's pages there, not on the test pages.
+  const sites = madeFor(a);
   switch (c.status) {
     case 'unavailable': return { state: 'idle', text: kind === 'review' ? 'This toolkit has no full review.' : 'This toolkit does not check adapters in the background.' };
     case 'queued': return { state: 'running', text: `${what}: waiting${c.position ? `, ${ordinal(c.position)} in line` : ''}.` };
-    case 'running': return { state: 'running', text: kind === 'review' ? 'Full review running: the background check, then an independent reviewer. This can take up to an hour.' : 'Checking in the background: on test pages and copies of real sites, narrow and with reduced motion. This takes a few minutes.' };
+    case 'running': return { state: 'running', text: kind === 'review' ? 'Full review running: the background check, then an independent reviewer. This can take up to an hour.'
+      : sites.length ? `Checking in the background: on the copies of your pages on ${sites.join(', ')}, narrow and with reduced motion. This takes a few minutes.`
+      : 'Checking in the background: on test pages and copies of real sites, narrow and with reduced motion. This takes a few minutes.' };
     case 'cancelled': return { state: 'idle', text: c.why === 'changed' ? `${what} stopped: the assistant is changing the adapter. Its next version is checked.` : `${what} stopped.` };
     case 'failed': return { state: 'failed', text: `${what} could not run: ${c.error}` };
     case 'passed': {
       if (kind === 'review') return { state: 'passed', text: 'Full review: no issues found.' };
       const broke = `Background check passed: nothing broke in ${runs(c.passed)}${c.skipped ? ` (${c.skipped} skipped: a site could not be reached)` : ''}.`;
+      if (c.narrow) {
+        const where = sites.length ? sites.join(', ') : 'the sites it is for';
+        if (!c.ownPages) return { state: 'passed', text: `Background check: there was nothing to check it on. It is made for ${where}, and no copy of your page there was saved (one is saved when you share the page source and it is previewed). Its preview on your page is what showed it working.` };
+        const pagesWord = c.ownPages === 1 ? 'the copy of your page' : `the ${c.ownPages} copies of your pages`;
+        return { state: 'passed', text: `${broke} On ${pagesWord} on ${where} it made its change${c.ownChecks ? ` and its ${c.ownChecks === 1 ? 'check passed' : `${c.ownChecks} checks passed`}` : ''}, also narrow and with reduced motion. The general test pages were skipped: they do not have what it changes.` };
+      }
       if (c.appliedOn) return { state: 'passed', text: `${broke} It made its change on ${c.appliedOn} of its ${c.testPages} test pages.` };
-      // Made for one site: the test pages do not have what it changes.
-      const site = (a.runsOn || []).filter(p => p !== '*://*/*').map(hostOf).filter(Boolean);
-      return { state: 'passed', text: `${broke} None of its ${c.testPages} test pages has what it changes${site.length ? ` (it is made for ${[...new Set(site)].join(', ')})` : ''}, so this shows it does no harm on other pages, not that it works. Its preview on your page is what showed it working.` };
+      // Made for one site (checked before the checks knew): the test pages do not have what it changes.
+      return { state: 'passed', text: `${broke} None of its ${c.testPages} test pages has what it changes${sites.length ? ` (it is made for ${sites.join(', ')})` : ''}, so this shows it does no harm on other pages, not that it works. Its preview on your page is what showed it working.` };
     }
     case 'problems': {
       const fix = a.gaveUp ? ` The assistant could not fix ${kind === 'review' ? 'them' : 'all of them'} after ${a.fixes} tries: ask it, or use this version as it is.`
@@ -792,7 +841,11 @@ function renderReady() {
     const reviewing = ['queued', 'running'].includes(a.review?.status);
     const review = button(a.review && !reviewing ? 'Full review again' : 'Full review', 'secondary', () => askReview(a, review));
     review.disabled = reviewing || a.review?.status === 'unavailable';
-    row.append(button(mine ? 'Add this version' : 'Add to my account', 'primary', (e) => addToAccount(a, e.currentTarget)), button('Export', 'secondary', () => exportAdapter(a)), review);
+    // In the account already: nothing to add until there is a newer version.
+    const current = mine && mine.version >= (a.version || 1);
+    const add = button(current ? 'In your account' : mine ? `Add version ${a.version} now` : 'Add to my account', 'primary', (e) => addToAccount(a, e.currentTarget));
+    add.disabled = !!current;
+    row.append(add, button('Export', 'secondary', () => exportAdapter(a)), review);
     li.append(row);
     return li;
   }));

@@ -16,10 +16,17 @@
 // A new version stops the checks of the old one. So does a preview of
 // changed code: the agent is rebuilding, and its next adapter_ready starts
 // the checks again.
+//
+// An adapter made for some sites only (its runsOn names them) is not run on
+// the test pages, which do not have what it changes: it is checked on the
+// copies the person's browser saved of their pages on those sites
+// (page-data.js), with the checks its preview passed there, and on the
+// recorded copies of those sites.
 
 import { readFileSync } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
+import { matchUrlPattern } from '../../toolkit/protocol/adapter/index.js';
 
 const hashOf = (code) => createHash('sha256').update(code).digest('hex');
 const LIVE = new Set(['queued', 'running']);
@@ -35,7 +42,9 @@ export function stateOf(view, kind, hash) {
   const check = view.result?.check || {};
   const s = check.summary || {};
   const failing = (check.runs || []).filter(r => r.status === 'fail').slice(0, MAX_LISTED).map(r => ({ name: r.name, problems: r.problems.slice(0, 5) }));
-  const out = { ...base, passed: s.passed || 0, failed: s.failed || 0, skipped: s.skipped || 0, appliedOn: s.appliedOnTestPages || 0, testPages: s.testPages || 0, failing };
+  const out = { ...base, passed: s.passed || 0, failed: s.failed || 0, skipped: s.skipped || 0, appliedOn: s.appliedOnTestPages || 0, testPages: s.testPages || 0, failing,
+    // Made for some sites: checked on copies of the person's pages instead of the test pages.
+    ...(s.narrow ? { narrow: true, ownPages: s.ownPages || 0, appliedOnOwnPages: s.appliedOnOwnPages || 0, ownChecks: s.ownChecks || 0 } : {}) };
   if (kind === 'review') {
     const r = view.result?.review || {};
     out.verdict = r.verdict || null;
@@ -50,7 +59,8 @@ export function stateOf(view, kind, hash) {
 function fixMessage(adapter, state, kind) {
   const lines = [`The background ${kind === 'review' ? 'full review' : 'check'} of “${adapter.name}” (${adapter.file}, the version you offered last) found problems.`];
   if (state.failing?.length) {
-    lines.push('', `The verifier ran it on its test pages and recorded copies of real sites: ${state.failed} run${state.failed === 1 ? '' : 's'} failed:`);
+    const where = state.narrow ? 'copies of the person\'s pages it is for (saved when you previewed it), with your checks,' : 'its test pages and recorded copies of real sites';
+    lines.push('', `The verifier ran it on ${where}: ${state.failed} run${state.failed === 1 ? '' : 's'} failed:`);
     for (const f of state.failing) lines.push(`- ${f.name}: ${f.problems.join('; ') || 'failed'}`);
   }
   if (kind === 'review' && state.report) lines.push('', 'The reviewer\'s report:', state.report);
@@ -58,7 +68,7 @@ function fixMessage(adapter, state, kind) {
   return lines.join('\n');
 }
 
-export function createVerification({ checks, chats, workDir, log, maxFixes = 2 }) {
+export function createVerification({ checks, chats, pageData, workDir, log, maxFixes = 2 }) {
   const jobs = new Map();    // checkId -> {uid, chatId, adapterId, hash, kind}
   const waiting = new Map(); // uid -> [{chatId, adapterId, hash, kind, text, shown}] fixes to ask for once no run is going
 
@@ -95,7 +105,14 @@ export function createVerification({ checks, chats, workDir, log, maxFixes = 2 }
     const checkId = `chk_${randomBytes(12).toString('hex')}`;
     jobs.set(checkId, { uid, chatId, adapterId, hash: adapter.hash, kind });
     // The job's first change (queued) comes through onChange.
-    checks.submit(uid, { checkId, review, adapter: { key: `assistant/${adapter.id}`, name: adapter.name, description: adapter.about, urlPatterns: adapter.runsOn, supportAreas: adapter.supportAreas, code } });
+    // The person's own pages: the copies their browser saved of pages it runs
+    // on, with the checks its preview passed (kept by the code they checked).
+    const runsOn = adapter.runsOn || [];
+    const copies = pageData?.copies ? pageData.copies(uid, chatId, { matches: (url) => runsOn.some(p => matchUrlPattern(p, url)) }) : [];
+    let own = [];
+    try { own = JSON.parse(readFileSync(path.join(workDir(uid), '..', 'previews', chatId, `${adapter.hash}.checks.json`), 'utf8')); } catch { /* previewed before checks were kept */ }
+    checks.submit(uid, { checkId, review, adapter: { key: `assistant/${adapter.id}`, name: adapter.name, description: adapter.about, urlPatterns: runsOn, supportAreas: adapter.supportAreas, code } },
+      { copies, checks: Array.isArray(own) ? own : [] });
   }
 
   function onChange(view) {

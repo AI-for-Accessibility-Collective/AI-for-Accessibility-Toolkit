@@ -64,6 +64,10 @@ import { openVerifier, ROOT, isCore, interA11y } from './harness.mjs';
 import { keyboardAudit, RUBRIC_SCS } from './intera11y.mjs';
 import { serveHttp, sitesFor, LIMITS } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
+import { matchUrlPattern } from '../../toolkit/protocol/adapter/index.js';
+
+// A pattern for every site (*://*/*, https://*/*, <all_urls>), as the agent host's browser tools judge it.
+const coversEverySite = (p) => p === '*' || p === '<all_urls>' || /^[^:]+:\/\/\*(\/|:|$)/.test(String(p));
 
 const HERE = path.join(ROOT, 'scripts/verify-adapters');
 const SPECS = path.join(ROOT, 'tools/test/verify');
@@ -92,6 +96,10 @@ const checkOptions = JSON.parse(flag('--options', '{}'));
 const checkPersonal = JSON.parse(flag('--personal', 'null'));
 const checkPages = flag('--pages', '').split(',').filter(Boolean);
 const checkOut = flag('--out', null);
+// --spec FILE: what the agent host knows of the adapter (JSON): runsOn, its
+// URL patterns; copies, pages the person's browser saved ({url, file}, file
+// relative to FILE); checks, the ones its preview ran ({name, code}).
+const checkSpecFile = flag('--spec', null);
 // --review-file FILE: review one adapter file (the server's review).
 const reviewFile = flag('--review-file', null);
 const aboutFile = flag('--about', null);
@@ -106,7 +114,7 @@ if (reviewFile && mode !== 'agent') { console.error('--review-file is an agent r
 if (mode === 'replay') await replay();
 else if (mode === 'check') await check(names[0]);
 else if (mode === 'agent') await agents();
-else { console.error('Usage: run.mjs --replay [name ...] | --check <adapter.js> [--options JSON] [--personal JSON] [--pages a.html,b.html] [--no-sites] [--out report.json] | --agent [--create | --review BASE | --fix DIR | --review-file FILE [--about FILE] [--check-report FILE]] [name ...] [--parallel N] [--logs DIR] [--skills DIR,...]'); process.exit(2); }
+else { console.error('Usage: run.mjs --replay [name ...] | --check <adapter.js> [--options JSON] [--personal JSON] [--pages a.html,b.html] [--no-sites] [--spec check.json] [--out report.json] | --agent [--create | --review BASE | --fix DIR | --review-file FILE [--about FILE] [--check-report FILE]] [name ...] [--parallel N] [--logs DIR] [--skills DIR,...]'); process.exit(2); }
 
 /** One run of a spec, judged as the replay judges it: { r, problems }. On a
  *  real page, skipping (nothing to do there) is fine, and a page that does
@@ -117,7 +125,9 @@ async function judge(v, name, spec, live, { keyboard = false, skipOk = false } =
   try { r = await v.verify(spec); } catch (e) { r = { status: live ? 'unreachable' : 'failed', message: e.message.slice(0, 200) }; }
   const problems = [];
   // On a live page, skipping (nothing to do there) is fine, and a page that does not load is reported, not failed.
-  const fine = live ? ['applied', 'skipped', 'unreachable'] : skipOk ? ['applied', 'skipped'] : ['applied'];
+  // The person's own page (a copy their browser saved) is the page it is for: it must apply there.
+  const own = !!spec.copy;
+  const fine = own ? ['applied'] : live ? ['applied', 'skipped', 'unreachable'] : skipOk ? ['applied', 'skipped'] : ['applied'];
   if (!fine.includes(r.status)) problems.push(`${r.status}${r.message ? `: ${r.message}` : ''}`);
   if (r.leftovers?.length && spec.restores !== false) problems.push(`disable() leaves ${r.leftovers.join(' ')}`);
   // On a live page, a check that already failed before enable() is the site's
@@ -126,7 +136,7 @@ async function judge(v, name, spec, live, { keyboard = false, skipOk = false } =
   const silent = (c) => /^the model did not answer/.test(c.error || '');
   const unanswered = (r.checks || []).map((c, i) => (!c.after && silent(c) ? spec.checks[i]?.name : null)).filter(Boolean);
   if (unanswered.length) console.log(`WARN: ${name}: the model did not answer in time, so these checks say nothing: ${unanswered.join('; ')}`);
-  const bad = (r.checks || []).map((c, i) => (!c.after && !silent(c) && !(live && !c.before) ? spec.checks[i]?.name : null)).filter(Boolean);
+  const bad = (r.checks || []).map((c, i) => (!c.after && !silent(c) && !(live && !own && !c.before) ? spec.checks[i]?.name : null)).filter(Boolean);
   if (bad.length) problems.push(`checks fail: ${bad.join('; ')}`);
   if (r.aiSettled === false) console.log(`WARN: ${name}: the model was still being asked after 60 seconds when the page was audited`);
   if (r.axe?.error) problems.push(`axe-core: ${r.axe.error}`);
@@ -194,25 +204,42 @@ async function check(file) {
   const copy = path.join(dir, path.basename(file).replace(/[^\w.-]/g, '_'));
   copyFileSync(file, copy);
   const rel = path.relative(ROOT, copy);
-  const pages = checkPages.length ? checkPages : readdirSync(path.join(CORE_SPECS, 'pages')).filter((f) => f.endsWith('.html') && !f.startsWith('review-')).sort();
+  const given = checkSpecFile ? JSON.parse(readFileSync(checkSpecFile, 'utf8')) : {};
+  const runsOn = Array.isArray(given.runsOn) ? given.runsOn : [];
+  // Made for some sites, not every one: the test pages and the other sites
+  // do not have what it changes, so they are not where it is checked.
+  const narrow = runsOn.length > 0 && !runsOn.some(coversEverySite);
+  const copies = (Array.isArray(given.copies) ? given.copies : []).filter((c) => /^https?:\/\//.test(c?.url || '') && c.file)
+    .map((c) => ({ url: c.url, file: path.resolve(path.dirname(checkSpecFile), c.file) })).filter((c) => existsSync(c.file));
+  const ownChecks = (Array.isArray(given.checks) ? given.checks : []).filter((c) => c && typeof c.code === 'string').map((c) => ({ name: String(c.name || 'check'), code: c.code }));
+  const pages = checkPages.length ? checkPages : narrow ? [] : readdirSync(path.join(CORE_SPECS, 'pages')).filter((f) => f.endsWith('.html') && !f.startsWith('review-')).sort();
   const base = { file: rel, options: checkOptions, checks: [] };
   const runs = [];
+  // The person's own pages first: the adapter's own checks, on the page as they saw it, also narrow and with reduced motion.
+  for (const c of copies) {
+    const where = (() => { const u = new URL(c.url); return `your page ${u.host}${u.pathname.length > 1 ? u.pathname.slice(0, 60) : ''}`; })();
+    const own = { ...base, page: c.url, copy: c.file, checks: ownChecks };
+    runs.push([where, own, true, 'copy']);
+    runs.push([`${where} (narrow)`, { ...own, viewport: { width: 390, height: 844 } }, true, false]);
+    runs.push([`${where} (reduced motion)`, { ...own, reducedMotion: 'reduce' }, true, false]);
+  }
   for (const page of pages) {
     runs.push([page, { ...base, page }, false, true]);
     runs.push([`${page} (narrow)`, { ...base, page, viewport: { width: 390, height: 844 } }, false, false]);
     runs.push([`${page} (reduced motion)`, { ...base, page, reducedMotion: 'reduce' }, false, false]);
     if (checkPersonal) runs.push([`${page} (their settings)`, { ...base, page, personal: checkPersonal }, false, false]);
   }
-  if (!argv.includes('--no-sites')) for (const site of sitesFor(rel)) runs.push([`@ ${site.name}`, { ...base, page: site.url }, true, false]);
+  if (!argv.includes('--no-sites')) for (const site of sitesFor(rel)) if (!narrow || runsOn.some((p) => matchUrlPattern(p, site.url))) runs.push([`@ ${site.name}`, { ...base, page: site.url }, true, false]);
   const v = await openVerifier();
   const report = { adapter: path.basename(file), at: new Date().toISOString(), runs: [] };
-  let failed = 0, skipped = 0, applied = 0, keyboards = 0;
+  let failed = 0, skipped = 0, applied = 0, keyboards = 0, ownApplied = 0, ownFailed = 0;
   try {
     for (const [name, spec, live, first] of runs) {
       // InterA11y's keyboard audit on the first five test pages it applies on.
-      const { r, problems } = await judge(v, name, spec, live, { skipOk: true, keyboard: first && keyboards < 5 });
-      if (first && r.status === 'applied') { applied++; keyboards++; }
+      const { r, problems } = await judge(v, name, spec, live, { skipOk: true, keyboard: first === true && keyboards < 5 });
+      if (first === true && r.status === 'applied') { applied++; keyboards++; }
       const status = r.status === 'unreachable' ? 'skip' : problems.length ? 'fail' : 'pass';
+      if (spec.copy) { if (first === 'copy' && r.status === 'applied') ownApplied++; if (status === 'fail') ownFailed++; }
       if (status === 'skip') skipped++;
       if (status === 'fail') failed++;
       report.runs.push({ name, status, result: r.status, problems, ...(r.axe?.advice?.length ? { advice: r.axe.advice.map((a) => `${a.id} on ${a.count}`) } : {}), ...(r.copy ? { copy: r.copy } : {}) });
@@ -222,12 +249,14 @@ async function check(file) {
     await v.close();
     rmSync(copy, { force: true });
   }
-  report.summary = { passed: runs.length - failed - skipped, failed, skipped, appliedOnTestPages: applied, testPages: pages.length };
+  report.summary = { passed: runs.length - failed - skipped, failed, skipped, appliedOnTestPages: applied, testPages: pages.length,
+    narrow, ownPages: copies.length, appliedOnOwnPages: ownApplied, ownRunsFailed: ownFailed, ownChecks: ownChecks.length };
   report.notes = [];
-  if (!applied) report.notes.push(`It applied on none of the ${pages.length} test pages: the checks above say little until it runs on a page with the barrier it is for (--pages, or its own page).`);
+  if (narrow && !copies.length) report.notes.push('It is made for some sites only, and there is no copy of a page of theirs to check it on: nothing here shows it works.');
+  if (!narrow && !applied) report.notes.push(`It applied on none of the ${pages.length} test pages: the checks above say little until it runs on a page with the barrier it is for (--pages, or its own page).`);
   report.notes.push('These checks find some problems in code. They do not show that the adapter helps anyone: only the people who use it can.');
-  if (!applied) console.log(`\nNOTE: ${report.notes[0]}`);
-  console.log(`\n${report.summary.passed} passed, ${failed} failed, ${skipped} skipped (site unreachable); it applied on ${applied} of ${pages.length} test pages.`);
+  if (report.notes.length > 1) console.log(`\nNOTE: ${report.notes[0]}`);
+  console.log(`\n${report.summary.passed} passed, ${failed} failed, ${skipped} skipped (site unreachable); ${narrow ? `made for ${runsOn.join(', ')}: it applied on ${ownApplied} of ${copies.length} of the person's pages` : `it applied on ${applied} of ${pages.length} test pages`}.`);
   console.log(report.notes.at(-1));
   if (checkOut) writeFileSync(checkOut, JSON.stringify(report, null, 2) + '\n');
   process.exit(failed ? 1 : 0);

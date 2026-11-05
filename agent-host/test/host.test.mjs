@@ -70,12 +70,15 @@ const fakeFetch = async (url, init) => {
   return new Response('{"candidates":[]}', { status: 200, headers: { 'content-type': 'application/json' } });
 };
 // Stands in for the verifier: passes, fails ("CHECKFAILS"), or runs until stopped ("SLOWCHECK").
-const checkRuns = [];
+const checkRuns = [], checkSpecs = [];
 const checkRunner = {
   kind: 'local',
   async check({ dir, file, signal }) {
     const code = readFileSync(path.join(dir, 'in', file), 'utf8');
     checkRuns.push(code);
+    // What run.mjs --spec would read, and the copies beside it.
+    checkSpecs.push({ code, spec: JSON.parse(readFileSync(path.join(dir, 'in', 'check.json'), 'utf8')),
+      copies: existsSync(path.join(dir, 'in', 'copies')) ? readdirSync(path.join(dir, 'in', 'copies')).map(f => readFileSync(path.join(dir, 'in', 'copies', f), 'utf8')) : [] });
     if (/SLOWCHECK/.test(code)) await new Promise(r => { const t = setTimeout(r, 20_000); signal?.addEventListener('abort', () => { clearTimeout(t); r(); }); });
     if (signal?.aborted) return { code: 137, timedOut: false, stderr: '' };
     const failed = /CHECKFAILS/.test(code) ? 1 : 0;
@@ -407,6 +410,31 @@ await test('a chat that ended before the host offered passing previews gets its 
   assert.ok(chat.entries.some(e => e.kind === 'notice' && /“Tea cosy” is ready/.test(e.text)));
   // Opened again: offered once.
   assert.equal((await chatNow(id)).adapters.length, 1);
+});
+
+await test('an adapter for one site is checked on the copies of the person\'s pages there, with its preview\'s checks', async () => {
+  const sb = sidebar('ada', { preview: previewOk });
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  const mhtml = (url, mark) => Buffer.from(`From: <Saved by Blink>\r\nContent-Type: multipart/related;\r\n\ttype="text/html";\r\n\tboundary="----B"\r\n\r\n------B\r\nContent-Type: text/html\r\nContent-Location: ${url}\r\n\r\n<p>${mark}</p>\r\n------B--\r\n`).toString('base64');
+  const copy = (body) => api(`/agent/chats/${id}/page-copy`, { method: 'POST', body });
+  assert.equal((await copy({ url: 'https://example.com/shop', mhtml: mhtml('https://example.com/shop', 'OLD') })).status, 201);
+  assert.equal((await copy({ url: 'https://example.com/shop', mhtml: mhtml('https://example.com/shop', 'SHOP') })).status, 201);
+  assert.equal((await copy({ url: 'https://other.example/', mhtml: mhtml('https://other.example/', 'OTHER') })).status, 201);
+  assert.equal((await copy({ url: 'https://example.com/x', mhtml: Buffer.from('<p>not saved</p>').toString('base64') })).status, 400, 'only MHTML');
+  assert.equal((await copy({ url: 'file:///etc/passwd', mhtml: mhtml('https://example.com/', 'X') })).status, 400, 'only a web page');
+  assert.equal((await api('/agent/chats/nope/page-copy', { method: 'POST', body: { url: 'https://example.com/', mhtml: mhtml('https://example.com/', 'X') } })).status, 404);
+  assert.ok(!JSON.stringify(lines).includes('example.com/shop'), 'never in the log');
+  const before = checkSpecs.length;
+  await until(async () => (await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'previewonly please' } })).status !== 409);
+  await until(async () => { const x = await adapterNow(id, 'tea-cosy'); return x?.check?.status === 'passed' && x; });
+  const got = checkSpecs.slice(before).find(c => /cosy/.test(c.code));
+  assert.deepEqual(got.spec.runsOn, ['https://example.com/*']);
+  // Its site's page, the latest copy of it; not the other site's.
+  assert.deepEqual(got.spec.copies, [{ url: 'https://example.com/shop', file: 'copies/0.mhtml' }]);
+  assert.equal(got.copies.length, 1);
+  assert.match(got.copies[0], /SHOP/);
+  assert.deepEqual(got.spec.checks, [{ name: 'cosy', code: 'return document.body.dataset.cosy === "1";' }]);
+  sb.close();
 });
 
 await test('the model proxy: sandbox token in, real key out, one model, a rate limit', async () => {

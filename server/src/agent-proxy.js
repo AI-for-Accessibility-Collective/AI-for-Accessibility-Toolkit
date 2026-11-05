@@ -4,8 +4,9 @@
 // shared secret and naming the account. The host runs that account's opencode
 // sandbox. Event streams pass straight through.
 //
-// What a person shares of a page (/v1/agent/requests/…) is never logged here:
-// app.js leaves those bodies out of the request log (agentContentLogged).
+// What a person shares of a page (/v1/agent/requests/…, and the copy of a
+// page an adapter was previewed on, …/page-copy) is never logged here: app.js
+// leaves those bodies out of the request log (agentContentLogged).
 
 import { sendJSON, bearerFrom } from './http.js';
 
@@ -13,7 +14,7 @@ export const AGENT_PREFIX = '/v1/agent';
 const MAX_BODY = 12_000_000;
 
 /** Whether the request log may keep a request's body: never page data. */
-export const agentContentLogged = (pathname) => !pathname.startsWith(`${AGENT_PREFIX}/requests/`);
+export const agentContentLogged = (pathname) => !pathname.startsWith(`${AGENT_PREFIX}/requests/`) && !/^\/v1\/agent\/chats\/[^/]+\/page-copy$/.test(pathname);
 
 export function createAgentProxy({ authenticate, hostUrl, secret, fetch = globalThis.fetch, log }) {
   const base = hostUrl ? String(hostUrl).replace(/\/+$/, '') : null;

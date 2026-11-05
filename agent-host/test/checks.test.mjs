@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHost, listen } from '../src/host.js';
 import { createChecks, dockerCheckRunner } from '../src/checks.js';
+import { copyFromMhtml } from '../../scripts/verify-adapters/mhtml.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SECRET = 'test-secret-that-is-long-enough-5678';
@@ -205,7 +206,7 @@ await test('on the VM: gVisor, no network for the check, the model network for t
   process.env.PATH = `${bin}:${PATH}`;
   try {
     const r = dockerCheckRunner({ image: 'verify-check:t', sitesDir: '/srv/sites', rubricsDir: '/srv/ia', modelUrl: 'http://172.30.0.1:8790/model/v1beta' });
-    await r.check({ id: 'abc', dir: '/srv/checks/chk_abc', file: 'x.js', timeoutMs: 5000 });
+    await r.check({ id: 'abc', dir: '/srv/checks/chk_abc', file: 'x.js', spec: 'check.json', timeoutMs: 5000 });
     await r.review({ id: 'abc', dir: '/srv/checks/chk_abc', file: 'x.js', token: 'chk_TOKEN', timeoutMs: 5000 });
   } finally { process.env.PATH = PATH; }
   const [check, review] = readFileSync(record, 'utf8').trim().split('\n').map(l => JSON.parse(l));
@@ -218,6 +219,7 @@ await test('on the VM: gVisor, no network for the check, the model network for t
     assert.ok(!c.args.join(' ').includes('chk_TOKEN'), 'the token is not on the command line');
   }
   assert.equal(after(check.args, '--network'), 'none');
+  assert.equal(after(check.args, '--spec'), '/job/check.json', 'where it runs, and the person\'s pages, from the read-only job folder');
   assert.equal(check.token, null);
   assert.equal(after(review.args, '--network'), 'ai4a11y-chk');
   assert.equal(review.token, 'chk_TOKEN');
@@ -247,6 +249,26 @@ await test('run.mjs reviews one file: the skill\'s reviewer instructions, what i
   assert.match(out.report, /Task names the file: true\. About: true\. Check: true\. Failing run: true\. Rubrics offered: 10\./);
   assert.deepEqual(keys, ['chk_job_token'], 'the model call carried the job token, through the proxy');
   assert.ok(!existsSync(path.resolve(here, '../../tools/core-adapters/.check/check-bigger-buttons.js')), 'its copy is removed');
+});
+
+await test('a page the browser saved as MHTML becomes a copy served at its own address', () => {
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 1, 2]);
+  const mhtml = [
+    'From: <Saved by Blink>', 'Snapshot-Content-Location: https://scholar.example/citations?user=1', 'Subject: Ada', 'MIME-Version: 1.0',
+    'Content-Type: multipart/related;', '\ttype="text/html";', '\tboundary="----MultipartBoundary--x"', '',
+    '------MultipartBoundary--x', 'Content-Type: text/html', 'Content-ID: <frame-1@mhtml.blink>', 'Content-Transfer-Encoding: quoted-printable',
+    'Content-Location: https://scholar.example/citations?user=1', '',
+    '<html><body><p class=3D"gsc">A long line that is folded=', ' here</p></body></html>',
+    '------MultipartBoundary--x', 'Content-Type: image/png', 'Content-Transfer-Encoding: base64', 'Content-Location: https://scholar.example/logo.png', '',
+    png.toString('base64'), '',
+    '------MultipartBoundary--x--', '',
+  ].join('\r\n');
+  const copy = copyFromMhtml(Buffer.from(mhtml, 'latin1'), { url: 'https://scholar.example/citations?user=1' });
+  const page = copy.entries['https://scholar.example/citations?user=1'];
+  assert.equal(page.headers['content-type'], 'text/html');
+  assert.equal(copy.inline[page.body].toString(), '<html><body><p class="gsc">A long line that is folded here</p></body></html>');
+  assert.deepEqual(copy.inline[copy.entries['https://scholar.example/logo.png'].body], png);
+  assert.throws(() => copyFromMhtml(Buffer.from('<p>not saved</p>')), /not MHTML/);
 });
 
 for (const s of servers) { s.closeAllConnections?.(); s.close(); }

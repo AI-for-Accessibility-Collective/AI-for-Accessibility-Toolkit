@@ -53,6 +53,7 @@ import { createRequire } from 'node:module';
 import { build } from 'esbuild';
 import { chromium } from 'playwright';
 import { prepareSite, serveFromCopy, serveFromCopyPuppeteer, VERIFIER_UA } from './sites.mjs';
+import { copyFromMhtml } from './mhtml.mjs';
 import { buildPreviewScript, previewTeardownScript } from '../../extension/runtime/scripts.js';
 import { rewriteExports, instantiateWebModule } from '../../toolkit/protocol/adapter/package.js';
 import { buildPrompt } from '../../toolkit/blocks/ai/prompts.js';
@@ -302,7 +303,8 @@ export async function openVerifier({ headless = true } = {}) {
     // A real page is served from the verifier's copy of it (sites.mjs): no
     // visit to the site, and the same page on every run.
     let copy = null;
-    if (live) { try { copy = await prepareSite(browser, spec.page); } catch (e) { return { status: 'unreachable', message: e.message.slice(0, 200), errors: [] }; } }
+    // A page the person saved in their browser (spec.copy, an MHTML file: mhtml.mjs), else the verifier's own recording.
+    if (live) { try { copy = spec.copy ? copyFromMhtml(readFileSync(spec.copy), { url: spec.page }) : await prepareSite(browser, spec.page); } catch (e) { return { status: 'unreachable', message: e.message.slice(0, 200), errors: [] }; } }
     // A live site's Content-Security-Policy would block the injected scripts, as the extension's user scripts are not.
     const context = await browser.newContext({ viewport: spec.viewport || { width: 1280, height: 800 }, reducedMotion: spec.reducedMotion || 'no-preference', bypassCSP: live, ...(live ? { userAgent: VERIFIER_UA, serviceWorkers: 'block' } : {}) });
     if (copy) await serveFromCopy(context, copy);
@@ -431,7 +433,7 @@ export async function openVerifier({ headless = true } = {}) {
     if (!live && (!spec.page || !existsSync(path.resolve(CORE_PAGES, spec.page)))) throw new Error(`page must be a file in ${path.relative(ROOT, CORE_PAGES)}/ or an https URL (got ${spec.page})`);
     const url = live ? spec.page : `${base}/core/${spec.page}`;
     const { installHelpers, installListenerLog } = interA11y().inpage;
-    const copy = live ? await prepareSite(browser, url) : null;
+    const copy = live ? (spec.copy ? copyFromMhtml(readFileSync(spec.copy), { url }) : await prepareSite(browser, url)) : null;
     const b = await puppeteerBrowser();
     const pages = new Set();
     let aiCalls = 0;

@@ -142,10 +142,20 @@ reach it) and asks `GET /checks/<id>` for the result
   verify image's `check` target (`scripts/verify-adapters/Dockerfile`, the
   repository and its packages baked in): gVisor, `--network none`, no
   capabilities, `no-new-privileges`, 4 CPUs, 6 GB, removed when it ends.
-  The adapter is mounted read-only at `/job`; the recorded copies of real
+  The adapter is mounted read-only at `/job`, with `check.json` (its URL
+  patterns; for the sidebar's adapters, the copies of the person's pages
+  it is for and its preview's checks, `run.mjs --spec`); the recorded copies of real
   sites (`AGENT_CHECK_SITES`, default `<data>/verify-sites`) read-only at
   `/sites`, served with `VERIFY_SITES=offline` (no visit, ever). It is
   stopped after 20 minutes (`AGENT_CHECK_MINUTES`).
+- **An adapter for some sites** (URL patterns that do not cover every
+  site) skips the test pages, which do not have what it changes. The
+  sidebar saves the page as MHTML (`chrome.pageCapture`) before the first
+  preview on it in a chat, where the person shares the page source, and
+  sends it to `POST /agent/chats/:id/page-copy`; it is kept with the chat's
+  page data (`page-data/<chat>/<time>-copy.mhtml`, at most 8 MB). The
+  background check runs the adapter on the latest copy of each of its pages
+  (up to five) with the checks its preview passed, and it must apply there.
 - **The review** (with `--review`) is `run.mjs --review-file` in a second
   one-shot container on the network `ai4a11y-chk`, which reaches the
   host's sandbox port and nothing else ([vm/setup.sh](vm/setup.sh)). Its

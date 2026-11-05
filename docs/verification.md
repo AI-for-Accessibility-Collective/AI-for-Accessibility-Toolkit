@@ -60,12 +60,23 @@ Steps 1 to 8 need Chromium (`npx playwright install chromium`).
   ```bash
   node scripts/verify-adapters/run.mjs --check path/to/adapter.js \
     [--options '{"size": 44}'] [--personal '{"fontScale": 150}'] \
-    [--pages a.html,b.html] [--no-sites] [--out report.json]
+    [--pages a.html,b.html] [--no-sites] [--spec check.json] [--out report.json]
   ```
 
   On a page it is not for, `enable()` returning false is fine. If it applies
   on none of the test pages, the result says so: give it a page with the
   barrier it is for.
+
+  `--spec` names a JSON file: `runsOn` (the adapter's URL patterns),
+  `copies` (pages saved as MHTML, `{url, file}`, the file relative to the
+  spec) and `checks` (`{name, code}`, as a preview's). An adapter whose
+  `runsOn` names some sites, not every site, is not run on the test pages,
+  which do not have what it changes, nor on the recorded sites it does not
+  match. It runs on each copy, served at its own address, also narrow and
+  with reduced motion, with those checks, and there it must apply and its
+  checks must pass after `enable()`. The assistant sidebar saves such a
+  copy when the person shares the page source and an adapter is previewed
+  on the page (`agent-host/src/page-data.js`).
 - **The core adapters**, with their own checks:
   `node scripts/verify-adapters/run.mjs --replay --core [id ...]`.
 - **Step 9 in a coding agent**: the `ai4a11y-toolkit` skill does it after an
@@ -88,6 +99,8 @@ node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--
 - **What runs.** Steps 2 to 8, as `run.mjs --check` runs them, on the
   adapter's current revision: every test page, each also on a narrow
   screen and with reduced motion, and the recorded copy of every real page.
+  An adapter whose URL patterns name some sites only runs on the recorded
+  pages of those sites instead (`--spec`, above).
   With `--review`, step 9 as well: an independent reviewer (opencode with
   Gemini) that did not write the adapter reads it and tries it. Its
   instructions are the skill's reviewer's (`toolkit/scripts/adapter-reviewer.md`)

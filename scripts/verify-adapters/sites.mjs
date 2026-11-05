@@ -210,7 +210,8 @@ function lookup(rec, url) {
   }
   return rec.paths.get(url.split(/[?#]/)[0]) || null;
 }
-const bodyOf = (rec, e) => readFileSync(path.join(CACHE, keyOf(rec.url), 'bodies', e.body));
+// A copy read from a saved page (mhtml.mjs) keeps its bodies in memory.
+const bodyOf = (rec, e) => rec.inline?.[e.body] || readFileSync(path.join(CACHE, keyOf(rec.url), 'bodies', e.body));
 
 /** Serve a Playwright context from the copy; anything not in it fails, as if offline. */
 export async function serveFromCopy(context, rec) {

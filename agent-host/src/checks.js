@@ -20,7 +20,8 @@
 //
 //   <data>/checks/<checkId>/
 //     job.json   who asked, the adapter (no code), status, and the result
-//     in/        the adapter, what it is for, the check's report (read-only in the containers)
+//     in/        the adapter, what it is for (about.txt; check.json, with copies/
+//                of the person's pages it is for), the check's report (read-only in the containers)
 //     out/       the check's report.json (removed once read)
 //     review/    the reviewer's report (removed once read)
 // in/, out/ and review/ are removed when the job ends; job.json is kept for
@@ -31,7 +32,7 @@
 // container is stopped. onChange hears every change of a job's status.
 
 import { spawn, execFile } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, renameSync, chmodSync, statSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, renameSync, chmodSync, statSync, existsSync, copyFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { MAX_PACKAGE_CODE } from '../../toolkit/protocol/adapter/package.js';
@@ -42,6 +43,8 @@ const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 const KEEP_MS = 7 * 24 * 3600_000;
 const MAX_REPORT = 4_000_000;
 const MAX_REVIEW_TEXT = 40_000;
+const MAX_COPIES = 5;
+const MAX_OWN_CHECKS = 8;
 
 const httpError = (status, code, message) => Object.assign(new Error(message), { status, code });
 
@@ -64,7 +67,11 @@ function trimReport(r) {
   const runs = Array.isArray(r?.runs) ? r.runs.slice(0, 400) : [];
   return {
     at: clip(r?.at, 40),
-    summary: r?.summary && typeof r.summary === 'object' ? Object.fromEntries(['passed', 'failed', 'skipped', 'appliedOnTestPages', 'testPages'].map((k) => [k, Number(r.summary[k]) || 0])) : null,
+    summary: r?.summary && typeof r.summary === 'object' ? {
+      ...Object.fromEntries(['passed', 'failed', 'skipped', 'appliedOnTestPages', 'testPages'].map((k) => [k, Number(r.summary[k]) || 0])),
+      // Made for some sites: checked on the person's pages instead of the test pages.
+      ...(r.summary.narrow === true ? { narrow: true, ...Object.fromEntries(['ownPages', 'appliedOnOwnPages', 'ownRunsFailed', 'ownChecks'].map((k) => [k, Number(r.summary[k]) || 0])) } : {}),
+    } : null,
     notes: (Array.isArray(r?.notes) ? r.notes : []).slice(0, 10).map((n) => clip(n, 400)),
     runs: runs.map((x) => ({
       name: clip(x?.name, 200), status: ['pass', 'fail', 'skip'].includes(x?.status) ? x.status : 'fail', result: clip(x?.result, 40),
@@ -113,11 +120,11 @@ export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, ru
 
   return {
     kind: 'docker',
-    check({ id, dir, file, timeoutMs, signal }) {
+    check({ id, dir, file, spec, timeoutMs, signal }) {
       return runProcess('docker', ['run', '--rm', '--name', name(id, 'check'), ...limits, '--network', 'none',
         '-v', `${path.join(dir, 'in')}:/job:ro`, '-v', `${path.join(dir, 'out')}:/out`, '-v', `${sitesDir}:/sites:ro`,
         '-e', 'VERIFY_SITES=offline', '-e', 'VERIFY_SITE_CACHE=/sites',
-        image, 'node', 'scripts/verify-adapters/run.mjs', '--check', `/job/${file}`, '--out', '/out/report.json'],
+        image, 'node', 'scripts/verify-adapters/run.mjs', '--check', `/job/${file}`, ...(spec ? ['--spec', `/job/${spec}`] : []), '--out', '/out/report.json'],
       { env: baseEnv(), timeoutMs, onTimeout: stop(id, 'check'), signal });
     },
     review({ id, dir, file, token, timeoutMs, signal }) {
@@ -153,8 +160,8 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
   const env = (extra) => baseEnv({ VERIFY_SITES: 'offline', VERIFY_SITE_CACHE: sitesDir, INTERA11Y_DIR: rubricsDir, ...extra });
   return {
     kind: 'local',
-    check({ dir, file, timeoutMs, signal }) {
-      return runProcess(node, [run, '--check', path.join(dir, 'in', file), '--out', path.join(dir, 'out', 'report.json')], { cwd: repoDir, env: env(), timeoutMs, signal });
+    check({ dir, file, spec, timeoutMs, signal }) {
+      return runProcess(node, [run, '--check', path.join(dir, 'in', file), ...(spec ? ['--spec', path.join(dir, 'in', spec)] : []), '--out', path.join(dir, 'out', 'report.json')], { cwd: repoDir, env: env(), timeoutMs, signal });
     },
     review({ dir, file, token, timeoutMs, signal }) {
       return runProcess(node, [run, '--agent', '--sandboxed', '--review-file', path.join(dir, 'in', file), '--about', path.join(dir, 'in', 'about.txt'),
@@ -208,8 +215,12 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     };
   }
 
-  /** A job from the toolkit service: { checkId, review, adapter: { key, revision, name, description, urlPatterns, supportAreas, code } }. */
-  function submit(uid, body) {
+  /**
+   * A job from the toolkit service: { checkId, review, adapter: { key, revision, name, description, urlPatterns, supportAreas, code } }.
+   * From this host only (never from a request body): `own`, the person's own
+   * pages to check it on, { copies: [{url, file}] (saved MHTML on this host), checks: [{name, code}] }.
+   */
+  function submit(uid, body, own = {}) {
     assertUid(uid);
     const id = String(body?.checkId || '');
     const dir = dirOf(id);
@@ -231,13 +242,23 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       `For: ${(Array.isArray(a.supportAreas) ? a.supportAreas : []).slice(0, 10).map((p) => clip(p, 40)).join(', ') || '(not given)'}`,
     ].join('\n');
     writeFileSync(path.join(dir, 'in', 'about.txt'), `${about}\n`);
+    // What run.mjs --spec reads: where it runs (an adapter for some sites
+    // only is not run on the test pages), copies of the person's pages there, and its own checks.
+    const copies = (Array.isArray(own.copies) ? own.copies : []).filter((c) => /^https?:\/\//.test(c?.url || '') && c.file && existsSync(c.file)).slice(0, MAX_COPIES);
+    if (copies.length) mkdirSync(path.join(dir, 'in', 'copies'));
+    copies.forEach((c, i) => copyFileSync(c.file, path.join(dir, 'in', 'copies', `${i}.mhtml`)));
+    writeFileSync(path.join(dir, 'in', 'check.json'), JSON.stringify({
+      runsOn: (Array.isArray(a.urlPatterns) ? a.urlPatterns : []).slice(0, 20).map((p) => clip(p, 200)),
+      copies: copies.map((c, i) => ({ url: clip(c.url, 2000), file: `copies/${i}.mhtml` })),
+      checks: (Array.isArray(own.checks) ? own.checks : []).slice(0, MAX_OWN_CHECKS).filter((c) => typeof c?.code === 'string').map((c) => ({ name: clip(c.name, 100), code: c.code.slice(0, 3000) })),
+    }));
     const job = {
-      checkId: id, uid, review: body.review === true, file, status: 'queued', submittedAt: new Date(now()).toISOString(),
+      checkId: id, uid, review: body.review === true, file, spec: 'check.json', copies: copies.length, status: 'queued', submittedAt: new Date(now()).toISOString(),
       adapter: { key: clip(a.key, 200), revision: Number(a.revision) || null, name: clip(a.name, 200) },
     };
     saveJob(job);
     queue.push(id);
-    log?.info('check.queued', { uid, checkId: id, review: job.review, codeBytes: code.length, position: position(id) });
+    log?.info('check.queued', { uid, checkId: id, review: job.review, codeBytes: code.length, copies: copies.length, position: position(id) });
     setImmediate(pump);
     return view(job);
   }
@@ -271,7 +292,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     log?.info('check.started', { uid: job.uid, checkId: id, review: job.review });
     try {
       for (const sub of ['out', 'review']) { mkdirSync(path.join(dir, sub), { recursive: true }); chmodSync(path.join(dir, sub), 0o777); }
-      const c = await runner.check({ id: id.slice(4), dir, file: job.file, timeoutMs: checkTimeoutMs, signal: ctl.signal });
+      const c = await runner.check({ id: id.slice(4), dir, file: job.file, spec: job.spec, timeoutMs: checkTimeoutMs, signal: ctl.signal });
       if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
       const report = readJson(path.join(dir, 'out', 'report.json'));
       if (!report) {

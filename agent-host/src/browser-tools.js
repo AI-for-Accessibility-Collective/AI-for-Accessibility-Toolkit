@@ -237,6 +237,14 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     return checks;
   }
 
+  function keepChecks(uid, chatId, hash, checks) {
+    try {
+      const dir = path.join(workDir(uid), '..', 'previews', chatId);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(path.join(dir, `${hash}.checks.json`), JSON.stringify(checks));
+    } catch (e) { log?.warn('preview.checks-not-kept', { uid, chatId, error: e.message }); }
+  }
+
   /** Whether a preview record shows the adapter working, and if not, why (plain words for the person). */
   function verdict(rec, code) {
     if (!rec) return { ok: false, why: 'has not been previewed on your page' };
@@ -323,6 +331,8 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
       const shift = Number.isFinite(a.shift) ? Math.max(0, Math.round(a.shift * 1000) / 1000) : null;
       const axe = a.status === 'applied' ? axeOf(a.axe) : undefined;
       const rec = record({ status: a.status || 'failed', changes, shift, checks: results, ...(axe ? { axe } : {}) });
+      // The checks themselves, by the code they checked: the background check runs them again on the copy of this page.
+      keepChecks(uid, chatId, rec.hash, checks);
       const passed = results.filter(c => c.after).length;
       const added = problems(axe?.added);
       const tally = (results.length ? ` · ${passed} of ${results.length} checks pass` : '')

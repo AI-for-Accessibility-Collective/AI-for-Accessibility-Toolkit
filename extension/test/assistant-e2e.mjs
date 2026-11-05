@@ -53,7 +53,11 @@ const agent = REMOTE ? null : createHost({
     checkRunner: {
       kind: 'local',
       async check({ dir }) {
-        writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [{ name: 'buttons.html', status: 'pass', result: 'applied', problems: [] }], summary: { passed: 3, failed: 0, skipped: 1, appliedOnTestPages: 1, testPages: 14 }, notes: [] }));
+        // An adapter for one site, with a copy of the person's page there, is checked on that copy.
+        const spec = JSON.parse(readFileSync(path.join(dir, 'in', 'check.json'), 'utf8'));
+        const summary = spec.copies.length ? { passed: 3, failed: 0, skipped: 0, appliedOnTestPages: 0, testPages: 0, narrow: true, ownPages: spec.copies.length, appliedOnOwnPages: spec.copies.length, ownRunsFailed: 0, ownChecks: spec.checks.length }
+          : { passed: 3, failed: 0, skipped: 1, appliedOnTestPages: 1, testPages: 14 };
+        writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [{ name: 'buttons.html', status: 'pass', result: 'applied', problems: [] }], summary, notes: [] }));
         return { code: 0, timedOut: false, stderr: '' };
       },
       async review({ dir }) {
@@ -235,7 +239,8 @@ try {
     assert.match(shown, /Changed: yes\./, 'the preview counted what enable() changed in the page');
     assert.ok(!/export const|```/.test(shown), 'no code in the sidebar');
     // Usable at once, then checked in the background; the full review when asked.
-    await panel.locator('#ready-list', { hasText: 'Background check passed: nothing broke in 3 runs (1 skipped: a site could not be reached). It made its change on 1 of its 14 test pages.' }).waitFor();
+    // Made for this site: checked on the copy of the page, not on the general test pages.
+    await panel.locator('#ready-list', { hasText: `Background check passed: nothing broke in 3 runs. On the copy of your page on ${new URL(shop).host} it made its change and its check passed, also narrow and with reduced motion. The general test pages were skipped: they do not have what it changes.` }).waitFor();
     await panel.getByRole('button', { name: 'Full review', exact: true }).click();
     await panel.locator('#ready-list', { hasText: 'Full review: no issues found.' }).waitFor();
     // What a screen reader heard: each change once.
@@ -253,6 +258,12 @@ try {
     const files = await readdir(path.join(chatDir, chatId));
     assert.ok(files.some(f => f.endsWith('-page.jpg')), 'the screenshot was kept');
     assert.match(readFileSync(path.join(chatDir, chatId, files.find(f => f.endsWith('-page.json'))), 'utf8'), /Save for later/);
+    // With the page source shared, a copy of the page as it was before the preview, for the background check.
+    const copy = JSON.parse(readFileSync(path.join(chatDir, chatId, files.find(f => f.endsWith('-copy.json'))), 'utf8'));
+    assert.ok(copy.url.startsWith(shop), 'a copy of the chat\'s page');
+    const mhtml = readFileSync(path.join(chatDir, chatId, copy.file), 'latin1');
+    assert.match(mhtml, /multipart\/related/);
+    assert.ok(!/data-big|BiggerButtons/.test(mhtml), 'saved before the preview changed it');
 
     // The chat is named after its first reply.
     await panel.locator('#chat-select option', { hasText: 'Stand-in title: build' }).waitFor({ state: 'attached' });
@@ -325,6 +336,7 @@ try {
     assert.match(await panel.locator('#preview-label').innerText(), /Previews go on the page when you say so/);
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the installed adapter on the page');
     await panel.locator('#ready-list', { hasText: 'In your account: it runs in this browser' }).waitFor();
+    assert.equal(await panel.getByRole('button', { name: 'In your account' }).isDisabled(), true, 'nothing to add until a newer version');
 
     // A newer version replaces it in the account once it passes its background check.
     // The switch on with nothing to put back: the next preview goes on without asking.
@@ -336,6 +348,7 @@ try {
     const latest = await until(async () => { const c = await chatNow(); const a = c.adapters[0]; return !c.busy && a.check?.status === 'passed' && a.version > 2 && a.version; }, 'the newest version checked', 30000);
     await panel.locator('#status', { hasText: `Updated “Bigger buttons” in your account to version ${latest}.` }).waitFor({ timeout: 30000 });
     await panel.locator('#ready-list', { hasText: 'In your account: it runs in this browser' }).waitFor();
+    assert.equal(await panel.getByRole('button', { name: 'In your account' }).isDisabled(), true);
 
     // Chats keep their history: a new one starts empty, the old one comes back.
     const firstChat = await panel.locator('#chat-select').inputValue();

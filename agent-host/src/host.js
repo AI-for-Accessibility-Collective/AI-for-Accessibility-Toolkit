@@ -71,7 +71,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
   const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, perMinute, log });
   // After adapter_ready: the background check, the full review on request, and fixes of what they find.
-  const verification = createVerification({ checks, chats, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });
+  const verification = createVerification({ checks, chats, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });
   checks?.onChange(verification.onChange);
   const tools = createBrowserTools({ uidForToken: accounts.uidForToken, chats, requests, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log, verification });
 
@@ -129,6 +129,13 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
         pageType: typeof b.pageType === 'string' ? b.pageType : undefined, areas: Array.isArray(b.areas) ? b.areas.map(String) : undefined }));
     }
     if ((r = /^\/agent\/chats\/([^/]+)\/stop$/.exec(p)) && m === 'POST') return send(res, 200, chats.stop(uid, r[1]));
+    // A copy of the page an adapter was previewed on, saved by the person's browser (page source shared): its background check runs on it.
+    if ((r = /^\/agent\/chats\/([^/]+)\/page-copy$/.exec(p)) && m === 'POST') {
+      chats.get(uid, r[1]);
+      const saved = pageData.copy(uid, r[1], await body(req));
+      log.info('page.copy-saved', { uid, chatId: r[1], bytes: saved.bytes });
+      return send(res, 201, { ok: true, bytes: saved.bytes });
+    }
     if ((r = /^\/agent\/chats\/([^/]+)\/consent$/.exec(p)) && m === 'POST') {
       const b = await body(req);
       chats.setConsent(uid, r[1], b.origin, b.level);
