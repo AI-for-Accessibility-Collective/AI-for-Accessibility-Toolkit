@@ -350,6 +350,21 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       }
     }
 
+    // The agent host's adapter checks, for the admin console's Checks tab:
+    // what waits, what runs where (the VM or Cloud Run), what finished.
+    if (pathname === '/admin/checks' && method === 'GET') {
+      if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) return sendJSON(res, 401, { error: 'unauthorized' });
+      if (!agentHost.url || !agentHost.secret) return sendJSON(res, 503, { error: 'agent-unavailable', message: 'The assistant is not set up on this toolkit.' });
+      try {
+        const hours = Math.min(168, Number(new URL(req.url, 'http://x').searchParams.get('hours')) || 24);
+        const up = await (agentHost.fetch || fetch)(`${String(agentHost.url).replace(/\/+$/, '')}/admin/checks?hours=${hours}`, { headers: { authorization: `Bearer ${agentHost.secret}` }, signal: AbortSignal.timeout(15_000) });
+        return sendJSON(res, up.status, await up.json().catch(() => ({ error: 'bad-answer' })));
+      } catch (e) {
+        log.warn('admin.checks-unreachable', { error: e });
+        return sendJSON(res, 502, { error: 'agent-unreachable', message: 'The agent host is not answering.' });
+      }
+    }
+
     if (pathname === ADMIN_ACCOUNTS_PREFIX || pathname.startsWith(ADMIN_ACCOUNTS_PREFIX + '/')) {
       if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
         return sendJSON(res, 401, { error: 'unauthorized' });

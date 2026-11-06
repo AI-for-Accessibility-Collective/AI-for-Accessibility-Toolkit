@@ -27,7 +27,7 @@ import { createVerification } from './verification.js';
 import { createBrowserTools } from './browser-tools.js';
 import { createPageData } from './page-data.js';
 import { dockerRunner, localRunner } from './runner.js';
-import { createChecks, dockerCheckRunner, localCheckRunner } from './checks.js';
+import { createChecks, dockerCheckRunner, localCheckRunner, keptLog } from './checks.js';
 import { burstRunner, cloudRunClient } from './burst.js';
 import { fetchRubrics as fetchUpstreamRubrics } from '../../scripts/verify-adapters/intera11y-upstream.mjs';
 
@@ -67,10 +67,12 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   const checkRunner = givenCheckRunner || (runnerKind === 'local'
     ? localCheckRunner({ repoDir, sitesDir: sites, rubricsDir, modelUrl, opencodeBin, script: checkScript })
     : checkImage ? dockerCheckRunner({ image: checkImage, network: checkNetwork, sitesDir: sites, rubricsDir, modelUrl, log }) : null);
+  // The checks' log, also kept on disk (<data>/checks/events.jsonl).
+  const checkLog = keptLog(log, path.join(dataDir, 'checks', 'events.jsonl'));
   // Checks beyond this host's CPUs: Cloud Run job executions, when set up.
   const burst = givenBurst || (checkRunner && burstConfig?.job && burstConfig.hostUrl
-    ? burstRunner({ cloud: cloudRunClient({ ...burstConfig, ...(fetch ? { fetch } : {}) }), hostUrl: burstConfig.hostUrl, max: burstConfig.max, cpus: burstConfig.cpus, tasks: burstConfig.tasks, log }) : null);
-  const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs, parallel: checkParallel,
+    ? burstRunner({ cloud: cloudRunClient({ ...burstConfig, ...(fetch ? { fetch } : {}) }), hostUrl: burstConfig.hostUrl, max: burstConfig.max, cpus: burstConfig.cpus, tasks: burstConfig.tasks, log: checkLog }) : null);
+  const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log: checkLog, checkTimeoutMs, reviewTimeoutMs, parallel: checkParallel,
     localCpus: checkCpus, reviewParallel, burst,
     fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;
   // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
@@ -108,6 +110,11 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     // A Cloud Run check fetching its files and sending its report: its own token, not the shared secret.
     if (p.startsWith('/burst/')) return burst ? burst.handle(req, res, p) : send(res, 404, { error: 'not-found' });
     if (!secretOk(req.headers.authorization)) return send(res, 401, { error: 'unauthorized' });
+    // The toolkit's admin console: the checks waiting, running and finished, for every account.
+    if (m === 'GET' && p === '/admin/checks') {
+      if (!checks) return send(res, 503, { error: 'checks-unavailable', message: 'Checks are not set up on this host.' });
+      return send(res, 200, checks.overview({ hours: Math.min(168, Number(url.searchParams.get('hours')) || 24) }));
+    }
     const uid = assertUid(String(req.headers['x-ai4a11y-uid'] || ''));
     let r;
     if (m === 'GET' && p === '/agent/status') {

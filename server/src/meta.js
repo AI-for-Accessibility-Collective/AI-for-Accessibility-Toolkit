@@ -78,6 +78,7 @@ export const HTTP_ENDPOINTS = [
   { method: 'GET', path: '/admin/tokens', auth: 'admin', purpose: 'list {id, uid, label, kind, createdAt, expiresAt?, revoked} (no token values)' },
   { method: 'DELETE', path: '/admin/tokens/{id}', auth: 'admin', purpose: 'revoke' },
   { method: 'GET', path: '/admin/users', auth: 'admin', purpose: 'list {users: uid[]}, every uid holding stored state' },
+  { method: 'GET', path: '/admin/checks', auth: 'admin', purpose: "the agent host's adapter checks (?hours=24, at most 168) -> {capacity, queued, running, recent}: what waits, what runs where (VM or Cloud Run), what finished; 503 without an agent host" },
   { method: 'DELETE', path: '/admin/users/{uid}', auth: 'admin', purpose: "delete that uid's partition and revoke its tokens -> {ok, uid, revokedTokens} (a count); 404 when the uid had neither data nor live tokens" },
   { method: 'GET', path: '/admin', auth: 'admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts, then attaches the cached credential to the page\'s own fetches; browser POSTs must be same-origin JSON)', purpose: 'admin console: accounts, tokens, stored data' },
 ];

@@ -336,7 +336,7 @@ await test('checks run here while this host has CPUs for them, then on Cloud Run
   const where = [], release = [];
   const report = (dir) => writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [], summary: { passed: 1, failed: 0, skipped: 0, appliedOnTestPages: 0, testPages: 0 } }));
   const held = (name) => async ({ id, dir }) => { where.push([id, name]); await new Promise(r => release.push(r)); report(dir); return { code: 0, timedOut: false, stderr: '' }; };
-  const checks = createChecks({ dataDir: dir4, rubricsDir: path.join(dir4, 'intera11y'), log, localCpus: 48,
+  const checks = createChecks({ dataDir: dir4, rubricsDir: path.join(dir4, 'intera11y'), log, typical: { here: 60_000, burst: 60_000 }, localCpus: 48,
     runner: { cpus: 24, check: held('here'), async review({ dir }) { writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Fine.' })); return { code: 0, timedOut: false, stderr: '' }; } },
     burst: { max: 1, check: held('burst') } });
   const ids = ['c1', 'c2', 'c3', 'c4'].map((x) => `chk_00000000000000${x}`);
@@ -355,6 +355,23 @@ await test('checks run here while this host has CPUs for them, then on Cloud Run
   while (release.length) release.shift()();
   await until(() => checks.idle());
   assert.ok(ids.every((id) => checks.get('ada', id).status === 'done'));
+});
+
+await test('Cloud Run only when waiting here would take longer: its containers take time to start', async () => {
+  const dir7 = mkdtempSync(path.join(tmpdir(), 'agent-checks-worth-'));
+  const where = [], release = [];
+  const held = (name) => async ({ id, dir }) => { where.push([id, name]); await new Promise(r => release.push(r)); writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [] })); return { code: 0, timedOut: false, stderr: '' }; };
+  // A check takes a minute here and three on Cloud Run: two slots here.
+  const checks = createChecks({ dataDir: dir7, rubricsDir: path.join(dir7, 'intera11y'), log, localCpus: 48, typical: { here: 60_000, burst: 180_000 },
+    runner: { cpus: 24, check: held('here') }, burst: { max: 5, check: held('burst') } });
+  const ids = Array.from({ length: 8 }, (_, i) => `chk_000000000000007${i}`);
+  for (const id of ids) checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {};' } });
+  await until(() => where.length === 4);
+  await new Promise(r => setTimeout(r, 100));
+  // Two here; the next four would wait at most two minutes here, so they wait; the last two would wait three: Cloud Run.
+  assert.deepEqual(where.map(([id, w]) => `${id.slice(-1)}:${w}`), ['0:here', '1:here', '6:burst', '7:burst']);
+  while (where.length < 8 || release.length) { if (release.length) release.shift()(); await new Promise(r => setTimeout(r, 20)); }
+  await until(() => checks.idle());
 });
 
 await test('a check on Cloud Run fetches only its own files with its token, and its report comes back', async () => {
@@ -379,7 +396,7 @@ await test('a check on Cloud Run fetches only its own files with its token, and 
     async cancel() {},
   };
   burst = burstRunner({ cloud, hostUrl, max: 2, cpus: 8, pollMs: 200, log });
-  const checks = createChecks({ dataDir: dir5, rubricsDir: path.join(dir5, 'intera11y'), log, localCpus: 1, burst,
+  const checks = createChecks({ dataDir: dir5, rubricsDir: path.join(dir5, 'intera11y'), log, typical: { here: 60_000, burst: 60_000 }, localCpus: 1, burst,
     runner: { cpus: 24, async check() { throw new Error('not here'); } } });
   const id = 'chk_00000000000000e1';
   checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {}; // ENV' } });
@@ -404,7 +421,7 @@ await test('a check on Cloud Run cannot read outside its own folder, and a wrong
   const asks = [];
   const cloud = { async run(env) { token = env.JOB_TOKEN; return 'executions/x'; }, async state() { return { done: !!ended, failed: true }; }, async cancel() { ended = true; } };
   burst = burstRunner({ cloud, hostUrl: 'http://unused', max: 1, pollMs: 100, log });
-  const checks = createChecks({ dataDir: dir6, rubricsDir: path.join(dir6, 'intera11y'), log, localCpus: 1, burst, checkTimeoutMs: 3000,
+  const checks = createChecks({ dataDir: dir6, rubricsDir: path.join(dir6, 'intera11y'), log, typical: { here: 60_000, burst: 60_000 }, localCpus: 1, burst, checkTimeoutMs: 3000,
     runner: { cpus: 24, async check() { throw new Error('not here'); } } });
   const id = 'chk_00000000000000f1';
   checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {};' } });

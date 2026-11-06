@@ -39,6 +39,10 @@ const agentHost = http.createServer(async (req, res) => {
     jobs.set(body.checkId, { uid: req.headers['x-ai4a11y-uid'], status: 'queued', position: 1, review: body.review });
     return send(202, { check: { checkId: body.checkId, status: 'queued', position: 1 } });
   }
+  if (req.method === 'GET' && req.url.startsWith('/admin/checks')) {
+    return send(200, { capacity: { cpus: 72, cpuUsed: 24, perCheck: 24, burst: { max: 10, running: 0 }, reviews: { max: 8, running: 0 } },
+      running: [{ checkId: 'chk_1', uid: 'ada', adapter: 'Bigger buttons', review: false, where: 'here' }], queued: [], recent: [] });
+  }
   const m = /^\/checks\/([^/]+)$/.exec(req.url);
   if (req.method === 'GET' && m) {
     if (quiet) return send(500, { error: 'busy' });
@@ -248,6 +252,17 @@ await test('neither the code nor a report is in the request log', async () => {
   assert.ok(!log.includes('dataset.big'), 'no code');
   assert.ok(!log.includes('adds target-size'), 'no report');
   assert.ok(log.includes('"event":"check.asked"'));
+});
+
+await test('the admin console sees the host\'s checks: the admin only, with the shared secret to the host', async () => {
+  assert.equal((await fetch(`${svc.base}/admin/checks`)).status, 401);
+  assert.equal((await fetch(`${svc.base}/admin/checks`, { headers: { authorization: `Bearer ${await svc.mint('ada')}` } })).status, 401, 'not a person\'s token');
+  const res = await fetch(`${svc.base}/admin/checks`, { headers: { authorization: `Bearer ${ADMIN}` } });
+  assert.equal(res.status, 200);
+  const o = await res.json();
+  assert.deepEqual([o.capacity.cpuUsed, o.running[0].where], [24, 'here']);
+  const asked = seen.findLast((x) => x.url.startsWith('/admin/checks'));
+  assert.equal(asked.auth, `Bearer ${SECRET}`);
 });
 
 svc.stop();

@@ -512,6 +512,17 @@ await test('the model proxy: sandbox token in, real key out, one model, no rate 
   assert.ok(!config.includes('REAL-KEY') && config.includes(token));
 });
 
+await test('the admin console\'s view of the checks: the shared secret, every account, where each ran; every change kept in the log file', async () => {
+  assert.equal((await fetch(`http://127.0.0.1:${apiPort}/admin/checks`)).status, 401);
+  const o = await (await fetch(`http://127.0.0.1:${apiPort}/admin/checks`, { headers: { authorization: `Bearer ${SECRET}` } })).json();
+  assert.ok(o.capacity && Array.isArray(o.queued) && Array.isArray(o.running));
+  assert.ok(o.recent.length && o.recent.every((r) => r.uid === 'ada' && r.where && r.finishedAt), 'finished checks, with where they ran');
+  assert.ok(!JSON.stringify(o).includes('export const'), 'never code');
+  const kept = readFileSync(path.join(dataDir, 'checks', 'events.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  for (const e of ['check.queued', 'check.started', 'check.done']) assert.ok(kept.some((k) => k.event === e), `${e} kept`);
+  assert.ok(kept.find((k) => k.event === 'check.started').where, 'where it ran');
+});
+
 await test('the browser tools need a sandbox token', async () => {
   const res = await fetch(`http://127.0.0.1:${sandboxPort}/mcp`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' });
   assert.equal(res.status, 401);

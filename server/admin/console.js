@@ -56,7 +56,7 @@ const NOT_SHOWN = {
 
 // ── tabs ───────────────────────────────────────────────────────────────────
 
-const tabs = ['accounts', 'tokens', 'data'];
+const tabs = ['accounts', 'tokens', 'data', 'checks'];
 function showTab(name, focus = false) {
   for (const t of tabs) {
     const tab = $(`tab-${t}`);
@@ -69,6 +69,7 @@ function showTab(name, focus = false) {
   if (name === 'accounts') act(loadAccounts);
   if (name === 'tokens') act(loadTokens);
   if (name === 'data') act(loadUsers);
+  if (name === 'checks') act(loadChecks);
 }
 for (const t of tabs) {
   $(`tab-${t}`).addEventListener('click', () => showTab(t));
@@ -275,6 +276,51 @@ async function loadUsers() {
   }
 }
 $('data-refresh').addEventListener('click', () => act(loadUsers));
+
+// ── checks ─────────────────────────────────────────────────────────────────
+
+const WHERE = { here: 'VM', burst: 'Cloud Run', none: '—' };
+const seconds = (from, to) => (from && to ? `${Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / 1000))} s` : '');
+const kindOf = (c) => (c.review ? (c.reused ? 'Full review (check reused)' : 'Full review') : 'Check');
+
+function fillTable(id, heads, rows, empty) {
+  const table = $(id);
+  table.replaceChildren();
+  const head = element('tr');
+  for (const h of heads) { const th = element('th', '', h); th.scope = 'col'; head.append(th); }
+  table.append(element('thead'));
+  table.tHead.append(head);
+  const body = element('tbody');
+  if (!rows.length) { const tr = element('tr'); const td = element('td', 'empty', empty); td.colSpan = heads.length; tr.append(td); body.append(tr); }
+  for (const cells of rows) { const tr = element('tr'); for (const c of cells) tr.append(element('td', '', String(c ?? ''))); body.append(tr); }
+  table.append(body);
+}
+
+async function loadChecks() {
+  const o = await api('/admin/checks');
+  const c = o.capacity;
+  $('checks-capacity').textContent = `VM: ${c.cpuUsed} of ${c.cpus} CPUs in use (${c.perCheck} a check). `
+    + (c.burst ? `Cloud Run: ${c.burst.running} of ${c.burst.max} checks. ` : 'Cloud Run: not set up. ')
+    + `Reviews: ${c.reviews.running} of ${c.reviews.max}. `
+    + (c.typicalMs ? `A check takes about ${Math.round(c.typicalMs.here / 1000)} s on the VM${c.burst ? ` and ${Math.round(c.typicalMs.burst / 1000)} s on Cloud Run (which starts first), so it goes there only when waiting would take longer` : ''}. ` : '')
+    + `Updated ${new Date().toLocaleTimeString()}.`;
+  const now = new Date().toISOString();
+  fillTable('checks-queued', ['Place', 'Account', 'Adapter', 'Kind', 'Asked', 'Waiting'],
+    o.queued.map((q) => [q.position, q.uid, q.adapter, kindOf(q), when(q.submittedAt), seconds(q.submittedAt, now)]), 'Nothing waiting.');
+  fillTable('checks-running', ['Account', 'Adapter', 'Kind', 'Where', 'Waited', 'Running for'],
+    o.running.map((r) => [r.uid, r.adapter, kindOf(r), WHERE[r.where] || r.where || '', seconds(r.submittedAt, r.startedAt), seconds(r.startedAt, now)]), 'Nothing running.');
+  fillTable('checks-recent', ['Finished', 'Account', 'Adapter', 'Kind', 'Where', 'Waited', 'Took', 'Result'],
+    o.recent.map((r) => [when(r.finishedAt), r.uid, r.adapter, kindOf(r), WHERE[r.where] || r.where || '', seconds(r.submittedAt, r.startedAt), seconds(r.startedAt, r.finishedAt),
+      r.status !== 'done' ? `${r.status}${r.error ? `: ${r.error}` : ''}` : r.review ? (r.verdict ? `review: ${r.verdict}` : 'review: unfinished') : r.failed ? `${r.failed} runs failed` : 'passed']), 'Nothing finished.');
+  $('checks-queued-count').textContent = o.queued.length;
+  $('checks-running-count').textContent = o.running.length;
+  $('checks-recent-count').textContent = o.recent.length;
+}
+$('checks-refresh').addEventListener('click', () => act(loadChecks));
+// While the tab is open and the page is on screen.
+setInterval(() => {
+  if (!$('panel-checks').hidden && $('checks-auto').checked && document.visibilityState === 'visible') loadChecks().catch(() => {});
+}, 10_000);
 
 // ── sign out ───────────────────────────────────────────────────────────────
 

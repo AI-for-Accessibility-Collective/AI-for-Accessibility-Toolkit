@@ -148,13 +148,21 @@ reach it) and asks `GET /checks/<id>` for the result
   runs on the VM while it has CPUs for it (`AGENT_CHECK_CPUS`, 72 of its
   96; a check takes 24, so three at once, and the sandboxes keep the
   rest), else as a Cloud Run job execution (`AGENT_BURST_JOB`, up to
-  `AGENT_BURST_MAX` = 10 at once, [src/burst.js](src/burst.js)), else it
-  waits. Cloud Run gives a task at most 8 CPUs, so a check there is three
+  `AGENT_BURST_MAX` = 10 at once, [src/burst.js](src/burst.js)) when
+  waiting for the VM would take longer (Cloud Run starts its containers
+  first: a check took 163 s there against 36 s on the VM; the host keeps
+  running averages of both), else it waits. Cloud Run gives a task at most 8 CPUs, so a check there is three
   tasks at once (`AGENT_BURST_TASKS`; 24 CPUs, as on the VM), each running
   every third page with all its runs (`run.mjs --shard`); the host merges
   their reports ([check-report.mjs](../scripts/verify-adapters/check-report.mjs)). A review whose check already ran needs no CPUs for it and
   goes ahead; reviews run up to `AGENT_REVIEW_PARALLEL` (8) at once. There
   is no limit on how many a person asks for.
+- **Seen and kept.** The admin console's Checks tab (`/admin/checks` on
+  the service, from `GET /admin/checks` here) shows what waits, what runs
+  where, what finished in the last 24 hours, and the capacity in use. Every
+  change is logged, and the log lines are also kept on disk in
+  `<data>/checks/events.jsonl` (rolled over at 50 MB), so they outlast the
+  host's container; `job.json` keeps where each check ran.
 - **On Cloud Run** the job's image is the check image with the recorded
   site copies baked in ([vm/burst-image.sh](vm/burst-image.sh)); it fetches
   only its own files from the host's API port with a token made for that

@@ -25,6 +25,7 @@
       <button type="button" role="tab" id="tab-accounts" aria-controls="panel-accounts" aria-selected="true">Accounts</button>
       <button type="button" role="tab" id="tab-tokens" aria-controls="panel-tokens" aria-selected="false" tabindex="-1">Tokens</button>
       <button type="button" role="tab" id="tab-data" aria-controls="panel-data" aria-selected="false" tabindex="-1">Stored data</button>
+      <button type="button" role="tab" id="tab-checks" aria-controls="panel-checks" aria-selected="false" tabindex="-1">Checks</button>
     </div>
 
     <section id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts" class="admin-section">
@@ -86,6 +87,26 @@
         <div class="section-heading"><h2 id="data-heading">Stored profiles</h2><button id="data-refresh" class="text-button" type="button">Refresh</button></div>
         <p class="hint">Every uid with data on this toolkit. Deleting a uid’s data also revokes its tokens and disconnects its apps; its account (if any) stays and starts empty at the next sign-in.</p>
         <ul id="users-list" class="stack"></ul>
+      </section>
+    </section>
+
+    <section id="panel-checks" role="tabpanel" aria-labelledby="tab-checks" class="admin-section" hidden>
+      <section class="panel" aria-labelledby="checks-heading">
+        <div class="section-heading"><h2 id="checks-heading">Adapter checks</h2><span class="row-actions"><label class="toggle-control"><input type="checkbox" id="checks-auto" checked> Refresh every 10 seconds</label><button id="checks-refresh" class="text-button" type="button">Refresh</button></span></div>
+        <p class="hint">Background checks and full reviews on the agent host, for every account. A check runs on the agent host’s VM while it has CPUs for it, then on Cloud Run, then waits in line. Every change is also written to the host’s log, <code>checks/events.jsonl</code>.</p>
+        <p id="checks-capacity" class="muted"></p>
+      </section>
+      <section class="panel" aria-labelledby="checks-queued-heading">
+        <div class="section-heading"><h2 id="checks-queued-heading">Waiting</h2><span id="checks-queued-count" class="count">0</span></div>
+        <div style="overflow-x:auto"><table class="data-table" id="checks-queued"></table></div>
+      </section>
+      <section class="panel" aria-labelledby="checks-running-heading">
+        <div class="section-heading"><h2 id="checks-running-heading">Running</h2><span id="checks-running-count" class="count">0</span></div>
+        <div style="overflow-x:auto"><table class="data-table" id="checks-running"></table></div>
+      </section>
+      <section class="panel" aria-labelledby="checks-recent-heading">
+        <div class="section-heading"><h2 id="checks-recent-heading">Finished in the last 24 hours</h2><span id="checks-recent-count" class="count">0</span></div>
+        <div style="overflow-x:auto"><table class="data-table" id="checks-recent"></table></div>
       </section>
     </section>
   </main>

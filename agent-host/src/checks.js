@@ -34,7 +34,7 @@
 // container is stopped. onChange hears every change of a job's status.
 
 import { spawn, execFile } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, renameSync, chmodSync, statSync, existsSync, copyFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, renameSync, chmodSync, statSync, existsSync, copyFileSync, appendFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { MAX_PACKAGE_CODE } from '../../toolkit/protocol/adapter/package.js';
@@ -50,6 +50,28 @@ const MAX_COPIES = 5;
 const MAX_OWN_CHECKS = 8;
 
 const httpError = (status, code, message) => Object.assign(new Error(message), { status, code });
+const MAX_EVENTS_FILE = 50_000_000;
+
+/**
+ * The checks' log, kept: each line also goes to `file` (JSON lines on the
+ * host's disk, beside the jobs), so where a check waited and ran, and how it
+ * ended, outlast a restart of the host's container. Never code or page data:
+ * only what the log lines carry. Rolled over to <file>.1 at 50 MB.
+ */
+export function keptLog(log, file) {
+  mkdirSync(path.dirname(file), { recursive: true });
+  const write = (severity, event, fields) => {
+    try {
+      if (existsSync(file) && statSync(file).size > MAX_EVENTS_FILE) renameSync(file, `${file}.1`);
+      appendFileSync(file, `${JSON.stringify({ time: new Date().toISOString(), severity, event, ...fields })}\n`);
+    } catch { /* the console log still has it */ }
+  };
+  return {
+    info: (e, f = {}) => { write('INFO', e, f); log?.info(e, f); },
+    warn: (e, f = {}) => { write('WARNING', e, f); log?.warn(e, f); },
+    error: (e, f = {}) => { write('ERROR', e, f); log?.error(e, f); },
+  };
+}
 
 function readJson(file, max = MAX_REPORT) {
   try {
@@ -195,14 +217,16 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
  * @param {object} [o.burst]         burstRunner: checks beyond this host's CPUs, on Cloud Run
  * @param {number} [o.localCpus]     this host's CPUs for checks (each takes runner.cpus); else `parallel` checks at once
  * @param {number} [o.reviewParallel] reviews at once (their reviewers mostly wait on the model)
+ * @param {object} [o.typical]       how long a check takes {here, burst} in ms, until checks have run
  *
  * In the order asked: a check runs here while this host has CPUs for it,
- * else on Cloud Run while it has room, else it waits; one that waits keeps
+ * else on Cloud Run while it has room and waiting here would take longer,
+ * else it waits; one that waits keeps
  * the checks after it waiting too. A review whose check already ran needs no
  * CPUs for it and goes ahead of them.
  */
 export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async () => ({ have: [], missing: [] }), log,
-  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, parallel = 1, localCpus, reviewParallel = 8, burst = null, now = () => Date.now(), onChange }) {
+  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, parallel = 1, localCpus, reviewParallel = 8, burst = null, typical = { here: 60_000, burst: 180_000 }, now = () => Date.now(), onChange }) {
   const root = path.join(dataDir, 'checks');
   mkdirSync(root, { recursive: true });
   const queue = [];         // checkIds waiting
@@ -287,7 +311,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     };
     saveJob(job);
     queue.push(id);
-    log?.info('check.queued', { uid, checkId: id, review: job.review, codeBytes: code.length, copies: copies.length, position: position(id) });
+    log?.info('check.queued', { uid, checkId: id, review: job.review, reused: !!job.reused, codeBytes: code.length, copies: copies.length, position: position(id), waiting: queue.length, running: running.size });
     setImmediate(pump);
     return view(job);
   }
@@ -298,14 +322,24 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     return view(job);
   }
 
+  // How long a check takes on this host and on Cloud Run (which starts its
+  // containers first), as running averages: a check goes to Cloud Run only
+  // when waiting for this host's CPUs would take longer.
+  const took = { ...typical };
+  const slots = Math.max(1, Math.floor(cpus / cost));
+  const worthBursting = (ahead) => (Math.floor(ahead / slots) + 1) * took.here + took.here > took.burst;
+
   function pump() {
-    let held = false; // a check is waiting: the checks after it wait too
+    let held = false; // a check waits for this host: the checks after it do not take its place here
+    let ahead = 0;    // checks waiting for this host before this one
     for (let i = 0; i < queue.length;) {
       const id = queue[i];
       const job = readJob(id);
       if (!job || job.status !== 'queued') { queue.splice(i, 1); continue; }
-      const where = job.reused ? 'none' : held ? null : cpuUsed + cost <= cpus ? 'here' : burst && bursting < burst.max ? 'burst' : null;
-      if (!where || (job.review && reviewing >= reviewParallel)) { if (!job.reused) held = true; i++; continue; }
+      const reviewFull = job.review && reviewing >= reviewParallel;
+      const where = reviewFull ? null : job.reused ? 'none' : !held && cpuUsed + cost <= cpus ? 'here'
+        : burst && bursting < burst.max && worthBursting(ahead) ? 'burst' : null;
+      if (!where) { if (!job.reused) { held = true; ahead++; } i++; continue; }
       queue.splice(i, 1);
       if (where === 'here') cpuUsed += cost;
       if (where === 'burst') bursting++;
@@ -313,11 +347,13 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       running.set(id, where);
       // The CPUs (or the Cloud Run room) go back once its check is done; a review goes on with its reviewer.
       let freed = false;
-      const checkDone = () => {
+      const began = now();
+      const checkDone = (ok = false) => {
         if (freed) return;
         freed = true;
         if (where === 'here') cpuUsed -= cost;
         if (where === 'burst') bursting--;
+        if (ok && where !== 'none') took[where] = Math.round(took[where] * 0.7 + (now() - began) * 0.3);
         setImmediate(pump);
       };
       runJob(id, where, checkDone).catch((e) => log?.error('check.crashed', { checkId: id, error: e.message }))
@@ -334,13 +370,15 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     stops.set(id, ctl);
     job.status = 'running';
     job.startedAt = new Date(started).toISOString();
+    job.where = where;
     saveJob(job);
-    log?.info('check.started', { uid: job.uid, checkId: id, review: job.review, where });
+    log?.info('check.started', { uid: job.uid, checkId: id, review: job.review, where, waitedMs: started - Date.parse(job.submittedAt),
+      cpuUsed, cpus, bursting, burstMax: burst?.max || 0, waiting: queue.length });
     try {
       for (const sub of ['out', 'review']) { mkdirSync(path.join(dir, sub), { recursive: true }); chmodSync(path.join(dir, sub), 0o777); }
       // The check of this code already ran: its report, not a second run.
       const c = job.reused ? null : await (where === 'burst' ? burst : runner).check({ id: id.slice(4), dir, file: job.file, spec: job.spec, timeoutMs: checkTimeoutMs, signal: ctl.signal });
-      checkDone();
+      checkDone(!!c && !c.timedOut && c.code !== -1);
       if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
       const report = readJson(path.join(dir, job.reused ? 'in' : 'out', job.reused ? 'check-report.json' : 'report.json'));
       if (!report) {
@@ -353,7 +391,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       if (job.review) job.result.review = await runReview(job, dir, report, ctl.signal);
       if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
       job.status = 'done';
-      log?.info('check.done', { uid: job.uid, checkId: id, ms: now() - started, failed: job.result.check.summary?.failed, verdict: job.result.review?.verdict });
+      log?.info('check.done', { uid: job.uid, checkId: id, review: job.review, where, ms: now() - started, failed: job.result.check.summary?.failed, verdict: job.result.review?.verdict });
     } catch (e) {
       if (e.cancelled || ctl.signal.aborted) {
         job.status = 'cancelled';
@@ -470,5 +508,30 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     setImmediate(pump);
   }
 
-  return { submit, get, cancel, uidForToken, recover, onChange: (l) => listeners.add(l), idle: () => !running.size && !queue.length };
+  /**
+   * For the admin console: what waits, what runs and where, what finished in
+   * the last `hours`, and the capacity in use. Names and times only, never code.
+   */
+  function overview({ hours = 24, limit = 100 } = {}) {
+    const row = (j) => ({ checkId: j.checkId, uid: j.uid, adapter: j.adapter?.name || j.adapter?.key || '', review: !!j.review, reused: !!j.reused,
+      status: j.status, where: j.where || null, submittedAt: j.submittedAt, startedAt: j.startedAt || null, finishedAt: j.finishedAt || null });
+    const since = now() - hours * 3600_000;
+    const recent = [];
+    for (const id of readdirSync(root)) {
+      if (!CHECK_ID.test(id)) continue;
+      const j = readJob(id);
+      if (!j || ['queued', 'running'].includes(j.status) || !(Date.parse(j.finishedAt || '') >= since)) continue;
+      recent.push({ ...row(j), failed: j.result?.check?.summary?.failed ?? null, verdict: j.result?.review?.verdict ?? null, ...(j.error ? { error: clip(j.error, 200) } : {}) });
+    }
+    recent.sort((a, b) => String(b.finishedAt).localeCompare(String(a.finishedAt)));
+    return {
+      capacity: { cpus, cpuUsed, perCheck: cost, burst: burst ? { max: burst.max, running: bursting } : null, reviews: { max: reviewParallel, running: reviewing },
+        typicalMs: { ...took } },
+      running: [...running.keys()].map((id) => readJob(id)).filter(Boolean).map(row),
+      queued: queue.map((id, i) => readJob(id) && { ...row(readJob(id)), position: i + 1 }).filter(Boolean),
+      recent: recent.slice(0, limit),
+    };
+  }
+
+  return { submit, get, cancel, uidForToken, recover, overview, onChange: (l) => listeners.add(l), idle: () => !running.size && !queue.length };
 }
