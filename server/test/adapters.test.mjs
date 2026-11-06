@@ -2,7 +2,10 @@
 // state, and validation — against the real app over a real store.
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createApp } from '../src/app.js';
@@ -197,7 +200,42 @@ try {
   assert.equal((await store.readJSON('users/person/adapters.json')), null, 'per-user state gone with the partition');
   assert.equal((await api('GET', '/v1/adapters/browser-extension/letter-spacing', { token: ext })).status, 200, 'listing outlives the person');
 
-  console.log('Adapter marketplace: full CRUD, sync, ownership, install state, validation, and delete-cascade passed.');
+  // The skill's helper packages an app's listing and submits it (adapter.mjs list-app).
+  const helper = fileURLToPath(new URL('../../.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs', import.meta.url));
+  const maker = await token('maker');
+  const reader = await token('reader');
+  const { TOOLKIT_URL: _u, TOOLKIT_TOKEN: _t, ...env } = process.env;
+  const listApp = (...args) => promisify(execFile)(process.execPath, [helper, 'list-app', ...args], { cwd: dir, timeout: 30_000, env: { ...env, TOOLKIT_URL: base, TOOLKIT_TOKEN: maker } });
+  const listingFile = path.join(dir, 'listing.json');
+  await writeFile(path.join(dir, 'focus.js'), 'document.body.dataset.focus = "1";');
+  const listing = { appId: 'museum-guide', appName: 'Museum guide', adapters: [
+    { id: 'calm-audio', name: 'Calm audio', description: 'Speaks one step at a time, for people who lose track of long directions.', version: '1.2.0', supportAreas: ['cognitive'] },
+    { id: 'focus-ring', name: 'Focus ring', description: 'Shows where the keyboard is.', supportAreas: ['motor'], codeFile: 'focus.js' },
+  ] };
+  await writeFile(listingFile, JSON.stringify(listing));
+  const dry = await listApp(listingFile, '--dry-run');
+  assert.match(dry.stdout, /Museum guide \(museum-guide\), 2 adapters:\n- Calm audio \(calm-audio 1\.2\.0, description only, for cognitive\)/);
+  assert.match(dry.stdout, /Focus ring \(focus-ring, data \+ code, 34 characters, for motor\)/);
+  assert.ok(!(await api('GET', '/v1/adapters', { token: maker })).json.adapters.some(a => a.appId === 'museum-guide'), 'a dry run submits nothing');
+  const listed = await listApp(listingFile);
+  assert.match(listed.stdout, /Listed: 2 new, 0 updated\./);
+  const shown = (await api('GET', '/v1/adapters', { token: reader })).json;
+  assert.deepEqual(shown.adapters.filter(a => a.appId === 'museum-guide').map(a => [a.id, a.kind, a.registeredBy]).sort(), [['calm-audio', 'data', 'maker'], ['focus-ring', 'code', 'maker']]);
+  assert.equal(shown.apps.find(a => a.appId === 'museum-guide').name, 'Museum guide');
+  assert.equal((await api('GET', '/v1/adapters/museum-guide/focus-ring/code', { token: reader })).json.code, 'document.body.dataset.focus = "1";');
+  // A change: one adaptation left the app, so its listing is taken down.
+  await writeFile(listingFile, JSON.stringify({ ...listing, adapters: [listing.adapters[0]] }));
+  assert.match((await listApp(listingFile)).stdout, /Listed: 0 new, 1 updated, taken down: focus-ring\./);
+  // A file that is not ready is refused before anything is sent.
+  await writeFile(listingFile, JSON.stringify({ appId: 'Museum Guide', adapters: [{ id: 'x', name: 'X', supportAreas: ['eyes'] }] }));
+  const refused = await listApp(listingFile).catch(e => e);
+  assert.equal(refused.code, 1);
+  assert.match(refused.stderr, /appId: lowercase[\s\S]*appName[\s\S]*description: what it changes[\s\S]*eyes is not one of/);
+  await writeFile(listingFile, JSON.stringify({ ...listing, adapters: [listing.adapters[0]] }));
+  assert.match((await listApp(listingFile, '--remove')).stdout, /Took down Museum guide's listings: calm-audio\./);
+  assert.ok(!(await api('GET', '/v1/adapters', { token: reader })).json.adapters.some(a => a.appId === 'museum-guide'));
+
+  console.log('Adapter marketplace: full CRUD, sync, ownership, install state, validation, delete-cascade, and the skill\'s list-app passed.');
 } finally {
   await new Promise(resolve => server.close(resolve));
   await rm(dir, { recursive: true, force: true });

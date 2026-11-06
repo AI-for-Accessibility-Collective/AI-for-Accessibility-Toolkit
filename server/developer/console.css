@@ -178,3 +178,11 @@ a.text-button:hover { text-decoration: underline; }
 .learned-actions { margin-top: calc(16px * var(--space)); flex-wrap: wrap; }
 
 .learned-item > .badge { justify-self: start; }
+
+/* Listings: each app's group is folded until opened. */
+.listing-group > summary { display: flex; align-items: center; gap: calc(10px * var(--space)); list-style: none; cursor: pointer; min-height: 44px; }
+.listing-group > summary::-webkit-details-marker { display: none; }
+.listing-group > summary::before { content: '›'; font-size: 1.1rem; color: var(--green); }
+.listing-group[open] > summary::before { transform: rotate(90deg); }
+.listing-group > summary h3 { margin: 0; }
+.listing-group[open] > summary { margin-bottom: calc(6px * var(--space)); }

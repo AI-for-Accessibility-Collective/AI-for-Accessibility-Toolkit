@@ -47,9 +47,15 @@ Every entry belongs to an app (`appId`, a lowercase slug) and the two-level
 key is `appId/id` — the browser extension and the XR app can each have an
 adapter called `one-step`. `GET /v1/adapters` returns the flat list plus an
 `apps` summary (display name, count); the developer console
-(`/developer` → **Listings**) renders one group per app. An app the
-developer has hidden on the Apps page is hidden here too, with a **Show
-hidden** switch to bring it back.
+(`/developer` → **Listings**) renders one group per app, folded until opened,
+together with the adapters shared through the registry (grouped by their
+owner's app). An app the developer has hidden on the Apps page is hidden here
+too, with a **Show hidden** switch to bring it back.
+
+A coding agent submits an app's listing with the toolkit skill: it writes
+`listing.json` and runs `adapter.mjs list-app listing.json` (`--dry-run` to
+check it first, `--remove` to take the app's listings down), which calls
+`POST /v1/adapters/sync` with `full: true`.
 
 ## Adapter MCP descriptors
 

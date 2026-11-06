@@ -13,6 +13,8 @@
 //   node adapter.mjs check bigger-buttons [--review]
 //   node adapter.mjs verify bigger-buttons [--no-review]
 //   node adapter.mjs verify --app museum-guide
+//   node adapter.mjs list-app listing.json [--dry-run]
+//   node adapter.mjs list-app listing.json --remove
 //   node adapter.mjs profile
 //   node adapter.mjs learned
 //   node adapter.mjs answer prop_123 accept
@@ -52,6 +54,18 @@
 //           an app connected now with Adapter MCP, each adaptation read,
 //           applied and undone through the running app. Uses the toolkit's
 //           adapter_verify and app_verify tools.
+// list-app  packages an app's listing and submits it to the toolkit, so the
+//           app and its adapters show on the developer console's Listings
+//           page for everyone on the toolkit. listing.json is
+//           { "appId", "appName", "adapters": [{ "id", "name", "description",
+//           "version", "supportAreas", "settingsKeys", "sourceUrl", "docsUrl",
+//           "requiresAI", "codeFile" or "code", "descriptor" }] }: codeFile is
+//           a path beside listing.json whose JavaScript is listed with it (a
+//           data + code listing); without code it is a description only, the
+//           code staying in the app. It checks the file, prints what will be
+//           listed, and submits it; the app's listings not in the file are
+//           taken down. --dry-run only checks and prints; --remove takes the
+//           app's listings down.
 // profile   the person's profile as apps read it (supportAreas, fields.needs, …).
 // learned   what the toolkit learned about the person: suggested profile
 //           changes waiting for an answer, and memories.
@@ -125,6 +139,8 @@ function parse(argv) {
     else if (flag === '--no-review') flags.noReview = true;
     else if (flag === '--check') flags.checkId = value();
     else if (flag === '--needs') flags.needs = value();
+    else if (flag === '--dry-run') flags.dryRun = true;
+    else if (flag === '--remove') flags.remove = true;
     else fail(`Unknown option ${flag}.`);
   }
   return { command, target, flags };
@@ -614,10 +630,65 @@ function findings(file, flags) {
   else console.log(`${fix} Then stop, and tell the person what the review found, what you fixed, and what may still be open. Ask whether they want another round (a new reviewer checks your fixes and looks again); only if they say yes: review <adapter.js> --asked … --runs-on … --round ${round + 1} --rounds ${round + 1} --earlier ${file}`);
 }
 
+const SLUG = /^[a-z0-9][a-z0-9._-]{0,63}$/;
+const LISTING_FIELDS = ['id', 'name', 'description', 'version', 'supportAreas', 'settingsKeys', 'sourceUrl', 'docsUrl', 'requiresAI', 'code', 'codeFile', 'descriptor'];
+
+/** listing.json, checked and with each codeFile read in: { appId, appName, adapters }. */
+function readListing(file) {
+  let listing;
+  try { listing = JSON.parse(readFileSync(file, 'utf8')); } catch (e) { fail(`Could not read ${file}: ${e.message}`); }
+  const problems = [];
+  if (!SLUG.test(listing?.appId || '')) problems.push('appId: lowercase letters, digits, dots, dashes and underscores, starting with a letter or digit');
+  if (!listing?.appName || typeof listing.appName !== 'string') problems.push('appName: the app\'s name, as people know it');
+  if (!Array.isArray(listing?.adapters) || !listing.adapters.length) problems.push('adapters: a list of at least one adapter');
+  const ids = new Set();
+  const adapters = (listing?.adapters || []).map((a, i) => {
+    const at = `adapters[${i}]${a?.id ? ` (${a.id})` : ''}`;
+    if (!SLUG.test(a?.id || '')) problems.push(`${at}.id: like the appId`);
+    else if (ids.has(a.id)) problems.push(`${at}.id: listed twice`);
+    ids.add(a?.id);
+    if (!a?.name) problems.push(`${at}.name: needed`);
+    if (!a?.description) problems.push(`${at}.description: what it changes and for whom, in plain words`);
+    const bad = (a?.supportAreas || []).filter(x => !AREAS.includes(x));
+    if (bad.length) problems.push(`${at}.supportAreas: ${bad.join(', ')} is not one of ${AREAS.join(', ')}`);
+    const unknown = Object.keys(a || {}).filter(k => !LISTING_FIELDS.includes(k));
+    if (unknown.length) problems.push(`${at}: unknown field ${unknown.join(', ')}`);
+    const { codeFile, ...out } = a || {};
+    if (codeFile) {
+      try { out.code = readFileSync(path.resolve(path.dirname(file), codeFile), 'utf8'); } catch (e) { problems.push(`${at}.codeFile: ${e.message}`); }
+    }
+    return out;
+  });
+  if (problems.length) fail(`${file} is not ready to list:\n${problems.map(p => `- ${p}`).join('\n')}`);
+  return { appId: listing.appId, appName: listing.appName, adapters };
+}
+
+async function listApp(file, flags) {
+  if (!file) fail('Say which listing: node adapter.mjs list-app listing.json (see the comment at the top of this file for its fields).');
+  const listing = readListing(file);
+  if (flags.remove) {
+    const { status: code, body } = await api('POST', '/v1/adapters/sync', { appId: listing.appId, appName: listing.appName, full: true, adapters: [] });
+    if (code !== 200) fail(`The toolkit refused it (${code}): ${body.message || body.error || 'no reason given'}`);
+    console.log(body.removed.length ? `Took down ${listing.appName}'s listings: ${body.removed.join(', ')}.` : `${listing.appName} had no listings of yours.`);
+    return;
+  }
+  console.log(`${listing.appName} (${listing.appId}), ${plural(listing.adapters.length, 'adapter')}:`);
+  for (const a of listing.adapters) {
+    const kind = a.code ? `data + code, ${a.code.length} characters` : 'description only';
+    console.log(`- ${a.name} (${a.id}${a.version ? ` ${a.version}` : ''}, ${kind}${a.supportAreas?.length ? `, for ${a.supportAreas.join(', ')}` : ''}): ${a.description}`);
+  }
+  if (flags.dryRun) { console.log('\nNot submitted (--dry-run). Run it again without --dry-run to list it.'); return; }
+  const { status: code, body } = await api('POST', '/v1/adapters/sync', { ...listing, full: true });
+  if (code !== 200) fail(`The toolkit refused it (${code}): ${body.message || body.error || 'no reason given'}`);
+  console.log(`\nListed: ${body.created} new, ${body.updated} updated${body.removed.length ? `, taken down: ${body.removed.join(', ')}` : ''}.`);
+  for (const s of body.skipped) console.log(`Not listed: ${s.id}: ${s.reason}`);
+  console.log(`It shows on the developer console's Listings page (${base}/developer#/listings) for everyone on this toolkit.`);
+}
+
 const { command, target, flags } = parse(process.argv.slice(2));
-const COMMANDS = { publish, status, share, extension, check, verify, profile, learned, answer, review, findings };
+const COMMANDS = { publish, status, share, extension, check, verify, 'list-app': listApp, profile, learned, answer, review, findings };
 if (!COMMANDS[command]) {
-  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check [<id> [--review]] | profile | learned | answer <id> accept|not-now|never | review <file.js> --asked … --runs-on … | findings <report.md> --round N [--rounds M]');
+  fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check [<id> [--review]] | verify <id> | list-app <listing.json> [--dry-run | --remove] | profile | learned | answer <id> accept|not-now|never | review <file.js> --asked … --runs-on … | findings <report.md> --round N [--rounds M]');
 }
 if (command === 'extension') { extension(target, flags); process.exit(0); }
 if (command === 'review' || command === 'findings') { COMMANDS[command](target, flags); process.exit(0); }

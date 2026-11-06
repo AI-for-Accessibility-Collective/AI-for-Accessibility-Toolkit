@@ -236,7 +236,7 @@ try {
   // ── the toolkit's own adapters: their own tab, not under Shared with you ──
   await boPage.click('[data-ws-tab="toolkit"]');
   assert.equal(await boPage.locator('[data-ws-tab="toolkit"]').getAttribute('aria-pressed'), 'true');
-  await boPage.locator('.adapter-group h3', { hasText: 'Toolkit' }).waitFor();
+  await boPage.locator('#page-adapters .adapter-group h3', { hasText: 'Toolkit' }).waitFor();
   assert.equal(await boPage.locator('#ws-count').innerText(), '11');
   assert.equal(await boPage.locator('.adapter-card[data-adapter^="toolkit/toolkit/"]').count(), 11);
   assert.match(await boPage.locator('#ws-groups').innerText(), /unvalidated/);

@@ -162,7 +162,7 @@ your apps. The console's pages:
 - **Apps:** apps built with the SDK, grouped by app: what each shares and
   installs, and, while one is open, live control of its adapters. The Redbird
   demo store opens from here already connected.
-- **Listings:** the adapter descriptions apps have listed on this instance.
+- **Listings:** what apps offer on this instance, grouped by app: the listings they submitted (with the skill's `adapter.mjs list-app`) and the adapters shared through the registry.
   See [docs/ADAPTER-MARKETPLACE.md](docs/ADAPTER-MARKETPLACE.md).
 - **Account & tokens:** your default token, extra app tokens, and your password.
 

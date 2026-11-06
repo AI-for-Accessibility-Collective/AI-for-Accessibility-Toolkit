@@ -1173,11 +1173,6 @@ a.external .icon {
 }
 
 /* ── Adapters page ────────────────────────────────────────────────────────── */
-.adapter-register {
-  padding: calc(22px * var(--space)) calc(24px * var(--space));
-  margin-bottom: calc(22px * var(--space));
-}
-
 .register-grid {
   display: grid;
   grid-template-columns: repeat(2,minmax(0,1fr));

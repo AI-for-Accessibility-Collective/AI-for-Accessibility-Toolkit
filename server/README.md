@@ -160,9 +160,13 @@ publishes its catalog automatically in remote mode;
 listing is **data-only** (a manifest: what the adapter does, the settings
 keys it applies, links) or **data + code** (the source is stored on the
 instance for hosts to download, lint, and install behind their own consent —
-the server never runs it). The page filters by app, kind, search, `Mine`, and
-`Installed`, shows the stored code with its hash, and registers new listings
-with **+ Register adapter**. Install state is per user; delete is offered
+the server never runs it). Adapters shared through the registry show there
+too, under their app, and can run in this browser. Each app's group is folded
+until opened. The page filters by app, kind, search, `Mine`, and
+`Installed`, and shows the stored code with its hash. There is no form to add
+a listing: a coding agent packages and submits an app's listing with the
+skill's helper (`adapter.mjs list-app listing.json`, which calls
+`POST /v1/adapters/sync`). Install state is per user; delete is offered
 only for listings your token's uid registered (admin can moderate anything
 through the API).
 

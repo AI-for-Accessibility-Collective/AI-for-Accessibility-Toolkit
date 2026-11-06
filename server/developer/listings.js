@@ -1,11 +1,15 @@
-// The Listings page: browse the descriptions apps listed on this toolkit
-// (the adapter marketplace), grouped by app, register new listings (data-only
-// or data + code), and keep per-user install state. Sharing adapters other
-// apps can run is the Adapters page (adapters.js).
-// Talks to /v1/adapters through the shared client; all async work runs
-// through the workspace's busy-aware run().
+// The Listings page: what apps offer on this toolkit, grouped by app, each
+// group folded until opened. Two sources: the listings apps submitted (the
+// adapter marketplace, /v1/adapters, data-only or data + code; a coding agent
+// submits them with the skill's `adapter.mjs list-app`), and the adapters
+// shared through the registry (/v1/mcp), which can run in this browser.
+// Building and sharing your own is the Adapters page (adapters.js).
+// All async work runs through the workspace's busy-aware run().
 
 import { icon } from './icons.js';
+import { createRegistryClient, BROWSER_RUNTIME_APP } from '/sdk/toolkit/adapter-mcp/index.js';
+
+const BUILTIN_OWNER = 'toolkit';
 
 const $ = id => document.getElementById(id);
 
@@ -34,6 +38,7 @@ export function createListingsPage({ getClient, status, run, getHiddenApps = () 
   let adapters = [];
   let apps = [];
   let codeCache = new Map();
+  const openGroups = new Set(); // the app groups the person opened, by their key
 
   // ── marketplace list ──────────────────────────────────────────────────────
 
@@ -47,14 +52,35 @@ export function createListingsPage({ getClient, status, run, getHiddenApps = () 
       return;
     }
     try {
-      const result = await client.adapters.list();
-      adapters = result.adapters;
+      const registry = createRegistryClient({ url: client.base, token: client.token });
+      const [result, shared, inBrowser] = await Promise.all([
+        client.adapters.list(),
+        registry.search({ scope: 'shared' }).catch(() => ({ adapters: [] })),
+        registry.installed(BROWSER_RUNTIME_APP).catch(() => ({ adapters: [] })),
+      ]);
+      const running = new Set((inBrowser.adapters || []).map(x => keyOf(x.adapter)));
+      adapters = [...result.adapters.map(a => ({ ...a, group: a.appId })), ...shared.adapters.map(a => fromRegistry(a, running))];
       apps = result.apps;
       codeCache = new Map();
       render();
     } catch (error) {
       status(error.message, true);
     }
+  }
+
+  const keyOf = (k) => `${k.owner}/${k.appId}/${k.id}`;
+
+  // A shared registry adapter, in a listing's shape. Grouped by its owner's app.
+  function fromRegistry(a, running) {
+    const builtin = a.owner === BUILTIN_OWNER;
+    return {
+      shared: a, group: `${a.owner}/${a.adapter.appId}`, groupName: builtin ? 'Toolkit' : a.appName || a.adapter.appId,
+      groupBy: builtin ? 'built into the toolkit' : `by ${a.owner}`,
+      appId: a.adapter.appId, id: a.adapter.id, name: a.name, description: a.description, version: a.version,
+      kind: 'shared', settingsKeys: [], supportAreas: a.supportAreas || [], needs: a.needs || [],
+      mine: !!a.mine, installed: running.has(keyOf(a.adapter)), portable: a.portable, urlPatterns: a.urlPatterns || [],
+      updatedAt: a.updatedAt, revision: a.revision,
+    };
   }
 
   function visibleAdapters() {
@@ -68,7 +94,7 @@ export function createListingsPage({ getClient, status, run, getHiddenApps = () 
       .filter(a => (!app || a.appId === app) && (!kind || a.kind === kind))
       .filter(a => !$('adapter-mine').checked || a.mine)
       .filter(a => !$('adapter-installed').checked || a.installed)
-      .filter(a => !search || `${a.appId} ${a.id} ${a.name} ${a.description} ${a.settingsKeys.join(' ')}`.toLowerCase().includes(search));
+      .filter(a => !search || `${a.appId} ${a.id} ${a.name} ${a.description} ${a.settingsKeys.join(' ')} ${(a.needs || []).map(n => n.phrase).join(' ')}`.toLowerCase().includes(search));
   }
 
   function render() {
@@ -85,27 +111,70 @@ export function createListingsPage({ getClient, status, run, getHiddenApps = () 
     if (!shown.length) {
       groups.append(element('p', 'empty', adapters.length
         ? 'No adapters match these filters.'
-        : 'No adapters registered yet. Apps publish theirs with POST /v1/adapters/sync, or use + Register adapter above.'));
+        : 'Nothing listed yet. Apps submit their listings with a coding agent and the toolkit skill (adapter.mjs list-app), and shared adapters show here too.'));
       return;
     }
     const byApp = new Map();
     for (const adapter of shown) {
-      if (!byApp.has(adapter.appId)) byApp.set(adapter.appId, []);
-      byApp.get(adapter.appId).push(adapter);
+      if (!byApp.has(adapter.group)) byApp.set(adapter.group, []);
+      byApp.get(adapter.group).push(adapter);
     }
-    for (const [appId, list] of byApp) {
-      const appName = apps.find(a => a.appId === appId)?.name || appId;
-      const group = element('section', 'adapter-group');
-      const heading = element('div', 'section-heading');
-      heading.append(element('h3', '', appName));
-      heading.append(element('span', 'count', String(list.length)));
-      group.append(heading);
-      if (appName !== appId) group.append(element('p', 'adapter-group-id', `app id: ${appId}`));
+    for (const [key, list] of byApp) {
+      const first = list[0];
+      const appName = first.groupName || apps.find(a => a.appId === first.appId)?.name || first.appId;
+      // Folded until the person opens it; it stays open across refreshes.
+      const group = element('details', 'adapter-group listing-group');
+      group.open = openGroups.has(key);
+      group.addEventListener('toggle', () => { if (group.open) openGroups.add(key); else openGroups.delete(key); });
+      const summary = element('summary', 'section-heading');
+      summary.append(element('h3', '', appName), element('span', 'count', String(list.length)));
+      group.append(summary);
+      group.append(element('p', 'adapter-group-id', [`app id: ${first.appId}`, first.groupBy].filter(Boolean).join(' · ')));
       const grid = element('div', 'adapter-grid');
-      for (const adapter of list) grid.append(adapterCard(adapter));
+      for (const adapter of list) grid.append(adapter.shared ? sharedCard(adapter) : adapterCard(adapter));
       group.append(grid);
       groups.append(group);
     }
+  }
+
+  // A shared adapter: what it does and who it is for, and running it in this browser.
+  function sharedCard(adapter) {
+    const a = adapter.shared;
+    const card = element('article', 'adapter-card');
+    const title = element('h3', 'adapter-title');
+    title.append(element('span', '', adapter.name));
+    title.append(element('span', 'badge live', 'Shared'));
+    if (!adapter.portable) title.append(element('span', 'badge offline', 'Description only'));
+    card.append(title);
+    card.append(element('p', 'adapter-id', [`${adapter.appId}/${adapter.id}`, `revision ${adapter.revision}`].join(' · ')));
+    if (adapter.description) card.append(element('p', 'adapter-description', adapter.description));
+    const pills = element('div', 'pills');
+    for (const n of adapter.needs) pills.append(element('span', 'pill', n.phrase));
+    for (const area of adapter.supportAreas) pills.append(element('span', 'pill area', area));
+    if (adapter.mine) pills.append(element('span', 'pill mine', 'mine'));
+    if (adapter.installed) pills.append(element('span', 'pill installed', 'in your browser'));
+    if (pills.children.length) card.append(pills);
+    const by = [adapter.groupBy];
+    const updated = shortDate(adapter.updatedAt);
+    if (updated) by.push(`updated ${updated}`);
+    if (adapter.urlPatterns.length) by.push(`runs on ${adapter.urlPatterns.join(', ')}`);
+    card.append(element('p', 'adapter-by', by.join(' · ')));
+    const actions = element('div', 'card-actions');
+    if (adapter.portable) actions.append(button(adapter.installed ? 'secondary' : 'primary', adapter.installed ? 'Stop running in my browser' : 'Run in my browser', () => run(async () => {
+      const client = getClient();
+      const registry = createRegistryClient({ url: client.base, token: client.token });
+      if (adapter.installed) await registry.uninstall(BROWSER_RUNTIME_APP, a.adapter);
+      else await registry.install(BROWSER_RUNTIME_APP, a.adapter);
+      window.postMessage({ source: 'ai4a11y-console', type: 'adapters-changed' }, location.origin);
+      adapter.installed = !adapter.installed;
+      render();
+      status(adapter.installed ? `${adapter.name} runs in your browser runtime on ${adapter.urlPatterns.join(', ')}.` : `${adapter.name} stopped. Your browser runtime turns it off in open pages.`);
+    }), `${adapter.installed ? 'Stop running' : 'Run'} ${adapter.name} in my browser`));
+    const more = element('a', '', 'On the Adapters page');
+    more.href = '#/adapters';
+    actions.append(more);
+    card.append(actions);
+    return card;
   }
 
   function renderAppFilter() {
@@ -199,53 +268,6 @@ export function createListingsPage({ getClient, status, run, getHiddenApps = () 
     card.append(details);
   }
 
-  // ── register form ─────────────────────────────────────────────────────────
-
-  function openRegister(prefill) {
-    $('register-panel').hidden = false;
-    if (prefill) {
-      $('reg-app').value = prefill.appId || '';
-      $('reg-id').value = prefill.id || '';
-    }
-    $('reg-app').focus();
-  }
-
-  function closeRegister() {
-    $('register-panel').hidden = true;
-    $('register-form').reset();
-    $('reg-code-group').hidden = true;
-  }
-
-  $('new-adapter').addEventListener('click', () => {
-    if (!getClient()) { status('Connect to an instance before registering an adapter.', true); return; }
-    openRegister();
-  });
-  $('register-cancel').addEventListener('click', closeRegister);
-  $('reg-has-code').addEventListener('change', () => { $('reg-code-group').hidden = !$('reg-has-code').checked; });
-  $('register-form').addEventListener('submit', event => {
-    event.preventDefault();
-    run(async () => {
-      const areas = [...document.querySelectorAll('#register-form input[name=area]:checked')].map(input => input.value);
-      const entry = {
-        appId: $('reg-app').value.trim(),
-        appName: $('reg-app-name').value.trim(),
-        id: $('reg-id').value.trim(),
-        name: $('reg-name').value.trim(),
-        description: $('reg-description').value.trim(),
-        version: $('reg-version').value.trim(),
-        settingsKeys: $('reg-keys').value.split(',').map(key => key.trim()).filter(Boolean),
-        supportAreas: areas,
-        sourceUrl: $('reg-source').value.trim(),
-        docsUrl: $('reg-docs').value.trim(),
-      };
-      if ($('reg-has-code').checked) entry.code = $('reg-code').value;
-      const saved = await getClient().adapters.register(entry);
-      closeRegister();
-      await refresh();
-      status(`Registered ${saved.appId}/${saved.id}. It is listed under ${apps.find(a => a.appId === saved.appId)?.name || saved.appId}.`);
-    });
-  });
-
   // ── wiring ────────────────────────────────────────────────────────────────
 
   for (const id of ['adapter-search', 'adapter-app', 'adapter-kind', 'adapter-mine', 'adapter-installed', 'adapter-show-hidden']) {
@@ -253,5 +275,5 @@ export function createListingsPage({ getClient, status, run, getHiddenApps = () 
   }
   $('adapter-refresh').addEventListener('click', refresh);
 
-  return { refresh, openRegister };
+  return { refresh };
 }

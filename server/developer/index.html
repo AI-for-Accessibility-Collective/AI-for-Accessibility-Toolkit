@@ -181,34 +181,13 @@
         </section>
       </section>
       <section id="page-listings" class="page" hidden>
-        <div class="page-heading"><div><p class="eyebrow">DESCRIBE &amp; LIST</p><h1 id="listings-heading">Listings</h1><p class="muted">Descriptions apps have listed on this toolkit, grouped by app: what each host offers, including adapters whose code stays in the app. To share an adapter other apps can run, use Adapters.</p></div><button id="new-adapter" class="secondary" type="button">+ Register listing</button></div>
-        <section id="register-panel" class="panel adapter-register" hidden aria-labelledby="register-heading">
-          <div class="section-heading"><div><p class="eyebrow">NEW LISTING</p><h2 id="register-heading">Register an adapter</h2></div></div>
-          <form id="register-form">
-            <div class="register-grid">
-              <div class="input-group"><label for="reg-app">App id</label><input id="reg-app" list="known-apps" required placeholder="browser-extension" maxlength="64" pattern="[a-z0-9][a-z0-9._-]*"><datalist id="known-apps"><option value="browser-extension">Browser Extension</option><option value="xr">XR Task Guide</option></datalist></div>
-              <div class="input-group"><label for="reg-app-name">App display name <small>(optional)</small></label><input id="reg-app-name" maxlength="120" placeholder="Browser Extension"></div>
-              <div class="input-group"><label for="reg-id">Adapter id</label><input id="reg-id" required placeholder="dark-mode" maxlength="64" pattern="[a-z0-9][a-z0-9._-]*"></div>
-              <div class="input-group"><label for="reg-name">Display name</label><input id="reg-name" required placeholder="Dark Mode" maxlength="120"></div>
-              <div class="input-group"><label for="reg-version">Version <small>(optional)</small></label><input id="reg-version" maxlength="32" placeholder="1.0.0"></div>
-              <div class="input-group"><label for="reg-keys">Settings keys <small>(comma-separated)</small></label><input id="reg-keys" placeholder="darkMode, textScale"></div>
-              <div class="input-group register-wide"><label for="reg-description">Description</label><textarea id="reg-description" rows="2" maxlength="2000" placeholder="What this adapter changes, and for whom."></textarea></div>
-              <fieldset class="register-areas"><legend>Support areas</legend><label><input type="checkbox" name="area" value="vision"> Vision</label><label><input type="checkbox" name="area" value="motor"> Motor</label><label><input type="checkbox" name="area" value="hearing"> Hearing</label><label><input type="checkbox" name="area" value="cognitive"> Cognitive</label><label><input type="checkbox" name="area" value="sensory"> Sensory</label><label><input type="checkbox" name="area" value="reading"> Reading</label></fieldset>
-              <div class="register-links"><div class="input-group"><label for="reg-source">Source URL <small>(optional)</small></label><input id="reg-source" type="url" maxlength="500" placeholder="https://github.com/…"></div><div class="input-group"><label for="reg-docs">Docs URL <small>(optional)</small></label><input id="reg-docs" type="url" maxlength="500" placeholder="https://…"></div></div>
-              <div class="register-code">
-                <label class="toggle-control"><input type="checkbox" id="reg-has-code"> Include adapter code <small>(data + code listing)</small></label>
-                <div id="reg-code-group" class="input-group" hidden><label for="reg-code">Adapter source <small>(JavaScript, stored verbatim for hosts to download)</small></label><textarea id="reg-code" rows="8" spellcheck="false" placeholder="document.documentElement.style.colorScheme = 'dark';"></textarea></div>
-              </div>
-            </div>
-            <div class="editor-actions"><div><button id="register-submit" class="primary" type="submit">Register</button><button id="register-cancel" class="secondary" type="button">Cancel</button></div><span class="hint">Data-only listings publish a manifest; the code stays in your app’s repo. Listings with code store the source on this instance for hosts to download, lint, and install behind their own consent — the server never runs it.</span></div>
-          </form>
-        </section>
+        <div class="page-heading"><div><p class="eyebrow">DESCRIBE &amp; LIST</p><h1 id="listings-heading">Listings</h1><p class="muted">What apps offer on this toolkit, grouped by app: the listings apps submitted (including adapters whose code stays in the app) and the adapters shared through the registry. Open an app to see its adapters. A coding agent submits an app’s listing with the toolkit skill.</p></div></div>
         <section class="panel adapters-browser" aria-labelledby="marketplace-heading">
           <div class="section-heading"><h2 id="marketplace-heading">Listings</h2><span id="adapter-count" class="count">0</span></div>
           <label for="adapter-search" class="visually-hidden">Search adapters</label><input id="adapter-search" type="search" placeholder="Search adapters…">
           <div class="adapter-filters">
             <div class="input-group"><label for="adapter-app">App</label><select id="adapter-app"><option value="">All apps</option></select></div>
-            <div class="input-group"><label for="adapter-kind">Kind</label><select id="adapter-kind"><option value="">All kinds</option><option value="data">Data only</option><option value="code">Data + code</option></select></div>
+            <div class="input-group"><label for="adapter-kind">Kind</label><select id="adapter-kind"><option value="">All kinds</option><option value="data">Data only</option><option value="code">Data + code</option><option value="shared">Shared adapter</option></select></div>
             <label class="toggle-control"><input type="checkbox" id="adapter-mine"> Mine</label>
             <label class="toggle-control"><input type="checkbox" id="adapter-installed"> Installed</label>
             <label class="toggle-control"><input type="checkbox" id="adapter-show-hidden"> Show hidden apps</label>
