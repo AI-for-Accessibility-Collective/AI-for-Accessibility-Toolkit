@@ -96,6 +96,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -319,15 +320,17 @@ async function share(id, flags) {
 
 // The extension folder: --dir or AI4A11Y_EXTENSION_DIR, the toolkit repository
 // this skill sits in (<repo>/.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs),
-// or a toolkit checkout in the current folder or a folder above it.
+// a toolkit checkout in the current folder or a folder above it, or the
+// console's download unzipped (ai4a11y-extension) there or in Downloads.
 const TOOLKIT_REPO = 'https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Toolkit.git';
 function findExtensionDir(flags) {
   const places = [flags.dir, process.env.AI4A11Y_EXTENSION_DIR,
     path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../extension')];
   for (let dir = process.cwd(); ; dir = path.dirname(dir)) {
-    places.push(path.join(dir, 'extension'), path.join(dir, 'AI-for-Accessibility-Toolkit', 'extension'));
+    places.push(path.join(dir, 'extension'), path.join(dir, 'AI-for-Accessibility-Toolkit', 'extension'), path.join(dir, 'ai4a11y-extension'));
     if (path.dirname(dir) === dir) break;
   }
+  places.push(path.join(os.homedir(), 'Downloads', 'ai4a11y-extension'));
   return places.filter(Boolean).map(p => path.resolve(p)).find((dir) => {
     try { return /adapter runtime/i.test(JSON.parse(readFileSync(path.join(dir, 'manifest.json'), 'utf8')).name); } catch { return false; }
   });
@@ -354,9 +357,12 @@ function extension(_target, flags) {
   const folder = findExtensionDir(flags);
   if (!folder) {
     fail([
-      'The extension is not on this computer yet. It is the extension folder of the toolkit repository:',
+      'The extension is not on this computer yet. Download it from the toolkit (the console offers it in its setup steps) and unzip it:',
+      `  ${base || '<your toolkit>'}/developer/extension.zip`,
+      'Then run this again with --dir <the unzipped folder> (ai4a11y-extension; one in Downloads is found on its own).',
+      'Or get the toolkit repository, whose extension folder is the same:',
       `  git clone ${TOOLKIT_REPO}`,
-      'Then run this again from that folder, or with --dir <the cloned folder>/extension.',
+      'and run this again from that folder, or with --dir <the cloned folder>/extension.',
     ].join('\n'));
   }
   const copied = !flags.noOpen && copyToClipboard(folder);

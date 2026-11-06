@@ -15,6 +15,7 @@ import { createAdaptersRouter } from './adapters.js';
 import { buildMeta } from './meta.js';
 import { ADMIN_ASSETS, serveAdminPage, serveAdminAsset } from './admin-page.js';
 import { DEVELOPER_ASSETS, serveDeveloperAsset } from './developer-page.js';
+import { EXTENSION_ZIP_PATH, serveExtensionZip } from './extension-zip.js';
 import { SDK_ASSETS, serveSdkAsset } from './sdk-assets.js';
 import { createAccounts } from './accounts.js';
 import { createRelay } from './relay.js';
@@ -325,6 +326,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     if (method === 'GET' && DEVELOPER_ASSETS.has(pathname)) {
       return serveDeveloperAsset(res, DEVELOPER_ASSETS.get(pathname));
     }
+    // The browser adapter runtime extension, zipped, for the console's setup steps.
+    if ((method === 'GET' || method === 'HEAD') && pathname === EXTENSION_ZIP_PATH) return serveExtensionZip(res, method);
 
     // /v1/healthz is the canonical liveness path: the bare /healthz works in
     // local/dev but is intercepted at the *.run.app edge before reaching the

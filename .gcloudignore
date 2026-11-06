@@ -1,6 +1,6 @@
 # Upload only what the toolkit-service image needs (build context stays small).
-# The Dockerfile copies toolkit/, server/ and the few files server/ reads
-# from tools/ and scripts/ (see server/Dockerfile).
+# The Dockerfile copies toolkit/, server/, extension/ (the console's download)
+# and the few files server/ reads from tools/ and scripts/ (see server/Dockerfile).
 *
 !cloudbuild.yaml
 !server/
@@ -18,6 +18,9 @@ scripts/*
 !scripts/verify-adapters/
 scripts/verify-adapters/*
 !scripts/verify-adapters/core-adapters.json
+!extension/
+!extension/**
+extension/test/
 toolkit/node_modules/
 toolkit/node_modules/**
 server/data/

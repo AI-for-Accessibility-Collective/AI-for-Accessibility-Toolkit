@@ -27,6 +27,7 @@
 | GET | `/v1/healthz` | the same payload; deployed probes must use this path, because bare `/healthz` is intercepted at the run.app edge |
 | GET | `/v1/meta` | generated service+API description (no auth) |
 | GET | `/developer` | developer console (profiles, adapters, apps, listings, account); static assets under `/developer/` (API calls require bearer) |
+| GET | `/developer/extension.zip` | the browser adapter runtime extension (`extension/`, without its tests) as a zip with one folder, `ai4a11y-extension`, to unzip and Load unpacked (public) |
 | POST, GET | `/v1/mcp` | the adapter registry, an MCP server (CONTRACT.md, "Adapter registry") |
 | POST | `/v1/librarian/{method}` | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | `{uid, label, kind}` for the presented token |

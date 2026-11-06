@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { inflateRawSync, crc32 } from 'node:zlib';
+import { extensionFiles } from '../src/extension-zip.js';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createApp } from '../src/app.js';
@@ -24,6 +26,30 @@ try {
     assert.match(response.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   }
   assert.equal((await fetch(base + '/developer/missing.js')).status, 404);
+  // The extension, zipped for the console's setup steps: one folder with
+  // every file the extension runs with, and none of its tests.
+  const zipped = await fetch(base + '/developer/extension.zip');
+  assert.equal(zipped.status, 200);
+  assert.equal(zipped.headers.get('content-type'), 'application/zip');
+  const manifest = JSON.parse(await readFile(new URL('../../extension/manifest.json', import.meta.url), 'utf8'));
+  assert.equal(zipped.headers.get('content-disposition'), `attachment; filename="ai4a11y-extension-${manifest.version}.zip"`);
+  const bytes = Buffer.from(await zipped.arrayBuffer());
+  const entries = new Map();
+  for (let at = 0; bytes.readUInt32LE(at) === 0x04034b50;) {
+    const size = bytes.readUInt32LE(at + 18), nameLength = bytes.readUInt16LE(at + 26), extra = bytes.readUInt16LE(at + 28);
+    const name = bytes.subarray(at + 30, at + 30 + nameLength).toString('utf8');
+    const data = inflateRawSync(bytes.subarray(at + 30 + nameLength + extra, at + 30 + nameLength + extra + size));
+    assert.equal(crc32(data), bytes.readUInt32LE(at + 14), `${name} checks out`);
+    entries.set(name, data);
+    at += 30 + nameLength + extra + size;
+  }
+  const expected = extensionFiles();
+  assert.deepEqual([...entries.keys()], expected.map(([name]) => `ai4a11y-extension/${name}`));
+  for (const [name, file] of expected) assert.ok(entries.get(`ai4a11y-extension/${name}`).equals(await readFile(file)), name);
+  for (const must of ['manifest.json', 'background.js', 'bridge.js', 'sidepanel/sidepanel.html', 'vendor/adapter-mcp/registry.js', 'icons/icon-128.png']) assert.ok(entries.has(`ai4a11y-extension/${must}`), must);
+  assert.ok(![...entries.keys()].some(n => n.includes('/test/') || n.endsWith('/package.json')), 'no tests or package.json');
+  assert.equal((await fetch(base + '/developer/extension.zip', { method: 'HEAD' })).status, 200);
+  assert.match(await (await fetch(base + '/developer')).text(), /href="\/developer\/extension\.zip" download/);
   assert.equal((await fetch(base + '/developer/%2e%2e/.env')).status, 404);
   assert.equal((await fetch(base + '/v1/librarian/replaceProfile', { method: 'POST', body: '{}' })).status, 401);
   const preflight = await fetch(base + '/v1/librarian/replaceProfile', { method: 'OPTIONS', headers: { origin: 'http://developer.test', 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization,content-type' } });

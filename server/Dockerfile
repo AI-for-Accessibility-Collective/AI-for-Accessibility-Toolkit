@@ -15,6 +15,9 @@ COPY server/ ./server/
 COPY tools/utils/ai-output.js ./tools/utils/ai-output.js
 COPY tools/core-adapters/ ./tools/core-adapters/
 COPY scripts/verify-adapters/core-adapters.json ./scripts/verify-adapters/core-adapters.json
+# The browser adapter runtime extension, which the console offers as a zip
+# (src/extension-zip.js).
+COPY extension/ ./extension/
 
 WORKDIR /app/server
 

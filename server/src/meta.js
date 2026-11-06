@@ -19,6 +19,7 @@ export const HTTP_ENDPOINTS = [
   { method: 'GET', path: '/v1/healthz', auth: 'none', purpose: 'the same payload; the path deployed probes must use (the bare /healthz is intercepted at the run.app edge)' },
   { method: 'GET', path: '/v1/meta', auth: 'none', purpose: 'generated service+API description' },
   { method: 'GET', path: '/developer', auth: 'none (API calls require bearer)', purpose: 'developer profile manager; static assets under /developer/' },
+  { method: 'GET', path: '/developer/extension.zip', auth: 'none', purpose: 'the browser adapter runtime extension as a zip (one folder, ai4a11y-extension) to unzip and Load unpacked' },
   { method: 'POST', path: '/v1/librarian/{method}', auth: 'bearer', purpose: "invoke a Librarian method for the token's uid" },
   { method: 'GET', path: '/v1/whoami', auth: 'bearer', purpose: '{uid, label, kind} for the presented token' },
   { method: 'GET', path: '/v1/adapters', auth: 'bearer', purpose: 'list the adapter marketplace, grouped-by-app metadata included; filters ?app= ?kind= ?mine=1 ?installed=1 (mine/installed are per calling uid)' },

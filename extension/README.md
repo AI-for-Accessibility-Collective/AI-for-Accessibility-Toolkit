@@ -13,7 +13,11 @@ and check what it changes before relying on it.
 
 1. In Chrome 135 or later, open `chrome://extensions`, turn on
    **Developer mode**, choose **Load unpacked** and pick this `extension`
-   folder.
+   folder. Without the repository: download the extension from your
+   toolkit's developer console (**Adapters** → **Set up the extension**, or
+   `<toolkit>/developer/extension.zip`), unzip it, and pick the
+   `ai4a11y-extension` folder. The toolkit builds that zip from this folder,
+   without the tests.
 2. On the extension's **Details**, turn on **Allow User Scripts**. Adapters
    run as user scripts, and Chrome asks you to allow them for each extension.
 3. Sign in to your toolkit's developer console (`/developer`). With the

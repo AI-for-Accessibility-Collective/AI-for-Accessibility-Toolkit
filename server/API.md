@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-11-06T17:39:10.075Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-11-06T17:55:01.894Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -12,6 +12,7 @@ Version: `0.1.0`
 | GET | `/v1/healthz` | none | the same payload; the path deployed probes must use (the bare /healthz is intercepted at the run.app edge) |
 | GET | `/v1/meta` | none | generated service+API description |
 | GET | `/developer` | none (API calls require bearer) | developer profile manager; static assets under /developer/ |
+| GET | `/developer/extension.zip` | none | the browser adapter runtime extension as a zip (one folder, ai4a11y-extension) to unzip and Load unpacked |
 | POST | `/v1/librarian/{method}` | bearer | invoke a Librarian method for the token's uid |
 | GET | `/v1/whoami` | bearer | {uid, label, kind} for the presented token |
 | GET | `/v1/adapters` | bearer | list the adapter marketplace, grouped-by-app metadata included; filters ?app= ?kind= ?mine=1 ?installed=1 (mine/installed are per calling uid) |
