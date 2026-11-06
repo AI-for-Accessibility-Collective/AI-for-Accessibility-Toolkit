@@ -81,7 +81,7 @@ information.
 4. Under **Adapters**, each team writes adapters for any website and runs
    them in their own browser with the adapter runtime extension
    (`extension/`, [its README](../extension/README.md): Load unpacked, turn on
-   **Allow User Scripts**, then **Connect with this console** from its popup).
+   **Allow User Scripts**; it then connects to the console in front on its own).
    **Share** makes an adapter visible to every team; others run it from
    **Shared with you**.
 5. Under **Apps**, **Open Redbird** opens the Redbird demo store (run it with

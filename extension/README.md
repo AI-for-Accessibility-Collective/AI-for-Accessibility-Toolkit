@@ -16,9 +16,14 @@ and check what it changes before relying on it.
    folder.
 2. On the extension's **Details**, turn on **Allow User Scripts**. Adapters
    run as user scripts, and Chrome asks you to allow them for each extension.
-3. Sign in to your toolkit's developer console (`/developer`), open the
-   extension from the toolbar, and choose **Connect with this console**. (Or
-   enter the toolkit's address and your default token by hand.)
+3. Sign in to your toolkit's developer console (`/developer`). With the
+   console in front, the extension connects to it on its own, and it follows
+   whichever console is in front: the hosted toolkit, or one on this
+   computer. For any other toolkit, open the extension from the toolbar and
+   choose **Connect with this console** (or enter the toolkit's address and
+   your default token by hand): a toolkit decides what code runs on the pages
+   you visit, so the extension does not connect to an address it does not
+   know on its own.
 
 The console's **Adapters** page then shows **Connected in this browser**.
 
@@ -82,9 +87,13 @@ installed until you choose **Update**.
 - The service worker ([background.js](background.js)) syncs on start, every
   30 seconds, on the registry's notifications while it is awake, and right
   after a save in the console. A small script ([bridge.js](bridge.js)) runs on
-  the connected toolkit's `/developer` page only, so a save there wakes the
-  runtime at once and the console can show whether this browser's runtime is
-  connected. The token never reaches the page.
+  the connected toolkit's `/developer` page and on the consoles it follows
+  ([runtime/config.js](runtime/config.js)), so a save there wakes the runtime
+  at once and the console can show whether this browser's runtime is
+  connected. When a followed console shows a signed-in developer's token and
+  its tab is in front, the bridge says so, and the service worker reads the
+  token from the page and connects. The extension's token never reaches the
+  page.
 - Results go back to the registry with the page **origin** only, never the
   full address or anything on the page.
 - `vendor/` holds copies of the toolkit's protocol modules and registry

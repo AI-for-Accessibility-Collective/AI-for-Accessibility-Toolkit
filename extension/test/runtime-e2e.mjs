@@ -116,13 +116,33 @@ try {
   // Connecting refuses a bad address and a bad token before it accepts the real one.
   await assert.rejects(runtime(([url, token]) => globalThis.ai4a11yRuntime.handlers.connect({ url, token }), ['http://toolkit.example', dev.token]), /https/);
   await assert.rejects(runtime(([url]) => globalThis.ai4a11yRuntime.handlers.connect({ url, token: 'aat_wrong' }), [base]), /did not accept/);
-  // The workshop path: sign in to the console, then one click in the side panel.
-  const signedIn = await context.newPage();
-  await signedIn.goto(`${base}/developer`);
-  await signedIn.fill('#signin-username', 'dev');
-  await signedIn.fill('#signin-password', dev.password);
-  await signedIn.click('#signin');
-  await signedIn.waitForFunction(() => document.getElementById('sidebar-token-value').textContent.startsWith('aat_'));
+  // The workshop path: sign in to the console, and the runtime follows it,
+  // with no click. Signing in to another toolkit's console (the same service
+  // at another origin here) follows that one, and bringing the first to the
+  // front again goes back.
+  const connectionNow = () => runtime(() => globalThis.ai4a11yRuntime.handlers.status()).then(s => s.connection);
+  const openConsole = async (origin) => {
+    const page = await context.newPage();
+    await page.goto(`${origin}/developer`);
+    await page.fill('#signin-username', 'dev');
+    await page.fill('#signin-password', dev.password);
+    await page.click('#signin');
+    await page.waitForFunction(() => document.getElementById('sidebar-token-value').textContent.startsWith('aat_'));
+    return page;
+  };
+  const followed = (origin) => until(async () => (await connectionNow())?.url === origin, `the runtime to follow ${origin}`);
+  const signedIn = await openConsole(base);
+  await followed(base);
+  assert.deepEqual(await connectionNow(), { url: base, uid: 'dev' });
+  const secondOrigin = base.replace('127.0.0.1', 'localhost');
+  const second = await openConsole(secondOrigin);
+  await followed(secondOrigin);
+  await signedIn.bringToFront();
+  await followed(base);
+  await second.close();
+  // Disconnecting with the console in front stays disconnected; the side
+  // panel's one click (for a toolkit it does not follow) connects again.
+  await runtime(() => globalThis.ai4a11yRuntime.handlers.disconnect());
   const consoleTabId = await runtime((url) => chrome.tabs.query({ url: `${url}/developer*` }).then(t => t[0].id), base);
   const connectPopup = await context.newPage();
   // The side panel opens on Settings while not connected (opened as a page, named ?tab=).
@@ -130,6 +150,7 @@ try {
   assert.equal(await connectPopup.getByRole('tab', { name: 'Settings' }).getAttribute('aria-selected'), 'true');
   await connectPopup.locator('#use-console').waitFor();
   assert.equal(await connectPopup.locator('#console-origin').innerText(), base);
+  assert.equal(await connectionNow(), null);
   await connectPopup.getByRole('button', { name: 'Connect with this console' }).click();
   await connectPopup.locator('#connected').waitFor();
   await connectPopup.locator('#status', { hasText: /^Connected as dev\./ }).waitFor();

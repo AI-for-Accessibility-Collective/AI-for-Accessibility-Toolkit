@@ -394,13 +394,24 @@ await test('page types: the markup first, else the model once per address, kept'
   assert.equal(pageKey('https://a.example/p?q=1#f'), 'https://a.example/p?q=1');
 });
 
-await test('the console bridge steps aside when the extension is reloaded under it, and the new one takes over', async () => {
+await test('the console bridge steps aside when the extension is reloaded under it, the new one takes over, and a token shown asks the runtime to follow', async () => {
   const { readFileSync } = await import('node:fs');
   const code = readFileSync(new URL('../bridge.js', import.meta.url), 'utf8');
   const window = new EventTarget();
   const posted = [];
   window.postMessage = (data) => posted.push(data);
   const location = { origin: 'http://localhost:8080' };
+  // The console's sidebar token, and the observers watching the page for it.
+  const tokenEl = { textContent: '' };
+  const document = { getElementById: (id) => (id === 'sidebar-token-value' ? tokenEl : null) };
+  const observers = new Set();
+  class MutationObserver {
+    constructor(fn) { this.fn = fn; }
+    observe() { observers.add(this); }
+    disconnect() { observers.delete(this); }
+  }
+  const pageChanged = () => { for (const o of observers) o.fn([]); };
+  const sandbox = (chrome) => ({ window, location, document, MutationObserver, chrome, Promise });
   const extension = (version) => {
     const sent = [];
     const chrome = { runtime: {
@@ -421,12 +432,19 @@ await test('the console bridge steps aside when the extension is reloaded under 
   process.on('unhandledRejection', onUnhandled);
   try {
     const old = extension('0.1.0');
-    vm.runInNewContext(code, { window, location, chrome: old.chrome, Promise });
+    vm.runInNewContext(code, sandbox(old.chrome));
     await settle();
     assert.equal(posted.at(-1).version, '0.1.0');
     fromConsole('profile-changed');
     await settle();
     assert.deepEqual(old.sent, ['status', 'sync', 'status']);
+    // Signing in shows the token: the bridge asks the runtime to follow (the
+    // message carries no token), once per token.
+    tokenEl.textContent = 'aat_first';
+    pageChanged();
+    pageChanged();
+    await settle();
+    assert.deepEqual(old.sent.slice(3), ['followConsole', 'status']);
     // The extension reloads: the old bridge must not throw, and steps aside.
     old.invalidate();
     const before = posted.length;
@@ -435,14 +453,17 @@ await test('the console bridge steps aside when the extension is reloaded under 
     await settle();
     assert.equal(posted.length, before, 'the cut-off bridge says nothing');
     assert.equal(window.__ai4a11yBridge, undefined);
+    assert.equal(observers.size, 0, 'the cut-off bridge stops watching the page');
     // The reloaded extension injects its bridge into the same page: it takes over.
     const fresh = extension('0.1.1');
-    vm.runInNewContext(code, { window, location, chrome: fresh.chrome, Promise });
+    vm.runInNewContext(code, sandbox(fresh.chrome));
     await settle();
     assert.equal(posted.at(-1).version, '0.1.1');
+    // It finds the token already shown, and asks to follow it.
+    assert.deepEqual(fresh.sent, ['status', 'followConsole', 'status']);
     fromConsole('adapters-changed');
     await settle();
-    assert.deepEqual(fresh.sent, ['status', 'sync', 'status']);
+    assert.deepEqual(fresh.sent.slice(3), ['sync', 'status']);
     assert.deepEqual(unhandled, []);
   } finally { process.off('unhandledRejection', onUnhandled); }
 });

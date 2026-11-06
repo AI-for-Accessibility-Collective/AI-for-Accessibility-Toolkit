@@ -44,7 +44,7 @@ The person says what should change, you write the file, and the toolkit runs it 
    - The helper below reads `TOOLKIT_URL` and `TOOLKIT_TOKEN` from `.env`. Keep the token out of your messages, other files and commits (git ignores `.env`).
 2. Check that the person's browser runs adapters: `node <skill folder>/scripts/adapter.mjs check`. It prints "Connected: Chrome … on macOS, last seen …", or says that no browser runtime is connected. If none is, help them set up the extension:
    - Run `node <skill folder>/scripts/adapter.mjs extension` (with `--no-open` if the person does not want windows opened). It finds the extension folder, opens `chrome://extensions` in Chrome, copies the folder's path, and prints the steps. Always run it rather than giving the steps from memory: the person needs the folder's path. If the extension is not on their computer, it prints the `git clone` that gets it; run that where they agree, then `extension` again with `--dir <the cloned folder>/extension`.
-   - Chrome lets only the person install it. Give them one step at a time and wait after each: turn on **Developer mode**; choose **Load unpacked** and pick the extension folder (on a Mac, Cmd+Shift+G in the folder picker, then paste); on the extension's **Details**, turn on **Allow User Scripts**; sign in to the developer console, open the extension from the toolbar and choose **Connect with this console**.
+   - Chrome lets only the person install it. Give them one step at a time and wait after each: turn on **Developer mode**; choose **Load unpacked** and pick the extension folder (on a Mac, Cmd+Shift+G in the folder picker, then paste); on the extension's **Details**, turn on **Allow User Scripts**; sign in to the developer console. With the console in front, the extension connects to it on its own (on another toolkit than the hosted one or a local one, they open the extension from the toolbar and choose **Connect with this console**).
    - Run `check` again to confirm.
 3. Before you write any code, send the person one message with these questions, then stop and wait for their answer. This holds even when their request seems complete: they choose, not you.
    - Mark each question **Needed** or **Optional**, and give each optional one the default you will use if they skip it.
@@ -253,7 +253,8 @@ their own. All of an account's state is partitioned by its `uid`.
    `{uid, label, kind}` (`kind` is `default` or `app`).
 
 The browser extensions do **not** use `.env`. The adapter runtime
-(`extension/` here) connects from its side panel's Settings ("Connect with this console")
+(`extension/` here) connects to the developer console in front (the hosted toolkit or one on
+this computer; another from its side panel's Settings, "Connect with this console")
 and keeps the address and token in `chrome.storage.local`. The personalized
 extension lives in its own repository and keeps them in `chrome.storage.sync`
 (`toolkitServerUrl` / `toolkitServerToken`), written by its Options page.

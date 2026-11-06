@@ -174,7 +174,7 @@ ${accessTools}
 
 ${verifyTools}
 
-**The browser runtime** (\`extension/\`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app \`${BROWSER_RUNTIME_APP}\` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its side panel (the toolbar button opens it: Profile, Builder, Settings), and reports applied / failed (with the error) / skipped per page origin with \`adapter_report\`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console → the side panel's **Settings** → **Connect with this console** (the skill's \`adapter.mjs extension\` walks a person through it, and \`adapter.mjs check\` confirms it). On connecting, the runtime checks in with an empty \`adapter_report\`, so \`adapter_status\` lists it before it runs anything. Adapters are built in code with a coding agent (the console's **+ New adapter** is a guide to that); the console's **Adapters** page edits them (live lint), saves revisions, runs them in the browser, shares them, installs others' and shows the runtime's reports.
+**The browser runtime** (\`extension/\`, an unpacked Chrome extension, Chrome 135+): it runs everything installed into the app \`${BROWSER_RUNTIME_APP}\` as user scripts on the URLs each adapter targets, picks up a new revision in open pages without a reload, can be switched off per site from its side panel (the toolbar button opens it: Profile, Builder, Settings), and reports applied / failed (with the error) / skipped per page origin with \`adapter_report\`. Setup: Load unpacked → turn on **Allow User Scripts** on its Details → sign in to the console with it in front; the runtime connects to the console in front on its own (the hosted toolkit, or one on this computer; another toolkit connects from the side panel's **Settings** → **Connect with this console**) (the skill's \`adapter.mjs extension\` walks a person through it, and \`adapter.mjs check\` confirms it). On connecting, the runtime checks in with an empty \`adapter_report\`, so \`adapter_status\` lists it before it runs anything. Adapters are built in code with a coding agent (the console's **+ New adapter** is a guide to that); the console's **Adapters** page edits them (live lint), saves revisions, runs them in the browser, shares them, installs others' and shows the runtime's reports.
 
 SDK helpers: ${helpers.map((h) => `\`${h}\``).join(', ')}.
 
@@ -221,7 +221,7 @@ The person says what should change, you write the file, and the toolkit runs it 
    - The helper below reads \`TOOLKIT_URL\` and \`TOOLKIT_TOKEN\` from \`.env\`. Keep the token out of your messages, other files and commits (git ignores \`.env\`).
 2. Check that the person's browser runs adapters: \`node <skill folder>/scripts/adapter.mjs check\`. It prints "Connected: Chrome … on macOS, last seen …", or says that no browser runtime is connected. If none is, help them set up the extension:
    - Run \`node <skill folder>/scripts/adapter.mjs extension\` (with \`--no-open\` if the person does not want windows opened). It finds the extension folder, opens \`chrome://extensions\` in Chrome, copies the folder's path, and prints the steps. Always run it rather than giving the steps from memory: the person needs the folder's path. If the extension is not on their computer, it prints the \`git clone\` that gets it; run that where they agree, then \`extension\` again with \`--dir <the cloned folder>/extension\`.
-   - Chrome lets only the person install it. Give them one step at a time and wait after each: turn on **Developer mode**; choose **Load unpacked** and pick the extension folder (on a Mac, Cmd+Shift+G in the folder picker, then paste); on the extension's **Details**, turn on **Allow User Scripts**; sign in to the developer console, open the extension from the toolbar and choose **Connect with this console**.
+   - Chrome lets only the person install it. Give them one step at a time and wait after each: turn on **Developer mode**; choose **Load unpacked** and pick the extension folder (on a Mac, Cmd+Shift+G in the folder picker, then paste); on the extension's **Details**, turn on **Allow User Scripts**; sign in to the developer console. With the console in front, the extension connects to it on its own (on another toolkit than the hosted one or a local one, they open the extension from the toolbar and choose **Connect with this console**).
    - Run \`check\` again to confirm.
 3. Before you write any code, send the person one message with these questions, then stop and wait for their answer. This holds even when their request seems complete: they choose, not you.
    - Mark each question **Needed** or **Optional**, and give each optional one the default you will use if they skip it.
@@ -570,7 +570,8 @@ their own. All of an account's state is partitioned by its \`uid\`.
    \`{uid, label, kind}\` (\`kind\` is \`default\` or \`app\`).
 
 The browser extensions do **not** use \`.env\`. The adapter runtime
-(\`extension/\` here) connects from its side panel's Settings ("Connect with this console")
+(\`extension/\` here) connects to the developer console in front (the hosted toolkit or one on
+this computer; another from its side panel's Settings, "Connect with this console")
 and keeps the address and token in \`chrome.storage.local\`. The personalized
 extension lives in its own repository and keeps them in \`chrome.storage.sync\`
 (\`toolkitServerUrl\` / \`toolkitServerToken\`), written by its Options page.

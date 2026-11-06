@@ -24,6 +24,9 @@
 //   wake-ups     install/startup, a 30-second alarm, the registry's
 //                notification stream while the worker is awake, and the
 //                developer console page itself (bridge.js) right after a save
+//   follow       the developer console in front, signed in, on the hosted
+//                toolkit or one on this computer (runtime/config.js): the
+//                runtime connects to it with the token it shows
 //
 // Shaped after the personalized extension's custom-adapter path (its user
 // script world and reconcile loop), without its built-in adapters, agents,
@@ -34,7 +37,7 @@ import { BROWSER_RUNTIME_APP, normalizedUrl, urlPatternRegExpSource } from './ve
 import { registrationFor, runnable, teardownScript, buildUserScript, personalScript, scriptId, keyOf, SCRIPT_PREFIX, BLOCKS_FILE, PREVIEW_KEY } from './runtime/scripts.js';
 import { personalFromProfile, explicitFromMemories, personalFromSettings, siteOf, SETTABLE_KEYS } from './vendor/blocks/personal.js';
 import { shortcutFromProfile, shortcutKeysFromProfile, checkCombo, normalCombo, SHORTCUT_FIELD } from './vendor/blocks/shortcut.js';
-import { isAllowedServerUrl, readConnection, writeConnection, instanceId, runtimeLabel } from './runtime/config.js';
+import { isAllowedServerUrl, readConnection, writeConnection, instanceId, runtimeLabel, FOLLOWED_ORIGINS, followsConsoleAt } from './runtime/config.js';
 import { createPageTypes, askToolkit } from './runtime/page-type.js';
 
 const APP = BROWSER_RUNTIME_APP;
@@ -567,24 +570,53 @@ async function registerBridge() {
   const connection = await readConnection();
   const existing = await chrome.scripting.getRegisteredContentScripts({ ids: ['console-bridge'] });
   if (existing.length) await chrome.scripting.unregisterContentScripts({ ids: ['console-bridge'] });
-  if (!connection) return;
-  const u = new URL(connection.url);
-  const matches = [`${u.protocol}//${u.hostname}/developer*`];
+  // The consoles it follows (a match pattern has no port: any port on this
+  // computer), and the connected toolkit's.
+  const hosts = new Set([...FOLLOWED_ORIGINS, 'http://localhost', 'http://127.0.0.1']);
+  if (connection) { const u = new URL(connection.url); hosts.add(`${u.protocol}//${u.hostname}`); }
+  const matches = [...hosts].map(h => `${h}/developer*`);
   await chrome.scripting.registerContentScripts([{
     id: 'console-bridge', js: ['bridge.js'], matches, runAt: 'document_start', persistAcrossSessions: true,
   }]);
-  // A registered script reaches pages loaded from now on. The console the
-  // person just connected from is already open: give it the bridge too, so it
-  // shows this runtime without a reload.
-  const port = u.port || (u.protocol === 'https:' ? '443' : '80');
+  // A registered script reaches pages loaded from now on. Consoles already
+  // open (the one the person just connected from, say) get it now, so they
+  // show this runtime without a reload.
   for (const tab of await chrome.tabs.query({ url: matches })) {
     try {
-      const at = new URL(tab.url);
-      if ((at.port || (at.protocol === 'https:' ? '443' : '80')) !== port) continue;
       await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['bridge.js'] });
     } catch { /* a tab that is closing or not ready yet */ }
   }
 }
+
+// The console in front, signed in, on a toolkit it follows: connect to that
+// one, with the default token the console shows, unless already connected
+// with it. One at a time: tab switches and the bridge can ask together.
+let following = Promise.resolve();
+function followConsole(tabId) {
+  following = following.then(() => followNow(tabId)).catch(() => {});
+  return following;
+}
+async function followNow(tabId) {
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab?.active || !tab.url) return;
+  let u;
+  try { u = new URL(tab.url); } catch { return; }
+  if (!u.pathname.startsWith('/developer') || !followsConsoleAt(u.origin)) return;
+  const [{ result: token } = {}] = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: () => document.getElementById('sidebar-token-value')?.textContent?.trim() || null,
+  }).catch(() => []);
+  if (!/^aat_[A-Za-z0-9_-]+$/.test(token || '')) return;
+  const connection = await readConnection();
+  if (connection?.url === u.origin && connection.token === token) return;
+  await handlers.connect({ url: u.origin, token });
+}
+chrome.tabs.onActivated.addListener(({ tabId }) => { followConsole(tabId); });
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
+  if (windowId === chrome.windows.WINDOW_ID_NONE) return;
+  const [tab] = await chrome.tabs.query({ active: true, windowId }).catch(() => []);
+  if (tab) followConsole(tab.id);
+});
 
 // ── messages from the side panel and the bridge ───────────────────────────────────
 
@@ -684,6 +716,13 @@ const handlers = {
 };
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // A console on a toolkit it follows says it shows a token: the runtime
+  // reads it from the page itself, and only while that tab is in front.
+  if (message?.type === 'followConsole') {
+    if (sender.tab?.id == null || !followsConsoleAt(sender.origin)) return false;
+    followConsole(sender.tab.id).then(() => sendResponse({ ok: true }));
+    return true;
+  }
   const handler = handlers[message?.type];
   if (!handler) return false;
   // The extension's own pages (the side panel) may ask anything. The bridge may
@@ -712,6 +751,9 @@ async function start(reason) {
   await chrome.alarms.create(SYNC_ALARM, { periodInMinutes: 0.5 });
   await registerBridge().catch(() => {});
   await sync(reason);
+  // On first launch too: the console that is already in front.
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true }).catch(() => []);
+  if (tab) await followConsole(tab.id);
 }
 chrome.runtime.onInstalled.addListener(() => start('installed'));
 chrome.runtime.onStartup.addListener(() => start('startup'));

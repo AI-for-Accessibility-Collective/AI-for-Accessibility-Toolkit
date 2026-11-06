@@ -1,10 +1,13 @@
-// Runs on the connected toolkit's developer console (/developer) only.
+// Runs on the connected toolkit's developer console (/developer), and on the
+// consoles the runtime follows (runtime/config.js).
 //
 // The console says "adapters changed" right after a save, and "profile
 // changed" after it writes the profile (Load profile, Apply), which wakes the
 // runtime to sync now rather than at its next 30-second alarm. The runtime
 // answers with whether it is connected, as whom, and whether user scripts
-// are allowed, so the console can show this browser's runtime state. Nothing
+// are allowed, so the console can show this browser's runtime state. When the
+// console shows a signed-in developer's token, the bridge says so (not the
+// token), and the runtime connects to it if this tab is in front. Nothing
 // else crosses: never the token, never page content.
 
 // It may run twice in one page (registered for new pages, and injected into
@@ -21,6 +24,7 @@ if (window.__ai4a11yBridge?.alive()) { window.__ai4a11yBridge.announce(); return
 const alive = () => { try { return !!chrome.runtime?.id; } catch { return false; } };
 function retire() {
   window.removeEventListener('message', onMessage);
+  tokenWatch.disconnect();
   if (window.__ai4a11yBridge?.announce === announce) delete window.__ai4a11yBridge;
 }
 
@@ -60,6 +64,21 @@ function onMessage(event) {
 }
 window.addEventListener('message', onMessage);
 
+// Signing in, or in as someone else, changes the token the console shows.
+let shown = '';
+function tokenChanged() {
+  const token = document.getElementById('sidebar-token-value')?.textContent?.trim() || '';
+  if (!token.startsWith('aat_') || token === shown) return;
+  if (!alive()) return retire();
+  shown = token;
+  let sent;
+  try { sent = chrome.runtime.sendMessage({ type: 'followConsole' }); } catch { return retire(); }
+  Promise.resolve(sent).catch(() => {}).finally(announce);
+}
+const tokenWatch = new MutationObserver(tokenChanged);
+tokenWatch.observe(document, { subtree: true, childList: true, characterData: true });
+
 window.__ai4a11yBridge = { announce, alive };
 announce();
+tokenChanged();
 })();

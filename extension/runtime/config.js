@@ -15,6 +15,23 @@ export function isAllowedServerUrl(url) {
   return u.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname);
 }
 
+/**
+ * Toolkits the runtime connects to on its own when their developer console
+ * is the tab in front, signed in: the hosted toolkit, and any on this
+ * computer. A toolkit decides what code runs on every page, so another
+ * address connects only from the side panel.
+ */
+export const FOLLOWED_ORIGINS = [
+  'https://toolkit-service-774429076434.us-central1.run.app',
+  'https://toolkit-service-bkoy44hgea-uc.a.run.app',
+];
+export function followsConsoleAt(origin) {
+  let u;
+  try { u = new URL(String(origin || '')); } catch { return false; }
+  if (FOLLOWED_ORIGINS.includes(u.origin)) return true;
+  return u.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname);
+}
+
 /** @returns {Promise<{url: string, token: string, uid: string} | null>} */
 export async function readConnection() {
   const { connection } = await chrome.storage.local.get('connection');
