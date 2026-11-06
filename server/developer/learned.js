@@ -168,7 +168,7 @@ export function createLearnedPanel({ getClient, status, run, onProfileChanged })
     status(`Reset the suggestions: cleared ${cleared.proposals}, and the weekly count starts again at zero.`);
   }));
   $('learned-reset-all').addEventListener('click', () => {
-    if (!confirm('Reset everything your toolkit learned? This clears the suggestions, the memories and the observations not learned from yet. Your profile and your own notes stay.')) return;
+    if (!confirm('Reset everything your toolkit learned for the active profile? This clears its suggestions, memories and the observations not learned from yet. Its settings and your own notes stay, and other profiles keep their memory.')) return;
     run(async () => {
       const { cleared } = await profileTools().reset({ memories: true });
       await refresh();

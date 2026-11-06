@@ -113,6 +113,8 @@ export function createClient(baseUrl, token, fetcher = fetch) {
     readWords: (words, current) => request('/v1/ai/text', { task: 'profile', input: words, adapter: 'toolkit/profile', options: { current } }, 'POST', 60000),
     // Which preset is selected, and whether it has been edited since (CONTRACT.md "Profile selection").
     selection: () => request('/v1/profile/selection'),
+    // Make a profile the active one: a preset's id, or 'default' (POST /v1/profile/select): {profile, selected, ...}.
+    selectProfile: (id) => request('/v1/profile/select', { id }),
     // The adapter marketplace (CONTRACT.md "Adapter marketplace").
     adapters: {
       list: async () => request('/v1/adapters'),

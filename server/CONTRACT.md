@@ -40,11 +40,11 @@
 | DELETE | `/v1/account/tokens/{id}` | revoke one of the account's tokens (session token) |
 | POST | `/v1/account/password` | change password `{current, next}` (session token) |
 | GET | `/v1/account/presets` | `{presets}` saved profile presets (session token) |
-| PUT | `/v1/account/presets` | replace saved presets `{presets}` (session token) |
-| GET | `/v1/profile/selection` | `{revision, selected, updatedAt}`: the preset last loaded with `replaceProfile`, `selected` is `{id, name, edited}` or null (any token) |
+| PUT | `/v1/account/presets` | replace saved presets `{presets}`; a saved preset left out is deleted, with its profile's settings and memory (session token) |
+| GET | `/v1/profile/selection` | `{revision, selected, updatedAt}`: the preset last loaded with `replaceProfile`, `selected` is `{id, name, edited}` or null for Default. It is the active profile: each profile keeps its own settings and memory, so the Librarian's reads and writes are that profile's. `replaceProfile` with a preset's `{id, name}` switches to it first; without one, to Default (any token) |
 | GET | `/v1/profile/events` | server-sent events: a `profile` event with that same object on connecting and on every profile write, so an app follows the profile without a refresh. It carries no profile content; read that with `getProfile` (any token) |
-| GET | `/v1/profile/presets` | `{presets: [{id, name, description, builtIn}]}`: the console's built-in presets, then the account's saved ones (any token) |
-| POST | `/v1/profile/select` | `{id}` makes that preset the active profile, as the console's Load profile does → `{revision, selected, updatedAt, profile}` (any token) |
+| GET | `/v1/profile/presets` | `{presets: [{id, name, description, builtIn}]}`: Default (`default`, the account's own profile), the console's built-in presets, then the account's saved ones (any token) |
+| POST | `/v1/profile/select` | `{id}` makes that profile the active one, as the console's Load profile does: a preset's settings are set from it and its memory is its own; `default` switches back without changing anything → `{revision, selected, updatedAt, profile}` (any token) |
 | POST | `/v1/providers` | register an Adapter MCP app instance → `{providerId, endpoints}` (app or default token) |
 | DELETE | `/v1/providers/{providerId}` | sign the instance off |
 | GET | `/v1/providers/{providerId}/channel` | server-sent events: relayed MCP requests for the instance |

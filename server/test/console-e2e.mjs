@@ -215,7 +215,7 @@ try {
 
   // What the toolkit learned, on the Memory page: an observation, Learn now, a suggestion to accept, pause, reset.
   await dev.click('.nav-link[data-page="memory"]');
-  assert.match(await dev.locator('#memory-profile').innerText(), /^Current profile: \S/);
+  assert.match(await dev.locator('#memory-profile').innerText(), /^The memory of \S.*, the active profile\./);
   const statusIs = (text) => dev.waitForFunction(t => document.getElementById('status').textContent.startsWith(t), text);
   await dev.locator('#learned-summary', { hasText: 'Learning is on.' }).waitFor();
   assert.match(await dev.locator('#learned-proposals').innerText(), /No suggestions waiting/);

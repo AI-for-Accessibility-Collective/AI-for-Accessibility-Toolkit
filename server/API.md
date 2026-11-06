@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-11-06T08:34:23.012Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-11-06T17:39:10.075Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -47,8 +47,8 @@ Version: `0.1.0`
 | POST | `/v1/mcp/apps/{appId}` | bearer (same account) | MCP endpoint for the app's one live instance; an error names the instance endpoints when several are connected |
 | GET | `/v1/profile/selection` | bearer | the preset last loaded with replaceProfile: {revision, selected: {id, name, edited} or null, updatedAt} |
 | GET | `/v1/profile/events` | bearer | server-sent events: a `profile` event (the same object as /v1/profile/selection) on connecting and on every profile write, with no profile content; read that with getProfile |
-| GET | `/v1/profile/presets` | bearer | the presets an app can choose from, the console's built-in ones then the account's saved ones: {presets: [{id, name, description, builtIn}]} |
-| POST | `/v1/profile/select` | bearer | make a preset the active profile, as the console does when it loads one {id} -> {revision, selected, updatedAt, profile} |
+| GET | `/v1/profile/presets` | bearer | the profiles an app can choose from: Default (the account's own), the console's built-in presets, then the account's saved ones: {presets: [{id, name, description, builtIn}]} |
+| POST | `/v1/profile/select` | bearer | make a profile the active one, as the console does when it loads one; each profile keeps its own settings and memory, and 'default' goes back to the account's own {id} -> {revision, selected, updatedAt, profile} |
 | GET | `/v1/apps` | bearer | the account's connected apps grouped by app: {apps: [{appId, name, live, hidden, connections, adapters, endpoint}], hiddenApps} |
 | DELETE | `/v1/apps/{appId}` | bearer | forget an app that is not connected (it returns when it connects again) |
 | PUT | `/v1/apps/{appId}/hidden` | bearer | hide the app in the developer console (Apps and Listings) |

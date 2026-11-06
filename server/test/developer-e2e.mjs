@@ -25,7 +25,8 @@ let browser;
 try {
   const tokenResponse = await fetch(base + '/admin/tokens', { method: 'POST', headers: { authorization: 'Bearer test-admin', 'content-type': 'application/json' }, body: JSON.stringify({ uid: 'browser-test' }) });
   const { token } = await tokenResponse.json();
-  const { librarian } = await host.getInstance('browser-test');
+  // The account's active profile's Librarian, looked up on every call: each profile keeps its own.
+  const librarian = new Proxy({}, { get: (_, method) => async (...args) => (await host.getInstance('browser-test')).librarian[method](...args) });
   browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
   page.setDefaultTimeout(10000);
@@ -37,8 +38,9 @@ try {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(base + '/developer');
-  assert.equal(await page.locator('.profile-card').count(), 9);
-  assert.equal(await page.locator('[data-load]:disabled').count(), 9);
+  // Default, then the nine built-in presets.
+  assert.equal(await page.locator('.profile-card').count(), 10);
+  assert.equal(await page.locator('[data-load]:disabled').count(), 10);
   // Accounts are the front door; the token form is the advanced path.
   assert.equal(await page.locator('#signin-form').isVisible(), true);
   await page.click('#token-connect summary');
@@ -63,6 +65,14 @@ try {
     await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
     assert.deepEqual(editableProfile(await librarian.getProfile()), preset.profile, `${preset.name} must round trip without data loss`);
   }
+  // Default is the account's own profile: loading it switches back to its
+  // own settings (each profile keeps its own) without changing them.
+  await page.click('[data-load="default"]');
+  await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Default loaded'));
+  assert.deepEqual(await page.locator('.profile-card:has([data-load="default"]) .marker').allInnerTexts(), ['Selected', 'Active in toolkit']);
+  assert.notDeepEqual(editableProfile(await librarian.getProfile()), BUILTIN_PROFILES.at(-1).profile, 'Default keeps its own settings');
+  // (Asked of the server the console is connected to: each server keeps the selection it last saw.)
+  assert.equal((await (await fetch(`http://127.0.0.1:${remote.address().port}/v1/profile/selection`, { headers: { authorization: `Bearer ${token}` } })).json()).selected, null);
   const customValues = {
     supportAreas: ['custom-area'], freeText: '', 'literal.dot': 12,
     fields: { visionKind: 'lowVision', needs: [
@@ -261,6 +271,11 @@ try {
   assert.equal(await page.locator('[data-load^="custom-"]').count(), 1, 'custom presets survive reload');
   assert.match(await page.locator('#connection-state').innerText(), /Signed out/);
   assert.equal(await page.inputValue('#instance-token'), '');
+  // Deleting asks first: dismissed, nothing goes; accepted, it does.
+  page.once('dialog', (d) => d.dismiss());
+  await page.click('[data-delete]');
+  assert.equal(await page.locator('[data-load^="custom-"]').count(), 1, 'a dismissed warning keeps the preset');
+  page.once('dialog', (d) => { assert.match(d.message(), /^Delete /); d.accept(); });
   await page.click('[data-delete]');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Deleted saved preset'));
   assert.equal(await page.locator('[data-load^="custom-"]').count(), 0);

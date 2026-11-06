@@ -137,7 +137,7 @@ try {
 
   // The Profiles page still works after the shell restructure.
   await page.click('.nav-link[data-page="profiles"]');
-  assert.equal(await page.locator('.profile-card').count(), 9);
+  assert.equal(await page.locator('.profile-card').count(), 10, 'Default and the nine built-in presets');
 
   // Mobile layout must not overflow with the sidebar stacked above.
   await page.click('.nav-link[data-page="listings"]');

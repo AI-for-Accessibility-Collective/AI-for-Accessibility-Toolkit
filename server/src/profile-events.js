@@ -4,8 +4,8 @@
 //
 //   GET  /v1/profile/selection   {ok, revision, selected, updatedAt}
 //   GET  /v1/profile/events      SSE: a `profile` event now, and one on every change
-//   GET  /v1/profile/presets     the presets an app can choose from: {presets: [{id, name, description, builtIn}]}
-//   POST /v1/profile/select      {id} makes that preset the active profile (the console's Load profile)
+//   GET  /v1/profile/presets     the profiles an app can choose from: {presets: [{id, name, description, builtIn}]}, Default first
+//   POST /v1/profile/select      {id} makes that profile the active one (the console's Load profile)
 //
 // The event carries no profile content, only the revision and the selected
 // preset's name. A listener that wants the profile calls getProfile with its
@@ -16,10 +16,18 @@
 // marks it `edited`; replacing the profile with no preset clears it. It is
 // stored in the console document, so it outlives a restart; the SSE
 // subscribers are in memory, like the relay's.
+//
+// Each profile keeps its own settings and memory (toolkit-host.js), and the
+// selected one is the account's active profile: nothing selected is the
+// Default profile, the account's own. Loading a preset switches to it and
+// sets its settings from the preset; its memory stays with it. Choosing
+// Default switches back without changing it. An edited preset keeps the
+// preset's memory.
 
 import { HttpError, sendJSON, readJSON } from './http.js';
 import { CONSOLE_DOC, readConsolePrefs } from './providers.js';
 import { BUILTIN_PROFILES } from '../developer/profiles.js';
+import { profileFolder } from './toolkit-host.js';
 
 const PROFILE_PREFIX = '/v1/profile';
 
@@ -29,6 +37,9 @@ export const PROFILE_WRITES = new Set(['replaceProfile', 'setProfileField', 'set
 const MAX_ID = 80;
 const MAX_NAME = 120;
 
+/** The Default profile, first in the list an app chooses from. */
+export const DEFAULT_PROFILE = { id: 'default', name: 'Default', description: 'Your own profile' };
+
 /**
  * The preset a caller names, or null. `edited: true` says the profile is that
  * preset with changes (the console's temporary profile). Anything else about
@@ -37,7 +48,7 @@ const MAX_NAME = 120;
 export function cleanSelection(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const { id, name } = value;
-  if (typeof id !== 'string' || typeof name !== 'string' || !id || !name.trim()) return null;
+  if (typeof id !== 'string' || typeof name !== 'string' || !id || !name.trim() || id === DEFAULT_PROFILE.id) return null;
   return { id: id.slice(0, MAX_ID), name: name.trim().slice(0, MAX_NAME), edited: value.edited === true };
 }
 
@@ -62,6 +73,33 @@ export function createProfileEvents({ store, authenticate, toolkitHost, withUser
   }
 
   const snapshot = (s) => ({ revision: s.revision, selected: s.selected, updatedAt: s.updatedAt });
+
+  /** The active profile's id, or null for Default. */
+  async function profileOf(uid) {
+    return (await stateOf(uid)).selected?.id || null;
+  }
+
+  /**
+   * Make `selection`'s profile the active one before anything is written to
+   * it, without telling anyone yet (`changed` does, once the write landed).
+   * Returns what was selected before, to put back if the write fails. Call
+   * inside the uid's queue.
+   */
+  async function use(uid, selection) {
+    profileFolder(selection?.id); // throws for an id that cannot name a profile's folder
+    const s = await stateOf(uid);
+    const before = s.selected;
+    if ((before?.id || null) === (selection?.id || null)) return before;
+    await keep(uid, s, selection);
+    return before;
+  }
+
+  async function keep(uid, s, selection) {
+    s.selected = selection;
+    const doc = (await store.readJSON(CONSOLE_DOC(uid))) || {};
+    if (s.selected) doc.activeProfile = s.selected; else delete doc.activeProfile;
+    await store.writeJSON(CONSOLE_DOC(uid), doc);
+  }
   const frame = (s) => `event: profile\nid: ${s.revision}\ndata: ${JSON.stringify(snapshot(s))}\n\n`;
 
   /**
@@ -75,9 +113,7 @@ export function createProfileEvents({ store, authenticate, toolkitHost, withUser
     else s.selected = selection;
     s.revision = Math.max(s.revision + 1, Date.now());
     s.updatedAt = new Date().toISOString();
-    const doc = (await store.readJSON(CONSOLE_DOC(uid))) || {};
-    if (s.selected) doc.activeProfile = s.selected; else delete doc.activeProfile;
-    await store.writeJSON(CONSOLE_DOC(uid), doc);
+    await keep(uid, s, s.selected);
     for (const res of s.subs) { try { res.write(frame(s)); } catch { /* its close handler removes it */ } }
     return snapshot(s);
   }
@@ -104,15 +140,16 @@ export function createProfileEvents({ store, authenticate, toolkitHost, withUser
     res.on('close', () => { clearInterval(beat); s.subs.delete(res); });
   }
 
-  // The console's built-in presets, then the ones the account saved.
+  // Default, the console's built-in presets, then the ones the account saved.
   async function presetsOf(uid) {
     const saved = (await readConsolePrefs(store, uid)).presets
       .filter(p => p && typeof p.id === 'string' && typeof p.name === 'string' && p.profile && typeof p.profile === 'object')
       .map(p => ({ id: p.id, name: p.name, description: typeof p.description === 'string' ? p.description : '', builtIn: false, profile: p.profile }));
-    return [...BUILTIN_PROFILES.map(p => ({ id: p.id, name: p.name, description: p.description || '', builtIn: true, profile: p.profile })), ...saved];
+    return [{ ...DEFAULT_PROFILE, builtIn: true, profile: null }, ...BUILTIN_PROFILES.map(p => ({ id: p.id, name: p.name, description: p.description || '', builtIn: true, profile: p.profile })), ...saved];
   }
 
-  // Same as the console's Load profile: replaceProfile, then announce which preset it was.
+  // Same as the console's Load profile: switch to the preset's profile, set
+  // its settings from it, then announce which it was. Default only switches.
   async function select(req, res, rec) {
     const body = await readJSON(req);
     if (typeof body?.id !== 'string' || !body.id) throw new HttpError(400, 'invalid-preset', 'Send {id} of a preset from /v1/profile/presets.');
@@ -121,13 +158,17 @@ export function createProfileEvents({ store, authenticate, toolkitHost, withUser
       if (!(await authenticate(req))) throw new HttpError(401, 'unauthorized', 'This token is no longer valid.');
       const preset = (await presetsOf(rec.uid)).find(p => p.id === body.id);
       if (!preset) throw new HttpError(404, 'unknown-preset', `No preset ${body.id.slice(0, MAX_ID)}. List them at /v1/profile/presets.`);
+      const selection = preset.id === DEFAULT_PROFILE.id ? null : { id: preset.id, name: preset.name, edited: false };
+      const before = await use(rec.uid, selection);
       let profile;
       try {
-        profile = await (await toolkitHost.getInstance(rec.uid)).librarian.replaceProfile(preset.profile);
+        const { librarian } = await toolkitHost.getInstance(rec.uid);
+        profile = preset.profile ? await librarian.replaceProfile(preset.profile) : await librarian.getProfile();
       } catch (e) {
+        await use(rec.uid, before);
         throw new HttpError(400, 'invalid-preset', `That preset can't be loaded: ${e.message}`);
       }
-      const snap = await changed(rec.uid, { id: preset.id, name: preset.name, edited: false });
+      const snap = await changed(rec.uid, selection);
       return sendJSON(res, 200, { ok: true, ...snap, profile });
     });
   }
@@ -158,5 +199,5 @@ export function createProfileEvents({ store, authenticate, toolkitHost, withUser
     }
   }
 
-  return { route, changed, dropUser };
+  return { route, changed, use, profileOf, dropUser };
 }

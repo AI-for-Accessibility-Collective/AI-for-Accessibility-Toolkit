@@ -121,7 +121,8 @@ function lookForSuggestions() {
 }
 
 function renderPresets() {
-  $('profile-started').textContent = selection ? `Your profile started from ${selection.name}${selection.edited ? ' and has changed since' : ''}.` : 'Your profile did not start from a preset.';
+  // Each profile keeps its own settings and memory; nothing selected is Default, the person's own.
+  $('profile-started').textContent = selection ? `Your profile started from ${selection.name}${selection.edited ? ' and has changed since' : ''}. It keeps its own memory.` : 'You are using Default, your own profile.';
   $('profile-presets').hidden = !presets.length;
   const select = $('profile-preset');
   if (document.activeElement === select) return;
@@ -185,7 +186,7 @@ async function usePreset() {
     profile = got.profile || await librarian('getProfile');
     selection = got.selected || null;
     renderProfile();
-    say(`Your profile now starts from ${selection?.name || 'that preset'}.`);
+    say(selection ? `Your profile now starts from ${selection.name}, with its own memory.` : 'You are using Default again, with its own settings and memory.');
     ask('sync').catch(() => {});
     refreshAdapters();
   } catch (e) { say(e.message, true); }

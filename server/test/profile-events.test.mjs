@@ -4,12 +4,12 @@
 
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, stat, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
-import { createToolkitHost } from '../src/toolkit-host.js';
+import { createToolkitHost, isProfileKey } from '../src/toolkit-host.js';
 
 const ADMIN = 'test-admin-password';
 const dir = await mkdtemp(path.join(tmpdir(), 'profile-events-test-'));
@@ -145,16 +145,17 @@ await test('one account never hears another account', async () => {
   events.close();
 });
 
-await test('presets: the built-in ones, then the account\'s saved ones, without their content', async () => {
+await test('presets: Default, the built-in ones, then the account\'s saved ones, without their content', async () => {
   const profile = { freeText: 'Saved by alice', fields: {} };
   const put = await call('PUT', '/v1/account/presets', { token: sessions.get(alice), body: { presets: [{ id: 'custom-mine', name: 'Mine', description: 'My own', profile }] } });
   assert.equal(put.status, 200);
   const { status, body } = await call('GET', '/v1/profile/presets', { token: alice }); // a default token, not a session
   assert.equal(status, 200);
-  assert.equal(body.presets.filter(p => p.builtIn).length, 9);
+  assert.deepEqual(body.presets[0], { id: 'default', name: 'Default', description: 'Your own profile', builtIn: true });
+  assert.equal(body.presets.filter(p => p.builtIn).length, 10);
   assert.deepEqual(body.presets.at(-1), { id: 'custom-mine', name: 'Mine', description: 'My own', builtIn: false });
   assert.ok(!JSON.stringify(body).includes('Saved by alice'));
-  assert.equal((await call('GET', '/v1/profile/presets', { token: bob })).body.presets.length, 9, 'not another account\'s presets');
+  assert.equal((await call('GET', '/v1/profile/presets', { token: bob })).body.presets.length, 10, 'not another account\'s presets');
 });
 
 await test('select loads a preset like the console does, and announces it', async () => {
@@ -189,6 +190,60 @@ await test('the selection survives a restart', async () => {
   assert.deepEqual((await res.json()).selected, { id: 'custom-3', name: 'Kept', edited: false });
   again.closeAllConnections?.();
   await new Promise(r => again.close(r));
+});
+
+await test('each profile keeps its own settings and memory; Default is the account\'s own, and a deleted preset\'s goes with it', async () => {
+  const carol = await account('carol');
+  const notes = async () => (await librarian(carol, 'listMemories')).body.result.memories.filter(m => m.kind === 'note').map(m => m.text).sort();
+  const settings = async () => (await librarian(carol, 'getProfile')).body.result.freeText;
+  // Default: the account's own, before any preset.
+  await librarian(carol, 'replaceProfile', { freeText: 'Default text', fields: {} });
+  await librarian(carol, 'addNote', 'default note');
+  assert.equal((await call('GET', '/v1/profile/selection', { token: carol })).body.selected, null);
+  // A built-in preset: its settings from the preset, and a memory of its own.
+  await call('POST', '/v1/profile/select', { token: carol, body: { id: 'wai-2' } });
+  assert.deepEqual(await notes(), []);
+  await librarian(carol, 'addNote', 'wai-2 note');
+  // A saved preset, loaded the way the console loads one.
+  await call('PUT', '/v1/account/presets', { token: sessions.get(carol), body: { presets: [{ id: 'custom-x', name: 'X', profile: { freeText: 'X text', fields: {} } }] } });
+  await librarian(carol, 'replaceProfile', { freeText: 'X text', fields: {} }, { id: 'custom-x', name: 'X' });
+  assert.equal(await settings(), 'X text');
+  assert.deepEqual(await notes(), []);
+  await librarian(carol, 'addNote', 'x note');
+  // An edit keeps the preset's memory.
+  await librarian(carol, 'setProfileField', 'freeText', 'X edited');
+  assert.equal((await call('GET', '/v1/profile/selection', { token: carol })).body.selected.edited, true);
+  assert.deepEqual(await notes(), ['x note']);
+  // Default comes back as it was left, settings and memory, without being replaced.
+  const back = await call('POST', '/v1/profile/select', { token: carol, body: { id: 'default' } });
+  assert.equal(back.status, 200);
+  assert.equal(back.body.selected, null);
+  assert.equal(back.body.profile.freeText, 'Default text');
+  assert.deepEqual(await notes(), ['default note']);
+  await call('POST', '/v1/profile/select', { token: carol, body: { id: 'wai-2' } });
+  assert.deepEqual(await notes(), ['wai-2 note']);
+  // Deleting the active saved preset deletes its profile and goes back to Default.
+  await librarian(carol, 'replaceProfile', { freeText: 'X text', fields: {} }, { id: 'custom-x', name: 'X' });
+  assert.deepEqual(await notes(), ['x note']);
+  const folder = path.join(dir, 'users', 'carol', 'profiles', 'custom-x');
+  assert.ok(await stat(folder).then(() => true, () => false), 'the preset has a folder of its own');
+  assert.equal((await call('PUT', '/v1/account/presets', { token: sessions.get(carol), body: { presets: [] } })).status, 200);
+  assert.equal(await stat(folder).then(() => true, () => false), false, 'its folder is gone');
+  assert.equal((await call('GET', '/v1/profile/selection', { token: carol })).body.selected, null);
+  assert.deepEqual(await notes(), ['default note']);
+  assert.ok(await stat(path.join(dir, 'users', 'carol', 'profiles', 'wai-2')).then(() => true, () => false), 'other profiles stay');
+  // A profile's folder holds only what it keeps on its own; the rest stays the account's.
+  const own = JSON.parse(await readFile(path.join(dir, 'users', 'carol', 'profiles', 'wai-2', 'local.json'), 'utf8'));
+  assert.ok(Object.keys(own).length && Object.keys(own).every(isProfileKey), Object.keys(own).join());
+  const shared = JSON.parse(await readFile(path.join(dir, 'users', 'carol', 'local.json'), 'utf8'));
+  assert.ok('aa.meta' in shared);
+  // The same id again starts empty.
+  await librarian(carol, 'replaceProfile', { freeText: 'X again', fields: {} }, { id: 'custom-x', name: 'X' });
+  assert.deepEqual(await notes(), []);
+  // An id that cannot name a folder is refused, and nothing switches.
+  const evil = await librarian(carol, 'replaceProfile', { freeText: 'no', fields: {} }, { id: '../alice', name: 'Evil' });
+  assert.equal(evil.status, 400);
+  assert.equal((await call('GET', '/v1/profile/selection', { token: carol })).body.selected.id, 'custom-x');
 });
 
 server.closeAllConnections?.();

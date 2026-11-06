@@ -21,6 +21,11 @@ let client = null, saved = [], draft = {}, selectedId = null, activeId = null, f
 // TEMP_ID. `temp` is {baseId, baseName, profile, applied} or null.
 const TEMP_ID = 'temporary';
 let temp = null;
+// The Default profile: the account's own, in use when no preset is. Each
+// profile keeps its own settings and memory on the toolkit; loading Default
+// switches back to it without changing it.
+const DEFAULT_ID = 'default';
+const DEFAULT_ENTRY = { id: DEFAULT_ID, name: 'Default', description: 'your own profile' };
 // `session` is true when signed in with an account (presets and tokens live
 // in the account); false when connected with a bare access token.
 let session = false, defaultToken = null;
@@ -58,7 +63,7 @@ function selectionFor(id) {
     const preset = temp?.baseId && findPreset(temp.baseId);
     return preset ? { id: preset.id, name: preset.name, edited: true } : null;
   }
-  const preset = id && findPreset(id);
+  const preset = id && id !== DEFAULT_ID && findPreset(id);
   return preset ? { id: preset.id, name: preset.name } : null;
 }
 // Show the toolkit's profile; if it is a preset with changes, they are the temporary profile.
@@ -70,10 +75,10 @@ function showToolkitProfile(profile, chosen) {
     temp = { baseId: known.id, baseName: known.name, profile: structuredClone(draft), applied: true };
     selectedId = activeId = TEMP_ID;
   } else {
-    selectedId = activeId = known ? known.id : null;
+    selectedId = activeId = known ? known.id : DEFAULT_ID;
   }
   const name = known && chosen.edited && !known.id.startsWith('custom-') ? `${known.name} (modified)` : known?.name;
-  $('profile-name').value = name || 'My profile'; $('profile-description').value = known?.description || '';
+  $('profile-name').value = name || DEFAULT_ENTRY.name; $('profile-description').value = known?.description || '';
   $('draft-state').textContent = selectedId === TEMP_ID ? 'Temporary · applied' : 'In sync';
   renderEditor(); renderLibrary();
 }
@@ -200,14 +205,14 @@ function renderNewValue() {
   $('new-value-control').replaceChildren(newValueEditor.element);
   updateControls();
 }
-// The Memory page names the profile its suggestions change: the active one.
+// The Memory page shows the active profile's memory, and names it.
 function showMemoryProfile() {
-  const name = activeId === TEMP_ID ? `${temp?.baseName || 'Your profile'} (modified)` : findPreset(activeId)?.name;
-  $('memory-profile-name').textContent = client ? name || 'Your toolkit profile' : 'none (sign in)';
+  const name = activeId === TEMP_ID ? `${temp?.baseName || DEFAULT_ENTRY.name} (modified)` : activeId === DEFAULT_ID ? DEFAULT_ENTRY.name : findPreset(activeId)?.name;
+  $('memory-profile-name').textContent = client ? name || DEFAULT_ENTRY.name : 'none (sign in)';
 }
 function renderLibrary() {
   showMemoryProfile();
-  const all = [...BUILTIN_PROFILES, ...saved];
+  const all = [DEFAULT_ENTRY, ...BUILTIN_PROFILES, ...saved];
   $('profile-count').textContent = all.length;
   const search = $('profile-search').value.trim().toLowerCase();
   const shown = all.filter(item => (filter !== 'custom' || item.id.startsWith('custom-'))
@@ -216,6 +221,7 @@ function renderLibrary() {
   if (temp) $('profile-list').append(renderTempCard());
   if (!shown.length) $('profile-list').append(element('p', 'empty', 'No profiles here yet. Create a profile and save it as a preset.'));
   for (const item of shown) {
+    if (item.id === DEFAULT_ID) { $('profile-list').append(renderDefaultCard()); continue; }
     const card = profileCard(item.id, item.name, item.description);
     const actions = element('div', 'card-actions');
     const load = element('button', 'secondary', 'Load profile');
@@ -241,21 +247,58 @@ function renderLibrary() {
       const remove = element('button', 'delete', 'Delete');
       remove.type = 'button'; remove.dataset.delete = item.id;
       remove.setAttribute('aria-label', `Delete saved preset ${item.name}`);
-      remove.addEventListener('click', () => run(async () => {
-        const next = saved.filter(p => p.id !== item.id);
-        await storePresets(next); saved = next;
-        if (selectedId === item.id) selectedId = null;
-        if (activeId === item.id) activeId = null;
-        if (temp?.baseId === item.id) temp.baseId = null;
-        renderLibrary();
-        status(`Deleted saved preset ${item.name}. The toolkit’s active profile is unchanged.`);
-      }));
+      remove.addEventListener('click', () => {
+        // In an account, the preset's profile goes too: its settings and memory on the toolkit.
+        const warning = session
+          ? `Delete ${item.name}? Its memory is deleted too: what the toolkit learned while it was loaded, its suggestions and its observations. This can’t be undone.${activeId === item.id || (activeId === TEMP_ID && temp?.baseId === item.id) ? ' It is the active profile, so the toolkit goes back to Default.' : ''}`
+          : `Delete ${item.name} from this browser?`;
+        if (!confirm(warning)) return;
+        run(async () => {
+          const wasActive = activeId === item.id || (activeId === TEMP_ID && temp?.baseId === item.id);
+          const next = saved.filter(p => p.id !== item.id);
+          await storePresets(next); saved = next;
+          if (temp?.baseId === item.id) { temp.baseId = null; temp.baseName = null; }
+          if (session && wasActive) {
+            temp = null;
+            await readToolkitProfile();
+            status(`Deleted ${item.name} and its memory. Default is the active profile now.`);
+            return;
+          }
+          if (selectedId === item.id) selectedId = null;
+          if (activeId === item.id) activeId = null;
+          renderLibrary();
+          status(session ? `Deleted ${item.name} and its memory. The toolkit’s active profile is unchanged.` : `Deleted saved preset ${item.name}. The toolkit’s active profile is unchanged.`);
+        });
+      });
       actions.append(remove);
     }
     card.append(element('p', '', item.profile.freeText || 'Custom developer profile.'), actions);
     $('profile-list').append(card);
   }
   updateControls();
+}
+// Default: loading it switches the toolkit back to the account's own
+// profile, as it was left, with its own memory. It can't be deleted.
+function renderDefaultCard() {
+  const card = profileCard(DEFAULT_ID, DEFAULT_ENTRY.name, DEFAULT_ENTRY.description);
+  card.append(element('p', '', 'Your own profile, in use when no preset is loaded. Each profile keeps its own settings and memory; loading Default goes back to its own, as you left them.'));
+  const actions = element('div', 'card-actions');
+  const load = element('button', 'secondary', 'Load profile');
+  load.type = 'button'; load.dataset.load = DEFAULT_ID;
+  load.setAttribute('aria-label', 'Load Default (your own profile)');
+  load.addEventListener('click', () => run(async () => {
+    const result = await client.selectProfile(DEFAULT_ID);
+    window.postMessage({ source: 'ai4a11y-console', type: 'profile-changed' }, location.origin);
+    stashTemp();
+    draft = editableProfile(validateProfile(result.profile)); selectedId = activeId = DEFAULT_ID;
+    $('profile-name').value = DEFAULT_ENTRY.name; $('profile-description').value = '';
+    $('draft-state').textContent = 'Applied';
+    renderEditor(); renderLibrary();
+    status(`Default loaded. The toolkit uses your own profile and its memory again.${temp ? ' Your temporary profile is kept at the top of the library.' : ''}`);
+  }));
+  actions.append(load);
+  card.append(actions);
+  return card;
 }
 // A library card with its heading and the two markers: Selected (in the
 // editor) and Active in toolkit. They sit beside the heading, not in it, so
@@ -303,7 +346,7 @@ function renderTempCard() {
     // The toolkit goes back to the preset the changes were based on.
     if (wasActive && base) await client.call('replaceProfile', validateProfile(base.profile), selectionFor(base.id));
     temp = null;
-    if (wasActive) activeId = base ? base.id : null;
+    if (wasActive) activeId = base ? base.id : DEFAULT_ID;
     if (wasSelected && base) {
       draft = editableProfile(base.profile); selectedId = base.id;
       $('profile-name').value = base.name; $('profile-description').value = base.description || '';
@@ -492,7 +535,7 @@ $('refresh').addEventListener('click', () => run(async () => {
 }));
 $('apply').addEventListener('click', () => run(async () => {
   const name = $('profile-name').value.trim();
-  const selection = selectedId === TEMP_ID ? selectionFor(TEMP_ID) : (selectedId && name ? { id: selectedId, name } : null);
+  const selection = selectedId === TEMP_ID ? selectionFor(TEMP_ID) : (selectedId && selectedId !== DEFAULT_ID && name ? { id: selectedId, name } : null);
   const result = await client.call('replaceProfile', readEditor(), selection);
   draft = editableProfile(result); activeId = selectedId;
   if (selectedId === TEMP_ID) { temp.profile = structuredClone(draft); temp.applied = true; }

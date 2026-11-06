@@ -9,7 +9,7 @@
 //   DELETE /v1/account/tokens/{id}   revoke one of the account's app tokens
 //   POST   /v1/account/password      {current, next}
 //   GET    /v1/account/presets       saved profile presets
-//   PUT    /v1/account/presets       {presets: [...]} replace them
+//   PUT    /v1/account/presets       {presets: [...]} replace them; a saved preset left out is deleted, with its profile's settings and memory
 //
 // Everything under /v1/account needs a SESSION token: an app holding the
 // default token can use the toolkit, but cannot mint tokens, read the default
@@ -33,8 +33,9 @@ const MAX_PRESETS_BYTES = 200_000;
  * @param {ReturnType<import('./relay.js').createRelay>} config.relay
  * @param {(uid: string, fn: () => Promise<any>) => Promise<any>} config.withUserLock
  * @param {(req) => Promise<object|null>} config.authenticate
+ * @param {(uid: string, ids: string[]) => Promise<void>} [config.onPresetsRemoved] deletes those presets' profiles (inside the uid's queue)
  */
-export function createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log = silentLogger }) {
+export function createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log = silentLogger, onPresetsRemoved = async () => {} }) {
   async function requireSession(req) {
     const rec = await authenticate(req);
     if (!rec) throw new HttpError(401, 'unauthorized', 'Sign in again.');
@@ -122,8 +123,11 @@ export function createAccountRoutes({ store, accounts, relay, withUserLock, auth
         const presets = validatePresets(body?.presets);
         await withUserLock(rec.uid, async () => {
           const doc = (await store.readJSON(CONSOLE_DOC(rec.uid))) || {};
+          const kept = new Set(presets.map(p => p.id));
+          const removed = (Array.isArray(doc.presets) ? doc.presets : []).map(p => p?.id).filter(id => typeof id === 'string' && !kept.has(id));
           doc.presets = presets;
           await store.writeJSON(CONSOLE_DOC(rec.uid), doc);
+          if (removed.length) await onPresetsRemoved(rec.uid, removed);
         });
         return sendJSON(res, 200, { ok: true, presets });
       }

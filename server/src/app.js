@@ -145,13 +145,30 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     onAdapters: (rec, application, adapters) => learning.fromApp(rec.uid, application.appId, adapters),
   });
   const profileEvents = createProfileEvents({ store, authenticate, toolkitHost, withUserLock });
+  // Each profile keeps its own settings and memory: the account's Librarian is its active profile's.
+  toolkitHost.followProfiles?.((uid) => profileEvents.profileOf(uid));
   const learning = createLearning({ toolkitHost, withUserLock, profileEvents, access, log, builtinNeeds: builtinAdapters ? builtinNeeds() : [], ...(learningDelayMs !== undefined ? { extractDelayMs: learningDelayMs } : {}) });
   const verify = createVerify({ checks: adapterChecks, relay, aiCaller: ai.caller || null, log, ...(verifyPollMs ? { pollMs: verifyPollMs } : {}) });
   const registry = createRegistry({ store, withUserLock, authenticate, log, version, tools: { ...learning.tools, ...access.tools, ...verify.tools }, onInstallChange: learning.fromRegistry });
   learning.useRegistry(registry);
-  const accountRoutes = createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log });
+  const accountRoutes = createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log, onPresetsRemoved: dropProfiles });
   const adminAccountRoutes = createAdminAccountRoutes({ store, accounts, relay, wipeUser });
   const anyOrigin = corsOrigins.includes('*');
+
+  // Saved presets were deleted: their profiles' settings and memory go too.
+  // An active one gives way to Default first. Inside the uid's queue.
+  async function dropProfiles(uid, ids) {
+    const active = await profileEvents.profileOf(uid);
+    if (ids.includes(active)) await profileEvents.changed(uid, null);
+    for (const id of ids) {
+      // A deleted preset's id was checked as a saved preset's (custom-…).
+      if (!/^custom-[A-Za-z0-9_-]{1,93}$/.test(id)) continue;
+      await store.deleteUnder(uid, `profiles/${id}`);
+      log.info('profile.deleted', { uid, profile: id });
+    }
+    toolkitHost.evict?.(uid);
+    if (ids.includes(active)) learning.scheduleDecide(uid);
+  }
 
   // The whole deletion story for one uid, used by DELETE /admin/users/{uid}
   // and DELETE /admin/accounts/{uid}. Inside the uid's queue, so an
@@ -563,10 +580,19 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
         return sendJSON(res, 401, { error: 'unauthorized' });
       }
 
+      // Loading a preset switches to its profile before its settings are
+      // written there (profile-events.js); the switch is undone if the write fails.
+      let before;
+      if (routeName === 'replaceProfile') {
+        try { before = await profileEvents.use(rec.uid, cleanSelection(args[1])); }
+        catch (e) { return sendJSON(res, 400, { error: 'invalid-profile', message: e.message }); }
+      }
+
       let instance;
       try {
         instance = await toolkitHost.getInstance(rec.uid);
       } catch (e) {
+        if (before !== undefined) await profileEvents.use(rec.uid, before).catch(() => {});
         log.error('librarian.instance.failed', { uid: rec.uid, error: e });
         return sendJSON(res, 500, { error: 'internal-error', message: e.message });
       }
@@ -597,6 +623,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
         }
         return sendJSON(res, 200, { ok: true, result });
       } catch (e) {
+        // The profile it switched to for this write stays as it was.
+        if (before !== undefined) await profileEvents.use(rec.uid, before).catch(() => {});
         // Application errors are data, not transport failures (CONTRACT.md).
         // Logged by method and error code only: the message may quote the profile.
         log.warn('librarian.call.failed', { uid: rec.uid, method: routeName, errorCode: safeErrorText(e), ...(logContent ? { error: loggedContent(e?.message) } : {}) });

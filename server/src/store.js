@@ -140,6 +140,14 @@ function assertSafeKey(key) {
   }
 }
 
+// One folder inside a user's partition (`users/<uid>/<sub>/`): safe path
+// segments only, so it cannot reach outside it.
+function assertSafeSub(sub) {
+  if (typeof sub !== 'string' || !sub || !sub.split('/').every(s => /^[A-Za-z0-9._~@-]+$/.test(s) && s !== '.' && s !== '..')) {
+    throw new Error(`store: unsafe folder ${JSON.stringify(sub)}`);
+  }
+}
+
 // A uid names one user's profile partition (`users/<uid>/...`). Unlike document
 // keys this one CAN reach admin-listing/deletion, so keep it a single safe path
 // segment — no separators, no '..'.
@@ -205,6 +213,15 @@ export function fileStore(dir) {
         return false;
       }
       await fs.rm(udir, { recursive: true, force: true });
+      return true;
+    },
+    // Remove one folder of a user's partition (one profile's data, say).
+    async deleteUnder(uid, sub) {
+      assertSafeUid(uid);
+      assertSafeSub(sub);
+      const target = path.join(dir, 'users', uid, sub);
+      try { await fs.access(target); } catch { return false; }
+      await fs.rm(target, { recursive: true, force: true });
       return true;
     },
   };
@@ -334,19 +351,29 @@ export function gcsStore(bucket, { retryBaseMs = 500 } = {}) {
     },
     async deleteUser(uid) {
       assertSafeUid(uid);
-      const token = await accessToken();
-      const { items } = await listAll(`prefix=${encodeURIComponent(`users/${uid}/`)}`);
-      if (!items.length) return false;
-      for (const it of items) {
-        const delUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(it.name)}`;
-        const delResp = await fetch(delUrl, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-        if (!delResp.ok && delResp.status !== 404) {
-          throw new Error(`gcsStore: deleteUser ${it.name} failed (${delResp.status}): ${await delResp.text()}`);
-        }
-      }
-      return true;
+      return deletePrefix(`users/${uid}/`, 'deleteUser');
+    },
+    async deleteUnder(uid, sub) {
+      assertSafeUid(uid);
+      assertSafeSub(sub);
+      return deletePrefix(`users/${uid}/${sub}/`, 'deleteUnder');
     },
   };
+
+  // Delete every object under a prefix, page by page.
+  async function deletePrefix(prefix, what) {
+    const token = await accessToken();
+    const { items } = await listAll(`prefix=${encodeURIComponent(prefix)}`);
+    if (!items.length) return false;
+    for (const it of items) {
+      const delUrl = `https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(it.name)}`;
+      const delResp = await fetch(delUrl, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (!delResp.ok && delResp.status !== 404) {
+        throw new Error(`gcsStore: ${what} ${it.name} failed (${delResp.status}): ${await delResp.text()}`);
+      }
+    }
+    return true;
+  }
 }
 
 /** Selects the backend per CONTRACT.md: `TOOLKIT_BUCKET` set -> gcs, else
