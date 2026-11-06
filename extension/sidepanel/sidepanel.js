@@ -616,10 +616,22 @@ async function sendAnswers(entry, form) {
 
 // ── chats ────────────────────────────────────────────────────────────────────
 
+// Several chats may run at once. What a chat not open here asks (to see or
+// preview its page) waits until the person opens it; the list says so.
+const heldRequests = new Map(); // chatId -> Map(request id -> request)
+
+function holdRequest(request) {
+  if (!heldRequests.has(request.chatId)) heldRequests.set(request.chatId, new Map());
+  heldRequests.get(request.chatId).set(request.id, request);
+  renderChats();
+  const title = chats.find(c => c.id === request.chatId)?.title || 'Another chat';
+  announce(`“${title}” asks for you: open it in the chat list.`);
+}
+
 function renderChats() {
   const select = $('chat-select');
   select.replaceChildren(...chats.map(c => {
-    const o = el('option', '', `${c.title}${c.busy ? ' (working)' : ''}`);
+    const o = el('option', '', `${c.title}${heldRequests.get(c.id)?.size ? ' (asks you)' : c.busy ? ' (working)' : ''}`);
     o.value = c.id;
     return o;
   }));
@@ -913,6 +925,11 @@ async function openChat(id) {
   // A preview belongs to its chat: another chat's comes off the page.
   if (previewing?.on && previewing.chatId !== id) await takePreviewOff();
   await restorePreview();
+  // What this chat asked while it was not open.
+  const held = [...(heldRequests.get(id)?.values() || [])];
+  heldRequests.delete(id);
+  if (held.length) renderChats();
+  for (const r of held) await handleRequest(r);
   try { await chrome.storage.local.set({ assistantChat: id }); } catch { /* fine */ }
 }
 
@@ -1007,7 +1024,8 @@ async function stream() {
       wait = 1000;
       $('reconnect').hidden = true;
       // Open requests come again at the start of the stream; the rest is fetched.
-      if (!first) { requests.clear(); renderRequests(); catchUp().catch(e => say(e.message, true)); }
+      // The host sends the open requests again, every chat's.
+      if (!first) { requests.clear(); heldRequests.clear(); renderRequests(); renderChats(); catchUp().catch(e => say(e.message, true)); }
       if (dropped) announce('Connected to the assistant again.');
       first = false;
       dropped = false;
@@ -1071,10 +1089,13 @@ function onEvent(event) {
     if (event.chat.id === chat?.id && was !== undefined && was !== event.chat.busy) {
       announce(event.chat.busy ? 'The assistant is working.' : 'The assistant is done.');
       renderTranscript(); renderReady();
-    }
+    } else if (was && !event.chat.busy) announce(`The assistant is done in “${event.chat.title}”.`);
     return;
   }
-  if (event.type === 'chat-deleted') { chatGone(event.chatId).catch(e => say(e.message, true)); return; }
+  if (event.type === 'chat-deleted') { heldRequests.delete(event.chatId); chatGone(event.chatId).catch(e => say(e.message, true)); return; }
+  // Another chat's: it waits for the person to open that chat.
+  if (event.type === 'request' && event.chatId !== chat?.id) { holdRequest(event.request); return; }
+  if (event.type === 'request-closed' && heldRequests.get(event.chatId)?.delete(event.id)) { renderChats(); return; }
   if (event.chatId !== chat?.id) return;
   if (event.type === 'entry') addEntry(event.entry);
   else if (event.type === 'request') handleRequest(event.request);
@@ -1164,7 +1185,8 @@ $('message').addEventListener('keydown', (e) => {
 $('stop').addEventListener('click', () => api(`/chats/${chat.id}/stop`, { method: 'POST' }).catch(e => say(e.message, true)));
 $('new-chat').addEventListener('click', async () => {
   const created = (await api('/chats', { method: 'POST' })).chat;
-  chats.unshift(created);
+  // The host's event for it may have come first.
+  if (!chats.some(c => c.id === created.id)) chats.unshift(created);
   await openChat(created.id);
   $('message').focus();
 });

@@ -3,10 +3,14 @@
 // development and tests (no isolation; never for real accounts).
 //
 // Each message is one `opencode run --format json`, continuing the chat's
-// opencode session. Its JSON lines come back as an async iterable.
+// opencode session. Its JSON lines come back as an async iterable. Several
+// may run at once (one per chat): each gets its own opencode config
+// (config/runs/<run>.json, removed when it ends) whose browser tools header
+// carries that run's token, so the host knows which chat a tool call is for.
 
 import { spawn, execFile } from 'node:child_process';
-import { writeFileSync, copyFileSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { promisify } from 'node:util';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -16,13 +20,14 @@ const exec = promisify(execFile);
 export const MODEL = 'google/gemini-3.8-flash';
 
 /** The sandbox's opencode settings: model through the host's proxy, the browser tools, the skills (directories of skill folders). */
-export function opencodeConfig({ token, hostUrl, instructions, skills }) {
+export function opencodeConfig({ token, hostUrl, instructions, skills, runToken }) {
   return {
     $schema: 'https://opencode.ai/config.json',
     model: MODEL,
     // The real key never enters the sandbox: the proxy adds it.
     provider: { google: { options: { baseURL: `${hostUrl}/model/v1beta`, apiKey: token } } },
-    mcp: { browser: { type: 'remote', url: `${hostUrl}/mcp`, headers: { authorization: `Bearer ${token}` }, oauth: false, codemode: false } },
+    // The browser tools take a run's token: it names the chat.
+    mcp: { browser: { type: 'remote', url: `${hostUrl}/mcp`, headers: { authorization: `Bearer ${runToken || token}` }, oauth: false, codemode: false } },
     // The person answers in the sidebar's chat, not in opencode's question form.
     permissions: [{ action: 'question', resource: '*', effect: 'deny' }],
     instructions: [instructions],
@@ -45,8 +50,20 @@ async function* lines(child) {
   }
 }
 
-function running(child) {
-  const done = new Promise((resolve) => child.on('close', (code, signal) => resolve({ code, signal })));
+/** This run's opencode config, beside the account's: { file, name }. Removed when the run ends (running). */
+function runConfig(dir, settings) {
+  mkdirSync(path.join(dir, 'config', 'runs'), { recursive: true });
+  const name = `${Date.now()}-${randomBytes(6).toString('hex')}.json`;
+  const file = path.join(dir, 'config', 'runs', name);
+  writeFileSync(file, JSON.stringify(settings, null, 2));
+  return { file, name };
+}
+
+function running(child, configFile) {
+  const done = new Promise((resolve) => child.on('close', (code, signal) => {
+    if (configFile) rmSync(configFile, { force: true });
+    resolve({ code, signal });
+  }));
   let stderr = '';
   child.stderr.on('data', (d) => { stderr = (stderr + d).slice(-4000); });
   return { events: lines(child), done, stop: () => child.kill('SIGTERM'), stderr: () => stderr };
@@ -96,8 +113,10 @@ export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'run
 
   async function run(uid, opts) {
     await ensure(uid);
-    const child = spawn('docker', ['exec', '-i', '-w', '/work', name(uid), 'opencode', ...argsFor(opts)], { stdio: ['ignore', 'pipe', 'pipe'] });
-    return running(child);
+    const { dir, token } = accounts.ensure(uid);
+    const cfg = runConfig(dir, opencodeConfig({ token, hostUrl, instructions: '/opt/agent/AGENTS.md', skills: '/toolkit/.claude/skills', runToken: opts.runToken }));
+    const child = spawn('docker', ['exec', '-i', '-w', '/work', '-e', `OPENCODE_CONFIG=/etc/agent/runs/${cfg.name}`, name(uid), 'opencode', ...argsFor(opts)], { stdio: ['ignore', 'pipe', 'pipe'] });
+    return running(child, cfg.file);
   }
 
   return { ensure, run, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
@@ -124,15 +143,17 @@ export function localRunner({ accounts, hostUrl, bin = 'opencode', repoDir, mode
 
   async function run(uid, opts) {
     await ensure(uid);
+    const { token } = accounts.ensure(uid);
     const dir = accounts.dirOf(uid), home = path.join(dir, 'home');
+    const cfg = runConfig(dir, opencodeConfig({ token, hostUrl, instructions: path.join(repoDir, 'agent-host/sandbox/AGENTS.md'), skills: path.join(repoDir, '.claude/skills'), runToken: opts.runToken }));
     const { GEMINI_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY, WS_GEMINI_KEY, AGENT_HOST_SECRET, ...env } = process.env;
     const child = spawn(bin, argsFor(opts), {
       cwd: path.join(dir, 'work'), stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...env, HOME: home, XDG_CONFIG_HOME: path.join(home, '.config'), XDG_DATA_HOME: path.join(home, '.local/share'),
         XDG_CACHE_HOME: path.join(home, '.cache'), XDG_STATE_HOME: path.join(home, '.local/state'),
-        OPENCODE_CONFIG: path.join(dir, 'config', 'opencode.json') },
+        OPENCODE_CONFIG: cfg.file },
     });
-    return running(child);
+    return running(child, cfg.file);
   }
 
   return { ensure, run, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };

@@ -9,7 +9,7 @@
 //
 // When either finds problems in the code it checked, and that code is still
 // the adapter's, the agent is asked to fix them, as a message in the chat
-// once no run is going (the person sees one line saying so). Its next
+// once that chat's run is over (the person sees one line saying so). Its next
 // adapter_ready offers the new version, which is checked again. It is asked
 // at most `maxFixes` times for an adapter; after that the person is told.
 //
@@ -70,7 +70,7 @@ function fixMessage(adapter, state, kind) {
 
 export function createVerification({ checks, chats, pageData, workDir, log, maxFixes = 2 }) {
   const jobs = new Map();    // checkId -> {uid, chatId, adapterId, hash, kind}
-  const waiting = new Map(); // uid -> [{chatId, adapterId, hash, kind, text, shown}] fixes to ask for once no run is going
+  const waiting = new Map(); // uid -> [{chatId, adapterId, hash, kind, text, shown}] fixes to ask for once their chat is not running
   const reviewsAfter = new Map(); // checkId of a running background check -> {uid, chatId, adapterId, hash, kind: 'review'}, a review that starts when it ends
 
   const adapterOf = (uid, chatId, adapterId) => {
@@ -158,11 +158,12 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
     askToFix(j.uid);
   }
 
-  /** Ask the agent for the next fix that is still about the adapter's code, once no run is going. */
+  /** Ask the agent for each fix that is still about the adapter's code, once its chat is not running. */
   async function askToFix(uid) {
     const list = waiting.get(uid) || [];
-    while (list.length && !chats.activeChat(uid)) {
-      const w = list.shift();
+    for (const w of [...list]) {
+      if (chats.isBusy(uid, w.chatId)) continue; // asked when that chat's run ends
+      list.splice(list.indexOf(w), 1);
       const adapter = adapterOf(uid, w.chatId, w.adapterId);
       // Stale: the agent offered or wrote another version meanwhile.
       if (!adapter || adapter.hash !== w.hash || codeHash(uid, adapter.file) !== w.hash) continue;

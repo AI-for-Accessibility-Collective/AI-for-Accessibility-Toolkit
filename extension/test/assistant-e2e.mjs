@@ -446,6 +446,24 @@ try {
     const agentApi2 = (p) => fetch(`${base}/v1/agent${p}`, { headers: { authorization: `Bearer ${token}` } });
     assert.equal((await (await agentApi2(`/chats/${kindsChat}`)).json()).chat.allSites, true, 'all websites, as the person chose');
 
+    // Two chats at once: one works while another is open; what it asks waits, marked in the chat list.
+    await panel.getByRole('button', { name: 'New chat' }).click();
+    await panel.locator('#transcript', { hasText: 'Say what gets in your way' }).waitFor();
+    await listen(); // the panel was reloaded since
+    await ask('later please');
+    const laterChat = await panel.locator('#chat-select').inputValue();
+    await panel.locator(`#chat-select option[value="${laterChat}"]`, { hasText: '(working)' }).waitFor({ state: 'attached' });
+    await panel.getByRole('button', { name: 'New chat' }).click();
+    await until(async () => (await panel.locator('#chat-select').inputValue()) !== laterChat, 'the new chat open');
+    await ask('meanwhile here');
+    await panel.locator('#transcript', { hasText: 'You said: meanwhile here' }).waitFor();
+    await panel.locator(`#chat-select option[value="${laterChat}"]`, { hasText: '(asks you)' }).waitFor({ state: 'attached' });
+    await until(async () => /“later please” asks for you/.test(await said()), 'the sidebar said which chat asks');
+    await panel.selectOption('#chat-select', laterChat);
+    await panel.getByRole('button', { name: 'Don’t share' }).click();
+    await panel.locator('#transcript', { hasText: 'Later: The person chose not to share this page.' }).waitFor();
+    await panel.locator(`#chat-select option[value="${laterChat}"]`, { hasText: '(asks you)' }).waitFor({ state: 'detached' });
+
     // Deleting a chat asks once more, then opens another.
     const doomed = await panel.locator('#chat-select').inputValue();
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
@@ -455,7 +473,7 @@ try {
     await panel.locator('#status', { hasText: 'Deleted' }).waitFor();
     assert.equal(await panel.locator(`#chat-select option[value="${doomed}"]`).count(), 0);
     assert.notEqual(await panel.locator('#chat-select').inputValue(), doomed);
-    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, reconnecting after the stream drops, the preview switch, chat titles, multiple-choice questions (pages, areas, Other), steps folded, what a screen reader hears, background check and full review, the account updated to a newer checked version, deleting a chat.');
+    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, reconnecting after the stream drops, the preview switch, chat titles, multiple-choice questions (pages, areas, Other), steps folded, what a screen reader hears, background check and full review, the account updated to a newer checked version, two chats running at once, deleting a chat.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
     // Send, then answer what the agent asks (share everything, preview) until its run ends;
