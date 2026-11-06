@@ -1013,7 +1013,7 @@ What exists now, so the sections above can be read against working code.
 | Browser runtime | `extension/` | The reference runtime for web packages (§14.4). |
 | Developer console | `server/developer/adapters.js` | The Adapters page: the coding-agent guide, edit an adapter with live lint, save revisions, run it in the browser runtime, share it, install others' and see the runtime's reports. |
 | Listings | `server/src/adapters.js` | The older marketplace of descriptions. A listing may carry a `descriptor`; the service checks it and computes its digest. Listings without one are shown as legacy. |
-| Integration | the Redbird demo store (`workshop/toolkit.js` in its repository) | Exports the workshop adapters (and, from a starter folder, the participant's own `adapter.js`) as the app `redbird` for live control, keeps the rest of its library internal, and limits each tab to its own page. |
+| Integration | the Redbird demo store (`workshop/toolkit.js` in its repository) | Exports five of the store's own adaptations as the app `redbird` for live control, registers the needs they meet, follows the person's toolkit profile, keeps the rest of its library internal, and limits each tab to its own page. |
 
 Decisions the implementation took for 0.1.0, to revisit with a second,
 independently built integration (§12):
@@ -1093,7 +1093,7 @@ unavailable and runtimes stop running it.
 
 One self-contained JavaScript file that exports an adapter: an object with
 `enable(options)` and `disable()`, where `disable()` puts the page back the way
-it was (the shape the Redbird starter uses). `export const`, `export function`,
+it was (the shape Redbird's own adaptations use). `export const`, `export function`,
 `export class`, `export default` and `export { … }` are supported; `import` is
 not. A package may name its `entry` export when the file exports more than one
 adapter. The descriptor must include the `web` surface and at least one URL

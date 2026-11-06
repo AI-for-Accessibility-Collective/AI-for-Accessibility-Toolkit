@@ -87,7 +87,7 @@ information.
 5. Under **Apps**, **Open Redbird** opens the Redbird demo store (run it with
    `python3 tools/serve.py` in a Redbird checkout, on `http://localhost:8000`)
    already connected. Each tab shows up as **Redbird demo**, live, and its
-   adapters can be tried from the console. Apps the team builds with the
+   own adaptations can be tried from the console. Apps the team builds with the
    Adapter MCP SDK show up the same way, grouped by app; **Hide** keeps one
    out of the way.
 6. A coding agent can use the same registry and apps over MCP: the

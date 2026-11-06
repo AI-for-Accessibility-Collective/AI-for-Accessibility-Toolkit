@@ -102,7 +102,9 @@ keeps the guide's settings in step with the person's toolkit profile.
 
 **Redbird demo** (`AI-for-Accessibility-Collective/redbird`). Each store
 tab connects through Adapter MCP as the app `redbird` rather than publishing a
-listing, so its adapters show up under **Apps**, live, while the tab is open.
+listing, so its own adaptations show up under **Apps**, live, while the tab is
+open. It registers the needs they meet, and follows the person's toolkit
+profile.
 
 **Your app.** One call publishes your catalog — see the XR example as a
 template — or register single adapters with `POST /v1/adapters`. Use

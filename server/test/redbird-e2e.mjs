@@ -1,7 +1,8 @@
 // Real browser + real toolkit service + the Redbird practice store: a
 // developer signs in, presses Open Redbird, and the store tab shows up under
-// Apps as "Redbird demo"; its adapters are then driven from the console's Try
-// it panel and from an MCP client holding the same default token.
+// Apps as "Redbird demo", an app with its own adaptations. They are driven
+// from the console's Try it panel and from an MCP client holding the same
+// default token, and the store follows the toolkit profile.
 //
 // Needs a Redbird checkout next to this repository (../redbird) or at
 // REDBIRD_DIR; skips when there is none.
@@ -111,11 +112,18 @@ try {
   assert.ok(!shop.url().includes('aat_'), 'the token leaves the address bar once read');
   assert.equal(JSON.parse(await shop.evaluate(() => localStorage.getItem('redbird:toolkit'))).token, token);
 
+  // Connected, the store registers the needs its own adaptations meet.
+  const registered = async () => JSON.stringify(await (await fetch(`${base}/v1/librarian/listRegisteredNeeds`, {
+    method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }),
+  })).json());
+  for (let i = 0; i < 100 && !/redbird\/no-pressure/.test(await registered()); i++) await new Promise(r => setTimeout(r, 100));
+  for (const need of ['redbird/real-dates', 'redbird/no-pressure']) assert.ok((await registered()).includes(need), `${need} is registered`);
+
   // The tab shows up grouped under Redbird demo, live.
   await dev.waitForFunction(() => [...document.querySelectorAll('#app-groups .app-group h3')].some(h => h.textContent.includes('Redbird demo')), null, { timeout: 20000 });
   const group = dev.locator('.app-group', { hasText: 'Redbird demo' });
   assert.match(await group.innerText(), /Live/);
-  for (const name of ['Real arrival dates', 'Swatch names', 'Calm urgency', 'Reading level', 'Pause moving things', 'Fix this page']) {
+  for (const name of ['Real arrival dates', 'Swatch names', 'Calm urgency', 'Reading level', 'Pause moving things']) {
     assert.ok(await group.getByRole('heading', { name, exact: true }).count(), `${name} is exported`);
   }
 
@@ -156,13 +164,15 @@ try {
   assert.equal(elsewhere.compatible, false, 'one tab is one page');
   assert.ok(elsewhere.reasons.some(r => r.code === 'target-unavailable'), JSON.stringify(elsewhere.reasons));
 
-  // A switch that comes off with a reload answers first: the reload waits for the answer to go.
-  await shop.evaluate(() => { window.__beforeReload = true; });
-  const fixes = (await api.describe('redbird', 'toolkit-fixes')).descriptor;
-  assert.equal((await api.apply(fixes, target, { enabled: true, parameters: {} }, 'e2e-fixes-on')).status, 'applied');
-  const fixesOff = await api.apply(fixes, target, { enabled: false }, 'e2e-fixes-off');
-  assert.equal(fixesOff.status, 'applied', JSON.stringify(fixesOff.reasons));
-  await shop.waitForFunction(() => !window.__beforeReload);
+  // ── app_verify (the skill's verify --app) drives each adaptation and puts the store back ──
+  const onBefore = await shop.evaluate(() => new URLSearchParams(location.search).get('try'));
+  const verifier = createMcpClient({ url: `${base}/v1/mcp`, token, clientInfo: { name: 'redbird-e2e', version: '0' } });
+  const verified = await verifier.callTool('app_verify', { app: 'redbird' });
+  assert.equal(verified.isError, false, JSON.stringify(verified));
+  const report = verified.structuredContent;
+  assert.deepEqual(report.adapters.map(x => x.adapter).sort(), ['calm-urgency', 'pause-moving-things', 'reading-level', 'real-arrival-dates', 'swatch-names']);
+  for (const x of report.adapters) assert.ok(x.steps.every(st => st.ok), `${x.adapter}: ${JSON.stringify(x.steps)}`);
+  assert.equal(await shop.evaluate(() => new URLSearchParams(location.search).get('try')), onBefore, 'put back as it was');
 
   // The adapters switched on in the panel (its switches carry data-ad).
   const adaptersOn = () => shop.locator('input[data-ad]:checked').evaluateAll(els => [...new Set(els.map(e => e.dataset.ad))].sort());
@@ -177,7 +187,8 @@ try {
   await persona.filter({ hasText: 'remove distracting motion' }).waitFor();
   assert.match(await persona.innerText(), /Profile 2/, 'the store shows which preset is selected');
   assert.match(await shop.locator('#ws-prof option[value="toolkit"]').innerText(), /Profile 2/);
-  const autism = ['calm-urgency', 'mute-sounds', 'reduce-brightness', 'stop-auto-advance'];
+  // Its needs (less motion, simpler words, an outline) turn on the adaptations that meet them.
+  const autism = ['pause-moving-things', 'reading-level', 'structure'];
   await shop.waitForFunction((want) => JSON.stringify([...new Set([...document.querySelectorAll('input[data-ad]:checked')].map(e => e.dataset.ad))].sort()) === JSON.stringify(want), autism).catch(async () => assert.deepEqual(await adaptersOn(), autism));
   assert.equal(await shop.evaluate(() => window.__sameLoad), true, 'the store was not reloaded');
   // An edit through the API keeps the preset's name and says it was edited.
@@ -199,7 +210,7 @@ try {
   await persona.filter({ hasText: 'screen-reader structure' }).waitFor();
   assert.match(await persona.innerText(), /Profile 3/);
   assert.equal(await picker.inputValue(), 'toolkit', 'the store goes back to following the toolkit profile');
-  const blindness = ['describe-on-demand', 'live-region-announcer', 'skip-links', 'swatch-names', 'toolkit-fixes'];
+  const blindness = ['announce-changes', 'focus-keyboard', 'names', 'structure', 'swatch-names'];
   await shop.waitForFunction((want) => JSON.stringify([...new Set([...document.querySelectorAll('input[data-ad]:checked')].map(e => e.dataset.ad))].sort()) === JSON.stringify(want), blindness).catch(async () => assert.deepEqual(await adaptersOn(), blindness));
   const chosen = await (await fetch(`${base}/v1/profile/selection`, { headers: { authorization: `Bearer ${token}` } })).json();
   assert.deepEqual(chosen.selected, { id: 'wai-3', name: 'Profile 3', edited: false });
@@ -211,7 +222,7 @@ try {
   const learning = createRegistryClient({ url: base, token }).profile;
   const waitingBefore = (await learning.learned()).pendingObservations;
   await shop.click('#ws-tab-profiles');
-  await shop.locator('#ws-on-list input[data-ad="skip-links"]').uncheck();
+  await shop.locator('#ws-on-list input[data-ad="focus-keyboard"]').uncheck();
   const learnedState = async () => (await learning.learned()).pendingObservations > waitingBefore;
   for (let i = 0; i < 50 && !(await learnedState()); i++) await new Promise(r => setTimeout(r, 100));
   assert.ok(await learnedState(), 'the toolkit kept an observation of the switch');
@@ -227,7 +238,7 @@ try {
   await dev.waitForFunction(() => [...document.querySelectorAll('.app-group')].some(g => g.textContent.includes('Redbird demo') && g.textContent.includes('Offline')), null, { timeout: 20000 });
 
   assert.deepEqual(errors, [], 'no page errors');
-  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the same tab through MCP (list, query, apply, revert, one-page targets, a switch that reloads the page still answering), a preset loaded in the console reaching the open store with no refresh and turning on its adapters, picking a toolkit preset from the store dropdown, a switch while shopping as yourself reaching the toolkit to learn from (kept to Redbird alone once the console narrows it), and going offline when the tab closes.');
+  console.log('Redbird browser workflow passed: Open Redbird from the console, the tab appearing live under Redbird demo, Try it with a parameter, the needs its adaptations meet registered, the same tab through MCP (list, query, apply, revert, one-page targets), app_verify driving each adaptation and putting the store back, a preset loaded in the console reaching the open store with no refresh and turning on the adaptations that meet its needs, picking a toolkit preset from the store dropdown, a switch while shopping as yourself reaching the toolkit to learn from (kept to Redbird alone once the console narrows it), and going offline when the tab closes.');
 } finally {
   await browser?.close();
   app.relay.closeAll();
