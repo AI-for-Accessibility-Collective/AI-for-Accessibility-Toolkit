@@ -9,6 +9,14 @@
 // last observation for an account. A suggestion changes the profile only when
 // the person accepts it; then the apps following the profile hear about it.
 //
+// Needs: adapters declare the needs they meet and apps register theirs
+// (profile_need_register). A little after a need is registered or the
+// profile changes, the profile agent decides whether the person's profile
+// calls for each (Librarian.decideNeeds); a decision is a suggestion the
+// person answers, and accepting one switches on the adapter that meets it.
+// Switching an adapter on in their browser is the person saying they have
+// its needs (Librarian.chooseNeed).
+//
 // It also serves the profile_* tools on the toolkit's MCP endpoint
 // (toolkit/protocol/adapter/profile.js) and the developer console's reset.
 //
@@ -18,9 +26,10 @@
 
 import { withAiContext } from './ai-context.js';
 import { DEFAULT_PROPOSALS_PER_WEEK } from '../../toolkit/index.js';
-import { PROFILE_TOOL_SCHEMAS, PROFILE_TOOL_DESCRIPTIONS, PROFILE_READ_ONLY, BROWSER_RUNTIME_APP } from '../../toolkit/protocol/adapter/index.js';
+import { PROFILE_TOOL_SCHEMAS, PROFILE_TOOL_DESCRIPTIONS, PROFILE_READ_ONLY, BROWSER_RUNTIME_APP, checkNeeds } from '../../toolkit/protocol/adapter/index.js';
 
 const EXTRACT_DELAY_MS = 30_000;
+const DECIDE_DELAY_MS = 5_000;
 const WEEK_MS = 7 * 24 * 3600 * 1000;
 
 const hostOf = (origin) => {
@@ -50,8 +59,10 @@ export function librarianObservation(obs) {
   return { ...rest, data: { ...(rest.data || {}), ...(app ? { app } : {}), ...(adapter ? { adapter: typeof adapter === 'string' ? adapter : `${adapter.owner}/${adapter.appId}/${adapter.id}` } : {}) } };
 }
 
-export function createLearning({ toolkitHost, withUserLock, profileEvents, access, log, extractDelayMs = EXTRACT_DELAY_MS, now = () => Date.now() }) {
+export function createLearning({ toolkitHost, withUserLock, profileEvents, access, log, extractDelayMs = EXTRACT_DELAY_MS, decideDelayMs = Math.min(extractDelayMs, DECIDE_DELAY_MS), builtinNeeds = [], now = () => Date.now() }) {
   const timers = new Map(); // uid + partition -> pending extract
+  const deciding = new Map(); // uid -> pending decideNeeds
+  let registry = null;      // set once the registry exists (useRegistry), to switch adapters on
   const timerKey = (uid, partition) => `${uid}\u0000${partition || ''}`;
 
   // purpose: what any AI call inside is logged as (gemini.js, ai.call).
@@ -71,6 +82,36 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
     }, extractDelayMs);
     timer.unref?.();
     timers.set(key, timer);
+  }
+
+  /** Let the profile agent decide on the registered needs a little after the last change. */
+  function scheduleDecide(uid) {
+    clearTimeout(deciding.get(uid));
+    const timer = setTimeout(() => {
+      deciding.delete(uid);
+      decideIn(uid).catch(e => log.warn('learning.needs.failed', { uid, errorCode: e?.code || e?.name || 'error' }));
+    }, decideDelayMs);
+    timer.unref?.();
+    deciding.set(uid, timer);
+  }
+
+  async function decideIn(uid) {
+    clearTimeout(deciding.get(uid));
+    deciding.delete(uid);
+    const result = await withToolkit(uid, async ({ librarian }) => {
+      // The toolkit's own adapters' needs, for every person.
+      for (const b of builtinNeeds) await librarian.registerNeeds(b.from, b.needs);
+      return librarian.decideNeeds();
+    }, 'learning.needs');
+    log.info('learning.needs', { uid, ran: !!result?.ran, reason: result?.reason, decided: result?.decided || 0, suggested: result?.suggested || 0 });
+    return result;
+  }
+
+  /** An app registers the needs it meets, for this person. */
+  async function registerNeeds(uid, app, needs) {
+    const result = await withToolkit(uid, ({ librarian }) => librarian.registerNeeds({ appId: app, app }, needs), 'learning.needs');
+    scheduleDecide(uid);
+    return result;
   }
 
   /** Keep one observation where its visibility says: the account's own Librarian, or a partition. */
@@ -128,6 +169,7 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
       const profile = await librarian.getProfile();
       const { memories } = await librarian.listMemories({ status: 'active' });
       const proposals = await librarian.listProposals(null);
+      const needs = await librarian.listRegisteredNeeds();
       let pendingObservations = pendingIn(await datastore.get('mine.episodicLog'));
       const all = memories.map(m => memoryView(m, null));
       for (const p of scoped) {
@@ -146,6 +188,12 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
         proposalsThisWeek: proposals.filter(p => p.createdAt > since).length,
         proposalsPerWeek: profile.metaPreferences?.maxProposalsPerWeek ?? DEFAULT_PROPOSALS_PER_WEEK,
         pendingObservations,
+        // The needs adapters and apps registered, and the profile agent's last decision on each.
+        needs: needs.map(n => ({
+          key: n.key, phrase: n.phrase, description: n.description, abilities: n.abilities, value: n.value, from: n.from,
+          included: (profile.fields?.needs || []).some(x => x?.dimension === n.key),
+          ...(n.decision ? { decision: { include: n.decision.include, by: n.decision.by, reason: n.decision.reason || '', at: n.decision.at } } : {}),
+        })),
       };
     });
   }
@@ -154,6 +202,13 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
     const result = await withToolkit(uid, ({ librarian }) => librarian.respondToProposal(id, response));
     if (response === 'accept' && result?.ok !== false) {
       try { await profileEvents.changed(uid); } catch (e) { log.warn('profile.announce.failed', { uid, errorCode: e?.code || 'error' }); }
+      scheduleDecide(uid);
+      // A need the person accepted: switch on the adapter that meets it, in their browser.
+      const key = parseKey(result?.need?.adapter);
+      if (key && registry) {
+        try { await registry.call(uid, 'adapter_install', { app: BROWSER_RUNTIME_APP, adapter: key, enabled: true }); }
+        catch (e) { log.warn('learning.needs.switch-on-failed', { uid, adapter: result.need.adapter, errorCode: e?.code || 'error' }); }
+      }
     }
     return result;
   }
@@ -189,6 +244,11 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
         cleared.suppressions += (await datastore.get('mine.suppressions')).length;
         await datastore.set('mine.proposals', []);
         await datastore.set('mine.suppressions', []);
+        // The profile agent decides on the registered needs afresh; what the person chose stays.
+        await datastore.patch('mine.registeredNeeds', (all) => {
+          for (const n of Object.values(all || {})) if (n.decision?.by !== 'person') delete n.decision;
+          return all;
+        });
         if (!memories) continue;
         for (const [scope, recs] of Object.entries(await datastore.allMemoryShards())) {
           const kept = (recs || []).filter(r => r.kind === 'note');
@@ -202,7 +262,7 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
         });
       }
       return { reset: true, cleared };
-    });
+    }).finally(() => scheduleDecide(uid));
   }
 
   // ── what the adapter registry says about the person ───────────────────────
@@ -210,6 +270,15 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
   // them; installing into an app is a developer setting the app up. Each one
   // follows the adapter's visibility.
   function fromRegistry(uid, event) {
+    // The needs an installed adapter meets are the profile agent's to decide on, whichever app installed it.
+    if (event.needs?.length && event.kind !== 'uninstalled') {
+      const on = event.app === BROWSER_RUNTIME_APP && (event.kind === 'installed' || event.enabled === true);
+      withToolkit(uid, async ({ librarian }) => {
+        await librarian.registerNeeds({ appId: event.appId, adapter: event.adapter }, event.needs);
+        // Switched on in their own browser: the person has these needs.
+        if (on) for (const n of event.needs) await librarian.chooseNeed(`${event.appId}/${n.id}`);
+      }, 'learning.needs').then(() => scheduleDecide(uid), e => log.warn('learning.needs.register-failed', { uid, errorCode: e?.code || 'error' }));
+    }
     if (event.app !== BROWSER_RUNTIME_APP) return;
     const what = `the adapter "${event.name}"${event.supportAreas?.length ? ` (for ${event.supportAreas.join(', ')})` : ''}`;
     const data = { adapter: event.adapter, supportAreas: event.supportAreas || [] };
@@ -245,11 +314,22 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
       return { paused: args.paused };
     }),
     profile_learning_reset: (uid, args, auth) => reset(uid, args, auth),
+    profile_need_register: (uid, args, auth) => {
+      // An app token speaks for its own app.
+      const app = auth?.kind === 'app' && auth.appId ? auth.appId : args.app;
+      const errs = checkNeeds(args.needs);
+      if (errs.length) throw Object.assign(new Error(`The needs do not fit: ${errs.slice(0, 3).map(e => `${e.path} ${e.message}`).join('; ')}`), { code: 'invalid-needs' });
+      if (!app) throw Object.assign(new Error('Name the app that meets these needs: app, or use the app\'s token.'), { code: 'app-required' });
+      return registerNeeds(uid, app, args.needs);
+    },
   };
   const tools = Object.fromEntries(Object.keys(PROFILE_TOOL_SCHEMAS).map(name => [name, {
     schema: PROFILE_TOOL_SCHEMAS[name], description: PROFILE_TOOL_DESCRIPTIONS[name],
     readOnly: PROFILE_READ_ONLY.includes(name), run: run[name],
   }]));
 
-  return { observe, scheduleExtract, learnNow, learned, respond, reset, forget, fromRegistry, tools };
+  return {
+    observe, scheduleExtract, scheduleDecide, decideIn, learnNow, learned, respond, reset, forget, fromRegistry, tools,
+    useRegistry: (r) => { registry = r; },
+  };
 }

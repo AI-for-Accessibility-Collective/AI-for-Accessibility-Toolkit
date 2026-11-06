@@ -8,6 +8,7 @@ column is what a developer meets in the code.
 | Public word | What it means | What it is called in the code |
 |---|---|---|
 | **Need** | What a person says, in their own words | free text, `supportAreas`, onboarding steps, derived `needs[]` entries (`{ dimension, value, strength, unit?, confidence?, source? }`, with strength ranked floor > preference > hint) |
+| **Registered need** | A need an adapter or app says it meets, which the toolkit's own list does not name | a descriptor's `needs`, or `profile_need_register`: `{ id, phrase, description, abilities, value? }`; in the profile as `needs[]` `{ dimension: '<appId>/<id>', … }`. The profile agent decides from the profile whether each fits the person and suggests it; switching the adapter on is the person's own answer (`toolkit/core/needs.js`) |
 | **Profile** | The portable understanding of the person, which adjusts its settings based on each person's level of consent | AbilityModel, Librarian, memory, grants, no-memory zones, the proposal queue |
 | **Skill** | Which adaptations to apply, at what settings, for a need | `SKILL.md`, the Engineer (skill builder), the registry |
 | **Adaptation** | The change a host makes in response | adapter modules, auditors, validators, ability presets, surface renderers, ports |

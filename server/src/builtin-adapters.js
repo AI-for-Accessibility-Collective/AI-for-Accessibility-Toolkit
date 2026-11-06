@@ -43,12 +43,21 @@ export function loadBuiltinAdapters({ briefs = BRIEFS, dir = CODE_DIR } = {}) {
         // Every web page, as the assistant's "All websites" is.
         targets: [{ platforms: ['*'], urls: ['*://*/*'] }],
         supportAreas: b.suggestedFor || [],
+        ...(b.needs?.length ? { needs: b.needs } : {}),
       },
       package: { format: WEB_MODULE, code },
       appName: BUILTIN_APP.appName,
       shared: true,
     };
   });
+}
+
+/** The needs the built-ins meet, for the profile agent: [{from: {appId, adapter}, needs}]. */
+export function builtinNeeds(adapters = loadBuiltinAdapters()) {
+  return adapters.filter(a => a.descriptor.needs?.length).map(a => ({
+    from: { appId: a.descriptor.appId, adapter: `${BUILTIN_OWNER}/${a.descriptor.appId}/${a.descriptor.id}` },
+    needs: a.descriptor.needs,
+  }));
 }
 
 /**

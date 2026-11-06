@@ -63,7 +63,7 @@ export const DIGEST_FIELDS = Object.freeze([
   'appId', 'id', 'name', 'description', 'version', 'adapterProtocol', 'exposure',
   'reach', 'mode', 'capabilities', 'platformConstraints', 'surfaces', 'targets',
   'targetRefSchema', 'inputSchema', 'outputSchema', 'stateSchema', 'requires',
-  'effects', 'operations', 'pageTypes',
+  'effects', 'operations', 'pageTypes', 'needs',
 ]);
 
 /** The digest-relevant subset of a descriptor, with absent fields left out. */

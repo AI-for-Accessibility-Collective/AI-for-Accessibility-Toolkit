@@ -6,6 +6,7 @@
 // `{path, message}` pairs, so a developer fixes a descriptor in one pass.
 
 import { PAGE_TYPE_IDS } from './page-types.js';
+import { checkNeeds } from './needs.js';
 import { checkSchema } from './schema.js';
 import { checkTargetRules, checkPlatformRecords } from './match.js';
 
@@ -153,6 +154,7 @@ export function checkDescriptor(d, { application } = {}) {
     err('/pageTypes', `must be a non-empty list of ${PAGE_TYPE_IDS.join(', ')} (page-types.js): the kinds of page, among those its targets match, it runs on`);
   }
   if (d.visibility !== undefined && !VISIBILITY.includes(d.visibility)) err('/visibility', `must be ${VISIBILITY.join(', ')}`);
+  if (d.needs !== undefined) errors.push(...checkNeeds(d.needs));
   return errors;
 }
 
@@ -165,6 +167,7 @@ export function summarizeDescriptor(d) {
   };
   if (d.supportAreas) summary.supportAreas = d.supportAreas;
   if (d.pageTypes) summary.pageTypes = d.pageTypes;
+  if (d.needs) summary.needs = d.needs;
   return summary;
 }
 

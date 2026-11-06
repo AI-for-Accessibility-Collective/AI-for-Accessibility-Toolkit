@@ -28,7 +28,14 @@ const LLM_ANSWER = JSON.stringify({
   operations: [{ op: 'ADD', record: { text: 'Prefers bigger buttons when shopping.', scope: 'general', tier: 'preference' } }],
   proposals: [{ aspect: 'profile.largeTargets', aspectLabel: 'Bigger buttons and links', change: { op: 'profile-set', path: 'fields.largeTargets', value: true }, rationale: 'You keep choosing bigger buttons.' }],
 });
-const host = createToolkitHost({ store, geminiCaller: async (prompt) => { prompts.push(prompt); return LLM_ANSWER; } });
+// The profile agent's decisions on registered needs: what `include` says, for every need it is shown.
+const needPrompts = [];
+const include = new Set();
+const decide = (prompt) => JSON.stringify({ decisions: [...prompt.matchAll(/^\d+\. ([^:\s]+):/gm)].map(m => ({ need: m[1], include: include.has(m[1]), reason: `Their profile mentions ${m[1]}.` })) });
+const host = createToolkitHost({ store, geminiCaller: async (prompt) => {
+  if (prompt.includes('Needs that adapters and apps meet')) { needPrompts.push(prompt); return decide(prompt); }
+  prompts.push(prompt); return LLM_ANSWER;
+} });
 const app = createApp({ store, adminPassword: ADMIN, toolkitHost: host, learningDelayMs: 150 });
 const server = http.createServer(app);
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -169,6 +176,52 @@ try {
     await until(() => prompts.length > before, 'extract');
     assert.match(prompts.at(-1), /Removed the adapter \\"Big buttons\\" \(for motor\) from their browser\./);
   });
+  await test('needs: an app registers one, the profile agent suggests it, accepting adds it; an adapter switched on is the person\'s answer', async () => {
+    const nina = await tokenFor('nina');
+    const reg = createRegistryClient({ url: base, token: nina });
+    const NEED = { id: 'big-hit-areas', phrase: 'Bigger buttons and links', description: 'Makes buttons and links bigger to hit.', abilities: 'Small targets are hard to hit: a tremor, limited hand control.' };
+    await reg.publish({
+      appName: 'Helper',
+      descriptor: defineDescriptor({ appId: 'helper', id: 'big-hit', name: 'Big hit areas', version: '1.0.0', targets: [{ platforms: ['*'], urls: ['https://example.com/*'] }], needs: [NEED] }),
+      code: 'export default { enable() {}, disable() {} };',
+    });
+    await assert.rejects(reg.publish({ descriptor: defineDescriptor({ appId: 'helper', id: 'bad', name: 'Bad', version: '1.0.0', targets: [{ platforms: ['*'], urls: ['https://example.com/*'] }], needs: [{ id: 'x', phrase: 'x' }] }), code: 'export default { enable() {}, disable() {} };' }), /needs\/0/);
+    // An app's own need, registered for the person.
+    await assert.rejects(reg.profile.registerNeeds([{ ...NEED, id: 'route', description: 'short' }], { app: 'maps' }), /description/);
+    const registered = await reg.profile.registerNeeds([{ ...NEED, id: 'simple-routes', phrase: 'Simpler directions', description: 'Gives directions with fewer turns.', abilities: 'Long lists of steps are hard to follow.' }], { app: 'maps' });
+    assert.deepEqual(registered.registered, ['maps/simple-routes']);
+    // Installing into an app registers the adapter's needs for the profile agent too.
+    await reg.install('redbird', { appId: 'helper', id: 'big-hit' });
+    include.add('helper/big-hit-areas');
+    await librarian(nina, 'setProfileFields', { freeText: 'My hands shake.', supportAreas: ['motor'] });
+    const suggested = await until(async () => { const s = await reg.profile.learned(); return s.proposals.some(p => p.change.op === 'need-add') ? s : null; }, 'the need suggestion');
+    assert.equal(needPrompts.length, 1, 'one decision for both needs');
+    assert.match(needPrompts[0], /helper\/big-hit-areas: "Bigger buttons and links"/);
+    assert.match(needPrompts[0], /maps\/simple-routes: "Simpler directions"/);
+    const p = suggested.proposals.find(x => x.change.op === 'need-add');
+    assert.equal(p.label, 'Bigger buttons and links');
+    assert.equal(p.rationale, 'Their profile mentions helper/big-hit-areas.');
+    assert.deepEqual(suggested.needs.map(n => [n.key, n.included, n.decision?.include]).sort(), [['helper/big-hit-areas', false, true], ['maps/simple-routes', false, false]]);
+    // Accepting adds the need and switches the adapter on in the person's browser.
+    assert.notEqual((await reg.profile.respond(p.id, 'accept')).ok, false);
+    assert.ok((await reg.profile.get()).profile.fields.needs.some(n => n.dimension === 'helper/big-hit-areas'));
+    const running = await until(async () => (await reg.installed('browser-runtime')).adapters.find(a => a.adapter.id === 'big-hit' && a.enabled), 'the adapter switched on');
+    assert.ok(running);
+    // Switching an adapter on is the person's answer: its need is theirs, with no suggestion.
+    const before = needPrompts.length;
+    await reg.publish({
+      appName: 'Helper',
+      descriptor: defineDescriptor({ appId: 'helper', id: 'calm', name: 'Calm', version: '1.0.0', targets: [{ platforms: ['*'], urls: ['https://example.com/*'] }], needs: [{ ...NEED, id: 'calm', phrase: 'Less motion', description: 'Stops what moves on its own.', abilities: 'Movement makes it hard to focus.' }] }),
+      code: 'export default { enable() {}, disable() {} };',
+    });
+    await reg.install('browser-runtime', { appId: 'helper', id: 'calm' });
+    const mine = await until(async () => (await reg.profile.get()).profile.fields.needs.find(n => n.dimension === 'helper/calm'), 'the chosen need');
+    assert.equal(mine.source, 'person');
+    await new Promise(r => setTimeout(r, 400));
+    assert.equal((await reg.profile.learned()).needs.find(n => n.key === 'helper/calm').decision.by, 'person');
+    assert.ok(!needPrompts.slice(before).some(x => /helper\/calm/.test(x)), 'the agent does not decide what the person chose');
+  });
+
   await test('the skill\'s helper lists what was learned and passes on the person\'s answer', async () => {
     const helper = fileURLToPath(new URL('../../.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs', import.meta.url));
     const { TOOLKIT_URL: _u, TOOLKIT_TOKEN: _t, ...env } = process.env;

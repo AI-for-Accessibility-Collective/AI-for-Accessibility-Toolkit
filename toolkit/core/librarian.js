@@ -44,6 +44,7 @@ import { GRANT_SCOPES, validateScopes, normalizeGrant, isActive, filterAbilityMo
 import { buildProfileBlob, validateProfileBlob } from '../sync/blob.js';
 import { resolveSkill, matchSkill, matchSkillToNeed, validateSkill, vocabList } from './skill.js';
 import { buildSkill } from './skill-builder.js';
+import { cleanRegistration, sameRegistration, profileBasis, needsToDecide, decisionPrompt, readDecisions } from './needs.js';
 
 // How many profile suggestions the Librarian drafts a week when the profile
 // does not say (a preset's metaPreferences often leave it out).
@@ -1722,9 +1723,17 @@ Return ONLY valid JSON with:
         if (!isSafeProposalChange(prop.change)) {
           return { ok: false, reason: 'profile-path-not-allowed' };
         }
+        const isNeed = prop.change?.op === 'need-add' || prop.change?.op === 'need-remove';
+        const registeredNeed = isNeed ? ((await DS().get('mine.registeredNeeds')) || {})[prop.change.key] : null;
+        if (isNeed && !registeredNeed) return { ok: false, reason: 'need-not-registered' };
         prop.status = 'accepted';
         if (prop.change?.op === 'profile-set') {
           await this.setProfileField(prop.change.path, prop.change.value);
+        } else if (isNeed) {
+          // A registered need the profile agent suggested (decideNeeds).
+          const needs = ((await getOrInitProfile()).fields?.needs || []).filter(n => n?.dimension !== prop.change.key);
+          if (prop.change.op === 'need-add') needs.push({ dimension: prop.change.key, value: prop.change.value ?? true, strength: 'preference', source: 'profile-agent' });
+          await this.setProfileField('fields.needs', needs);
         } else if (prop.change?.op === 'add-profile-action' && prop.change.action) {
           // Save into an existing auto-apply profile for the category, or
           // create one — same storage the popup's manual "Save to Profile"
@@ -1919,7 +1928,106 @@ Return ONLY valid JSON with:
       prop.respondedAt = now;
       await DS().set('mine.proposals', props);
       await updateBadge();
+      // An added need names what meets it, so the host can switch that adapter on.
+      if (prop.status === 'accepted' && prop.change?.op === 'need-add') {
+        const reg = ((await DS().get('mine.registeredNeeds')) || {})[prop.change.key];
+        return { ok: true, status: prop.status, need: { key: prop.change.key, ...(reg?.from?.adapter ? { adapter: reg.from.adapter } : {}) } };
+      }
       return { ok: true, status: prop.status };
+    },
+
+    // ---- registered needs -------------------------------------------------
+    // Register needs an adapter or app meets ({id, phrase, description,
+    // abilities, value?}, protocol/adapter/needs.js), as "<appId>/<id>". A
+    // need whose words change is decided again. Returns {registered: keys}.
+    async registerNeeds(from, needs) {
+      if (!from || typeof from.appId !== 'string' || !from.appId || !Array.isArray(needs)) throw new Error('registerNeeds(from: {appId, adapter?, app?}, needs: [{id, phrase, description, abilities}])');
+      const now = clock.now();
+      const keys = [];
+      await DS().patch('mine.registeredNeeds', (all) => {
+        all = all || {};
+        for (const n of needs) {
+          if (!n || typeof n.id !== 'string' || !n.id) continue;
+          const next = cleanRegistration(n, from, now);
+          const prev = all[next.key];
+          // Same words: keep the decision. New words: decide again, unless the person chose it.
+          all[next.key] = sameRegistration(prev, next) ? { ...prev, from: next.from }
+            : { ...next, ...(prev?.decision?.by === 'person' ? { decision: prev.decision } : {}) };
+          keys.push(next.key);
+        }
+        return all;
+      });
+      return { registered: keys };
+    },
+
+    // The registered needs, each with the profile agent's last decision
+    // ({include, value, reason, by: 'agent'|'person', at}).
+    async listRegisteredNeeds() {
+      return Object.values((await DS().get('mine.registeredNeeds')) || {});
+    },
+
+    // The profile agent decides, with the model, whether the person's profile
+    // calls for each registered need not yet decided on this profile (one
+    // call). Adding a need, or taking out one it added, becomes a suggestion
+    // the person answers. Skipped while learning is paused.
+    async decideNeeds() {
+      if (!_gemini) return { ran: false, reason: 'no-llm' };
+      const profile = await getOrInitProfile();
+      if (profile.memoryPaused) return { ran: false, reason: 'paused' };
+      const basis = profileBasis(profile);
+      const asked = needsToDecide(await DS().get('mine.registeredNeeds'), basis);
+      if (!asked.length) return { ran: false, reason: 'nothing-to-decide' };
+      const decided = readDecisions(parseJsonLoose(await _gemini(decisionPrompt(profile, asked))), asked);
+      const now = clock.now();
+      const have = new Map((profile.fields?.needs || []).filter(n => n?.dimension).map(n => [n.dimension, n]));
+      const drafts = [];
+      for (const n of asked) {
+        const d = decided[n.key];
+        if (!d) continue;
+        const present = have.get(n.key);
+        const draft = { aspect: `need:${n.key}`, aspectLabel: n.phrase, rationale: d.reason, source: n.appId };
+        if (d.include && !present) drafts.push({ ...draft, change: { op: 'need-add', key: n.key, value: d.value } });
+        // Only what the agent added is the agent's to take out.
+        else if (!d.include && present?.source === 'profile-agent') drafts.push({ ...draft, change: { op: 'need-remove', key: n.key } });
+      }
+      await DS().patch('mine.registeredNeeds', (all) => {
+        for (const [key, d] of Object.entries(decided)) if (all?.[key] && all[key].decision?.by !== 'person') all[key].decision = { ...d, basis, by: 'agent', at: now };
+        return all;
+      });
+      // A suggestion the new decision goes against is withdrawn.
+      await DS().patch('mine.proposals', (props) => {
+        for (const p of props || []) {
+          const key = p.status === 'pending' && p.aspect?.startsWith('need:') ? p.aspect.slice(5) : null;
+          if (!key || !decided[key]) continue;
+          if ((p.change?.op === 'need-add' && !decided[key].include) || (p.change?.op === 'need-remove' && decided[key].include)) { p.status = 'withdrawn'; p.respondedAt = now; }
+        }
+        return props;
+      });
+      await this._draftProposals(drafts, { suppressions: (await DS().get('mine.suppressions')) || [], profile, now });
+      await updateBadge();
+      return { ran: true, decided: Object.keys(decided).length, suggested: drafts.length };
+    },
+
+    // The person switched on what meets a registered need: they have it. It
+    // goes into the profile as theirs, the agent does not decide it again,
+    // and a suggestion about it is withdrawn. Returns {ok, added}.
+    async chooseNeed(key) {
+      const reg = ((await DS().get('mine.registeredNeeds')) || {})[key];
+      if (!reg) return { ok: false, reason: 'not-registered' };
+      const now = clock.now();
+      const needs = [...((await getOrInitProfile()).fields?.needs || [])];
+      const i = needs.findIndex(n => n?.dimension === key);
+      const changed = i < 0 || needs[i].source !== 'person';
+      if (i < 0) needs.push({ dimension: key, value: reg.value.kind === 'number' ? (reg.value.start ?? reg.value.min) : true, strength: 'preference', source: 'person' });
+      else if (changed) needs[i] = { ...needs[i], source: 'person' };
+      if (changed) await this.setProfileField('fields.needs', needs);
+      await DS().patch('mine.registeredNeeds', (all) => { if (all?.[key]) all[key].decision = { include: true, by: 'person', at: now }; return all; });
+      await DS().patch('mine.proposals', (props) => {
+        for (const p of props || []) if (p.status === 'pending' && p.aspect === `need:${key}`) { p.status = 'withdrawn'; p.respondedAt = now; }
+        return props;
+      });
+      await updateBadge();
+      return { ok: true, added: i < 0 };
     },
 
     // ====================== SLOW LANE (LLM) ======================

@@ -180,3 +180,4 @@ a.text-button:hover { text-decoration: underline; }
 .learned-memory { grid-template-columns: minmax(0, 1fr) repeat(3, auto); align-items: center; }
 .learned-actions { margin-top: calc(16px * var(--space)); flex-wrap: wrap; }
 
+.learned-item > .badge { justify-self: start; }

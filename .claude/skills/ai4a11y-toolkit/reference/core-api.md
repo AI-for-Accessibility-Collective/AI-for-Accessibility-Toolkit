@@ -25,6 +25,10 @@ Read directly off a live `createToolkit(...)` instance — call as `toolkit.libr
 | `librarian.setSiteCategoryOverride(origin, category)` | async | Record the person's own category for an origin. |
 | `librarian.getEffectivePreferences(url, contexts)` | async | Deterministic scope-chain merge of machine-actionable settings. |
 | `librarian.interpretNeedsPrompt(text)` | async | Prompt for the popup's "what support do you need?" flow. |
+| `librarian.registerNeeds(from, needs)` | async | Register needs an adapter or app meets ({id, phrase, description, abilities, value?}, protocol/adapter/needs.js), as "<appId>/<id>". |
+| `librarian.listRegisteredNeeds()` | async | The registered needs, each with the profile agent's last decision ({include, value, reason, by: 'agent'\|'person', at}). |
+| `librarian.decideNeeds()` | async | The profile agent decides, with the model, whether the person's profile calls for each registered need not yet decided on this profile (one call). |
+| `librarian.chooseNeed(key)` | async | The person switched on what meets a registered need: they have it. |
 
 ### memory
 

@@ -17,6 +17,7 @@ const TOOLKIT_FILES = [
   'protocol/adapter/schema.js',
   'protocol/adapter/canonical.js',
   'protocol/adapter/page-types.js',
+  'protocol/adapter/needs.js',
   'protocol/adapter/match.js',
   'protocol/adapter/wire.js',
   'protocol/adapter/package.js',

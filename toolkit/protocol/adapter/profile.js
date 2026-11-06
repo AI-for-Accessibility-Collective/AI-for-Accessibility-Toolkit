@@ -7,6 +7,7 @@
 
 import { SLUG } from './descriptor.js';
 import { REGISTRY_KEY_SCHEMA } from './registry.js';
+import { NEED_SCHEMA, MAX_NEEDS } from './needs.js';
 
 const ID = { type: 'string', minLength: 1, maxLength: 120 };
 
@@ -41,6 +42,13 @@ export const PROFILE_TOOL_SCHEMAS = Object.freeze({
     },
   },
   profile_memory_delete: { type: 'object', additionalProperties: false, required: ['id'], properties: { id: ID } },
+  profile_need_register: {
+    type: 'object', additionalProperties: false, required: ['needs'],
+    properties: {
+      needs: { type: 'array', minItems: 1, maxItems: MAX_NEEDS, items: NEED_SCHEMA, description: 'The needs the app meets, each {id, phrase, description, abilities, value?}. Registering one again with new words has it decided again.' },
+      app: { type: 'string', pattern: SLUG.source, description: 'The app that meets them. An app token is always its own app.' },
+    },
+  },
   profile_learning_pause: { type: 'object', additionalProperties: false, required: ['paused'], properties: { paused: { type: 'boolean' } } },
   profile_learning_reset: {
     type: 'object', additionalProperties: false,
@@ -56,10 +64,11 @@ export const PROFILE_READ_ONLY = Object.freeze(['profile_get', 'profile_learned'
 export const PROFILE_TOOL_DESCRIPTIONS = Object.freeze({
   profile_get: 'Read the person\'s profile: their needs and settings, which every app renders.',
   profile_observe: 'Tell the toolkit what the person did with an adapter or app, so it can learn: one plain sentence, the site, small details, and up to 4 images. Who can read it follows the visibility of the app or adapter it comes from. Skipped while learning is paused.',
-  profile_learned: 'What the toolkit learned: the memories it keeps, the suggested profile changes waiting for an answer, how many it suggested this week against its weekly limit, and whether learning is paused.',
+  profile_learned: 'What the toolkit learned: the memories it keeps, the suggested profile changes waiting for an answer, how many it suggested this week against its weekly limit, whether learning is paused, and the needs adapters and apps registered with the profile agent\'s last decision on each.',
   profile_learn_now: 'Learn from the observations so far now, instead of waiting a little after the last one. Uses the toolkit\'s language model.',
   profile_proposal_respond: 'Answer a suggested profile change: accept (the profile changes and apps follow it), declineOnce, or suppress.',
   profile_memory_delete: 'Forget one memory.',
+  profile_need_register: 'Register needs your app meets, which the toolkit cannot list itself: each a plain phrase, what it does, and the abilities it is relevant to (the barrier it removes, in plain words). The profile agent decides from the person\'s profile whether each fits them and suggests adding it; the person answers. A need the person has shows in profile_get as {dimension: "<app>/<id>", value}. An adapter declares its needs in its descriptor instead.',
   profile_learning_pause: 'Pause or resume learning. While paused, observations are not kept.',
   profile_learning_reset: 'Start learning over: clear the suggested changes (the weekly count starts again at zero) and the "stop suggesting" list; with memories, also the memories and pending observations. The profile itself stays as it is.',
 });

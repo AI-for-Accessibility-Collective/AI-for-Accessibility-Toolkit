@@ -13,6 +13,10 @@ const AREAS = ['vision', 'hearing', 'motor', 'cognitive', 'reading', 'sensory'];
 // A need's dimension in the words the extension's Profile tab uses ("Larger
 // text"); the profile keeps the toolkit's name for it (textSize).
 const DIMENSION_NAMES = Object.fromEntries(PROFILE_NEEDS.map(d => [d.id, d.name]));
+/** Name the needs adapters and apps registered ("toolkit/bigger-targets") by their phrase. */
+export function nameRegisteredNeeds(needs) {
+  for (const n of needs || []) if (n?.key && n.phrase) DIMENSION_NAMES[n.key] = n.phrase;
+}
 // A need's level is stored as its `strength` (toolkit/core/strength.js).
 const LEVEL_NAMES = { floor: 'Must have', preference: 'Preferred', hint: 'Nice to have' };
 const UNIT_NAMES = { ratio: 'Times the usual size', em: 'Letter widths (em)', percent: 'Percent', boolean: 'On or off', enum: 'One of a list' };

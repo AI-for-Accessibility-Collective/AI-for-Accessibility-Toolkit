@@ -1,6 +1,6 @@
 import { BUILTIN_PROFILES } from './profiles.js';
 import { createClient, editableProfile, profileRows, setKey, removeKey, validateProfile, readSaved, writeSaved, signIn, readSession, writeSession } from './client.js';
-import { createValueEditor, VALUE_DEFAULTS } from './value-editor.js';
+import { createValueEditor, VALUE_DEFAULTS, nameRegisteredNeeds } from './value-editor.js';
 import { fieldInfo } from './fields.js';
 import { createAdaptersPage } from './adapters.js';
 import { createLearnedPanel } from './learned.js';
@@ -393,6 +393,7 @@ $('new-type').addEventListener('change', renderNewValue);
 async function connectWith(candidate, { asSession, account = null, token = null }) {
   const identity = await candidate.whoami();
   const profile = validateProfile(await candidate.call('getProfile'));
+  await loadNeedNames(candidate);
   client = candidate; session = asSession; selectedId = null; activeId = null; temp = null;
   // A bare app token can itself connect apps; a session hands out the default token.
   defaultToken = asSession ? token : (identity.kind === 'session' ? null : candidate.token);
@@ -476,8 +477,13 @@ $('new-profile').addEventListener('click', () => {
   renderEditor(); renderLibrary(); $('draft-state').textContent = 'New draft';
   $('profile-name').focus(); status('New profile draft. Add keys, then save a preset or apply it to the toolkit.');
 });
+// The needs adapters and apps registered show by their phrase in the needs editor.
+async function loadNeedNames(c = client) {
+  try { nameRegisteredNeeds(await c.call('listRegisteredNeeds')); } catch { /* an older toolkit: by their keys */ }
+}
 async function readToolkitProfile() {
   const profile = await client.call('getProfile');
+  await loadNeedNames();
   showToolkitProfile(profile, (await client.selection().catch(() => null))?.selected);
 }
 $('refresh').addEventListener('click', () => run(async () => {

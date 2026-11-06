@@ -383,7 +383,9 @@ async function learned() {
   console.log(s.proposals.length ? '\nSuggested changes (ask the person, then: node adapter.mjs answer <id> accept | not-now | never):' : '\nNo suggestions waiting.');
   for (const p of s.proposals) {
     const c = p.change || {};
-    const what = c.op === 'profile-set' ? `set ${c.path.replace(/^fields\./, '')} to ${JSON.stringify(c.value)}` : c.op || '';
+    const what = c.op === 'profile-set' ? `set ${c.path.replace(/^fields\./, '')} to ${JSON.stringify(c.value)}`
+      : c.op === 'need-add' ? `add the need ${c.key}${c.value !== true && c.value !== undefined ? ` at ${JSON.stringify(c.value)}` : ''}`
+      : c.op === 'need-remove' ? `take out the need ${c.key}` : c.op || '';
     console.log(`- ${p.id}: ${p.label}${what ? ` (${what})` : ''}${p.rationale ? `. ${p.rationale}` : ''}`);
   }
   console.log(s.memories.length ? '\nWhat it remembers:' : '\nNothing learned yet.');

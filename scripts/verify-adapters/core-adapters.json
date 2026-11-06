@@ -8,6 +8,14 @@
         "vision",
         "reading"
       ],
+      "needs": [
+        {
+          "id": "larger-text",
+          "phrase": "Larger text with more room",
+          "description": "Makes text bigger, by zooming or by the text size alone, with more space between lines and letters.",
+          "abilities": "Small or tightly packed text is hard to read: low vision, tired eyes, reading from further away, or reading more easily with more space."
+        }
+      ],
       "reads": [
         "fontScale",
         "textSizeMethod",
@@ -42,6 +50,14 @@
       "suggestedFor": [
         "vision"
       ],
+      "needs": [
+        {
+          "id": "more-contrast",
+          "phrase": "Text that stands out from its background",
+          "description": "Raises the contrast of text that is too faint against its background, or gives pages light text on a dark background.",
+          "abilities": "Faint or low-contrast text is hard to make out: low vision, color blindness, glare, or bright light being uncomfortable."
+        }
+      ],
       "reads": [
         "contrastMode",
         "darkMode"
@@ -71,6 +87,14 @@
       "suggestedFor": [
         "motor",
         "vision"
+      ],
+      "needs": [
+        {
+          "id": "keyboard-use",
+          "phrase": "Use pages with the keyboard",
+          "description": "Shows clearly where the keyboard is on the page, adds a way to skip to the main content, and makes controls reachable with the keyboard.",
+          "abilities": "A mouse or touch screen is hard or impossible to use, so they use a keyboard, a switch, or voice control that acts like one; or they lose track of where they are on the page."
+        }
       ],
       "reads": [
         "motionReducer"
@@ -103,6 +127,14 @@
       "suggestedFor": [
         "motor"
       ],
+      "needs": [
+        {
+          "id": "bigger-targets",
+          "phrase": "Bigger buttons and links",
+          "description": "Makes small links, buttons and form controls bigger to hit, with room between them.",
+          "abilities": "Small targets are hard to hit: a tremor, limited hand control, a pointer held in the mouth or on the head, or a large touch screen used with fingers."
+        }
+      ],
       "reads": [
         "targetSize",
         "bigTargets"
@@ -134,6 +166,14 @@
         "vision",
         "motor"
       ],
+      "needs": [
+        {
+          "id": "page-structure",
+          "phrase": "Pages organized into parts",
+          "description": "Gives the page regions and headings that a screen reader or a keyboard can jump between.",
+          "abilities": "They move through pages by structure rather than by looking: they use a screen reader, or find long pages without clear parts hard to follow."
+        }
+      ],
       "reads": [],
       "adjusts": "nothing (the shortcut, if given, turns it on and off). The outline opens from a 'Page outline' button that is the first thing Tab reaches after any skip link, visible when focused, so it covers nothing.",
       "priorWork": [
@@ -159,6 +199,14 @@
       "name": "Announce changes",
       "suggestedFor": [
         "vision"
+      ],
+      "needs": [
+        {
+          "id": "announce-changes",
+          "phrase": "Hear about changes on the page",
+          "description": "Tells a screen reader when the page changes without saying so: a message that appears, new content, a new view.",
+          "abilities": "They use a screen reader, so a change they cannot see goes unnoticed unless it is announced."
+        }
       ],
       "reads": [],
       "adjusts": "nothing (the shortcut, if given, turns it on and off).",
@@ -186,6 +234,14 @@
       "suggestedFor": [
         "sensory",
         "cognitive"
+      ],
+      "needs": [
+        {
+          "id": "calm-page",
+          "phrase": "Less motion and distraction",
+          "description": "Stops what moves on its own: animations, smooth scrolling, autoplaying video and moving images.",
+          "abilities": "Movement makes it hard to focus or is uncomfortable: distraction, dizziness or nausea from motion, sensitivity to busy pages."
+        }
       ],
       "reads": [
         "motionReducer"
@@ -217,6 +273,14 @@
       "suggestedFor": [
         "hearing"
       ],
+      "needs": [
+        {
+          "id": "captions",
+          "phrase": "Captions on videos",
+          "description": "Turns on the captions and subtitles that videos and audio already have.",
+          "abilities": "Speech in videos and audio is hard to hear or follow: deaf or hard of hearing, a noisy or quiet place, or following better when reading along."
+        }
+      ],
       "reads": [],
       "adjusts": "nothing (the shortcut, if given, turns it on and off).",
       "priorWork": [
@@ -238,6 +302,14 @@
       "name": "Names for controls and images",
       "suggestedFor": [
         "vision"
+      ],
+      "needs": [
+        {
+          "id": "control-names",
+          "phrase": "Names for buttons, fields and images",
+          "description": "Gives buttons, links and form fields that have no name a short one, and images that have no description one.",
+          "abilities": "They use a screen reader or voice control, which cannot say or reach a button, field or image the page left unnamed."
+        }
       ],
       "reads": [],
       "adjusts": "nothing (the shortcut, if given, turns it on and off).",
@@ -270,6 +342,14 @@
         "cognitive",
         "reading"
       ],
+      "needs": [
+        {
+          "id": "plain-language",
+          "phrase": "Hard paragraphs in plain language",
+          "description": "Offers each long or hard paragraph again in plain language, at their reading level, when they ask.",
+          "abilities": "Long sentences and unusual words are hard to follow: reading in a second language, dyslexia, memory or attention, or wanting the point quickly."
+        }
+      ],
       "reads": [
         "readingLevel"
       ],
@@ -298,6 +378,14 @@
       "suggestedFor": [
         "reading",
         "vision"
+      ],
+      "needs": [
+        {
+          "id": "read-aloud",
+          "phrase": "Read pages aloud",
+          "description": "Reads the main content or the text they select aloud, highlighting each word as it is spoken.",
+          "abilities": "Reading text on a screen is tiring or slow: dyslexia, low vision, fatigue, or understanding better by listening."
+        }
       ],
       "reads": [
         "speechRate"

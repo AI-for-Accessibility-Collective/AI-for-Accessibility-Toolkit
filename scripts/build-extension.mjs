@@ -27,6 +27,7 @@ const FILES = [
   'protocol/adapter/profile.js',
   'protocol/adapter/access.js',
   'protocol/adapter/page-types.js',
+  'protocol/adapter/needs.js',
   'adapter-mcp/client.js',
   'adapter-mcp/registry.js',
   // The person's settings for the blocks, as the web surface derives them.

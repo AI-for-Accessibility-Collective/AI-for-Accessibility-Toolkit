@@ -36,10 +36,11 @@ for (const { adapter, entry } of await loadInstalledAdapters(registry, 'my-app')
 
 - `profile_get` — Read the person's profile: their needs and settings, which every app renders.
 - `profile_observe` — Tell the toolkit what the person did with an adapter or app, so it can learn: one plain sentence, the site, small details, and up to 4 images. Who can read it follows the visibility of the app or adapter it comes from. Skipped while learning is paused.
-- `profile_learned` — What the toolkit learned: the memories it keeps, the suggested profile changes waiting for an answer, how many it suggested this week against its weekly limit, and whether learning is paused.
+- `profile_learned` — What the toolkit learned: the memories it keeps, the suggested profile changes waiting for an answer, how many it suggested this week against its weekly limit, whether learning is paused, and the needs adapters and apps registered with the profile agent's last decision on each.
 - `profile_learn_now` — Learn from the observations so far now, instead of waiting a little after the last one. Uses the toolkit's language model.
 - `profile_proposal_respond` — Answer a suggested profile change: accept (the profile changes and apps follow it), declineOnce, or suppress.
 - `profile_memory_delete` — Forget one memory.
+- `profile_need_register` — Register needs your app meets, which the toolkit cannot list itself: each a plain phrase, what it does, and the abilities it is relevant to (the barrier it removes, in plain words). The profile agent decides from the person's profile whether each fits them and suggests adding it; the person answers. A need the person has shows in profile_get as {dimension: "<app>/<id>", value}. An adapter declares its needs in its descriptor instead.
 - `profile_learning_pause` — Pause or resume learning. While paused, observations are not kept.
 - `profile_learning_reset` — Start learning over: clear the suggested changes (the weekly count starts again at zero) and the "stop suggesting" list; with memories, also the memories and pending observations. The profile itself stays as it is.
 

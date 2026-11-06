@@ -110,6 +110,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
       shared: rec.shared === true, revision: rec.revision, version: rec.version,
       supportAreas: rec.supportAreas || [], urlPatterns: rec.urlPatterns || [],
       ...(rec.pageTypes ? { pageTypes: rec.pageTypes } : {}),
+      ...(rec.needs ? { needs: rec.needs } : {}),
       portable: !!rec.format, format: rec.format || null, visibility: rec.visibility || 'user',
       createdAt: rec.createdAt, updatedAt: rec.updatedAt,
     };
@@ -247,6 +248,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
         appId, id, appName, name: descriptor.name, description: descriptor.description || '',
         version: descriptor.version, supportAreas: descriptor.supportAreas || [],
         ...(descriptor.pageTypes ? { pageTypes: descriptor.pageTypes } : {}),
+        ...(descriptor.needs?.length ? { needs: descriptor.needs } : {}),
         ...(descriptor.visibility && descriptor.visibility !== 'user' ? { visibility: descriptor.visibility } : {}),
         urlPatterns: webUrlPatterns(descriptor.targets), format: pkg ? pkg.format : null,
         shared: sharedNow, sharedAt: sharedNow ? (existing?.shared ? existing.sharedAt : at) : null,
@@ -351,7 +353,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
     const wasOn = before ? before.enabled !== false : null;
     const sites = Object.fromEntries(Object.entries(args.sites || {}).filter(([origin, on]) => on === (before?.sites?.[origin] === false)));
     onInstallChange(caller, {
-      app: args.app, adapter: full, name: rec.name || rec.id, supportAreas: rec.supportAreas || [],
+      app: args.app, adapter: full, name: rec.name || rec.id, supportAreas: rec.supportAreas || [], needs: rec.needs || [], appId: rec.appId,
       kind: before ? null : 'installed', enabled: before && args.enabled !== undefined && args.enabled !== wasOn ? args.enabled : undefined, sites,
     });
     return { app: args.app, adapter: { owner, appId: rec.appId, id: rec.id }, install: entry };

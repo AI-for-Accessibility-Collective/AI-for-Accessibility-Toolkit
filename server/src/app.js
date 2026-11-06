@@ -25,7 +25,7 @@ import { sendJSON, sendHttpError, bearerFrom, readJSON as readBody } from './htt
 import { silentLogger, safeErrorText, loggedContent, MAX_LOGGED_CHARS } from './log.js';
 import { createActivityLog } from './activity.js';
 import { createRegistry, REGISTRY_PATH } from './registry.js';
-import { seedBuiltinAdapters } from './builtin-adapters.js';
+import { seedBuiltinAdapters, builtinNeeds } from './builtin-adapters.js';
 import { createLearning, pausedFor, librarianObservation } from './learning.js';
 import { createAccess } from './access.js';
 import { withAiContext } from './ai-context.js';
@@ -142,8 +142,9 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       : access.nameApp(rec.uid, application.appId, application.name)),
   });
   const profileEvents = createProfileEvents({ store, authenticate, toolkitHost, withUserLock });
-  const learning = createLearning({ toolkitHost, withUserLock, profileEvents, access, log, ...(learningDelayMs !== undefined ? { extractDelayMs: learningDelayMs } : {}) });
+  const learning = createLearning({ toolkitHost, withUserLock, profileEvents, access, log, builtinNeeds: builtinAdapters ? builtinNeeds() : [], ...(learningDelayMs !== undefined ? { extractDelayMs: learningDelayMs } : {}) });
   const registry = createRegistry({ store, withUserLock, authenticate, log, version, tools: { ...learning.tools, ...access.tools }, onInstallChange: learning.fromRegistry });
+  learning.useRegistry(registry);
   const accountRoutes = createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log });
   const adminAccountRoutes = createAdminAccountRoutes({ store, accounts, relay, wipeUser });
   const anyOrigin = corsOrigins.includes('*');
@@ -587,6 +588,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
           // A failure to announce must not turn a stored write into an error.
           try { await profileEvents.changed(rec.uid, routeName === 'replaceProfile' ? cleanSelection(args[1]) : undefined); }
           catch (e) { log.warn('profile.announce.failed', { uid: rec.uid, errorCode: safeErrorText(e) }); }
+          // A changed profile: the profile agent looks at the registered needs again.
+          learning.scheduleDecide(rec.uid);
         }
         return sendJSON(res, 200, { ok: true, result });
       } catch (e) {

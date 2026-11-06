@@ -72,6 +72,8 @@ export function createRegistryClient({ url, token, fetch: fetcher = globalThis.f
       forget: (id) => call('profile_memory_delete', { id }),
       pause: (paused = true) => call('profile_learning_pause', { paused }),
       reset: ({ memories = false } = {}) => call('profile_learning_reset', { memories }),
+      /** Register the needs an app meets ({id, phrase, description, abilities, value?}); the profile agent decides whether each fits the person. */
+      registerNeeds: (needs, { app } = {}) => call('profile_need_register', { needs, ...(app ? { app } : {}) }),
     },
 
     // Who can read what an app or adapter gives the toolkit (protocol/adapter/access.js).

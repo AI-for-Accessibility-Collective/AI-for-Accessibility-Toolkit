@@ -71,6 +71,10 @@ export function createDatastore({ kv, clock, taxonomy, toolsRegistry = null, bui
     // land here — see taxonomy.noMemoryCategories().
     'mine.episodicLog':  { area: 'local', key: 'aa.mine.episodicLog',  version: 1, def: { cursor: 0, entries: [] }, reserved: true },
     'mine.proposals':    { area: 'local', key: 'aa.mine.proposals',    version: 1, def: [],   reserved: true },
+    // Needs adapters and apps registered for this person, keyed
+    // "<appId>/<id>", each with the profile agent's last decision on it
+    // (core/needs.js).
+    'mine.registeredNeeds': { area: 'local', key: 'aa.mine.registeredNeeds', version: 1, def: {}, reserved: true },
     // origin → {category, source: 'hostmap'|'llm'|'user', classifiedAt,
     // taxonomyVersion}. Classify once, cache; user overrides are sticky.
     'mine.siteIndex':    { area: 'local', key: 'aa.mine.siteIndex',    version: 1, def: {},   reserved: true },

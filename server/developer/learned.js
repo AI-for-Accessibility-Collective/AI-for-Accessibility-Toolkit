@@ -29,6 +29,8 @@ function changeText(p) {
   const c = p.change || {};
   if (c.op === 'profile-set') return `Set ${c.path.replace(/^fields\./, '')} to ${valueText(c.value)}.`;
   if (c.op === 'add-profile-action') return `Save "${c.action?.name || 'this task'}" as an action to run again.`;
+  if (c.op === 'need-add') return `Add the need "${p.label}"${c.value !== true && c.value !== undefined ? ` at ${valueText(c.value)}` : ''}, and switch on what meets it.`;
+  if (c.op === 'need-remove') return `Take the need "${p.label}" out of your profile.`;
   return '';
 }
 
@@ -50,9 +52,10 @@ export function createLearnedPanel({ getClient, status, run, onProfileChanged })
   function setEnabled(on) { for (const id of controls) $(id).disabled = !on; }
 
   function render(state) {
-    const proposals = $('learned-proposals'), memories = $('learned-memories');
+    const proposals = $('learned-proposals'), memories = $('learned-memories'), needs = $('learned-needs');
     proposals.replaceChildren();
     memories.replaceChildren();
+    needs.replaceChildren();
     if (!state) {
       $('learned-summary').textContent = 'Sign in to see what your toolkit learned.';
       setEnabled(false);
@@ -99,6 +102,22 @@ export function createLearnedPanel({ getClient, status, run, onProfileChanged })
       memories.append(li);
     }
     if (!state.memories.length) memories.append(element('li', 'hint', 'Nothing learned yet.'));
+
+    // The needs adapters and apps registered, and what the profile agent made of each.
+    for (const n of state.needs || []) {
+      const li = element('li', 'learned-item');
+      li.append(element('strong', '', n.phrase));
+      const from = n.from?.adapter ? `the adapter ${n.from.adapter.split('/').slice(1).join('/')}` : `the app ${n.from?.app || n.key.split('/')[0]}`;
+      li.append(element('p', 'hint', `${n.description} From ${from}.`));
+      const d = n.decision;
+      const where = n.included ? (d?.by === 'person' ? 'In your profile: you switched it on' : 'In your profile')
+        : !d ? 'Not decided yet'
+        : d.include ? 'Suggested' : 'Not suggested';
+      li.append(element('span', 'badge', where));
+      if (d?.reason && d.by === 'agent') li.append(element('p', 'hint', d.reason));
+      needs.append(li);
+    }
+    if (!state.needs?.length) needs.append(element('li', 'hint', 'No adapter or app has registered a need yet.'));
   }
 
   async function refresh() {
