@@ -26,6 +26,7 @@
       <button type="button" role="tab" id="tab-tokens" aria-controls="panel-tokens" aria-selected="false" tabindex="-1">Tokens</button>
       <button type="button" role="tab" id="tab-data" aria-controls="panel-data" aria-selected="false" tabindex="-1">Stored data</button>
       <button type="button" role="tab" id="tab-checks" aria-controls="panel-checks" aria-selected="false" tabindex="-1">Checks</button>
+      <button type="button" role="tab" id="tab-sandboxes" aria-controls="panel-sandboxes" aria-selected="false" tabindex="-1">Sandboxes</button>
     </div>
 
     <section id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts" class="admin-section">
@@ -107,6 +108,18 @@
       <section class="panel" aria-labelledby="checks-recent-heading">
         <div class="section-heading"><h2 id="checks-recent-heading">Finished in the last 24 hours</h2><span id="checks-recent-count" class="count">0</span></div>
         <div style="overflow-x:auto"><table class="data-table" id="checks-recent"></table></div>
+      </section>
+    </section>
+
+    <section id="panel-sandboxes" role="tabpanel" aria-labelledby="tab-sandboxes" class="admin-section" hidden>
+      <section class="panel" aria-labelledby="sandboxes-heading">
+        <div class="section-heading"><h2 id="sandboxes-heading">Assistant sandboxes</h2><span class="row-actions"><label class="toggle-control"><input type="checkbox" id="sandboxes-auto" checked> Refresh every 10 seconds</label><button id="sandboxes-refresh" class="text-button" type="button">Refresh</button></span></div>
+        <p class="hint">One sandbox per account on the agent host’s VM, where the assistant sidebar’s agent works. What each uses now, and how many of its chats are running. Never what is in them.</p>
+        <p id="sandboxes-vm" class="muted"></p>
+      </section>
+      <section class="panel" aria-labelledby="sandboxes-list-heading">
+        <div class="section-heading"><h2 id="sandboxes-list-heading">Accounts</h2><span id="sandboxes-count" class="count">0</span></div>
+        <div style="overflow-x:auto"><table class="data-table" id="sandboxes-table"></table></div>
       </section>
     </section>
   </main>

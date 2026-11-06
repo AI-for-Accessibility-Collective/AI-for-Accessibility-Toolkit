@@ -17,6 +17,7 @@ import http from 'node:http';
 import { timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { createAccounts, assertUid } from './accounts.js';
 import { createEvents } from './events.js';
 import { createRequests } from './requests.js';
@@ -110,6 +111,8 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     // A Cloud Run check fetching its files and sending its report: its own token, not the shared secret.
     if (p.startsWith('/burst/')) return burst ? burst.handle(req, res, p) : send(res, 404, { error: 'not-found' });
     if (!secretOk(req.headers.authorization)) return send(res, 401, { error: 'unauthorized' });
+    // The toolkit's admin console: every account's sandbox, what it uses, and its chats running now.
+    if (m === 'GET' && p === '/admin/sandboxes') return send(res, 200, await sandboxOverview());
     // The toolkit's admin console: the checks waiting, running and finished, for every account.
     if (m === 'GET' && p === '/admin/checks') {
       if (!checks) return send(res, 503, { error: 'checks-unavailable', message: 'Checks are not set up on this host.' });
@@ -191,6 +194,24 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
       if (!res.headersSent) send(res, status, { error: e.code || (status === 404 ? 'not-found' : 'error'), message: e.message });
       else res.end();
     });
+  }
+
+  async function sandboxOverview() {
+    let boxes = [];
+    try { boxes = (await runner.monitor?.()) || []; } catch (e) { log.warn('sandbox.monitor-failed', { error: e.message }); }
+    const byUid = new Map(boxes.filter(b => b.uid).map(b => [b.uid, b]));
+    const accountsNow = accounts.known().map(uid => {
+      let chatList = [];
+      try { chatList = chats.list(uid); } catch { /* an account without chats */ }
+      return { uid, chats: chatList.length, running: chats.busyChats(uid).length, lastActive: chatList[0]?.updatedAt || null, sandbox: byUid.get(uid) || null };
+    });
+    // Containers whose account folder is gone.
+    for (const b of boxes) if (b.uid && !accountsNow.some(a => a.uid === b.uid)) accountsNow.push({ uid: b.uid, chats: 0, running: 0, lastActive: null, sandbox: b, orphan: true });
+    accountsNow.sort((a, b) => (b.running - a.running) || String(b.lastActive || '').localeCompare(String(a.lastActive || '')));
+    return {
+      vm: { cpus: os.cpus().length, load: os.loadavg().map(n => Math.round(n * 100) / 100), memTotal: os.totalmem(), memFree: os.freemem(), uptimeS: Math.round(os.uptime()) },
+      limits: runner.limits || null, runner: runnerKind, accounts: accountsNow,
+    };
   }
 
   /** Start every known account's sandbox, so they are running before anyone asks. */

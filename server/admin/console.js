@@ -56,7 +56,7 @@ const NOT_SHOWN = {
 
 // ── tabs ───────────────────────────────────────────────────────────────────
 
-const tabs = ['accounts', 'tokens', 'data', 'checks'];
+const tabs = ['accounts', 'tokens', 'data', 'checks', 'sandboxes'];
 function showTab(name, focus = false) {
   for (const t of tabs) {
     const tab = $(`tab-${t}`);
@@ -70,6 +70,7 @@ function showTab(name, focus = false) {
   if (name === 'tokens') act(loadTokens);
   if (name === 'data') act(loadUsers);
   if (name === 'checks') act(loadChecks);
+  if (name === 'sandboxes') act(loadSandboxes);
 }
 for (const t of tabs) {
   $(`tab-${t}`).addEventListener('click', () => showTab(t));
@@ -320,6 +321,31 @@ $('checks-refresh').addEventListener('click', () => act(loadChecks));
 // While the tab is open and the page is on screen.
 setInterval(() => {
   if (!$('panel-checks').hidden && $('checks-auto').checked && document.visibilityState === 'visible') loadChecks().catch(() => {});
+}, 10_000);
+
+// ── sandboxes ──────────────────────────────────────────────────────────────
+
+const gb = (bytes) => `${Math.round(bytes / 1e9)} GB`;
+
+async function loadSandboxes() {
+  const o = await api('/admin/sandboxes');
+  const v = o.vm;
+  const up = o.accounts.filter((a) => a.sandbox?.state === 'running');
+  const used = up.reduce((n, a) => n + (a.sandbox.cpuPercent || 0), 0) / 100;
+  $('sandboxes-vm').textContent = `VM: ${v.cpus} CPUs, load ${v.load.join(' / ')} (1, 5, 15 min); memory ${gb(v.memTotal - v.memFree)} of ${gb(v.memTotal)} in use. `
+    + `${up.length} sandbox${up.length === 1 ? '' : 'es'} running, using about ${used.toFixed(1)} CPUs now`
+    + (o.limits ? `; each may use up to ${o.limits.cpus} CPUs and ${o.limits.memory}.` : '.')
+    + ` Chats running: ${o.accounts.reduce((n, a) => n + a.running, 0)}. Updated ${new Date().toLocaleTimeString()}.`;
+  fillTable('sandboxes-table', ['Account', 'Sandbox', 'CPU', 'Memory', 'Processes', 'Chats running', 'Chats', 'Last active'],
+    o.accounts.map((a) => [a.uid + (a.orphan ? ' (no account folder)' : ''),
+      a.sandbox ? `${a.sandbox.state}${a.sandbox.status ? ` (${a.sandbox.status})` : ''}` : 'not started',
+      a.sandbox?.cpuPercent !== undefined ? `${a.sandbox.cpuPercent.toFixed(1)}%` : '',
+      a.sandbox?.memory || '', a.sandbox?.pids ?? '', a.running, a.chats, when(a.lastActive)]), 'No accounts have used the assistant yet.');
+  $('sandboxes-count').textContent = o.accounts.length;
+}
+$('sandboxes-refresh').addEventListener('click', () => act(loadSandboxes));
+setInterval(() => {
+  if (!$('panel-sandboxes').hidden && $('sandboxes-auto').checked && document.visibilityState === 'visible') loadSandboxes().catch(() => {});
 }, 10_000);
 
 // ── sign out ───────────────────────────────────────────────────────────────

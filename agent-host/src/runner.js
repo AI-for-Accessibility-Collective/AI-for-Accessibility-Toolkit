@@ -119,7 +119,28 @@ export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'run
     return running(child, cfg.file);
   }
 
-  return { ensure, run, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
+  /**
+   * For the admin console: every account's sandbox container, its state and
+   * what it uses now (docker stats), by account. Never what is in it.
+   */
+  async function monitor() {
+    const out = await exec('docker', ['ps', '-a', '--filter', 'label=ai4a11y.sandbox=1', '--format', '{{json .}}']).then(r => r.stdout, () => '');
+    const boxes = out.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    const live = boxes.filter(b => b.State === 'running').map(b => b.Names);
+    const stats = new Map();
+    if (live.length) {
+      const st = await exec('docker', ['stats', '--no-stream', '--format', '{{json .}}', ...live], { timeout: 20_000 }).then(r => r.stdout, () => '');
+      for (const l of st.split('\n').filter(Boolean)) { try { const x = JSON.parse(l); stats.set(x.Name, x); } catch { /* skip */ } }
+    }
+    const uidOf = (labels) => /(?:^|,)ai4a11y\.uid=([^,]+)/.exec(labels || '')?.[1] || null;
+    return boxes.map(b => {
+      const x = stats.get(b.Names);
+      return { uid: uidOf(b.Labels), container: b.Names, state: b.State, status: b.Status, createdAt: b.CreatedAt,
+        ...(x ? { cpuPercent: parseFloat(x.CPUPerc) || 0, memory: x.MemUsage, memPercent: parseFloat(x.MemPerc) || 0, pids: Number(x.PIDs) || 0 } : {}) };
+    });
+  }
+
+  return { ensure, run, monitor, limits: { cpus: Number(cpus), memory }, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
 }
 
 /**
@@ -156,5 +177,6 @@ export function localRunner({ accounts, hostUrl, bin = 'opencode', repoDir, mode
     return running(child, cfg.file);
   }
 
-  return { ensure, run, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
+  // No containers here: the sandboxes are this computer's processes.
+  return { ensure, run, monitor: async () => [], limits: null, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
 }

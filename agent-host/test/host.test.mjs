@@ -523,6 +523,16 @@ await test('the admin console\'s view of the checks: the shared secret, every ac
   assert.ok(kept.find((k) => k.event === 'check.started').where, 'where it ran');
 });
 
+await test('the admin console\'s sandbox monitor: the shared secret, every account, its chats running, the VM; never what is in them', async () => {
+  assert.equal((await fetch(`http://127.0.0.1:${apiPort}/admin/sandboxes`)).status, 401);
+  const o = await (await fetch(`http://127.0.0.1:${apiPort}/admin/sandboxes`, { headers: { authorization: `Bearer ${SECRET}` } })).json();
+  assert.ok(o.vm.cpus > 0 && o.vm.memTotal > 0 && o.vm.load.length === 3);
+  const ada = o.accounts.find((a) => a.uid === 'ada');
+  assert.ok(ada && ada.chats > 0 && typeof ada.running === 'number' && ada.lastActive);
+  assert.equal(o.runner, 'local');
+  assert.ok(!/SECRET FILE TEXT|export const|sbx_/.test(JSON.stringify(o)), 'no code, no tokens');
+});
+
 await test('the browser tools need a sandbox token', async () => {
   const res = await fetch(`http://127.0.0.1:${sandboxPort}/mcp`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' });
   assert.equal(res.status, 401);

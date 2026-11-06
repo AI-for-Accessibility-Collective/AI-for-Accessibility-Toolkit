@@ -39,6 +39,9 @@ const agentHost = http.createServer(async (req, res) => {
     jobs.set(body.checkId, { uid: req.headers['x-ai4a11y-uid'], status: 'queued', position: 1, review: body.review });
     return send(202, { check: { checkId: body.checkId, status: 'queued', position: 1 } });
   }
+  if (req.method === 'GET' && req.url === '/admin/sandboxes') {
+    return send(200, { vm: { cpus: 96, load: [1, 1, 1], memTotal: 1, memFree: 1 }, limits: { cpus: 6, memory: '12g' }, accounts: [{ uid: 'ada', chats: 2, running: 1, sandbox: { state: 'running', cpuPercent: 12.5 } }] });
+  }
   if (req.method === 'GET' && req.url.startsWith('/admin/checks')) {
     return send(200, { capacity: { cpus: 72, cpuUsed: 24, perCheck: 24, burst: { max: 10, running: 0 }, reviews: { max: 8, running: 0 } },
       running: [{ checkId: 'chk_1', uid: 'ada', adapter: 'Bigger buttons', review: false, where: 'here' }], queued: [], recent: [] });
@@ -263,6 +266,9 @@ await test('the admin console sees the host\'s checks: the admin only, with the 
   assert.deepEqual([o.capacity.cpuUsed, o.running[0].where], [24, 'here']);
   const asked = seen.findLast((x) => x.url.startsWith('/admin/checks'));
   assert.equal(asked.auth, `Bearer ${SECRET}`);
+  assert.equal((await fetch(`${svc.base}/admin/sandboxes`)).status, 401);
+  const sb = await (await fetch(`${svc.base}/admin/sandboxes`, { headers: { authorization: `Bearer ${ADMIN}` } })).json();
+  assert.deepEqual([sb.accounts[0].uid, sb.accounts[0].running, sb.limits.cpus], ['ada', 1, 6]);
 });
 
 svc.stop();
