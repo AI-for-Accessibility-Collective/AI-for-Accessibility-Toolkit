@@ -125,6 +125,7 @@ export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, ru
 
   return {
     kind: 'docker',
+    cpus: Number(cpus),
     check({ id, dir, file, spec, timeoutMs, signal }) {
       return runProcess('docker', ['run', '--rm', '--name', name(id, 'check'), ...limits, '--network', 'none',
         '-v', `${path.join(dir, 'in')}:/job:ro`, '-v', `${path.join(dir, 'out')}:/out`, '-v', `${sitesDir}:/sites:ro`,
@@ -183,13 +184,24 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
  * @param {object} o.runner          dockerCheckRunner or localCheckRunner (or a stand-in in tests)
  * @param {string} o.rubricsDir      where fetchRubrics keeps InterA11y's rubric files
  * @param {Function} [o.fetchRubrics] (dir) => { have, missing }
+ * @param {object} [o.burst]         burstRunner: checks beyond this host's CPUs, on Cloud Run
+ * @param {number} [o.localCpus]     this host's CPUs for checks (each takes runner.cpus); else `parallel` checks at once
+ * @param {number} [o.reviewParallel] reviews at once (their reviewers mostly wait on the model)
+ *
+ * In the order asked: a check runs here while this host has CPUs for it,
+ * else on Cloud Run while it has room, else it waits; one that waits keeps
+ * the checks after it waiting too. A review whose check already ran needs no
+ * CPUs for it and goes ahead of them.
  */
 export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async () => ({ have: [], missing: [] }), log,
-  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, parallel = 1, now = () => Date.now(), onChange }) {
+  checkTimeoutMs = 20 * 60_000, reviewTimeoutMs = 45 * 60_000, parallel = 1, localCpus, reviewParallel = 8, burst = null, now = () => Date.now(), onChange }) {
   const root = path.join(dataDir, 'checks');
   mkdirSync(root, { recursive: true });
   const queue = [];         // checkIds waiting
-  const running = new Set(); // checkIds running, at most `parallel`
+  const running = new Map(); // checkId -> where its check runs: 'here', 'burst', or 'none' (its report was given)
+  const cost = Number(runner.cpus) || 1;
+  const cpus = Number(localCpus) || Math.max(1, parallel) * cost;
+  let cpuUsed = 0, bursting = 0, reviewing = 0;
   const tokens = new Map();  // job token -> { uid, checkId }
   const stops = new Map();   // checkId -> AbortController, while it runs
   const listeners = new Set(onChange ? [onChange] : []);
@@ -278,17 +290,34 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     return view(job);
   }
 
-  // Up to `parallel` jobs at once, in the order asked; the rest wait.
   function pump() {
-    while (running.size < Math.max(1, parallel) && queue.length) {
-      const id = queue.shift();
-      running.add(id);
-      runJob(id).catch((e) => log?.error('check.crashed', { checkId: id, error: e.message }))
-        .finally(() => { running.delete(id); pump(); });
+    let held = false; // a check is waiting: the checks after it wait too
+    for (let i = 0; i < queue.length;) {
+      const id = queue[i];
+      const job = readJob(id);
+      if (!job || job.status !== 'queued') { queue.splice(i, 1); continue; }
+      const where = job.reused ? 'none' : held ? null : cpuUsed + cost <= cpus ? 'here' : burst && bursting < burst.max ? 'burst' : null;
+      if (!where || (job.review && reviewing >= reviewParallel)) { if (!job.reused) held = true; i++; continue; }
+      queue.splice(i, 1);
+      if (where === 'here') cpuUsed += cost;
+      if (where === 'burst') bursting++;
+      if (job.review) reviewing++;
+      running.set(id, where);
+      // The CPUs (or the Cloud Run room) go back once its check is done; a review goes on with its reviewer.
+      let freed = false;
+      const checkDone = () => {
+        if (freed) return;
+        freed = true;
+        if (where === 'here') cpuUsed -= cost;
+        if (where === 'burst') bursting--;
+        setImmediate(pump);
+      };
+      runJob(id, where, checkDone).catch((e) => log?.error('check.crashed', { checkId: id, error: e.message }))
+        .finally(() => { checkDone(); if (job.review) reviewing--; running.delete(id); pump(); });
     }
   }
 
-  async function runJob(id) {
+  async function runJob(id, where = 'here', checkDone = () => {}) {
     const job = readJob(id);
     if (!job || job.status !== 'queued') return;
     const dir = dirOf(id);
@@ -298,11 +327,12 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     job.status = 'running';
     job.startedAt = new Date(started).toISOString();
     saveJob(job);
-    log?.info('check.started', { uid: job.uid, checkId: id, review: job.review });
+    log?.info('check.started', { uid: job.uid, checkId: id, review: job.review, where });
     try {
       for (const sub of ['out', 'review']) { mkdirSync(path.join(dir, sub), { recursive: true }); chmodSync(path.join(dir, sub), 0o777); }
       // The check of this code already ran: its report, not a second run.
-      const c = job.reused ? null : await runner.check({ id: id.slice(4), dir, file: job.file, spec: job.spec, timeoutMs: checkTimeoutMs, signal: ctl.signal });
+      const c = job.reused ? null : await (where === 'burst' ? burst : runner).check({ id: id.slice(4), dir, file: job.file, spec: job.spec, timeoutMs: checkTimeoutMs, signal: ctl.signal });
+      checkDone();
       if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
       const report = readJson(path.join(dir, job.reused ? 'in' : 'out', job.reused ? 'check-report.json' : 'report.json'));
       if (!report) {

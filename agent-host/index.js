@@ -17,7 +17,14 @@
 //   AGENT_CHECK_SITES     the recorded copies of real sites (default <data>/verify-sites; local: .verify-cache/sites)
 //   AGENT_CHECK_MODEL_URL how a reviewer reaches the model proxy (default the sandbox URL + /model/v1beta)
 //   AGENT_CHECK_MINUTES   a check's time limit (default 20); AGENT_REVIEW_MINUTES a review's (default 45)
-//   AGENT_CHECK_PARALLEL  checks (and reviews) run at once (default 4; each takes 4 CPUs and 6 GB)
+//   AGENT_CHECK_CPUS      this host's CPUs for checks (default 72 of the VM's 96; a check takes 24)
+//   AGENT_CHECK_PARALLEL  without AGENT_CHECK_CPUS, checks at once here (default 3)
+//   AGENT_REVIEW_PARALLEL reviews at once (default 8)
+//
+// Checks beyond this host's CPUs, on Cloud Run (src/burst.js; without AGENT_BURST_JOB they wait):
+//   AGENT_BURST_JOB       the Cloud Run job (vm/burst-setup.sh); AGENT_BURST_PROJECT, AGENT_BURST_REGION
+//   AGENT_BURST_HOST_URL  how a job reaches this host's API port (http://<internal IP>:8791)
+//   AGENT_BURST_MAX       executions at once (default 20); AGENT_BURST_CPUS each one's CPUs (default 8)
 
 import path from 'node:path';
 import os from 'node:os';
@@ -50,7 +57,13 @@ const host = createHost({
   checkModelUrl: env.AGENT_CHECK_MODEL_URL || undefined,
   checkTimeoutMs: (Number(env.AGENT_CHECK_MINUTES) || 20) * 60_000,
   reviewTimeoutMs: (Number(env.AGENT_REVIEW_MINUTES) || 45) * 60_000,
-  checkParallel: Number(env.AGENT_CHECK_PARALLEL) || 4,
+  checkParallel: Number(env.AGENT_CHECK_PARALLEL) || 3,
+  checkCpus: Number(env.AGENT_CHECK_CPUS) || undefined,
+  reviewParallel: Number(env.AGENT_REVIEW_PARALLEL) || 8,
+  burst: env.AGENT_BURST_JOB ? {
+    project: env.AGENT_BURST_PROJECT, region: env.AGENT_BURST_REGION || 'us-central1', job: env.AGENT_BURST_JOB,
+    hostUrl: env.AGENT_BURST_HOST_URL, max: Number(env.AGENT_BURST_MAX) || 20, cpus: Number(env.AGENT_BURST_CPUS) || 8,
+  } : null,
   log,
 });
 

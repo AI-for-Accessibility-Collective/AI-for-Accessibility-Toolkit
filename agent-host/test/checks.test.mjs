@@ -13,6 +13,8 @@ import { fileURLToPath } from 'node:url';
 import { createHost, listen } from '../src/host.js';
 import { createChecks, dockerCheckRunner } from '../src/checks.js';
 import { copyFromMhtml } from '../../scripts/verify-adapters/mhtml.mjs';
+import { burstRunner } from '../src/burst.js';
+import { spawn } from 'node:child_process';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SECRET = 'test-secret-that-is-long-enough-5678';
@@ -270,6 +272,88 @@ await test('a page the browser saved as MHTML becomes a copy served at its own a
   assert.equal(copy.inline[page.body].toString(), '<html><body><p class="gsc">A long line that is folded here</p></body></html>');
   assert.deepEqual(copy.inline[copy.entries['https://scholar.example/logo.png'].body], png);
   assert.throws(() => copyFromMhtml(Buffer.from('<p>not saved</p>')), /not MHTML/);
+});
+
+await test('checks run here while this host has CPUs for them, then on Cloud Run, then wait; a review of a finished check goes ahead', async () => {
+  const dir4 = mkdtempSync(path.join(tmpdir(), 'agent-checks-burst-'));
+  const where = [], release = [];
+  const report = (dir) => writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [], summary: { passed: 1, failed: 0, skipped: 0, appliedOnTestPages: 0, testPages: 0 } }));
+  const held = (name) => async ({ id, dir }) => { where.push([id, name]); await new Promise(r => release.push(r)); report(dir); return { code: 0, timedOut: false, stderr: '' }; };
+  const checks = createChecks({ dataDir: dir4, rubricsDir: path.join(dir4, 'intera11y'), log, localCpus: 48,
+    runner: { cpus: 24, check: held('here'), async review({ dir }) { writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Fine.' })); return { code: 0, timedOut: false, stderr: '' }; } },
+    burst: { max: 1, check: held('burst') } });
+  const ids = ['c1', 'c2', 'c3', 'c4'].map((x) => `chk_00000000000000${x}`);
+  for (const id of ids) checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {};' } });
+  await until(() => where.length === 3);
+  assert.deepEqual(where.map(([, w]) => w), ['here', 'here', 'burst'], 'two on this host\'s 48 CPUs, the third on Cloud Run');
+  assert.equal(checks.get('ada', ids[3]).status, 'queued', 'the fourth waits');
+  // A review with the report of a check that ran: no CPUs needed, it goes ahead of the waiting check.
+  const r = 'chk_00000000000000d1';
+  checks.submit('ada', { checkId: r, review: true, adapter: { key: 'ada/agent/a', code: 'export default {};' } }, { report: { runs: [], summary: { passed: 3, failed: 0, skipped: 0, appliedOnTestPages: 1, testPages: 1 } } });
+  await until(() => checks.get('ada', r).status === 'done');
+  assert.equal(checks.get('ada', ids[3]).status, 'queued');
+  release.shift()();
+  await until(() => where.length === 4);
+  assert.equal(where[3][1], 'here', 'a CPU slot freed: the next check runs here');
+  while (release.length) release.shift()();
+  await until(() => checks.idle());
+  assert.ok(ids.every((id) => checks.get('ada', id).status === 'done'));
+});
+
+await test('a check on Cloud Run fetches only its own files with its token, and its report comes back', async () => {
+  const dir5 = mkdtempSync(path.join(tmpdir(), 'agent-checks-cloud-'));
+  const children = [];
+  let burst, env0;
+  const server = http.createServer((req, res) => burst.handle(req, res, new URL(req.url, 'http://x').pathname));
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const hostUrl = `http://127.0.0.1:${server.address().port}`;
+  // Stands in for Cloud Run: runs the job's script here, with the job's environment.
+  const cloud = {
+    async run(env) {
+      env0 = env;
+      const child = spawn(process.execPath, [path.join(here, '../../scripts/verify-adapters/burst.mjs')], { stdio: 'ignore',
+        env: { PATH: process.env.PATH, ...env, BURST_RUN_SCRIPT: path.join(here, 'fake-check.mjs'), BURST_JOB_DIR: mkdtempSync(path.join(tmpdir(), 'burst-job-')) } });
+      children.push(child);
+      return `executions/${children.length}`;
+    },
+    async state(name) { const c = children[Number(name.split('/')[1]) - 1]; return { done: c.exitCode !== null, failed: c.exitCode > 0 }; },
+    async cancel() {},
+  };
+  burst = burstRunner({ cloud, hostUrl, max: 2, cpus: 8, pollMs: 200, log });
+  const checks = createChecks({ dataDir: dir5, rubricsDir: path.join(dir5, 'intera11y'), log, localCpus: 1, burst,
+    runner: { cpus: 24, async check() { throw new Error('not here'); } } });
+  const id = 'chk_00000000000000e1';
+  checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {}; // ENV' } });
+  await until(() => checks.get('ada', id).status === 'done');
+  const c = checks.get('ada', id);
+  assert.equal(c.result.check.summary.failed, 1, 'the report the job sent');
+  assert.equal(env0.VERIFY_CHECK_PARALLEL, 6, 'six runs at a time on eight CPUs');
+  assert.ok(c.result.check.runs.find((x) => x.name === 'env').problems[0].startsWith('sites offline'), 'offline, on the copies in its image');
+  // The token is this check's only, and only while it runs.
+  assert.equal((await fetch(`${hostUrl}/burst/00000000000000e1`, { headers: { authorization: `Bearer ${env0.JOB_TOKEN}` } })).status, 401);
+  server.close();
+});
+
+await test('a check on Cloud Run cannot read outside its own folder, and a wrong token reads nothing', async () => {
+  const dir6 = mkdtempSync(path.join(tmpdir(), 'agent-checks-cloud2-'));
+  let burst, token, ended;
+  const server = http.createServer((req, res) => burst.handle(req, res, new URL(req.url, 'http://x').pathname));
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const base = `http://127.0.0.1:${server.address().port}/burst/00000000000000f1`;
+  const asks = [];
+  const cloud = { async run(env) { token = env.JOB_TOKEN; return 'executions/x'; }, async state() { return { done: !!ended, failed: true }; }, async cancel() { ended = true; } };
+  burst = burstRunner({ cloud, hostUrl: 'http://unused', max: 1, pollMs: 100, log });
+  const checks = createChecks({ dataDir: dir6, rubricsDir: path.join(dir6, 'intera11y'), log, localCpus: 1, burst, checkTimeoutMs: 3000,
+    runner: { cpus: 24, async check() { throw new Error('not here'); } } });
+  const id = 'chk_00000000000000f1';
+  checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {};' } });
+  await until(() => token);
+  const get = (p, t = token) => fetch(`${base}${p}`, { headers: { authorization: `Bearer ${t}` } });
+  asks.push((await get('')).status, (await get('', `brs_${'0'.repeat(48)}`)).status, (await get('/files/..%2Fjob.json')).status, (await get('/files/a.js')).status);
+  assert.deepEqual(asks, [200, 401, 404, 200]);
+  const done = await until(() => ['failed', 'done'].includes(checks.get('ada', id).status) && checks.get('ada', id));
+  assert.equal(done.status, 'failed', 'no report: it timed out');
+  server.close();
 });
 
 for (const s of servers) { s.closeAllConnections?.(); s.close(); }

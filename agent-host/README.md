@@ -135,9 +135,21 @@ it sends the job to this host's `POST /checks` (the API port, signed like
 reach it) and asks `GET /checks/<id>` for the result
 ([src/checks.js](src/checks.js)).
 
-- **Four at a time** (`AGENT_CHECK_PARALLEL`), in the order asked; the rest
-  wait. There is no limit on how many a person asks for. Each may use up to 24 CPUs
-  and 8 GB (limits, not reservations); the VM (c4-standard-96: 96 vCPUs, 360 GB) also runs the sidebar's sandboxes.
+- **As many as demand needs, the VM first.** In the order asked, a check
+  runs on the VM while it has CPUs for it (`AGENT_CHECK_CPUS`, 72 of its
+  96; a check takes 24, so three at once, and the sandboxes keep the
+  rest), else as a Cloud Run job execution (`AGENT_BURST_JOB`, up to
+  `AGENT_BURST_MAX` = 20 at once, 8 CPUs each, [src/burst.js](src/burst.js)),
+  else it waits. A review whose check already ran needs no CPUs for it and
+  goes ahead; reviews run up to `AGENT_REVIEW_PARALLEL` (8) at once. There
+  is no limit on how many a person asks for.
+- **On Cloud Run** the job's image is the check image with the recorded
+  site copies baked in ([vm/burst-image.sh](vm/burst-image.sh)); it fetches
+  only its own files from the host's API port with a token made for that
+  check (`/burst/<id>`), runs `run.mjs --check` offline, and sends the
+  report back. It runs as a service account with no roles, and all its
+  traffic goes into the VPC, where the firewall lets it reach the host's
+  API port and nothing else ([vm/burst-setup.sh](vm/burst-setup.sh)).
 - **The check** is `run.mjs --check` in a one-shot container from the
   verify image's `check` target (`scripts/verify-adapters/Dockerfile`, the
   repository and its packages baked in): gVisor, `--network none`, no

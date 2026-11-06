@@ -8,6 +8,8 @@
 #   agent-sandbox-image  us-central1-docker.pkg.dev/<project>/toolkit/agent-sandbox:<tag>
 #   agent-check-image    us-central1-docker.pkg.dev/<project>/toolkit/agent-check:<tag>
 #                        (optional: without it the host serves no adapter checks)
+#   agent-burst-job      the Cloud Run job for checks beyond the VM's CPUs
+#                        (optional; vm/burst-setup.sh makes it)
 #   sandbox-internet     "on" lets sandboxes reach the internet (still never the
 #                        metadata server, private addresses or each other);
 #                        anything else, or unset, keeps them off it
@@ -21,6 +23,9 @@ HOST_IMAGE=$(meta instance/attributes/agent-host-image)
 SANDBOX_IMAGE=$(meta instance/attributes/agent-sandbox-image)
 SANDBOX_INTERNET=$(meta instance/attributes/sandbox-internet 2>/dev/null || echo off)
 CHECK_IMAGE=$(meta instance/attributes/agent-check-image 2>/dev/null || echo)
+# Checks beyond the VM's CPUs run as this Cloud Run job (vm/burst-setup.sh); none, they wait.
+BURST_JOB=$(meta instance/attributes/agent-burst-job 2>/dev/null || echo)
+INTERNAL_IP=$(meta instance/network-interfaces/0/ip)
 PROJECT=$(meta project/project-id)
 DATA=/srv/agent-host
 SBX_NET=ai4a11y-sbx
@@ -119,6 +124,7 @@ ExecStart=/usr/bin/docker run --rm --name ai4a11y-agent-host --network host \\
   -e AGENT_SANDBOX_IMAGE=$SANDBOX_IMAGE -e AGENT_SANDBOX_NETWORK=$SBX_NET \\
   -e AGENT_SANDBOX_LISTEN=$SBX_GATEWAY:8790 -e AGENT_API_LISTEN=0.0.0.0:8791 \\
   -e AGENT_CHECK_IMAGE=$CHECK_IMAGE -e AGENT_CHECK_NETWORK=$CHK_NET -e AGENT_CHECK_SITES=$DATA/verify-sites \\
+  -e AGENT_BURST_JOB=$BURST_JOB -e AGENT_BURST_PROJECT=$PROJECT -e AGENT_BURST_REGION=us-central1 -e AGENT_BURST_HOST_URL=http://$INTERNAL_IP:8791 \\
   -v /var/run/docker.sock:/var/run/docker.sock -v $DATA:$DATA \\
   $HOST_IMAGE
 ExecStop=/usr/bin/docker stop ai4a11y-agent-host

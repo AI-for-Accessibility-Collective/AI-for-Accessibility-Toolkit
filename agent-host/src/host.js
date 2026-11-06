@@ -28,6 +28,7 @@ import { createBrowserTools } from './browser-tools.js';
 import { createPageData } from './page-data.js';
 import { dockerRunner, localRunner } from './runner.js';
 import { createChecks, dockerCheckRunner, localCheckRunner } from './checks.js';
+import { burstRunner, cloudRunClient } from './burst.js';
 import { fetchRubrics as fetchUpstreamRubrics } from '../../scripts/verify-adapters/intera11y-upstream.mjs';
 
 const MAX_BODY = 12_000_000;
@@ -47,7 +48,7 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  */
 export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
   opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, requestTimeoutMs, log = createLogger(), runner: givenRunner,
-  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkParallel, checkRunner: givenCheckRunner, fetchRubrics, checkScript, titler: givenTitler }) {
+  checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkParallel, checkCpus, reviewParallel, burst: burstConfig, burstRunner: givenBurst, checkRunner: givenCheckRunner, fetchRubrics, checkScript, titler: givenTitler }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
   const events = createEvents();
@@ -66,7 +67,11 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   const checkRunner = givenCheckRunner || (runnerKind === 'local'
     ? localCheckRunner({ repoDir, sitesDir: sites, rubricsDir, modelUrl, opencodeBin, script: checkScript })
     : checkImage ? dockerCheckRunner({ image: checkImage, network: checkNetwork, sitesDir: sites, rubricsDir, modelUrl, log }) : null);
+  // Checks beyond this host's CPUs: Cloud Run job executions, when set up.
+  const burst = givenBurst || (checkRunner && burstConfig?.job && burstConfig.hostUrl
+    ? burstRunner({ cloud: cloudRunClient({ ...burstConfig, ...(fetch ? { fetch } : {}) }), hostUrl: burstConfig.hostUrl, max: burstConfig.max, cpus: burstConfig.cpus, log }) : null);
   const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs, parallel: checkParallel,
+    localCpus: checkCpus, reviewParallel, burst,
     fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;
   // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
   const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, log });
@@ -100,6 +105,8 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     const url = new URL(req.url, 'http://host');
     const p = url.pathname, m = req.method;
     if (m === 'GET' && p === '/healthz') return send(res, 200, { ok: true });
+    // A Cloud Run check fetching its files and sending its report: its own token, not the shared secret.
+    if (p.startsWith('/burst/')) return burst ? burst.handle(req, res, p) : send(res, 404, { error: 'not-found' });
     if (!secretOk(req.headers.authorization)) return send(res, 401, { error: 'unauthorized' });
     const uid = assertUid(String(req.headers['x-ai4a11y-uid'] || ''));
     let r;
