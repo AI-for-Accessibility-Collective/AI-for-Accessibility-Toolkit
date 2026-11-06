@@ -281,7 +281,7 @@ function renderLibrary() {
 // profile, as it was left, with its own memory. It can't be deleted.
 function renderDefaultCard() {
   const card = profileCard(DEFAULT_ID, DEFAULT_ENTRY.name, DEFAULT_ENTRY.description);
-  card.append(element('p', '', 'Your own profile, in use when no preset is loaded. Each profile keeps its own settings and memory; loading Default goes back to its own, as you left them.'));
+  card.append(element('p', '', 'Your own profile.'));
   const actions = element('div', 'card-actions');
   const load = element('button', 'secondary', 'Load profile');
   load.type = 'button'; load.dataset.load = DEFAULT_ID;
