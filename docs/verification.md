@@ -113,6 +113,15 @@ node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--
   the verifier's tools and InterA11y's tools and rubrics. It chooses the
   WCAG criteria that apply to what the adapter changes, reads each rubric
   and gives a verdict for each. Its report starts `Verdict: ok | issues`.
+  On the agent host the review is three reviewers at once, each on one part
+  (`run.mjs --focus`, `scripts/verify-adapters/review-focus.mjs`): the
+  code (the contract and putting the page back, errors, performance,
+  privacy, whether it does what it is for); what people see and read
+  (rubrics 1.1.1, 1.4.1, 1.4.13, 2.4.4, 3.3.1); and keyboard, focus and
+  announcements (2.1.1, 2.1.2, 2.4.3, 2.4.7, 4.1.3). Their reports become
+  one, a section each. It finds issues when any part does, and says no
+  issues only when every part finished; a part that did not finish is
+  named.
 - **What comes back.** `adapter.mjs` prints what passed, what failed and
   why, the advice, the review's findings, and what a check cannot show. The
   developer console's Adapters page shows the latest check on the
@@ -125,8 +134,8 @@ node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--
   own, or a shared one). It then sends the job to the agent host
   (`agent-host/`). The host runs one check at a time, each in a one-shot
   container under gVisor that has no network at all. The copies of real
-  pages are mounted read-only, so no site is visited. The reviewer runs in
-  a second container whose only network is the host's model proxy. The
+  pages are mounted read-only, so no site is visited. Each reviewer runs in
+  its own container whose only network is the host's model proxy. The
   model key stays on the host. The GenA11y rubric text is fetched by the
   host beforehand, so the reviewer needs no internet.
 - **Time.** Four checks run at a time; the rest wait their turn. A check

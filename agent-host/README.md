@@ -157,17 +157,25 @@ reach it) and asks `GET /checks/<id>` for the result
   page data (`page-data/<chat>/<time>-copy.mhtml`, at most 8 MB). The
   background check runs the adapter on the latest copy of each of its pages
   (up to five) with the checks its preview passed, and it must apply there.
-- **The review** (with `--review`) is `run.mjs --review-file` in a second
-  one-shot container on the network `ai4a11y-chk`, which reaches the
-  host's sandbox port and nothing else ([vm/setup.sh](vm/setup.sh)). Its
-  opencode talks to the model proxy with a token made for this review: it
-  names the account, works only at the model proxy (never the browser
-  tools), and only while the review runs. The real key stays on the host. The rubric text InterA11y adapted from GenA11y
+- **The review** (with `--review`) is three reviewers at once, each
+  `run.mjs --review-file --focus <part>` in its own one-shot container (4
+  CPUs, 6 GB: a reviewer mostly waits for the model) on the network
+  `ai4a11y-chk`, which reaches the host's sandbox port and nothing else
+  ([vm/setup.sh](vm/setup.sh)). The parts
+  ([review-focus.mjs](../scripts/verify-adapters/review-focus.mjs)): the
+  code; what people see and read (half of the rubrics); keyboard, focus and
+  announcements (the other half). Each reviewer's opencode talks to the
+  model proxy with its own token: it names the account, works only at the
+  model proxy (never the browser tools), and only while that review runs.
+  Their reports become one, a section per part in that order: issues when
+  any part found some, ok only when every part finished and found none; a
+  part that did not finish is named (`unfinished`), and the review fails
+  only when none finished. The real key stays on the host. The rubric text InterA11y adapted from GenA11y
   (GPL-3.0) is fetched by the host from InterA11y at the vendored commit,
   checked against its hash, into `<data>/intera11y/`, and mounted read-only
   (`INTERA11Y_DIR`). It is stopped after 45 minutes (`AGENT_REVIEW_MINUTES`).
   A full review the sidebar asks for reuses the background check of the
-  same code: when it has finished, the reviewer starts at once with its
+  same code: when it has finished, the reviewers start at once with its
   report; while it runs, the review waits for it. So the code is checked
   once. Within a check, `run.mjs` runs several runs at a time
   (`VERIFY_CHECK_PARALLEL`: 18 on the VM, three by default), each in its own browser context.

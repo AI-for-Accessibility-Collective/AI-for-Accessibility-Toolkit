@@ -140,15 +140,21 @@ await test('a check that runs too long is stopped, and one with no report fails,
   assert.match((await finished(none.checkId)).error, /could not finish/);
 });
 
-await test('a review runs after the check, with a token that works only at the model proxy and only while it runs', async () => {
+await test('a review runs after the check: three reviewers at once, each on its part with its own token that works only at the model proxy and only while it runs', async () => {
   const j = job(undefined, { review: true });
   await api('/checks', { method: 'POST', body: j });
   const c = await finished(j.checkId);
   assert.equal(c.status, 'done');
   assert.equal(c.result.review.verdict, 'issues');
-  assert.deepEqual(c.result.review.rubricsRead, ['2.5.8']);
-  // What the reviewer saw: the proxy took its token, the browser tools did not; no secrets; it had the about text and the report.
-  assert.match(c.result.review.report, /Proxy: 200\. Tools: 401\. Secret: absent\. About: yes\. Report: 1 failed\./);
+  assert.equal(c.result.review.unfinished, undefined);
+  assert.deepEqual(c.result.review.rubricsRead, ['1.1.1', '2.1.1', '2.4.7'], 'what each part read, together');
+  // One section per part, in order, each from its own reviewer with its own token.
+  const report = c.result.review.report;
+  assert.deepEqual([...report.matchAll(/^## (.+)$/gm)].map(m => m[1]), ['The code', 'What people see and read', 'Keyboard, focus and announcements']);
+  assert.deepEqual([...report.matchAll(/^Focus: (\w+)\./gm)].map(m => m[1]), ['code', 'perceive', 'operate']);
+  assert.equal(new Set([...report.matchAll(/Token: (\w+)\./g)].map(m => m[1])).size, 3, 'a token each');
+  // What each reviewer saw: the proxy took its token, the browser tools did not; no secrets; it had the about text and the report.
+  assert.equal([...report.matchAll(/Proxy: 200\. Tools: 401\. Secret: absent\. About: yes\. Report: 1 failed\./g)].length, 3);
   assert.equal(upstream.at(-1).key, 'REAL-KEY', 'the proxy added the real key');
   assert.equal(rubricFetches, 1, 'the rubrics were fetched on the host, before the review');
   // After the review, the token is gone.
@@ -184,17 +190,54 @@ await test('after a restart, what was waiting runs; what lost its files fails', 
 
 await test('a review\'s token names the account while the review runs, for as many model calls as it makes', async () => {
   const dir3 = mkdtempSync(path.join(tmpdir(), 'agent-checks-token-'));
-  let token, during = [];
+  const tokens = [], during = [];
+  let running = 0, most = 0;
   const checks = createChecks({ dataDir: dir3, rubricsDir: path.join(dir3, 'intera11y'), log, runner: {
     async check({ dir }) { writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [] })); return { code: 0, timedOut: false, stderr: '' }; },
-    async review({ dir, token: t }) { token = t; during = Array.from({ length: 500 }, () => checks.uidForToken(t)); writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Verdict: ok\nFine.' })); return { code: 0, timedOut: false, stderr: '' }; },
+    async review({ dir, token: t, focus }) {
+      tokens.push(t); running++; most = Math.max(most, running);
+      await new Promise(r => setTimeout(r, 100));
+      during.push(...Array.from({ length: 500 }, () => checks.uidForToken(t)));
+      writeFileSync(path.join(dir, 'review', focus, 'review.json'), JSON.stringify({ verdict: 'ok', report: `Verdict: ok\nFine: ${focus}.` }));
+      running--;
+      return { code: 0, timedOut: false, stderr: '' };
+    },
   } });
   const id = 'chk_00000000000000b1';
   checks.submit('ada', { checkId: id, review: true, adapter: { key: 'ada/agent/a', code: 'export default {};' } });
   await until(() => checks.get('ada', id).status === 'done');
+  assert.equal(most, 3, 'the three reviewers ran at the same time');
+  assert.equal(new Set(tokens).size, 3, 'each its own token');
   assert.ok(during.every((u) => u === 'ada'), 'no cap on calls');
-  assert.equal(checks.uidForToken(token), null, 'gone after the review');
+  assert.ok(tokens.every((t) => checks.uidForToken(t) === null), 'gone after the review');
   assert.equal(checks.get('ada', id).result.review.verdict, 'ok');
+});
+
+await test('a reviewer that does not finish is named; the others\' findings stand, and no issues is not said for a part not reviewed', async () => {
+  // One part gives no report, the others find issues: issues, and the part is named.
+  const a = job('export default {}; // NOREVIEW-operate', { review: true });
+  await api('/checks', { method: 'POST', body: a });
+  const ca = await finished(a.checkId);
+  assert.equal(ca.result.review.verdict, 'issues');
+  assert.deepEqual(ca.result.review.unfinished, ['operate']);
+  assert.match(ca.result.review.report, /## Keyboard, focus and announcements\n\n\(The review of keyboard, focus and announcements did not finish\.\)/);
+  assert.match(ca.result.review.report, /Focus: code\./);
+  // The others find none: no verdict, and why.
+  const b = job('export default {}; // OK-all NOREVIEW-code', { review: true });
+  await api('/checks', { method: 'POST', body: b });
+  const cb = await finished(b.checkId);
+  assert.equal(cb.result.review.verdict, null);
+  assert.match(cb.result.review.error, /Part of the review did not finish \(the code\), and the rest found no issues\./);
+  // None finishes: the review failed.
+  const c = job('export default {}; // NOREVIEW-code NOREVIEW-perceive NOREVIEW-operate', { review: true });
+  await api('/checks', { method: 'POST', body: c });
+  const cc = await finished(c.checkId);
+  assert.equal(cc.result.review.verdict, null);
+  assert.match(cc.result.review.error, /did not finish their reports/);
+  // All find none: ok.
+  const d = job('export default {}; // OK-all', { review: true });
+  await api('/checks', { method: 'POST', body: d });
+  assert.equal((await finished(d.checkId)).result.review.verdict, 'ok');
 });
 
 await test('on the VM: gVisor, no network for the check, the model network for the review, and the token only by name', async () => {
@@ -207,7 +250,7 @@ await test('on the VM: gVisor, no network for the check, the model network for t
   try {
     const r = dockerCheckRunner({ image: 'verify-check:t', sitesDir: '/srv/sites', rubricsDir: '/srv/ia', modelUrl: 'http://172.30.0.1:8790/model/v1beta' });
     await r.check({ id: 'abc', dir: '/srv/checks/chk_abc', file: 'x.js', spec: 'check.json', timeoutMs: 5000 });
-    await r.review({ id: 'abc', dir: '/srv/checks/chk_abc', file: 'x.js', token: 'chk_TOKEN', timeoutMs: 5000 });
+    await r.review({ id: 'abc', dir: '/srv/checks/chk_abc', file: 'x.js', token: 'chk_TOKEN', focus: 'code', timeoutMs: 5000 });
   } finally { process.env.PATH = PATH; }
   const [check, review] = readFileSync(record, 'utf8').trim().split('\n').map(l => JSON.parse(l));
   const after = (args, flag) => args[args.indexOf(flag) + 1];
@@ -226,6 +269,10 @@ await test('on the VM: gVisor, no network for the check, the model network for t
   assert.equal(review.token, 'chk_TOKEN');
   assert.ok(review.args.includes('GEMINI_API_KEY') && review.args.includes('/srv/ia:/opt/intera11y:ro'));
   assert.ok(review.args.includes('--review-file') && review.args.includes('/job/x.js'));
+  // One part: its own container and folder, and fewer CPUs (a reviewer mostly waits for the model).
+  assert.equal(after(review.args, '--focus'), 'code');
+  assert.equal(after(review.args, '--name'), 'ai4a11y-check-abc-review-code');
+  assert.ok(review.args.includes('/srv/checks/chk_abc/review/code:/review') && review.args.includes('--cpus=4'));
 });
 
 await test('run.mjs reviews one file: the skill\'s reviewer instructions, what it is for, the check, the rubrics, the model through the proxy', async () => {
@@ -250,6 +297,16 @@ await test('run.mjs reviews one file: the skill\'s reviewer instructions, what i
   assert.match(out.report, /Task names the file: true\. About: true\. Check: true\. Failing run: true\. Rubrics offered: 10\./);
   assert.deepEqual(keys, ['chk_job_token'], 'the model call carried the job token, through the proxy');
   assert.ok(!existsSync(path.resolve(here, '../../tools/core-adapters/.check/check-bigger-buttons.js')), 'its copy is removed');
+  // One part: only its rubrics, and it is told its part; its own copy and folder.
+  const part = await runner.review({ dir: work, file: 'bigger-buttons.js', token: 'chk_job_token', focus: 'operate', timeoutMs: 60_000 });
+  assert.equal(part.code, 0, part.stderr);
+  const op = JSON.parse(readFileSync(path.join(work, 'review', 'operate', 'review.json'), 'utf8'));
+  assert.match(op.report, /Rubrics offered: 5\. Part: operate\./);
+  assert.match(op.report, /check-bigger-buttons-operate\.js/);
+  assert.ok(!existsSync(path.resolve(here, '../../tools/core-adapters/.check/check-bigger-buttons-operate.js')), 'its copy is removed');
+  const code = await runner.review({ dir: work, file: 'bigger-buttons.js', token: 'chk_job_token', focus: 'code', timeoutMs: 60_000 });
+  assert.equal(code.code, 0, code.stderr);
+  assert.match(JSON.parse(readFileSync(path.join(work, 'review', 'code', 'review.json'), 'utf8')).report, /Rubrics offered: 0\. Part: code\./);
 });
 
 await test('a page the browser saved as MHTML becomes a copy served at its own address', () => {

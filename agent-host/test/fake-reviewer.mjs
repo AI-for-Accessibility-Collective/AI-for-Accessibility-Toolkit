@@ -26,5 +26,6 @@ out({ type: 'text', part: { id: 'p1', type: 'text', text: [
   '  Fix: none',
   '',
   `Model: ${model}. Rubric: ${/Focus Visible/.test(rubric.result.content[0].text) ? 'read' : 'not read'}. Denied: ${denied}. Instructions: ${instructions}.`,
-  `Task names the file: ${/tools\/core-adapters\/\.check\/check-bigger-buttons\.js/.test(task)}. About: ${/Makes buttons bigger/.test(task)}. Check: ${/Its result: 1 passed, 1 failed/.test(task)}. Failing run: ${/adds color-contrast/.test(task)}. Rubrics offered: ${(task.match(/^- \d+\.\d+\.\d+ /gm) || []).length}.`,
+  `Task names the file: ${/tools\/core-adapters\/\.check\/check-bigger-buttons(-\w+)?\.js/.test(task)}. About: ${/Makes buttons bigger/.test(task)}. Check: ${/Its result: 1 passed, 1 failed/.test(task)}. Failing run: ${/adds color-contrast/.test(task)}. Rubrics offered: ${(task.match(/^- \d+\.\d+\.\d+ /gm) || []).length}. Part: ${/Your part of this review: the code\./.test(task) ? 'code' : /Your part of this review: keyboard, focus/.test(task) ? 'operate' : /Your part of this review: what people see/.test(task) ? 'perceive' : 'all'}.`,
+  `File: ${/check-[\w-]+\.js/.exec(task)?.[0]}.`,
 ].join('\n') } });

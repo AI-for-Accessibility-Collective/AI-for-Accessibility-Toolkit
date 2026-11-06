@@ -3,8 +3,8 @@
 // page. A fuller check then runs here in the background (checks.js: the
 // verifier on the test pages and the site copies, also narrow and with
 // reduced motion, axe-core, and that disable() puts the page back), and, when
-// the person asks, a full review too (the same check, then an independent
-// reviewer). Each adapter in a chat carries the state of both (`check`,
+// the person asks, a full review too (the same check, then independent
+// reviewers at once, one per part). Each adapter in a chat carries the state of both (`check`,
 // `review`), and the sidebar shows it.
 //
 // When either finds problems in the code it checked, and that code is still
@@ -49,7 +49,7 @@ export function stateOf(view, kind, hash) {
     const r = view.result?.review || {};
     out.verdict = r.verdict || null;
     if (r.report) out.report = String(r.report).slice(0, 6000);
-    if (!r.verdict) return { ...out, status: 'failed', error: r.error || 'The reviewer did not finish.' };
+    if (!r.verdict) return { ...out, status: 'failed', error: r.error || 'The reviewers did not finish.' };
     return { ...out, status: r.verdict === 'issues' || out.failed ? 'problems' : 'passed' };
   }
   return { ...out, status: out.failed ? 'problems' : 'passed' };
@@ -63,7 +63,7 @@ function fixMessage(adapter, state, kind) {
     lines.push('', `The verifier ran it on ${where}: ${state.failed} run${state.failed === 1 ? '' : 's'} failed:`);
     for (const f of state.failing) lines.push(`- ${f.name}: ${f.problems.join('; ') || 'failed'}`);
   }
-  if (kind === 'review' && state.report) lines.push('', 'The reviewer\'s report:', state.report);
+  if (kind === 'review' && state.report) lines.push('', 'The reviewers\' report (each part of the review by its own reviewer):', state.report);
   lines.push('', 'Fix what is the adapter\'s, preview it again on the person\'s page with your checks, and offer it again with adapter_ready. If a problem is the test page\'s or the site\'s, not the adapter\'s, say so in one sentence and leave it. Do not ask the person questions for this unless a fix would change what they asked for.');
   return lines.join('\n');
 }
@@ -123,7 +123,7 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
     const copies = pageData?.copies ? pageData.copies(uid, chatId, { matches: (url) => runsOn.some(p => matchUrlPattern(p, url)) }) : [];
     let own = [];
     try { own = JSON.parse(readFileSync(path.join(workDir(uid), '..', 'previews', chatId, `${adapter.hash}.checks.json`), 'utf8')); } catch { /* previewed before checks were kept */ }
-    // A review of code whose background check finished: the reviewer starts at once, with that check's report.
+    // A review of code whose background check finished: the reviewers start at once, with that check's report.
     let report = null;
     if (review && adapter.check?.hash === adapter.hash && ['passed', 'problems'].includes(adapter.check.status)) {
       try { report = checks.get(uid, adapter.check.checkId).result?.check || null; } catch { report = null; }
