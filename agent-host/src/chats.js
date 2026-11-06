@@ -117,7 +117,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
   function markReady(uid, chatId, adapter) {
     const chat = read(uid, chatId);
     const old = chat.adapters.find(a => a.id === adapter.id);
-    const rec = { ...adapter, version: (old?.version || 0) + 1, fixes: old?.fixes || 0, at: new Date().toISOString() };
+    const rec = { ...adapter, version: (old?.version || 0) + 1, fixes: old?.fixes || 0, ...(old?.reviewed ? { reviewed: true } : {}), at: new Date().toISOString() };
     chat.adapters = [...chat.adapters.filter(a => a.id !== adapter.id), rec];
     save(uid, chat);
     events.publish(uid, { type: 'adapter', chatId, adapter: rec });

@@ -240,16 +240,22 @@ try {
     assert.ok(!/export const|```/.test(shown), 'no code in the sidebar');
     // Usable at once, then checked in the background; the full review when asked.
     // Made for this site: checked on the copy of the page, not on the general test pages.
-    await panel.locator('#ready-list', { hasText: `Background check passed: nothing broke in 3 runs. On the copy of your page on ${new URL(shop).host} it made its change and its check passed, also narrow and with reduced motion. The general test pages were skipped: they do not have what it changes.` }).waitFor();
-    await panel.getByRole('button', { name: 'Full review', exact: true }).click();
+    // The preview's line opens to its checks.
+    await panel.locator('#transcript .step-details summary', { hasText: '“Bigger buttons” is previewing on your page' }).first().click();
+    assert.match(await panel.locator('#transcript .step-details[open]').first().innerText(), /Checks\s+Passes: /);
+    // The person is told more checks run in the background; the full review starts on its own after the background check.
+    assert.match(await panel.locator('#transcript').innerText(), /We are running more checks on it in the background\. Try it on your page and ask for changes in the meantime\./);
     await panel.locator('#ready-list', { hasText: 'Full review: no issues found.' }).waitFor();
+    // A background check that passed says nothing.
+    assert.doesNotMatch(await panel.locator('#ready-list').innerText(), /Background check passed/);
     // What a screen reader heard: each change once.
     await until(async () => /“Bigger buttons” passed the full review\./.test(await said()), 'the review said');
     const heard = await said();
-    for (const line of ['The assistant is working.', 'The assistant asks to see this page.', 'The assistant asks to preview “Bigger buttons”.', 'Previewing “Bigger buttons” on this page.', '“Bigger buttons” is ready.', 'The assistant is done.', '“Bigger buttons” passed the background check.']) {
+    for (const line of ['The assistant is working.', 'The assistant asks to see this page.', 'The assistant asks to preview “Bigger buttons”.', 'Previewing “Bigger buttons” on this page.', '“Bigger buttons” is ready: you can add it to your account or export it.', 'The assistant is done.']) {
       assert.ok(heard.includes(line), `said: ${line}\n--- heard ---\n${heard}`);
     }
     assert.ok(!/Looking at the page/.test(heard), 'steps are not read out one by one');
+    assert.ok(!/passed the background check/.test(heard), 'a background check that passed is not said');
     await shot(panel, '3-ready');
 
     // The page data stays on the agent host's disk, screenshot included.
@@ -335,8 +341,9 @@ try {
     await until(async () => (await toggle.getAttribute('aria-checked')) === 'false', 'the switch off once installed');
     assert.match(await panel.locator('#preview-label').innerText(), /Previews go on the page when you say so/);
     await until(() => page.evaluate(() => document.body.dataset.big === '1'), 'the installed adapter on the page');
-    await panel.locator('#ready-list', { hasText: 'In your account: it runs in this browser' }).waitFor();
+    await panel.getByRole('button', { name: 'In your account' }).waitFor();
     assert.equal(await panel.getByRole('button', { name: 'In your account' }).isDisabled(), true, 'nothing to add until a newer version');
+    assert.doesNotMatch(await panel.locator('#ready-list').innerText(), /In your account: it runs/);
 
     // A newer version replaces it in the account once it passes its background check.
     // The switch on with nothing to put back: the next preview goes on without asking.
@@ -347,7 +354,7 @@ try {
     const chatNow = async () => (await (await fetch(`${base}/v1/agent/chats/${await panel.locator('#chat-select').inputValue()}`, { headers: { authorization: `Bearer ${token}` } })).json()).chat;
     const latest = await until(async () => { const c = await chatNow(); const a = c.adapters[0]; return !c.busy && a.check?.status === 'passed' && a.version > 2 && a.version; }, 'the newest version checked', 30000);
     await panel.locator('#status', { hasText: `Updated “Bigger buttons” in your account to version ${latest}.` }).waitFor({ timeout: 30000 });
-    await panel.locator('#ready-list', { hasText: 'In your account: it runs in this browser' }).waitFor();
+    await panel.getByRole('button', { name: 'In your account' }).waitFor();
     assert.equal(await panel.getByRole('button', { name: 'In your account' }).isDisabled(), true);
 
     // Chats keep their history: a new one starts empty, the old one comes back.
@@ -523,9 +530,9 @@ try {
     await until(async () => (await heightOfBuy()) >= 44, 'the installed adapter on the page');
     console.log(`Installed from the account: ${mine.adapters.filter(a => a.adapter.appId === 'assistant').map(a => a.adapter.id).join(', ')}; the Buy button is ${await heightOfBuy()}px tall to a press.`);
     assert.ok(!/```/.test(shown), 'no code blocks in the sidebar');
-    // The background check, on the host's verifier: it ends one way or the other.
-    const checked = await until(async () => { const t = await panel.locator('#ready-list').innerText(); return /Background check (passed|found problems|could not run)[^\n]*/.exec(t)?.[0]; }, 'the background check', 20 * 60_000);
-    console.log(`Background check: ${checked}`);
+    // The background check, then the full review, on the host's verifier: they end one way or the other.
+    const checked = await until(async () => { const t = await panel.locator('#ready-list').innerText(); return /(Full review: no issues found|Full review found issues|Full review could not run|Background check (found problems|could not run))[^\n]*/.exec(t)?.[0]; }, 'the background check and full review', 30 * 60_000);
+    console.log(`Background checks: ${checked}`);
     await shot(panel, 'real-checked');
     console.log('Assistant browser workflow passed with real opencode and Gemini 3.8 Flash: asked multiple choice, shared the page, built, previewed, reviewed, offered, added to the account.');
   }

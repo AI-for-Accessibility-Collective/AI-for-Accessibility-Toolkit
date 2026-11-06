@@ -30,7 +30,7 @@ await test('tool steps become plain lines without their input or output', () => 
   const e = translate({ type: 'tool_use', sessionID: 's1', part: { id: 'p', tool: 'bash', state: { status: 'completed', input: { command: 'rm -rf /' }, output: 'x' } } });
   assert.deepEqual(e, { sessionId: 's1', entry: { id: 'p', kind: 'step', text: 'Running a check', state: 'done' } });
   assert.equal(translate({ type: 'tool_use', part: { tool: 'execute', state: {} } }).entry, undefined);
-  assert.match(translate({ type: 'tool_use', part: { tool: 'edit', state: { status: 'error', input: { filePath: '/work/adapters/a.js' } } } }).entry.text, /Writing the adapter: that did not work/);
+  assert.match(translate({ type: 'tool_use', part: { tool: 'edit', state: { status: 'error', input: { filePath: '/work/adapters/a.js' } } } }).entry.text, /Writing the adapter: trying another way$/);
 });
 
 await test('a title from the model is one plain line', () => {
@@ -238,7 +238,12 @@ await test('an adapter that adds accessibility problems, or was not checked with
   await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'build it' } });
   let chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
   assert.match(chat.entries.find(e => e.kind === 'agent').text, /Axe: problems\. Ready: yes\./);
-  assert.ok(chat.entries.some(e => e.state === 'done' && e.text === '“Bigger buttons” is previewing on your page · 1 of 1 checks pass · 2 new accessibility problems'));
+  const shown = chat.entries.find(e => e.state === 'done' && e.text === '“Bigger buttons” is previewing on your page · 1 of 1 checks pass · 2 new accessibility problems');
+  assert.ok(shown);
+  // The line opens to its checks and the new problems.
+  assert.equal(shown.details.checks.length, 1);
+  assert.equal(shown.details.checks[0].pass, true);
+  assert.deepEqual(shown.details.issues, [{ help: added.help, impact: 'serious', count: 2 }]);
   assert.ok(chat.entries.some(e => e.kind === 'warning' && e.text === '“Bigger buttons” adds 2 accessibility problems that axe-core finds: Elements must meet minimum color contrast ratio thresholds (WCAG 1.4.3). Check it on your page before you rely on it.'));
   assert.ok(!chat.entries.some(e => e.kind === 'warning' && /Not checked/.test(e.text)));
   assert.equal(chat.adapters.length, 1);
@@ -362,6 +367,9 @@ await test('when the background check finds problems, the agent is asked to fix 
   assert.match(asked, /buttons\.html \(narrow\): adds color-contrast/);
   assert.ok(chat.entries.some(e => e.kind === 'notice' && e.text === 'The background check found problems in “flaky”. The assistant is fixing them.'));
   assert.ok(!chat.entries.some(e => e.kind === 'you' && /background check/.test(e.text)), 'not shown as the person\'s message');
+  // The full review that started on its own waits for the fixed version, so the agent is asked once.
+  assert.deepEqual([a.review?.status, a.review?.why], ['cancelled', 'changed']);
+  assert.ok(!chat.entries.some(e => /full review found problems/.test(e.text || '')));
   sb.close();
 });
 
@@ -413,7 +421,11 @@ await test('a preview that passes makes the adapter the person\'s, even when the
   chat = await until(async () => { const c = await chatNow(id); return !c.busy && c.adapters.length && c; });
   const a = chat.adapters[0];
   assert.deepEqual([a.id, a.name, a.runsOn, a.pageTypes, a.supportAreas, a.version], ['tea-cosy', 'Tea cosy', ['https://example.com/*'], ['product'], ['motor'], 1]);
-  assert.ok(chat.entries.some(e => e.kind === 'notice' && e.text === '“Tea cosy” is ready. You can add it to your account or export it.'));
+  // The first version's full review starts on its own, and the person is told the checks run in the background.
+  assert.ok(a.review && ['queued', 'running', 'passed'].includes(a.review.status), JSON.stringify(a.review));
+  const reviewed = await until(async () => { const x = await adapterNow(id, 'tea-cosy'); return x?.review?.status === 'passed' && x; });
+  assert.equal(reviewed.reviewed, true);
+  assert.ok(chat.entries.some(e => e.kind === 'notice' && e.text === '“Tea cosy” is ready: you can add it to your account or export it. We are running more checks on it in the background. Try it on your page and ask for changes in the meantime.'));
   // Its page types reach the account with it: Add to my account gets them from the adapter.
   const got = await (await api(`/agent/chats/${id}/adapters/tea-cosy`)).json();
   assert.deepEqual(got.adapter.pageTypes, ['product']);

@@ -67,6 +67,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .step.running::before { background: #d39b00; animation: pulse 1.2s ease-in-out infinite; }
 .step.failed { color: var(--red); }
 .step.failed::before { background: var(--red); }
+.step:has(> .step-details) { align-items: flex-start; }
+.step:has(> .step-details)::before { margin-top: .45em; }
+.step-details { flex: 1; min-width: 0; }
+.step-details summary { cursor: pointer; font-weight: 400; color: inherit; margin-top: 0; }
+.step-details summary:hover { text-decoration: underline; }
+.step-details .details-head { margin: 6px 0 2px; font-weight: 600; color: var(--muted); }
+.step-details ul { margin: 0; padding-left: 18px; }
+.step-details li.fail { color: var(--red); }
+.step-details li.pass { color: var(--muted); }
 @keyframes pulse { 50% { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { .step.running::before, .steps-head.running::before, .steps-group.working::before { animation: none; } }
 

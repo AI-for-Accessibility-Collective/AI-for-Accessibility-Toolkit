@@ -58,7 +58,7 @@ export function translate(event) {
     const label = stepLabel(part.tool, part.state?.input);
     if (label) {
       const failed = part.state?.status === 'error';
-      out.entry = { id: part.id || part.callID, kind: 'step', text: failed ? `${label}: that did not work, trying another way` : label, state: failed ? 'failed' : 'done' };
+      out.entry = { id: part.id || part.callID, kind: 'step', text: failed ? `${label}: trying another way` : label, state: failed ? 'failed' : 'done' };
     }
   } else if (event?.type === 'error') {
     const message = event.error?.data?.message || event.error?.message || event.error?.name || 'unknown problem';

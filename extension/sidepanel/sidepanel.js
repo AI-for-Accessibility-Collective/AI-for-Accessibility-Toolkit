@@ -643,8 +643,27 @@ function entryNode(entry, count = 1) {
     const li = el('li', `step ${entry.state || 'done'}`);
     const words = el('span', '', entry.text);
     if (count > 1) words.append(el('span', 'times', ` (${count} times)`));
-    li.append(words);
     li.dataset.id = entry.id;
+    if (!entry.details) { li.append(words); return li; }
+    // A preview's line opens to its checks and the new problems axe-core found.
+    const more = el('details', 'step-details');
+    more.open = openDetails.has(entry.id);
+    more.addEventListener('toggle', () => { if (more.open) openDetails.add(entry.id); else openDetails.delete(entry.id); });
+    const summary = el('summary');
+    summary.append(words);
+    more.append(summary);
+    const { checks = [], issues = [] } = entry.details;
+    if (checks.length) {
+      const ul = el('ul');
+      for (const c of checks) ul.append(el('li', c.pass ? 'pass' : 'fail', `${c.pass ? 'Passes' : 'Fails'}: ${c.name}${c.error ? ` (${c.error})` : ''}`));
+      more.append(el('p', 'details-head', 'Checks'), ul);
+    }
+    if (issues.length) {
+      const ul = el('ul');
+      for (const i of issues) ul.append(el('li', 'fail', `${i.help}${i.count > 1 ? ` (${i.count} places)` : ''}${i.impact ? ` · ${i.impact}` : ''}`));
+      more.append(el('p', 'details-head', 'New accessibility problems'), ul);
+    }
+    li.append(more);
     return li;
   }
   if (entry.kind === 'questions') {
@@ -672,6 +691,7 @@ function foldedEntries(entries) {
 
 const isBusy = () => !!chats.find(c => c.id === chat?.id)?.busy;
 const openSteps = new Set(); // the groups of steps the person opened, by their first step's id
+const openDetails = new Set(); // the preview lines the person opened, by their id
 
 /**
  * What the transcript shows: messages, and each run of steps as one group,
@@ -695,7 +715,7 @@ function stepsNode(item) {
   const failed = item.steps.filter(s => s.entry.state === 'failed').length;
   const n = item.steps.reduce((sum, s) => sum + s.count, 0);
   const head = el('div', `steps-head${item.working ? ' running' : ''}`);
-  head.append(el('span', '', item.working ? 'Working…' : `${n} step${n === 1 ? '' : 's'}${failed ? ` · ${failed} did not work` : ''}`));
+  head.append(el('span', '', item.working ? 'Working…' : `${n} step${n === 1 ? '' : 's'}${failed ? ` · ${failed} iteration${failed === 1 ? '' : 's'}` : ''}`));
   const list = el('ol', 'steps');
   list.id = `steps-${item.key}`;
   list.hidden = !open;
@@ -759,7 +779,7 @@ function addEntry(entry) {
     else if (e.kind === 'error') announce(e.text, true);
     else if (e.kind === 'questions') { const n = e.questions?.length || 0; announce(`The assistant asks ${n === 1 ? 'a question' : `${n} questions`}. Answer them below the conversation.`); }
   }
-  if (e.kind === 'step' && e.state === 'failed' && before?.state !== 'failed') announce(`Did not work: ${e.text}`);
+  if (e.kind === 'step' && e.state === 'failed' && before?.state !== 'failed') announce(`Trying again: ${e.text}`);
   renderTranscript();
 }
 
@@ -787,7 +807,7 @@ function checkWords(a, kind) {
   const sites = madeFor(a);
   switch (c.status) {
     case 'unavailable': return { state: 'idle', text: kind === 'review' ? 'This toolkit has no full review.' : 'This toolkit does not check adapters in the background.' };
-    case 'queued': return { state: 'running', text: c.after === 'check' ? 'Full review: the reviewer starts as soon as the background check finishes, with what it found.'
+    case 'queued': return { state: 'running', text: c.after === 'check' ? 'Full review: the reviewers start as soon as the background check finishes, with what it found.'
       : `${what}: waiting${c.position ? `, ${ordinal(c.position)} in line` : ''}.` };
     case 'running': return { state: 'running', text: kind === 'review' ? (c.reused
         ? 'Full review running: three independent reviewers at once (the code, and the accessibility criteria in two halves) read and try it, with what the background check found. This usually takes under 20 minutes.'
@@ -797,17 +817,8 @@ function checkWords(a, kind) {
     case 'cancelled': return { state: 'idle', text: c.why === 'changed' ? `${what} stopped: the assistant is changing the adapter. Its next version is checked.` : `${what} stopped.` };
     case 'failed': return { state: 'failed', text: `${what} could not run: ${c.error}` };
     case 'passed': {
-      if (kind === 'review') return { state: 'passed', text: 'Full review: no issues found.' };
-      const broke = `Background check passed: nothing broke in ${runs(c.passed)}${c.skipped ? ` (${c.skipped} skipped: a site could not be reached)` : ''}.`;
-      if (c.narrow) {
-        const where = sites.length ? sites.join(', ') : 'the sites it is for';
-        if (!c.ownPages) return { state: 'passed', text: `Background check: there was nothing to check it on. It is made for ${where}, and no copy of your page there was saved (one is saved when you share the page source and it is previewed). Its preview on your page is what showed it working.` };
-        const pagesWord = c.ownPages === 1 ? 'the copy of your page' : `the ${c.ownPages} copies of your pages`;
-        return { state: 'passed', text: `${broke} On ${pagesWord} on ${where} it made its change${c.ownChecks ? ` and its ${c.ownChecks === 1 ? 'check passed' : `${c.ownChecks} checks passed`}` : ''}, also narrow and with reduced motion. The general test pages were skipped: they do not have what it changes.` };
-      }
-      if (c.appliedOn) return { state: 'passed', text: `${broke} It made its change on ${c.appliedOn} of its ${c.testPages} test pages.` };
-      // Made for one site (checked before the checks knew): the test pages do not have what it changes.
-      return { state: 'passed', text: `${broke} None of its ${c.testPages} test pages has what it changes${sites.length ? ` (it is made for ${sites.join(', ')})` : ''}, so this shows it does no harm on other pages, not that it works. Its preview on your page is what showed it working.` };
+      // A background check that passed needs no words: only problems are shown.
+      return kind === 'review' ? { state: 'passed', text: 'Full review: no issues found.' } : null;
     }
     case 'problems': {
       const fix = a.gaveUp ? ` The assistant could not fix ${kind === 'review' ? 'them' : 'all of them'} after ${a.fixes} tries: ask it, or use this version as it is.`
@@ -849,9 +860,7 @@ function renderReady() {
     li.append(title, el('p', 'about', a.about), el('p', 'where', `Runs on ${a.pageTypes?.length ? `${a.pageTypes.map(t => pageTypeById(t)?.name || t).join(', ')} on ` : ''}${a.runsOn.map(p => (p === '*://*/*' ? 'all websites' : p)).join(', ')}`));
     for (const kind of ['check', 'review']) { const w = checkWords(a, kind); if (w) li.append(statusNode(w)); }
     const mine = added[addedKey(a)];
-    if (mine) li.append(el('p', 'where', mine.version >= (a.version || 1)
-      ? 'In your account: it runs in this browser on the pages above. If the assistant improves it in this chat, your account gets the new version by itself once that version passes its background check.'
-      : `Your account still has version ${mine.version}. It switches to version ${a.version} by itself once this version passes its background check.`));
+    if (mine && mine.version < (a.version || 1)) li.append(el('p', 'where', `Your account still has version ${mine.version}. It switches to version ${a.version} by itself once this version passes its background check.`));
     const row = el('div', 'row');
     const reviewing = ['queued', 'running'].includes(a.review?.status);
     const review = button(a.review && !reviewing ? 'Full review again' : 'Full review', 'secondary', () => askReview(a, review));
@@ -889,7 +898,7 @@ function adapterNews(before, a) {
     const said = {
       running: was === 'queued' ? null : `Checking “${a.name}”: the ${what} started.`,
       queued: `The ${what} of “${a.name}” is waiting to start.`,
-      passed: `“${a.name}” passed the ${what}.`,
+      passed: kind === 'review' ? `“${a.name}” passed the ${what}.` : null,
       problems: `The ${what} found problems in “${a.name}”.`,
       failed: `The ${what} of “${a.name}” could not run.`,
     }[now];

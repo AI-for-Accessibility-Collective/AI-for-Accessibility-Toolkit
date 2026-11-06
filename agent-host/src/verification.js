@@ -2,9 +2,10 @@
 // can use it at once: its latest preview passed the agent's checks on their
 // page. A fuller check then runs here in the background (checks.js: the
 // verifier on the test pages and the site copies, also narrow and with
-// reduced motion, axe-core, and that disable() puts the page back), and, when
-// the person asks, a full review too (the same check, then independent
-// reviewers at once, one per part). Each adapter in a chat carries the state of both (`check`,
+// reduced motion, axe-core, and that disable() puts the page back), and a
+// full review (the same check, then independent reviewers at once, one per
+// part): on its own for each version offered until one review has finished,
+// and again whenever the person asks. Each adapter in a chat carries the state of both (`check`,
 // `review`), and the sidebar shows it.
 //
 // When either finds problems in the code it checked, and that code is still
@@ -94,7 +95,7 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
   }
 
   /** Start the background check (or, asked for, the full review) of an adapter as it is now. */
-  function start(uid, chatId, adapterId, { review = false } = {}) {
+  function start(uid, chatId, adapterId, { review = false, auto = false } = {}) {
     const kind = review ? 'review' : 'check';
     const adapter = adapterOf(uid, chatId, adapterId);
     if (!adapter) throw Object.assign(new Error('no such adapter in this chat'), { status: 404 });
@@ -110,7 +111,7 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
     }
     // A review asked for while the background check of this code runs waits for it, rather than checking it a second time.
     if (review && adapter.check?.hash === adapter.hash && LIVE.has(adapter.check.status) && jobs.has(adapter.check.checkId)) {
-      reviewsAfter.set(adapter.check.checkId, { uid, chatId, adapterId, hash: adapter.hash, kind: 'review' });
+      reviewsAfter.set(adapter.check.checkId, { uid, chatId, adapterId, hash: adapter.hash, kind: 'review', auto });
       set(uid, chatId, adapterId, { review: { hash: adapter.hash, status: 'queued', after: 'check', at: new Date().toISOString() } });
       return;
     }
@@ -138,13 +139,17 @@ export function createVerification({ checks, chats, pageData, workDir, log, maxF
     const state = stateOf(view, j.kind, j.hash);
     if (!LIVE.has(state.status)) jobs.delete(view.checkId);
     if (state.status === 'cancelled') return; // stop() said why
-    set(j.uid, j.chatId, j.adapterId, { [j.kind]: state });
+    // A full review that finished: later versions are not reviewed again on their own.
+    set(j.uid, j.chatId, j.adapterId, { [j.kind]: state, ...(j.kind === 'review' && ['passed', 'problems'].includes(state.status) ? { reviewed: true } : {}) });
     log?.info('verify.state', { uid: j.uid, chatId: j.chatId, kind: j.kind, status: state.status });
     // The review that waited for this check starts now, with its report (or, if it could not run, with its own check).
     const after = !LIVE.has(state.status) && reviewsAfter.get(view.checkId);
     if (after) {
       reviewsAfter.delete(view.checkId);
-      try { start(after.uid, after.chatId, after.adapterId, { review: true }); } catch (e) { log?.warn('verify.review-not-started', { uid: after.uid, chatId: after.chatId, error: e.message }); }
+      const fixing = (adapterOf(j.uid, j.chatId, j.adapterId)?.fixes || 0) < maxFixes;
+      // A review started on its own waits for the fixed version when the check found problems the agent is asked to fix.
+      if (after.auto && state.status === 'problems' && fixing) set(after.uid, after.chatId, after.adapterId, { review: { hash: after.hash, status: 'cancelled', why: 'changed', at: new Date().toISOString() } });
+      else try { start(after.uid, after.chatId, after.adapterId, { review: true }); } catch (e) { log?.warn('verify.review-not-started', { uid: after.uid, chatId: after.chatId, error: e.message }); }
     }
     if (state.status !== 'problems') return;
     const adapter = adapterOf(j.uid, j.chatId, j.adapterId);

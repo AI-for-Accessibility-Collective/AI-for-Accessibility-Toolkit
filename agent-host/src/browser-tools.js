@@ -342,7 +342,12 @@ export function createBrowserTools({ chats, requests, pageData, workDir, log, ve
       const label = { applied: `“${name}” is previewing on your page${tally}`, skipped: `“${name}” did not apply on this page`, failed: `“${name}” failed on your page` }[a.status] || `Preview of “${name}” finished`;
       const v = verdict(rec, adapter.code);
       const good = v.ok;
-      chats.addEntry(uid, chatId, { id: step.id, text: label, state: a.status === 'failed' || (a.status === 'applied' && !good) ? 'failed' : 'done' });
+      // What the person can open under the line: each check, and each new problem axe-core found.
+      const details = a.status === 'applied' && (results.length || axe?.added?.length)
+        ? { checks: results.map(({ name, after, error }) => ({ name, pass: after, ...(error ? { error } : {}) })),
+            issues: (axe?.added || []).map(({ help, impact, count }) => ({ help, impact, count })) }
+        : undefined;
+      chats.addEntry(uid, chatId, { id: step.id, text: label, state: a.status === 'failed' || (a.status === 'applied' && !good) ? 'failed' : 'done', ...(details ? { details } : {}) });
       const intro = [
         `Preview result: ${a.status}${a.message ? ` (${String(a.message).slice(0, 1000)})` : ''}.`,
         a.status === 'skipped' && /pattern|scope|match/i.test(a.message || '')
@@ -381,7 +386,7 @@ export function createBrowserTools({ chats, requests, pageData, workDir, log, ve
       const kinds = (args.page_types || []).filter(k => PAGE_TYPE_IDS.includes(k));
       offer(uid, chatId, adapter, v, { id, name: String(args.name || id).slice(0, 80), about: String(args.about || '').slice(0, 600), runsOn: patterns,
         supportAreas: (args.support_areas || []).filter(a => SUPPORT_AREAS.includes(a)), pageTypes: kinds.length ? kinds : chats.get(uid, chatId).pageTypes });
-      return text('The sidebar now offers it to the person with "Add to my account" and "Export". Tell them in one or two sentences what it does; do not publish it yourself. A fuller check of this version now runs in the background; if it finds problems, they come to you as a message to fix.'
+      return text('The sidebar now offers it to the person with "Add to my account" and "Export". Tell them in one or two sentences what it does; do not publish it yourself. A fuller check of this version, and until one has finished a full review by independent reviewers, now run in the background; if they find problems, they come to you as a message to fix. The first time you offer it, tell the person these checks run in the background and that they can try it and ask for changes in the meantime.'
         + (v.concern ? ` The sidebar also told them it ${v.concern}: say in a sentence why that is left.` : ''));
     },
   };
@@ -395,7 +400,12 @@ export function createBrowserTools({ chats, requests, pageData, workDir, log, ve
     const rec = chats.markReady(uid, chatId, { id, file: adapter.file, hash: hashOf(adapter.code), name, about, runsOn, supportAreas,
       ...(pageTypes?.length ? { pageTypes } : {}) });
     try { verification?.start(uid, chatId, rec.id); } catch (e) { log?.warn('verify.start-failed', { uid, chatId, error: e.message }); }
-    chats.addEntry(uid, chatId, { kind: 'notice', text: `“${name}” is ready. You can add it to your account or export it.` });
+    // Until a full review has finished for it, the full review starts too (it waits for the background check).
+    const review = !rec.reviewed;
+    if (review) try { verification?.start(uid, chatId, rec.id, { review: true, auto: true }); } catch (e) { log?.warn('verify.review-not-started', { uid, chatId, error: e.message }); }
+    chats.addEntry(uid, chatId, { kind: 'notice', text: rec.version === 1
+      ? `“${name}” is ready: you can add it to your account or export it. We are running more checks on it in the background. Try it on your page and ask for changes in the meantime.`
+      : `“${name}” version ${rec.version} is ready.` });
     if (v.concern) chats.addEntry(uid, chatId, { kind: 'warning', text: `“${name}” ${v.concern}. Check it on your page before you rely on it.` });
     return rec;
   }

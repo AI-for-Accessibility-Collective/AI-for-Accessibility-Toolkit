@@ -72,11 +72,16 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   ([src/verification.js](src/verification.js)). An adapter is usable as
   soon as `adapter_ready` accepts it; the host keeps that version's code
   (`offered/<chat>/<id>.js`, what Add to my account and Export get) and
-  runs the server check on it (below) without the person asking. The person
-  can ask for the full review too. The sidebar shows how each stands. When
-  either finds problems in the version still offered, the agent gets a
-  message with what failed, once no run is going, at most twice per
-  adapter; its next `adapter_ready` is a new version, checked again. A
+  runs the server check on it (below) without the person asking, then the
+  full review: on its own for each version offered until one review has
+  finished, and whenever the person asks. The first offer tells the person
+  these run in the background and they can try it and ask for changes
+  meanwhile. The sidebar shows only what is running or found problems (a
+  background check that passed says nothing). When either finds problems
+  in the version still offered, the agent gets a message with what failed,
+  once no run is going, at most twice per adapter; a review that started
+  on its own skips a version whose check sent the agent a fix. Its next
+  `adapter_ready` is a new version, checked again. A
   preview of changed code stops the check of the old version. A version
   that passes replaces an earlier one the person added to their account
   (by the sidebar, while it is open).
