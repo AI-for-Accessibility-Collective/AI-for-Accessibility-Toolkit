@@ -364,16 +364,18 @@ await test('a check on Cloud Run fetches only its own files with its token, and 
   const server = http.createServer((req, res) => burst.handle(req, res, new URL(req.url, 'http://x').pathname));
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const hostUrl = `http://127.0.0.1:${server.address().port}`;
-  // Stands in for Cloud Run: runs the job's script here, with the job's environment.
+  // Stands in for Cloud Run: runs the job's script here, once per task, with the job's environment.
+  let tasks0;
   const cloud = {
-    async run(env) {
-      env0 = env;
-      const child = spawn(process.execPath, [path.join(here, '../../scripts/verify-adapters/burst.mjs')], { stdio: 'ignore',
-        env: { PATH: process.env.PATH, ...env, BURST_RUN_SCRIPT: path.join(here, 'fake-check.mjs'), BURST_JOB_DIR: mkdtempSync(path.join(tmpdir(), 'burst-job-')) } });
-      children.push(child);
-      return `executions/${children.length}`;
+    async run(env, timeout, tasks) {
+      env0 = env; tasks0 = tasks;
+      for (let t = 0; t < tasks; t++) {
+        children.push(spawn(process.execPath, [path.join(here, '../../scripts/verify-adapters/burst.mjs')], { stdio: 'ignore',
+          env: { PATH: process.env.PATH, ...env, CLOUD_RUN_TASK_INDEX: String(t), CLOUD_RUN_TASK_COUNT: String(tasks), BURST_RUN_SCRIPT: path.join(here, 'fake-check.mjs'), BURST_JOB_DIR: mkdtempSync(path.join(tmpdir(), 'burst-job-')) } }));
+      }
+      return 'executions/1';
     },
-    async state(name) { const c = children[Number(name.split('/')[1]) - 1]; return { done: c.exitCode !== null, failed: c.exitCode > 0 }; },
+    async state() { return { done: children.every((c) => c.exitCode !== null), failed: children.some((c) => c.exitCode > 0) }; },
     async cancel() {},
   };
   burst = burstRunner({ cloud, hostUrl, max: 2, cpus: 8, pollMs: 200, log });
@@ -383,7 +385,9 @@ await test('a check on Cloud Run fetches only its own files with its token, and 
   checks.submit('ada', { checkId: id, adapter: { key: 'ada/agent/a', code: 'export default {}; // ENV' } });
   await until(() => checks.get('ada', id).status === 'done');
   const c = checks.get('ada', id);
-  assert.equal(c.result.check.summary.failed, 1, 'the report the job sent');
+  assert.equal(tasks0, 3, 'three tasks of 8 CPUs: 24, as on the VM');
+  assert.equal(c.result.check.summary.failed, 3, 'the three slices\' reports, merged');
+  assert.equal(c.result.check.runs.length, 12);
   assert.equal(env0.VERIFY_CHECK_PARALLEL, 6, 'six runs at a time on eight CPUs');
   assert.ok(c.result.check.runs.find((x) => x.name === 'env').problems[0].startsWith('sites offline'), 'offline, on the copies in its image');
   // The token is this check's only, and only while it runs.

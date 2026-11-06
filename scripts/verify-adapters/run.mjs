@@ -68,6 +68,7 @@ import { REVIEW_FOCUSES, focusOf } from './review-focus.mjs';
 import { serveHttp, sitesFor, LIMITS } from './mcp.mjs';
 import { MODEL } from '../../agent-host/src/runner.js';
 import { matchUrlPattern } from '../../toolkit/protocol/adapter/index.js';
+import { notesOf } from './check-report.mjs';
 
 // A pattern for every site (*://*/*, https://*/*, <all_urls>), as the agent host's browser tools judge it.
 const coversEverySite = (p) => p === '*' || p === '<all_urls>' || /^[^:]+:\/\/\*(\/|:|$)/.test(String(p));
@@ -103,6 +104,9 @@ const checkOut = flag('--out', null);
 // URL patterns; copies, pages the person's browser saved ({url, file}, file
 // relative to FILE); checks, the ones its preview ran ({name, code}).
 const checkSpecFile = flag('--spec', null);
+// --shard i/n: only every n-th run, from the i-th (0-based): one slice of the
+// check, each run marked with its place (`at`), for check-report.mjs to merge.
+const [shardAt, shards] = (/^(\d+)\/(\d+)$/.exec(flag('--shard', '')) || [null, 0, 1]).slice(1).map(Number);
 // --review-file FILE: review one adapter file (the server's review).
 const reviewFile = flag('--review-file', null);
 const aboutFile = flag('--about', null);
@@ -209,7 +213,8 @@ async function check(file) {
   // Run as a core adapter is (with the blocks): from a copy under tools/core-adapters/.check/.
   const dir = path.join(ROOT, 'tools/core-adapters/.check');
   mkdirSync(dir, { recursive: true });
-  const copy = path.join(dir, path.basename(file).replace(/[^\w.-]/g, '_'));
+  // Its own name: checks running side by side (the slices of one) each remove their copy at the end.
+  const copy = path.join(dir, `${process.pid}-${path.basename(file).replace(/[^\w.-]/g, '_')}`);
   copyFileSync(file, copy);
   const rel = path.relative(ROOT, copy);
   const given = checkSpecFile ? JSON.parse(readFileSync(checkSpecFile, 'utf8')) : {};
@@ -238,6 +243,11 @@ async function check(file) {
     if (checkPersonal) runs.push([`${page} (their settings)`, { ...base, page, personal: checkPersonal }, false, false]);
   }
   if (!argv.includes('--no-sites')) for (const site of sitesFor(rel)) if (!narrow || runsOn.some((p) => matchUrlPattern(p, site.url))) runs.push([`@ ${site.name}`, { ...base, page: site.url }, true, false]);
+  // One slice of the check: every n-th page with all its runs (normal,
+  // narrow, reduced motion), each run keeping its place in the whole.
+  const pagesInOrder = [...new Set(runs.map(([, spec]) => spec.page))];
+  const places = runs.map((_, i) => i).filter((i) => shards < 2 || pagesInOrder.indexOf(runs[i][1].page) % shards === shardAt);
+  if (shards > 1) { const all = runs.splice(0); for (const i of places) runs.push(all[i]); }
   const v = await openVerifier();
   const report = { adapter: path.basename(file), at: new Date().toISOString(), runs: [] };
   let failed = 0, skipped = 0, applied = 0, keyboards = 0, ownApplied = 0, ownFailed = 0;
@@ -249,7 +259,7 @@ async function check(file) {
   async function one(i) {
     const [name, spec, live, first] = runs[i];
     // InterA11y's keyboard audit on the first five test pages it applies on (counting the audits under way).
-    const keyboard = first === true && keyboards + auditing < 5;
+    const keyboard = first === true && keyboards + auditing < Math.ceil(5 / Math.max(1, shards));
     if (keyboard) auditing++;
     let out;
     try { out = await judge(v, name, spec, live, { skipOk: true, keyboard }); } finally { if (keyboard) auditing--; }
@@ -259,7 +269,7 @@ async function check(file) {
     if (spec.copy) { if (first === 'copy' && r.status === 'applied') ownApplied++; if (status === 'fail') ownFailed++; }
     if (status === 'skip') skipped++;
     if (status === 'fail') failed++;
-    done[i] = { name, status, result: r.status, problems, ...(r.axe?.advice?.length ? { advice: r.axe.advice.map((a) => `${a.id} on ${a.count}`) } : {}), ...(r.copy ? { copy: r.copy } : {}) };
+    done[i] = { name, ...(shards > 1 ? { at: places[i] } : {}), status, result: r.status, problems, ...(r.axe?.advice?.length ? { advice: r.axe.advice.map((a) => `${a.id} on ${a.count}`) } : {}), ...(r.copy ? { copy: r.copy } : {}) };
     console.log(`${status.toUpperCase()}: ${name}${r.status === 'skipped' ? ' (enable() returned false: nothing for it here)' : r.status === 'applied' ? ` (shift ${r.shift ?? '-'})` : r.message ? ` (${r.message})` : ''}${problems.length ? `\n  ${problems.join('\n  ')}` : ''}`);
   }
   try {
@@ -271,10 +281,7 @@ async function check(file) {
   }
   report.summary = { passed: runs.length - failed - skipped, failed, skipped, appliedOnTestPages: applied, testPages: pages.length,
     narrow, ownPages: copies.length, appliedOnOwnPages: ownApplied, ownRunsFailed: ownFailed, ownChecks: ownChecks.length };
-  report.notes = [];
-  if (narrow && !copies.length) report.notes.push('It is made for some sites only, and there is no copy of a page of theirs to check it on: nothing here shows it works.');
-  if (!narrow && !applied) report.notes.push(`It applied on none of the ${pages.length} test pages: the checks above say little until it runs on a page with the barrier it is for (--pages, or its own page).`);
-  report.notes.push('These checks find some problems in code. They do not show that the adapter helps anyone: only the people who use it can.');
+  report.notes = notesOf(report.summary);
   if (report.notes.length > 1) console.log(`\nNOTE: ${report.notes[0]}`);
   console.log(`\n${report.summary.passed} passed, ${failed} failed, ${skipped} skipped (site unreachable); ${narrow ? `made for ${runsOn.join(', ')}: it applied on ${ownApplied} of ${copies.length} of the person's pages` : `it applied on ${applied} of ${pages.length} test pages`}.`);
   console.log(report.notes.at(-1));

@@ -80,7 +80,9 @@ Steps 1 to 8 need Chromium (`npx playwright install chromium`).
 
   The runs go three at a time, each in its own browser context
   (`VERIFY_CHECK_PARALLEL`; 1 runs them one by one). The report keeps
-  their order.
+  their order. `--shard i/n` runs one slice of it, every n-th
+  page with all its runs (the agent host's checks on Cloud Run run three
+  at once and merge them, `scripts/verify-adapters/check-report.mjs`).
 - **The core adapters**, with their own checks:
   `node scripts/verify-adapters/run.mjs --replay --core [id ...]`.
 - **Step 9 in a coding agent**: the `ai4a11y-toolkit` skill does it after an

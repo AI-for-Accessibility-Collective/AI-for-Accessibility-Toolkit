@@ -7,6 +7,9 @@
 //   JOB_URL    http://<host>:8791/burst/<id>
 //   JOB_TOKEN  good for this check only, while it runs
 //   JOB_FILE   the adapter's file name; JOB_SPEC check.json, if there is one
+//   CLOUD_RUN_TASK_INDEX / CLOUD_RUN_TASK_COUNT  (Cloud Run's) this task's slice
+//              of the check's runs: a task has at most 8 CPUs, so a check
+//              runs as several tasks at once, and the host merges the slices
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
@@ -19,6 +22,8 @@ const JOB_SPEC = process.env.JOB_SPEC || '';
 const RUN = process.env.BURST_RUN_SCRIPT || path.join(here, 'run.mjs');
 const JOB = process.env.BURST_JOB_DIR || '/tmp/job';
 const headers = { authorization: `Bearer ${JOB_TOKEN}` };
+const TASK = Number(process.env.CLOUD_RUN_TASK_INDEX) || 0;
+const TASKS = Number(process.env.CLOUD_RUN_TASK_COUNT) || 1;
 
 async function get(url) {
   const r = await fetch(url, { headers });
@@ -26,7 +31,7 @@ async function get(url) {
   return r;
 }
 async function report(body) {
-  await fetch(`${JOB_URL}/report`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  await fetch(`${JOB_URL}/report/${TASK}`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body) });
 }
 
 try {
@@ -38,7 +43,8 @@ try {
   }
   const out = path.join(JOB, 'report.json');
   const code = await new Promise((resolve) => {
-    const child = spawn(process.execPath, [RUN, '--check', path.join(JOB, JOB_FILE), ...(JOB_SPEC ? ['--spec', path.join(JOB, JOB_SPEC)] : []), '--out', out],
+    const child = spawn(process.execPath, [RUN, '--check', path.join(JOB, JOB_FILE), ...(JOB_SPEC ? ['--spec', path.join(JOB, JOB_SPEC)] : []),
+      ...(TASKS > 1 ? ['--shard', `${TASK}/${TASKS}`] : []), '--out', out],
       { stdio: ['ignore', 'inherit', 'inherit'], env: { ...process.env, JOB_TOKEN: '', VERIFY_SITES: 'offline', VERIFY_SITE_CACHE: process.env.VERIFY_SITE_CACHE || '/sites' } });
     child.on('close', resolve);
     child.on('error', () => resolve(-1));

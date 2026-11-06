@@ -24,7 +24,8 @@
 // Checks beyond this host's CPUs, on Cloud Run (src/burst.js; without AGENT_BURST_JOB they wait):
 //   AGENT_BURST_JOB       the Cloud Run job (vm/burst-setup.sh); AGENT_BURST_PROJECT, AGENT_BURST_REGION
 //   AGENT_BURST_HOST_URL  how a job reaches this host's API port (http://<internal IP>:8791)
-//   AGENT_BURST_MAX       executions at once (default 20); AGENT_BURST_CPUS each one's CPUs (default 8)
+//   AGENT_BURST_MAX       checks at once (default 10); AGENT_BURST_TASKS tasks per check (default 3),
+//                         AGENT_BURST_CPUS each task's CPUs (default 8, Cloud Run's most)
 
 import path from 'node:path';
 import os from 'node:os';
@@ -62,7 +63,7 @@ const host = createHost({
   reviewParallel: Number(env.AGENT_REVIEW_PARALLEL) || 8,
   burst: env.AGENT_BURST_JOB ? {
     project: env.AGENT_BURST_PROJECT, region: env.AGENT_BURST_REGION || 'us-central1', job: env.AGENT_BURST_JOB,
-    hostUrl: env.AGENT_BURST_HOST_URL, max: Number(env.AGENT_BURST_MAX) || 20, cpus: Number(env.AGENT_BURST_CPUS) || 8,
+    hostUrl: env.AGENT_BURST_HOST_URL, max: Number(env.AGENT_BURST_MAX) || 10, cpus: Number(env.AGENT_BURST_CPUS) || 8, tasks: Number(env.AGENT_BURST_TASKS) || 3,
   } : null,
   log,
 });

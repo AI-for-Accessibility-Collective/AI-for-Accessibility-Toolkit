@@ -16,7 +16,7 @@ WORKDIR /app
 COPY toolkit/protocol/ ./toolkit/protocol/
 COPY agent-host/ ./agent-host/
 # Where the GenA11y rubric text comes from, and the parts a review is split into, for the server's reviewers (src/checks.js).
-COPY scripts/verify-adapters/intera11y-upstream.mjs scripts/verify-adapters/review-focus.mjs ./scripts/verify-adapters/
+COPY scripts/verify-adapters/intera11y-upstream.mjs scripts/verify-adapters/review-focus.mjs scripts/verify-adapters/check-report.mjs ./scripts/verify-adapters/
 WORKDIR /app/agent-host
 ENV NODE_ENV=production AGENT_RUNNER=docker AGENT_DATA_DIR=/srv/agent-host
 CMD ["node", "index.js"]

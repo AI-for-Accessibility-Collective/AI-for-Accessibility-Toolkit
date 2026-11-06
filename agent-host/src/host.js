@@ -69,7 +69,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     : checkImage ? dockerCheckRunner({ image: checkImage, network: checkNetwork, sitesDir: sites, rubricsDir, modelUrl, log }) : null);
   // Checks beyond this host's CPUs: Cloud Run job executions, when set up.
   const burst = givenBurst || (checkRunner && burstConfig?.job && burstConfig.hostUrl
-    ? burstRunner({ cloud: cloudRunClient({ ...burstConfig, ...(fetch ? { fetch } : {}) }), hostUrl: burstConfig.hostUrl, max: burstConfig.max, cpus: burstConfig.cpus, log }) : null);
+    ? burstRunner({ cloud: cloudRunClient({ ...burstConfig, ...(fetch ? { fetch } : {}) }), hostUrl: burstConfig.hostUrl, max: burstConfig.max, cpus: burstConfig.cpus, tasks: burstConfig.tasks, log }) : null);
   const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs, parallel: checkParallel,
     localCpus: checkCpus, reviewParallel, burst,
     fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;

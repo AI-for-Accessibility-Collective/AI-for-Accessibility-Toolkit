@@ -13,10 +13,16 @@
 // service account with no roles, its traffic goes into the VPC
 // (all-traffic egress, tag ai4a11y-burst), and the firewall lets that tag
 // reach only the host's API port (vm/burst-setup.sh).
+//
+// Cloud Run gives a task at most 8 CPUs, so one check is one execution of
+// `tasks` tasks at once (3: 24 CPUs, as a check has on the VM), each running
+// its slice of the check's runs (run.mjs --shard); the host merges their
+// reports (check-report.mjs) once every slice is in.
 
 import { randomBytes } from 'node:crypto';
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { mergeShards } from '../../scripts/verify-adapters/check-report.mjs';
 
 const TOKEN = /^brs_[a-f0-9]{48}$/;
 const MAX_REPORT = 4_000_000;
@@ -41,9 +47,9 @@ export function cloudRunClient({ project, region, job, fetch = globalThis.fetch 
   const base = 'https://run.googleapis.com/v2';
   return {
     /** Start one execution with these environment variables; its name. */
-    async run(env, timeoutSeconds) {
+    async run(env, timeoutSeconds, tasks = 1) {
       const op = await call('POST', `${base}/projects/${project}/locations/${region}/jobs/${job}:run`, {
-        overrides: { containerOverrides: [{ env: Object.entries(env).map(([name, value]) => ({ name, value: String(value) })) }], taskCount: 1, timeout: `${timeoutSeconds}s` },
+        overrides: { containerOverrides: [{ env: Object.entries(env).map(([name, value]) => ({ name, value: String(value) })) }], taskCount: tasks, timeout: `${timeoutSeconds}s` },
       });
       return op.metadata?.name || null;
     },
@@ -63,8 +69,8 @@ export function cloudRunClient({ project, region, job, fetch = globalThis.fetch 
  * @param {string} o.hostUrl   how a job reaches this host's API port (http://10.128.0.44:8791)
  * @param {number} [o.max]     executions at once
  */
-export function burstRunner({ cloud, hostUrl, max = 20, cpus = 8, pollMs = 15_000, log }) {
-  const sessions = new Map(); // token -> {id, dir, file, spec, done(report)}
+export function burstRunner({ cloud, hostUrl, max = 20, cpus = 8, tasks = 3, pollMs = 15_000, log }) {
+  const sessions = new Map(); // token -> {id, dir, file, spec, slices: Map(task -> report), done()}
 
   return {
     kind: 'burst',
@@ -74,7 +80,7 @@ export function burstRunner({ cloud, hostUrl, max = 20, cpus = 8, pollMs = 15_00
       const token = `brs_${randomBytes(24).toString('hex')}`;
       let finish;
       const reported = new Promise((r) => { finish = r; });
-      sessions.set(token, { id, dir, file, spec, done: finish });
+      sessions.set(token, { id, dir, file, spec, slices: new Map(), done: finish });
       let execution = null, timer = null, poll = null;
       const started = Date.now();
       try {
@@ -82,7 +88,7 @@ export function burstRunner({ cloud, hostUrl, max = 20, cpus = 8, pollMs = 15_00
           JOB_URL: `${hostUrl}/burst/${id}`, JOB_TOKEN: token, JOB_FILE: file, JOB_SPEC: spec || '',
           // Runs at a time: fewer than its CPUs (see checks.js).
           VERIFY_CHECK_PARALLEL: Math.max(1, Math.floor(cpus * 3 / 4)),
-        }, Math.ceil(timeoutMs / 1000));
+        }, Math.ceil(timeoutMs / 1000), tasks);
         log?.info('check.burst-started', { checkId: `chk_${id}` });
         const outcome = await new Promise((resolve) => {
           reported.then(() => resolve('reported'));
@@ -112,7 +118,7 @@ export function burstRunner({ cloud, hostUrl, max = 20, cpus = 8, pollMs = 15_00
     async handle(req, res, pathname) {
       const auth = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
       const s = TOKEN.test(auth) ? sessions.get(auth) : null;
-      const m = /^\/burst\/([a-f0-9]{16,40})(?:\/(files\/(.+)|report))?$/.exec(pathname);
+      const m = /^\/burst\/([a-f0-9]{16,40})(?:\/(files\/(.+)|report\/(\d+)))?$/.exec(pathname);
       if (!s || !m || m[1] !== s.id) return send(res, 401, { error: 'unknown check' });
       const inDir = path.join(s.dir, 'in');
       if (req.method === 'GET' && !m[2]) {
@@ -129,12 +135,19 @@ export function burstRunner({ cloud, hostUrl, max = 20, cpus = 8, pollMs = 15_00
         res.writeHead(200, { 'content-type': 'application/octet-stream' });
         return res.end(readFileSync(full));
       }
-      if (req.method === 'POST' && m[2] === 'report') {
+      if (req.method === 'POST' && m[4] !== undefined) {
+        const task = Number(m[4]);
+        if (task >= tasks) return send(res, 404, { error: 'no such task' });
         const chunks = []; let size = 0;
         for await (const c of req) { size += c.length; if (size > MAX_REPORT) return send(res, 413, { error: 'too large' }); chunks.push(c); }
-        try { JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { return send(res, 400, { error: 'not JSON' }); }
-        writeFileSync(path.join(s.dir, 'out', 'report.json'), Buffer.concat(chunks));
-        s.done();
+        let report;
+        try { report = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { return send(res, 400, { error: 'not JSON' }); }
+        s.slices.set(task, report);
+        // Every slice in: one report, as the VM's check writes it.
+        if (s.slices.size === tasks) {
+          writeFileSync(path.join(s.dir, 'out', 'report.json'), JSON.stringify(mergeShards([...s.slices.values()])));
+          s.done();
+        }
         return send(res, 200, { ok: true });
       }
       return send(res, 404, { error: 'not-found' });
