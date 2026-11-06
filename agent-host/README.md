@@ -23,7 +23,7 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
                                      │  docker exec, per message
                                      ▼
                                sandbox <account>              opencode run, /work, /toolkit (read-only)
-                                     │  sandbox token
+                                     │  sandbox token (model), run token (browser tools)
                                      ▼
                                agent host, sandbox port 8790  model proxy (adds the key) + browser tools (MCP)
 ```
@@ -54,7 +54,10 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   `gemini-3.8-flash` (titles too), and adds the real key (no per-account
   rate limit: the project's model quota is the only one) ([src/model-proxy.js](src/model-proxy.js)).
 - **The browser tools** ([src/browser-tools.js](src/browser-tools.js)) are an
-  MCP server the sandbox's opencode is configured with. A call goes to the
+  MCP server the sandbox's opencode is configured with. Each run has its own
+  opencode config (`config/runs/<run>.json`, removed when it ends) whose
+  header carries that run's token, so a call names the chat it is for; the
+  token works only while the run lasts. A call goes to the
   account's sidebar and waits for the person (up to 4 minutes, under
   opencode's own limit on a tool call, so the agent hears "no answer"):
   `browser_page`, `browser_preview`, `browser_remove_preview`, `adapter_ready`.
@@ -102,7 +105,13 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
 - **What the person sees has no code**: replies with code left out, and one
   plain line per step ([src/updates.js](src/updates.js)).
 - **Chats keep their history** on the host (`chats/`), each continuing its
-  own opencode session. One chat runs at a time per account. After the first
+  own opencode session. Several chats of one account may run at once (one
+  run per chat; a second message to a running chat gets 409), in the
+  account's one sandbox. Each works on its own page in the sidebar; what a
+  chat that is not open asks waits until the person opens it, and the chat
+  list marks it "(asks you)". They share `/work`: an adapter file another
+  running chat has previewed or offered is that chat's until its run ends,
+  and the agent is told to write its own. After the first
   reply the host asks the model (with its own key, outside any sandbox) for
   a few words to title the chat ([src/titles.js](src/titles.js)). The person
   can delete a chat; that stops its run and removes `chats/<chat>.json`, but

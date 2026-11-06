@@ -18,7 +18,7 @@ async function tool(name, args) {
 }
 
 out({ type: 'step_start', part: { type: 'step-start' } });
-if (/^hang/.test(message)) { await new Promise(() => {}); }
+if (/^hang/.test(message)) { setInterval(() => {}, 1000); await new Promise(() => {}); } // runs until stopped
 if (/^build/.test(message)) {
   // Two reads in a row: the sidebar folds them into one line.
   for (const id of ['p1', 'p1b']) out({ type: 'tool_use', part: { id, type: 'tool', tool: 'read', state: { status: 'completed', input: { filePath: '/toolkit/.claude/skills/ai4a11y-toolkit/SKILL.md' }, output: 'SECRET FILE TEXT' } } });
@@ -82,6 +82,26 @@ if (/^build/.test(message)) {
   ] });
   const bad = await tool('ask_questions', { questions: [{ question: 'Only one?', options: [{ label: 'Yes' }] }] });
   out({ type: 'text', part: { id: 'p1', type: 'text', text: `Asked: ${asked.isError ? 'no' : 'yes'}. Bad: ${bad.isError ? 'refused' : 'allowed'}.` } });
+} else if (/^twin/.test(message)) {
+  // Two chats at once: each waits, so the runs overlap, then asks its own question.
+  const name = message.split(' ')[1] || 'x';
+  await new Promise(r => setTimeout(r, 800));
+  const asked = await tool('ask_questions', { questions: [{ question: `From ${name}?`, options: [{ label: 'Yes' }, { label: 'No' }] }] });
+  out({ type: 'text', part: { id: 't1', type: 'text', text: `Twin ${name}: ${asked.isError ? 'no' : 'asked'}.` } });
+} else if (/^claim/.test(message)) {
+  // Two chats writing the same file: the first to preview it keeps it while it runs.
+  const wait = Number(message.split(' ')[1]) || 0;
+  await new Promise(r => setTimeout(r, wait));
+  mkdirSync('adapters', { recursive: true });
+  writeFileSync('adapters/shared.js', `export const A = { enable() { document.body.dataset.big = "1"; /* ${wait} */ }, disable() { delete document.body.dataset.big; } };\n`);
+  const p = await tool('browser_preview', { file: 'adapters/shared.js', name: 'Shared', runs_on: ['https://example.com/*'], checks: [{ name: 'big', code: 'return document.body.dataset.big === "1";' }] });
+  if (!wait) await new Promise(r => setTimeout(r, 1500));
+  out({ type: 'text', part: { id: 'c1', type: 'text', text: `Claim ${wait}: ${p.isError ? `refused: ${p.content[0].text}` : 'previewed'}` } });
+} else if (/^later/.test(message)) {
+  // Asks to see the page a moment later, while the person may be in another chat.
+  await new Promise(r => setTimeout(r, 1500));
+  const page = await tool('browser_page', { reason: 'To see the page.' });
+  out({ type: 'text', part: { id: 'l1', type: 'text', text: `Later: ${page.content[0].text.split('\n')[0]}` } });
 } else if (/^sketch/.test(message)) {
   // Writes an adapter and stops without previewing it.
   mkdirSync('adapters', { recursive: true });

@@ -6,8 +6,12 @@
 // finished. Its title is the start of the first message until the model
 // names it (titles.js), after the first reply.
 //
-// One chat runs at a time per account: the browser tools act on the tab the
-// person's sidebar is open on, so two runs would share one page.
+// Several chats of one account may run at once, each its own opencode run in
+// the account's one sandbox; one run per chat. A run has its own token (in the
+// browser tools' header of that run's opencode config): a tool call names its
+// chat by it, and the token ends with the run. Each chat works on its own page
+// in the sidebar. The sandbox's /work is shared: a file another running chat
+// previewed or offered is that chat's while it runs (claimFile).
 
 import { readFileSync, writeFileSync, readdirSync, renameSync, existsSync, unlinkSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
@@ -23,7 +27,10 @@ export const SHARE_LEVELS = LEVELS;
 const httpError = (status, message, code) => Object.assign(new Error(message), { status, code });
 
 export function createChats({ accounts, runner, events, requests, log, afterRun, titler, onIdle }) {
-  const runs = new Map(); // uid -> {chatId, stop}
+  const runs = new Map();      // uid -> Map(chatId -> {stop, token, files})
+  const runTokens = new Map(); // run token -> {uid, chatId}, while the run lasts
+  const runsOf = (uid) => runs.get(uid) || new Map();
+  const runOf = (uid, chatId) => runs.get(uid)?.get(chatId) || null;
 
   const fileOf = (uid, id) => {
     if (!/^c_[A-Za-z0-9_-]{6,40}$/.test(String(id))) throw httpError(404, 'no such chat');
@@ -46,7 +53,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
 
   const summary = (uid, chat) => ({
     id: chat.id, title: chat.title, createdAt: chat.createdAt, updatedAt: chat.updatedAt,
-    busy: runs.get(uid)?.chatId === chat.id,
+    busy: !!runOf(uid, chat.id),
   });
   const full = (uid, chat) => ({ ...summary(uid, chat), consent: chat.consent, entries: chat.entries, adapters: chat.adapters, allSites: chat.allSites === true,
     ...(chat.pageTypes ? { pageTypes: chat.pageTypes } : {}), ...(chat.supportAreas ? { supportAreas: chat.supportAreas } : {}) });
@@ -128,7 +135,25 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     return chat.adapters[i];
   }
 
-  const activeChat = (uid) => runs.get(uid)?.chatId || null;
+  /** Whether this chat's assistant is running now. */
+  const isBusy = (uid, chatId) => !!runOf(uid, chatId);
+  /** The chats of an account running now. */
+  const busyChats = (uid) => [...runsOf(uid).keys()];
+  /** The run a browser-tools token belongs to: {uid, chatId}, or null once it ended. */
+  const runForToken = (token) => (typeof token === 'string' && token.startsWith('run_') ? runTokens.get(token) || null : null);
+
+  /**
+   * A file in /work this chat's run previews or offers. Another chat running
+   * now that did so first keeps it: returns that chat's title, else null.
+   */
+  function claimFile(uid, chatId, file) {
+    for (const [other, run] of runsOf(uid)) {
+      if (other === chatId || !run.files.has(file)) continue;
+      try { return read(uid, other).title || 'another chat'; } catch { return 'another chat'; }
+    }
+    runOf(uid, chatId)?.files.add(file);
+    return null;
+  }
 
   /** The model's title, from the first message and the first reply; once per chat, when it answers. */
   async function nameChat(uid, chatId) {
@@ -159,7 +184,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     const message = String(text || '').trim();
     if (!message) throw httpError(400, 'Say something first.');
     if (message.length > 20_000) throw httpError(400, 'That message is too long.');
-    if (runs.has(uid)) throw httpError(409, runs.get(uid).chatId === chatId ? 'The assistant is still working on this chat. Wait, or stop it.' : 'Another chat is still working. Wait, or stop it.', 'busy');
+    if (runOf(uid, chatId)) throw httpError(409, 'The assistant is still working on this chat. Wait, or stop it.', 'busy');
     const chat = read(uid, chatId);
     if (chat.title === 'New chat' && !shown) { chat.title = fallbackTitle(message); save(uid, chat); }
     if (['all', 'site', 'type', 'type-all', 'other'].includes(pages)) {
@@ -172,14 +197,16 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     const asked = answers && chat.entries.find(e => e.id === answers && e.kind === 'questions' && !e.answered);
     if (asked) addEntry(uid, chatId, { id: asked.id, answered: true });
     addEntry(uid, chatId, shown ? { kind: 'notice', text: String(shown).slice(0, 300) } : { kind: 'you', text: message });
-    const run = { chatId, stop: null, stopped: false, since: new Date().toISOString() };
-    runs.set(uid, run);
+    const run = { chatId, stop: null, stopped: false, since: new Date().toISOString(), token: `run_${randomBytes(24).toString('base64url')}`, files: new Set() };
+    if (!runs.has(uid)) runs.set(uid, new Map());
+    runs.get(uid).set(chatId, run);
+    runTokens.set(run.token, { uid, chatId });
     events.publish(uid, { type: 'chat', chat: summary(uid, read(uid, chatId)) });
     // Runs in the background; the sidebar follows on the event stream.
     (async () => {
       let replied = false;
       try {
-        const proc = await runner.run(uid, { sessionId: chat.sessionId, text: message, title: chat.title });
+        const proc = await runner.run(uid, { sessionId: chat.sessionId, text: message, title: chat.title, runToken: run.token });
         run.stop = proc.stop;
         if (run.stopped) proc.stop();
         for await (const event of proc.events) {
@@ -201,19 +228,21 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
           try { addEntry(uid, chatId, { kind: 'error', text: 'The assistant could not start. Try again in a moment.' }); } catch { /* deleted */ }
         }
       } finally {
-        runs.delete(uid);
+        runTokens.delete(run.token);
+        runs.get(uid)?.delete(chatId);
+        if (!runs.get(uid)?.size) runs.delete(uid);
         requests.cancelChat(uid, chatId);
         try { events.publish(uid, { type: 'chat', chat: summary(uid, read(uid, chatId)) }); } catch { /* deleted */ }
       }
-      try { onIdle?.(uid); } catch (e) { log?.warn('chat.on-idle-failed', { uid, error: e.message }); }
+      try { onIdle?.(uid, chatId); } catch (e) { log?.warn('chat.on-idle-failed', { uid, error: e.message }); }
       if (!run.deleted) await nameChat(uid, chatId).catch(e => log?.warn('chat.title-failed', { uid, chatId, error: e.message }));
     })();
     return { ok: true };
   }
 
   function stop(uid, chatId) {
-    const run = runs.get(uid);
-    if (!run || run.chatId !== chatId) return { stopped: false };
+    const run = runOf(uid, chatId);
+    if (!run) return { stopped: false };
     run.stopped = true;
     run.stop?.();
     requests.cancelChat(uid, chatId);
@@ -224,13 +253,13 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
   function remove(uid, chatId) {
     const file = fileOf(uid, chatId);
     if (!existsSync(file)) throw httpError(404, 'no such chat');
-    const run = runs.get(uid);
-    if (run?.chatId === chatId) { run.deleted = run.stopped = true; run.stop?.(); }
+    const run = runOf(uid, chatId);
+    if (run) { run.deleted = run.stopped = true; run.stop?.(); }
     requests.cancelChat(uid, chatId);
     unlinkSync(file);
     events.publish(uid, { type: 'chat-deleted', chatId });
     return { deleted: true };
   }
 
-  return { list, create, get, remove, addEntry, setConsent, recordPreview, previews, previewOf, markReady, updateAdapter, activeChat, send, stop };
+  return { list, create, get, remove, addEntry, setConsent, recordPreview, previews, previewOf, markReady, updateAdapter, isBusy, busyChats, runForToken, claimFile, send, stop };
 }

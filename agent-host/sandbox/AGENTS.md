@@ -41,7 +41,7 @@ condition from what they ask for.
   image or a chart), speech and media. The skill's
   `reference/building-blocks.md` lists each one's calls, config and what it
   always does. Read it before you write your first adapter.
-- `/work` is yours. Write adapters to `/work/adapters/<id>.js`, one file each.
+- `/work` is yours. Write adapters to `/work/adapters/<id>.js`, one file each. The person's other chats may run at the same time in the same `/work`: give each adapter a name of its own, and if a tool says a file is another chat's, write yours to another file.
 - You have a browser: Chromium, with Playwright (`import { chromium } from
   'playwright'` in a script you run with `node`). Use it to try an adapter on
   a page of your own in `/work` (one with the barrier it removes) before you

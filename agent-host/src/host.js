@@ -78,7 +78,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   // After adapter_ready: the background check, the full review on request, and fixes of what they find.
   const verification = createVerification({ checks, chats, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });
   checks?.onChange(verification.onChange);
-  const tools = createBrowserTools({ uidForToken: accounts.uidForToken, chats, requests, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log, verification });
+  const tools = createBrowserTools({ chats, requests, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log, verification });
 
   function sandboxHandler(req, res) {
     const p = new URL(req.url, 'http://sandbox').pathname;
@@ -113,7 +113,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     if (m === 'GET' && p === '/agent/status') {
       accounts.ensure(uid);
       runner.ensure(uid).catch(e => log.error('sandbox.start-failed', { uid, error: e.message }));
-      return send(res, 200, { ok: true, model: 'gemini-3.8-flash', busyChat: chats.activeChat(uid) });
+      return send(res, 200, { ok: true, model: 'gemini-3.8-flash', busyChats: chats.busyChats(uid) });
     }
     if (m === 'GET' && p === '/agent/events') return events.subscribe(uid, res, requests.pendingFor(uid));
     if (m === 'GET' && p === '/agent/chats') return send(res, 200, { chats: chats.list(uid) });

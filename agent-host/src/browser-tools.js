@@ -193,7 +193,7 @@ const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const NO_ANSWER = 'The person has not answered in the sidebar (it may be closed, or they are away). Stop here: tell them in one sentence what is waiting for them, and wait for their reply.';
 const fail = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
 
-export function createBrowserTools({ uidForToken, chats, requests, pageData, workDir, log, verification }) {
+export function createBrowserTools({ chats, requests, pageData, workDir, log, verification }) {
   /** Read an adapter file from the account's /work, refusing anything outside it. */
   function readAdapter(uid, file) {
     const root = realpathSync(workDir(uid));
@@ -303,6 +303,8 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     async browser_preview(uid, chatId, args) {
       let adapter, patterns, checks;
       try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on, { allSites: chats.get(uid, chatId).allSites }); checks = checksOf(args.checks); } catch (e) { return fail(e.message); }
+      const taken = chats.claimFile(uid, chatId, adapter.file);
+      if (taken) return fail(fileTaken(adapter.file, taken));
       const name = String(args.name || adapter.file).slice(0, 80);
       const record = (fields) => chats.recordPreview(uid, chatId, { file: adapter.file, name, hash: hashOf(adapter.code), runsOn: patterns, ...fields });
       // Changed code: the agent is rebuilding, so the background checks of the old code stop.
@@ -370,6 +372,8 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     async adapter_ready(uid, chatId, args) {
       let adapter, patterns;
       try { adapter = readAdapter(uid, args.file); patterns = patternsOf(args.runs_on, { allSites: chats.get(uid, chatId).allSites }); } catch (e) { return fail(e.message); }
+      const taken = chats.claimFile(uid, chatId, adapter.file);
+      if (taken) return fail(fileTaken(adapter.file, taken));
       const v = verdict(chats.previewOf(uid, chatId, adapter.file), adapter.code);
       if (!v.ok) return fail(`Not ready: the adapter ${v.why}. Preview it with browser_preview and checks that show it works, fix what fails, and offer it once every check passes.`);
       const id = String(args.id || '');
@@ -453,7 +457,7 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
    * does that when the run ends.
    */
   function offerFinished(uid, chatId) {
-    if (chats.activeChat(uid) === chatId) return;
+    if (chats.isBusy(uid, chatId)) return;
     for (const rec of Object.values(chats.previews(uid, chatId))) {
       let code;
       try { code = readFileSync(path.join(workDir(uid), rec.file), 'utf8'); } catch { continue; }
@@ -462,9 +466,10 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
     }
   }
 
-  async function call(uid, name, args) {
-    const chatId = chats.activeChat(uid);
-    if (!chatId) return fail('No chat is running for this person.');
+  // The person's other chats may run at the same time, in the same /work.
+  const fileTaken = (file, title) => `${file} is being worked on in the person's other chat “${title}”, which is running now. Write this chat's adapter to a file of its own (another name under /work/adapters/), preview that one, and offer it.`;
+
+  async function call(uid, chatId, name, args) {
     if (!handlers[name]) return fail(`Unknown tool ${name}.`);
     log?.info('tool.call', { uid, chatId, tool: name });
     try { return await handlers[name](uid, chatId, args || {}); } catch (e) { log?.warn('tool.error', { uid, tool: name, error: e.message }); return fail(e.message); }
@@ -476,9 +481,10 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
 
   async function handle(req, res) {
     if (req.method !== 'POST') { res.writeHead(405, { allow: 'POST' }); return res.end(); }
+    // A run's token (runner.js): the account, and the chat the call is for.
     const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-    const uid = uidForToken(token);
-    if (!uid) return json(res, 401, { error: 'unknown sandbox' });
+    const run = chats.runForToken(token);
+    if (!run) return json(res, 401, { error: 'unknown run' });
     let msg;
     try {
       const chunks = []; for await (const c of req) chunks.push(c);
@@ -491,7 +497,7 @@ export function createBrowserTools({ uidForToken, chats, requests, pageData, wor
         return reply({ protocolVersion: msg.params?.protocolVersion || '2025-06-18', capabilities: { tools: {} }, serverInfo: { name: 'ai4a11y-browser', version: '0.1.0' } });
       case 'ping': return reply({});
       case 'tools/list': return reply({ tools: TOOLS });
-      case 'tools/call': return reply(await call(uid, msg.params?.name, msg.params?.arguments));
+      case 'tools/call': return reply(await call(run.uid, run.chatId, msg.params?.name, msg.params?.arguments));
       default: return json(res, 200, { jsonrpc: '2.0', id: msg.id, error: { code: -32601, message: `no method ${msg.method}` } });
     }
   }

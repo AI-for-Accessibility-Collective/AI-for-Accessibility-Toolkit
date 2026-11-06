@@ -256,15 +256,53 @@ await test('reading the accessibility skill gets its own line', () => {
   assert.equal(translate({ type: 'tool_use', part: { id: 'k', tool: 'read', state: { status: 'completed', input: { filePath: '/opt/agent/skills/intopia-web-accessibility/INDEX.md' } } } }).entry.text, 'Reading accessibility guidance (WCAG)');
 });
 
-await test('one run at a time per account, and stop ends it', async () => {
+await test('one run at a time per chat; other chats of the account run meanwhile; stop ends a run', async () => {
   const other = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
   await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'hang please' } });
   await until(async () => (await (await api(`/agent/chats/${other}`)).json()).chat.busy);
-  const busy = await api(`/agent/chats/${chatId}/messages`, { method: 'POST', body: { text: 'hi' } });
-  assert.equal(busy.status, 409);
+  const again = await api(`/agent/chats/${other}/messages`, { method: 'POST', body: { text: 'hi' } });
+  assert.equal(again.status, 409);
+  assert.match((await again.json()).message, /still working on this chat/);
+  // Another chat of the same account runs and finishes while that one still runs.
+  assert.equal((await api(`/agent/chats/${chatId}/messages`, { method: 'POST', body: { text: 'meanwhile' } })).status, 202);
+  await until(async () => { const c = (await (await api(`/agent/chats/${chatId}`)).json()).chat; return !c.busy && c.entries.some(e => e.text === 'You said: meanwhile'); });
+  assert.equal((await (await api(`/agent/chats/${other}`)).json()).chat.busy, true);
   assert.equal((await (await api(`/agent/chats/${other}/stop`, { method: 'POST' })).json()).stopped, true);
   const chat = await until(async () => { const c = (await (await api(`/agent/chats/${other}`)).json()).chat; return !c.busy && c; });
   assert.equal(chat.entries.at(-1).text, 'Stopped.');
+});
+
+await test('two chats run at once, and each tool call lands in its own chat', async () => {
+  const [a, b] = [(await (await api('/agent/chats', { method: 'POST' })).json()).chat.id, (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id];
+  await api(`/agent/chats/${a}/messages`, { method: 'POST', body: { text: 'twin A' } });
+  await api(`/agent/chats/${b}/messages`, { method: 'POST', body: { text: 'twin B' } });
+  const status = await (await api('/agent/status')).json();
+  assert.deepEqual(status.busyChats.filter(id => id === a || id === b).sort(), [a, b].sort(), 'both running');
+  const done = async (id) => until(async () => { const c = (await (await api(`/agent/chats/${id}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
+  const [ca, cb] = [await done(a), await done(b)];
+  assert.deepEqual(ca.entries.filter(e => e.kind === 'questions').map(e => e.questions[0].question), ['From A?']);
+  assert.deepEqual(cb.entries.filter(e => e.kind === 'questions').map(e => e.questions[0].question), ['From B?']);
+  assert.match(ca.entries.findLast(e => e.kind === 'agent').text, /Twin A: asked/);
+  // A run's token names its chat, and ends with the run; the account's own token is no run's.
+  const config = path.join(dataDir, 'accounts/ada/config/runs');
+  assert.deepEqual(readdirSync(config), [], 'each run\'s config is removed when it ends');
+  const account = readFileSync(path.join(dataDir, 'accounts/ada/token'), 'utf8');
+  const res = await fetch(`http://127.0.0.1:${sandboxPort}/mcp`, { method: 'POST', headers: { authorization: `Bearer ${account}`, 'content-type': 'application/json' }, body: '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' });
+  assert.equal(res.status, 401);
+});
+
+await test('a file another running chat previewed is that chat\'s; the agent is told to use its own', async () => {
+  const sb = sidebar('ada', { preview: () => ({ status: 'applied', changes: 1, shift: 0, checks: [{ before: false, after: true }] }) });
+  const [a, b] = [(await (await api('/agent/chats', { method: 'POST' })).json()).chat.id, (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id];
+  await api(`/agent/chats/${a}/messages`, { method: 'POST', body: { text: 'claim 0' } });
+  await api(`/agent/chats/${b}/messages`, { method: 'POST', body: { text: 'claim 500' } });
+  const reply = async (id) => (await until(async () => { const c = (await (await api(`/agent/chats/${id}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; })).entries.findLast(e => e.kind === 'agent').text;
+  assert.match(await reply(a), /Claim 0: previewed/);
+  assert.match(await reply(b), /Claim 500: refused: adapters\/shared\.js is being worked on in the person's other chat “claim 0”, which is running now\. Write this chat's adapter to a file of its own/);
+  // Once that chat's run is over, the file is free again.
+  await api(`/agent/chats/${b}/messages`, { method: 'POST', body: { text: 'claim 1' } });
+  assert.match(await until(async () => { const t = await reply(b); return /Claim 1:/.test(t) && t; }), /Claim 1: previewed/);
+  sb.close();
 });
 
 await test('a chat can be deleted, even while it runs; another sidebar is told', async () => {
