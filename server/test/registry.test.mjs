@@ -13,7 +13,7 @@ import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 import { createLogger } from '../src/log.js';
-import { defineDescriptor, descriptorDigest, PROFILE_TOOLS, ACCESS_TOOLS } from '../../toolkit/protocol/adapter/index.js';
+import { defineDescriptor, descriptorDigest, PROFILE_TOOLS, ACCESS_TOOLS, VERIFY_TOOLS } from '../../toolkit/protocol/adapter/index.js';
 import { createRegistryClient, loadInstalledAdapters, RegistryCallError } from '../../toolkit/adapter-mcp/index.js';
 
 const ADMIN = 'test-admin';
@@ -76,7 +76,7 @@ try {
     assert.equal(init.result.protocolVersion, '2025-11-25');
     assert.deepEqual(init.result.capabilities.resources, { listChanged: true });
     const tools = (await rpc(ada, 'tools/list')).result.tools;
-    assert.deepEqual(tools.map(t => t.name), ['adapter_search', 'adapter_get', 'adapter_publish', 'adapter_share', 'adapter_delete', 'adapter_install', 'adapter_uninstall', 'adapter_installed', 'adapter_report', 'adapter_status', ...PROFILE_TOOLS, ...ACCESS_TOOLS]);
+    assert.deepEqual(tools.map(t => t.name), ['adapter_search', 'adapter_get', 'adapter_publish', 'adapter_share', 'adapter_delete', 'adapter_install', 'adapter_uninstall', 'adapter_installed', 'adapter_report', 'adapter_status', ...PROFILE_TOOLS, ...ACCESS_TOOLS, ...VERIFY_TOOLS]);
     assert.equal(tools.find(t => t.name === 'adapter_delete').annotations.destructiveHint, true);
     assert.equal((await rpc(ada, 'nope')).error.code, -32601);
     const notification = await fetch(`${base}/v1/mcp`, { method: 'POST', headers: { authorization: `Bearer ${ada}`, 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) });

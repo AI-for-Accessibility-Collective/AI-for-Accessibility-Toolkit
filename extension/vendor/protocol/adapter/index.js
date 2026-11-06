@@ -26,5 +26,6 @@ export {
   BROWSER_RUNTIME_APP, REPORT_STATUSES, OWNER_PATTERN, registryKey,
 } from './registry.js';
 export { NEED_SCHEMA, MAX_NEEDS, checkNeeds, needKey } from './needs.js';
+export { VERIFY_TOOL_SCHEMAS, VERIFY_TOOLS, VERIFY_TOOL_DESCRIPTIONS } from './verify.js';
 export { PROFILE_TOOL_SCHEMAS, PROFILE_TOOLS, PROFILE_READ_ONLY, PROFILE_TOOL_DESCRIPTIONS } from './profile.js';
 export { ACCESS_TOOL_SCHEMAS, ACCESS_TOOLS, ACCESS_READ_ONLY, ACCESS_TOOL_DESCRIPTIONS, narrowestVisibility } from './access.js';

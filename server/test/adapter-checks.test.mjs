@@ -16,6 +16,9 @@ import { createApp } from '../src/app.js';
 import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 import { createLogger } from '../src/log.js';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 
 const ADMIN = 'test-admin-password';
 const SECRET = 'agent-host-secret-for-tests-0123456789';
@@ -64,13 +67,13 @@ const RESULT = {
 };
 const finish = (checkId, result = RESULT) => Object.assign(jobs.get(checkId), { status: 'done', startedAt: new Date().toISOString(), finishedAt: new Date().toISOString(), result });
 
-async function boot(agent) {
+async function boot(agent, extra = {}) {
   const dir = await mkdtemp(path.join(tmpdir(), 'adapter-checks-test-'));
   const store = fileStore(dir);
   const lines = [];
   const log = createLogger({ format: 'json', level: 'debug', write: (line) => lines.push(line) });
   const toolkitHost = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
-  const app = createApp({ store, adminPassword: ADMIN, toolkitHost, log, agentHost: agent });
+  const app = createApp({ store, adminPassword: ADMIN, toolkitHost, log, agentHost: agent, ...extra });
   const server = http.createServer(app);
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -271,6 +274,103 @@ await test('the admin console sees the host\'s checks: the admin only, with the 
   assert.deepEqual([sb.accounts[0].uid, sb.accounts[0].running, sb.limits.cpus], ['ada', 1, 6]);
 });
 
+// ── adapter_verify: the same check and review as a tool call, with progress and a report ──
+const summaries = [];
+const vsvc = await boot({ url: hostUrl, secret: SECRET }, { verifyPollMs: 40, ai: { caller: async (prompt) => { summaries.push(prompt); return 'Here is what it does:\n- Makes small buttons bigger to hit.\n- Keeps the page layout.'; }, price: () => ({ input: 0, output: 0 }) } });
+const vada = await vsvc.mint('ada');
+await vsvc.publish('ada', 'verify-me');
+const mcp = async (name, args, { token = vada, progressToken } = {}) => {
+  const res = await fetch(`${vsvc.base}/v1/mcp`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args, ...(progressToken ? { _meta: { progressToken } } : {}) } }),
+  });
+  if (!String(res.headers.get('content-type')).includes('event-stream')) return { result: (await res.json()).result, progress: [] };
+  const events = (await res.text()).split('\n\n').map((b) => b.split('\n').find((l) => l.startsWith('data:'))).filter(Boolean).map((l) => JSON.parse(l.slice(5)));
+  return { result: events.find((e) => e.id === 1).result, progress: events.filter((e) => e.method === 'notifications/progress').map((e) => e.params.message) };
+};
+/** Move the stand-in host's job for this adapter through its stages. */
+async function walk(key, stages) {
+  // Only a check asked for from now on, not an earlier one of the same adapter.
+  const from = seen.length;
+  let job;
+  for (let i = 0; i < 400 && !job; i++) { const s = seen.slice(from).findLast((x) => x.method === 'POST' && x.body?.adapter?.key === key); if (s) job = s.body.checkId; else await new Promise((r) => setTimeout(r, 20)); }
+  if (!job) throw new Error(`no check of ${key} was asked for`);
+  for (const st of stages) { await new Promise((r) => setTimeout(r, 150)); if (st === 'done') finish(job); else Object.assign(jobs.get(job), st); }
+  return job;
+}
+
+await test('adapter_verify: says what the adapter does, reports progress as it goes, and ends with the changes to make', async () => {
+  const walking = walk('ada/agent/verify-me', [
+    { status: 'running', stage: 'check' },
+    { status: 'running', stage: 'review', reviewers: 3, reviewersDone: 1, result: { check: { summary: RESULT.check.summary } } },
+    'done',
+  ]);
+  const { result, progress } = await mcp('adapter_verify', { adapter: 'verify-me', waitSeconds: 30 }, { progressToken: 'p1' });
+  await walking;
+  assert.equal(result.isError, false, JSON.stringify(result));
+  assert.match(progress[0], /^Asked for a verification of Bigger buttons \(revision 1\): the check, then three reviewers\.$/);
+  assert.match(progress[1], /What it does:\n- Makes small buttons bigger to hit\.\n- Keeps the page layout\./);
+  assert.ok(progress.includes('Waiting for the checker: number 1 in line.'), progress);
+  assert.ok(progress.some((p) => /^Running the check/.test(p)), progress);
+  assert.ok(progress.includes('Check done: 70 runs passed, 2 failed. Reviewing: 1 of 3 reviewers finished (the code; what people perceive; how people operate it).'), progress);
+  assert.equal(progress.at(-1), 'Done.');
+  assert.match(summaries[0], /<code>\n[\s\S]*dataset\.big/);
+  const r = result.structuredContent;
+  assert.equal(r.status, 'done');
+  assert.equal(r.summary, '- Makes small buttons bigger to hit.\n- Keeps the page layout.');
+  assert.deepEqual(r.review.findings, { high: 1, medium: 0, low: 1 });
+  assert.ok(r.actions.some((a) => /^Fix the failed run "a\.html \(narrow\)"/.test(a)), r.actions);
+  assert.ok(r.actions.includes('Fix (high): a.js:3 — focus lost'), r.actions);
+  assert.equal(r.actions.at(-1), 'Then publish a new revision and verify again.');
+  // The text an agent reads is the report itself.
+  assert.match(result.content[0].text, /^Bigger buttons \(revision 1\)\n\nWhat it does:/);
+  assert.match(result.content[0].text, /Check: 70 of 72 runs passed, 2 failed, 3 skipped; it applied on 4 of 22 test pages\./);
+  assert.match(result.content[0].text, /Review: issues: 1 high, 0 medium, 1 low/);
+  assert.match(result.content[0].text, /Recommended actions:\n1\. /);
+  assert.match(result.content[0].text, /pre-alpha/);
+  assert.equal(seen.findLast((x) => x.method === 'POST' && x.body?.adapter?.key === 'ada/agent/verify-me').body.review, true, 'a full review by default');
+});
+
+await test('adapter_verify: past waitSeconds it returns the checkId, and calling again keeps waiting', async () => {
+  await vsvc.publish('ada', 'verify-me', 'export default { enable() { return true; }, disable() {} }; // v2');
+  const first = await mcp('adapter_verify', { adapter: 'verify-me', review: false, waitSeconds: 5 });
+  const waiting = first.result.structuredContent;
+  assert.equal(waiting.status, 'queued');
+  assert.match(waiting.next, /Call adapter_verify again with \{ checkId: "chk_[a-f0-9]{20}" \}/);
+  assert.match(first.result.content[0].text, /^Waiting for the checker/);
+  setTimeout(() => finish(waiting.checkId, { check: { summary: { passed: 10, failed: 0, skipped: 0, appliedOnTestPages: 3, testPages: 3 }, runs: [] } }), 200);
+  const again = (await mcp('adapter_verify', { checkId: waiting.checkId, waitSeconds: 10 })).result.structuredContent;
+  assert.equal(again.status, 'done');
+  assert.deepEqual(again.actions, ['Nothing to change from these checks. Next, have people who meet the barrier it is for try it on the pages they use.']);
+  assert.equal(again.review, undefined);
+});
+
+await test('adapter_verify: an app-bound token is refused, and an unknown adapter is said plainly', async () => {
+  const appToken = await vsvc.mint('ada', 'app', { appId: 'shop' });
+  const refused = (await mcp('adapter_verify', { adapter: 'verify-me' }, { token: appToken })).result;
+  assert.equal(refused.isError, true);
+  assert.match(refused.content[0].text, /default token/);
+  const missing = (await mcp('adapter_verify', { adapter: 'nothing-here' })).result;
+  assert.equal(missing.isError, true);
+  assert.match(missing.content[0].text, /You have no adapter nothing-here/);
+});
+
+await test('the skill\'s helper verifies: progress lines as they come, then the report', async () => {
+  await vsvc.publish('ada', 'verify-me', 'export default { enable() { return true; }, disable() {} }; // v3');
+  const helper = fileURLToPath(new URL('../../.claude/skills/ai4a11y-toolkit/scripts/adapter.mjs', import.meta.url));
+  const { TOOLKIT_URL: _u, TOOLKIT_TOKEN: _t, ...env } = process.env;
+  const walking = walk('ada/agent/verify-me', [{ status: 'running', stage: 'check' }, 'done']);
+  const { stdout } = await promisify(execFile)(process.execPath, [helper, 'verify', 'verify-me', '--no-review', '--wait', '1'], { timeout: 60_000, env: { ...env, TOOLKIT_URL: vsvc.base, TOOLKIT_TOKEN: vada } });
+  await walking;
+  assert.match(stdout, /^· Asked for a verification of Bigger buttons \(revision 3\): the check\.\n/);
+  assert.match(stdout, /What it does:\n- Makes small buttons bigger to hit\./);
+  assert.match(stdout, /· Running the check/);
+  assert.match(stdout, /\n\nBigger buttons \(revision 3\)\n\nWhat it does:/);
+  assert.match(stdout, /Recommended actions:\n1\. Fix the failed run/);
+});
+
+vsvc.stop();
 svc.stop();
 agentHost.close();
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -11,6 +11,8 @@
 //   node adapter.mjs extension
 //   node adapter.mjs check
 //   node adapter.mjs check bigger-buttons [--review]
+//   node adapter.mjs verify bigger-buttons [--no-review]
+//   node adapter.mjs verify --app museum-guide
 //   node adapter.mjs profile
 //   node adapter.mjs learned
 //   node adapter.mjs answer prop_123 accept
@@ -21,6 +23,9 @@
 //           into browser-runtime, so the adapter runtime extension runs it on
 //           the pages it targets. --share shares it, --no-run skips the install,
 //           --visibility adapter keeps what it gives the toolkit to itself.
+//           --needs needs.json declares the needs it meets (a list of {id,
+//           phrase, description, abilities}), so the toolkit can suggest it
+//           to the people it fits.
 // status    what the extension reported: running, or failed with the error.
 // share     shares an adapter with everyone on this toolkit (--stop to stop).
 // extension helps set up the adapter runtime extension: finds its folder (or
@@ -36,6 +41,17 @@
 //           asked. It waits up to 9 minutes (--wait N); run it again to keep
 //           waiting: while that check is still running it waits for it, and
 //           once it has finished, asking again runs a new check.
+// verify    verifies what you built, as the toolkit does in the cloud, and
+//           prints its progress as it goes and then a short report: what it
+//           does, what the check and the review found, and the changes to
+//           make (recommended actions). With an adapter's id: its latest
+//           revision, the check and the full review (three reviewers at once,
+//           about 15 minutes; --no-review: the check only, about a minute).
+//           It waits up to 9 minutes (--wait N, in minutes), then prints the
+//           check's id: --check <id> keeps waiting for it. With --app <id>:
+//           an app connected now with Adapter MCP, each adaptation read,
+//           applied and undone through the running app. Uses the toolkit's
+//           adapter_verify and app_verify tools.
 // profile   the person's profile as apps read it (supportAreas, fields.needs, …).
 // learned   what the toolkit learned about the person: suggested profile
 //           changes waiting for an answer, and memories.
@@ -106,6 +122,9 @@ function parse(argv) {
     else if (flag === '--earlier') flags.earlier = value();
     else if (flag === '--review') flags.review = true;
     else if (flag === '--wait') flags.wait = Number(value());
+    else if (flag === '--no-review') flags.noReview = true;
+    else if (flag === '--check') flags.checkId = value();
+    else if (flag === '--needs') flags.needs = value();
     else fail(`Unknown option ${flag}.`);
   }
   return { command, target, flags };
@@ -155,6 +174,74 @@ async function tool(name, args) {
   return result;
 }
 
+// A tool that says how far it is: its progress lines as they come (MCP
+// progress notifications over a server-sent event stream), then its result.
+async function toolWithProgress(name, args, onProgress) {
+  let res;
+  try {
+    res = await fetch(`${base}/v1/mcp`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: nextId++, method: 'tools/call', params: { name, arguments: args, _meta: { progressToken: `p${nextId}` } } }),
+    });
+  } catch (e) {
+    fail(`Could not reach the toolkit at ${base}: ${e.message}`);
+  }
+  if (res.status === 401) fail('The toolkit did not accept the token. Copy the two lines into .env again from the developer console (Adapters, New adapter).');
+  if (!String(res.headers.get('content-type')).includes('event-stream')) {
+    const body = await res.json().catch(() => null);
+    if (!res.ok || !body?.result) fail(`The toolkit answered ${res.status}: ${body?.error?.message || body?.message || 'no details'}`);
+    return body.result;
+  }
+  const decoder = new TextDecoder();
+  let buffer = '', result = null;
+  for await (const chunk of res.body) {
+    buffer += decoder.decode(chunk, { stream: true });
+    let cut;
+    while ((cut = buffer.indexOf('\n\n')) >= 0) {
+      const data = buffer.slice(0, cut).split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5)).join('\n');
+      buffer = buffer.slice(cut + 2);
+      if (!data) continue;
+      const msg = JSON.parse(data);
+      if (msg.method === 'notifications/progress') onProgress(msg.params.message);
+      else if (msg.result || msg.error) result = msg.result || fail(msg.error.message);
+    }
+  }
+  return result || fail('The toolkit stopped answering before the result. Run it again.');
+}
+
+function readNeeds(file) {
+  let needs;
+  try { needs = JSON.parse(readFileSync(file, 'utf8')); } catch (e) { fail(`Could not read the needs in ${file}: ${e.message}`); }
+  if (!Array.isArray(needs)) fail(`${file} should hold a list of needs: [{ "id", "phrase", "description", "abilities" }].`);
+  return needs;
+}
+
+async function verify(id, flags) {
+  const show = line => console.log(line.includes('\n') ? line : `· ${line}`);
+  if (flags.app) {
+    const r = await toolWithProgress('app_verify', { app: flags.app }, show);
+    if (r.isError) fail(r.content?.[0]?.text || 'The toolkit refused it.');
+    console.log(`\n${r.content[0].text}`);
+    return;
+  }
+  if (!id && !flags.checkId) fail('Say what to verify: node adapter.mjs verify bigger-buttons, --check <id> to keep waiting, or --app <app id>.');
+  const until = Date.now() + (Number.isFinite(flags.wait) ? flags.wait : 9) * 60_000;
+  let args = flags.checkId ? { checkId: flags.checkId } : { adapter: flags.app && !id.includes('/') ? `${flags.app}/${id}` : id, review: !flags.noReview };
+  for (;;) {
+    const left = Math.round((until - Date.now()) / 1000);
+    const r = await toolWithProgress('adapter_verify', { ...args, waitSeconds: Math.max(5, Math.min(240, left)) }, show);
+    if (r.isError) fail(r.content?.[0]?.text || 'The toolkit refused it.');
+    const s = r.structuredContent || {};
+    if (s.report) { console.log(`\n${s.report}`); return; }
+    args = { checkId: s.checkId };
+    if (Date.now() >= until - 5000) {
+      console.log(`\nStill running (${s.progress}). Keep waiting with: node adapter.mjs verify --check ${s.checkId}`);
+      return;
+    }
+  }
+}
+
 const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
 
 async function publish(file, flags) {
@@ -173,6 +260,7 @@ async function publish(file, flags) {
     targets: [{ platforms: ['*'], urls: flags.runsOn }],
     supportAreas: flags.for,
     ...(flags.visibility ? { visibility: flags.visibility } : {}),
+    ...(flags.needs ? { needs: readNeeds(flags.needs) } : {}),
   };
   const r = await tool('adapter_publish', {
     appName: flags.app ? flags.app : APP.appName, descriptor,
@@ -527,7 +615,7 @@ function findings(file, flags) {
 }
 
 const { command, target, flags } = parse(process.argv.slice(2));
-const COMMANDS = { publish, status, share, extension, check, profile, learned, answer, review, findings };
+const COMMANDS = { publish, status, share, extension, check, verify, profile, learned, answer, review, findings };
 if (!COMMANDS[command]) {
   fail('Use: node adapter.mjs publish <file.js> --name … --runs-on … | status <id> | share <id> | extension | check [<id> [--review]] | profile | learned | answer <id> accept|not-now|never | review <file.js> --asked … --runs-on … | findings <report.md> --round N [--rounds M]');
 }

@@ -259,6 +259,8 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       checkId: job.checkId, status: job.status, review: job.review, adapter: job.adapter, ...(job.reused ? { reused: true } : {}),
       submittedAt: job.submittedAt, startedAt: job.startedAt || null, finishedAt: job.finishedAt || null,
       ...(job.status === 'queued' ? { position: position(job.checkId) } : {}),
+      // While it runs: the check, then the reviewers (how many of them have finished).
+      ...(job.status === 'running' && job.stage ? { stage: job.stage, ...(job.stage === 'review' ? { reviewers: REVIEW_FOCUSES.length, reviewersDone: job.reviewersDone || 0 } : {}) } : {}),
       ...(job.error ? { error: job.error } : {}),
       ...(job.result ? { result: job.result } : {}),
     };
@@ -371,6 +373,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     job.status = 'running';
     job.startedAt = new Date(started).toISOString();
     job.where = where;
+    job.stage = 'check';
     saveJob(job);
     log?.info('check.started', { uid: job.uid, checkId: id, review: job.review, where, waitedMs: started - Date.parse(job.submittedAt),
       cpuUsed, cpus, bursting, burstMax: burst?.max || 0, waiting: queue.length });
@@ -388,7 +391,11 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
           : 'The check could not finish: the verifier wrote no report. If the adapter loads, this is the checker\'s problem; try again later.' });
       }
       job.result = { check: trimReport(report) };
-      if (job.review) job.result.review = await runReview(job, dir, report, ctl.signal);
+      if (job.review) {
+        job.stage = 'review';
+        job.reviewersDone = 0;
+        job.result.review = await runReview(job, dir, report, ctl.signal);
+      }
       if (ctl.signal.aborted) throw Object.assign(new Error('cancelled'), { cancelled: true });
       job.status = 'done';
       log?.info('check.done', { uid: job.uid, checkId: id, review: job.review, where, ms: now() - started, failed: job.result.check.summary?.failed, verdict: job.result.review?.verdict });
@@ -404,6 +411,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       }
     } finally {
       stops.delete(id);
+      delete job.stage; delete job.reviewersDone;
       job.finishedAt = new Date(now()).toISOString();
       saveJob(job);
       for (const sub of ['in', 'out', 'review']) rmSync(path.join(dir, sub), { recursive: true, force: true });
@@ -424,6 +432,7 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
       let r;
       try { r = await runner.review({ id: job.checkId.slice(4), dir, file: job.file, token, focus: focus.id, timeoutMs: reviewTimeoutMs, signal }); } finally { tokens.delete(token); }
       const out = readJson(path.join(logs, 'review.json'), 2_000_000);
+      job.reviewersDone = (job.reviewersDone || 0) + 1;
       const done = !!out?.report && !/^\(no report;/.test(out.report);
       if (!done) log?.warn('check.review-no-report', { uid: job.uid, checkId: job.checkId, focus: focus.id, code: r.code, timedOut: r.timedOut, stderr: r.stderr.slice(-600) });
       return { focus, r, out: done ? out : null };

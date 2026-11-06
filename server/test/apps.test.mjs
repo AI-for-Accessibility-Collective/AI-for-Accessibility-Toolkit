@@ -255,6 +255,19 @@ try {
       return r.body.result?.length ? r.body.result : null;
     });
     assert.deepEqual(needs.map(n => [n.key, n.phrase, n.value.start, n.from.app]), [['guide/larger-captions', 'Larger captions', 1.5, 'guide']]);
+
+    // app_verify drives each adaptation through the running app, and puts it back.
+    const r = await call('POST', '/v1/mcp', { token: bo.token, body: { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'app_verify', arguments: { app: 'guide' } } } });
+    const v = r.body.result.structuredContent;
+    assert.equal(r.body.result.isError, false, JSON.stringify(r.body.result));
+    assert.deepEqual(v.adapters[0].steps.map(s => [s.step, s.ok]), [['describe', true], ['query', true], ['check', true], ['apply', true], ['query after', true], ['undo', true]], JSON.stringify(v.adapters[0].steps));
+    assert.equal(adapter.enabled, false, 'the adaptation is put back');
+    assert.deepEqual(v.adapters[0].needs, ['Larger captions']);
+    assert.deepEqual(v.actions, ['Nothing to change from these steps. Next, have people who meet the barriers it is for try it.']);
+    assert.match(r.body.result.content[0].text, /^Museum guide: 1 adaptation verified through the running app\.\n\nCaptions \(meets: Larger captions\): describe ok, query ok, check ok, apply ok, query after ok, undo ok\./);
+    const offline = (await call('POST', '/v1/mcp', { token: bo.token, body: { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'app_verify', arguments: { app: 'nowhere' } } } })).body.result;
+    assert.equal(offline.isError, true);
+    assert.match(offline.content[0].text, /not connected right now/);
   });
 } finally {
   for (const c of connections) await c.close().catch(() => {});

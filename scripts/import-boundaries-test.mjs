@@ -95,6 +95,10 @@ const KNOWN_EDGES = {
     to: ['toolkit/protocol/adapter/index.js', 'toolkit/index.js'],
     why: 'the profile_* MCP tools use the contract\'s tool schemas and descriptions, so the server lists and checks them exactly as apps see them; the weekly suggestion limit it reports falls back to the core\'s own default',
   },
+  'server/src/verify.js': {
+    to: ['toolkit/protocol/adapter/index.js'],
+    why: 'the adapter_verify and app_verify MCP tools use the contract\'s schemas and descriptions, so the server lists and checks them exactly as coding agents see them',
+  },
   'server/src/adapters.js': {
     to: ['toolkit/protocol/adapter/index.js'],
     why: 'marketplace listings may carry an Adapter MCP descriptor, validated and digested with the same contract code',

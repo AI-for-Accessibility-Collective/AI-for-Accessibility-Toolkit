@@ -466,7 +466,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
 
   /** The in-process binding: the same checks as tools/call, for the console's server code and tests.
    *  `auth` is who is calling (a token record); left out, the account's own tools. */
-  async function call(caller, name, args = {}, auth = null) {
+  async function call(caller, name, args = {}, auth = null, opts = {}) {
     const extra = Object.hasOwn(extraTools, name) ? extraTools[name] : null;
     const run = TOOLS[name] || extra?.run;
     if (!run) throw new ToolError('unknown-tool', `There is no tool ${name}.`);
@@ -474,7 +474,7 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
     if (errs.length) throw new ToolError('invalid-arguments', `The arguments do not fit ${name}: ${formatErrors(errs, 3)}`, { errors: errs.slice(0, 20) });
     if (!extra) return run(caller, args ?? {});
     try {
-      return await run(caller, args ?? {}, auth);
+      return await run(caller, args ?? {}, auth, opts);
     } catch (e) {
       throw e instanceof ToolError ? e : new ToolError(e.code || 'failed', e.message);
     }
@@ -506,15 +506,16 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
 
   // ── MCP over HTTP ────────────────────────────────────────────────────────
 
-  function toolResult(result) {
-    return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result, isError: false };
+  // A tool that writes its own report (adapter_verify) gives that as the text; the rest, their JSON.
+  function toolResult(result, textOf = null) {
+    return { content: [{ type: 'text', text: textOf ? textOf(result) : JSON.stringify(result) }], structuredContent: result, isError: false };
   }
   function toolError(e) {
     const result = { error: e.code, message: e.message, ...e.extra };
     return { content: [{ type: 'text', text: e.message }], structuredContent: result, isError: true };
   }
 
-  async function rpc(rec, message) {
+  async function rpc(rec, message, opts = {}) {
     const ok = (result) => ({ jsonrpc: '2.0', id: message.id, result });
     const fail = (code, msg) => ({ jsonrpc: '2.0', id: message.id, error: { code, message: msg } });
     const params = message.params && typeof message.params === 'object' ? message.params : {};
@@ -542,9 +543,9 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
         if (typeof params.name !== 'string' || !(TOOLS[params.name] || Object.hasOwn(extraTools, params.name))) return fail(-32602, `Unknown tool: ${params.name}`);
         const started = Date.now();
         try {
-          const result = await call(rec.uid, params.name, params.arguments ?? {}, rec);
+          const result = await call(rec.uid, params.name, params.arguments ?? {}, rec, opts);
           log.info('registry.call', { uid: rec.uid, tool: params.name, outcome: 'ok', ms: Date.now() - started });
-          return ok(toolResult(result));
+          return ok(toolResult(result, Object.hasOwn(extraTools, params.name) ? extraTools[params.name].textOf : null));
         } catch (e) {
           if (!(e instanceof ToolError)) throw e;
           log.info('registry.call', { uid: rec.uid, tool: params.name, outcome: e.code, ms: Date.now() - started });
@@ -592,6 +593,19 @@ export function createRegistry({ store, withUserLock, authenticate, log, version
     if (Array.isArray(message)) return sendJSON(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32600, message: 'JSON-RPC batches are not supported.' } });
     if (!message || message.jsonrpc !== '2.0') return sendJSON(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Invalid Request' } });
     if (typeof message.method !== 'string' || !Object.hasOwn(message, 'id')) { res.writeHead(202); return res.end(); }
+    // A tool that says how far it is (adapter_verify, app_verify), to a client that asked to hear it:
+    // the answer is a stream of progress notifications, then the result.
+    const tool = message.method === 'tools/call' && Object.hasOwn(extraTools, message.params?.name) ? extraTools[message.params.name] : null;
+    const progressToken = message.params?._meta?.progressToken;
+    if (tool?.progress && progressToken !== undefined && String(req.headers.accept || '').includes('text/event-stream')) {
+      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', 'x-accel-buffering': 'no' });
+      const write = (msg) => { try { res.write(`event: message\ndata: ${JSON.stringify(msg)}\n\n`); } catch { /* the client left */ } };
+      let n = 0;
+      const progress = (text) => write({ jsonrpc: '2.0', method: 'notifications/progress', params: { progressToken, progress: ++n, message: String(text).slice(0, 2000) } });
+      const keepAlive = setInterval(() => { try { res.write(': still working\n\n'); } catch { /* gone */ } }, 15_000);
+      try { write(await rpc(rec, message, { progress })); } finally { clearInterval(keepAlive); res.end(); }
+      return;
+    }
     return sendJSON(res, 200, await rpc(rec, message));
   }
 

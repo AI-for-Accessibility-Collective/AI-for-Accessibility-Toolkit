@@ -136,7 +136,8 @@ identify them.
 ## Adapter checks
 
 A developer can have a published adapter checked on the server
-(`adapter.mjs check <id> [--review]`, `POST /v1/adapters/checks`; see
+(`adapter.mjs check <id> [--review]`, `POST /v1/adapters/checks`, or
+`adapter.mjs verify <id>`, the MCP tool `adapter_verify`; see
 [docs/verification.md](../docs/verification.md), "On the server"). The
 toolkit service checks who may ask and reads the adapter from the registry;
 it sends the job to this host's `POST /checks` (the API port, signed like

@@ -27,6 +27,7 @@ import { createActivityLog } from './activity.js';
 import { createRegistry, REGISTRY_PATH } from './registry.js';
 import { seedBuiltinAdapters, builtinNeeds } from './builtin-adapters.js';
 import { createLearning, pausedFor, librarianObservation } from './learning.js';
+import { createVerify } from './verify.js';
 import { createAccess } from './access.js';
 import { withAiContext } from './ai-context.js';
 import { createProfileEvents, cleanSelection, PROFILE_WRITES } from './profile-events.js';
@@ -62,7 +63,7 @@ const SDK_PREFIX = '/sdk/';
  *  @param {boolean} [config.builtinAdapters]  publish the toolkit's own adapters (builtin-adapters.js) at start; server/index.js turns it on
  *  @returns {((req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => void) & {relay: ReturnType<typeof createRelay>, accounts: ReturnType<typeof createAccounts>, activity: ReturnType<typeof createActivityLog>}}
  */
-export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {}, builtinAdapters = false }) {
+export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0', corsOrigins = [], tokenSecret, relay = createRelay(), log = silentLogger, learningDelayMs, logContent = true, agentHost = {}, ai = {}, builtinAdapters = false, verifyPollMs }) {
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
@@ -145,7 +146,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   });
   const profileEvents = createProfileEvents({ store, authenticate, toolkitHost, withUserLock });
   const learning = createLearning({ toolkitHost, withUserLock, profileEvents, access, log, builtinNeeds: builtinAdapters ? builtinNeeds() : [], ...(learningDelayMs !== undefined ? { extractDelayMs: learningDelayMs } : {}) });
-  const registry = createRegistry({ store, withUserLock, authenticate, log, version, tools: { ...learning.tools, ...access.tools }, onInstallChange: learning.fromRegistry });
+  const verify = createVerify({ checks: adapterChecks, relay, aiCaller: ai.caller || null, log, ...(verifyPollMs ? { pollMs: verifyPollMs } : {}) });
+  const registry = createRegistry({ store, withUserLock, authenticate, log, version, tools: { ...learning.tools, ...access.tools, ...verify.tools }, onInstallChange: learning.fromRegistry });
   learning.useRegistry(registry);
   const accountRoutes = createAccountRoutes({ store, accounts, relay, withUserLock, authenticate, log });
   const adminAccountRoutes = createAdminAccountRoutes({ store, accounts, relay, wipeUser });

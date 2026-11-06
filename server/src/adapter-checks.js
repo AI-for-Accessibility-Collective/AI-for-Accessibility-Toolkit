@@ -112,7 +112,9 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
       // Kept, so that while the host does not answer the toolkit says the last state it saw, not "waiting".
       const moved = c.status !== entry.status || (changes.startedAt || null) !== (entry.startedAt || null);
       const kept = moved ? (await save(uid, entry.checkId, (e) => Object.assign(e, { status: changes.status, startedAt: changes.startedAt }))).entry : entry;
-      return { entry: { ...kept, ...changes }, result: null, position: c.position ?? null };
+      // How far it is: the check, then the reviewers; the check's part of the result once it is in.
+      const live = { ...(c.stage ? { stage: c.stage } : {}), ...(c.reviewers ? { reviewers: c.reviewers, reviewersDone: c.reviewersDone || 0 } : {}), ...(c.result?.check?.summary ? { checkSummary: c.result.check.summary } : {}) };
+      return { entry: { ...kept, ...changes }, result: null, position: c.position ?? null, live };
     }
     const result = c.result || null;
     if (result) await store.writeJSON(RESULT_DOC(uid, entry.checkId), result);
@@ -131,7 +133,13 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
   }
 
   async function ask(req, res, rec) {
-    const body = await readJSON(req, { maxBytes: 10_000 });
+    const r = await start(rec.uid, await readJSON(req, { maxBytes: 10_000 }));
+    return sendJSON(res, r.status, r.body);
+  }
+
+  /** Ask for a check (and a review): {status, body: {check, reused?, framing}, got}. Throws HttpError. */
+  async function start(uid, body) {
+    const rec = { uid };
     const review = body.review === true;
     const { owner, appId, id, got } = await resolve(rec.uid, body);
     const key = { owner, appId, id };
@@ -156,7 +164,7 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
     });
     if (reserved.reused) {
       const { entry, result, position } = await refresh(rec.uid, reserved.reused);
-      return sendJSON(res, 200, { check: { ...entry, ...(position ? { position } : {}), ...(result ? { result } : {}) }, reused: true, framing: CHECK_FRAMING });
+      return { status: 200, got, body: { check: { ...entry, ...(position ? { position } : {}), ...(result ? { result } : {}) }, reused: true, framing: CHECK_FRAMING } };
     }
     const { entry } = reserved;
     // Not sent, or refused: the check never happened, so it is not listed.
@@ -177,29 +185,40 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
       });
     } catch (e) {
       await undo(e);
-      return sendJSON(res, 502, { error: 'checker-unreachable', message: 'The checker is not answering. Try again in a few minutes.' });
+      return { status: 502, body: { error: 'checker-unreachable', message: 'The checker is not answering. Try again in a few minutes.' } };
     }
     if (r.status !== 202) {
       await undo(`host ${r.status}`);
       const status = r.status === 503 ? 503 : 502;
-      return sendJSON(res, status, { error: r.json?.error || 'checker-refused', message: r.json?.message || 'The checker could not take it. Try again in a few minutes.' });
+      return { status, body: { error: r.json?.error || 'checker-refused', message: r.json?.message || 'The checker could not take it. Try again in a few minutes.' } };
     }
     log?.info('check.asked', { uid: rec.uid, checkId: entry.checkId, adapter: `${owner}/${appId}/${id}`, revision: got.revision, review });
-    return sendJSON(res, 202, { check: { ...entry, position: r.json?.check?.position ?? null }, framing: CHECK_FRAMING });
+    return { status: 202, got, body: { check: { ...entry, position: r.json?.check?.position ?? null }, framing: CHECK_FRAMING } };
   }
 
   async function one(res, rec, checkId) {
-    if (!CHECK_ID.test(checkId)) return sendJSON(res, 404, { error: 'not-found' });
-    const index = await readIndex(rec.uid);
+    const r = await status(rec.uid, checkId);
+    return sendJSON(res, r.status, r.body);
+  }
+
+  /** One check as it is now ({status, body: {check, note?, framing}}), with its result once done and, while it runs, its stage. */
+  async function status(uid, checkId) {
+    if (!CHECK_ID.test(checkId)) return { status: 404, body: { error: 'not-found' } };
+    const index = await readIndex(uid);
     const stored = index.checks.find((e) => e.checkId === checkId);
-    if (!stored) return sendJSON(res, 404, { error: 'not-found', message: 'No such check on this account.' });
-    const { entry, result: fresh, position, unreachable } = await refresh(rec.uid, stored);
-    const result = fresh || (FINAL.has(entry.status) ? await store.readJSON(RESULT_DOC(rec.uid, checkId)) : null);
-    return sendJSON(res, 200, {
-      check: { ...entry, ...(position ? { position } : {}), ...(result ? { result } : {}) },
+    if (!stored) return { status: 404, body: { error: 'not-found', message: 'No such check on this account.' } };
+    const { entry, result: fresh, position, unreachable, live } = await refresh(uid, stored);
+    const result = fresh || (FINAL.has(entry.status) ? await store.readJSON(RESULT_DOC(uid, checkId)) : null);
+    return { status: 200, body: {
+      check: { ...entry, ...(position ? { position } : {}), ...(live || {}), ...(result ? { result } : {}) },
       ...(unreachable ? { note: 'The checker is not answering right now; this is the last state the toolkit knew.' } : {}),
       framing: CHECK_FRAMING,
-    });
+    } };
+  }
+
+  /** Keep what the toolkit says about a check: a few lines of what the adapter does, for its report. */
+  async function annotate(uid, checkId, about) {
+    await save(uid, checkId, (e) => { e.about = String(about || '').slice(0, 1200); });
   }
 
   async function list(res, rec, search) {
@@ -212,7 +231,7 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
     return sendJSON(res, 200, { checks, framing: CHECK_FRAMING });
   }
 
-  return async function route(req, res, method, pathname, search = '') {
+  async function route(req, res, method, pathname, search = '') {
     if (!base || !secret) return sendJSON(res, 503, { error: 'checks-unavailable', message: 'Server checks are not set up on this toolkit. Run the check on your own computer instead: node scripts/verify-adapters/run.mjs --check <adapter.js>.' });
     if (!bearerFrom(req)) return sendJSON(res, 401, { error: 'unauthorized' });
     const rec = await authenticate(req);
@@ -230,5 +249,8 @@ export function createAdapterChecks({ store, withUserLock, authenticate, registr
     } catch (e) {
       return sendHttpError(res, e);
     }
-  };
+  }
+
+  // The verify tools (verify.js) use these too.
+  return Object.assign(route, { start, status, annotate, available: () => !!(base && secret), framing: CHECK_FRAMING });
 }

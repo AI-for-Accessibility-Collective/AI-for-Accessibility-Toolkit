@@ -95,12 +95,29 @@ Steps 1 to 8 need Chromium (`npx playwright install chromium`).
 ## On the server
 
 A developer, or their coding agent, can have a published adapter checked
-on the toolkit's server instead of on their own computer. It is optional
-and runs only when asked:
+on the toolkit's server instead of on their own computer:
 
 ```bash
+node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs verify bigger-buttons [--no-review]
 node .claude/skills/ai4a11y-toolkit/scripts/adapter.mjs check bigger-buttons [--review]
 ```
+
+`verify` is what the skill's coding agent runs on its own after it
+publishes an adapter. It is the MCP tool `adapter_verify` on `/v1/mcp`
+(`server/src/verify.js`): it sums up what the adapter does with the
+service's model, runs the check with the review (the review is on unless
+`--no-review`), sends progress as it goes (MCP progress notifications,
+when the client sends a `progressToken`), and ends with a short report:
+what it does, the failed runs, the review's findings, and recommended
+actions. A full verification takes about 13 to 15 minutes; after
+`waitSeconds` (240 by default) it returns its check's id, and calling again
+with `checkId` keeps waiting. `check` is the same check without the summary
+or the actions, with the review only when asked.
+
+`app_verify` (`verify --app <app id>`) does the same for an app connected
+with Adapter MCP, through the running app: for each adaptation, describe,
+targets, read, check, apply with its default parameters, read again, and
+undo. It does not read the app's code.
 
 - **What runs.** Steps 2 to 8, as `run.mjs --check` runs them, on the
   adapter's current revision: every test page, each also on a narrow
