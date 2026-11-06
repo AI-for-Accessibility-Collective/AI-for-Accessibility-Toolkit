@@ -111,15 +111,16 @@ function baseEnv(extra = {}) {
  *   check   --network none
  *   review  the check network, which reaches the host's model proxy and nothing else (vm/setup.sh)
  */
-export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, rubricsDir, modelUrl, runtime = 'runsc', cpus = '8', memory = '6g', pids = '2048', log }) {
+export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, rubricsDir, modelUrl, runtime = 'runsc', cpus = '24', memory = '8g', pids = '4096', log }) {
   if (!image) throw new Error('AGENT_CHECK_IMAGE is needed for checks on the VM.');
   // Runs at a time in a check: fewer than its CPUs. With as many runs as CPUs
   // or more, timing (layout shift, settling) makes runs fail that are fine
-  // (measured on the VM: 8 CPUs, 6 at a time, 82 s for 129 runs, under 3 GB).
+  // (measured on the VM, 129 runs: 8 CPUs, 6 at a time, 82 s; 24 CPUs, 16 at
+  // a time 43 s, 20 at a time 33 s, under 4.5 GB; 16 CPUs, 16 at a time, a run failed).
   const runsAtOnce = Math.max(1, Math.floor(Number(cpus) * 3 / 4));
   const name = (id, step) => `ai4a11y-check-${id}-${step}`;
   const limits = [`--runtime=${runtime}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
-    `--cpus=${cpus}`, `--memory=${memory}`, `--pids-limit=${pids}`, '--shm-size=1g', '--label', 'ai4a11y.check=1'];
+    `--cpus=${cpus}`, `--memory=${memory}`, `--pids-limit=${pids}`, '--shm-size=2g', '--label', 'ai4a11y.check=1'];
   const stop = (id, step) => () => execFile('docker', ['rm', '-f', name(id, step)], () => {});
 
   return {

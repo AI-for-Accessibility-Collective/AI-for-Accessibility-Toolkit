@@ -220,7 +220,7 @@ await test('on the VM: gVisor, no network for the check, the model network for t
   }
   assert.equal(after(check.args, '--network'), 'none');
   assert.equal(after(check.args, '--spec'), '/job/check.json', 'where it runs, and the person\'s pages, from the read-only job folder');
-  assert.ok(check.args.includes('--cpus=8') && check.args.includes('VERIFY_CHECK_PARALLEL=6'), 'six runs at a time on eight CPUs');
+  assert.ok(check.args.includes('--cpus=24') && check.args.includes('VERIFY_CHECK_PARALLEL=18'), 'eighteen runs at a time on 24 CPUs');
   assert.equal(check.token, null);
   assert.equal(after(review.args, '--network'), 'ai4a11y-chk');
   assert.equal(review.token, 'chk_TOKEN');
