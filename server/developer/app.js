@@ -8,6 +8,8 @@ import { createAppsPage } from './apps.js';
 import { createAccountPage } from './account.js';
 import { icon } from './icons.js';
 import { setupTextSize } from './text-size.js';
+import { applyProfileReading } from './profile-reading.js';
+import { PROFILE_AREAS, PROFILE_NEEDS, cleanProfileReading } from './toolkit/blocks/profile-words.js';
 
 const $ = id => document.getElementById(id);
 setupTextSize();
@@ -133,6 +135,18 @@ function renderEditor() {
       editor.element.setAttribute('aria-labelledby', label.id);
     }
     if (path.join('.') === 'fields.needs') row.classList.add('needs-row');
+    let control = editor.element;
+    if (path.join('.') === 'freeText') {
+      // The toolkit reads the words, as the extension's Profile tab does, and changes what differs below.
+      control = element('div', 'free-text');
+      const update = element('button', 'secondary', 'Update');
+      update.type = 'button'; update.id = 'free-text-update';
+      update.setAttribute('aria-describedby', 'free-text-hint');
+      const hint = element('p', 'hint', 'Reads the text and changes the support areas, needs and plain language below only where they differ.');
+      hint.id = 'free-text-hint';
+      update.addEventListener('click', () => run(() => updateFromWords(editor)).then(() => $('free-text-update')?.focus()));
+      control.append(editor.element, update, hint);
+    }
     const remove = element('button', 'remove');
     remove.append(icon('remove'));
     remove.type = 'button';
@@ -145,11 +159,28 @@ function renderEditor() {
       renderEditor(); modified();
       status(`Removed ${path.join('.')} from the draft. Apply to update the toolkit.`);
     }));
-    row.append(label, editor.element, remove);
+    row.append(label, control, remove);
     $('key-list').append(row);
   });
   $('profile-json').value = JSON.stringify(draft, null, 2);
   updateControls();
+}
+async function updateFromWords(editor) {
+  if (!client) throw new Error('Sign in or connect first: the toolkit reads the text.');
+  const words = editor.read().trim();
+  if (!words) throw new Error('Describe the person’s abilities in freeText first, in a sentence or two.');
+  status('Reading the text…');
+  const answer = await client.readWords(words);
+  const reading = cleanProfileReading(answer.text);
+  if (!reading) throw new Error(answer.reason === 'no-answer' ? 'The toolkit found nothing to change in the text. Say a little more about what gets in the way, and update again.' : 'The toolkit could not work out what pages should do from the text. Nothing below changed.');
+  const before = readEditor(), next = structuredClone(before);
+  const changes = applyProfileReading(next, words, reading, { areas: PROFILE_AREAS, needs: PROFILE_NEEDS });
+  if (JSON.stringify(next) !== JSON.stringify(before)) {
+    draft = validateProfile(next);
+    renderEditor(); modified();
+  }
+  const said = changes.length ? `Updated from the text: ${changes.join('; ')}.` : 'Nothing below needed to change.';
+  status(`${said}${reading.summary ? ` ${reading.summary}` : ''} Apply to update the toolkit.`);
 }
 function renderNewValue() {
   newValueEditor = createValueEditor({ value: structuredClone(VALUE_DEFAULTS[$('new-type').value]), path: ['newValue'], id: 'new-value', onChange() {} });

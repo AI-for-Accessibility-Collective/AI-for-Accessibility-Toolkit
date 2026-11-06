@@ -1381,3 +1381,17 @@ a.external .icon {
     flex-basis: 45%;
   }
 }
+
+.free-text {
+  display: grid;
+  gap: calc(6px * var(--space));
+  justify-items: start;
+}
+
+.free-text textarea {
+  width: 100%;
+}
+
+.free-text .hint {
+  margin: 0;
+}

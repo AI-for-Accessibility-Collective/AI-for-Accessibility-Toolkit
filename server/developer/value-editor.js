@@ -1,5 +1,6 @@
 // Native, labelled controls. Readers return typed values without JSON coercion.
 import { icon } from './icons.js';
+import { PROFILE_NEEDS } from './toolkit/blocks/profile-words.js';
 
 const ENUMS = {
   'metaPreferences.consentBoundary': ['profile-only', 'all-tiers'],
@@ -8,7 +9,11 @@ const ENUMS = {
   'fields.visionKind': ['blind', 'lowVision', 'colorBlind'],
 };
 const AREAS = ['vision', 'hearing', 'motor', 'cognitive', 'reading', 'sensory'];
-const DIMENSIONS = ['textSize', 'lineSpacing', 'letterSpacing', 'reduceMotion', 'darkTheme', 'captions', 'simplify', 'contrast', 'readAloudRate', 'readAloud', 'describeImages', 'labelControls', 'repairLandmarks', 'announceUpdates', 'spaAnnounce', 'skipLinks', 'pageStructure', 'keyboardAccess'];
+// A need's dimension in the words the extension's Profile tab uses ("Larger
+// text"); the profile keeps the toolkit's name for it (textSize).
+const DIMENSION_NAMES = Object.fromEntries(PROFILE_NEEDS.map(d => [d.id, d.name]));
+// A need's level is stored as its `strength` (toolkit/core/strength.js).
+const LEVEL_NAMES = { floor: 'Must have', preference: 'Preferred', hint: 'Nice to have' };
 export const VALUE_DEFAULTS = { string: '', number: 0, boolean: true, array: [], object: {}, null: null };
 const typeOf = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
 function node(tag, className, text) {
@@ -31,14 +36,14 @@ function field(labelText, editor) {
   group.append(label, editor.element);
   return group;
 }
-function dropdown(value, choices, id, onChange, optional = false, customLabel) {
+function dropdown(value, choices, id, onChange, optional = false, customLabel, names = {}) {
   const values = [...(optional ? [undefined] : []), ...choices];
   const custom = customLabel && typeof value === 'string' && !values.includes(value);
   if (!values.includes(value) && !custom) values.push(value);
   const select = node('select');
   select.id = id;
   values.forEach((item, index) => {
-    const option = node('option', '', item === undefined ? 'Not set' : String(item));
+    const option = node('option', '', item === undefined ? 'Not set' : names[item] ?? String(item));
     option.value = String(index); select.append(option);
   });
   if (!customLabel) {
@@ -78,7 +83,6 @@ function textEditor(value, id, onChange, multiline = false) {
 function numberEditor(value, id, onChange, label, optional = false) {
   const input = node('input');
   input.id = id; input.type = 'number'; input.step = 'any'; input.value = value ?? '';
-  if (label.endsWith('confidence')) { input.min = '0'; input.max = '1'; }
   input.addEventListener('input', onChange);
   return { element: input, id, read() {
     if (optional && input.value === '' && !input.validity.badInput) return value === null ? null : undefined;
@@ -159,30 +163,28 @@ function needsEditor(value, path, id, onChange) {
     const properties = node('div', 'need-properties');
     const editors = new Map();
     const position = () => entries.indexOf(entry) + 1;
-    const make = (key, editor) => {
-      editors.set(key, editor); properties.append(field(key[0].toUpperCase() + key.slice(1), editor));
+    const make = (key, editor, label = key[0].toUpperCase() + key.slice(1)) => {
+      editors.set(key, editor); properties.append(field(label, editor));
     };
     const needPath = [...path, String(sequence)];
     const update = () => { updateSummary(); onChange(); };
-    const dimension = textEditor(need.dimension, `${entryId}-dimension`, update);
-    const dimensions = node('datalist'); dimensions.id = `${entryId}-dimensions`;
-    for (const name of DIMENSIONS) { const option = node('option'); option.value = name; dimensions.append(option); }
-    dimension.element.setAttribute('list', dimensions.id);
-    make('dimension', dimension);
+    const dimension = dropdown(need.dimension, Object.keys(DIMENSION_NAMES), `${entryId}-dimension`, update, false, 'dimension', DIMENSION_NAMES);
+    make('dimension', dimension, 'Need');
     make('value', typedEditor(need.value, [...needPath, 'value'], `${entryId}-value`, update));
-    make('strength', dropdown(need.strength, ['floor', 'preference', 'hint'], `${entryId}-strength`, onChange, true, 'strength'));
+    make('strength', dropdown(need.strength, Object.keys(LEVEL_NAMES), `${entryId}-strength`, onChange, true, 'level', LEVEL_NAMES), 'Level');
     make('unit', dropdown(need.unit, ['ratio', 'em', 'percent', 'boolean', 'enum'], `${entryId}-unit`, onChange, true, 'unit'));
-    make('confidence', numberEditor(need.confidence, `${entryId}-confidence`, onChange, 'need confidence', true));
     const source = createValueEditor({ value: need.source ?? '', path: [...needPath, 'source'], id: `${entryId}-source`, onChange });
     make('source', { ...source, read: () => source.read() === '' ? (need.source == null ? need.source : '') : source.read() });
-    for (const [key, child] of Object.entries(need)) if (!editors.has(key)) {
+    // Confidence is not part of a need the console edits: it is dropped.
+    for (const [key, child] of Object.entries(need)) if (!editors.has(key) && key !== 'confidence') {
       make(key, createValueEditor({ value: child, path: [...needPath, key], id: `${entryId}-extra-${editors.size}`, onChange }));
     }
     function updateSummary() {
       let valueText;
       try { const current = editors.get('value').read(); valueText = typeof current === 'string' ? current : JSON.stringify(current); }
       catch { valueText = 'Incomplete value'; }
-      const name = dimension.read() || 'Untitled need';
+      let name;
+      try { name = DIMENSION_NAMES[dimension.read()] || dimension.read() || 'Untitled need'; } catch { name = 'Untitled need'; }
       preview.textContent = `${name} · ${valueText}`;
       preview.title = `${name} · ${valueText}`;
     }
@@ -193,7 +195,7 @@ function needsEditor(value, path, id, onChange) {
           const next = editor.read();
           if (next !== undefined) Object.defineProperty(result, key, { value: next, enumerable: true, writable: true, configurable: true });
         }
-        if (!result.dimension.trim()) throw new Error(`Enter a dimension for need ${position()}.`);
+        if (!result.dimension.trim()) throw new Error(`Choose what need ${position()} is.`);
       } catch (error) {
         card.open = true;
         throw error;
@@ -204,7 +206,7 @@ function needsEditor(value, path, id, onChange) {
       entries.splice(entries.indexOf(entry), 1); card.remove(); renumber(); addButton.focus(); onChange();
     });
     body.append(properties, remove); card.append(body); entries.push(entry); list.append(card); renumber(); updateSummary();
-    if (notify) { card.open = true; dimension.element.focus(); onChange(); }
+    if (notify) { card.open = true; dimension.element.querySelector('select').focus(); onChange(); }
   }
   function renumber() { entries.forEach((entry, index) => { entry.legend.textContent = `Need ${index + 1}`; entry.title.textContent = `Need ${index + 1}`; }); }
   const addButton = button('+ Add need', () => add({ dimension: 'textSize', value: 1, strength: 'preference' }, true));

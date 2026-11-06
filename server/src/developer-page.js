@@ -20,6 +20,10 @@ export const DEVELOPER_ASSETS = new Map([
   ['/developer/icons.svg', 'icons.svg', 'image/svg+xml'],
   ['/developer/icons.js', 'icons.js', 'text/javascript'],
   ['/developer/text-size.js', 'text-size.js', 'text/javascript'],
+  ['/developer/profile-reading.js', 'profile-reading.js', 'text/javascript'],
+  // The profile's plain words, shared with the extension's Profile tab.
+  ['/developer/toolkit/blocks/profile-words.js', '../../toolkit/blocks/profile-words.js', 'text/javascript'],
+  ['/developer/toolkit/core/ability.js', '../../toolkit/core/ability.js', 'text/javascript'],
 ].map(([path, file, type]) => [path, {
   body: readFileSync(new URL(`../developer/${file}`, import.meta.url)),
   type: type.startsWith('text/') ? `${type}; charset=utf-8` : type,

@@ -83,13 +83,13 @@ const PROFILE_WRITES = new Set(['replaceProfile', 'setProfileField', 'setProfile
 export function createClient(baseUrl, token, fetcher = fetch) {
   const base = instanceBase(baseUrl);
   if (!token.trim()) throw new Error('Enter a toolkit access token.');
-  async function request(path, body, method) {
+  async function request(path, body, method, timeoutMs = 15000) {
     let response;
     try {
       response = await fetcher(base + path, {
         method: method || (body ? 'POST' : 'GET'), credentials: 'omit', cache: 'no-store',
         headers: { authorization: `Bearer ${token.trim()}`, ...(body ? { 'content-type': 'application/json' } : {}) },
-        ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000),
+        ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(timeoutMs),
       });
     } catch { throw new Error('Cannot reach the instance. Check its URL and allowed CORS origins.'); }
     const payload = await response.json().catch(() => null);
@@ -108,6 +108,8 @@ export function createClient(baseUrl, token, fetcher = fetch) {
       if (PROFILE_WRITES.has(method) && typeof window !== 'undefined') window.postMessage({ source: 'ai4a11y-console', type: 'profile-changed' }, location.origin);
       return result;
     },
+    // The toolkit's reading of a person's own words, as the extension's Profile tab asks for it: {text, reason}.
+    readWords: (words) => request('/v1/ai/text', { task: 'profile', input: words, adapter: 'toolkit/profile' }, 'POST', 60000),
     // Which preset is selected, and whether it has been edited since (CONTRACT.md "Profile selection").
     selection: () => request('/v1/profile/selection'),
     // The adapter marketplace (CONTRACT.md "Adapter marketplace").

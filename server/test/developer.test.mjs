@@ -8,6 +8,8 @@ import { fileStore } from '../src/store.js';
 import { createToolkitHost } from '../src/toolkit-host.js';
 import { BUILTIN_PROFILES } from '../developer/profiles.js';
 import { createClient, profileRows, setKey, removeKey, readSaved, writeSaved, SAVED_KEY } from '../developer/client.js';
+import { applyProfileReading } from '../developer/profile-reading.js';
+import { PROFILE_AREAS, PROFILE_NEEDS } from '../../toolkit/blocks/profile-words.js';
 
 const dir = await mkdtemp(path.join(tmpdir(), 'developer-test-'));
 const store = fileStore(dir);
@@ -15,7 +17,7 @@ const server = http.createServer(createApp({ store, adminPassword: 'test-admin',
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
 try {
-  for (const asset of ['/developer', '/developer/', '/developer/app.js', '/developer/adapters.js', '/developer/styles.css', '/developer/client.js', '/developer/value-editor.js', '/developer/profiles.js']) {
+  for (const asset of ['/developer', '/developer/', '/developer/app.js', '/developer/adapters.js', '/developer/styles.css', '/developer/client.js', '/developer/value-editor.js', '/developer/profiles.js', '/developer/profile-reading.js', '/developer/toolkit/blocks/profile-words.js', '/developer/toolkit/core/ability.js']) {
     const response = await fetch(base + asset);
     assert.equal(response.status, 200, asset);
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
@@ -70,6 +72,33 @@ try {
   assert.deepEqual(readSaved(storage), saved);
   storage.value = '{}'; assert.throws(() => readSaved(storage), /invalid format/);
   storage.value = '[{"id":"wai-1","name":"bad","profile":{}}]'; assert.throws(() => readSaved(storage), /invalid/);
+  // freeText's Update changes only what differs from the reading.
+  const vocabulary = { areas: PROFILE_AREAS, needs: PROFILE_NEEDS };
+  const before = {
+    freeText: 'old', supportAreas: ['hearing', 'custom-area'], metaPreferences: { language: 'plain' },
+    fields: { wordsSummary: 'Captions.', visionKind: 'lowVision', needs: [
+      { dimension: 'captions', value: true, strength: 'floor', source: 'developer' },
+      { dimension: 'textSize', value: 1.25, strength: 'hint' },
+      { dimension: 'reduceMotion', value: false },
+      { dimension: 'custom', value: 'kept' },
+    ] },
+  };
+  const read = structuredClone(before);
+  const changes = applyProfileReading(read, 'new words', { supportAreas: ['hearing', 'vision'], needs: [{ dimension: 'captions', value: true }, { dimension: 'textSize', value: 1.5 }, { dimension: 'darkTheme', value: true }], plainLanguage: true, summary: 'Captions.' }, vocabulary);
+  assert.deepEqual(changes, ['added support for vision', 'added Dark pages', 'changed Larger text from 125% to 150%']);
+  assert.equal(read.freeText, 'new words');
+  assert.deepEqual(read.supportAreas, ['hearing', 'custom-area', 'vision']);
+  assert.deepEqual(read.fields.needs, [
+    before.fields.needs[0],
+    { dimension: 'textSize', value: 1.5, strength: 'hint', source: 'person-words' },
+    before.fields.needs[2],
+    before.fields.needs[3],
+    { dimension: 'darkTheme', value: true, strength: 'preference', source: 'person-words' },
+  ]);
+  assert.equal(read.fields.visionKind, 'lowVision');
+  const again = structuredClone(read);
+  assert.deepEqual(applyProfileReading(again, 'new words', { supportAreas: ['hearing', 'vision'], needs: [{ dimension: 'captions', value: true }, { dimension: 'textSize', value: 1.5 }, { dimension: 'darkTheme', value: true }], plainLanguage: true, summary: 'Captions.' }, vocabulary), []);
+  assert.deepEqual(again, read, 'the same reading again changes nothing');
   console.log('Developer interface: assets, auth, CORS, all nine presets, toolkit updates, key editing, and persistence passed.');
 } finally {
   await new Promise(resolve => server.close(resolve));

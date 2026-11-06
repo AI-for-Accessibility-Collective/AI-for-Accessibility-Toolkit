@@ -13,10 +13,12 @@ import { editableProfile } from '../developer/client.js';
 
 const dir = await mkdtemp(path.join(tmpdir(), 'developer-e2e-'));
 const store = fileStore(dir), host = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
-const server = http.createServer(createApp({ store, adminPassword: 'test-admin', toolkitHost: host }));
+// The model behind freeText's Update: one fixed reading of the words.
+const ai = { caller: async () => JSON.stringify({ supportAreas: ['vision'], needs: { textSize: 1.5, captions: true }, plainLanguage: true, summary: 'Larger text and captions.' }), price: () => ({ input: 0, output: 0 }) };
+const server = http.createServer(createApp({ store, adminPassword: 'test-admin', toolkitHost: host, ai }));
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
-const remote = http.createServer(createApp({ store, adminPassword: 'test-admin', toolkitHost: host, corsOrigins: [base] }));
+const remote = http.createServer(createApp({ store, adminPassword: 'test-admin', toolkitHost: host, corsOrigins: [base], ai }));
 await new Promise(resolve => remote.listen(0, '127.0.0.1', resolve));
 let browser;
 try {
@@ -63,25 +65,28 @@ try {
   const customValues = {
     supportAreas: ['custom-area'], freeText: '', 'literal.dot': 12,
     fields: { visionKind: 'lowVision', needs: [
-      { dimension: 'custom', value: { label: 'keep', flags: [1, true, { enabled: false }] }, strength: 'custom-strength', unit: 'custom-unit', confidence: null, source: null, extension: { enabled: false } },
+      { dimension: 'custom', value: { label: 'keep', flags: [1, true, { enabled: false }] }, strength: 'custom-strength', unit: 'custom-unit', confidence: 0.4, source: null, extension: { enabled: false } },
       { dimension: 'nullable', value: null },
     ] },
     metaPreferences: { consentBoundary: 'custom-boundary', language: 'custom-language', sharing: 'personal' },
   };
+  // The console does not edit a need's confidence: applying drops it.
+  const customKept = structuredClone(customValues);
+  delete customKept.fields.needs[0].confidence;
   await librarian.replaceProfile(customValues);
   await page.click('#refresh');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Read the current profile'));
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
-  assert.deepEqual(editableProfile(await librarian.getProfile()), customValues, 'custom enum choices, nulls, nested values, unknown properties, and literal dots must survive');
+  assert.deepEqual(editableProfile(await librarian.getProfile()), customKept, 'custom enum choices, nulls, nested values, unknown properties, and literal dots must survive');
   for (const key of ['metaPreferences.consentBoundary', 'metaPreferences.language', 'metaPreferences.sharing', 'fields.visionKind']) {
     await page.getByRole('button', { name: `Other value for ${key}`, exact: true }).click();
     await page.getByLabel(`Other ${key}`, { exact: true }).fill(`custom-${key}`);
   }
   const customNeed = await expandNeed(1);
-  for (const property of ['strength', 'unit']) {
-    await customNeed.getByRole('button', { name: `Other value for ${property}`, exact: true }).click();
-    await customNeed.getByLabel(`Other ${property}`, { exact: true }).fill(`custom-${property}`);
+  for (const [label, property] of [['level', 'strength'], ['unit', 'unit']]) {
+    await customNeed.getByRole('button', { name: `Other value for ${label}`, exact: true }).click();
+    await customNeed.getByLabel(`Other ${label}`, { exact: true }).fill(`custom-${property}`);
   }
   // Switching to a known value hides the input without losing its text.
   const customConsent = page.getByRole('combobox', { name: 'metaPreferences.consentBoundary', exact: true });
@@ -92,7 +97,7 @@ try {
   await page.getByLabel('Other metaPreferences.consentBoundary', { exact: true }).fill('');
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Enter a custom value'));
-  assert.deepEqual(editableProfile(await librarian.getProfile()), customValues, 'blank Other never overwrites the toolkit');
+  assert.deepEqual(editableProfile(await librarian.getProfile()), customKept, 'blank Other never overwrites the toolkit');
   await page.getByLabel('Other metaPreferences.consentBoundary', { exact: true }).fill('custom-metaPreferences.consentBoundary');
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
@@ -137,14 +142,16 @@ try {
   await page.getByRole('textbox', { name: 'freeText', exact: true }).fill('Plain text needs no JSON quotes.');
   const firstNeed = await expandNeed(1);
   await firstNeed.getByRole('switch', { name: 'Value', exact: true }).uncheck();
-  await firstNeed.getByLabel('Strength', { exact: true }).selectOption({ label: 'floor' });
+  // The need reads as the extension names it; its level in plain words.
+  assert.equal(await firstNeed.getByRole('combobox', { name: 'Need', exact: true }).locator('option:checked').innerText(), 'Captions on videos');
+  assert.equal(await firstNeed.getByLabel('Confidence', { exact: true }).count(), 0);
+  await firstNeed.getByLabel('Level', { exact: true }).selectOption({ label: 'Must have' });
   await firstNeed.getByLabel('Unit', { exact: true }).selectOption({ label: 'boolean' });
-  await firstNeed.getByLabel('Confidence', { exact: true }).fill('0.8');
   await firstNeed.getByLabel('Source', { exact: true }).fill('developer');
   await page.getByRole('button', { name: '+ Add need', exact: true }).click();
   const secondNeed = page.getByRole('group', { name: 'Need 2', exact: true });
   await secondNeed.getByLabel('Value', { exact: true }).fill('1.5');
-  assert.match(await page.locator('.need-card').nth(1).locator('summary').innerText(), /textSize · 1.5/);
+  assert.match(await page.locator('.need-card').nth(1).locator('summary').innerText(), /Larger text · 1.5/);
   await page.getByRole('button', { name: '+ Add need', exact: true }).click();
   const thirdNeed = page.getByRole('group', { name: 'Need 3', exact: true });
   await thirdNeed.getByRole('combobox', { name: /value type/ }).selectOption({ label: 'string' });
@@ -167,9 +174,27 @@ try {
   assert.equal(typedProfile.metaPreferences.consentBoundary, 'all-tiers');
   assert.equal(typedProfile.freeText, 'Plain text needs no JSON quotes.');
   assert.deepEqual(typedProfile.fields.needs, [
-    { dimension: 'captions', value: false, strength: 'floor', unit: 'boolean', confidence: 0.8, source: 'developer' },
+    { dimension: 'captions', value: false, strength: 'floor', unit: 'boolean', source: 'developer' },
     { dimension: 'textSize', value: 1.5, strength: 'preference' },
   ]);
+  // Update under freeText: the toolkit reads the words, and only what differs below changes.
+  await page.getByRole('textbox', { name: 'freeText', exact: true }).fill('Small text is hard for me to read, and I need captions.');
+  await page.getByRole('button', { name: 'Update', exact: true }).click();
+  await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Updated from the text'));
+  assert.equal(await page.locator('#status').innerText(), 'Updated from the text: added support for vision; removed support for movement and dexterity; changed Captions on videos; updated the summary; turned plain language on. Larger text and captions. Apply to update the toolkit.');
+  await page.click('#apply');
+  await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
+  const updated = await librarian.getProfile();
+  assert.deepEqual(updated.supportAreas, ['custom-area', 'vision']);
+  assert.deepEqual(updated.fields.needs, [
+    { dimension: 'captions', value: true, strength: 'floor', unit: 'boolean', source: 'person-words' },
+    { dimension: 'textSize', value: 1.5, strength: 'preference' },
+  ], 'a need with the same value stays as it was; a changed one keeps its level');
+  assert.equal(updated.fields.wordsSummary, 'Larger text and captions.');
+  assert.equal(updated.metaPreferences.language, 'plain');
+  await page.getByRole('button', { name: 'Update', exact: true }).click();
+  await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Nothing below needed to change'));
+  assert.equal(await page.locator('#draft-state').innerText(), 'Temporary · applied', 'an update with nothing to change leaves the draft as it was');
   await page.fill('#new-key', 'fields.testFlag');
   await page.getByRole('switch', { name: 'Value', exact: false }).last().check();
   await page.getByRole('button', { name: '+ Add key', exact: true }).click();
