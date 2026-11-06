@@ -65,7 +65,7 @@ Structurally, at the level the Collective could do well in a one-year research p
   the right team.
 - The project's own rule, stated in [CONTRIBUTING](../CONTRIBUTING.md):
   people with disabilities must be involved in design and evaluation,
-  participants are compensated, and ability profiles are not simulated
+  participants are paid where possible, and ability profiles are not simulated
   without community input.
 
 ## What that process means for you
