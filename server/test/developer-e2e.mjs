@@ -14,7 +14,8 @@ import { editableProfile } from '../developer/client.js';
 const dir = await mkdtemp(path.join(tmpdir(), 'developer-e2e-'));
 const store = fileStore(dir), host = createToolkitHost({ store, geminiCaller: async () => { throw new Error('LLM disabled in test'); } });
 // The model behind freeText's Update: one fixed reading of the words.
-const ai = { caller: async () => JSON.stringify({ supportAreas: ['vision'], needs: { textSize: 1.5, captions: true }, plainLanguage: true, summary: 'Larger text and captions.' }), price: () => ({ input: 0, output: 0 }) };
+const prompts = [];
+const ai = { caller: async (prompt) => (prompts.push(prompt), JSON.stringify({ supportAreas: ['vision'], needs: { textSize: 1.5, captions: true }, plainLanguage: true, summary: 'Larger text and captions.' })), price: () => ({ input: 0, output: 0 }) };
 const server = http.createServer(createApp({ store, adminPassword: 'test-admin', toolkitHost: host, ai }));
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
@@ -79,9 +80,9 @@ try {
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
   assert.deepEqual(editableProfile(await librarian.getProfile()), customKept, 'custom enum choices, nulls, nested values, unknown properties, and literal dots must survive');
-  for (const key of ['metaPreferences.consentBoundary', 'metaPreferences.language', 'metaPreferences.sharing', 'fields.visionKind']) {
-    await page.getByRole('button', { name: `Other value for ${key}`, exact: true }).click();
-    await page.getByLabel(`Other ${key}`, { exact: true }).fill(`custom-${key}`);
+  for (const [name, key] of [['Consent boundary', 'metaPreferences.consentBoundary'], ['Language', 'metaPreferences.language'], ['Sharing', 'metaPreferences.sharing'], ['Kind of vision support', 'fields.visionKind']]) {
+    await page.getByRole('button', { name: `Other value for ${name}`, exact: true }).click();
+    await page.getByLabel(`Other ${name}`, { exact: true }).fill(`custom-${key}`);
   }
   const customNeed = await expandNeed(1);
   for (const [label, property] of [['level', 'strength'], ['unit', 'unit']]) {
@@ -89,16 +90,16 @@ try {
     await customNeed.getByLabel(`Other ${label}`, { exact: true }).fill(`custom-${property}`);
   }
   // Switching to a known value hides the input without losing its text.
-  const customConsent = page.getByRole('combobox', { name: 'metaPreferences.consentBoundary', exact: true });
-  await customConsent.selectOption({ label: 'profile-only' });
-  assert.equal(await page.getByLabel('Other metaPreferences.consentBoundary', { exact: true }).isHidden(), true);
+  const customConsent = page.getByRole('combobox', { name: 'Consent boundary', exact: true });
+  await customConsent.selectOption({ label: 'Profile only' });
+  assert.equal(await page.getByLabel('Other Consent boundary', { exact: true }).isHidden(), true);
   await customConsent.selectOption({ label: 'Other' });
-  assert.equal(await page.getByLabel('Other metaPreferences.consentBoundary', { exact: true }).inputValue(), 'custom-metaPreferences.consentBoundary');
-  await page.getByLabel('Other metaPreferences.consentBoundary', { exact: true }).fill('');
+  assert.equal(await page.getByLabel('Other Consent boundary', { exact: true }).inputValue(), 'custom-metaPreferences.consentBoundary');
+  await page.getByLabel('Other Consent boundary', { exact: true }).fill('');
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Enter a custom value'));
   assert.deepEqual(editableProfile(await librarian.getProfile()), customKept, 'blank Other never overwrites the toolkit');
-  await page.getByLabel('Other metaPreferences.consentBoundary', { exact: true }).fill('custom-metaPreferences.consentBoundary');
+  await page.getByLabel('Other Consent boundary', { exact: true }).fill('custom-metaPreferences.consentBoundary');
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
   const customUpdated = await librarian.getProfile();
@@ -121,7 +122,10 @@ try {
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile 6 loaded'));
   assert.equal((await librarian.getProfile()).fields.visionKind, undefined);
   assert.deepEqual((await librarian.getAbilityModel()).supportAreas, ['hearing']);
-  const areas = page.getByRole('combobox', { name: 'supportAreas', exact: true });
+  const areas = page.getByRole('combobox', { name: 'Support areas', exact: true });
+  // Fields read by their plain names, with a caption and, for the JSON, their key path.
+  assert.match(await page.locator('.key-label').filter({ has: page.locator('label', { hasText: /^Support areas$/ }) }).innerText(), /Support areas\nThe broad areas the person wants support with\.\nsupportAreas/);
+  assert.equal(await areas.getAttribute('aria-describedby') !== null, true);
   await areas.fill('motor');
   await areas.press('Enter');
   // The first edit moves the work into the temporary profile; Profile 6 itself is unchanged.
@@ -134,19 +138,19 @@ try {
   assert.equal(await page.inputValue('#profile-name'), 'Profile 6 (modified)');
   assert.equal(await page.locator('#draft-state').innerText(), 'Temporary · not applied');
   assert.deepEqual((await librarian.getProfile()).supportAreas, ['hearing'], 'an edit is not applied by itself');
-  await page.getByRole('button', { name: 'Remove hearing from supportAreas', exact: true }).click();
+  await page.getByRole('button', { name: 'Remove hearing from Support areas', exact: true }).click();
   await areas.fill('custom-area');
   await areas.press('Enter');
-  const consent = page.getByRole('combobox', { name: 'metaPreferences.consentBoundary', exact: true });
-  await consent.selectOption({ label: 'all-tiers' });
-  await page.getByRole('textbox', { name: 'freeText', exact: true }).fill('Plain text needs no JSON quotes.');
+  const consent = page.getByRole('combobox', { name: 'Consent boundary', exact: true });
+  await consent.selectOption({ label: 'All of its memory' });
+  await page.getByRole('textbox', { name: 'In their own words', exact: true }).fill('Plain text needs no JSON quotes.');
   const firstNeed = await expandNeed(1);
   await firstNeed.getByRole('switch', { name: 'Value', exact: true }).uncheck();
   // The need reads as the extension names it; its level in plain words.
   assert.equal(await firstNeed.getByRole('combobox', { name: 'Need', exact: true }).locator('option:checked').innerText(), 'Captions on videos');
   assert.equal(await firstNeed.getByLabel('Confidence', { exact: true }).count(), 0);
   await firstNeed.getByLabel('Level', { exact: true }).selectOption({ label: 'Must have' });
-  await firstNeed.getByLabel('Unit', { exact: true }).selectOption({ label: 'boolean' });
+  await firstNeed.getByLabel('Unit', { exact: true }).selectOption({ label: 'On or off' });
   await firstNeed.getByLabel('Source', { exact: true }).fill('developer');
   await page.getByRole('button', { name: '+ Add need', exact: true }).click();
   const secondNeed = page.getByRole('group', { name: 'Need 2', exact: true });
@@ -154,7 +158,7 @@ try {
   assert.match(await page.locator('.need-card').nth(1).locator('summary').innerText(), /Larger text · 1.5/);
   await page.getByRole('button', { name: '+ Add need', exact: true }).click();
   const thirdNeed = page.getByRole('group', { name: 'Need 3', exact: true });
-  await thirdNeed.getByRole('combobox', { name: /value type/ }).selectOption({ label: 'string' });
+  await thirdNeed.getByRole('combobox', { name: 'Kind of value' }).selectOption({ label: 'Text' });
   await thirdNeed.getByLabel('Value', { exact: true }).fill('custom value');
   await thirdNeed.getByRole('button', { name: 'Remove need', exact: true }).click();
   await page.click('#apply');
@@ -178,9 +182,10 @@ try {
     { dimension: 'textSize', value: 1.5, strength: 'preference' },
   ]);
   // Update under freeText: the toolkit reads the words, and only what differs below changes.
-  await page.getByRole('textbox', { name: 'freeText', exact: true }).fill('Small text is hard for me to read, and I need captions.');
+  await page.getByRole('textbox', { name: 'In their own words', exact: true }).fill('Small text is hard for me to read, and I need captions.');
   await page.getByRole('button', { name: 'Update', exact: true }).click();
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Updated from the text'));
+  assert.match(prompts.at(-1), /What their profile says now, in the same shape: \{"supportAreas":\["motor"\],"needs":\{"textSize":1\.5\},"plainLanguage":false\}/, 'the reading starts from the fields as they are');
   assert.equal(await page.locator('#status').innerText(), 'Updated from the text: added support for vision; removed support for movement and dexterity; changed Captions on videos; updated the summary; turned plain language on. Larger text and captions. Apply to update the toolkit.');
   await page.click('#apply');
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Profile applied'));
@@ -197,9 +202,9 @@ try {
   assert.equal(await page.locator('#draft-state').innerText(), 'Temporary · applied', 'an update with nothing to change leaves the draft as it was');
   await page.fill('#new-key', 'fields.testFlag');
   await page.getByRole('switch', { name: 'Value', exact: false }).last().check();
-  await page.getByRole('button', { name: '+ Add key', exact: true }).click();
+  await page.getByRole('button', { name: '+ Add field', exact: true }).click();
   await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('Added fields.testFlag'));
-  await page.getByLabel('Remove fields.transcripts', { exact: true }).click();
+  await page.getByLabel('Remove Transcripts', { exact: true }).click();
   await page.fill('#profile-name', 'Browser custom preset');
   await page.fill('#profile-description', 'custom test');
   await page.click('#save');
@@ -238,7 +243,7 @@ try {
   assert.equal(await page.locator('[data-load^="custom-"]').count(), 1, 'save updates an existing custom preset');
   assert.equal(await page.inputValue('#profile-name'), 'Browser custom preset', 'a custom preset keeps its name, since saving overwrites it');
   // Discarding a temporary profile returns the editor to its preset.
-  const freeText = page.getByRole('textbox', { name: 'freeText', exact: true });
+  const freeText = page.getByRole('textbox', { name: 'In their own words', exact: true });
   const savedText = await freeText.inputValue();
   await freeText.fill('A change to throw away.');
   assert.equal(await page.locator('.temp-card').count(), 1);

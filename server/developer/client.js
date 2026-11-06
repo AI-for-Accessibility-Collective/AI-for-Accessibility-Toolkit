@@ -108,8 +108,9 @@ export function createClient(baseUrl, token, fetcher = fetch) {
       if (PROFILE_WRITES.has(method) && typeof window !== 'undefined') window.postMessage({ source: 'ai4a11y-console', type: 'profile-changed' }, location.origin);
       return result;
     },
-    // The toolkit's reading of a person's own words, as the extension's Profile tab asks for it: {text, reason}.
-    readWords: (words) => request('/v1/ai/text', { task: 'profile', input: words, adapter: 'toolkit/profile' }, 'POST', 60000),
+    // The toolkit's reading of a person's own words, as the extension's Profile tab asks for it,
+    // starting from what the profile says now ({supportAreas, needs, plainLanguage}): {text, reason}.
+    readWords: (words, current) => request('/v1/ai/text', { task: 'profile', input: words, adapter: 'toolkit/profile', options: { current } }, 'POST', 60000),
     // Which preset is selected, and whether it has been edited since (CONTRACT.md "Profile selection").
     selection: () => request('/v1/profile/selection'),
     // The adapter marketplace (CONTRACT.md "Adapter marketplace").

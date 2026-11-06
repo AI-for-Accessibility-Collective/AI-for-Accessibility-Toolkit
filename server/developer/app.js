@@ -1,6 +1,7 @@
 import { BUILTIN_PROFILES } from './profiles.js';
 import { createClient, editableProfile, profileRows, setKey, removeKey, validateProfile, readSaved, writeSaved, signIn, readSession, writeSession } from './client.js';
 import { createValueEditor, VALUE_DEFAULTS } from './value-editor.js';
+import { fieldInfo } from './fields.js';
 import { createAdaptersPage } from './adapters.js';
 import { createLearnedPanel } from './learned.js';
 import { createListingsPage } from './listings.js';
@@ -122,18 +123,26 @@ function renderEditor() {
   editors = [];
   const rows = profileRows(draft);
   $('key-count').textContent = rows.length;
-  if (!rows.length) $('key-list').append(element('p', 'empty', 'Start with a key below, or connect and load a profile from the library.'));
+  if (!rows.length) $('key-list').append(element('p', 'empty', 'Start with a field below, or connect and load a profile from the library.'));
   rows.forEach(({ path, value }, index) => {
     const row = element('div', 'key-row');
     const editor = createValueEditor({ value, path, id: `key-${index}`, onChange: editorChanged });
     editors.push({ path, editor });
-    const label = element('label', 'key-label', path.join('.'));
+    // The field's plain name and what it is for; its key path, when that differs, for the JSON and Add field.
+    const info = fieldInfo(path.join('.'));
+    const head = element('div', 'key-label');
+    const label = element('label', '', info.name);
     label.htmlFor = editor.id;
     label.id = `key-label-${index}`;
+    const caption = element('small', '', info.caption);
+    caption.id = `key-caption-${index}`;
+    head.append(label, caption);
+    if (info.name !== path.join('.')) head.append(element('code', 'key-path', path.join('.')));
     if (editor.element.tagName === 'DIV') {
       editor.element.setAttribute('role', 'group');
       editor.element.setAttribute('aria-labelledby', label.id);
     }
+    (editor.element.matches('input, select, textarea') ? editor.element : editor.element.querySelector('input, select, textarea') || editor.element).setAttribute('aria-describedby', caption.id);
     if (path.join('.') === 'fields.needs') row.classList.add('needs-row');
     let control = editor.element;
     if (path.join('.') === 'freeText') {
@@ -142,7 +151,7 @@ function renderEditor() {
       const update = element('button', 'secondary', 'Update');
       update.type = 'button'; update.id = 'free-text-update';
       update.setAttribute('aria-describedby', 'free-text-hint');
-      const hint = element('p', 'hint', 'Reads the text and changes the support areas, needs and plain language below only where they differ.');
+      const hint = element('p', 'hint', 'Reads the words, starting from the fields below, and changes support areas, needs and language only where the words call for it.');
       hint.id = 'free-text-hint';
       update.addEventListener('click', () => run(() => updateFromWords(editor)).then(() => $('free-text-update')?.focus()));
       control.append(editor.element, update, hint);
@@ -150,16 +159,16 @@ function renderEditor() {
     const remove = element('button', 'remove');
     remove.append(icon('remove'));
     remove.type = 'button';
-    remove.setAttribute('aria-label', `Remove ${path.join('.')}`);
+    remove.setAttribute('aria-label', `Remove ${info.name}`);
     remove.addEventListener('click', () => run(async () => {
       // Read all OTHER controls first so an incomplete field can be removed.
       const next = readEditor(editor);
       removeKey(next, path);
       draft = next;
       renderEditor(); modified();
-      status(`Removed ${path.join('.')} from the draft. Apply to update the toolkit.`);
+      status(`Removed ${info.name} from the draft. Apply to update the toolkit.`);
     }));
-    row.append(label, control, remove);
+    row.append(head, control, remove);
     $('key-list').append(row);
   });
   $('profile-json').value = JSON.stringify(draft, null, 2);
@@ -170,10 +179,14 @@ async function updateFromWords(editor) {
   const words = editor.read().trim();
   if (!words) throw new Error('Describe the person’s abilities in freeText first, in a sentence or two.');
   status('Reading the text…');
-  const answer = await client.readWords(words);
+  // The reading starts from what the fields say now, so what the words leave alone stays.
+  const now = readEditor();
+  const answer = await client.readWords(words, {
+    supportAreas: now.supportAreas || [], needs: now.fields?.needs || [], plainLanguage: now.metaPreferences?.language === 'plain',
+  });
   const reading = cleanProfileReading(answer.text);
   if (!reading) throw new Error(answer.reason === 'no-answer' ? 'The toolkit found nothing to change in the text. Say a little more about what gets in the way, and update again.' : 'The toolkit could not work out what pages should do from the text. Nothing below changed.');
-  const before = readEditor(), next = structuredClone(before);
+  const before = now, next = structuredClone(before);
   const changes = applyProfileReading(next, words, reading, { areas: PROFILE_AREAS, needs: PROFILE_NEEDS });
   if (JSON.stringify(next) !== JSON.stringify(before)) {
     draft = validateProfile(next);
@@ -513,15 +526,15 @@ $('add-form').addEventListener('submit', event => {
     const next = readEditor();
     const path = $('new-key').value.trim().split('.');
     const exists = profileRows(next).some(row => row.path.length === path.length && row.path.every((part, index) => part === path[index]));
-    if (exists) throw new Error('That key already exists. Edit its value above.');
+    if (exists) throw new Error('That field already exists. Edit its value above.');
     // Do not let an add silently replace an existing object subtree either.
     let parent = next;
     for (const key of path.slice(0, -1)) parent = parent?.[key];
-    if (parent && Object.hasOwn(parent, path.at(-1))) throw new Error('That key already exists. Edit it in the full JSON view.');
+    if (parent && Object.hasOwn(parent, path.at(-1))) throw new Error('That field already exists. Edit it in the full JSON view.');
     setKey(next, path, newValueEditor.read());
     validateProfile(next); draft = next;
     $('new-key').value = ''; renderEditor(); modified();
-    status(`Added ${path.join('.')} to the draft.`);
+    status(`Added ${fieldInfo(path.join('.')).name} to the draft.`);
   });
 });
 $('use-json').addEventListener('click', () => run(async () => {

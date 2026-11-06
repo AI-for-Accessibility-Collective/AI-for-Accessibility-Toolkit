@@ -534,17 +534,36 @@ input::placeholder {
 }
 
 .key-label {
-  font-family: ui-monospace,SFMono-Regular,Consolas,monospace;
-  font-size: .75rem;
+  font-size: .85rem;
   overflow-wrap: anywhere;
-  padding-top: calc(10px * var(--space));
+  padding-top: calc(8px * var(--space));
+}
+
+.key-label label {
+  font-weight: 650;
 }
 
 .key-label small {
   display: block;
-  font: .65rem system-ui;
+  font-size: .75rem;
+  line-height: 1.45;
   color: var(--muted);
-  margin-top: calc(5px * var(--space));
+  margin-top: calc(3px * var(--space));
+}
+
+.key-label .key-path {
+  display: block;
+  font-family: ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size: .68rem;
+  color: var(--muted);
+  margin-top: calc(4px * var(--space));
+}
+
+.field-caption {
+  display: block;
+  font-size: .75rem;
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .key-row textarea {

@@ -17,6 +17,10 @@
 //   template      a whole prompt of the builder's own, with {text} and the slots below
 //   question      choose: the adapter's question about the options (the block sets `choices`)
 //
+// The `profile` task (the toolkit's own, not an adapter's) also takes
+// `current`: what the person's profile says now, in the answer's shape, so a
+// new reading of their words starts from it.
+//
 // What no field can remove: the page text is fenced and marked as content,
 // never instructions (a page can say "ignore your instructions"); and the
 // output contract (only the answer, or NO_ANSWER). The service then gates
@@ -26,7 +30,7 @@
 // running its own model can too.
 
 import { PAGE_TYPES } from '../../protocol/adapter/page-types.js';
-import { PROFILE_AREAS, PROFILE_NEEDS } from '../profile-words.js';
+import { PROFILE_AREAS, PROFILE_NEEDS, cleanProfileReading } from '../profile-words.js';
 
 export const PROMPT_VERSION = '2026-11-05';
 export const NO_ANSWER = 'NO_ANSWER';
@@ -86,6 +90,12 @@ export function cleanOptions(task, options = {}) {
   const out = {};
   for (const [k, v] of Object.entries(options)) {
     if (v === undefined || v === null || v === '') continue;
+    if (k === 'current' && task === 'profile') {
+      const r = cleanProfileReading(v);
+      if (!r) throw new Error('current is the profile now: {supportAreas, needs, plainLanguage}.');
+      out.current = { supportAreas: r.supportAreas, needs: Object.fromEntries(r.needs.map((n) => [n.dimension, n.value])), plainLanguage: r.plainLanguage };
+      continue;
+    }
     const f = PROMPT_FIELDS[k];
     if (!f) throw new Error(`Unknown option "${k}". Options: ${Object.keys(PROMPT_FIELDS).join(', ')}.`);
     if (k === 'readingLevel') {
@@ -184,7 +194,10 @@ function taskBody(task, o) {
       'Below is how a person describes their own abilities and what gets in their way on the web, in their own words. Work out what web pages should do for them. Describe barriers in pages, not deficits in the person, and add nothing they did not say or clearly imply.',
       `Support areas (ids): ${PROFILE_AREAS.map(a => `${a.id} (${a.name.toLowerCase()})`).join(', ')}.`,
       'What pages can do (ids), with the value each takes:\n' + PROFILE_NEEDS.map(d => (d.kind === 'number' ? `- ${d.id}: ${d.name.toLowerCase()}, a number from ${d.min} to ${d.max} (${d.unit})` : `- ${d.id}: ${d.name.toLowerCase()}, true`)).join('\n'),
-      'Answer with JSON only, in this shape: {"supportAreas": ["vision"], "needs": {"textSize": 1.5, "reduceMotion": true}, "plainLanguage": false, "summary": "One plain sentence, to the person, saying what pages will do for them."} List only the needs their words call for; leave the rest out. The summary says only what the needs you listed do, nothing they do not. plainLanguage is true when they ask for or would clearly benefit from plain language. If the text says nothing about their abilities or needs, answer exactly ' + NO_ANSWER + '.',
+      'Answer with JSON only, in this shape: {"supportAreas": ["vision"], "needs": {"textSize": 1.5, "reduceMotion": true}, "plainLanguage": false, "summary": "One plain sentence, to the person, saying what pages will do for them."} ' + (o.current
+        ? 'List the needs their profile should have now; leave the rest out.'
+        : 'List only the needs their words call for; leave the rest out.') + ' The summary says only what the needs you listed do, nothing they do not. plainLanguage is true when they ask for or would clearly benefit from plain language. If the text says nothing about their abilities or needs, answer exactly ' + NO_ANSWER + '.',
+      ...(o.current ? [`What their profile says now, in the same shape: ${JSON.stringify(o.current)}\nStart from it. Keep what their words do not change, even what they do not mention. Change a value only where their words call for a different one, add what their words call for that is not there, and take out only what their words say they no longer need or that goes against them.`] : []),
     ];
     case 'columnHeader': return [
       'Write a short header, 1 to 4 words, for the table column whose cells are below.',

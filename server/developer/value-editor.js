@@ -1,6 +1,7 @@
 // Native, labelled controls. Readers return typed values without JSON coercion.
 import { icon } from './icons.js';
 import { PROFILE_NEEDS } from './toolkit/blocks/profile-words.js';
+import { CHOICES, NEED_FIELDS, fieldInfo } from './fields.js';
 
 const ENUMS = {
   'metaPreferences.consentBoundary': ['profile-only', 'all-tiers'],
@@ -14,7 +15,9 @@ const AREAS = ['vision', 'hearing', 'motor', 'cognitive', 'reading', 'sensory'];
 const DIMENSION_NAMES = Object.fromEntries(PROFILE_NEEDS.map(d => [d.id, d.name]));
 // A need's level is stored as its `strength` (toolkit/core/strength.js).
 const LEVEL_NAMES = { floor: 'Must have', preference: 'Preferred', hint: 'Nice to have' };
+const UNIT_NAMES = { ratio: 'Times the usual size', em: 'Letter widths (em)', percent: 'Percent', boolean: 'On or off', enum: 'One of a list' };
 export const VALUE_DEFAULTS = { string: '', number: 0, boolean: true, array: [], object: {}, null: null };
+const TYPE_NAMES = { string: 'Text', number: 'Number', boolean: 'On or off', array: 'List', object: 'Group of fields', null: 'Empty' };
 const typeOf = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
 function node(tag, className, text) {
   const result = document.createElement(tag);
@@ -29,11 +32,18 @@ function button(text, action, label) {
   result.addEventListener('click', action);
   return result;
 }
-function field(labelText, editor) {
+function field(labelText, editor, caption) {
   const group = node('div', 'input-group');
   const label = node('label', '', labelText);
   label.htmlFor = editor.id;
-  group.append(label, editor.element);
+  group.append(label);
+  if (caption) {
+    const hint = node('small', 'field-caption', caption);
+    hint.id = `${editor.id}-caption`;
+    (editor.element.matches('input, select, textarea') ? editor.element : editor.element.querySelector('input, select, textarea'))?.setAttribute('aria-describedby', hint.id);
+    group.append(hint);
+  }
+  group.append(editor.element);
   return group;
 }
 function dropdown(value, choices, id, onChange, optional = false, customLabel, names = {}) {
@@ -91,6 +101,7 @@ function numberEditor(value, id, onChange, label, optional = false) {
   } };
 }
 function pillsEditor(value, path, id, onChange) {
+  const name = fieldInfo(path.join('.')).name;
   let items = [...value];
   const root = node('div', 'pills-editor'), pills = node('div', 'pills');
   const entry = node('div', 'pill-entry'), input = node('input');
@@ -102,7 +113,7 @@ function pillsEditor(value, path, id, onChange) {
       const pill = node('span', 'pill');
       const remove = button('', () => {
         items.splice(index, 1); draw(); input.focus(); onChange();
-      }, `Remove ${item} from ${path.join('.')}`);
+      }, `Remove ${item} from ${name}`);
       remove.append(icon('remove'));
       pill.append(node('span', '', item), remove);
       pills.append(pill);
@@ -123,7 +134,7 @@ function pillsEditor(value, path, id, onChange) {
     for (const area of AREAS) { const option = node('option'); option.value = area; list.append(option); }
     input.setAttribute('list', list.id); root.append(list);
   }
-  entry.append(input, button('Add', () => { commit(); input.focus(); }, `Add to ${path.join('.')}`));
+  entry.append(input, button('Add', () => { commit(); input.focus(); }, `Add to ${name}`));
   root.append(pills, entry); draw();
   return { element: root, id, read: () => [...items, ...pending().filter(item => !items.includes(item))] };
 }
@@ -134,13 +145,13 @@ function typedEditor(value, path, id, onChange) {
   const root = node('div', 'typed-value');
   let editor;
   const makeEditor = next => next === null
-    ? { element: node('span', 'hint', 'Null'), read: () => null }
+    ? { element: node('span', 'hint', 'Empty'), read: () => null }
     : createValueEditor({ value: next, path, id, onChange });
   const type = dropdown(typeOf(value), Object.keys(VALUE_DEFAULTS), `${id}-type`, () => {
     editor = makeEditor(structuredClone(VALUE_DEFAULTS[type.read()]));
     content.replaceChildren(editor.element); onChange();
-  });
-  type.element.setAttribute('aria-label', `${path.join('.')} value type`);
+  }, false, undefined, TYPE_NAMES);
+  type.element.setAttribute('aria-label', 'Kind of value');
   const content = node('div');
   editor = makeEditor(value);
   content.append(editor.element); root.append(type.element, content);
@@ -163,16 +174,17 @@ function needsEditor(value, path, id, onChange) {
     const properties = node('div', 'need-properties');
     const editors = new Map();
     const position = () => entries.indexOf(entry) + 1;
-    const make = (key, editor, label = key[0].toUpperCase() + key.slice(1)) => {
-      editors.set(key, editor); properties.append(field(label, editor));
+    const make = (key, editor) => {
+      const info = NEED_FIELDS[key];
+      editors.set(key, editor); properties.append(field(info?.name ?? key, editor, info?.caption));
     };
     const needPath = [...path, String(sequence)];
     const update = () => { updateSummary(); onChange(); };
     const dimension = dropdown(need.dimension, Object.keys(DIMENSION_NAMES), `${entryId}-dimension`, update, false, 'dimension', DIMENSION_NAMES);
-    make('dimension', dimension, 'Need');
+    make('dimension', dimension);
     make('value', typedEditor(need.value, [...needPath, 'value'], `${entryId}-value`, update));
-    make('strength', dropdown(need.strength, Object.keys(LEVEL_NAMES), `${entryId}-strength`, onChange, true, 'level', LEVEL_NAMES), 'Level');
-    make('unit', dropdown(need.unit, ['ratio', 'em', 'percent', 'boolean', 'enum'], `${entryId}-unit`, onChange, true, 'unit'));
+    make('strength', dropdown(need.strength, Object.keys(LEVEL_NAMES), `${entryId}-strength`, onChange, true, 'level', LEVEL_NAMES));
+    make('unit', dropdown(need.unit, Object.keys(UNIT_NAMES), `${entryId}-unit`, onChange, true, 'unit', UNIT_NAMES));
     const source = createValueEditor({ value: need.source ?? '', path: [...needPath, 'source'], id: `${entryId}-source`, onChange });
     make('source', { ...source, read: () => source.read() === '' ? (need.source == null ? need.source : '') : source.read() });
     // Confidence is not part of a need the console edits: it is dropped.
@@ -219,7 +231,7 @@ function needsEditor(value, path, id, onChange) {
 export function createValueEditor({ value, path, id, onChange }) {
   const key = path.join('.');
   if (key === 'fields.needs' && Array.isArray(value)) return needsEditor(value, path, id, onChange);
-  if (ENUMS[key] && typeof value === 'string') return dropdown(value, ENUMS[key], id, onChange, false, key);
+  if (ENUMS[key] && typeof value === 'string') return dropdown(value, ENUMS[key], id, onChange, false, fieldInfo(key).name, CHOICES[key]);
   if (Array.isArray(value) && value.every(item => typeof item === 'string')) return pillsEditor(value, path, id, onChange);
   if (typeof value === 'string') return textEditor(value, id, onChange, key === 'freeText');
   if (typeof value === 'number') return numberEditor(value, id, onChange, key);
@@ -239,7 +251,7 @@ export function createValueEditor({ value, path, id, onChange }) {
     const type = dropdown('null', Object.keys(VALUE_DEFAULTS), id, () => {
       editor = createValueEditor({ value: structuredClone(VALUE_DEFAULTS[type.read()]), path, id: `${id}-value`, onChange });
       content.replaceChildren(editor.element); onChange();
-    });
+    }, false, undefined, TYPE_NAMES);
     let editor = { read: () => null };
     const content = node('div'); root.append(type.element, content);
     return { element: root, id, read: () => editor.read() };

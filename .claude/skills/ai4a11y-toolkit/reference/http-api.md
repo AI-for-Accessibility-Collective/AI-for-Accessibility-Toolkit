@@ -72,6 +72,8 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
 | GET | `/admin/tokens` | list `{id, uid, label, kind, createdAt, expiresAt?, revoked}` (no token values; `id` is what DELETE takes) |
 | DELETE | `/admin/tokens/{id}` | revoke |
 | GET | `/admin/users` | list `{users: uid[]}`, every uid holding stored state |
+| GET | `/admin/checks` | the agent host's adapter checks (`?hours=24`, at most 168): `{capacity, queued, running, recent}`: what waits, what runs where (the VM or Cloud Run), what finished; 503 without an agent host |
+| GET | `/admin/sandboxes` | the agent host's sandboxes: `{vm, limits, accounts: [{uid, chats, running, lastActive, sandbox: {state, status, cpuPercent, memory, memPercent, pids}}]}`; never what is in them; 503 without an agent host |
 | DELETE | `/admin/users/{uid}` | delete that uid's partition and revoke its tokens; returns `{ok, uid, revokedTokens}` (a count), or 404 when the uid had neither data nor live tokens |
 | GET | `/admin` | admin console (accounts, tokens, stored data) — browser login popup |
 

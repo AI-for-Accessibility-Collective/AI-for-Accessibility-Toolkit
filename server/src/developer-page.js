@@ -21,6 +21,7 @@ export const DEVELOPER_ASSETS = new Map([
   ['/developer/icons.js', 'icons.js', 'text/javascript'],
   ['/developer/text-size.js', 'text-size.js', 'text/javascript'],
   ['/developer/profile-reading.js', 'profile-reading.js', 'text/javascript'],
+  ['/developer/fields.js', 'fields.js', 'text/javascript'],
   // The profile's plain words, shared with the extension's Profile tab.
   ['/developer/toolkit/blocks/profile-words.js', '../../toolkit/blocks/profile-words.js', 'text/javascript'],
   ['/developer/toolkit/core/ability.js', '../../toolkit/core/ability.js', 'text/javascript'],
