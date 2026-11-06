@@ -5,19 +5,16 @@
 // with the browser's speech recognition). Saving asks the toolkit's model
 // (the `profile` task on /v1/ai, Gemini Flash) what that means for web
 // pages: support areas, needs (blocks/profile-words.js) and plain language,
-// and writes them with the words in one setProfileFields. What pages will do
-// is then listed in plain words, what is on first; everything else is folded
-// under More options, and each can be turned on or off there. A preset (the
+// and writes them with the words in one setProfileFields. A preset (the
 // developer console's, /v1/profile/presets) can replace it all.
 //
-// Needs adapters and apps registered (toolkit/core/needs.js) are listed with
-// the toolkit's own. The profile agent decides from the profile whether each
-// fits; what it suggests is under Suggested for you, for the person to
-// answer. Turning one on switches on the adapter that meets it, which is the
-// person's own answer; turning it off takes the need out and switches the
-// adapter off.
+// Needs adapters and apps registered (toolkit/core/needs.js): the profile
+// agent decides from the profile whether each fits; what it suggests is
+// under Suggested for you, for the person to answer. Adding one switches on
+// the adapter that meets it.
 //
-// Adapters, three sections:
+// Adapters, three sections. Every adapter in this browser has a switch that
+// turns it off (and on again) everywhere.
 //   Applied on this page  the installed adapters that target the page beside
 //                         the panel, what happened when they ran, and a
 //                         switch for this site
@@ -37,7 +34,6 @@ import { PROFILE_AREAS, PROFILE_NEEDS, cleanProfileReading } from '../vendor/blo
 import { $, say, el, button, ask, pageTab, keyOf } from './ui.js';
 
 const RESULT_TEXT = { applied: 'Running on this page', failed: 'Failed', skipped: 'Not running', removed: 'Switched off' };
-const PLAIN = { id: 'plainLanguage', name: 'Plain language' };
 
 let connection = null;
 let registry = null;
@@ -46,7 +42,6 @@ let selection = null; // {id, name, edited} or null
 let presets = [];
 let events = null;    // AbortController of /v1/profile/events
 let lastRevision = null;
-let registered = [];  // the needs adapters and apps registered (profile_learned)
 let suggested = [];   // the profile agent's suggestions about them, waiting for an answer
 
 async function service(path, { method = 'GET', body } = {}) {
@@ -65,7 +60,6 @@ const librarian = async (method, args = []) => (await service(`/v1/librarian/${m
 
 const needsOf = (p) => (Array.isArray(p?.fields?.needs) ? p.fields.needs : []);
 const areasOf = (p) => (Array.isArray(p?.supportAreas) ? p.supportAreas : []);
-const plainOf = (p) => p?.metaPreferences?.language === 'plain';
 
 async function loadProfile() {
   const [p, sel, pre] = await Promise.all([
@@ -81,70 +75,17 @@ async function loadProfile() {
 
 async function loadSuggestions() {
   const learned = await registry.profile.learned().catch(() => null);
-  registered = learned?.needs || [];
   suggested = (learned?.proposals || []).filter(x => x.change?.op === 'need-add' || x.change?.op === 'need-remove');
 }
-
-/** A registered need as a line the tab shows: its phrase, and its number where it takes one. */
-function registeredItem(n) {
-  const v = n.value || { kind: 'on' };
-  if (v.kind !== 'number') return { id: n.key, name: n.phrase, kind: 'on', need: n };
-  const whole = Number.isInteger(v.min) && Number.isInteger(v.max);
-  return { id: n.key, name: n.phrase, kind: 'number', min: v.min, max: v.max, step: whole ? 1 : 0.1, start: v.start ?? v.min, unit: v.unit || 'the value', show: (x) => `${x}${v.unit ? ` ${v.unit}` : ''}`, need: n };
-}
-const adapterOf = (n) => { const [owner, appId, id] = String(n?.from?.adapter || '').split('/'); return owner && appId && id ? { owner, appId, id } : null; };
 
 function renderProfile() {
   // What the person is typing or saying stays.
   if (document.activeElement !== $('profile-words') && !listening) $('profile-words').value = profile?.freeText || '';
-  renderUnderstood();
+  renderSuggestions();
   renderPresets();
 }
 
-/** One line of what pages will do: a switch, and a value where it takes one. */
-function itemRow(kind, d, on, value) {
-  const li = el('li', 'profile-item');
-  const id = `pi-${kind}-${d.id}`;
-  const box = Object.assign(document.createElement('input'), { type: 'checkbox', id, checked: on });
-  const label = el('label', '', d.name);
-  label.htmlFor = id;
-  li.append(box, label);
-  let number = null;
-  if (d.kind === 'number') {
-    number = Object.assign(document.createElement('input'), { type: 'number', min: d.min, max: d.max, step: d.step, value: value ?? d.start, disabled: !on });
-    number.setAttribute('aria-label', `${d.name}, ${d.unit}`);
-    number.addEventListener('change', () => saveItem(kind, d, box.checked, Number(number.value)));
-    li.append(number);
-  }
-  box.addEventListener('change', () => { if (number) number.disabled = !box.checked; saveItem(kind, d, box.checked, number ? Number(number.value) : true); });
-  return li;
-}
-
-function renderUnderstood() {
-  const areas = areasOf(profile);
-  const needs = new Map(needsOf(profile).map(n => [n.dimension, n]));
-  const on = [], off = [];
-  for (const a of PROFILE_AREAS) (areas.includes(a.id) ? on : off).push(itemRow('area', { ...a, name: `Support for ${a.name.toLowerCase()}` }, areas.includes(a.id)));
-  for (const d of PROFILE_NEEDS) {
-    const n = needs.get(d.id);
-    const isOn = !!n && (d.kind === 'number' ? Number.isFinite(Number(n.value)) : n.value === true);
-    (isOn ? on : off).push(itemRow('need', d, isOn, n ? Number(n.value) : undefined));
-  }
-  (plainOf(profile) ? on : off).push(itemRow('plain', PLAIN, plainOf(profile)));
-  for (const n of registered) {
-    const d = registeredItem(n);
-    const have = needs.get(n.key);
-    const isOn = !!have && have.value !== false;
-    (isOn ? on : off).push(itemRow('registered', d, isOn, have && d.kind === 'number' ? Number(have.value) : undefined));
-  }
-  renderSuggestions();
-  $('profile-understood').hidden = false;
-  $('profile-selected').replaceChildren(...(on.length ? on : [el('li', 'empty', 'Nothing yet. Describe your abilities above, or turn something on under More options.')]));
-  $('profile-others').replaceChildren(...off);
-  $('profile-summary').textContent = profile?.fields?.wordsSummary || '';
-}
-
-/** The profile agent's suggestions about registered needs: yes, not now, or never. */
+/** The profile agent's suggestions about registered needs: add (or remove), not now, or never. */
 function renderSuggestions() {
   $('profile-suggestions').hidden = !suggested.length;
   $('profile-suggested').replaceChildren(...suggested.map((p) => {
@@ -164,7 +105,7 @@ function renderSuggestions() {
         say(said);
       } catch (e) { say(e.message, true); for (const b of row.querySelectorAll('button')) b.disabled = false; }
     };
-    const yes = button(p.change.op === 'need-add' ? 'Yes, turn it on' : 'Yes, take it out', 'primary', answer('accept', `Done: ${p.label}.`));
+    const yes = button(p.change.op === 'need-add' ? 'Add' : 'Remove', 'primary', answer('accept', `${p.change.op === 'need-add' ? 'Added' : 'Removed'}: ${p.label}.`));
     const later = button('Not now', 'secondary', answer('declineOnce', `Not now: ${p.label}.`));
     const never = button('Don’t suggest again', 'secondary', answer('suppress', `Your toolkit won’t suggest this again: ${p.label}.`));
     for (const b of [yes, later, never]) b.setAttribute('aria-label', `${b.textContent}: ${p.label}`);
@@ -176,7 +117,7 @@ function renderSuggestions() {
 
 /** Suggestions come a few seconds after the profile changes: look again a little later. */
 function lookForSuggestions() {
-  for (const ms of [7000, 15000]) setTimeout(async () => { await loadSuggestions(); renderUnderstood(); }, ms);
+  for (const ms of [7000, 15000]) setTimeout(async () => { await loadSuggestions(); renderSuggestions(); }, ms);
 }
 
 function renderPresets() {
@@ -186,44 +127,6 @@ function renderPresets() {
   if (document.activeElement === select) return;
   select.replaceChildren(Object.assign(el('option', '', 'Choose a preset'), { value: '' }),
     ...presets.map(p => Object.assign(el('option', '', p.description ? `${p.name}: ${p.description}` : p.name), { value: p.id })));
-}
-
-/** One switch or value changed: write just that, keep the rest. */
-async function saveItem(kind, d, on, value) {
-  try {
-    if (kind === 'area') {
-      const areas = new Set(areasOf(profile));
-      if (on) areas.add(d.id); else areas.delete(d.id);
-      profile = await librarian('setProfileFields', [{ supportAreas: PROFILE_AREAS.map(a => a.id).filter(a => areas.has(a)) }]);
-    } else if (kind === 'plain') {
-      profile = await librarian('setProfileFields', [{ 'metaPreferences.language': on ? 'plain' : 'standard' }]);
-    } else if (kind === 'registered') {
-      if (d.kind === 'number' && on && !(value >= d.min && value <= d.max)) { say(`${d.name}: choose a value from ${d.min} to ${d.max}.`, true); return; }
-      const adapter = adapterOf(d.need);
-      if (on) {
-        // Switching on the adapter that meets it is the person's own answer (the toolkit records the need); an app's need, directly.
-        if (adapter) await registry.install(BROWSER_RUNTIME_APP, adapter, { enabled: true });
-        else await librarian('chooseNeed', [d.id]);
-        if (d.kind === 'number' || !adapter) {
-          profile = await librarian('getProfile');
-          const needs = needsOf(profile).filter(n => n.dimension !== d.id);
-          needs.push({ ...(needsOf(profile).find(n => n.dimension === d.id) || { strength: 'preference', source: 'person' }), dimension: d.id, value: d.kind === 'number' ? value : true });
-          profile = await librarian('setProfileFields', [{ 'fields.needs': needs }]);
-        }
-      } else {
-        profile = await librarian('setProfileFields', [{ 'fields.needs': needsOf(profile).filter(n => n.dimension !== d.id) }]);
-        if (adapter) await registry.install(BROWSER_RUNTIME_APP, adapter, { enabled: false }).catch(() => {});
-      }
-      refreshAdapters();
-    } else {
-      if (d.kind === 'number' && on && !(value >= d.min && value <= d.max)) { say(`${d.name}: choose a value from ${d.min} to ${d.max}.`, true); return; }
-      const needs = needsOf(profile).filter(n => n.dimension !== d.id);
-      if (on) needs.push({ dimension: d.id, value: d.kind === 'number' ? value : true, strength: 'preference', source: 'person' });
-      profile = await librarian('setProfileFields', [{ 'fields.needs': needs }]);
-    }
-    say(`${on ? 'On' : 'Off'}: ${d.name}${on && d.kind === 'number' ? ` ${d.show(value)}` : ''}.`);
-    ask('sync').catch(() => {});
-  } catch (e) { say(e.message, true); }
 }
 
 /** Save the words: the toolkit's model reads them, then all of it is written at once. */
@@ -249,7 +152,7 @@ async function saveWords(event) {
       // Keep the words, so nothing said is lost.
       profile = await librarian('setProfileFields', [{ freeText: words }]);
       renderProfile();
-      say(body.reason === 'no-answer' ? 'Saved your words. Say a little more about what gets in your way, like the example, and save again.' : 'Saved your words, but the toolkit could not work out what pages should do. Turn things on under More options, or save again.', true);
+      say(body.reason === 'no-answer' ? 'Saved your words. Say a little more about what gets in your way, like the example, and save again.' : 'Saved your words, but the toolkit could not work out what pages should do. Say a little more and save again.', true);
       return;
     }
     // Needs this tab does not show stay as they were.
@@ -371,11 +274,31 @@ async function appliedList(state) {
   return { about, parts: [list] };
 }
 
+/** The switch that turns an adapter in this browser off, or on again, everywhere. */
+function onSwitch(a, enabled) {
+  const name = a.name || a.adapter.id;
+  const label = el('label', 'site-switch');
+  const box = Object.assign(document.createElement('input'), { type: 'checkbox', checked: enabled });
+  box.setAttribute('role', 'switch');
+  box.setAttribute('aria-label', name);
+  box.addEventListener('change', async () => {
+    box.disabled = true;
+    try {
+      await ask('setEnabled', { key: keyOf(a), on: box.checked });
+      say(box.checked ? `${name} is on.` : `${name} is off.`);
+    } catch (e) { say(e.message, true); box.checked = !box.checked; }
+    box.disabled = false;
+    refreshAdapters();
+  });
+  label.append(box, document.createTextNode('On'));
+  return label;
+}
+
 function appliedItem(a, state, origin, r) {
   const key = keyOf(a);
   const item = el('li');
   const top = el('div', 'adapter-top');
-  top.append(el('strong', '', a.name || a.adapter.id));
+  top.append(el('strong', '', a.name || a.adapter.id), onSwitch(a, a.enabled));
   const on = a.sites?.[origin] !== false;
   const label = el('label', 'site-switch');
   const box = Object.assign(document.createElement('input'), { type: 'checkbox', checked: on && a.enabled && a.available, disabled: !a.available || !a.enabled });
@@ -393,7 +316,7 @@ function appliedItem(a, state, origin, r) {
   top.append(label);
   item.append(top, el('span', 'from', `${a.appName || a.adapter.appId} · ${a.mine ? 'yours' : `shared by ${a.owner}`}`));
   if (!a.available) item.append(el('span', 'result failed', a.reason === 'not-shared' ? 'No longer shared by its owner.' : 'Deleted by its owner.'));
-  else if (!a.enabled) item.append(el('span', 'result', 'Switched off in the console.'));
+  else if (!a.enabled) item.append(el('span', 'result', 'Switched off.'));
   else if (!on) item.append(el('span', 'result', 'Off on this site.'));
   else if (r) item.append(el('span', `result ${r.status}`, `${RESULT_TEXT[r.status] || r.status}${r.message ? `: ${r.message}` : ''}`));
   else item.append(el('span', 'result', 'Runs when the page loads. Reload the page if it was open before.'));
@@ -434,7 +357,7 @@ async function recommendedList(state) {
   const list = [...found.values()].filter(({ a }) => !have.has(keyOf(a))).sort((x, y) => y.areas - x.areas || (x.a.name || '').localeCompare(y.a.name || ''));
   if (!list.length) return { about, parts: [empty(found.size ? 'Every adapter for your support areas is already in this browser.' : 'No adapters for your support areas yet. Build one in the Builder tab.')] };
   const ul = el('ul', 'adapters');
-  for (const { a } of list.slice(0, 30)) ul.append(registryItem(a, false));
+  for (const { a } of list.slice(0, 30)) ul.append(registryItem(a, null));
   return { about, parts: [ul] };
 }
 
@@ -442,7 +365,7 @@ async function allList(state) {
   const about = 'Every adapter this browser can run, by the application it came from.';
   const { adapters } = await registry.search({ portable: true });
   if (!adapters.length) return { about, parts: [empty('No adapters yet. Build one in the Builder tab.')] };
-  const have = installedKeys(state);
+  const have = new Map((state.adapters || []).map(a => [keyOf(a), a]));
   const groups = new Map();
   for (const a of adapters) {
     const app = a.appName || a.adapter.appId;
@@ -456,17 +379,18 @@ async function allList(state) {
     heading.id = id;
     group.setAttribute('aria-labelledby', id);
     const ul = el('ul', 'adapters');
-    for (const a of list.sort((x, y) => (x.name || '').localeCompare(y.name || ''))) ul.append(registryItem(a, have.has(keyOf(a))));
+    for (const a of list.sort((x, y) => (x.name || '').localeCompare(y.name || ''))) ul.append(registryItem(a, have.get(keyOf(a)) || null));
     group.append(heading, ul);
     return group;
   }) };
 }
 
+/** An adapter from the registry; `installed` is its entry in this browser, if it is in it. */
 function registryItem(a, installed) {
   const item = el('li');
   const top = el('div', 'adapter-top');
   top.append(el('strong', '', a.name || a.adapter.id));
-  if (installed) top.append(el('span', 'result applied', 'In this browser'));
+  if (installed) top.append(onSwitch(a, installed.enabled));
   else {
     const add = button('Add', 'secondary', async () => {
       add.disabled = true;
@@ -483,8 +407,7 @@ function registryItem(a, installed) {
   item.append(top);
   if (a.description) item.append(el('span', 'about', a.description));
   const areas = (a.supportAreas || []).map(areaName);
-  const where = (a.urlPatterns || []).slice(0, 2).join(', ') + ((a.urlPatterns || []).length > 2 ? ', …' : '');
-  item.append(el('span', 'from', [a.appName || a.adapter.appId, a.mine ? 'yours' : `shared by ${a.owner}`, areas.length ? areas.join(', ') : null, where ? `runs on ${where}` : null].filter(Boolean).join(' · ')));
+  item.append(el('span', 'from', [a.appName || a.adapter.appId, a.mine ? 'yours' : `shared by ${a.owner}`, areas.length ? areas.join(', ') : null].filter(Boolean).join(' · ')));
   return item;
 }
 

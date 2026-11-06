@@ -162,7 +162,7 @@ try {
     await setScale('100%');
     await panel.setViewportSize(before);
   };
-  // The panel opens on Profile: the person's words, what pages will do, then the adapters.
+  // The panel opens on Profile: the person's words, then the adapters.
   assert.equal(await panel.getByRole('tab', { name: 'Profile' }).getAttribute('aria-selected'), 'true');
   await panel.getByRole('textbox', { name: 'Describe your abilities' }).waitFor();
   assert.match(await panel.locator('#words-hint').innerText(), /^For example:/);
@@ -173,22 +173,14 @@ try {
   await panel.locator('#profile-working', { hasText: 'Understanding what you wrote' }).waitFor();
   await shot(panel, '0b-profile-working');
   await panel.locator('#profile-working').waitFor({ state: 'hidden' });
-  // Only what is on shows; the rest is folded.
-  const selected = await panel.locator('#profile-selected').innerText();
-  for (const line of ['Support for movement and dexterity', 'Support for vision', 'Larger text', 'Name unlabeled buttons and fields']) assert.ok(selected.includes(line), `${line} in ${selected}`);
-  assert.equal(await panel.getByRole('spinbutton', { name: /Larger text/ }).inputValue(), '1.5');
-  assert.match(await panel.locator('#profile-summary').innerText(), /larger text/);
-  assert.equal(await panel.locator('#profile-others').isVisible(), false, 'the rest is folded');
-  let saved = await (await fetch(`${base}/v1/librarian/getProfile`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }) })).json();
+  await panel.locator('#status', { hasText: /^Saved\./ }).waitFor();
+  // The profile is saved; the tab does not list what pages will do.
+  assert.equal(await panel.getByText('What pages will do for you').count(), 0);
+  assert.equal(await panel.getByText('More options').count(), 0);
+  const saved = await (await fetch(`${base}/v1/librarian/getProfile`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }) })).json();
   assert.deepEqual(saved.result.supportAreas, ['motor', 'vision']);
   assert.match(saved.result.freeText, /hands shake/);
   assert.deepEqual(saved.result.fields.needs.map(n => n.dimension).sort(), ['labelControls', 'textSize'], 'only known needs');
-  // One more, from what is folded.
-  await panel.getByText('More options').click();
-  await panel.getByRole('checkbox', { name: 'Less motion and animation' }).check();
-  await panel.locator('#status', { hasText: 'On: Less motion and animation.' }).waitFor();
-  saved = await (await fetch(`${base}/v1/librarian/getProfile`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ args: [] }) })).json();
-  assert.ok(saved.result.fields.needs.some(n => n.dimension === 'reduceMotion' && n.value === true));
   await shot(panel, '0c-profile-saved');
   // A preset chosen elsewhere (the console) shows here at once.
   await fetch(`${base}/v1/profile/select`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ id: 'wai-2' }) });

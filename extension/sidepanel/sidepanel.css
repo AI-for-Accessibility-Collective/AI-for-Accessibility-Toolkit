@@ -166,8 +166,10 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .adapters { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .adapters li { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 4px; }
 .adapters .empty { color: var(--muted); font-size: .8rem; border-style: dashed; }
-.adapter-top { display: flex; align-items: center; gap: 8px; }
-.adapter-top strong { flex: 1; min-width: 0; }
+.adapter-top { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; }
+.adapter-top .site-switch { display: inline-flex; align-items: center; gap: 4px; font-size: .8rem; }
+.adapter-top .site-switch input { accent-color: var(--green); margin: 0; width: 1rem; height: 1rem; }
+.adapter-top strong { flex: 1 1 8em; min-width: 0; overflow-wrap: anywhere; }
 .from { font-size: .72rem; color: var(--muted); }
 .result { font-size: .75rem; }
 .result.applied { color: var(--green); }
@@ -203,14 +205,6 @@ kbd { font: .78rem ui-monospace, SFMono-Regular, Menlo, monospace; background: w
 .working-line { font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .working-line::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #d39b00; animation: pulse 1.2s ease-in-out infinite; flex: none; }
 @media (prefers-reduced-motion: reduce) { .working-line::before { animation: none; } }
-#profile-understood { display: grid; gap: 6px; }
-#profile-understood h3 { font-size: .82rem; margin: 4px 0 0; }
-.profile-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.profile-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.profile-item input[type=checkbox] { accent-color: var(--green); margin: 0; }
-.profile-item label { flex: 1 1 0; min-width: 6em; overflow-wrap: anywhere; }
-.profile-item input[type=number] { width: 5.5em; font: inherit; padding: 2px 6px; border: 1px solid var(--line); border-radius: 6px; }
-.profile-items .empty { color: var(--muted); font-size: .8rem; }
 .suggestions { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .suggestions li { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 4px; }
 .suggestions .row { flex-wrap: wrap; }

@@ -223,7 +223,21 @@ try {
   // All: every adapter this browser can run, by application.
   await popup.locator('#all-box summary').click();
   await popup.getByRole('heading', { name: /^Developer console \(\d+\)$/ }).waitFor();
-  assert.match(await popup.locator('#all-list').innerText(), /Big buttons[\s\S]*In this browser/);
+  assert.equal(await popup.getByRole('switch', { name: 'Big buttons', exact: true }).first().isChecked(), true);
+  if (process.env.SHOTS) {
+    for (const width of [480, 320]) {
+      await popup.setViewportSize({ width, height: 900 });
+      await popup.screenshot({ path: `${process.env.SHOTS}/runtime-profile-${width}.png`, fullPage: true });
+    }
+    await popup.setViewportSize({ width: 1280, height: 720 });
+  }
+  assert.doesNotMatch(await popup.locator('#all-list').innerText(), /runs on/i, 'no address patterns for the person');
+  // Every adapter in this browser can be switched off everywhere, and on again.
+  await popup.getByRole('switch', { name: 'Big buttons', exact: true }).first().uncheck();
+  await page.waitForFunction(() => document.body.dataset.bigButtons === undefined, null, background);
+  await popup.locator('#applied-list li', { hasText: 'Big buttons' }).getByText('Switched off.').waitFor();
+  await popup.getByRole('switch', { name: 'Big buttons', exact: true }).first().check();
+  await page.waitForFunction(() => document.body.dataset.bigButtons === 'r2:60', null, background);
   await popup.getByRole('tab', { name: 'Settings' }).click();
   assert.match(await popup.locator('.who').innerText(), /Connected to 127\.0\.0\.1:\d+ as dev/);
   assert.match(await popup.locator('#installed-count').innerText(), /^3 adapters installed/);

@@ -629,6 +629,14 @@ const handlers = {
     await client.install(APP, { owner, appId, id }, { sites: { [origin]: on === true } });
     return sync('site');
   },
+  /** Switch one installed adapter off, or on again, everywhere. */
+  async setEnabled({ key, on }) {
+    const client = await connectionRegistry();
+    if (!client) throw new Error('Not connected.');
+    const [owner, appId, id] = String(key).split('/');
+    await client.install(APP, { owner, appId, id }, { enabled: on === true });
+    return sync('enabled');
+  },
   /**
    * The person's one shortcut (toolkit/blocks/shortcut.js), in their
    * profile: which adapter it goes to (null turns it off) and its keys.
