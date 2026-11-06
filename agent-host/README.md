@@ -136,12 +136,13 @@ reach it) and asks `GET /checks/<id>` for the result
 ([src/checks.js](src/checks.js)).
 
 - **Four at a time** (`AGENT_CHECK_PARALLEL`), in the order asked; the rest
-  wait. There is no limit on how many a person asks for. Each takes 4 CPUs
-  and 6 GB; the VM (32 vCPUs, 128 GB) also runs the sidebar's sandboxes.
+  wait. There is no limit on how many a person asks for. Each may use up to 8 CPUs
+  and 6 GB (limits, not reservations: four at once run 24 pages on its 32 vCPUs); the VM (32 vCPUs, 128 GB) also runs the sidebar's sandboxes.
 - **The check** is `run.mjs --check` in a one-shot container from the
   verify image's `check` target (`scripts/verify-adapters/Dockerfile`, the
   repository and its packages baked in): gVisor, `--network none`, no
-  capabilities, `no-new-privileges`, 4 CPUs, 6 GB, removed when it ends.
+  capabilities, `no-new-privileges`, 8 CPUs, 6 GB, removed when it ends;
+  six runs at a time (more than its CPUs makes timing fail runs that are fine).
   The adapter is mounted read-only at `/job`, with `check.json` (its URL
   patterns; for the sidebar's adapters, the copies of the person's pages
   it is for and its preview's checks, `run.mjs --spec`); the recorded copies of real
@@ -168,8 +169,8 @@ reach it) and asks `GET /checks/<id>` for the result
   A full review the sidebar asks for reuses the background check of the
   same code: when it has finished, the reviewer starts at once with its
   report; while it runs, the review waits for it. So the code is checked
-  once. Within a check, `run.mjs` runs three runs at a time
-  (`VERIFY_CHECK_PARALLEL`), each in its own browser context.
+  once. Within a check, `run.mjs` runs several runs at a time
+  (`VERIFY_CHECK_PARALLEL`: six on the VM, three by default), each in its own browser context.
 - **After a restart**, checks that were waiting or running start again.
 
 **Status:** the checks and the review find some bugs in code. They do not
