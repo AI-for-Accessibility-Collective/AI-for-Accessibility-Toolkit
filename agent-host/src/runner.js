@@ -140,7 +140,18 @@ export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'run
     });
   }
 
-  return { ensure, run, monitor, limits: { cpus: Number(cpus), memory }, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
+  /**
+   * End every opencode run in the account's sandbox. Only for a host that
+   * just started: it has no runs yet, so any found there were the old host's
+   * (a sandbox outlives the host, and so does what was exec'd in it).
+   */
+  async function endRuns(uid) {
+    // "[r]un" so the pattern does not match this script itself.
+    const script = 'for d in /proc/[0-9]*; do c=$(tr "\\0" " " < "$d/cmdline" 2>/dev/null); case "$c" in *opencode*" "[r]"un --standalone"*) [ "${d#/proc/}" = "$$" ] || kill "${d#/proc/}" 2>/dev/null;; esac; done; true';
+    await exec('docker', ['exec', name(uid), 'sh', '-c', script], { timeout: 20_000 });
+  }
+
+  return { ensure, run, endRuns, monitor, limits: { cpus: Number(cpus), memory }, workDir: (uid) => path.join(accounts.dirOf(uid), 'work') };
 }
 
 /**

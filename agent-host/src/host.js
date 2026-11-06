@@ -214,10 +214,12 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     };
   }
 
-  /** Start every known account's sandbox, so they are running before anyone asks. */
+  /** Start every known account's sandbox, so they are running before anyone asks; go on with the chats a restart cut off. */
   async function warm() {
     await checks?.recover().catch(e => log.error('check.recover-failed', { error: e.message }));
     for (const uid of accounts.known()) await runner.ensure(uid).catch(e => log.error('sandbox.start-failed', { uid, error: e.message }));
+    // The chats a restart cut off go on where they were.
+    await chats.resumeInterrupted(accounts.known()).catch(e => log.error('chat.resume-failed', { error: e.message }));
   }
 
   return { sandboxHandler, apiHandler, warm, accounts, chats, requests, events, checks };

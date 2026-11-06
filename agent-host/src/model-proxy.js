@@ -1,7 +1,9 @@
 // The sandboxes' only way to a model. A sandbox sends its own token as the
 // API key; the proxy checks it, pins the model, and sends the request on
 // with the real key, which never enters a sandbox. No rate limit of its own:
-// the model's quota is the project's.
+// the model's quota is the project's. No size limit of its own either: a
+// long chat (every screenshot it was shown goes along with each call) is the
+// model's to accept or refuse.
 // Nothing of a request or reply is logged: only the account, method and size.
 
 const METHODS = new Set(['generateContent', 'streamGenerateContent', 'countTokens']);
@@ -17,7 +19,7 @@ export function createModelProxy({ apiKey, model = 'gemini-3.8-flash', uidForTok
     if (!apiKey) return send(res, 503, { error: { message: 'the host has no model key' } });
     const chunks = [];
     let size = 0;
-    for await (const c of req) { size += c.length; if (size > 20_000_000) return send(res, 413, { error: { message: 'request too large' } }); chunks.push(c); }
+    for await (const c of req) { size += c.length; chunks.push(c); }
     // Every call, whatever model opencode asked for (it asks a small one for titles), goes to the one model.
     const target = new URL(`${upstream}/${m[1]}/models/${model}:${m[3]}`);
     for (const [k, v] of url.searchParams) if (k !== 'key') target.searchParams.set(k, v);

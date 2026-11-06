@@ -511,6 +511,40 @@ await test('a full review asked for while the background check runs waits for it
   sb.close();
 });
 
+await test('a run cut off by a restart goes on when the host starts again, once', async () => {
+  const newChat = async () => (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  const fileOf = (id) => path.join(host.accounts.dirOf('ada'), 'chats', `${id}.json`);
+  const kept = (id) => JSON.parse(readFileSync(fileOf(id), 'utf8'));
+  // While a run lasts its chat is marked running; the mark goes when it ends.
+  const a = await newChat();
+  await api(`/agent/chats/${a}/messages`, { method: 'POST', body: { text: 'hang on' } });
+  await until(async () => (await (await api(`/agent/chats/${a}`)).json()).chat.busy);
+  assert.equal(kept(a).running.text, 'hang on');
+  await api(`/agent/chats/${a}/stop`, { method: 'POST' });
+  await until(async () => !(await (await api(`/agent/chats/${a}`)).json()).chat.busy && !kept(a).running);
+  // A restart: the files still say running, and the host has no runs. One
+  // chat had its opencode session, one was cut off before it began, one was
+  // cut off while it was already resuming.
+  const b = await newChat(), c = await newChat();
+  const since = new Date().toISOString();
+  const cut = (id, running, extra = {}) => writeFileSync(fileOf(id), JSON.stringify({ ...kept(id), ...extra, running }));
+  cut(a, { since, text: 'hang on' }, { sessionId: 'ses_fake123' });
+  cut(b, { since, text: 'hello again' });
+  cut(c, { since, text: 'x', resumed: true }, { sessionId: 'ses_fake123' });
+  const resumed = await host.chats.resumeInterrupted(['ada', 'nobody']);
+  assert.deepEqual(resumed.map(r => r.chatId).sort(), [a, b].sort());
+  const done = (id, text) => until(async () => { const ch = (await (await api(`/agent/chats/${id}`)).json()).chat; return !ch.busy && ch.entries.some(e => e.kind === 'agent' && text.test(e.text)) && ch; });
+  const chatA = await done(a, /^You said: The toolkit restarted while you were working/);
+  assert.deepEqual(chatA.entries.slice(-2).map(e => e.kind), ['notice', 'agent']);
+  assert.match(chatA.entries.at(-2).text, /picking up where it left off/);
+  await done(b, /^You said: hello again$/);
+  const chatC = (await (await api(`/agent/chats/${c}`)).json()).chat;
+  assert.match(chatC.entries.at(-1).text, /restarted again.*Send a message/);
+  for (const id of [a, b, c]) assert.equal(kept(id).running, undefined);
+  // Nothing is left to pick up.
+  assert.deepEqual(await host.chats.resumeInterrupted(['ada']), []);
+});
+
 await test('the model proxy: sandbox token in, real key out, one model, no rate limit of its own', async () => {
   const token = readFileSync(path.join(dataDir, 'accounts/ada/token'), 'utf8');
   const call = (key, model = 'gemini-flash-lite-latest') => fetch(`http://127.0.0.1:${sandboxPort}/model/v1beta/models/${model}:streamGenerateContent?alt=sse`, { method: 'POST', headers: { 'x-goog-api-key': key, 'content-type': 'application/json' }, body: '{}' });

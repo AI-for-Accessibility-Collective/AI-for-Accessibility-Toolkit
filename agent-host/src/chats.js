@@ -12,6 +12,11 @@
 // chat by it, and the token ends with the run. Each chat works on its own page
 // in the sidebar. The sandbox's /work is shared: a file another running chat
 // previewed or offered is that chat's while it runs (claimFile).
+//
+// A run is marked in its chat's file while it lasts (`running`). When the
+// host restarts (an update), the runs it had are gone with it: at start it
+// ends what they left running in the sandboxes and picks each marked chat up
+// again, once (resumeInterrupted).
 
 import { readFileSync, writeFileSync, readdirSync, renameSync, existsSync, unlinkSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
@@ -21,6 +26,8 @@ import { fallbackTitle } from './titles.js';
 import { PAGE_TYPE_IDS, SUPPORT_AREAS } from '../../toolkit/protocol/adapter/index.js';
 
 const MAX_ENTRIES = 600;
+const RESUME = 'The toolkit restarted while you were working on my last message, so your last step may not have finished, and anything you were waiting for (a preview, a page I was asked to share, my answer to a question) was lost. Continue where you left off: look at the files in /work first, and ask again for anything you still need.';
+const RESUMED = 'The toolkit restarted while the assistant was working. It is picking up where it left off.';
 const LEVELS = ['none', 'url', 'source', 'screenshot'];
 export const SHARE_LEVELS = LEVELS;
 
@@ -180,7 +187,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
    * With `shown`, the message is the host's (verification.js): the person
    * sees that line instead.
    */
-  async function send(uid, chatId, text, { answers, pages, pageType, areas, shown } = {}) {
+  async function send(uid, chatId, text, { answers, pages, pageType, areas, shown, resumed } = {}) {
     const message = String(text || '').trim();
     if (!message) throw httpError(400, 'Say something first.');
     if (message.length > 20_000) throw httpError(400, 'That message is too long.');
@@ -198,6 +205,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     if (asked) addEntry(uid, chatId, { id: asked.id, answered: true });
     addEntry(uid, chatId, shown ? { kind: 'notice', text: String(shown).slice(0, 300) } : { kind: 'you', text: message });
     const run = { chatId, stop: null, stopped: false, since: new Date().toISOString(), token: `run_${randomBytes(24).toString('base64url')}`, files: new Set() };
+    mark(uid, chatId, { since: run.since, text: message, ...(resumed ? { resumed: true } : {}) });
     if (!runs.has(uid)) runs.set(uid, new Map());
     runs.get(uid).set(chatId, run);
     runTokens.set(run.token, { uid, chatId });
@@ -228,6 +236,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
           try { addEntry(uid, chatId, { kind: 'error', text: 'The assistant could not start. Try again in a moment.' }); } catch { /* deleted */ }
         }
       } finally {
+        if (!run.deleted) { try { mark(uid, chatId, null); } catch { /* deleted */ } }
         runTokens.delete(run.token);
         runs.get(uid)?.delete(chatId);
         if (!runs.get(uid)?.size) runs.delete(uid);
@@ -238,6 +247,48 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
       if (!run.deleted) await nameChat(uid, chatId).catch(e => log?.warn('chat.title-failed', { uid, chatId, error: e.message }));
     })();
     return { ok: true };
+  }
+
+  /** Mark the chat as running (what it was asked), or clear the mark (null). */
+  function mark(uid, chatId, running) {
+    const chat = read(uid, chatId);
+    if (running) chat.running = running; else if (chat.running) delete chat.running; else return;
+    save(uid, chat);
+  }
+
+  /**
+   * After a restart: every chat still marked running was cut off. Its
+   * sandbox's leftover runs are ended first (runner.endRuns), then it goes on
+   * from its opencode session with a message saying what happened; the person
+   * sees one line. A chat cut off while it was already resuming is not
+   * resumed again: the person is asked to send a message.
+   */
+  async function resumeInterrupted(uids) {
+    const resumed = [];
+    for (const uid of uids) {
+      const cut = [];
+      const dir = path.join(accounts.dirOf(uid), 'chats');
+      for (const name of existsSync(dir) ? readdirSync(dir) : []) {
+        if (!name.endsWith('.json')) continue;
+        try { const c = JSON.parse(readFileSync(path.join(dir, name), 'utf8')); if (c.running && !runOf(uid, c.id)) cut.push(c); } catch { /* a half-written file */ }
+      }
+      if (!cut.length) continue;
+      await runner.endRuns?.(uid).catch(e => log?.warn('chat.end-runs-failed', { uid, error: e.message }));
+      for (const c of cut) {
+        try {
+          mark(uid, c.id, null);
+          if (c.running.resumed) {
+            addEntry(uid, c.id, { kind: 'error', text: 'The toolkit restarted again while the assistant was working. Send a message to go on.' });
+            continue;
+          }
+          // Cut off before opencode began a session: ask again what was asked.
+          await send(uid, c.id, c.sessionId ? RESUME : String(c.running.text || RESUME), { shown: RESUMED, resumed: true });
+          resumed.push({ uid, chatId: c.id });
+          log?.info('chat.resumed', { uid, chatId: c.id, since: c.running.since });
+        } catch (e) { log?.warn('chat.resume-failed', { uid, chatId: c.id, error: e.message }); }
+      }
+    }
+    return resumed;
   }
 
   function stop(uid, chatId) {
@@ -261,5 +312,5 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     return { deleted: true };
   }
 
-  return { list, create, get, remove, addEntry, setConsent, recordPreview, previews, previewOf, markReady, updateAdapter, isBusy, busyChats, runForToken, claimFile, send, stop };
+  return { list, create, get, remove, addEntry, setConsent, recordPreview, previews, previewOf, markReady, updateAdapter, isBusy, busyChats, runForToken, claimFile, send, stop, resumeInterrupted };
 }
