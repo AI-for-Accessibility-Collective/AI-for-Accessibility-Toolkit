@@ -22,7 +22,8 @@
     "build:cli": "esbuild cli/cli-tools.js --bundle --format=iife --outfile=cli/cli-tools.bundle.js",
     "build:extension": "node scripts/build-extension.mjs",
     "build:types": "tsc -p toolkit/tsconfig.json",
-    "verify:adapters": "node scripts/verify-adapters/run.mjs --replay"
+    "verify:adapters": "node scripts/verify-adapters/run.mjs --replay",
+    "xr:bridge": "node toolkit/hosts/xr-bridge/run.mjs"
   },
   "devDependencies": {
     "@guidepup/virtual-screen-reader": "0.32.1",

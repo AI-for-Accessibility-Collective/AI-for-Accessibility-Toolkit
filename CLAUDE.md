@@ -40,7 +40,9 @@ in `docs/architecture.md`. This section is the code map.
     and for optional live control `createAdapterProvider`,
     `fromToggleAdapter`/`fromAction`, `connectToToolkit`, a small MCP client.
     The service also serves it at `/sdk/adapter-mcp.js`.
-  - `hosts/` — runnable demos (`xr-demo`, `skill-demo`).
+  - `hosts/` — runnable demos (`xr-demo`, `skill-demo`) and `xr-bridge`, the
+    opt-in bridge that connects the AI for Accessibility XR guide to the
+    toolkit over its own HTTP API (`npm run xr:bridge`).
 - `tools/` — the developer **catalog**: `adapters/` (executable fixes),
   `auditors/` (issue detectors), `validators/` (the verifier engine for agentic
   flows), `profiles/` (ability presets), `insights/` (knowledge modules, e.g.

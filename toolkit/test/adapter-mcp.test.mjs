@@ -294,6 +294,32 @@ await test('provider: undo refuses to overwrite a later change (A→B→C→B), 
   assert.equal(sc(await provider.call('adapter_revert', { receiptId: 'receipt-guessed' })).reasons[0].code, 'undo-expired');
 });
 
+await test('provider: an adaptation without parameters that is already on is a no-op', async () => {
+  const adapter = makeAdapter();
+  adapter.enabled = true; // turned on elsewhere
+  const plain = fromToggleAdapter({ descriptor: defineDescriptor({ appId: 'demo', id: 'plain', name: 'Plain', version: '1', targets: [{ platforms: ['*'], urls: ['https://shop.test/*'] }], operations: ['query', 'apply', 'revert'] }), adapter });
+  const { provider } = makeProvider({ extra: [plain] });
+  const ref = await refOf(provider, 'plain');
+  const on = sc(await provider.call('adapter_apply', { profileVersion: PROFILE_VERSION, adapterRef: ref, target: { url: PAGE }, desired: { enabled: true, parameters: {} } }));
+  assert.equal(on.status, 'noop');
+  assert.equal(adapter.enables, 0);
+});
+
+await test('provider: the parameters hook lets undo restore values set outside the provider', async () => {
+  const adapter = makeAdapter();
+  adapter.enable({ scale: 1.2 }); // set by the app itself
+  const read = fromToggleAdapter({ descriptor: scaleDescriptor({ id: 'read-scale', operations: ['query', 'check', 'apply', 'revert'] }), adapter, parameters: () => (adapter.enabled ? adapter.options : null) });
+  const { provider } = makeProvider({ extra: [read] });
+  const ref = await refOf(provider, 'read-scale');
+  const apply = async (parameters) => sc(await provider.call('adapter_apply', { profileVersion: PROFILE_VERSION, adapterRef: ref, target: { url: PAGE }, desired: { enabled: true, parameters } }));
+  assert.equal((await apply({ scale: 1.2 })).status, 'noop', 'the app already has these values');
+  const changed = await apply({ scale: 1.5 });
+  assert.equal(changed.status, 'applied');
+  const undo = sc(await provider.call('adapter_revert', { receiptId: changed.undo.receiptId }));
+  assert.equal(undo.status, 'applied');
+  assert.deepEqual(adapter.options, { scale: 1.2 }, 'back to what the app had');
+});
+
 await test('provider: requestKey deduplicates retries and refuses reuse with other arguments', async () => {
   const { provider, adapter } = makeProvider();
   const ref = await refOf(provider, 'text-scale');

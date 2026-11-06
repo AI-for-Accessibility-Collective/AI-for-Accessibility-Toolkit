@@ -92,12 +92,13 @@ build). In remote mode it adopts the API in both directions:
   service worker can use it) → save as a custom skill → the existing
   user-scripts reconcile registers it. Rejected code never lands.
 
-**XR Task Guide** (`AI-for-Accessibility-XR`). Its adapters
-(`src/toolkit-candidates/`) are data-only listings — prompt wording, paced
-delivery, voice — because their code is TypeScript living in that repo.
-[`examples/register-xr-adapters.mjs`](../examples/register-xr-adapters.mjs)
-publishes them (`appId: "xr"`) and is idempotent: re-running upserts, and
-`full: true` retires anything the list no longer contains.
+**AI for Accessibility XR guide** (`AI-for-Accessibility-XR`). It does not
+publish listings. When you run it with the toolkit, start the XR bridge
+beside it
+([`toolkit/hosts/xr-bridge/`](../toolkit/hosts/xr-bridge/README.md),
+`npm run xr:bridge`): the bridge connects through Adapter MCP as the app
+`ai4a11y-xr`, so its four adaptations show up under **Apps**, live, and it
+keeps the guide's settings in step with the person's toolkit profile.
 
 **Redbird demo** (`AI-for-Accessibility-Collective/redbird`). Each store
 tab connects through Adapter MCP as the app `redbird` rather than publishing a

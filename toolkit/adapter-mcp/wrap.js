@@ -37,8 +37,14 @@ const reason = (code, message) => ({ code, message });
  * @param {Function} [options.check]
  * @param {() => object} [options.availability]
  * @param {string|null} [options.executionArtifactDigest]
+ * @param {() => (object|null)} [options.parameters]  the parameters it is on
+ *        with, as the app reads them, for when something other than this
+ *        wrapper turned it on (the person in the app, another sync), so undo
+ *        can put them back. Without it, one that takes no parameters is on
+ *        with {}, and one that takes some is on with what this wrapper last
+ *        asked for, if anything.
  */
-export function fromToggleAdapter({ descriptor, adapter, toOptions = (p) => p, observe, resolveTarget, targets, check, availability, executionArtifactDigest = null }) {
+export function fromToggleAdapter({ descriptor, adapter, toOptions = (p) => p, observe, resolveTarget, targets, check, availability, executionArtifactDigest = null, parameters: current }) {
   if (descriptor?.mode !== 'stateful') throw new Error('fromToggleAdapter: the descriptor must be mode "stateful"');
   if (!adapter || typeof adapter.enable !== 'function' || typeof adapter.disable !== 'function') {
     throw new Error('fromToggleAdapter: the adapter needs enable() and disable()');
@@ -48,6 +54,15 @@ export function fromToggleAdapter({ descriptor, adapter, toOptions = (p) => p, o
   // was already on before the wrapper knew about it.
   let config = { enabled: isOn(), parameters: null };
   let generation = 0;
+  const takesNone = !Object.keys(descriptor.inputSchema?.properties || {}).length;
+  // The parameters it is on with: as the app reads them, else what this
+  // wrapper asked for, else {} when it takes none; null when not known.
+  function onWith() {
+    const read = typeof current === 'function' ? current() : null;
+    if (read) return read;
+    if (config.enabled && config.parameters) return config.parameters;
+    return takesNone ? {} : null;
+  }
 
   async function data() {
     if (observe) return observe();
@@ -73,10 +88,10 @@ export function fromToggleAdapter({ descriptor, adapter, toOptions = (p) => p, o
 
     async apply({ desired }) {
       const want = desired.enabled;
-      if (want === isOn() && (!want || (config.enabled && jsonEqual(config.parameters, desired.parameters)))) {
+      if (want === isOn() && (!want || jsonEqual(onWith(), desired.parameters ?? {}))) {
         return { status: 'noop', applied: want ? desired.parameters : {}, data: await data(), verification: 'adapter-reported' };
       }
-      const before = { enabled: isOn(), parameters: config.parameters };
+      const before = { enabled: isOn(), parameters: isOn() ? onWith() : null };
       try {
         await setTo(want, desired.parameters);
       } catch (e) {

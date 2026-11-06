@@ -214,7 +214,9 @@ export function createVerify({ checks, relay, aiCaller = null, log, pollMs = 500
       const applied = await call('adapter_apply', { profileVersion: PROFILE_VERSION, adapterRef: ref, target, desired: d.mode === 'action' ? { parameters } : { enabled: true, parameters }, requestKey: `verify-${crypto.randomBytes(6).toString('hex')}` });
       step('apply', ['applied', 'noop'].includes(applied.status), `${applied.status}${reasonOf(applied) ? `: ${reasonOf(applied)}` : ''}${applied.verification ? ` (${applied.verification})` : ''}`);
       if (ops.includes('query') && d.mode !== 'action') { const q = await call('adapter_query', { adapterRef: ref, target }); step('query after', q.state?.enabled === true, q.state ? `enabled: ${q.state.enabled}` : reasonOf(q)); }
-      if (applied.undo?.receiptId) { const u = await call('adapter_revert', { receiptId: applied.undo.receiptId }); step('undo', ['applied', 'noop'].includes(u.status), `${u.status}${reasonOf(u) ? `: ${reasonOf(u)}` : ''}`); }
+      // Nothing changed (it was already so): nothing to undo, and switching it off would change the app.
+      if (applied.status === 'noop') step('undo', true, 'nothing to undo: it was already so');
+      else if (applied.undo?.receiptId) { const u = await call('adapter_revert', { receiptId: applied.undo.receiptId }); step('undo', ['applied', 'noop'].includes(u.status), `${u.status}${reasonOf(u) ? `: ${reasonOf(u)}` : ''}`); }
       else if (d.mode !== 'action') { const off = await call('adapter_apply', { profileVersion: PROFILE_VERSION, adapterRef: ref, target, desired: { enabled: false }, requestKey: `verify-${crypto.randomBytes(6).toString('hex')}` }); step('switch off', ['applied', 'noop'].includes(off.status), `${off.status}${reasonOf(off) ? `: ${reasonOf(off)}` : ''} (no undo receipt)`); }
       results.push({ adapter: d.id, name: d.name, needs: (d.needs || []).map((n) => n.phrase), steps });
     }

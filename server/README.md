@@ -155,8 +155,7 @@ and the MCP endpoints `POST /v1/mcp/apps/{appId}` and
 catalog of descriptions that predates the registry
 (CONTRACT.md's "Adapter marketplace" section): adapters registered on this
 instance, grouped by the app that registered them (the browser extension
-publishes its catalog automatically in remote mode;
-`node ../examples/register-xr-adapters.mjs` publishes the XR app's). Each
+publishes its catalog automatically in remote mode). Each
 listing is **data-only** (a manifest: what the adapter does, the settings
 keys it applies, links) or **data + code** (the source is stored on the
 instance for hosts to download, lint, and install behind their own consent —
