@@ -47,8 +47,12 @@ import { createRegistryClient } from '../vendor/adapter-mcp/registry.js';
 import { BROWSER_RUNTIME_APP } from '../vendor/protocol/adapter/index.js';
 
 import { $, say, el, button, activeTab, isWebPage, originOf, hostOf } from './ui.js';
+import { setupTextSize } from './text-size.js';
 import { initSettings, renderSettings } from './settings.js';
 import { initProfile, renderProfileTab, refreshAdapters } from './profile.js';
+
+setupTextSize();
+
 const LEVELS = ['none', 'url', 'source', 'screenshot'];
 const APP = { appId: 'assistant', appName: 'Browser assistant' };
 const PREVIEW_STATE = 'assistantPreview'; // the last preview, for this browser session: {chatId, tabId, name, origin, request, on}

@@ -135,6 +135,33 @@ try {
   panel.on('pageerror', (e) => console.log('sidebar error:', e.message));
   failureReport = async () => console.log('--- sidebar ---\n' + await panel.locator('body').innerText());
   await panel.waitForLoadState();
+  // At the side panel's narrow width, at 100% and 200% text (the header's text size control), nothing reaches past the edge.
+  const NARROW = 320;
+  const setScale = async (percent) => {
+    await panel.locator('#text-reset').click();
+    while ((await panel.locator('#text-reset').innerText()) !== percent) await panel.locator('#text-larger').click();
+  };
+  const narrow = async (name) => {
+    const before = await panel.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+    await panel.setViewportSize({ width: NARROW, height: before.height });
+    for (const percent of ['100%', '200%']) {
+      await setScale(percent);
+      const out = await panel.evaluate(() => {
+        const w = document.documentElement.clientWidth;
+        const bad = [];
+        for (const e of document.querySelectorAll('body *')) {
+          if (e.closest('[hidden], .visually-hidden, details:not([open]) > :not(summary)')) continue;
+          const r = e.getBoundingClientRect();
+          if (r.width && r.height && (r.right > w + 1 || r.left < -1)) bad.push(`${e.tagName.toLowerCase()}${e.id ? `#${e.id}` : ''}${typeof e.className === 'string' && e.className ? `.${e.className.trim().split(/\s+/).join('.')}` : ''} (${Math.round(r.left)} to ${Math.round(r.right)} of ${w})`);
+        }
+        return { bad: bad.slice(0, 8), scroll: document.documentElement.scrollWidth > w, ...(innerHeight >= 620 * parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--text-scale') || 1) && document.documentElement.scrollHeight > innerHeight + 1 ? { tall: document.documentElement.scrollHeight } : {}) };
+      });
+      assert.deepEqual(out, { bad: [], scroll: false }, `${name} at ${NARROW}px and ${percent} text`);
+      if (process.env.SHOTS) await panel.screenshot({ path: path.join(process.env.SHOTS, `narrow-${name}-${percent.replace('%', '')}.png`), fullPage: true });
+    }
+    await setScale('100%');
+    await panel.setViewportSize(before);
+  };
   // The panel opens on Profile: the person's words, what pages will do, then the adapters.
   assert.equal(await panel.getByRole('tab', { name: 'Profile' }).getAttribute('aria-selected'), 'true');
   await panel.getByRole('textbox', { name: 'Describe your abilities' }).waitFor();
@@ -173,6 +200,15 @@ try {
   await panel.locator('#recommended-box summary').click();
   await panel.locator('#recommended-list li').first().waitFor();
   await shot(panel, '0d-recommended');
+  await narrow('profile');
+  // The text size is remembered: a sidebar opened again keeps it.
+  await panel.locator('#text-larger').click();
+  await panel.reload();
+  assert.equal(await panel.locator('#text-reset').innerText(), '110%');
+  assert.equal(await panel.evaluate(() => getComputedStyle(document.documentElement).fontSize), `${Math.round(16 * 1.1 * 100) / 100}px`);
+  await panel.locator('#text-reset').click();
+  await panel.getByRole('tab', { name: 'Settings' }).click();
+  await narrow('settings');
   await panel.getByRole('tab', { name: 'Builder' }).click();
   await panel.locator('#state', { hasText: 'Ready' }).waitFor({ timeout: 30000 });
   assert.match(await panel.locator('#transcript').innerText(), /Say what gets in your way/);
@@ -257,6 +293,7 @@ try {
     assert.ok(!/Looking at the page/.test(heard), 'steps are not read out one by one');
     assert.ok(!/passed the background check/.test(heard), 'a background check that passed is not said');
     await shot(panel, '3-ready');
+    await narrow('builder');
 
     // The page data stays on the agent host's disk, screenshot included.
     const chatDir = path.join(agentData, `accounts/${UID}/page-data`);
@@ -417,6 +454,7 @@ try {
     await panel.getByRole('group', { name: 'Which pages?' }).waitFor();
     await panel.locator('#state', { hasText: 'Ready' }).waitFor();
     await shot(panel, '4-questions');
+    await narrow('questions');
     await panel.getByRole('radio', { name: 'This page (Recommended)' }).check();
     // Other opens a box for their own words.
     const ownWords = panel.getByRole('textbox', { name: 'Your own answer: Who does it help?' });
