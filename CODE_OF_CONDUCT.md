@@ -30,16 +30,13 @@ This project exists to make technology more accessible. We hold ourselves to tha
 - Make meeting materials, documents, and communications accessible
 - Provide captions, transcripts, or alternative formats when possible
 - Respect different communication styles and needs
-- Compensate people with disabilities for their time and expertise
+- Compensate people with disabilities for their time and expertise where you can
 
 ## Enforcement
 
-Instances of unacceptable behavior may be reported through either route:
-
-1. The project maintainer contact listed in [MAINTAINERS.md](MAINTAINERS.md).
-2. Email the Collective's current PMO contact point: josephine.chu@dalberg.com.
-
-If your concern involves a person on one of these routes, use the other.
+Instances of unacceptable behavior may be reported by email to
+ai4a11y-collective-contact@googlegroups.com. Only the Collective's project management
+contact reads it, unless they need to bring in someone else to deal with it.
 All complaints will be reviewed and investigated, and will result in a
 response appropriate to the circumstances.
 

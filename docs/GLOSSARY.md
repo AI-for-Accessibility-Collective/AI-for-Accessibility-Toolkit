@@ -117,12 +117,16 @@ When to write a skill and when to write an adapter is explained in
 
 ## Principles
 
-- **Nothing about us without us.** People with disabilities shape, build and evaluate this work, and are compensated for it.
-- **Ability-based.** Adapt to what a person *can* do, not a diagnosis.
+- **Nothing about us without us.** People with disabilities shape, build and evaluate this work, and are paid for it where possible.
+- **Ability-based.** Adapt to what a person *can* do, not a diagnosis. Nobody has to name a condition or say they're disabled.
 - **Suggest, never apply.** Proposals with user validation; no silent changes.
 - **Privacy by default.** Single-writer stores, no-memory zones, permission-gated sharing.
 - **Platform-agnostic.** The core stays free of any surface; hosts and surfaces bring the platform.
 - **Build on existing tools.** axe-core, DarkReader, Readability, and your choice of LLM.
+
+Most interfaces are designed for one imagined "average" user, and everyone
+else is expected to cope. The problem lies in that design, not in the people
+using it.
 
 The rules that hold these principles in the code are the invariants in
 [architecture.md](architecture.md#invariants).

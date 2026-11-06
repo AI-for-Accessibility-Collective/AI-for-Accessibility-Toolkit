@@ -8,9 +8,9 @@ here.
 | For | Contact |
 |---|---|
 | Bugs, questions and feedback | This repository's [issues](../../issues) |
-| Security problems | **Report a vulnerability** on this repository's Security tab (see [SECURITY.md](SECURITY.md)) |
-| Code of conduct reports | josephine.chu@dalberg.com, the Collective's project management contact |
-| Anything else | josephine.chu@dalberg.com |
+| Security problems | **Report a vulnerability** on this repository's Security tab (see [SECURITY.md](SECURITY.md)). If you can't, email ai4a11y-collective-contact@googlegroups.com |
+| Code of conduct reports | ai4a11y-collective-contact@googlegroups.com. Only the Collective's project management contact reads it, unless they need to bring in someone else |
+| Anything else | The [contact form](https://forms.gle/pTH6nSKMXmqbx9Eg8), or email ai4a11y-collective-contact@googlegroups.com |
 
 ## Who maintains this
 

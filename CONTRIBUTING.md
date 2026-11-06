@@ -106,11 +106,11 @@ please open an issue to discuss it before you start.
 
 ## Working with people with disabilities
 
-- Involve people with disabilities in designing and testing what you build.
-- Pay participants.
-- Be careful with profile data, as it can reveal someone's disability.
-- Don't create ability profiles without input from the community they are
-  meant for.
+1. Involve people with disabilities in designing and testing what you build.
+2. Pay participants where you can.
+3. Be careful with profile data, as it can reveal someone's disability.
+4. Don't create ability profiles without input from the community they are
+   meant for.
 
 ## Questions
 

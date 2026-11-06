@@ -11,7 +11,9 @@
 **Not a developer?** The browser extensions built on this toolkit are in the
 [extension repository](https://github.com/AI-for-Accessibility-Collective/AI-for-Accessibility-Extension),
 with an install guide that needs no coding. There's also a plain-language
-overview in [docs/TLDR.md](docs/TLDR.md).
+overview in [docs/TLDR.md](docs/TLDR.md), and the Collective's website,
+[aiforaccessibilitycollective.org](https://aiforaccessibilitycollective.org),
+has a short video and more about the project.
 
 ## What it is
 
@@ -76,11 +78,12 @@ fit together.
 
 - **Not an auditor.** An auditor scans a site and gives the developer a report.
   This toolkit changes an app for the person using it, based on their profile.
-- **Not an overlay.** An overlay is added by a site owner and gives everyone
-  the same widget. With this toolkit, each person's own profile decides what
+- **Not an overlay.** An overlay is added by a site owner, often to tick a
+  compliance box, and gives everyone the same widget. With this toolkit, each person's own profile decides what
   changes, and site owners don't install anything.
 - **Not assistive technology.** It doesn't replace a screen reader, a
-  magnifier or anything else a person relies on.
+  magnifier or anything else a person relies on. It's built to work alongside
+  them.
 - **Not an app or a browser project.** The core has no user interface. We
   started with the browser because it was the easiest way to get feedback from
   people, but web, mobile, XR, desktop and server apps are all supported.
