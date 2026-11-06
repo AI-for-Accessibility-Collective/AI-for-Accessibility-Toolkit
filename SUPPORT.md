@@ -20,8 +20,8 @@ guide.
 Open an issue on this repository. For a bug, the bug report template asks
 what you did, what you expected and what happened instead.
 
-If you'd rather not use GitHub, you can email us (the address is in
-[MAINTAINERS.md](MAINTAINERS.md)).
+If you'd rather not use GitHub, use our [contact form](https://forms.gle/pTH6nSKMXmqbx9Eg8) or email
+ai4a11y-collective-contact@googlegroups.com.
 
 ## Security problems
 
