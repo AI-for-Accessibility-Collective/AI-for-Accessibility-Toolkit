@@ -1,23 +1,13 @@
 // The sandboxes' only way to a model. A sandbox sends its own token as the
-// API key; the proxy checks it, pins the model, limits the rate per account,
-// and sends the request on with the real key, which never enters a sandbox.
+// API key; the proxy checks it, pins the model, and sends the request on
+// with the real key, which never enters a sandbox. No rate limit of its own:
+// the model's quota is the project's.
 // Nothing of a request or reply is logged: only the account, method and size.
 
 const METHODS = new Set(['generateContent', 'streamGenerateContent', 'countTokens']);
 const PATH = /^\/model\/(v1beta|v1)\/models\/([^/:]+):([A-Za-z]+)$/;
 
-export function createModelProxy({ apiKey, model = 'gemini-3.8-flash', uidForToken, upstream = 'https://generativelanguage.googleapis.com', fetch = globalThis.fetch, perMinute = 60, log }) {
-  const recent = new Map(); // uid -> timestamps in the last minute
-
-  function allow(uid) {
-    const now = Date.now();
-    const times = (recent.get(uid) || []).filter(t => now - t < 60_000);
-    if (times.length >= perMinute) { recent.set(uid, times); return false; }
-    times.push(now);
-    recent.set(uid, times);
-    return true;
-  }
-
+export function createModelProxy({ apiKey, model = 'gemini-3.8-flash', uidForToken, upstream = 'https://generativelanguage.googleapis.com', fetch = globalThis.fetch, log }) {
   return async function handle(req, res) {
     const url = new URL(req.url, 'http://sandbox');
     const m = PATH.exec(url.pathname);
@@ -25,7 +15,6 @@ export function createModelProxy({ apiKey, model = 'gemini-3.8-flash', uidForTok
     const uid = uidForToken(String(req.headers['x-goog-api-key'] || url.searchParams.get('key') || ''));
     if (!uid) return send(res, 401, { error: { message: 'unknown sandbox' } });
     if (!apiKey) return send(res, 503, { error: { message: 'the host has no model key' } });
-    if (!allow(uid)) return send(res, 429, { error: { message: 'too many model calls this minute; wait a moment' } });
     const chunks = [];
     let size = 0;
     for await (const c of req) { size += c.length; if (size > 20_000_000) return send(res, 413, { error: { message: 'request too large' } }); chunks.push(c); }

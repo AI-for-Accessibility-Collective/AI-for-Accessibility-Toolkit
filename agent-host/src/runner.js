@@ -60,7 +60,7 @@ function running(child) {
 // Docker's own DNS (127.0.0.11, which it puts in every container on a custom
 // network) does not work under gVisor, so each sandbox gets a resolv.conf
 // naming public resolvers; with the internet off, the firewall drops those too.
-export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'runsc', cpus = '2', memory = '3g', pids = '512', dns = ['8.8.8.8', '1.1.1.1'], log }) {
+export function dockerRunner({ accounts, image, network, hostUrl, runtime = 'runsc', cpus = '6', memory = '12g', pids = '1024', dns = ['8.8.8.8', '1.1.1.1'], log }) {
   const name = (uid) => `ai4a11y-sbx-${uid.toLowerCase().replace(/[^a-z0-9_.-]/g, '-')}`;
   const ready = new Map();
 

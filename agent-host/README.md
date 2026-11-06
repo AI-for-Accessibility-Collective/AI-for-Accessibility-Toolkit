@@ -34,7 +34,7 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   `AGENT_HOST_SECRET` and naming the account. App-bound tokens are refused.
 - **Each account has its own sandbox**, always running: a container under
   gVisor (`runsc`), user 1000, no capabilities, `no-new-privileges`, a
-  read-only root with a tmpfs `/tmp`, 2 CPUs, 3 GB and 512 processes at most.
+  read-only root with a tmpfs `/tmp`, 6 CPUs, 12 GB and 1024 processes at most.
   Its only writable folders are its home (opencode's sessions) and `/work`
   (its adapters). `/toolkit` is the toolkit's code, docs and the
   `ai4a11y-toolkit` skill, read-only in the image. `/opt/agent/skills` has
@@ -51,8 +51,8 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
   ([vm/setup.sh](vm/setup.sh)).
 - **The model key never enters a sandbox.** opencode sends its own sandbox
   token as the API key; the host's proxy checks it, pins the model to
-  `gemini-3.8-flash` (titles too), limits each account to 60 calls a minute,
-  and adds the real key ([src/model-proxy.js](src/model-proxy.js)).
+  `gemini-3.8-flash` (titles too), and adds the real key (no per-account
+  rate limit: the project's model quota is the only one) ([src/model-proxy.js](src/model-proxy.js)).
 - **The browser tools** ([src/browser-tools.js](src/browser-tools.js)) are an
   MCP server the sandbox's opencode is configured with. A call goes to the
   account's sidebar and waits for the person (up to 4 minutes, under

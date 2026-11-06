@@ -100,7 +100,7 @@ const lines = [];
 const sandboxPort = 18790 + Math.floor(Math.random() * 500), apiPort = sandboxPort + 1000;
 const host = createHost({
   dataDir, secret: SECRET, apiKey: 'REAL-KEY', sandboxUrl: `http://127.0.0.1:${sandboxPort}`, runnerKind: 'local',
-  opencodeBin: path.join(here, 'fake-opencode.mjs'), repoDir: path.resolve(here, '../..'), fetch: fakeFetch, perMinute: 3, checkRunner, fetchRubrics: async () => ({ have: [], missing: [] }),
+  opencodeBin: path.join(here, 'fake-opencode.mjs'), repoDir: path.resolve(here, '../..'), fetch: fakeFetch, checkRunner, fetchRubrics: async () => ({ have: [], missing: [] }),
   log: { info: (e, f) => lines.push({ e, ...f }), warn: (e, f) => lines.push({ e, ...f }), error: (e, f) => lines.push({ e, ...f }) },
 });
 const servers = [await listen(host.sandboxHandler, `127.0.0.1:${sandboxPort}`), await listen(host.apiHandler, `127.0.0.1:${apiPort}`)];
@@ -460,15 +460,14 @@ await test('a full review asked for while the background check runs waits for it
   sb.close();
 });
 
-await test('the model proxy: sandbox token in, real key out, one model, a rate limit', async () => {
+await test('the model proxy: sandbox token in, real key out, one model, no rate limit of its own', async () => {
   const token = readFileSync(path.join(dataDir, 'accounts/ada/token'), 'utf8');
   const call = (key, model = 'gemini-flash-lite-latest') => fetch(`http://127.0.0.1:${sandboxPort}/model/v1beta/models/${model}:streamGenerateContent?alt=sse`, { method: 'POST', headers: { 'x-goog-api-key': key, 'content-type': 'application/json' }, body: '{}' });
   assert.equal((await call('sbx_not-a-real-token-at-all-000000')).status, 401);
   assert.equal((await call(token)).status, 200);
   assert.equal(upstreamCalls.at(-1).key, 'REAL-KEY');
   assert.match(upstreamCalls.at(-1).url, /\/models\/gemini-3\.8-flash:streamGenerateContent\?alt=sse$/);
-  await call(token); await call(token);
-  assert.equal((await call(token)).status, 429);
+  for (let i = 0; i < 70; i++) assert.equal((await call(token)).status, 200, 'no per-minute limit');
   // The sandbox's config holds its own token, never the real key.
   const config = readFileSync(path.join(dataDir, 'accounts/ada/config/opencode.json'), 'utf8');
   assert.ok(!config.includes('REAL-KEY') && config.includes(token));

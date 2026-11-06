@@ -46,7 +46,7 @@ export function createLogger(write = (line) => process.stdout.write(`${line}\n`)
  * @param {'docker'|'local'} [o.runnerKind]
  */
 export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = 'docker', image, network = 'ai4a11y-sbx', dns,
-  opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, perMinute, requestTimeoutMs, log = createLogger(), runner: givenRunner,
+  opencodeBin, repoDir, modelsJson, skillDirs, upstream, fetch, requestTimeoutMs, log = createLogger(), runner: givenRunner,
   checkImage, checkNetwork, sitesDir, checkModelUrl, checkTimeoutMs, reviewTimeoutMs, checkParallel, checkRunner: givenCheckRunner, fetchRubrics, checkScript, titler: givenTitler }) {
   if (!secret || secret.length < 24) throw new Error('AGENT_HOST_SECRET must be at least 24 characters.');
   const accounts = createAccounts({ dataDir });
@@ -69,7 +69,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
   const checks = checkRunner ? createChecks({ dataDir, runner: checkRunner, rubricsDir, log, checkTimeoutMs, reviewTimeoutMs, parallel: checkParallel,
     fetchRubrics: fetchRubrics || ((dir) => fetchUpstreamRubrics(dir, fetch ? { fetch } : {})) }) : null;
   // The model proxy takes a sandbox's token, or a running review's; the browser tools only a sandbox's.
-  const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, perMinute, log });
+  const model = createModelProxy({ apiKey, uidForToken: (t) => accounts.uidForToken(t) || checks?.uidForToken(t) || null, upstream, fetch, log });
   // After adapter_ready: the background check, the full review on request, and fixes of what they find.
   const verification = createVerification({ checks, chats, pageData, workDir: (uid) => path.join(accounts.dirOf(uid), 'work'), log });
   checks?.onChange(verification.onChange);
