@@ -1,13 +1,13 @@
 // The Apps page: every app that connected with this account's tokens through
 // the Adapter MCP SDK, grouped by app, live or last seen. For each app it
-// shows what the app shared through the registry and what it installed from
-// others (adapter-mcp.md §14), and, while the app is open, live control: the
+// shows whether it shares information with the person's other apps, and,
+// while the app is open, live control: the
 // developer can try any of its adapters on a live instance. For that the page
 // is an MCP client of the toolkit's relay, exactly like a coding agent would
 // be. From here a developer can also hide an app or forget one.
 
 import { createMcpClient, adapterClient, createRegistryClient } from '/sdk/adapter-mcp.js';
-import { visibilityControl } from './visibility.js';
+import { shareControl } from './visibility.js';
 
 const $ = id => document.getElementById(id);
 const REDBIRD_KEY = 'ai4a11y.developer.redbird-url';
@@ -55,7 +55,6 @@ function outcomeSentence(name, r) {
 export function createAppsPage({ getClient, getAppToken, status, run, onLiveCount = () => {} }) {
   let apps = [];
   let hiddenApps = [];
-  let shared = new Map(); // appId -> {published, sharedCount, installed}
   let access = new Map(); // appId -> {declared, restricted, visibility}
   let signature = '';
   let timer = null;
@@ -85,22 +84,15 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
     }
     try {
       const rc = createRegistryClient({ url: client.base, token: client.token });
-      const [result, registry, visibility] = await Promise.all([
+      const [result, visibility] = await Promise.all([
         client.apps.list(),
-        rc.search({}).catch(() => ({ adapters: [] })),
         rc.access.get().catch(() => ({ apps: [] })),
       ]);
       access = new Map(visibility.apps.map(a => [a.app, a]));
       apps = result.apps;
       hiddenApps = result.hiddenApps;
-      shared = new Map();
-      const tally = (appId) => (shared.has(appId) ? shared.get(appId) : shared.set(appId, { published: 0, sharedCount: 0, installed: 0 }).get(appId));
-      for (const a of registry.adapters) {
-        if (a.mine) { const t = tally(a.adapter.appId); t.published++; if (a.shared) t.sharedCount++; }
-        for (const app of a.installedIn || []) tally(app).installed++;
-      }
       onLiveCount(apps.filter(a => a.live && !a.hidden).length);
-      const next = JSON.stringify([apps.map(a => [a.appId, a.hidden, a.live, a.connections.map(c => [c.providerId, c.live]), a.adapters.map(d => d.descriptorDigest)]), [...shared], [...access]]);
+      const next = JSON.stringify([apps.map(a => [a.appId, a.hidden, a.live, a.connections.map(c => [c.providerId, c.live]), a.adapters.map(d => d.descriptorDigest)]), [...access]]);
       if (next !== signature || !quiet) { signature = next; render(); }
       else updateLiveDetails();
     } catch (error) {
@@ -157,20 +149,10 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
     for (const app of apps) {
       const seen = document.querySelector(`[data-last-seen="${CSS.escape(app.appId)}"]`);
       if (seen) seen.textContent = app.live ? 'connected now' : `last seen ${ago(app.lastSeenAt)}`;
-      const list = document.querySelector(`[data-activity="${CSS.escape(app.appId)}"]`);
-      if (list) fillActivity(list, app);
     }
   }
 
-  function fillActivity(list, app) {
-    // recentCalls is stored by the toolkit (it survives a restart); older
-    // services only send each connection's in-memory activity.
-    const items = (app.recentCalls || app.connections.flatMap(c => c.activity || []).sort((a, b) => b.at.localeCompare(a.at))).slice(0, 8);
-    list.replaceChildren(...(items.length ? items.map(a => element('li', '', `${new Date(a.at).toLocaleTimeString()} · ${a.tool || a.method}${a.adapter ? ` · ${a.adapter}` : ''} · ${a.outcome} · ${a.client}`)) : [element('li', '', 'No calls yet.')]));
-  }
-
-  // One app: a group like the Marketplace's, with its connections and recent
-  // calls under the heading and its adapters as cards.
+  // One app: a group like the Marketplace's, with its adapters as cards.
   function appGroup(app) {
     const group = element('section', `adapter-group app-group${app.hidden ? ' is-hidden' : ''}`);
     group.setAttribute('aria-labelledby', `app-${app.appId}`);
@@ -209,48 +191,15 @@ export function createAppsPage({ getClient, getAppToken, status, run, onLiveCoun
     group.append(meta);
     if (app.description) group.append(element('p', 'adapter-description app-description', app.description));
     const visibility = access.get(app.appId);
-    group.append(visibilityControl({
-      id: `visibility-${app.appId}`, name: app.name, declared: visibility?.declared || 'user', restricted: visibility?.restricted || null, levels: ['app'],
+    group.append(shareControl({
+      id: `visibility-${app.appId}`, name: app.name, declared: visibility?.declared || 'user', restricted: visibility?.restricted || null,
       onChange: (level) => run(async () => {
         const client = getClient();
         await createRegistryClient({ url: client.base, token: client.token }).access.restrict({ app: app.appId }, level);
         await refresh();
-        status(level ? `Only ${app.name} can read what it gives the toolkit now.` : `${app.name} is back to what it declares.`);
+        status(level ? `${app.name} no longer shares information with your other apps.` : `${app.name} shares information with your other apps again.`);
       }),
     }));
-    // What it shares through the registry, and what it took from others.
-    const t = shared.get(app.appId);
-    const line = element('p', 'adapter-group-id app-registry');
-    line.append(t
-      ? `Registry: ${t.published} published${t.published ? ` (${t.sharedCount} shared)` : ''} · ${t.installed} installed from the registry · `
-      : 'Registry: nothing published or installed yet · ');
-    const link = element('a', '', 'Adapters');
-    link.href = '#/adapters';
-    line.append(link);
-    group.append(line);
-
-    if (app.connections.length || app.recentCalls?.length) {
-      const conns = element('div', 'app-connections');
-      if (app.connections.length) {
-        const ul = element('ul', 'connection-list');
-        for (const c of app.connections) {
-          const where = [c.label || c.providerId, c.platform ? Object.values(c.platform).join(' · ') : ''].filter(Boolean).join(' — ');
-          const li = element('li');
-          li.append(element('span', `dot${c.live ? ' is-live' : ''}`), element('span', '', `${where}${c.live ? '' : ` (disconnected ${ago(new Date(c.lastSeenAt).toISOString())})`}`));
-          ul.append(li);
-        }
-        conns.append(ul);
-      }
-      const activity = element('details', 'recent-calls');
-      activity.append(element('summary', '', 'Recent calls'));
-      const list = element('ul', 'activity');
-      list.dataset.activity = app.appId;
-      fillActivity(list, app);
-      activity.append(list);
-      conns.append(activity);
-      group.append(conns);
-    }
-
     const grid = element('div', 'adapter-grid');
     for (const d of app.adapters) grid.append(adapterCard(app, d));
     group.append(grid);

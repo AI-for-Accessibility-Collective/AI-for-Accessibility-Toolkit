@@ -147,6 +147,15 @@ try {
   await dev.waitForFunction(() => document.querySelector('#app-groups .app-group h3')?.textContent.includes('Demo store'), null, { timeout: 15000 });
   assert.match(await dev.locator('.app-group').first().innerText(), /Live/);
   assert.equal(await dev.locator('#nav-live').innerText(), '1');
+  // Sharing with the person's other apps: yes or no, and nothing about connections or calls.
+  const share = dev.locator('.app-group').first().getByLabel('Share information with other apps');
+  assert.equal(await share.inputValue(), '');
+  assert.deepEqual(await share.locator('option').allInnerTexts(), ['Yes', 'No']);
+  await share.selectOption({ label: 'No' });
+  await dev.locator('#status', { hasText: 'Demo store no longer shares information with your other apps.' }).waitFor();
+  await share.selectOption({ label: 'Yes' });
+  await dev.locator('#status', { hasText: 'Demo store shares information with your other apps again.' }).waitFor();
+  assert.doesNotMatch(await dev.locator('.app-group').first().innerText(), /Recent calls|Registry:|Who can read/);
 
   // Try it: the target comes from adapter_targets, the form from the inputSchema.
   await dev.getByRole('button', { name: 'Try Big text' }).click();

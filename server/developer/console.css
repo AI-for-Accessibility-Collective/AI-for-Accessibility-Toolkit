@@ -42,13 +42,10 @@
 .adapter-group > .section-heading { align-items: flex-start; flex-wrap: wrap; }
 .adapter-group > .section-heading .card-actions .delete { margin-left: 0; }
 .app-description { margin: calc(-8px * var(--space)) 0 calc(14px * var(--space)); }
-.app-connections { background: #f6f8f6; border: 1px solid var(--line); border-radius: 8px; padding: calc(10px * var(--space)) calc(14px * var(--space)); margin-bottom: calc(14px * var(--space)); font-size: .75rem; color: var(--muted); display: grid; gap: calc(6px * var(--space)); }
 .connection-list { margin: 0; padding: 0; list-style: none; display: grid; gap: calc(4px * var(--space)); }
 .connection-list li { display: flex; gap: calc(8px * var(--space)); align-items: center; overflow-wrap: anywhere; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #b9c2bd; flex: none; }
 .dot.is-live { background: var(--green); }
-.recent-calls summary { color: var(--green); font-weight: 600; cursor: pointer; font-size: .72rem; }
-.activity { margin: calc(8px * var(--space)) 0 0; padding: 0; list-style: none; display: grid; gap: calc(2px * var(--space)); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .7rem; }
 .adapter-card.is-trying { grid-column: 1 / -1; }
 .adapter-card .card-actions .hint { margin: 0; }
 

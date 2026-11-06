@@ -115,7 +115,6 @@ try {
   await dev.waitForFunction(() => [...document.querySelectorAll('#app-groups .app-group h3')].some(h => h.textContent.includes('Redbird demo')), null, { timeout: 20000 });
   const group = dev.locator('.app-group', { hasText: 'Redbird demo' });
   assert.match(await group.innerText(), /Live/);
-  assert.match(await group.innerText(), /Store tab/);
   for (const name of ['Real arrival dates', 'Swatch names', 'Calm urgency', 'Reading level', 'Pause moving things', 'Fix this page']) {
     assert.ok(await group.getByRole('heading', { name, exact: true }).count(), `${name} is exported`);
   }

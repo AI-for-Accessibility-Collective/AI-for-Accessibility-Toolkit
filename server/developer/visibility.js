@@ -47,3 +47,42 @@ export function visibilityControl({ id, name, declared = 'user', restricted = nu
   wrap.append(label, select, hint);
   return wrap;
 }
+
+/**
+ * The Apps page's setting, as a yes or no: "Share information with other
+ * apps". Yes is the app's own declaration (user level); No keeps what it
+ * gives the toolkit to itself (app level). An app that declared No cannot be
+ * set to Yes here.
+ *
+ * @param {object} o
+ * @param {string} o.id
+ * @param {string} o.name
+ * @param {'user'|'app'} o.declared
+ * @param {string|null} o.restricted
+ * @param {(level: string|null) => Promise<void>} o.onChange
+ */
+export function shareControl({ id, name, declared = 'user', restricted = null, onChange }) {
+  const wrap = document.createElement('div');
+  wrap.className = 'visibility-setting';
+  const label = document.createElement('label');
+  label.htmlFor = id;
+  label.textContent = 'Share information with other apps';
+  const select = document.createElement('select');
+  select.id = id;
+  const own = declared !== 'user';
+  if (!own) select.append(new Option('Yes', ''));
+  select.append(new Option('No', own ? '' : 'app'));
+  select.value = !own && restricted === 'app' ? 'app' : '';
+  select.disabled = own;
+  select.addEventListener('change', () => onChange(select.value || null));
+  wrap.append(label, select);
+  if (own) {
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.id = `${id}-hint`;
+    hint.textContent = `${name} keeps it to itself.`;
+    select.setAttribute('aria-describedby', hint.id);
+    wrap.append(hint);
+  }
+  return wrap;
+}

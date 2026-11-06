@@ -219,7 +219,7 @@ try {
   await page.click('.nav-link[data-page="apps"]');
   const redbird = page.locator('.app-group', { has: page.getByRole('heading', { name: 'Redbird demo', exact: true }) });
   await redbird.waitFor();
-  await page.waitForFunction(() => /Registry: 1 published \(0 shared\)/.test(document.querySelector('.app-registry')?.textContent || ''));
+  await redbird.getByLabel('Share information with other apps').waitFor();
   assert.match(await page.locator('#snippet-mcp').innerText(), /\/v1\/mcp --header/);
   assert.match(await page.locator('#snippet-web').innerText(), /registry\.publish/);
   await link.close();
