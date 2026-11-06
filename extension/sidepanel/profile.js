@@ -236,8 +236,8 @@ function toggleVoice() {
   recognition.start();
   listening = true;
   $('words-voice').setAttribute('aria-pressed', 'true');
+  // The button says so (Stop speaking, pressed); no line at the bottom of the panel.
   $('words-voice').textContent = 'Stop speaking';
-  say('Listening. Describe your abilities, then press Stop speaking.');
 }
 
 // ── adapters ─────────────────────────────────────────────────────────────────
