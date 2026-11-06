@@ -1,46 +1,95 @@
-/**
- * Local-only CaptionFlow prototype. No video upload, no live AI.
- * Reuses Role 1 pipeline and Role 5 toolkit-backed font preference provider.
+/** CaptionFlow local-only demo host; ASR providers are isolated and injected.
+ * A selected browser video is uploaded only to the local loopback server for ASR.
+ * Hosted mode forwards it to the explicitly configured remote endpoint with consent.
  */
 import { createServer as createHttpServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, open, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createToolkit } from '../../toolkit/index.js';
 import { fileKV } from '../../toolkit/platforms/node/kv.js';
 import { createCaptionFlowPipeline } from '../src/pipeline.mjs';
-import { validatePreferences } from '../src/contracts.mjs';
+import { ContractError, validatePreferences } from '../src/contracts.mjs';
 import { createFixtureTranscriber } from '../src/mocks/fixture-transcriber.mjs';
 import { createFixtureCaptionProcessor } from '../src/mocks/fixture-caption-processor.mjs';
+import { createOriginalOnlyCaptionProcessor } from '../src/providers/original-captions.mjs';
+import { createLocalWhisperTranscriber } from '../src/providers/local-whisper.mjs';
+import { createHostedTranscriber } from '../src/providers/hosted-asr.mjs';
 import { createToolkitPreferenceProvider } from '../src/toolkit-preferences.mjs';
+import { loadCaptionFlowEnv } from '../src/runtime-config.mjs';
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const staticFiles = {
   '/': ['index.html', 'text/html; charset=utf-8'],
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['style.css', 'text/css; charset=utf-8'],
+  '/player-sync.mjs': ['../src/player-sync.mjs', 'text/javascript; charset=utf-8'],
 };
+const supportedMedia = new Set(['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-m4v']);
+
+class HttpError extends Error {
+  constructor(status, message) { super(message); this.status = status; }
+}
 const send = (res, status, obj) => {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
   res.end(JSON.stringify(obj));
 };
 async function parseJson(req) {
   let input = '';
   for await (const chunk of req) {
     input += chunk.toString('utf8');
-    if (input.length > 4096) throw new Error('Request body too large');
+    if (input.length > 4096) throw new HttpError(413, 'Request body too large');
   }
-  return JSON.parse(input);
+  try { return JSON.parse(input); }
+  catch { throw new HttpError(400, 'Expected JSON body'); }
+}
+async function receiveVideo(req, { maxMediaBytes, uploadDir, contentType }) {
+  if (!supportedMedia.has(contentType)) throw new HttpError(415, 'Supported video formats: MP4, WebM, Ogg, QuickTime');
+  if (Number(req.headers['content-length']) > maxMediaBytes) throw new HttpError(413, 'Video exceeds local upload limit');
+  const folder = await mkdtemp(join(uploadDir, 'captionflow-asr-'));
+  const extensions = { 'video/mp4': '.mp4', 'video/webm': '.webm', 'video/ogg': '.ogv', 'video/quicktime': '.mov', 'video/x-m4v': '.m4v' };
+  const path = join(folder, `input${extensions[contentType]}`);
+  let file;
+  try {
+    file = await open(path, 'wx', 0o600);
+    let bytes = 0;
+    for await (const chunk of req) {
+      bytes += chunk.length;
+      if (bytes > maxMediaBytes) throw new HttpError(413, 'Video exceeds local upload limit');
+      await file.write(chunk);
+    }
+    if (!bytes) throw new HttpError(400, 'Video file was empty');
+    await file.close(); file = null;
+    return { path, folder, contentType };
+  } catch (error) {
+    if (file) await file.close().catch(() => {});
+    await rm(folder, { recursive: true, force: true });
+    throw error;
+  }
 }
 
-export async function createCaptionFlowDemoServer({ storageDir = join(directory, '..', '.captionflow-storage'), userId = 'captionflow-demo' } = {}) {
+export async function createCaptionFlowDemoServer({
+  storageDir = join(directory, '..', '.captionflow-storage'),
+  userId = 'captionflow-demo',
+  uploadDir = tmpdir(),
+  maxMediaBytes = 75 * 1024 * 1024,
+  providers = {}, // injectable local/hosted transcribers for tests
+  hostedUrl = process.env.CAPTIONFLOW_HOSTED_URL,
+  hostedToken = process.env.CAPTIONFLOW_HOSTED_TOKEN,
+} = {}) {
   const kv = fileKV(storageDir);
   const { librarian } = createToolkit({ kv });
   const switchResult = await librarian.setActingUser(userId);
   if (!switchResult.ok) throw new Error(`Could not set demo acting user: ${switchResult.reason}`);
   const toolkitPrefs = createToolkitPreferenceProvider({ librarian, actingUserId: userId, historyKV: kv });
-  const transcriber = createFixtureTranscriber({ fileUrl: new URL('../fixtures/notice.transcript.json', import.meta.url) });
-  const captionProcessor = createFixtureCaptionProcessor({ fileUrl: new URL('../fixtures/notice.variants.json', import.meta.url) });
+  const fixtureTranscriber = createFixtureTranscriber({ fileUrl: new URL('../fixtures/notice.transcript.json', import.meta.url) });
+  const fixtureProcessor = createFixtureCaptionProcessor({ fileUrl: new URL('../fixtures/notice.variants.json', import.meta.url) });
+  const originalProcessor = createOriginalOnlyCaptionProcessor();
+  const localTranscriber = providers.local || createLocalWhisperTranscriber();
+  const hostedTranscriber = providers.hosted || (hostedUrl ? createHostedTranscriber({ endpoint: hostedUrl, token: hostedToken }) : null);
+  let busy = false;
 
   return createHttpServer(async (req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1');
@@ -51,18 +100,57 @@ export async function createCaptionFlowDemoServer({ storageDir = join(directory,
         res.end(await readFile(join(directory, filename)));
         return;
       }
+      if (req.method === 'GET' && url.pathname === '/api/providers') {
+        send(res, 200, { providers: { fixture: true, local: true, hosted: Boolean(hostedTranscriber) },
+          defaultProvider: ['fixture', 'local', 'hosted'].includes(process.env.CAPTIONFLOW_AI_BACKEND) ? process.env.CAPTIONFLOW_AI_BACKEND : 'fixture',
+          maxMediaBytes });
+        return;
+      }
       if (req.method === 'GET' && url.pathname === '/api/captions') {
         const language = url.searchParams.get('lang') ?? 'en';
         const mode = url.searchParams.get('mode') ?? 'plain';
-        // Validate user input before passing it to our pipeline.
         validatePreferences({ captionLanguage: language, mode });
-        const preferenceProvider = {
-          async getPreferences() {
-            return { ...(await toolkitPrefs.getPreferences()), captionLanguage: language, mode };
-          },
-        };
-        const pipeline = createCaptionFlowPipeline({ transcriber, captionProcessor, preferenceProvider });
+        const preferenceProvider = { async getPreferences() {
+          return { ...(await toolkitPrefs.getPreferences()), captionLanguage: language, mode };
+        }};
+        const pipeline = createCaptionFlowPipeline({ transcriber: fixtureTranscriber, captionProcessor: fixtureProcessor, preferenceProvider });
         send(res, 200, await pipeline.run({ videoId: 'fictional-notice-001', media: { kind: 'fixture' } }));
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/transcribe') {
+        const provider = url.searchParams.get('provider');
+        if (!['local', 'hosted'].includes(provider)) throw new HttpError(400, 'Choose local or hosted provider for transcription');
+        if (provider === 'hosted' && !hostedTranscriber) throw new HttpError(503, 'Hosted provider not configured');
+        if (provider === 'hosted' && url.searchParams.get('consent') !== 'yes') {
+          throw new HttpError(400, 'Explicit consent is required before sending a video to a hosted provider');
+        }
+        const speechLanguage = url.searchParams.get('language') ?? 'auto';
+        if (!['en', 'sw', 'auto'].includes(speechLanguage)) throw new HttpError(400, 'Speech language must be en, sw or auto');
+        const mode = url.searchParams.get('mode') ?? 'original';
+        if (!['original', 'plain'].includes(mode)) throw new HttpError(400, 'Caption mode must be original or plain');
+        if (busy) throw new HttpError(409, 'Transcription already running; try again after it completes');
+        const contentType = (req.headers['content-type'] || '').split(';')[0].toLowerCase();
+        if (!supportedMedia.has(contentType)) throw new HttpError(415, 'Upload a supported video file');
+        busy = true;
+        let uploaded;
+        let result;
+        try {
+          uploaded = await receiveVideo(req, { maxMediaBytes, uploadDir, contentType });
+          const videoId = `clip-${randomUUID()}`; // generated server-side; not the sample fixture ID
+          const transcriber = provider === 'local' ? localTranscriber : hostedTranscriber;
+          const pipeline = createCaptionFlowPipeline({
+            transcriber,
+            captionProcessor: originalProcessor,
+            preferenceProvider: { async getPreferences({ sourceLanguage }) {
+              return { ...(await toolkitPrefs.getPreferences()), captionLanguage: sourceLanguage === 'und' ? 'en' : sourceLanguage, mode };
+            }},
+          });
+          result = await pipeline.run({ videoId, media: { kind: 'local-file', path: uploaded.path, language: speechLanguage, contentType } });
+        } finally {
+          if (uploaded) await rm(uploaded.folder, { recursive: true, force: true });
+          busy = false;
+        }
+        send(res, 200, { ...result, provider });
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/preferences') {
@@ -80,20 +168,21 @@ export async function createCaptionFlowDemoServer({ storageDir = join(directory,
         send(res, 200, { ...result, preferences: validatePreferences(await toolkitPrefs.getPreferences(), 'en') });
         return;
       }
-      send(res, 404, { error: 'Not found' });
+      throw new HttpError(404, 'Not found');
     } catch (error) {
-      // This server is intentionally a development-only, loopback-bound prototype.
-      send(res, error.name === 'ContractError' || error instanceof SyntaxError ? 400 : 500, { error: error.message });
+      const status = error.status || (error.name === 'ContractError' || error instanceof SyntaxError ? 400 : 500);
+      if (!res.headersSent) send(res, status, { error: error.message });
     }
   });
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  loadCaptionFlowEnv();
   const port = Number(process.env.PORT ?? 8787);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid PORT');
   const server = await createCaptionFlowDemoServer();
   server.listen(port, '127.0.0.1', () => {
-    console.log(`CaptionFlow local prototype: http://127.0.0.1:${port}`);
-    console.log('Mock caption data only; local video stays in your browser. Never assume timing matches an arbitrary video.');
+    console.log(`CaptionFlow demo: http://127.0.0.1:${port}`);
+    console.log('Fixture, local faster-whisper and configured hosted ASR supported; localhost only.');
   });
 }

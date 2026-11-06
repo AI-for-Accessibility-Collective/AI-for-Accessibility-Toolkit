@@ -11,6 +11,9 @@ dist/
 build/
 *.egg
 .claude/worktrees/
+.venv
+test_video.mp4
+*.local.mp4
 
 # Runtime datastores (profiles, memory, admin tokens) — never commit
 /data/
