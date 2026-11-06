@@ -90,8 +90,8 @@ const checkRunner = {
     ], summary: { passed: 1, failed, skipped: 0, appliedOnTestPages: 1, testPages: 1 }, notes: [] }));
     return { code: failed, timedOut: false, stderr: '' };
   },
-  async review({ dir }) {
-    writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Nothing to fix.', rubricsRead: [] }));
+  async review({ dir, focus }) {
+    writeFileSync(path.join(dir, 'review', focus, 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Nothing to fix.', rubricsRead: [] }));
     return { code: 0, timedOut: false, stderr: '' };
   },
   cleanup: async () => {},
@@ -345,7 +345,8 @@ await test('a rebuild stops the check of the old code; the new version is checke
   assert.equal(r.verdict, 'ok');
   assert.equal(checkRuns.length, checked, 'not checked a second time');
   assert.equal(r.passed, 1, 'the background check\'s result goes with it');
-  assert.equal(r.report, 'Nothing to fix.');
+  // The three parts' reports, one section each.
+  assert.equal(r.report, '## The code\n\nNothing to fix.\n\n## What people see and read\n\nNothing to fix.\n\n## Keyboard, focus and announcements\n\nNothing to fix.');
   assert.equal((await api(`/agent/chats/${id}/adapters/nope/review`, { method: 'POST' })).status, 404);
   sb.close();
 });

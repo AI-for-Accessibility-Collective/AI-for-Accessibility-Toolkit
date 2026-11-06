@@ -3,6 +3,7 @@
 //   --check <file> --out <report.json>                 writes a report like run.mjs --check
 //   --agent --sandboxed --review-file <file> ... --logs <dir>   a reviewer: calls the model
 //     proxy with its token, tries the browser tools with it, and says what it saw
+//     and which part (--focus) it reviewed
 // "SLOW" in the adapter makes it take a second; "HANG", forever.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -41,16 +42,23 @@ if (args.includes('--review-file')) {
   const about = readFileSync(opt('--about'), 'utf8');
   const report = JSON.parse(readFileSync(opt('--check-report'), 'utf8'));
   const logs = opt('--logs');
+  const focus = opt('--focus');
+  const code = readFileSync(opt('--review-file'), 'utf8');
+  // "NOREVIEW-<part>" in the adapter: that part writes no report; "OK-<part>": it finds no issues.
+  if (code.includes(`NOREVIEW-${focus}`)) process.exit(1);
+  const ok = code.includes(`OK-${focus}`) || code.includes('OK-all');
   mkdirSync(logs, { recursive: true });
   const text = [
-    'Verdict: issues',
+    `Verdict: ${ok ? 'ok' : 'issues'}`,
+    `Focus: ${focus}. Token: ${String(token).slice(-6)}.`,
     '[medium] adapter.js:3 — a guess from a class name',
     '  Evidence: suspected from reading',
     '  Fix: use the role',
     '',
     `Proxy: ${model.status}. Tools: ${tools.status}. Secret: ${process.env.AGENT_HOST_SECRET || process.env.AGENT_GEMINI_KEY ? 'present' : 'absent'}. About: ${/Description: Makes buttons bigger/.test(about) ? 'yes' : 'no'}. Report: ${report.summary.failed} failed.`,
   ].join('\n');
-  writeFileSync(path.join(logs, 'review.json'), JSON.stringify({ verdict: 'issues', rubricsRead: ['2.5.8', '1.4.3'].slice(0, 1), report: text }));
+  const read = { code: [], perceive: ['1.1.1'], operate: ['2.4.7', '2.1.1'] }[focus] || ['2.5.8'];
+  writeFileSync(path.join(logs, 'review.json'), JSON.stringify({ verdict: ok ? 'ok' : 'issues', rubricsRead: read, report: text }));
   process.exit(0);
 }
 process.exit(2);

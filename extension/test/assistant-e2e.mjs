@@ -60,8 +60,8 @@ const agent = REMOTE ? null : createHost({
         writeFileSync(path.join(dir, 'out', 'report.json'), JSON.stringify({ runs: [{ name: 'buttons.html', status: 'pass', result: 'applied', problems: [] }], summary, notes: [] }));
         return { code: 0, timedOut: false, stderr: '' };
       },
-      async review({ dir }) {
-        writeFileSync(path.join(dir, 'review', 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Nothing to fix.', rubricsRead: [] }));
+      async review({ dir, focus }) {
+        writeFileSync(path.join(dir, 'review', focus, 'review.json'), JSON.stringify({ verdict: 'ok', report: 'Nothing to fix.', rubricsRead: [] }));
         return { code: 0, timedOut: false, stderr: '' };
       },
       cleanup: async () => {},

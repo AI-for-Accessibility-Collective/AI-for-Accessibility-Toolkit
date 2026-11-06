@@ -7,10 +7,12 @@
 // --check) in a one-shot container from the verify image under gVisor,
 // with no network at all: the adapter is written into it, the recorded
 // copies of real sites are mounted read-only, and it is stopped after a
-// timeout. With review, an independent reviewer then runs in a second
-// one-shot container (run.mjs --review-file): opencode with Gemini, whose
-// only network is the host's model proxy, with a token that names this
-// job and is good only while that review runs. The
+// timeout. With review, independent reviewers then run at the same time,
+// each in its own one-shot container (run.mjs --review-file --focus), each
+// on one part (scripts/verify-adapters/review-focus.mjs: the code, and the
+// WCAG rubrics in two halves): opencode with Gemini, whose only network is
+// the host's model proxy, each with a token that names this job and is good
+// only while its review runs. Their reports are put together in one. The
 // GenA11y rubric text it may read is fetched here first, into a folder
 // mounted read-only (INTERA11Y_DIR), so the reviewer needs no internet.
 //
@@ -23,7 +25,7 @@
 //     in/        the adapter, what it is for (about.txt; check.json, with copies/
 //                of the person's pages it is for), the check's report (read-only in the containers)
 //     out/       the check's report.json (removed once read)
-//     review/    the reviewer's report (removed once read)
+//     review/    each reviewer's report, review/<part>/ (removed once read)
 // in/, out/ and review/ are removed when the job ends; job.json is kept for
 // a week. Logged: who, which job, how long, how it came out; never code.
 //
@@ -37,6 +39,7 @@ import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { MAX_PACKAGE_CODE } from '../../toolkit/protocol/adapter/package.js';
 import { assertUid } from './accounts.js';
+import { REVIEW_FOCUSES } from '../../scripts/verify-adapters/review-focus.mjs';
 
 const CHECK_ID = /^chk_[a-f0-9]{16,40}$/;
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/;
@@ -111,7 +114,8 @@ function baseEnv(extra = {}) {
  *   check   --network none
  *   review  the check network, which reaches the host's model proxy and nothing else (vm/setup.sh)
  */
-export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, rubricsDir, modelUrl, runtime = 'runsc', cpus = '24', memory = '8g', pids = '4096', log }) {
+export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, rubricsDir, modelUrl, runtime = 'runsc', cpus = '24', memory = '8g', pids = '4096',
+  reviewCpus = '4', reviewMemory = '6g', log }) {
   if (!image) throw new Error('AGENT_CHECK_IMAGE is needed for checks on the VM.');
   // Runs at a time in a check: fewer than its CPUs. With as many runs as CPUs
   // or more, timing (layout shift, settling) makes runs fail that are fine
@@ -119,8 +123,11 @@ export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, ru
   // a time 43 s, 20 at a time 33 s, under 4.5 GB; 16 CPUs, 16 at a time, a run failed).
   const runsAtOnce = Math.max(1, Math.floor(Number(cpus) * 3 / 4));
   const name = (id, step) => `ai4a11y-check-${id}-${step}`;
-  const limits = [`--runtime=${runtime}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
-    `--cpus=${cpus}`, `--memory=${memory}`, `--pids-limit=${pids}`, '--shm-size=2g', '--label', 'ai4a11y.check=1'];
+  const limitsOf = (c, m) => [`--runtime=${runtime}`, '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
+    `--cpus=${c}`, `--memory=${m}`, `--pids-limit=${pids}`, '--shm-size=2g', '--label', 'ai4a11y.check=1'];
+  const limits = limitsOf(cpus, memory);
+  // A reviewer mostly waits for the model: fewer CPUs each, as several run at once.
+  const reviewLimits = limitsOf(reviewCpus, reviewMemory);
   const stop = (id, step) => () => execFile('docker', ['rm', '-f', name(id, step)], () => {});
 
   return {
@@ -133,16 +140,17 @@ export function dockerCheckRunner({ image, network = 'ai4a11y-chk', sitesDir, ru
         image, 'node', 'scripts/verify-adapters/run.mjs', '--check', `/job/${file}`, ...(spec ? ['--spec', `/job/${spec}`] : []), '--out', '/out/report.json'],
       { env: baseEnv(), timeoutMs, onTimeout: stop(id, 'check'), signal });
     },
-    review({ id, dir, file, token, timeoutMs, signal }) {
+    review({ id, dir, file, token, focus, timeoutMs, signal }) {
+      const step = focus ? `review-${focus}` : 'review';
       // The job's token reaches the container by name (-e GEMINI_API_KEY), never on the command line.
-      return runProcess('docker', ['run', '--rm', '--name', name(id, 'review'), ...limits, '--network', network,
-        '-v', `${path.join(dir, 'in')}:/job:ro`, '-v', `${path.join(dir, 'review')}:/review`, '-v', `${sitesDir}:/sites:ro`,
+      return runProcess('docker', ['run', '--rm', '--name', name(id, step), ...reviewLimits, '--network', network,
+        '-v', `${path.join(dir, 'in')}:/job:ro`, '-v', `${path.join(dir, 'review', ...(focus ? [focus] : []))}:/review`, '-v', `${sitesDir}:/sites:ro`,
         '-v', `${rubricsDir}:/opt/intera11y:ro`,
         '-e', 'VERIFY_SITES=offline', '-e', 'VERIFY_SITE_CACHE=/sites', '-e', 'INTERA11Y_DIR=/opt/intera11y',
         '-e', 'GEMINI_API_KEY', '-e', `VERIFY_MODEL_BASE_URL=${modelUrl}`, '-e', `VERIFY_AGENT_TIMEOUT_MIN=${Math.max(1, Math.floor(timeoutMs / 60_000) - 1)}`,
         image, 'node', 'scripts/verify-adapters/run.mjs', '--agent', '--sandboxed', '--skills', '/opt/agent/skills',
-        '--review-file', `/job/${file}`, '--about', '/job/about.txt', '--check-report', '/job/report.json', '--logs', '/review'],
-      { env: baseEnv({ GEMINI_API_KEY: token }), timeoutMs, onTimeout: stop(id, 'review'), signal });
+        '--review-file', `/job/${file}`, '--about', '/job/about.txt', '--check-report', '/job/report.json', ...(focus ? ['--focus', focus] : []), '--logs', '/review'],
+      { env: baseEnv({ GEMINI_API_KEY: token }), timeoutMs, onTimeout: stop(id, step), signal });
     },
     /** Containers a host that stopped left behind. */
     cleanup() {
@@ -169,9 +177,9 @@ export function localCheckRunner({ repoDir, sitesDir, rubricsDir, modelUrl, open
     check({ dir, file, spec, timeoutMs, signal }) {
       return runProcess(node, [run, '--check', path.join(dir, 'in', file), ...(spec ? ['--spec', path.join(dir, 'in', spec)] : []), '--out', path.join(dir, 'out', 'report.json')], { cwd: repoDir, env: env(), timeoutMs, signal });
     },
-    review({ dir, file, token, timeoutMs, signal }) {
+    review({ dir, file, token, focus, timeoutMs, signal }) {
       return runProcess(node, [run, '--agent', '--sandboxed', '--review-file', path.join(dir, 'in', file), '--about', path.join(dir, 'in', 'about.txt'),
-        '--check-report', path.join(dir, 'in', 'report.json'), '--logs', path.join(dir, 'review')],
+        '--check-report', path.join(dir, 'in', 'report.json'), ...(focus ? ['--focus', focus] : []), '--logs', path.join(dir, 'review', ...(focus ? [focus] : []))],
       { cwd: repoDir, env: env({ GEMINI_API_KEY: token, VERIFY_MODEL_BASE_URL: modelUrl, VERIFY_OPENCODE_BIN: opencodeBin, VERIFY_AGENT_TIMEOUT_MIN: String(Math.max(1, Math.floor(timeoutMs / 60_000) - 1)) }), timeoutMs, signal });
     },
     cleanup: async () => {},
@@ -368,19 +376,50 @@ export function createChecks({ dataDir, runner, rubricsDir, fetchRubrics = async
     const got = await fetchRubrics(rubricsDir).catch((e) => ({ have: [], missing: [{ reason: e.message }] }));
     if (got.missing?.length) log?.warn('check.rubrics-missing', { checkId: job.checkId, missing: got.missing.map((m) => m.sc).filter(Boolean) });
     writeFileSync(path.join(dir, 'in', 'report.json'), JSON.stringify(report));
-    const token = `chk_${randomBytes(24).toString('hex')}`;
-    tokens.set(token, { uid: job.uid, checkId: job.checkId });
-    let r;
-    try { r = await runner.review({ id: job.checkId.slice(4), dir, file: job.file, token, timeoutMs: reviewTimeoutMs, signal }); } finally { tokens.delete(token); }
-    const out = readJson(path.join(dir, 'review', 'review.json'), 2_000_000);
-    if (!out?.report || /^\(no report;/.test(out.report)) {
-      log?.warn('check.review-no-report', { uid: job.uid, checkId: job.checkId, code: r.code, timedOut: r.timedOut, stderr: r.stderr.slice(-600) });
-      return { verdict: null, error: r.timedOut ? `The review took longer than ${minutes(reviewTimeoutMs)} and was stopped.` : 'The reviewer did not finish its report. Try again later.' };
+    // One reviewer per part, all at once, each with its own token and folder.
+    const parts = await Promise.all(REVIEW_FOCUSES.map(async (focus) => {
+      const logs = path.join(dir, 'review', focus.id);
+      mkdirSync(logs, { recursive: true });
+      chmodSync(logs, 0o777);
+      const token = `chk_${randomBytes(24).toString('hex')}`;
+      tokens.set(token, { uid: job.uid, checkId: job.checkId });
+      let r;
+      try { r = await runner.review({ id: job.checkId.slice(4), dir, file: job.file, token, focus: focus.id, timeoutMs: reviewTimeoutMs, signal }); } finally { tokens.delete(token); }
+      const out = readJson(path.join(logs, 'review.json'), 2_000_000);
+      const done = !!out?.report && !/^\(no report;/.test(out.report);
+      if (!done) log?.warn('check.review-no-report', { uid: job.uid, checkId: job.checkId, focus: focus.id, code: r.code, timedOut: r.timedOut, stderr: r.stderr.slice(-600) });
+      return { focus, r, out: done ? out : null };
+    }));
+    return mergeReviews(parts);
+  }
+
+  /**
+   * The parts' reports as one: issues when any part found some, ok when
+   * every part finished and found none; a part that did not finish is said
+   * in the report and listed as `unfinished`. Failed only when none finished.
+   */
+  function mergeReviews(parts) {
+    const finished = parts.filter((p) => p.out);
+    if (!finished.length) {
+      return { verdict: null, error: parts.some((p) => p.r.timedOut) ? `The review took longer than ${minutes(reviewTimeoutMs)} and was stopped.` : 'The reviewers did not finish their reports. Try again later.' };
     }
+    const verdictOf = (p) => (['ok', 'issues'].includes(p.out?.verdict) ? p.out.verdict : null);
+    const unfinished = parts.filter((p) => !p.out || !verdictOf(p)).map((p) => p.focus.id);
+    const verdict = finished.some((p) => verdictOf(p) === 'issues') ? 'issues' : unfinished.length ? null : 'ok';
+    const each = Math.floor(MAX_REVIEW_TEXT / parts.length) - 200;
+    const report = parts.map((p) => {
+      const what = p.focus.title.toLowerCase();
+      const body = !p.out ? `(The review of ${what} did not finish${p.r.timedOut ? `: it took longer than ${minutes(reviewTimeoutMs)}` : ''}.)`
+        : clip(p.out.report, each) + (verdictOf(p) ? '' : `\n(The review of ${what} gave no verdict.)`);
+      return `## ${p.focus.title}\n\n${body}`;
+    }).join('\n\n');
     return {
-      verdict: ['ok', 'issues'].includes(out.verdict) ? out.verdict : null,
-      rubricsRead: (Array.isArray(out.rubricsRead) ? out.rubricsRead : []).map((s) => clip(s, 10)).slice(0, 20),
-      report: clip(out.report, MAX_REVIEW_TEXT),
+      verdict,
+      ...(unfinished.length ? { unfinished } : {}),
+      // With no verdict but parts that finished: what the person is told.
+      ...(!verdict ? { error: `Part of the review did not finish (${unfinished.map((id) => REVIEW_FOCUSES.find((f) => f.id === id).title.toLowerCase()).join('; ')}), and the rest found no issues.` } : {}),
+      rubricsRead: [...new Set(finished.flatMap((p) => (Array.isArray(p.out.rubricsRead) ? p.out.rubricsRead : [])))].map((sc) => clip(sc, 10)).sort().slice(0, 20),
+      report: clip(report, MAX_REVIEW_TEXT),
     };
   }
 

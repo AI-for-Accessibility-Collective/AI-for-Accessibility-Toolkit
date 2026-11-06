@@ -61,3 +61,21 @@ After the findings, add one section to your report:
     Rubrics:
     - <sc> <title>: PASS | FAIL | NOT_APPLICABLE | UNDETERMINED — <the observation>
     Left out: <the criteria you did not choose, and why, in one line>
+
+## When your task gives you one part
+
+The review may be split: then reviewers work at the same time, each on one
+part, and the toolkit puts their reports together. The task says which part
+is yours:
+
+- **The code**: the contract and putting the page back, errors,
+  performance, privacy and safety, and whether it does what it is for.
+  Read no rubrics and leave out the Rubrics section; the other reviewers
+  have them.
+- **Some of the rubrics**: judge only the criteria the task lists for you,
+  and report on the code only where a criterion needs it. Run
+  `keyboard_audit` only if one of your criteria is about the keyboard or
+  focus.
+
+Your report has the same form either way, with its own `Verdict:` line, for
+your part only.
