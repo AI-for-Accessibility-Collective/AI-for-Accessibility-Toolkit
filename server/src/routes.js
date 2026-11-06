@@ -112,6 +112,15 @@ export const LIBRARIAN_ROUTES = [
   // telling the person their settings went back to normal when they did not.
   { route: 'resetToProfile', target: 'resetToProfile', kind: 'librarian' },
 
+  // ---- registered needs ---------------------------------------------------
+  // Needs adapters and apps say they meet (toolkit/core/needs.js). Apps
+  // register theirs with the MCP tool profile_need_register, which checks
+  // them; the service runs decideNeeds itself (learning.js), since it calls
+  // the model. A client lists them with the agent's decisions, and says the
+  // person switched one on.
+  { route: 'listRegisteredNeeds', target: 'listRegisteredNeeds', kind: 'librarian' },
+  { route: 'chooseNeed', target: 'chooseNeed', kind: 'librarian' },
+
   // ---- natural-language notes --------------------------------------------
   // Prose the person wrote about their own needs (toolkit/core/librarian.js,
   // "Natural-language notes"). Route names match the method names — there is no

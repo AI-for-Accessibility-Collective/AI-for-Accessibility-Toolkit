@@ -97,6 +97,21 @@ check('the same words keep the decision', JSON.stringify((await L.listRegistered
 await L.registerNeeds({ appId: 'maps', app: 'maps' }, [{ ...ROUTE, description: 'Gives directions as a short list of landmarks.' }]);
 check('new words are decided again', !(await L.listRegisteredNeeds()).find(n => n.key === 'maps/route-detail').decision);
 
+// ---- an empty profile ------------------------------------------------------
+const tk2 = createToolkit({ kv: memKV(), clock: { now: () => nowMs }, scheduler: { every() {}, debounce() {} }, consent: { notifyPending() {} } });
+await tk2.datastore.runMigrations();
+let asked2 = 0;
+tk2.librarian.setGeminiCaller(async () => { asked2++; return '{}'; });
+await tk2.librarian.registerNeeds({ appId: 'toolkit' }, [TARGETS]);
+const blank = await tk2.librarian.decideNeeds();
+check('a profile that says nothing is decided without the model, and nothing is suggested', blank.ran && asked2 === 0 && blank.suggested === 0 && (await tk2.librarian.listRegisteredNeeds())[0].decision.include === false, blank);
+
+// ---- the values reach adapters -------------------------------------------
+const { personalFromProfile } = await import('../blocks/personal.js');
+const personal = personalFromProfile({ fields: { needs: [{ dimension: 'maps/route-detail', value: 4 }, { dimension: 'toolkit/bigger-targets', value: true }, { dimension: 'toolkit/off', value: false }, { dimension: 'textSize', value: 1.5 }] } });
+check('adapters get the registered needs the person has, with their values', JSON.stringify(personal.needs) === JSON.stringify({ 'maps/route-detail': 4, 'toolkit/bigger-targets': true }) && personal.fontScale === 150, personal);
+check('no registered needs, no needs key', personalFromProfile({ fields: { needs: [{ dimension: 'textSize', value: 1.5 }] } }).needs === undefined);
+
 // ---- pure parts ---------------------------------------------------------
 const asked = [{ key: 'a/x', value: { kind: 'on' } }, { key: 'a/n', value: { kind: 'number', min: 1, max: 3, start: 2 } }];
 const read = readDecisions({ decisions: [{ need: 'a/x', include: true, reason: 'r'.repeat(300) }, { need: 'a/n', include: true, value: 'lots' }, { need: 'b/y', include: true }, { need: 'a/x', include: false }] }, asked);

@@ -99,6 +99,13 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   `removeScopedSetting`, `recordExplicitSetting`, `resetToProfile`
   ("back to my profile": the bulk inverse of `recordScopedSettings`. Without a
   wire route a remote host's reset reaches nothing and reports success anyway).
+- Registered needs (toolkit/core/needs.js): `listRegisteredNeeds` (each with
+  the profile agent's last decision) and `chooseNeed` (the person switched on
+  what meets one: it goes into their profile as theirs) are routes under their
+  own names. Apps register needs with the MCP tool `profile_need_register`,
+  which checks them; `registerNeeds` and `decideNeeds` have no route, and the
+  service runs `decideNeeds` itself a little after a need is registered or
+  the profile changes.
 - `setProfileFields` is a first-class route under its own name for the same
   reason, with no extension message behind it. Every profile field lives in one
   stored record, so a caller that writes four fields in four requests writes
@@ -121,4 +128,4 @@ Instead of embedding the toolkit in-process, a client can call a hosted instance
   `respondToProposal` marks it `edited`, and a `replaceProfile` with no
   preset clears it. Every one of those writes also announces itself on
   `/v1/profile/events`.
-- 49 routes total.
+- 51 routes total.

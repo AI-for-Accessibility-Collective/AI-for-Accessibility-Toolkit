@@ -10,6 +10,13 @@
 // under More options, and each can be turned on or off there. A preset (the
 // developer console's, /v1/profile/presets) can replace it all.
 //
+// Needs adapters and apps registered (toolkit/core/needs.js) are listed with
+// the toolkit's own. The profile agent decides from the profile whether each
+// fits; what it suggests is under Suggested for you, for the person to
+// answer. Turning one on switches on the adapter that meets it, which is the
+// person's own answer; turning it off takes the need out and switches the
+// adapter off.
+//
 // Adapters, three sections:
 //   Applied on this page  the installed adapters that target the page beside
 //                         the panel, what happened when they ran, and a
@@ -39,6 +46,8 @@ let selection = null; // {id, name, edited} or null
 let presets = [];
 let events = null;    // AbortController of /v1/profile/events
 let lastRevision = null;
+let registered = [];  // the needs adapters and apps registered (profile_learned)
+let suggested = [];   // the profile agent's suggestions about them, waiting for an answer
 
 async function service(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${connection.url}${path}`, {
@@ -67,7 +76,23 @@ async function loadProfile() {
   profile = p;
   selection = sel?.selected || null;
   presets = pre?.presets || [];
+  await loadSuggestions();
 }
+
+async function loadSuggestions() {
+  const learned = await registry.profile.learned().catch(() => null);
+  registered = learned?.needs || [];
+  suggested = (learned?.proposals || []).filter(x => x.change?.op === 'need-add' || x.change?.op === 'need-remove');
+}
+
+/** A registered need as a line the tab shows: its phrase, and its number where it takes one. */
+function registeredItem(n) {
+  const v = n.value || { kind: 'on' };
+  if (v.kind !== 'number') return { id: n.key, name: n.phrase, kind: 'on', need: n };
+  const whole = Number.isInteger(v.min) && Number.isInteger(v.max);
+  return { id: n.key, name: n.phrase, kind: 'number', min: v.min, max: v.max, step: whole ? 1 : 0.1, start: v.start ?? v.min, unit: v.unit || 'the value', show: (x) => `${x}${v.unit ? ` ${v.unit}` : ''}`, need: n };
+}
+const adapterOf = (n) => { const [owner, appId, id] = String(n?.from?.adapter || '').split('/'); return owner && appId && id ? { owner, appId, id } : null; };
 
 function renderProfile() {
   // What the person is typing or saying stays.
@@ -106,10 +131,52 @@ function renderUnderstood() {
     (isOn ? on : off).push(itemRow('need', d, isOn, n ? Number(n.value) : undefined));
   }
   (plainOf(profile) ? on : off).push(itemRow('plain', PLAIN, plainOf(profile)));
+  for (const n of registered) {
+    const d = registeredItem(n);
+    const have = needs.get(n.key);
+    const isOn = !!have && have.value !== false;
+    (isOn ? on : off).push(itemRow('registered', d, isOn, have && d.kind === 'number' ? Number(have.value) : undefined));
+  }
+  renderSuggestions();
   $('profile-understood').hidden = false;
   $('profile-selected').replaceChildren(...(on.length ? on : [el('li', 'empty', 'Nothing yet. Describe your abilities above, or turn something on under More options.')]));
   $('profile-others').replaceChildren(...off);
   $('profile-summary').textContent = profile?.fields?.wordsSummary || '';
+}
+
+/** The profile agent's suggestions about registered needs: yes, not now, or never. */
+function renderSuggestions() {
+  $('profile-suggestions').hidden = !suggested.length;
+  $('profile-suggested').replaceChildren(...suggested.map((p) => {
+    const li = el('li');
+    li.append(el('strong', '', p.change.op === 'need-add' ? p.label : `Stop: ${p.label}`));
+    if (p.rationale) li.append(el('span', 'about', p.rationale));
+    const row = el('div', 'row');
+    const answer = (response, said) => async () => {
+      for (const b of row.querySelectorAll('button')) b.disabled = true;
+      try {
+        const r = await registry.profile.respond(p.id, response);
+        if (r?.ok === false) throw new Error(`Could not answer that (${r.reason}).`);
+        await loadProfile();
+        renderProfile();
+        ask('sync').catch(() => {});
+        refreshAdapters();
+        say(said);
+      } catch (e) { say(e.message, true); for (const b of row.querySelectorAll('button')) b.disabled = false; }
+    };
+    const yes = button(p.change.op === 'need-add' ? 'Yes, turn it on' : 'Yes, take it out', 'primary', answer('accept', `Done: ${p.label}.`));
+    const later = button('Not now', 'secondary', answer('declineOnce', `Not now: ${p.label}.`));
+    const never = button('Don’t suggest again', 'secondary', answer('suppress', `Your toolkit won’t suggest this again: ${p.label}.`));
+    for (const b of [yes, later, never]) b.setAttribute('aria-label', `${b.textContent}: ${p.label}`);
+    row.append(yes, later, never);
+    li.append(row);
+    return li;
+  }));
+}
+
+/** Suggestions come a few seconds after the profile changes: look again a little later. */
+function lookForSuggestions() {
+  for (const ms of [7000, 15000]) setTimeout(async () => { await loadSuggestions(); renderUnderstood(); }, ms);
 }
 
 function renderPresets() {
@@ -130,6 +197,24 @@ async function saveItem(kind, d, on, value) {
       profile = await librarian('setProfileFields', [{ supportAreas: PROFILE_AREAS.map(a => a.id).filter(a => areas.has(a)) }]);
     } else if (kind === 'plain') {
       profile = await librarian('setProfileFields', [{ 'metaPreferences.language': on ? 'plain' : 'standard' }]);
+    } else if (kind === 'registered') {
+      if (d.kind === 'number' && on && !(value >= d.min && value <= d.max)) { say(`${d.name}: choose a value from ${d.min} to ${d.max}.`, true); return; }
+      const adapter = adapterOf(d.need);
+      if (on) {
+        // Switching on the adapter that meets it is the person's own answer (the toolkit records the need); an app's need, directly.
+        if (adapter) await registry.install(BROWSER_RUNTIME_APP, adapter, { enabled: true });
+        else await librarian('chooseNeed', [d.id]);
+        if (d.kind === 'number' || !adapter) {
+          profile = await librarian('getProfile');
+          const needs = needsOf(profile).filter(n => n.dimension !== d.id);
+          needs.push({ ...(needsOf(profile).find(n => n.dimension === d.id) || { strength: 'preference', source: 'person' }), dimension: d.id, value: d.kind === 'number' ? value : true });
+          profile = await librarian('setProfileFields', [{ 'fields.needs': needs }]);
+        }
+      } else {
+        profile = await librarian('setProfileFields', [{ 'fields.needs': needsOf(profile).filter(n => n.dimension !== d.id) }]);
+        if (adapter) await registry.install(BROWSER_RUNTIME_APP, adapter, { enabled: false }).catch(() => {});
+      }
+      refreshAdapters();
     } else {
       if (d.kind === 'number' && on && !(value >= d.min && value <= d.max)) { say(`${d.name}: choose a value from ${d.min} to ${d.max}.`, true); return; }
       const needs = needsOf(profile).filter(n => n.dimension !== d.id);
@@ -177,6 +262,7 @@ async function saveWords(event) {
       'metaPreferences.language': reading.plainLanguage ? 'plain' : 'standard',
     }]);
     renderProfile();
+    lookForSuggestions();
     say(`Saved. ${reading.summary || 'Your adapters follow it now.'}`);
     ask('sync').catch(() => {});
     refreshAdapters();

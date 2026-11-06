@@ -52,7 +52,7 @@ export async function readConsolePrefs(store, uid) {
  * @param {(uid: string, fn: () => Promise<any>) => Promise<any>} config.withUserLock
  * @param {(req) => Promise<object|null>} config.authenticate  token record or null
  */
-export function createProviderRoutes({ store, relay, withUserLock, authenticate, activity = null, onApplication = null }) {
+export function createProviderRoutes({ store, relay, withUserLock, authenticate, activity = null, onApplication = null, onAdapters = null }) {
   async function requireRecord(req, { appToken = false } = {}) {
     const rec = await authenticate(req);
     if (!rec) throw new HttpError(401, 'unauthorized', 'Send a toolkit token: Authorization: Bearer aat_…');
@@ -119,6 +119,8 @@ export function createProviderRoutes({ store, relay, withUserLock, authenticate,
       doc.apps[application.appId] = { ...appInfo, adapters, updatedAt: now, lastSeenAt: now };
       await store.writeJSON(APPS_DOC(rec.uid), doc);
     });
+    // The needs its adapters meet, for the profile agent to decide on.
+    onAdapters?.(rec, application, adapters);
     return sendJSON(res, 200, {
       ok: true,
       providerId,

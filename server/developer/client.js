@@ -78,7 +78,7 @@ export async function signIn(baseUrl, username, password, fetcher = fetch) {
 }
 
 // Librarian calls that change the profile (server/src/profile-events.js PROFILE_WRITES).
-const PROFILE_WRITES = new Set(['replaceProfile', 'setProfileField', 'setProfileFields', 'respondToProposal', 'resetToProfile']);
+const PROFILE_WRITES = new Set(['replaceProfile', 'setProfileField', 'setProfileFields', 'respondToProposal', 'resetToProfile', 'chooseNeed']);
 
 export function createClient(baseUrl, token, fetcher = fetch) {
   const base = instanceBase(baseUrl);

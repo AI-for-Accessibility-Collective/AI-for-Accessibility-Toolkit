@@ -6,6 +6,7 @@
 //   await s.profile.set({ fontScale: 150 })                    for this site (the default)
 //   await s.profile.set({ fontScale: 150 }, { scope: 'all' })  for every site
 //   s.profile.onChange((personal, changed) => ...)
+//   s.profile.need('toolkit/bigger-targets')  a registered need's value, or undefined when they do not have it
 //
 // set() records what the person chose in their toolkit profile, so it
 // follows them to other pages and devices and wins over what the toolkit
@@ -29,6 +30,12 @@ export function profileBlock(s, env) {
   function get(key) {
     const p = env.personal;
     return key === undefined ? p : p[key];
+  }
+
+  /** A need an adapter or app registered ("<appId>/<id>"): its value when the person has it. */
+  function need(key) {
+    const n = env.personal.needs;
+    return n && Object.hasOwn(n, key) ? n[key] : undefined;
   }
 
   /** Whether the person just used the toolkit's UI or their shortcut. */
@@ -67,5 +74,5 @@ export function profileBlock(s, env) {
     return stop;
   }
 
-  return { get, set, onChange, keys: SETTABLE_KEYS };
+  return { get, set, onChange, need, keys: SETTABLE_KEYS };
 }

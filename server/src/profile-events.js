@@ -24,7 +24,7 @@ import { BUILTIN_PROFILES } from '../developer/profiles.js';
 const PROFILE_PREFIX = '/v1/profile';
 
 // Librarian routes that write the profile record.
-export const PROFILE_WRITES = new Set(['replaceProfile', 'setProfileField', 'setProfileFields', 'respondToProposal']);
+export const PROFILE_WRITES = new Set(['replaceProfile', 'setProfileField', 'setProfileFields', 'respondToProposal', 'chooseNeed']);
 
 const MAX_ID = 80;
 const MAX_NAME = 120;

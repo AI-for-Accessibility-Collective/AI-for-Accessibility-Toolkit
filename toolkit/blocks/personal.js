@@ -35,5 +35,8 @@ export function personalFromProfile(profile) {
   if (level === 'plain' || level === 'easy-read') out.readingLevel = level;
   else if (level !== null && level !== undefined && Number.isFinite(parseInt(level, 10))) out.readingLevel = clamp(parseInt(level, 10), 1, 12);
   else if (model.language === 'plain' || settings.autoSimplify) out.readingLevel = 'plain';
+  // The registered needs they have ("<appId>/<id>"), for the adapter that meets each.
+  const needs = model.needs.filter(n => n.dimension.includes('/') && n.value !== false && n.value !== null && n.value !== undefined);
+  if (needs.length) out.needs = Object.freeze(Object.fromEntries(needs.map(n => [n.dimension, n.value])));
   return Object.freeze(out);
 }

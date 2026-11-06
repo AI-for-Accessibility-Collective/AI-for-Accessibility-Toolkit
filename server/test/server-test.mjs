@@ -51,8 +51,9 @@ const DIRECT_SURFACE_ROUTES = [
 ];
 // Natural-language notes — routed under their own method names.
 const NOTE_ROUTES = ['addNote', 'listNotes', 'updateNote', 'deleteNote', 'findNotes'];
-const ALL_ROUTES = [...EXTENSION_ALIAS_ROUTES, ...DIRECT_SURFACE_ROUTES, ...NOTE_ROUTES];
-assert.equal(ALL_ROUTES.length, 49, 'contract total must be 49 routes');
+const NEED_ROUTES = ['listRegisteredNeeds', 'chooseNeed'];
+const ALL_ROUTES = [...EXTENSION_ALIAS_ROUTES, ...DIRECT_SURFACE_ROUTES, ...NOTE_ROUTES, ...NEED_ROUTES];
+assert.equal(ALL_ROUTES.length, 51, 'contract total must be 51 routes');
 
 const results = [];
 
@@ -109,7 +110,7 @@ async function main() {
     });
 
     // ---- meta: the full route set --------------------------------------------
-    await test('GET /v1/meta lists all 49 routes (36 extension aliases + 8 direct-surface + 5 notes), all supported', async () => {
+    await test('GET /v1/meta lists all 51 routes (36 extension aliases + 8 direct-surface + 5 notes + 2 registered needs), all supported', async () => {
       const r = await call('GET', '/v1/meta');
       assert.equal(r.status, 200);
       const methods = r.body.librarian.methods;

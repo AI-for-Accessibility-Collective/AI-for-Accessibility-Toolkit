@@ -276,8 +276,14 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
       withToolkit(uid, async ({ librarian }) => {
         await librarian.registerNeeds({ appId: event.appId, adapter: event.adapter }, event.needs);
         // Switched on in their own browser: the person has these needs.
-        if (on) for (const n of event.needs) await librarian.chooseNeed(`${event.appId}/${n.id}`);
-      }, 'learning.needs').then(() => scheduleDecide(uid), e => log.warn('learning.needs.register-failed', { uid, errorCode: e?.code || 'error' }));
+        let added = false;
+        if (on) for (const n of event.needs) added = (await librarian.chooseNeed(`${event.appId}/${n.id}`)).added || added;
+        return added;
+      }, 'learning.needs').then(async (added) => {
+        // The apps and pages following the profile hear about the need.
+        if (added) await profileEvents.changed(uid).catch(e => log.warn('profile.announce.failed', { uid, errorCode: e?.code || 'error' }));
+        scheduleDecide(uid);
+      }, e => log.warn('learning.needs.register-failed', { uid, errorCode: e?.code || 'error' }));
     }
     if (event.app !== BROWSER_RUNTIME_APP) return;
     const what = `the adapter "${event.name}"${event.supportAreas?.length ? ` (for ${event.supportAreas.join(', ')})` : ''}`;
@@ -296,6 +302,15 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
       observe(uid, { ...obs, ...about }).catch(() => observe(uid, obs))
         .catch(e => log.warn('learning.observe.failed', { uid, errorCode: e?.code || 'error' }));
     }
+  }
+
+  /** An app connected (Adapter MCP): the needs its adapters declare are the profile agent's to decide on. */
+  function fromApp(uid, appId, adapters) {
+    const withNeeds = (adapters || []).filter(d => d?.needs?.length);
+    if (!withNeeds.length) return;
+    withToolkit(uid, async ({ librarian }) => {
+      for (const d of withNeeds) await librarian.registerNeeds({ appId, app: appId }, d.needs);
+    }, 'learning.needs').then(() => scheduleDecide(uid), e => log.warn('learning.needs.register-failed', { uid, errorCode: e?.code || 'error' }));
   }
 
   // ── the profile_* MCP tools ──────────────────────────────────────────────
@@ -329,7 +344,7 @@ export function createLearning({ toolkitHost, withUserLock, profileEvents, acces
   }]));
 
   return {
-    observe, scheduleExtract, scheduleDecide, decideIn, learnNow, learned, respond, reset, forget, fromRegistry, tools,
+    observe, scheduleExtract, scheduleDecide, decideIn, learnNow, learned, respond, reset, forget, fromRegistry, fromApp, tools,
     useRegistry: (r) => { registry = r; },
   };
 }

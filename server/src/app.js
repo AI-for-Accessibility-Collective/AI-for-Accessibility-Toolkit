@@ -140,6 +140,8 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     onApplication: (rec, application) => (application.visibility
       ? access.tools.app_declare.run(rec.uid, { appId: application.appId, name: application.name, visibility: application.visibility }, rec)
       : access.nameApp(rec.uid, application.appId, application.name)),
+    // `learning` is made below; an app connects only once the service runs.
+    onAdapters: (rec, application, adapters) => learning.fromApp(rec.uid, application.appId, adapters),
   });
   const profileEvents = createProfileEvents({ store, authenticate, toolkitHost, withUserLock });
   const learning = createLearning({ toolkitHost, withUserLock, profileEvents, access, log, builtinNeeds: builtinAdapters ? builtinNeeds() : [], ...(learningDelayMs !== undefined ? { extractDelayMs: learningDelayMs } : {}) });

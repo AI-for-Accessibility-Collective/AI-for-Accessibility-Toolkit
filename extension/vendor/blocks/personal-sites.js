@@ -17,6 +17,7 @@ export const PERSONAL_KEYS = Object.freeze({
   contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast; 'none' when the person turned it off.",
   darkMode: 'true when the profile asks for a dark theme.',
   readingLevel: "'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours.",
+  needs: "The needs adapters and apps registered that the person has: { '<appId>/<id>': value } (true, or the need's number). Read yours with s.profile.need('<appId>/<id>'); missing means they do not have it.",
 });
 
 /** The personal keys an adapter may record for the person (profile.set): the ones that are settings. */

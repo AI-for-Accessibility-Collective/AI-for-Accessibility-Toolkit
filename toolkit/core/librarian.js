@@ -1977,7 +1977,11 @@ Return ONLY valid JSON with:
       const basis = profileBasis(profile);
       const asked = needsToDecide(await DS().get('mine.registeredNeeds'), basis);
       if (!asked.length) return { ran: false, reason: 'nothing-to-decide' };
-      const decided = readDecisions(parseJsonLoose(await _gemini(decisionPrompt(profile, asked))), asked);
+      // A profile that says nothing yet calls for nothing: no need to ask the model.
+      const blank = !(profile.supportAreas || []).length && !String(profile.freeText || '').trim() && !(profile.fields?.needs || []).length;
+      const decided = blank
+        ? Object.fromEntries(asked.map(n => [n.key, { include: false, value: true, reason: 'Your profile does not say anything about your needs yet.' }]))
+        : readDecisions(parseJsonLoose(await _gemini(decisionPrompt(profile, asked))), asked);
       const now = clock.now();
       const have = new Map((profile.fields?.needs || []).filter(n => n?.dimension).map(n => [n.dimension, n]));
       const drafts = [];

@@ -2665,7 +2665,8 @@ ${String(o.about).trim().slice(0, each)}`).join("\n\n");
     motionReducer: "true when the profile asks for reduced motion. Bands and scrolling stop animating, as with the system setting.",
     contrastMode: "'light' or 'yellow-black' when the profile asks for more contrast; 'none' when the person turned it off.",
     darkMode: "true when the profile asks for a dark theme.",
-    readingLevel: "'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours."
+    readingLevel: "'plain', 'easy-read' or a grade 1-12 (the profile's reading level, or plain language). ai.text({ readingLevel }) uses the profile's over yours.",
+    needs: "The needs adapters and apps registered that the person has: { '<appId>/<id>': value } (true, or the need's number). Read yours with s.profile.need('<appId>/<id>'); missing means they do not have it."
   });
   var SETTABLE_KEYS = Object.freeze(["speechRate", "fontScale", "textSizeMethod", "lineHeight", "letterSpacing", "targetSize", "motionReducer", "contrastMode", "darkMode"]);
   function personalFromSettings(settings, { keepOff = false } = {}) {
@@ -2714,6 +2715,10 @@ ${String(o.about).trim().slice(0, each)}`).join("\n\n");
       const p = env.personal;
       return key === void 0 ? p : p[key];
     }
+    function need(key) {
+      const n = env.personal.needs;
+      return n && Object.hasOwn(n, key) ? n[key] : void 0;
+    }
     function byPerson() {
       const now = Date.now();
       const last = shared.lastInput;
@@ -2753,7 +2758,7 @@ ${String(o.about).trim().slice(0, each)}`).join("\n\n");
       s.onEnd(stop);
       return stop;
     }
-    return { get, set, onChange, keys: SETTABLE_KEYS };
+    return { get, set, onChange, need, keys: SETTABLE_KEYS };
   }
 
   // toolkit/blocks/zoom.js

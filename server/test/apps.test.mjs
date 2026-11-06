@@ -240,6 +240,22 @@ try {
     const legacy = await call('POST', '/v1/adapters', { token: bo.token, body: { appId: 'xr', id: 'legacy', name: 'Legacy' } });
     assert.equal(legacy.body.adapter.descriptor, undefined);
   });
+
+  await test('an app that connects hands the needs its adapters declare to the profile agent', async () => {
+    const adapter = { enabled: false, enable() { this.enabled = true; }, disable() { this.enabled = false; } };
+    const NEED = { id: 'larger-captions', phrase: 'Larger captions', description: 'Shows captions in the guide at a bigger size.', abilities: 'Small caption text is hard to read while moving.', value: { kind: 'number', min: 1, max: 3, start: 1.5, unit: 'times the usual size' } };
+    const provider = createAdapterProvider({
+      application: { appId: 'guide', name: 'Museum guide', version: '1.0.0', supportedPlatforms: [{ environment: 'node' }], platform: { environment: 'node' }, surfaces: ['web'] },
+      adapters: [fromToggleAdapter({ adapter, descriptor: defineDescriptor({ appId: 'guide', id: 'captions', name: 'Captions', version: '1.0.0', targets: [{ platforms: ['*'], urls: ['https://guide.test/*'] }], needs: [NEED] }) })],
+    });
+    const c = connect({ token: bo.token, provider, providerId: 'guide-1' });
+    await c.ready;
+    const needs = await until(async () => {
+      const r = await call('POST', '/v1/librarian/listRegisteredNeeds', { token: bo.token, body: { args: [] } });
+      return r.body.result?.length ? r.body.result : null;
+    });
+    assert.deepEqual(needs.map(n => [n.key, n.phrase, n.value.start, n.from.app]), [['guide/larger-captions', 'Larger captions', 1.5, 'guide']]);
+  });
 } finally {
   for (const c of connections) await c.close().catch(() => {});
   relay.closeAll();

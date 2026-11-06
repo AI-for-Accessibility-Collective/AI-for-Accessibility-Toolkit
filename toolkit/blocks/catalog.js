@@ -379,6 +379,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       "await s.profile.set({ fontScale: 150 })                    // this site (the default)",
       "await s.profile.set({ fontScale: 150 }, { scope: 'all' })  // every site",
       's.profile.onChange((personal, changed) => ...)',
+      "s.profile.need('<appId>/<id>')   // a need your descriptor declared: its value when the person has it, else undefined",
     ],
     config: { scope: { default: 'site', description: "set(): 'site' records it for this site; 'all' for every site (and drops this site's own value, so it follows)." } },
     personal: Object.fromEntries(['speechRate', 'fontScale', 'textSizeMethod', 'lineHeight', 'letterSpacing', 'targetSize', 'motionReducer', 'contrastMode', 'darkMode'].map((k) => [k, 'Settable.'])),
