@@ -96,33 +96,81 @@
       </section>
       <section class="panel" aria-labelledby="view-title">
         <h2 id="view-title">2. Watch and read</h2>
-        <div class="video-shell">
-          <video
-            id="video"
-            controls
-            playsinline
-            preload="metadata"
-            aria-label="Video with CaptionFlow captions"
-          ></video>
-          <div class="caption-wrap" id="caption-wrap">
-            <div id="caption" aria-live="off">Choose a video to begin.</div>
+        <div class="watch-layout">
+          <div class="watch-main">
+            <div class="video-shell">
+              <video
+                id="video"
+                controls
+                playsinline
+                preload="metadata"
+                aria-label="Video with CaptionFlow captions"
+              ></video>
+              <div class="caption-wrap" id="caption-wrap">
+                <div id="caption" aria-live="off">Choose a video to begin.</div>
+              </div>
+            </div>
+            <p class="small" id="time-status">No video loaded.</p>
+            <p role="status" aria-live="polite" id="message" class="message">
+              Choose a video, then generate matching captions.
+            </p>
+            <div class="actions">
+              <button id="replay" type="button">↶ Replay this caption</button>
+              <button id="next" type="button">Next caption ↷</button>
+              <label
+                >Reading pace
+                <select id="pace">
+                  <option value="normal">Normal (1×)</option>
+                  <option value="slow">Slow (0.75×)</option>
+                  <option value="manual">Pause at each new caption</option>
+                </select></label
+              >
+            </div>
           </div>
-        </div>
-        <p class="small" id="time-status">No video loaded.</p>
-        <p role="status" aria-live="polite" id="message" class="message">
-          Choose a video, then generate matching captions.
-        </p>
-        <div class="actions">
-          <button id="replay" type="button">↶ Replay this caption</button>
-          <button id="next" type="button">Next caption ↷</button>
-          <label
-            >Reading pace
-            <select id="pace">
-              <option value="normal">Normal (1×)</option>
-              <option value="slow">Slow (0.75×)</option>
-              <option value="manual">Pause at each new caption</option>
-            </select></label
-          >
+          <section class="transcript-panel" aria-labelledby="transcript-title">
+            <h3 id="transcript-title">Transcript</h3>
+            <p class="small">Select a line to jump to that moment. Unreviewed wording is marked.</p>
+            <div class="actions transcript-tools">
+              <label
+                ><input type="checkbox" id="follow" checked /> Follow playback</label
+              >
+              <label
+                ><input type="checkbox" id="show-times" checked /> Show times</label
+              >
+              <label
+                >Transcript text size
+                <select id="transcript-size">
+                  <option value="normal">Normal</option>
+                  <option value="large">Large</option>
+                  <option value="xlarge">Extra large</option>
+                </select></label
+              >
+              <button id="download-transcript" type="button" disabled>
+                Save transcript (.txt)
+              </button>
+            </div>
+            <div class="transcript-search" role="search">
+              <label for="transcript-search"
+                >Search this transcript</label
+              >
+              <input
+                id="transcript-search"
+                type="search"
+                autocomplete="off"
+                placeholder="Type a word or phrase"
+              />
+              <div class="actions">
+                <button id="search-prev" type="button" disabled>
+                  Previous match
+                </button>
+                <button id="search-next" type="button" disabled>
+                  Next match
+                </button>
+              </div>
+              <p id="search-status" class="small" role="status" aria-live="polite"></p>
+            </div>
+            <ol id="transcript" class="transcript"></ol>
+          </section>
         </div>
       </section>
       <section class="panel" aria-labelledby="prefs-title">
@@ -149,13 +197,6 @@
           local demo user. Language, pace and contrast are temporary browser
           controls.
         </p>
-      </section>
-      <section class="panel" aria-labelledby="list-title">
-        <h2 id="list-title">4. Caption transcript</h2>
-        <p class="small">
-          Select a line to jump to that moment. Unreviewed wording is marked.
-        </p>
-        <ol id="transcript" class="transcript"></ol>
       </section>
     </main>
   </body>

@@ -321,3 +321,92 @@ button:disabled {
     line-height: 1.5;
     font-size: .93rem;
 }
+
+.watch-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: start
+}
+
+.watch-main,
+.transcript-panel {
+    min-width: 0
+}
+
+.transcript-panel h3 {
+    margin: 0 0 6px;
+    font-size: 1.05rem
+}
+
+.transcript-tools {
+    margin: 8px 0 12px
+}
+
+.transcript {
+    position: relative
+}
+
+.transcript[data-size=large] button {
+    font-size: 1.15rem
+}
+
+.transcript[data-size=xlarge] button {
+    font-size: 1.35rem
+}
+
+.transcript.hide-times .time {
+    display: none
+}
+
+.transcript [aria-current=true] {
+    font-weight: 700
+}
+
+.transcript-search {
+    margin-bottom: 10px
+}
+
+.transcript-search label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px
+}
+
+.transcript-search input[type=search] {
+    width: 100%;
+    border: 1px solid #aebdc9;
+    border-radius: 8px;
+    padding: 10px;
+    background: white;
+    color: #1b3043
+}
+
+.transcript-search .actions {
+    margin-top: 8px
+}
+
+.transcript mark {
+    background: #ffe38a;
+    color: #13263a;
+    padding: 0 2px;
+    border-radius: 3px
+}
+
+.transcript .match button {
+    border-left: 3px solid #df8f2a
+}
+
+.transcript .match-current button {
+    background: #fff1d6
+}
+
+@media(min-width:900px) {
+    .watch-layout {
+        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr)
+    }
+
+    .transcript {
+        max-height: 460px
+    }
+}
