@@ -501,7 +501,7 @@ try {
     await panel.locator('#transcript', { hasText: 'Later: The person chose not to share this page.' }).waitFor();
     await panel.locator(`#chat-select option[value="${laterChat}"]`, { hasText: '(asks you)' }).waitFor({ state: 'detached' });
 
-    // Uploading code to go on from: optional, with the next message. Before
+    // Uploading files from the computer, of any kind: optional, with the next message. Before
     // the first message the box asks what gets in the way; after, for more.
     await panel.getByRole('button', { name: 'New chat' }).click();
     await panel.locator('#transcript', { hasText: 'Say what gets in your way' }).waitFor();
@@ -509,14 +509,16 @@ try {
     await panel.locator('#upload-file').setInputFiles([
       { name: 'mine.js', mimeType: 'text/javascript', buffer: Buffer.from('export const Mine = { enable() {}, disable() {} };\n') },
       { name: 'stray.js', mimeType: 'text/javascript', buffer: Buffer.from('// not this one\n') },
+      { name: 'shot.png', mimeType: 'image/png', buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 13]) },
     ]);
-    await until(async () => /Attached mine\.js, stray\.js/.test(await said()), 'the attached files said');
+    await until(async () => /Attached mine\.js, stray\.js, shot\.png/.test(await said()), 'the attached files said');
     await shot(panel, '9-upload');
     await panel.getByRole('button', { name: 'Remove stray.js' }).click();
-    assert.equal(await panel.locator('#attachments li').count(), 1);
+    assert.equal(await panel.locator('#attachments li').count(), 2);
     await panel.locator('#send').click();
-    await panel.locator('#transcript', { hasText: 'Uploaded: mine.js' }).waitFor();
-    await panel.locator('#transcript', { hasText: 'You said: Continue working on this code.' }).waitFor();
+    await panel.locator('#transcript', { hasText: 'Uploaded: mine.js, shot.png' }).waitFor();
+    await panel.locator('#transcript', { hasText: 'You said: Continue from what I uploaded.' }).waitFor();
+    assert.match(await panel.locator('#transcript').innerText(), /shot\.png \(image\/png, 8 bytes\)/);
     assert.equal(await panel.locator('#attachments').isHidden(), true);
     assert.equal(await panel.locator('#message').getAttribute('placeholder'), 'Additional requests?');
 
@@ -529,7 +531,7 @@ try {
     await panel.locator('#status', { hasText: 'Deleted' }).waitFor();
     assert.equal(await panel.locator(`#chat-select option[value="${doomed}"]`).count(), 0);
     assert.notEqual(await panel.locator('#chat-select').inputValue(), doomed);
-    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, reconnecting after the stream drops, the preview switch, chat titles, multiple-choice questions (pages, areas, Other), steps folded, what a screen reader hears, background check and full review, the account updated to a newer checked version, two chats running at once, uploading code to go on from, the hint before the first message, deleting a chat.');
+    console.log('Assistant browser workflow passed (stand-in agent): page sharing with consent, preview with checks, axe-core and removal, automatic preview on the chat’s page while another tab is on screen, go to that tab and work on another page, repeated steps folded, no code shown, page data on the host, export, add to account (runs from the account), chat history, reconnecting after the stream drops, the preview switch, chat titles, multiple-choice questions (pages, areas, Other), steps folded, what a screen reader hears, background check and full review, the account updated to a newer checked version, two chats running at once, uploading files of any kind from the computer, the hint before the first message, deleting a chat.');
   } else {
     // ── real opencode and Gemini 3.8 Flash ────────────────────────────────────
     // Send, then answer what the agent asks (share everything, preview) until its run ends;

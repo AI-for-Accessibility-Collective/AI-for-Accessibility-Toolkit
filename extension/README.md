@@ -148,10 +148,11 @@ step shows as one line.
 - **When it is ready**, **Add to my account** publishes it to your account,
   private to you, and installs it here, so it runs on the pages it targets.
   **Export** saves the adapter file.
-- **Upload code** (optional, beside Send) sends code with your next message,
-  such as an adapter you exported, or one from elsewhere: the assistant goes
-  on from it instead of starting over. Text files of code only (`.js`,
-  `.mjs`, `.cjs`, `.ts`, `.json`, `.css`, `.html`, `.txt`, `.md`).
+- **Upload from computer** (optional, beside Send) sends files of any kind
+  with your next message, such as an adapter you exported, code from
+  elsewhere, a screenshot or a document: the assistant works from them, and
+  goes on from an adapter instead of starting over. One message carries up
+  to 32 MB.
 - **Chats** keep their history; **New chat** starts another. One chat works
   at a time.
 

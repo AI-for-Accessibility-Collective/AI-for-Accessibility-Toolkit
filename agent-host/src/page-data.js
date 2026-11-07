@@ -10,7 +10,7 @@
 import { mkdirSync, writeFileSync, readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 
-export const MAX_PAGE_COPY = 8_000_000; // bytes of MHTML; the host takes 12 MB bodies, and base64 adds a third
+export const MAX_PAGE_COPY = 8_000_000; // bytes of MHTML; the host takes 32 MB bodies, and base64 adds a third
 const MAX_COPIES = 5;
 
 // By time, then a count: two saved in the same millisecond keep apart, in order.

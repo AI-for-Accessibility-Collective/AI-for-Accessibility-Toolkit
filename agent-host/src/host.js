@@ -32,7 +32,7 @@ import { createChecks, dockerCheckRunner, localCheckRunner, keptLog } from './ch
 import { burstRunner, cloudRunClient } from './burst.js';
 import { fetchRubrics as fetchUpstreamRubrics } from '../../scripts/verify-adapters/intera11y-upstream.mjs';
 
-const MAX_BODY = 12_000_000;
+const MAX_BODY = 32 * 1024 * 1024; // Cloud Run's limit for a request, which the toolkit service forwards
 
 export function createLogger(write = (line) => process.stdout.write(`${line}\n`)) {
   const emit = (severity) => (event, fields = {}) => write(JSON.stringify({ time: new Date().toISOString(), severity, event, ...fields }));
@@ -141,7 +141,7 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     }
     if ((r = /^\/agent\/chats\/([^/]+)\/messages$/.exec(p)) && m === 'POST') {
       const b = await body(req);
-      log.info('chat.message', { uid, chatId: r[1], chars: String(b.text || '').length, ...(Array.isArray(b.files) ? { files: b.files.length, fileChars: b.files.reduce((n, f) => n + String(f?.content || '').length, 0) } : {}) });
+      log.info('chat.message', { uid, chatId: r[1], chars: String(b.text || '').length, ...(Array.isArray(b.files) ? { files: b.files.length, fileChars: b.files.reduce((n, f) => n + String(f?.data || f?.content || '').length, 0) } : {}) });
       return send(res, 202, await chats.send(uid, r[1], b.text, { answers: typeof b.answers === 'string' ? b.answers : undefined, pages: typeof b.pages === 'string' ? b.pages : undefined,
         pageType: typeof b.pageType === 'string' ? b.pageType : undefined, areas: Array.isArray(b.areas) ? b.areas.map(String) : undefined, files: b.files }));
     }

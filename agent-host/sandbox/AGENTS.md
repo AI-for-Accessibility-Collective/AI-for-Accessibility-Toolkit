@@ -42,7 +42,7 @@ condition from what they ask for.
   `reference/building-blocks.md` lists each one's calls, config and what it
   always does. Read it before you write your first adapter.
 - `/work` is yours. Write adapters to `/work/adapters/<id>.js`, one file each. The person's other chats may run at the same time in the same `/work`: give each adapter a name of its own, and if a tool says a file is another chat's, write yours to another file.
-- `/work/uploads/<chat>/` holds code the person uploaded to go on from (an adapter they exported, or code from elsewhere); their message names the files. Read them first and keep working on them instead of starting over: copy an adapter to `/work/adapters/<id>.js`, keeping the id and name its header gives, and change it there.
+- `/work/uploads/<chat>/` holds files the person uploaded from their computer, of any kind (an adapter they exported, code from elsewhere, a screenshot, a document); their message names them. Look at them first. Keep working on an adapter or other code instead of starting over: copy an adapter to `/work/adapters/<id>.js`, keeping the id and name its header gives, and change it there.
 - You have a browser: Chromium, with Playwright (`import { chromium } from
   'playwright'` in a script you run with `node`). Use it to try an adapter on
   a page of your own in `/work` (one with the barrier it removes) before you

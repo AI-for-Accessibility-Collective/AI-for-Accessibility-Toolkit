@@ -18,9 +18,10 @@
 // ends what they left running in the sandboxes and picks each marked chat up
 // again, once (resumeInterrupted).
 //
-// The person can upload code with a message, to go on from it (an adapter
-// they exported, or one from elsewhere): it is kept in
-// /work/uploads/<chat>/ and the agent is told where, to carry on from it.
+// The person can upload files from their computer with a message, any kind
+// (an adapter they exported, code from elsewhere, a screenshot, a document):
+// they are kept in /work/uploads/<chat>/ and the agent is told where, to
+// work from them.
 
 import { readFileSync, writeFileSync, readdirSync, renameSync, existsSync, unlinkSync, mkdirSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
@@ -37,31 +38,41 @@ export const SHARE_LEVELS = LEVELS;
 
 const httpError = (status, message, code) => Object.assign(new Error(message), { status, code });
 
-const UPLOAD_TYPES = ['js', 'mjs', 'cjs', 'ts', 'json', 'css', 'html', 'txt', 'md'];
-const MAX_UPLOADS = 20;
-const CONTINUE = 'Continue working on this code.';
+const CONTINUE = 'Continue from what I uploaded.';
 
-/** Uploaded files as they may be kept: [{name, content}], names made safe and unique. Throws 400 for anything else. */
+/**
+ * Uploaded files as they may be kept: [{name, bytes, type}], names made safe
+ * and unique. A file comes as base64 (`data`, any kind) or as text
+ * (`content`). Throws 400 for anything else.
+ */
 export function uploadsOf(files) {
   if (files === undefined || files === null) return [];
-  if (!Array.isArray(files) || files.length > MAX_UPLOADS) throw httpError(400, `Upload at most ${MAX_UPLOADS} files at once.`);
+  if (!Array.isArray(files)) throw httpError(400, 'files is a list of {name, data (base64)}.');
   const seen = new Set();
   return files.map((f) => {
     const raw = path.basename(String(f?.name || '').replace(/\\/g, '/'));
-    const ext = /\.([A-Za-z0-9]+)$/.exec(raw)?.[1]?.toLowerCase();
-    if (!ext || !UPLOAD_TYPES.includes(ext)) throw httpError(400, `Upload code: ${UPLOAD_TYPES.map(t => `.${t}`).join(', ')} files. “${raw.slice(0, 80) || 'That file'}” is not one.`);
-    if (typeof f.content !== 'string' || f.content.includes('\u0000')) throw httpError(400, `“${raw.slice(0, 80)}” is not a text file.`);
-    let name = raw.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[.-]+/, '').slice(-100) || `upload.${ext}`;
-    for (let n = 2; seen.has(name); n++) name = name.replace(/(?:-\d+)?(\.[A-Za-z0-9]+)$/, `-${n}$1`);
+    let bytes;
+    if (typeof f?.data === 'string') bytes = Buffer.from(f.data, 'base64');
+    else if (typeof f?.content === 'string') bytes = Buffer.from(f.content, 'utf8');
+    else throw httpError(400, `“${raw.slice(0, 80) || 'A file'}” came without its contents.`);
+    let name = raw.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[.-]+/, '').slice(-100) || 'upload';
+    const base = name.replace(/(\.[A-Za-z0-9]+)$/, ''), ext = name.slice(base.length);
+    for (let n = 2; seen.has(name); n++) name = `${base}-${n}${ext}`;
     seen.add(name);
-    return { name, content: f.content };
+    return { name, bytes, type: String(f.type || '').slice(0, 100) };
   });
 }
 
+const sizeOf = (n) => (n < 1024 ? `${n} bytes` : n < 1024 * 1024 ? `${Math.round(n / 1024)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`);
+
 /** What the agent is told about the files the person uploaded (paths in the sandbox). */
 function uploadNote(chatId, kept) {
-  const list = kept.map(f => `/work/uploads/${chatId}/${f.name} (${f.content.split('\n').length} lines)`).join(', ');
-  return `\n\nI uploaded code to continue from: ${list}. Read it first and keep working on it rather than starting over. For an adapter, copy it to /work/adapters/<id>.js (keep the id and name its header gives, if it has them) and change it there; code that is not a toolkit adapter yet, make into one that does what it does.`;
+  const list = kept.map((f) => {
+    const text = !f.bytes.includes(0);
+    const about = text ? `text, ${f.bytes.toString('utf8').split('\n').length} lines` : `${f.type || 'binary'}, ${sizeOf(f.bytes.length)}`;
+    return `/work/uploads/${chatId}/${f.name} (${about})`;
+  }).join(', ');
+  return `\n\nI uploaded files from my computer for you to work from: ${list}. Look at them first. If one is an adapter or other code, keep working on it rather than starting over: copy an adapter to /work/adapters/<id>.js (keep the id and name its header gives, if it has them) and change it there; code that is not a toolkit adapter yet, make into one that does what it does.`;
 }
 
 export function createChats({ accounts, runner, events, requests, log, afterRun, titler, onIdle }) {
@@ -216,8 +227,8 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
    * answer to a pages question (all: the adapter may run on every site;
    * type: on the kind of page `pageType` only), `areas` to an areas one.
    * With `shown`, the message is the host's (verification.js): the person
-   * sees that line instead. `files` is code the person uploaded with it
-   * ([{name, content}]): kept in /work/uploads/<chat>/, and the agent told.
+   * sees that line instead. `files` is what the person uploaded with it
+   * ([{name, data, type}]): kept in /work/uploads/<chat>/, and the agent told.
    */
   async function send(uid, chatId, text, { answers, pages, pageType, areas, shown, resumed, files } = {}) {
     const uploads = uploadsOf(files);
@@ -229,7 +240,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     if (uploads.length) {
       const dir = path.join(accounts.dirOf(uid), 'work', 'uploads', chatId);
       mkdirSync(dir, { recursive: true });
-      for (const f of uploads) writeFileSync(path.join(dir, f.name), f.content);
+      for (const f of uploads) writeFileSync(path.join(dir, f.name), f.bytes);
     }
     const message = uploads.length ? said + uploadNote(chatId, uploads) : said;
     if (chat.title === 'New chat' && !shown) { chat.title = fallbackTitle(said); save(uid, chat); }

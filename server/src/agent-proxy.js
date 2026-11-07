@@ -11,7 +11,7 @@
 import { sendJSON, bearerFrom } from './http.js';
 
 export const AGENT_PREFIX = '/v1/agent';
-const MAX_BODY = 12_000_000;
+const MAX_BODY = 32 * 1024 * 1024; // Cloud Run's own limit for a request
 
 /** Whether the request log may keep a request's body: never page data. */
 export const agentContentLogged = (pathname) => !pathname.startsWith(`${AGENT_PREFIX}/requests/`) && !/^\/v1\/agent\/chats\/[^/]+\/page-copy$/.test(pathname);
@@ -33,7 +33,7 @@ export function createAgentProxy({ authenticate, hostUrl, secret, fetch = global
       let size = 0;
       for await (const c of req) {
         size += c.length;
-        if (size > MAX_BODY) return sendJSON(res, 413, { error: 'too-large' });
+        if (size > MAX_BODY) return sendJSON(res, 413, { error: 'too-large', message: 'That is more than 32 MB, the most one message can carry. Send fewer or smaller files.' });
         chunks.push(c);
       }
       body = Buffer.concat(chunks);

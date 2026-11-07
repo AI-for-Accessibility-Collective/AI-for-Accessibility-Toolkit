@@ -752,7 +752,7 @@ function renderTranscript() {
   $('message').placeholder = chat?.entries.some(e => e.kind === 'you') ? 'Additional requests?' : 'What gets in your way on this page?';
   if (!chat?.entries.length) {
     renderQuestions();
-    list.replaceChildren(el('li', 'empty', 'Say what gets in your way on the page beside this sidebar, for example “the buttons are too small to tap” or “I can’t read the gray text”. The assistant asks a few questions, then builds an adapter and previews it here. To keep working on an adapter you exported, add it with Upload code.'));
+    list.replaceChildren(el('li', 'empty', 'Say what gets in your way on the page beside this sidebar, for example “the buttons are too small to tap” or “I can’t read the gray text”. The assistant asks a few questions, then builds an adapter and previews it here. To work from your own files, such as an adapter you exported, use Upload from computer.'));
     return;
   }
   list.querySelector('.empty')?.remove();
@@ -1180,10 +1180,17 @@ async function exportAdapter(a) {
 
 // ── start ────────────────────────────────────────────────────────────────────
 
-// Code the person uploads to go on from (an adapter they exported, or one
-// from elsewhere): it goes with their next message, and the assistant
-// carries on from it. Optional.
-let attached = []; // [{name, content}]
+// Files the person uploads from their computer, of any kind (an adapter they
+// exported, code from elsewhere, a screenshot, a document): they go with
+// their next message, and the assistant works from them. Optional.
+let attached = []; // [{name, type, data (base64), size}]
+const MAX_MESSAGE_BYTES = 32 * 1024 * 1024; // what one request may carry (the toolkit service forwards it)
+function base64Of(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(out);
+}
 function renderAttached() {
   const list = $('attachments');
   list.replaceChildren(...attached.map((f) => {
@@ -1206,9 +1213,9 @@ $('upload').addEventListener('click', () => $('upload-file').click());
 $('upload-file').addEventListener('change', async (e) => {
   const added = [];
   for (const file of e.target.files) {
-    const content = await file.text().catch(() => null);
-    if (content === null || content.includes('\u0000')) { say(`${file.name} is not a text file: upload code.`, true); continue; }
-    attached = [...attached.filter(f => f.name !== file.name), { name: file.name, content }];
+    const buffer = await file.arrayBuffer().catch(() => null);
+    if (!buffer) { say(`Could not read ${file.name}.`, true); continue; }
+    attached = [...attached.filter(f => f.name !== file.name), { name: file.name, type: file.type, data: base64Of(buffer), size: file.size }];
     added.push(file.name);
   }
   e.target.value = '';
@@ -1221,10 +1228,14 @@ $('composer').addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = $('message').value.trim();
   if ((!text && !attached.length) || !chat) return;
+  if (attached.reduce((n, f) => n + f.data.length, text.length) > MAX_MESSAGE_BYTES - 64 * 1024) {
+    say('These files are more than one message can carry (32 MB, a little less before they are sent). Remove some, or send them in more than one message.', true);
+    return;
+  }
   $('send').disabled = true;
   try {
     await ensureWorkingTab({ replaceClosed: true });
-    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text, ...(attached.length ? { files: attached } : {}) } });
+    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text, ...(attached.length ? { files: attached.map(({ name, type, data }) => ({ name, type, data })) } : {}) } });
     $('message').value = '';
     attached = [];
     renderAttached();
