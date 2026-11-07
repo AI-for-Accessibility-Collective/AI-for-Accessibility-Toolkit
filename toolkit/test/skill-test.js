@@ -10,7 +10,7 @@ import { createDatastore } from '../core/datastore.js';
 import { createLibrarian } from '../core/librarian.js';
 import { TAXONOMY } from '../core/taxonomy.js';
 import { SUPPORT_AREAS } from '../core/ability.js';
-import { skillRegistry } from '../registry/tools.js';
+import { skillRegistry, asAATools } from '../registry/tools.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const BUILTIN_DIR = join(HERE, '..', 'skills', 'builtin');
@@ -44,6 +44,7 @@ const tools = {
 };
 
 // ---- parse + validate the REAL builtin skills ------------------------------
+const realTools = asAATools();
 const builtinFiles = readdirSync(BUILTIN_DIR).filter(f => f.endsWith('.md'));
 check('ships builtin skills', builtinFiles.length >= 4);
 const builtins = [];
@@ -52,7 +53,10 @@ for (const f of builtinFiles) {
   builtins.push(skill);
   check(`${f}: has name + description`, !!skill.name && !!skill.description);
   check(`${f}: recipe has adapters`, skill.recipe.adapters.length > 0);
-  const { valid, errors } = validateSkill(skill, { tools });
+    // Shipped skills are checked against the real registry, so a valid skill
+  // that uses any registered adapter passes. The stand-in above stays for the
+  // vocabulary and "rejects unknown" cases below.
+  const { valid, errors } = validateSkill(skill, { tools: realTools });
   check(`${f}: validates against registry`, valid || (console.log('   errors:', errors), false));
 }
 
