@@ -1,0 +1,29 @@
+{
+  "seg-001": {
+    "en": {
+      "plain": "There is a community meeting on Friday at 2:00 PM."
+    },
+    "sw": {
+      "original": "Mkutano wa jamii utafanyika Ijumaa saa 2:00 alasiri.",
+      "plain": "Kuna mkutano wa jamii Ijumaa saa 2:00 alasiri."
+    }
+  },
+  "seg-002": {
+    "en": {
+      "plain": "It will be at the public library."
+    },
+    "sw": {
+      "original": "Mkutano utafanyika katika maktaba ya umma.",
+      "plain": "Mkutano utakuwa katika maktaba ya umma."
+    }
+  },
+  "seg-003": {
+    "en": {
+      "plain": "You can ask questions about local services."
+    },
+    "sw": {
+      "original": "Tafadhali leta maswali yako kuhusu huduma za eneo lako.",
+      "plain": "Unaweza kuuliza kuhusu huduma za eneo lako."
+    }
+  }
+}
