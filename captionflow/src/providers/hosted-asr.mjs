@@ -1,3 +1,4 @@
+import { createGeminiHostedTranscriber } from './gemini-asr.mjs';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { validateTranscript } from '../contracts.mjs';
@@ -6,9 +7,18 @@ import { validateTranscript } from '../contracts.mjs';
  * POST multipart/form-data {file, videoId, language}; expect CaptionFlow V1 transcript JSON.
  * Configure an adapter for the actual event API once its specification is known.
  */
+/** Resolve a server-side credential without copying the event key into a second .env variable.
+ * CaptionFlow's dedicated token wins when both variables are configured.
+ * This only selects a secret; it does not imply any API protocol compatibility.
+ */
+export function resolveHostedApiKey(env = process.env) {
+  const key = env.CAPTIONFLOW_HOSTED_TOKEN?.trim() || env.API_KEY?.trim();
+  return key || undefined;
+}
+
 export function createHostedTranscriber({
   endpoint = process.env.CAPTIONFLOW_HOSTED_URL,
-  token = process.env.CAPTIONFLOW_HOSTED_TOKEN,
+  token = resolveHostedApiKey(),
   fetchImpl = fetch,
   readMedia = readFile,
   timeoutMs = 120_000,
@@ -52,4 +62,31 @@ export function createHostedTranscriber({
       return validateTranscript(payload);
     },
   };
+}
+
+/** Recognize the hackathon's Gemini-compatible gateway without using its key. */
+export function isGeminiGatewayUrl(endpoint) {
+  if (!endpoint) return false;
+  try {
+    const path = new URL(endpoint).pathname.replace(/\/+$/, '');
+    return path.endsWith('/gemini') || /\/v1beta\/models\/[^/]+:generateContent$/.test(path);
+  } catch { return false; }
+}
+
+/** Select a hosted wire protocol. An explicit setting wins. When not configured,
+ * infer Gemini from a recognized Gemini gateway URL; other endpoints stay generic.
+ * Never accidentally send Bearer/multipart requests to Gemini's generateContent API.
+ */
+export function createConfiguredHostedTranscriber(options = {}) {
+  const endpoint = options.endpoint ?? process.env.CAPTIONFLOW_HOSTED_URL;
+  const configured = options.protocol || process.env.CAPTIONFLOW_HOSTED_PROTOCOL;
+  const protocol = configured || (isGeminiGatewayUrl(endpoint) ? 'gemini' : 'generic');
+  if (protocol === 'gemini') return createGeminiHostedTranscriber(options);
+  if (protocol === 'generic') {
+    if (isGeminiGatewayUrl(endpoint)) {
+      throw new Error('Gemini gateway configured with generic ASR protocol. Set CAPTIONFLOW_HOSTED_PROTOCOL=gemini in captionflow/.env');
+    }
+    return createHostedTranscriber(options);
+  }
+  throw new Error('CAPTIONFLOW_HOSTED_PROTOCOL must be generic or gemini');
 }

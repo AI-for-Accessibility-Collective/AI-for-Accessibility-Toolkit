@@ -42,7 +42,7 @@ export function createCaptionFlowPipeline({ transcriber, captionProcessor, prefe
         .filter(c => c.status !== 'ready')
         .map(c => ({ captionId: c.id, status: c.status, message: c.status === 'fallback'
           ? 'Requested transformation unavailable; original speech text shown'
-          : 'Caption transformation is illustrative and requires human review' }));
+          : 'Caption wording was changed and requires human review' }));
       return { videoId, sourceLanguage: transcript.sourceLanguage, transcript, captions, preferences, warnings };
     },
   };

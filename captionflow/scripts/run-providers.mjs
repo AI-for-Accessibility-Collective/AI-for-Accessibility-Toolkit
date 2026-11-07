@@ -1,5 +1,6 @@
 /** Headless provider smoke test; real media never sent remotely without --consent-hosted=yes. */
 import { resolve } from 'node:path';
+import { mediaContentTypeForFile } from '../src/media-content-type.mjs';
 import { loadCaptionFlowEnv } from '../src/runtime-config.mjs';
 
 loadCaptionFlowEnv();
@@ -7,8 +8,8 @@ import { createCaptionFlowPipeline } from '../src/pipeline.mjs';
 import { createFixtureTranscriber } from '../src/mocks/fixture-transcriber.mjs';
 import { createFixtureCaptionProcessor } from '../src/mocks/fixture-caption-processor.mjs';
 import { createLocalWhisperTranscriber } from '../src/providers/local-whisper.mjs';
-import { createHostedTranscriber } from '../src/providers/hosted-asr.mjs';
-import { createOriginalOnlyCaptionProcessor } from '../src/providers/original-captions.mjs';
+import { createConfiguredHostedTranscriber } from '../src/providers/hosted-asr.mjs';
+import { createPlainCaptionProcessor } from '../src/providers/plain-captions.mjs';
 
 const option = (name, fallback) => process.argv.find(a => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback;
 const provider = option('provider', process.env.CAPTIONFLOW_AI_BACKEND || 'fixture');
@@ -24,17 +25,17 @@ if (provider === 'hosted' && option('consent-hosted') !== 'yes') throw new Error
 const fixture = provider === 'fixture';
 const transcriber = fixture
   ? createFixtureTranscriber({ fileUrl: new URL('../fixtures/notice.transcript.json', import.meta.url) })
-  : provider === 'local' ? createLocalWhisperTranscriber() : createHostedTranscriber();
+  : provider === 'local' ? createLocalWhisperTranscriber() : createConfiguredHostedTranscriber();
 const captionProcessor = fixture
   ? createFixtureCaptionProcessor({ fileUrl: new URL('../fixtures/notice.variants.json', import.meta.url) })
-  : createOriginalOnlyCaptionProcessor();
+  : createPlainCaptionProcessor();
 const preferenceProvider = { async getPreferences({ sourceLanguage }) {
   return { captionLanguage: language === 'auto' ? (sourceLanguage === 'sw' ? 'sw' : 'en') : language, mode, fontScale: 1.3, paceMode: 'normal', contrastMode: 'high' };
 }};
 const pipeline = createCaptionFlowPipeline({transcriber,captionProcessor,preferenceProvider});
 try {
   const videoId = fixture ? 'fictional-notice-001' : 'local-video';
-  const media = fixture ? {kind:'fixture'} : {kind:'local-file',path:resolve(file),language,contentType:'video/mp4'};
+  const media = fixture ? {kind:'fixture'} : {kind:'local-file',path:resolve(file),language,contentType:mediaContentTypeForFile(file)};
   const result = await pipeline.run({videoId,media});
   console.error(`Provider=${provider}; ${result.captions.length} captions; ${result.warnings.length} review/fallback warnings.`);
   console.log(JSON.stringify(result,null,2));

@@ -11,12 +11,12 @@ import { fileURLToPath } from 'node:url';
 import { createToolkit } from '../../toolkit/index.js';
 import { fileKV } from '../../toolkit/platforms/node/kv.js';
 import { createCaptionFlowPipeline } from '../src/pipeline.mjs';
-import { ContractError, validatePreferences } from '../src/contracts.mjs';
+import { ContractError, validatePreferences, validateProcessedCaptions } from '../src/contracts.mjs';
 import { createFixtureTranscriber } from '../src/mocks/fixture-transcriber.mjs';
 import { createFixtureCaptionProcessor } from '../src/mocks/fixture-caption-processor.mjs';
-import { createOriginalOnlyCaptionProcessor } from '../src/providers/original-captions.mjs';
+import { createPlainCaptionProcessor } from '../src/providers/plain-captions.mjs';
 import { createLocalWhisperTranscriber } from '../src/providers/local-whisper.mjs';
-import { createHostedTranscriber } from '../src/providers/hosted-asr.mjs';
+import { createConfiguredHostedTranscriber, resolveHostedApiKey } from '../src/providers/hosted-asr.mjs';
 import { createToolkitPreferenceProvider } from '../src/toolkit-preferences.mjs';
 import { loadCaptionFlowEnv } from '../src/runtime-config.mjs';
 
@@ -26,6 +26,7 @@ const staticFiles = {
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
   '/style.css': ['style.css', 'text/css; charset=utf-8'],
   '/player-sync.mjs': ['../src/player-sync.mjs', 'text/javascript; charset=utf-8'],
+  '/caption-view.mjs': ['../src/caption-view.mjs', 'text/javascript; charset=utf-8'],
 };
 const supportedMedia = new Set(['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-m4v']);
 
@@ -70,14 +71,26 @@ async function receiveVideo(req, { maxMediaBytes, uploadDir, contentType }) {
   }
 }
 
+/** Configurable MiB limit for local demo uploads; protects temp disk and remote memory use. */
+export function configuredMaxMediaBytes(env = process.env) {
+  const raw = env.CAPTIONFLOW_MAX_UPLOAD_MB ?? '75';
+  const mib = Number(raw);
+  if (!Number.isFinite(mib) || mib < 1 || mib > 512) {
+    throw new Error('CAPTIONFLOW_MAX_UPLOAD_MB must be a number from 1 to 512 (MiB)');
+  }
+  return Math.floor(mib * 1024 * 1024);
+}
+
 export async function createCaptionFlowDemoServer({
   storageDir = join(directory, '..', '.captionflow-storage'),
   userId = 'captionflow-demo',
   uploadDir = tmpdir(),
-  maxMediaBytes = 75 * 1024 * 1024,
+  maxMediaBytes = configuredMaxMediaBytes(),
   providers = {}, // injectable local/hosted transcribers for tests
   hostedUrl = process.env.CAPTIONFLOW_HOSTED_URL,
-  hostedToken = process.env.CAPTIONFLOW_HOSTED_TOKEN,
+  hostedToken = resolveHostedApiKey(),
+  hostedProtocol = process.env.CAPTIONFLOW_HOSTED_PROTOCOL,
+  hostedModel = process.env.CAPTIONFLOW_HOSTED_MODEL ?? 'gemini-3.8-flash',
 } = {}) {
   const kv = fileKV(storageDir);
   const { librarian } = createToolkit({ kv });
@@ -86,9 +99,9 @@ export async function createCaptionFlowDemoServer({
   const toolkitPrefs = createToolkitPreferenceProvider({ librarian, actingUserId: userId, historyKV: kv });
   const fixtureTranscriber = createFixtureTranscriber({ fileUrl: new URL('../fixtures/notice.transcript.json', import.meta.url) });
   const fixtureProcessor = createFixtureCaptionProcessor({ fileUrl: new URL('../fixtures/notice.variants.json', import.meta.url) });
-  const originalProcessor = createOriginalOnlyCaptionProcessor();
+  const plainProcessor = createPlainCaptionProcessor();
   const localTranscriber = providers.local || createLocalWhisperTranscriber();
-  const hostedTranscriber = providers.hosted || (hostedUrl ? createHostedTranscriber({ endpoint: hostedUrl, token: hostedToken }) : null);
+  const hostedTranscriber = providers.hosted || (hostedUrl ? createConfiguredHostedTranscriber({ endpoint: hostedUrl, token: hostedToken, protocol: hostedProtocol, model: hostedModel }) : null);
   let busy = false;
 
   return createHttpServer(async (req, res) => {
@@ -140,12 +153,19 @@ export async function createCaptionFlowDemoServer({
           const transcriber = provider === 'local' ? localTranscriber : hostedTranscriber;
           const pipeline = createCaptionFlowPipeline({
             transcriber,
-            captionProcessor: originalProcessor,
+            captionProcessor: plainProcessor,
             preferenceProvider: { async getPreferences({ sourceLanguage }) {
               return { ...(await toolkitPrefs.getPreferences()), captionLanguage: sourceLanguage === 'und' ? 'en' : sourceLanguage, mode };
             }},
           });
           result = await pipeline.run({ videoId, media: { kind: 'local-file', path: uploaded.path, language: speechLanguage, contentType } });
+          // Pre-compute the conservative plain-language variant without a second
+          // (expensive) ASR run. The player can switch text modes instantly.
+          const plainVariant = validateProcessedCaptions(await plainProcessor.process({
+            transcript: result.transcript,
+            preferences: { ...result.preferences, mode: 'plain' },
+          }), result.transcript);
+          result = { ...result, captionVariants: { plain: plainVariant } };
         } finally {
           if (uploaded) await rm(uploaded.folder, { recursive: true, force: true });
           busy = false;

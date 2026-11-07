@@ -1,4 +1,5 @@
 import { selectActiveCue, nextCue, replayCue } from '/player-sync.mjs';
+import { viewCaptionsForMode } from '/caption-view.mjs';
 
 const byId = id => document.getElementById(id);
 const ids = ['video','video-file','caption-file','caption','caption-wrap','language','mode','pace','size','undo','contrast','replay','next','transcript','message','time-status','provider','generate','provider-note','hosted-consent-wrap','hosted-consent','download-json','demo-warning','caption-status'];
@@ -120,25 +121,23 @@ function setCaptions(data, nextSource) {
   els['demo-warning'].hidden = nextSource !== 'fixture';
 }
 function applyGeneratedMode() {
-  if (source !== 'generated' || !payload?.transcript?.segments) return;
-  const targetLanguage = els.language.value;
-  const targetMode = els.mode.value;
+  if (!['generated', 'external'].includes(source) || !payload?.transcript?.segments) return;
+  const desiredLanguage = els.language.value;
+  const desiredMode = els.mode.value;
   const changed = {
     ...payload,
-    captions: payload.transcript.segments.map(segment => {
-      const unmodified = targetMode === 'original' && targetLanguage === segment.language;
-      return {
-        id: segment.id, start: segment.start, end: segment.end,
-        originalText: segment.text, displayText: segment.text,
-        language: segment.language, mode: 'original', status: unmodified ? 'ready' : 'fallback',
-      };
-    }),
+    captions: viewCaptionsForMode(payload, { language: desiredLanguage, mode: desiredMode }),
   };
-  setCaptions(changed, 'generated');
-  if (changed.captions.some(c => c.status === 'fallback')) {
-    message(`No live simplifier or translator is configured. Showing original ${payload.sourceLanguage} captions rather than incorrectly labeled text.`);
+  setCaptions(changed, source);
+  if (changed.captions.some(c => c.language !== desiredLanguage)) {
+    message(`Translation to ${desiredLanguage} is not available. Showing original speech captions, correctly labeled in their source language.`);
+  } else if (desiredMode === 'plain') {
+    const reviewed = changed.captions.filter(c => c.status === 'needs-review').length;
+    message(reviewed
+      ? `Showing ${changed.captions.length} timed captions with ${reviewed} experimental wording suggestions. Review the changes; original text is always available.`
+      : 'No safe rule-based rewrite was found for these captions. Showing original speech rather than inventing simpler wording.');
   } else {
-    message(`Showing ${cues.length} original timed captions from the ${payload.provider || 'selected'} provider.`);
+    message(`Showing ${cues.length} original timed captions from ${payload.provider || 'the selected provider'}.`);
   }
 }
 async function loadDemoCues() {
@@ -254,7 +253,7 @@ els.provider.addEventListener('change', () => {
   updateProviderUI();
 });
 for (const name of ['language', 'mode']) els[name].addEventListener('change', () => {
-  if (source === 'generated') { applyGeneratedMode(); return; }
+  if (['generated', 'external'].includes(source) && payload?.transcript?.segments) { applyGeneratedMode(); return; }
   if (source === 'fixture') loadDemoCues().catch(error => message(error.message));
   else message('Using selected caption JSON. Change the JSON or re-transcribe to change caption language or wording.');
 });

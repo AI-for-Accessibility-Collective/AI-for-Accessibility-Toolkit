@@ -37,6 +37,7 @@ test('provider status + real-video HTTP path uses local transcriber and preserve
     const providers=await (await fetch(`${base}/api/providers`)).json();
     assert.equal(providers.providers.fixture,true);assert.equal(providers.providers.local,true);assert.equal(providers.providers.hosted,false);
     assert.equal((await fetch(`${base}/player-sync.mjs`)).status,200);
+    assert.equal((await fetch(`${base}/caption-view.mjs`)).status,200);
     const response=await fetch(`${base}/api/transcribe?provider=local&language=en&mode=original`,{
       method:'POST',headers:{'Content-Type':'video/mp4'},body:'simulated-video-data',
     });
@@ -46,6 +47,8 @@ test('provider status + real-video HTTP path uses local transcriber and preserve
     assert.equal(result.captions[0].start,0);assert.equal(result.captions[1].end,3.5);
     assert.equal(result.captions[0].status,'ready');
     assert.equal(result.warnings.length,0);
+    assert.equal(result.captionVariants.plain.length,2);
+    assert.equal(result.captionVariants.plain[0].status,'fallback');
     assert.deepEqual(await (await import('node:fs/promises')).readdir(uploadDir),[]);
     const plain=await fetch(`${base}/api/transcribe?provider=local&language=en&mode=plain`,{
       method:'POST',headers:{'Content-Type':'video/mp4'},body:'simulated-video-data',
@@ -64,4 +67,31 @@ test('provider errors, MIME checks, file limits and hosted consent are enforced'
     const good=await fetch(`${base}/api/transcribe?provider=hosted&language=en&consent=yes`,{method:'POST',headers:{'Content-Type':'video/mp4'},body:'test'});
     assert.equal(good.status,200);
   },{maxMediaBytes:8});
+});
+
+
+test('API supplies reviewed plain variant alongside original without transcribing twice',async()=>{
+  let calls=0;
+  const local={async transcribe({videoId}){
+    calls++;
+    return {videoId,sourceLanguage:'en',segments:[
+      {id:'first',start:0,end:2.5,text:'The project commenced prior to Friday at 2:00 PM.',language:'en'},
+      {id:'second',start:2.5,end:4.8,text:'Please visit our local library.',language:'en'},
+    ]};
+  }};
+  await withServer({local},async(base)=>{
+    const response=await fetch(`${base}/api/transcribe?provider=local&language=en&mode=original`,{
+      method:'POST',headers:{'Content-Type':'video/mp4'},body:'simulated-video-data',
+    });
+    assert.equal(response.status,200);
+    const result=await response.json();
+    assert.equal(calls,1);
+    assert.equal(result.captions[0].displayText,'The project commenced prior to Friday at 2:00 PM.');
+    assert.equal(result.captionVariants.plain[0].displayText,'The project started before Friday at 2:00 PM.');
+    assert.equal(result.captionVariants.plain[0].originalText,result.captions[0].displayText);
+    assert.equal(result.captionVariants.plain[0].status,'needs-review');
+    assert.deepEqual([result.captions[0].start,result.captions[0].end],
+      [result.captionVariants.plain[0].start,result.captionVariants.plain[0].end]);
+    assert.equal(result.captionVariants.plain[1].status,'fallback');
+  });
 });
