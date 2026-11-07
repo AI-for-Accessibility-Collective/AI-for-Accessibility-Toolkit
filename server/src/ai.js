@@ -5,7 +5,7 @@
 //
 //   POST /v1/ai/text     {task, input, options?, adapter?}            -> {text|null, reason?}
 //   POST /v1/ai/vision   {task, image: {mimeType, data}, input?, options?, adapter?} -> same
-//   GET  /v1/ai/usage    today's calls against the limits, and whether AI is on
+//   GET  /v1/ai/usage    today's calls and spending against the budget, and whether AI is on
 //   PUT  /v1/ai/settings {enabled}   switch it off or on for the account
 //
 // The service builds the prompt from the toolkit's default for the task and
@@ -14,8 +14,8 @@
 // ai-output.js) before it goes back: a refusal, a guess or an answer of the
 // wrong length comes back as null, which an adapter treats as "leave the page
 // alone". Each account has a daily budget in US dollars, metered from the
-// tokens Google bills for each call (gemini.js, GEMINI_PRICES), and each
-// adapter in it a daily number of calls.
+// tokens Google bills for each call (gemini.js, GEMINI_PRICES). There is no
+// limit on the number of calls: each adapter's are only counted.
 //
 // What a page sends here is page content: neither the request log nor the
 // AI call log keeps it (app.js, and the caller made with logContent off).
@@ -102,10 +102,9 @@ export function gateAnswer(task, answer, input, options = {}) {
  * @param {((prompt: string, opts?: {images?: object[]}) => Promise<string>)|null} o.caller  the model; null when the service has no key
  * @param {Function|null} [o.liteCaller]  a smaller model, for the tasks that say `model: 'lite'` (else `caller`)
  * @param {number} [o.dailyBudgetUsd]  US dollars per account per day (UTC)
- * @param {number} [o.dailyPerAdapter]  calls per adapter per day
  * @param {(model: string) => {input: number, output: number}} [o.price]  dollars per million tokens
  */
-export function createAiRoutes({ store, withUserLock, authenticate, caller: mainCaller, liteCaller = null, log, dailyBudgetUsd = 200, dailyPerAdapter = 200, price, now = () => Date.now() }) {
+export function createAiRoutes({ store, withUserLock, authenticate, caller: mainCaller, liteCaller = null, log, dailyBudgetUsd = 200, price, now = () => Date.now() }) {
   const usage = new Map();   // uid -> promise of its usage record
   const timers = new Map();  // uid -> flush timer
   const held = new Map();    // uid -> dollars held for calls still out
@@ -147,7 +146,6 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller: main
     if (!u.enabled) return { error: 'ai-off', status: 403, message: 'AI for adapters is switched off for this account.' };
     const out = held.get(uid) || 0;
     if (u.spentUsd + out + estimate > dailyBudgetUsd) return { error: 'ai-budget', status: 429, message: `This account reached its $${dailyBudgetUsd} AI budget for today.` };
-    if (adapter && (u.byAdapter[adapter] || 0) >= dailyPerAdapter) return { error: 'ai-budget', status: 429, message: `This adapter used its ${dailyPerAdapter} AI calls for today.` };
     held.set(uid, out + estimate);
     u.calls++;
     if (adapter) u.byAdapter[adapter] = (u.byAdapter[adapter] || 0) + 1;
@@ -224,7 +222,7 @@ export function createAiRoutes({ store, withUserLock, authenticate, caller: main
       if (method === 'POST' && pathname === `${AI_PREFIX}/vision`) return await ask(req, res, rec, 'vision');
       if (method === 'GET' && pathname === `${AI_PREFIX}/usage`) {
         const u = await load(rec.uid);
-        return sendJSON(res, 200, { day: u.day, spentUsd: u.spentUsd, budgetUsd: dailyBudgetUsd, calls: u.calls, perAdapterLimit: dailyPerAdapter, byAdapter: u.byAdapter, enabled: u.enabled, available: !!mainCaller });
+        return sendJSON(res, 200, { day: u.day, spentUsd: u.spentUsd, budgetUsd: dailyBudgetUsd, calls: u.calls, byAdapter: u.byAdapter, enabled: u.enabled, available: !!mainCaller });
       }
       if (method === 'PUT' && pathname === `${AI_PREFIX}/settings`) {
         // A token bound to one app speaks for that app, not for the account.

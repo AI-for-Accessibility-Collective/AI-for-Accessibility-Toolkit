@@ -14,7 +14,6 @@
 //   AI_DAILY_BUDGET_USD  the building blocks' AI (/v1/ai): US dollars per
 //                   account per day (UTC), default 200, metered from the
 //                   tokens each call used at the model's price (gemini.js);
-//                   AI_DAILY_CALLS_PER_ADAPTER, calls per adapter, default 200;
 //                   AI_PRICE_INPUT_PER_MTOK and AI_PRICE_OUTPUT_PER_MTOK
 //                   override the price, in dollars per million tokens
 //   LOG_CONTENT     off: leave request and response bodies and AI prompts and
@@ -83,7 +82,6 @@ function boot() {
     caller: geminiApiKey ? createGeminiCaller({ apiKey: geminiApiKey, model: geminiModel, log, logContent: false }) : null,
     liteCaller: geminiApiKey ? createGeminiCaller({ apiKey: geminiApiKey, model: process.env.GEMINI_LITE_MODEL || GEMINI_LITE_MODEL, log, logContent: false }) : null,
     dailyBudgetUsd: Number(process.env.AI_DAILY_BUDGET_USD) || undefined,
-    dailyPerAdapter: Number(process.env.AI_DAILY_CALLS_PER_ADAPTER) || undefined,
     price: process.env.AI_PRICE_INPUT_PER_MTOK && process.env.AI_PRICE_OUTPUT_PER_MTOK
       ? () => ({ input: Number(process.env.AI_PRICE_INPUT_PER_MTOK), output: Number(process.env.AI_PRICE_OUTPUT_PER_MTOK) })
       : undefined,

@@ -1,7 +1,8 @@
 // /v1/ai/…: the model behind the building blocks' AI. The service builds the
 // toolkit's prompt with the builder's fields, gates the answer (a refusal or
-// an answer of the wrong length is null), keeps daily limits per account and
-// per adapter, can be switched off per account, and never logs page content.
+// an answer of the wrong length is null), keeps a daily budget in dollars per
+// account (no limit on the number of calls), can be switched off per account,
+// and never logs page content.
 //
 //   node server/test/ai.test.mjs
 
@@ -48,7 +49,7 @@ async function boot({ ai }) {
   return { base, dir, lines, mint, stop };
 }
 
-const svc = await boot({ ai: { caller, price, dailyBudgetUsd: 100, dailyPerAdapter: 3 } });
+const svc = await boot({ ai: { caller, price, dailyBudgetUsd: 100 } });
 const token = await svc.mint('ada');
 const call = (p, body, { method = 'POST', tok = token } = {}) => fetch(svc.base + p, {
   method, headers: { authorization: `Bearer ${tok}`, ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined,
@@ -101,21 +102,20 @@ await test('vision: the image goes to the model with the prompt', async () => {
   reply = () => 'Plain words about the loan and what it costs each year.';
 });
 
-await test('the budget is dollars per account, from the tokens each call was billed; adapters have a call limit', async () => {
+await test('the budget is dollars per account, from the tokens each call was billed; calls are counted per adapter, not limited', async () => {
   const usage = await (await call('/v1/ai/usage', null, { method: 'GET' })).json();
   assert.equal(usage.budgetUsd, 100);
   assert.equal(usage.spentUsd, 10, 'five answered calls at $2');
-  assert.equal(usage.perAdapterLimit, 3);
+  assert.equal(usage.perAdapterLimit, undefined);
   assert.equal(usage.byAdapter['ada/browser-runtime/plain'], 1);
   // $5 a day. A call is let through when its estimate fits; what Google
   // bills is counted after, so the last call may go past by its own cost.
-  const svc2 = await boot({ ai: { caller, price, dailyBudgetUsd: 5, dailyPerAdapter: 2 } });
+  const svc2 = await boot({ ai: { caller, price, dailyBudgetUsd: 5 } });
   const t2 = await svc2.mint('bo');
   const c2 = (body) => fetch(svc2.base + '/v1/ai/text', { method: 'POST', headers: { authorization: `Bearer ${t2}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const statuses = [];
   for (let i = 0; i < 3; i++) statuses.push((await c2({ task: 'simplify', input: PASSAGE, adapter: 'bo/x/one' })).status);
-  assert.deepEqual(statuses, [200, 200, 429], 'the adapter limit');
-  assert.equal((await c2({ task: 'simplify', input: PASSAGE, adapter: 'bo/x/two' })).status, 200, '$4 spent: it fits');
+  assert.deepEqual(statuses, [200, 200, 200], 'one adapter, as many calls as the budget allows; $4 spent before the third: it fits');
   const over = await c2({ task: 'simplify', input: PASSAGE, adapter: 'bo/x/two' });
   assert.equal(over.status, 429, '$6 spent');
   assert.match((await over.json()).message, /\$5 AI budget/);

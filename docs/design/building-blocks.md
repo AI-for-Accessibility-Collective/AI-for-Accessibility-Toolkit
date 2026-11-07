@@ -607,8 +607,9 @@ Choices made while building it (mine, open to change):
 - Limits: $200 of AI per account per day (the project lead's number,
   `AI_DAILY_BUDGET_USD`), priced from the tokens each response reports at
   the model's standard-tier rate, because the response carries token counts
-  and no cost; 200 calls per adapter per day and 40 per adapter session
-  (mine); an off switch per account (`PUT /v1/ai/settings`). What a page
+  and no cost; no limit on the number of calls (the 200 calls per adapter
+  per day and 40 per adapter session I had set were removed at the project
+  lead's request, 2026-11-06); an off switch per account (`PUT /v1/ai/settings`). What a page
   sends to `/v1/ai` is never logged.
 - The gates stay in `tools/utils/ai-output.js`; the service imports them.
   The toolkit may not import the catalog, so a host that runs its own model

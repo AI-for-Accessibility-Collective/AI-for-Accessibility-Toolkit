@@ -108,8 +108,8 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
     invariants: [
       'Read-only.',
       'main() is what the page says, never a guess: its first visible main or role main (display: contents counts when its content shows), else its one article (or role article) that is not inside another or in its navigation, banner, contentinfo, complementary or search landmarks. With several articles (a list of stories) or none it is the body: compare with document.body to know the page did not say. Ids and classes (#main, .content) are names, not the page saying, and never count.',
-      'findMain() asks only where main() is the body, and only with something to choose: the boxes that hold a fifth or more of the page\'s running text (blocks of words that are not links or controls) in two paragraphs or more, or in one block of 500 characters or more, outside the landmarks above, dialogs and fixed layers, the tightest box for the same text, at most six. Found from layout and the tree, never from names. One question per page, through ai.choose with the page\'s title, and every session in the page shares the answer, "cannot tell" included; it counts against the asking session\'s budget once.',
-      'findMain() is null when the model cannot tell, there is none (no model, the budget spent) or nothing to choose, and after end(). On null, do less, and never fall back to a part you guess: no skip link, no buttons put in the page; what the person asks for (Play) can take the whole page. A page that says meanwhile (main marked by another adapter) wins.',
+      'findMain() asks only where main() is the body, and only with something to choose: the boxes that hold a fifth or more of the page\'s running text (blocks of words that are not links or controls) in two paragraphs or more, or in one block of 500 characters or more, outside the landmarks above, dialogs and fixed layers, the tightest box for the same text, at most six. Found from layout and the tree, never from names. One question per page, through ai.choose with the page\'s title, and every session in the page shares the answer, "cannot tell" included.',
+      'findMain() is null when the model cannot tell, there is none (no model, the account\'s daily AI budget spent) or nothing to choose, and after end(). On null, do less, and never fall back to a part you guess: no skip link, no buttons put in the page; what the person asks for (Play) can take the whole page. A page that says meanwhile (main marked by another adapter) wins.',
       'ownControls() decides from roles and relationships, never from names or classes: a control that names what it controls (aria-controls) is the widget\'s only when that is the widget, one of its parts or what holds them; one that does not say is the widget\'s only when it is outside every part. A "Play trailer" button inside a slide is the slide\'s, not the carousel\'s.',
       'landmark() and landmarks() follow HTML-AAM as Chrome computes it, from elements, roles and the tree, never from names or classes: an explicit role (its first valid token) wins; a header or footer inside article, aside, main, nav or section, or inside role article, complementary, main or navigation, is no banner or contentinfo (role region does not scope it); a section, form or role region needs a name; hidden elements are none. A div the page calls "header" is no banner: deciding that is the adapter\'s guess, not the page\'s word.',
     ],
@@ -290,7 +290,7 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       's.ai.available                       // false where no model is wired (then every call is null)',
     ],
     config: {
-      ...cfg(AI_DEFAULTS, { budget: 'Calls per session (cached answers are free).', maxInputChars: 'Longer input gets null, not a cut: send one block at a time.' }),
+      ...cfg(AI_DEFAULTS, { maxInputChars: 'Longer input gets null, not a cut: send one block at a time.' }),
       fields: { default: null, description: 'The prompt fields (readingLevel, translateTo, language, tone, audience, context, keep, glossary, instructions, template, maxSentences, maxChars, minRatio, maxRatio): see "Prompts" below.' },
     },
     personal: { readingLevel: 'The profile\'s reading level (or plain language) wins over yours.' },
@@ -327,9 +327,9 @@ export const CATALOG = /* @__PURE__ */ Object.freeze([
       context: { default: '', description: 'What the model needs besides the options: the part you are asking about, the page\'s title.' },
     },
     invariants: [
-      'The answer is one of your options or null: the service lets through only the number of an option, and 0 (the model cannot tell), any other answer, no model, the budget spent or end() are null.',
+      'The answer is one of your options or null: the service lets through only the number of an option, and 0 (the model cannot tell), any other answer, no model, the account\'s daily AI budget spent or end() are null.',
       'The model is told that names in the markup are clues, not proof, and that "cannot tell" is always acceptable. Do the same: on null, do less.',
-      'Ask only where your rules run out, once per question: answers are cached for the page, and each call counts against the session\'s budget (ai.text\'s).',
+      'Ask only where your rules run out, once per question: answers are cached for the page.',
       'It changes nothing in the page: what you do with the answer is yours, through the session as always.',
     ],
   },

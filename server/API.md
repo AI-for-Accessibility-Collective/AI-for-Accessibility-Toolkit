@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-11-06T17:55:01.894Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-11-06T23:55:50.279Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -54,9 +54,9 @@ Version: `0.1.0`
 | DELETE | `/v1/apps/{appId}` | bearer | forget an app that is not connected (it returns when it connects again) |
 | PUT | `/v1/apps/{appId}/hidden` | bearer | hide the app in the developer console (Apps and Listings) |
 | DELETE | `/v1/apps/{appId}/hidden` | bearer | show it again |
-| POST | `/v1/ai/text` | bearer | the building blocks' AI for adapters {task, input, options?, adapter?} -> {text\|null, reason?, task, version, usage}: the toolkit's prompt for the task with the builder's fields, the service's model, the answer gated; tasks simplify, summarize, define, translate, rewrite, label, linkText, columnHeader, choose; a daily budget in US dollars per account (default $200, metered from the tokens each call was billed) and a daily call limit per adapter (429); the body is never logged |
+| POST | `/v1/ai/text` | bearer | the building blocks' AI for adapters {task, input, options?, adapter?} -> {text\|null, reason?, task, version, usage}: the toolkit's prompt for the task with the builder's fields, the service's model, the answer gated; tasks simplify, summarize, define, translate, rewrite, label, linkText, columnHeader, choose; a daily budget in US dollars per account (default $200, metered from the tokens each call was billed; 429 past it), and no limit on the number of calls; the body is never logged |
 | POST | `/v1/ai/vision` | bearer | the same for an image {task: describe\|chart, image: {mimeType, data}, input?, options?, adapter?} |
-| GET | `/v1/ai/usage` | bearer | today's AI spending {day, spentUsd, budgetUsd, calls, perAdapterLimit, byAdapter, enabled, available} |
+| GET | `/v1/ai/usage` | bearer | today's AI spending {day, spentUsd, budgetUsd, calls, byAdapter, enabled, available} |
 | PUT | `/v1/ai/settings` | bearer (default token or session) | switch the building blocks' AI off or on for the account {enabled} |
 | GET | `/admin/accounts` | admin | list accounts {accounts: [{uid, displayName, disabled, createdAt, lastLoginAt, passwordSetBy, passwordKept, appTokens, sessions, liveApps, hasData}]}; with ?passwords=1, every account's admin-issued password {passwords: [{uid, displayName, password\|null, reason?}]} (reason: changed-by-account, not-kept or unreadable); with ?format=csv, a download of every account with its password, status and last sign-in |
 | POST | `/admin/accounts` | admin | make an account {uid, displayName?, password?} -> 201 {account, password?} (a generated password is returned; GET …/password shows it again) |

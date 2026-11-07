@@ -16,17 +16,19 @@
 // the builder's fields. The host runs the model and gates the answer: in
 // the browser runtime, the toolkit service does both with its own key, so the
 // page never holds one. An answer is a string, or null when there is none:
-// no model, a refusal, a guess, an answer of the wrong length, the budget
-// spent, or the session ended while it was on its way. null means "leave the
+// no model, a refusal, a guess, an answer of the wrong length, the
+// account's daily AI budget spent, or the session ended while it was on its
+// way. null means "leave the
 // page as it is".
 //
-// Answers are cached for the page and shared between calls in flight, and
-// each session has a budget of calls.
+// Answers are cached for the page and shared between calls in flight. There
+// is no limit on the number of calls; the service keeps the account's daily
+// budget in dollars.
 
 import { resolveConfig } from './shared.js';
 import { TASKS, PROMPT_FIELDS } from './ai/prompts.js';
 
-export const AI_DEFAULTS = { budget: 40, maxInputChars: 6000 };
+export const AI_DEFAULTS = { maxInputChars: 6000 };
 // Personal fields: the person's profile wins over the builder's value.
 const PERSONAL = { readingLevel: 'readingLevel', translateTo: 'translateTo' };
 const OPTION_KEYS = ['readingLevel', 'translateTo', 'language', 'tone', 'audience', 'context', 'keep', 'glossary', 'instructions', 'template', 'maxSentences', 'maxChars', 'purpose', 'minRatio', 'maxRatio', 'question', 'choices'];
@@ -34,7 +36,7 @@ const MAX_CHOICES = 12;
 const CACHE_MAX = 300;
 
 export function aiBlock(s, env) {
-  let used = 0;
+  let used = 0; // calls this session made (cached answers are free); counted, not limited
   const transport = env.transport || {};
 
   function cached(key, make) {
@@ -72,10 +74,8 @@ export function aiBlock(s, env) {
     if (!s.alive()) return null;
     if (!TASKS[task] || TASKS[task].kind !== kind) throw new Error(`ai.${kind} has no task "${task}". Tasks: ${Object.entries(TASKS).filter(([, t]) => t.kind === kind).map(([k]) => k).join(', ')}.`);
     if (typeof transport.ai !== 'function') return null;
-    const { c, o } = options(opts);
+    const { o } = options(opts);
     const key = `${kind}\u0000${task}\u0000${JSON.stringify(o)}\u0000${input}\u0000${extra.cacheKey || ''}`;
-    const hit = env.shared.cache.has(key);
-    if (!hit && used >= c.budget) return null;
     const { p, fresh } = cached(key, () => Promise.resolve()
       .then(() => transport.ai({ kind, task, input, options: o, ...extra.request }))
       .then((r) => (r && typeof r.text === 'string' && r.text.trim() ? r.text.trim() : null), () => null));

@@ -1626,7 +1626,7 @@ ${[...rules.values()].join("\n")}
   });
 
   // toolkit/blocks/ai.js
-  var AI_DEFAULTS = { budget: 40, maxInputChars: 6e3 };
+  var AI_DEFAULTS = { maxInputChars: 6e3 };
   var PERSONAL = { readingLevel: "readingLevel", translateTo: "translateTo" };
   var OPTION_KEYS = ["readingLevel", "translateTo", "language", "tone", "audience", "context", "keep", "glossary", "instructions", "template", "maxSentences", "maxChars", "purpose", "minRatio", "maxRatio", "question", "choices"];
   var MAX_CHOICES = 12;
@@ -1665,10 +1665,8 @@ ${[...rules.values()].join("\n")}
       if (!s.alive()) return null;
       if (!TASKS[task] || TASKS[task].kind !== kind) throw new Error(`ai.${kind} has no task "${task}". Tasks: ${Object.entries(TASKS).filter(([, t]) => t.kind === kind).map(([k]) => k).join(", ")}.`);
       if (typeof transport.ai !== "function") return null;
-      const { c, o } = options(opts);
+      const { o } = options(opts);
       const key = `${kind}\0${task}\0${JSON.stringify(o)}\0${input}\0${extra.cacheKey || ""}`;
-      const hit = env.shared.cache.has(key);
-      if (!hit && used >= c.budget) return null;
       const { p, fresh } = cached(key, () => Promise.resolve().then(() => transport.ai({ kind, task, input, options: o, ...extra.request })).then((r) => r && typeof r.text === "string" && r.text.trim() ? r.text.trim() : null, () => null));
       if (fresh) used++;
       const out = await p;

@@ -693,7 +693,7 @@ await test('text.replaceBlock: new text in place, the original one click away, a
 
 // ── ai ──────────────────────────────────────────────────────────────────────
 
-await test("ai.text: the profile's reading level wins, answers are cached, the budget holds, and a late answer is null", async () => {
+await test("ai.text: the profile's reading level wins, answers are cached, calls are counted without a limit, and a late answer is null", async () => {
   const requests = [];
   let release;
   const ai = async (r) => {
@@ -714,8 +714,8 @@ await test("ai.text: the profile's reading level wins, answers are cached, the b
   release();
   assert.equal(await late, null);
   const s3 = tk.session();
-  for (let i = 0; i < 3; i++) await s3.ai.text('summarize', `text ${i}`, { budget: 2 });
-  assert.equal(s3.ai.used, 2);
+  for (let i = 0; i < 50; i++) assert.equal(await s3.ai.text('summarize', `text ${i}`), `plain: text ${i}`);
+  assert.equal(s3.ai.used, 50);
   assert.equal(await s3.ai.text('summarize', 'x'.repeat(7000)), null, 'too long is null, not a cut');
   await assert.rejects(() => s3.ai.text('poem', 'x'), /no task "poem"/);
   s.end(); s3.end();
