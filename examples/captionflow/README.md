@@ -47,8 +47,29 @@ from the phone itself.
 Useful options:
 
 - `--lang en|sw|auto`: what is spoken. `auto` handles English, Swahili and code-switching.
-- `--provider gemini|whisper|mock`: `mock` runs the whole pipeline offline, without a key.
+- `--provider gemini|whisper|faster-whisper|mock`: `mock` runs the whole pipeline offline, without a key. `faster-whisper` runs on this machine with no key and no upload (see below).
 - `--import-vtt captions.vtt`: if a video already has captions (for example from YouTube), convert them instead of transcribing.
+
+## Local transcription with faster-whisper
+
+`faster_whisper_worker.py` runs [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
+on this machine. The model downloads once on first use (a few hundred MB for
+`small`). Set it up once:
+
+```bash
+python3 -m venv ~/.local/share/captionflow/venv
+~/.local/share/captionflow/venv/bin/pip install faster-whisper "av>=16,<17"
+```
+
+`av` is pinned because faster-whisper 1.2.1 does not work with PyAV 17 or
+later. The transcriber finds the venv at that path, or at `FASTER_WHISPER_PYTHON`.
+
+- `FASTER_WHISPER_MODEL`: `tiny`, `base`, `small` (default), `medium`, `large-v3`. Larger is more accurate and slower; `medium` or larger is worth trying for Swahili.
+- `FASTER_WHISPER_DEVICE`: `cpu` (default) or `cuda`.
+- `FASTER_WHISPER_COMPUTE`: `int8` (default on CPU).
+
+On CPU, `small` took about one second per second of audio on the test
+machine. Swahili has not been tested yet.
 
 ## How the timing works
 

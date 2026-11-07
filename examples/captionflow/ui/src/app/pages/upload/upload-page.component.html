@@ -33,19 +33,11 @@
 
       <div>
         <label class="form-label fw-semibold" for="language">Language spoken in the video</label>
-        <select id="language" class="form-select" [disabled]="busy() || usesCaptionFile()" (change)="pickLanguage($event)">
+        <select id="language" class="form-select" [disabled]="busy()" (change)="pickLanguage($event)">
           @for (option of languages; track option.value) {
             <option [value]="option.value" [selected]="option.value === language()">{{ option.label }}</option>
           }
         </select>
-      </div>
-
-      <div>
-        <label class="form-label fw-semibold" for="captions">Captions you already have (optional)</label>
-        <input id="captions" class="form-control" type="file" accept=".vtt,.srt,text/vtt" aria-describedby="captions-help" [disabled]="busy()" (change)="pickCaptions($event)">
-        <div id="captions-help" class="form-text">
-          WebVTT or SubRip, with timings. If you add one, CaptionFlow uses it and skips transcription.
-        </div>
       </div>
 
       @if (error(); as message) {

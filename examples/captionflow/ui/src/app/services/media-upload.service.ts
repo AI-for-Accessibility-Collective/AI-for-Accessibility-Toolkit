@@ -19,11 +19,6 @@ export class MediaUpload {
     this.publish(video, this.captions.parseText(transcript, 'transcript.json'));
   }
 
-  async importCaptions(video: File, captionFile: File): Promise<void> {
-    const text = await captionFile.text();
-    this.publish(video, this.captions.parseText(text, captionFile.name));
-  }
-
   private publish(video: File, captions: readonly Caption[]): void {
     if (captions.length === 0) {
       throw new Error(NO_SPEECH_ERROR);

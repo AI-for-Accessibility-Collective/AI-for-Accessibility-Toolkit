@@ -5,8 +5,10 @@
 //   node examples/captionflow/transcribe.mjs <video-or-audio> [options]
 //
 // Options
-//   --provider gemini|whisper|mock   default: gemini if GEMINI_API_KEY is set,
-//                                    else whisper if WHISPER_API_KEY is set
+//   --provider gemini|whisper|faster-whisper|mock
+//                                    default: gemini if GEMINI_API_KEY is set,
+//                                    else whisper if WHISPER_API_KEY is set,
+//                                    else faster-whisper if it is installed
 //   --lang auto|en|sw                what is spoken (default auto: English,
 //                                    Swahili, or a mix)
 //   --out <dir>                      where to write files (default: the
@@ -23,6 +25,10 @@
 //   WHISPER_API_KEY, WHISPER_BASE_URL (default https://api.groq.com/openai/v1),
 //   WHISPER_MODEL (default whisper-large-v3). Any OpenAI-compatible
 //   /audio/transcriptions endpoint works (OpenAI: https://api.openai.com/v1, whisper-1).
+//   FASTER_WHISPER_PYTHON (default ~/.local/share/captionflow/venv/bin/python),
+//   FASTER_WHISPER_MODEL (default small), FASTER_WHISPER_DEVICE (cpu),
+//   FASTER_WHISPER_COMPUTE (int8). faster-whisper runs on this machine; see
+//   faster_whisper_worker.py.
 //
 // Needs ffmpeg on PATH. Node 20+.
 //
@@ -33,8 +39,10 @@
 // neither lost nor shown twice.
 
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdtemp, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { createInterface } from 'node:readline';
+import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mergeChunks, splitLongSegments, makeTranscript, toVTT, parseVTT } from '../../tools/utils/timed-transcript.js';
@@ -213,6 +221,99 @@ function whisperProvider() {
   };
 }
 
+const FASTER_WHISPER_WORKER = fileURLToPath(new URL('./faster_whisper_worker.py', import.meta.url));
+const DEFAULT_FASTER_WHISPER_PYTHON = path.join(homedir(), '.local/share/captionflow/venv/bin/python');
+
+function fasterWhisperPython() {
+  const candidate = process.env.FASTER_WHISPER_PYTHON || DEFAULT_FASTER_WHISPER_PYTHON;
+  return existsSync(candidate) ? candidate : null;
+}
+
+/** Keeps one Python process with the model loaded, and runs one request at a
+ *  time (the pipeline may send two chunks at once). */
+class FasterWhisperWorker {
+  constructor(python) {
+    this.python = python;
+    this.worker = null;
+    this.queue = Promise.resolve();
+  }
+
+  request(message) {
+    const result = this.queue.then(() => this.send(message));
+    this.queue = result.catch(() => {});
+    return result;
+  }
+
+  close() {
+    this.worker?.child.stdin.end();
+    this.worker = null;
+  }
+
+  async send(message) {
+    const worker = this.start();
+    await worker.ready;
+    return new Promise((resolve, reject) => {
+      worker.pending = { resolve, reject };
+      worker.child.stdin.write(`${JSON.stringify(message)}\n`);
+    });
+  }
+
+  start() {
+    if (this.worker) return this.worker;
+    const child = spawn(this.python, [FASTER_WHISPER_WORKER], { stdio: ['pipe', 'pipe', 'pipe'] });
+    const worker = { child, pending: null, stderrTail: '' };
+    let markReady;
+    let failReady;
+    worker.ready = new Promise((resolve, reject) => { markReady = resolve; failReady = reject; });
+    const fail = (error) => {
+      failReady(error);
+      worker.pending?.reject(error);
+      worker.pending = null;
+      if (this.worker === worker) this.worker = null;
+    };
+    createInterface({ input: child.stdout }).on('line', (line) => {
+      let reply;
+      try { reply = JSON.parse(line); } catch { return; }
+      if (reply.ready) return markReady();
+      const pending = worker.pending;
+      worker.pending = null;
+      if (!pending) return;
+      if (reply.error) pending.reject(new Error(reply.error));
+      else pending.resolve(reply);
+    });
+    child.stderr.on('data', (chunk) => { worker.stderrTail = (worker.stderrTail + chunk).slice(-1500); });
+    child.on('error', (e) => fail(new Error(`could not start faster-whisper (${this.python}): ${e.message}`)));
+    child.on('close', (code) => fail(new Error(`faster-whisper stopped (exit ${code}): ${worker.stderrTail.slice(-400)}`)));
+    this.worker = worker;
+    return worker;
+  }
+}
+
+function fasterWhisperProvider() {
+  const python = fasterWhisperPython();
+  if (!python) {
+    throw new Error(`faster-whisper is not installed at ${DEFAULT_FASTER_WHISPER_PYTHON}. Set FASTER_WHISPER_PYTHON to a Python that has it.`);
+  }
+  const model = process.env.FASTER_WHISPER_MODEL || 'small';
+  const worker = new FasterWhisperWorker(python);
+  return {
+    name: `faster-whisper:${model}`,
+    format: 'wav',
+    defaultChunk: 300,
+    async transcribe(audioPath, { lang }) {
+      const reply = await worker.request({ audio: path.resolve(audioPath), lang });
+      return reply.segments.map((s) => ({
+        start: s.start,
+        end: s.end,
+        text: s.text,
+        confidence: s.confidence ?? undefined,
+        lang: s.lang ?? undefined,
+      }));
+    },
+    close: () => worker.close(),
+  };
+}
+
 /** Offline stand-in so the pipeline (chunking, merging, VTT) can be run and
  *  tested without a key. Says which chunk and time each line came from. */
 function mockProvider() {
@@ -234,9 +335,11 @@ function pickProvider(name) {
   if (name === 'mock') return mockProvider();
   if (name === 'whisper') return whisperProvider();
   if (name === 'gemini') return geminiProvider();
+  if (name === 'faster-whisper') return fasterWhisperProvider();
   if (process.env.GEMINI_API_KEY) return geminiProvider();
   if (process.env.WHISPER_API_KEY) return whisperProvider();
-  throw new Error('No transcription key. Set GEMINI_API_KEY or WHISPER_API_KEY, or use --provider mock to test offline.');
+  if (fasterWhisperPython()) return fasterWhisperProvider();
+  throw new Error('No transcription provider. Set GEMINI_API_KEY or WHISPER_API_KEY, install faster-whisper, or use --provider mock to test offline.');
 }
 
 // ---------------------------------------------------------------------------
@@ -244,7 +347,7 @@ function pickProvider(name) {
 // ---------------------------------------------------------------------------
 
 export function hasTranscriptionKey() {
-  return Boolean(process.env.GEMINI_API_KEY || process.env.WHISPER_API_KEY);
+  return Boolean(process.env.GEMINI_API_KEY || process.env.WHISPER_API_KEY || fasterWhisperPython());
 }
 
 export async function transcribeMedia(input, { providerName, lang = 'auto', chunk, overlap = 2 } = {}) {
@@ -283,6 +386,7 @@ export async function transcribeMedia(input, { providerName, lang = 'auto', chun
   try {
     await Promise.all(Array.from({ length: Math.min(2, chunks.length) }, worker));
   } finally {
+    provider.close?.();
     await rm(tmp, { recursive: true, force: true });
   }
 
@@ -298,7 +402,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const input = args._[0];
   if (!input && !args['import-vtt']) {
-    console.log('Usage: node examples/captionflow/transcribe.mjs <video> [--provider gemini|whisper|mock] [--lang auto|en|sw] [--out dir]');
+    console.log('Usage: node examples/captionflow/transcribe.mjs <video> [--provider gemini|whisper|faster-whisper|mock] [--lang auto|en|sw] [--out dir]');
     console.log('       node examples/captionflow/transcribe.mjs --import-vtt captions.vtt [--out dir]');
     process.exit(1);
   }

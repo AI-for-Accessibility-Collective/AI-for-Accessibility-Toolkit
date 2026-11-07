@@ -6,9 +6,7 @@ import { UploadStage } from '../../models/upload-stage.model';
 import { MediaUpload } from '../../services/media-upload.service';
 
 const NOT_A_VIDEO = 'Choose a video file: MP4, MOV, M4V, WebM or MKV.';
-const NOT_A_CAPTION_FILE = 'Choose a caption file: WebVTT (.vtt) or SubRip (.srt).';
 const VIDEO_EXTENSION = /\.(mp4|mov|m4v|webm|mkv)$/i;
-const CAPTION_EXTENSION = /\.(vtt|srt)$/i;
 const DEFAULT_ERROR = 'Captions could not be created. Try again.';
 
 interface LanguageOption {
@@ -18,10 +16,6 @@ interface LanguageOption {
 
 function isVideoFile(file: File): boolean {
   return file.type.startsWith('video/') || VIDEO_EXTENSION.test(file.name);
-}
-
-function isCaptionFile(file: File): boolean {
-  return CAPTION_EXTENSION.test(file.name);
 }
 
 @Component({
@@ -38,30 +32,19 @@ export class UploadPageComponent {
     { value: 'sw', label: 'Swahili' },
   ];
   protected readonly videoFile = signal<File | null>(null);
-  protected readonly captionFile = signal<File | null>(null);
   protected readonly language = signal<TranscriptionLanguage>('auto');
   protected readonly stage = signal<UploadStage>('idle');
   protected readonly progress = signal(0);
   protected readonly error = signal<string | null>(null);
   protected readonly dragging = signal(false);
   protected readonly busy = computed(() => this.stage() !== 'idle');
-  protected readonly usesCaptionFile = computed(() => this.captionFile() !== null);
   protected readonly canSubmit = computed(() => this.videoFile() !== null && !this.busy());
   protected readonly progressPercent = computed(() => Math.round(this.progress() * 100));
   protected readonly fileSize = computed(() => formatSize(this.videoFile()));
-  protected readonly submitLabel = computed(() => {
-    if (this.busy()) {
-      return 'Writing captions';
-    }
-    return this.usesCaptionFile() ? 'Use these captions and play' : 'Create captions and play';
-  });
+  protected readonly submitLabel = computed(() => (this.busy() ? 'Writing captions' : 'Create captions and play'));
 
   protected pickVideo(event: Event): void {
     this.chooseVideo((event.target as HTMLInputElement).files?.item(0) ?? null);
-  }
-
-  protected pickCaptions(event: Event): void {
-    this.chooseCaptions((event.target as HTMLInputElement).files?.item(0) ?? null);
   }
 
   protected pickLanguage(event: Event): void {
@@ -91,17 +74,11 @@ export class UploadPageComponent {
     this.error.set(null);
     this.progress.set(0);
     try {
-      const captions = this.captionFile();
-      if (captions) {
-        this.stage.set('writing');
-        await this.upload.importCaptions(video, captions);
-      } else {
-        this.stage.set('uploading');
-        await this.upload.upload(video, this.language(), {
-          onUploadProgress: (fraction) => this.progress.set(fraction),
-          onWriting: () => this.stage.set('writing'),
-        });
-      }
+      this.stage.set('uploading');
+      await this.upload.upload(video, this.language(), {
+        onUploadProgress: (fraction) => this.progress.set(fraction),
+        onWriting: () => this.stage.set('writing'),
+      });
       await this.router.navigateByUrl('/player');
     } catch (cause) {
       this.error.set(cause instanceof Error && cause.message ? cause.message : DEFAULT_ERROR);
@@ -114,12 +91,6 @@ export class UploadPageComponent {
     const accepted = file !== null && isVideoFile(file);
     this.error.set(file && !accepted ? NOT_A_VIDEO : null);
     this.videoFile.set(accepted ? file : null);
-  }
-
-  private chooseCaptions(file: File | null): void {
-    const accepted = file !== null && isCaptionFile(file);
-    this.error.set(file && !accepted ? NOT_A_CAPTION_FILE : null);
-    this.captionFile.set(accepted ? file : null);
   }
 }
 
