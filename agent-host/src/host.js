@@ -141,9 +141,9 @@ export function createHost({ dataDir, secret, apiKey, sandboxUrl, runnerKind = '
     }
     if ((r = /^\/agent\/chats\/([^/]+)\/messages$/.exec(p)) && m === 'POST') {
       const b = await body(req);
-      log.info('chat.message', { uid, chatId: r[1], chars: String(b.text || '').length });
+      log.info('chat.message', { uid, chatId: r[1], chars: String(b.text || '').length, ...(Array.isArray(b.files) ? { files: b.files.length, fileChars: b.files.reduce((n, f) => n + String(f?.content || '').length, 0) } : {}) });
       return send(res, 202, await chats.send(uid, r[1], b.text, { answers: typeof b.answers === 'string' ? b.answers : undefined, pages: typeof b.pages === 'string' ? b.pages : undefined,
-        pageType: typeof b.pageType === 'string' ? b.pageType : undefined, areas: Array.isArray(b.areas) ? b.areas.map(String) : undefined }));
+        pageType: typeof b.pageType === 'string' ? b.pageType : undefined, areas: Array.isArray(b.areas) ? b.areas.map(String) : undefined, files: b.files }));
     }
     if ((r = /^\/agent\/chats\/([^/]+)\/stop$/.exec(p)) && m === 'POST') return send(res, 200, chats.stop(uid, r[1]));
     // A copy of the page an adapter was previewed on, saved by the person's browser (page source shared): its background check runs on it.

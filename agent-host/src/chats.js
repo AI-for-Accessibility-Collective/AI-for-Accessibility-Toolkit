@@ -17,8 +17,12 @@
 // host restarts (an update), the runs it had are gone with it: at start it
 // ends what they left running in the sandboxes and picks each marked chat up
 // again, once (resumeInterrupted).
+//
+// The person can upload code with a message, to go on from it (an adapter
+// they exported, or one from elsewhere): it is kept in
+// /work/uploads/<chat>/ and the agent is told where, to carry on from it.
 
-import { readFileSync, writeFileSync, readdirSync, renameSync, existsSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, renameSync, existsSync, unlinkSync, mkdirSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { translate } from './updates.js';
@@ -32,6 +36,33 @@ const LEVELS = ['none', 'url', 'source', 'screenshot'];
 export const SHARE_LEVELS = LEVELS;
 
 const httpError = (status, message, code) => Object.assign(new Error(message), { status, code });
+
+const UPLOAD_TYPES = ['js', 'mjs', 'cjs', 'ts', 'json', 'css', 'html', 'txt', 'md'];
+const MAX_UPLOADS = 20;
+const CONTINUE = 'Continue working on this code.';
+
+/** Uploaded files as they may be kept: [{name, content}], names made safe and unique. Throws 400 for anything else. */
+export function uploadsOf(files) {
+  if (files === undefined || files === null) return [];
+  if (!Array.isArray(files) || files.length > MAX_UPLOADS) throw httpError(400, `Upload at most ${MAX_UPLOADS} files at once.`);
+  const seen = new Set();
+  return files.map((f) => {
+    const raw = path.basename(String(f?.name || '').replace(/\\/g, '/'));
+    const ext = /\.([A-Za-z0-9]+)$/.exec(raw)?.[1]?.toLowerCase();
+    if (!ext || !UPLOAD_TYPES.includes(ext)) throw httpError(400, `Upload code: ${UPLOAD_TYPES.map(t => `.${t}`).join(', ')} files. “${raw.slice(0, 80) || 'That file'}” is not one.`);
+    if (typeof f.content !== 'string' || f.content.includes('\u0000')) throw httpError(400, `“${raw.slice(0, 80)}” is not a text file.`);
+    let name = raw.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[.-]+/, '').slice(-100) || `upload.${ext}`;
+    for (let n = 2; seen.has(name); n++) name = name.replace(/(?:-\d+)?(\.[A-Za-z0-9]+)$/, `-${n}$1`);
+    seen.add(name);
+    return { name, content: f.content };
+  });
+}
+
+/** What the agent is told about the files the person uploaded (paths in the sandbox). */
+function uploadNote(chatId, kept) {
+  const list = kept.map(f => `/work/uploads/${chatId}/${f.name} (${f.content.split('\n').length} lines)`).join(', ');
+  return `\n\nI uploaded code to continue from: ${list}. Read it first and keep working on it rather than starting over. For an adapter, copy it to /work/adapters/<id>.js (keep the id and name its header gives, if it has them) and change it there; code that is not a toolkit adapter yet, make into one that does what it does.`;
+}
 
 export function createChats({ accounts, runner, events, requests, log, afterRun, titler, onIdle }) {
   const runs = new Map();      // uid -> Map(chatId -> {stop, token, files})
@@ -185,15 +216,23 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
    * answer to a pages question (all: the adapter may run on every site;
    * type: on the kind of page `pageType` only), `areas` to an areas one.
    * With `shown`, the message is the host's (verification.js): the person
-   * sees that line instead.
+   * sees that line instead. `files` is code the person uploaded with it
+   * ([{name, content}]): kept in /work/uploads/<chat>/, and the agent told.
    */
-  async function send(uid, chatId, text, { answers, pages, pageType, areas, shown, resumed } = {}) {
-    const message = String(text || '').trim();
-    if (!message) throw httpError(400, 'Say something first.');
-    if (message.length > 20_000) throw httpError(400, 'That message is too long.');
+  async function send(uid, chatId, text, { answers, pages, pageType, areas, shown, resumed, files } = {}) {
+    const uploads = uploadsOf(files);
+    const said = String(text || '').trim() || (uploads.length ? CONTINUE : '');
+    if (!said) throw httpError(400, 'Say something first.');
+    if (said.length > 20_000) throw httpError(400, 'That message is too long.');
     if (runOf(uid, chatId)) throw httpError(409, 'The assistant is still working on this chat. Wait, or stop it.', 'busy');
     const chat = read(uid, chatId);
-    if (chat.title === 'New chat' && !shown) { chat.title = fallbackTitle(message); save(uid, chat); }
+    if (uploads.length) {
+      const dir = path.join(accounts.dirOf(uid), 'work', 'uploads', chatId);
+      mkdirSync(dir, { recursive: true });
+      for (const f of uploads) writeFileSync(path.join(dir, f.name), f.content);
+    }
+    const message = uploads.length ? said + uploadNote(chatId, uploads) : said;
+    if (chat.title === 'New chat' && !shown) { chat.title = fallbackTitle(said); save(uid, chat); }
     if (['all', 'site', 'type', 'type-all', 'other'].includes(pages)) {
       // A type of page on all websites runs everywhere, only on pages of that kind.
       chat.allSites = pages === 'all' || (pages === 'type-all' && PAGE_TYPE_IDS.includes(pageType));
@@ -203,7 +242,7 @@ export function createChats({ accounts, runner, events, requests, log, afterRun,
     if (Array.isArray(areas)) { chat.supportAreas = areas.filter(a => SUPPORT_AREAS.includes(a)); save(uid, chat); }
     const asked = answers && chat.entries.find(e => e.id === answers && e.kind === 'questions' && !e.answered);
     if (asked) addEntry(uid, chatId, { id: asked.id, answered: true });
-    addEntry(uid, chatId, shown ? { kind: 'notice', text: String(shown).slice(0, 300) } : { kind: 'you', text: message });
+    addEntry(uid, chatId, shown ? { kind: 'notice', text: String(shown).slice(0, 300) } : { kind: 'you', text: said, ...(uploads.length ? { files: uploads.map(f => f.name) } : {}) });
     const run = { chatId, stop: null, stopped: false, since: new Date().toISOString(), token: `run_${randomBytes(24).toString('base64url')}`, files: new Set() };
     mark(uid, chatId, { since: run.since, text: message, ...(resumed ? { resumed: true } : {}) });
     if (!runs.has(uid)) runs.set(uid, new Map());

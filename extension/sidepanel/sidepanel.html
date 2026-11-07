@@ -114,8 +114,12 @@
 
     <form id="composer" class="composer">
       <label for="message" class="visually-hidden">Message to the assistant</label>
-      <textarea id="message" rows="3" placeholder="Additional requests?"></textarea>
+      <textarea id="message" rows="3" placeholder="What gets in your way on this page?"></textarea>
+      <ul id="attachments" class="attachments" aria-label="Code to send with your message" hidden></ul>
       <div class="composer-actions">
+        <input id="upload-file" type="file" multiple accept=".js,.mjs,.cjs,.ts,.json,.css,.html,.txt,.md" hidden>
+        <button id="upload" class="secondary upload" type="button" aria-describedby="upload-about">Upload code</button>
+        <span id="upload-about" class="visually-hidden">Optional: code to continue working on, such as an adapter you exported. It goes with your next message.</span>
         <button id="stop" class="secondary" type="button" hidden>Stop</button>
         <button id="send" class="primary" type="submit">Send</button>
       </div>

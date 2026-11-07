@@ -677,6 +677,7 @@ function entryNode(entry, count = 1) {
     return li;
   }
   const li = el('li', `msg ${entry.kind}`, entry.text);
+  if (entry.files?.length) li.append(el('span', 'files', `Uploaded: ${entry.files.join(', ')}`));
   li.dataset.id = entry.id;
   if (entry.kind === 'agent') li.setAttribute('aria-label', `Assistant: ${entry.text}`);
   return li;
@@ -747,9 +748,11 @@ const itemSig = (item) => item.steps
 // Only the lines that changed are replaced.
 function renderTranscript() {
   const list = $('transcript');
+  // Until the person has said something, the box asks what gets in their way.
+  $('message').placeholder = chat?.entries.some(e => e.kind === 'you') ? 'Additional requests?' : 'What gets in your way on this page?';
   if (!chat?.entries.length) {
     renderQuestions();
-    list.replaceChildren(el('li', 'empty', 'Say what gets in your way on the page beside this sidebar, for example “the buttons are too small to tap” or “I can’t read the gray text”. The assistant asks a few questions, then builds an adapter and previews it here.'));
+    list.replaceChildren(el('li', 'empty', 'Say what gets in your way on the page beside this sidebar, for example “the buttons are too small to tap” or “I can’t read the gray text”. The assistant asks a few questions, then builds an adapter and previews it here. To keep working on an adapter you exported, add it with Upload code.'));
     return;
   }
   list.querySelector('.empty')?.remove();
@@ -1177,15 +1180,54 @@ async function exportAdapter(a) {
 
 // ── start ────────────────────────────────────────────────────────────────────
 
+// Code the person uploads to go on from (an adapter they exported, or one
+// from elsewhere): it goes with their next message, and the assistant
+// carries on from it. Optional.
+let attached = []; // [{name, content}]
+function renderAttached() {
+  const list = $('attachments');
+  list.replaceChildren(...attached.map((f) => {
+    const li = el('li', '', f.name);
+    const remove = el('button', 'secondary', 'Remove');
+    remove.type = 'button';
+    remove.setAttribute('aria-label', `Remove ${f.name}`);
+    remove.addEventListener('click', () => {
+      attached = attached.filter(x => x !== f);
+      renderAttached();
+      announce(`Removed ${f.name}.`);
+      (attached.length ? $('attachments').querySelector('button') : $('upload')).focus();
+    });
+    li.append(remove);
+    return li;
+  }));
+  list.hidden = !attached.length;
+}
+$('upload').addEventListener('click', () => $('upload-file').click());
+$('upload-file').addEventListener('change', async (e) => {
+  const added = [];
+  for (const file of e.target.files) {
+    const content = await file.text().catch(() => null);
+    if (content === null || content.includes('\u0000')) { say(`${file.name} is not a text file: upload code.`, true); continue; }
+    attached = [...attached.filter(f => f.name !== file.name), { name: file.name, content }];
+    added.push(file.name);
+  }
+  e.target.value = '';
+  renderAttached();
+  if (added.length) announce(`Attached ${added.join(', ')}. ${added.length === 1 ? 'It goes' : 'They go'} with your next message.`);
+  $('message').focus();
+});
+
 $('composer').addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = $('message').value.trim();
-  if (!text || !chat) return;
+  if ((!text && !attached.length) || !chat) return;
   $('send').disabled = true;
   try {
     await ensureWorkingTab({ replaceClosed: true });
-    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text } });
+    await api(`/chats/${chat.id}/messages`, { method: 'POST', body: { text, ...(attached.length ? { files: attached } : {}) } });
     $('message').value = '';
+    attached = [];
+    renderAttached();
     say('');
   } catch (err) {
     say(err.message, true);

@@ -71,7 +71,9 @@ sidebar (extension) ──HTTPS──▶ toolkit service /v1/agent/…   checks 
 - **Offered, then checked in the background**
   ([src/verification.js](src/verification.js)). An adapter is usable as
   soon as `adapter_ready` accepts it; the host keeps that version's code
-  (`offered/<chat>/<id>.js`, what Add to my account and Export get) and
+  (`offered/<chat>/<id>.js`, what Add to my account and Export get; code
+  the person uploads with a message is kept in `work/uploads/<chat>/`, and
+  the message tells the agent to go on from it) and
   runs the server check on it (below) without the person asking, then the
   full review: on its own for each version offered until one review has
   finished, and whenever the person asks. The first offer tells the person

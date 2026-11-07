@@ -143,6 +143,11 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .composer { display: grid; gap: 6px; }
 .composer textarea { width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: white; resize: vertical; }
 .composer-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.composer-actions .upload { margin-right: auto; }
+.attachments { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.attachments li { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 10px; border: 1px solid var(--line); border-radius: 999px; background: white; font-size: .8rem; overflow-wrap: anywhere; }
+.attachments button { min-height: 28px; padding: 0 8px; }
+.msg .files { display: block; margin-top: 4px; font-size: .8rem; opacity: .9; }
 .check { flex: 1; display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; }
 .check input { accent-color: var(--green); }
 #status { font-size: .78rem; color: var(--green); min-height: 1em; }

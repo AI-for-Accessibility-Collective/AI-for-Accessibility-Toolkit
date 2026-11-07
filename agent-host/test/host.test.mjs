@@ -13,6 +13,7 @@ import { createHost, listen } from '../src/host.js';
 import { withoutCode, translate } from '../src/updates.js';
 import { cleanTitle, fallbackTitle } from '../src/titles.js';
 import { questionsOf } from '../src/browser-tools.js';
+import { uploadsOf } from '../src/chats.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SECRET = 'test-secret-that-is-long-enough-1234';
@@ -509,6 +510,27 @@ await test('a full review asked for while the background check runs waits for it
   assert.equal(r.verdict, 'ok');
   assert.equal(checkRuns.length - before, 1, 'checked once, for both');
   sb.close();
+});
+
+await test('uploaded code is kept in the chat\'s uploads folder, the person sees its name, and the agent is told to go on from it', async () => {
+  const id = (await (await api('/agent/chats', { method: 'POST' })).json()).chat.id;
+  const code = 'export const Mine = { enable() {}, disable() {} };\n';
+  const sent = await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: '', files: [{ name: '../../my adapter.js', content: code }, { name: 'notes.md', content: '# Notes' }] } });
+  assert.equal(sent.status, 202);
+  const chat = await until(async () => { const c = (await (await api(`/agent/chats/${id}`)).json()).chat; return !c.busy && c.entries.some(e => e.kind === 'agent') && c; });
+  const you = chat.entries.find(e => e.kind === 'you');
+  assert.equal(you.text, 'Continue working on this code.');
+  assert.deepEqual(you.files, ['my-adapter.js', 'notes.md']);
+  assert.equal(readFileSync(path.join(host.accounts.dirOf('ada'), 'work', 'uploads', id, 'my-adapter.js'), 'utf8'), code);
+  const told = chat.entries.find(e => e.kind === 'agent').text;
+  assert.match(told, new RegExp(`/work/uploads/${id}/my-adapter\\.js \\(2 lines\\)`));
+  assert.match(told, /keep working on it rather than starting over/);
+  // Only text files of code, and not too many.
+  for (const files of [[{ name: 'photo.png', content: 'x' }], [{ name: 'a.js', content: 'a\u0000b' }], [{ name: 'a.js' }], Array(21).fill({ name: 'a.js', content: '' })]) {
+    assert.equal((await api(`/agent/chats/${id}/messages`, { method: 'POST', body: { text: 'hi', files } })).status, 400);
+  }
+  assert.deepEqual(uploadsOf([{ name: 'a.js', content: '1' }, { name: 'a.js', content: '2' }, { name: '.hidden.js', content: '3' }]).map(f => f.name), ['a.js', 'a-2.js', 'hidden.js']);
+  assert.deepEqual(uploadsOf(undefined), []);
 });
 
 await test('a run cut off by a restart goes on when the host starts again, once', async () => {
