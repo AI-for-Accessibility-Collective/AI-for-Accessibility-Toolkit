@@ -8,7 +8,7 @@
 // `invokeLibrarianRoute` (server/src/routes.js) — this file never imports
 // anything under toolkit/ directly.
 
-import { verifyToken, verifyAdminHeader, issueToken, listTokens, revokeToken, revokeTokensFor, TOKEN_KINDS } from './auth.js';
+import { verifyToken, verifyAdminHeader, verifyAdminSession, adminSessionCookie, ADMIN_SESSION_COOKIE, issueToken, listTokens, revokeToken, revokeTokensFor, TOKEN_KINDS } from './auth.js';
 import { assertSafeUid } from './store.js';
 import { LIBRARIAN_ROUTES_BY_NAME, invokeLibrarianRoute } from './routes.js';
 import { createAdaptersRouter } from './adapters.js';
@@ -68,6 +68,11 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   if (!store) throw new Error('createApp: store is required');
   if (!adminPassword) throw new Error('createApp: adminPassword is required');
   if (!toolkitHost) throw new Error('createApp: toolkitHost is required');
+
+  // Admin auth: the Authorization header (Basic from the browser's prompt,
+  // Bearer from scripts) or the console's session cookie (auth.js).
+  const isAdmin = (req) => verifyAdminHeader(adminPassword, req.headers['authorization'])
+    || verifyAdminSession(adminPassword, req.headers['cookie']);
 
   // Built once at app-creation time (still "at runtime", per the boot
   // process's live route table + a real librarian instance — just not
@@ -346,11 +351,16 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     // prompts, caches the credential for the session (remembered by default,
     // and offered to the password manager), and every same-origin fetch the
     // page makes then carries it automatically.
+    // Signing in there also sets the console's session cookie, which its
+    // fetches then carry: Chrome drops the cached Basic credential after any
+    // 401 from this origin (see adminSessionCookie).
     if (method === 'GET' && pathname === '/admin') {
-      if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
+      if (!isAdmin(req)) {
         return sendAdminChallenge(res);
       }
-      return serveAdminPage(res);
+      const basic = /^Basic\s/i.test(String(req.headers['authorization'] || ''));
+      const secure = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https' || Boolean(req.socket?.encrypted);
+      return serveAdminPage(res, basic ? { 'set-cookie': adminSessionCookie(adminPassword, { secure }) } : {});
     }
     // The console's script and styles: public code, no data.
     if (method === 'GET' && pathname.startsWith(ADMIN_ASSETS_PREFIX)) {
@@ -358,12 +368,14 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       return asset ? serveAdminAsset(res, asset) : sendJSON(res, 404, { error: 'not-found' });
     }
 
-    // The browser attaches the cached Basic credential to ANY request to this
-    // origin, including one a foreign page triggers with a form post. A POST
+    // The browser attaches the cached Basic credential (and the console's
+    // session cookie, though SameSite=Strict keeps it off cross-site posts)
+    // to requests to this origin, including one a foreign page triggers with a form post. A POST
     // carrying that ambient credential must therefore be same-origin JSON
     // (which a cross-site form cannot send without a CORS preflight these
     // routes never answer). Bearer callers (scripts, tests) are unaffected.
-    if (pathname.startsWith('/admin/') && method === 'POST' && /^Basic\s/i.test(String(req.headers['authorization'] || ''))) {
+    if (pathname.startsWith('/admin/') && method === 'POST'
+      && (/^Basic\s/i.test(String(req.headers['authorization'] || '')) || verifyAdminSession(adminPassword, req.headers['cookie']))) {
       const type = String(req.headers['content-type'] || '');
       const origin = req.headers.origin;
       let sameOrigin = true;
@@ -375,11 +387,18 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
       }
     }
 
+    // Sign out of the console: clear its session cookie. No auth needed to
+    // forget a cookie.
+    if (pathname === '/admin/signout' && method === 'POST') {
+      res.writeHead(204, { 'set-cookie': `${ADMIN_SESSION_COOKIE}=; Path=/admin; Max-Age=0; HttpOnly; SameSite=Strict`, 'cache-control': 'no-store' });
+      return res.end();
+    }
+
     // From the agent host, for the admin console: its adapter checks (the
     // Checks tab: what waits, what runs where, what finished) and its
     // sandboxes (the Sandboxes tab: each account's, what it uses, its chats running).
     if ((pathname === '/admin/checks' || pathname === '/admin/sandboxes') && method === 'GET') {
-      if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) return sendJSON(res, 401, { error: 'unauthorized' });
+      if (!isAdmin(req)) return sendJSON(res, 401, { error: 'unauthorized' });
       if (!agentHost.url || !agentHost.secret) return sendJSON(res, 503, { error: 'agent-unavailable', message: 'The assistant is not set up on this toolkit.' });
       try {
         const hours = Math.min(168, Number(new URL(req.url, 'http://x').searchParams.get('hours')) || 24);
@@ -393,7 +412,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
     }
 
     if (pathname === ADMIN_ACCOUNTS_PREFIX || pathname.startsWith(ADMIN_ACCOUNTS_PREFIX + '/')) {
-      if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
+      if (!isAdmin(req)) {
         return sendJSON(res, 401, { error: 'unauthorized' });
       }
       return adminAccountRoutes(req, res, method, pathname);
@@ -466,9 +485,9 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   }
 
   async function handleAdminTokens(req, res, method, pathname) {
-    // Basic (browser popup credential, auto-attached to the page's fetches)
-    // or Bearer (curl/scripts) — see verifyAdminHeader.
-    if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
+    // Basic or the session cookie (the console's fetches) or Bearer
+    // (curl/scripts) — see isAdmin.
+    if (!isAdmin(req)) {
       return sendJSON(res, 401, { error: 'unauthorized' });
     }
 
@@ -521,7 +540,7 @@ export function createApp({ store, adminPassword, toolkitHost, version = '0.0.0'
   // revoke the uid's tokens (so a still-valid credential cannot recreate it),
   // then wipe the data. Same admin auth.
   async function handleAdminUsers(req, res, method, pathname) {
-    if (!verifyAdminHeader(adminPassword, req.headers['authorization'])) {
+    if (!isAdmin(req)) {
       return sendJSON(res, 401, { error: 'unauthorized' });
     }
 

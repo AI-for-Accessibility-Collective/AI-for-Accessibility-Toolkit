@@ -173,3 +173,30 @@ export function verifyAdminHeader(adminPassword, header) {
   if (colon === -1) return false;
   return verifyAdminPassword(adminPassword, decoded.slice(colon + 1));
 }
+
+/** The admin console's session cookie, set when the browser signs in to
+ *  /admin with Basic. Chrome forgets a cached Basic credential after ANY 401
+ *  from the origin (even one to a request carrying its own Bearer token, such
+ *  as a developer console tab with a stale token), which signed the console
+ *  out within seconds; a cookie survives that. Signed with the admin
+ *  password (changing it ends every session), HttpOnly, SameSite=Strict,
+ *  scoped to /admin, and not renewed by using it. */
+export const ADMIN_SESSION_COOKIE = 'toolkit_admin';
+export const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+
+const adminSessionSig = (adminPassword, expiresAt) =>
+  crypto.createHmac('sha256', adminPassword).update(`admin-session:${expiresAt}`).digest('base64url');
+
+export function adminSessionCookie(adminPassword, { secure = false, now = Date.now() } = {}) {
+  const expiresAt = now + ADMIN_SESSION_TTL_MS;
+  return `${ADMIN_SESSION_COOKIE}=${expiresAt}.${adminSessionSig(adminPassword, expiresAt)}; Path=/admin; Max-Age=${ADMIN_SESSION_TTL_MS / 1000}; HttpOnly; SameSite=Strict${secure ? '; Secure' : ''}`;
+}
+
+export function verifyAdminSession(adminPassword, cookieHeader, now = Date.now()) {
+  if (!adminPassword || typeof cookieHeader !== 'string') return false;
+  const m = new RegExp(`(?:^|;\\s*)${ADMIN_SESSION_COOKIE}=(\\d+)\\.([A-Za-z0-9_-]+)`).exec(cookieHeader);
+  if (!m || Number(m[1]) <= now) return false;
+  const a = Buffer.from(adminSessionSig(adminPassword, m[1]));
+  const b = Buffer.from(m[2]);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}

@@ -16,8 +16,13 @@
   Manager `toolkit-admin-password`); there is no separate admin token. The
   `/admin` page sits behind the browser's native login popup (HTTP `Basic`,
   any username — 401 + `WWW-Authenticate` challenge; the browser remembers the
-  session by default). `/admin/*` API routes accept the same `Basic` credential
-  or `Authorization: Bearer <ADMIN_PASSWORD>` for scripts/curl.
+  session by default). Serving the page after that sign-in also sets the
+  console's session cookie `toolkit_admin` (signed with the admin password,
+  `HttpOnly`, `SameSite=Strict`, `Path=/admin`, 12 hours, not renewed by use):
+  Chrome forgets a cached `Basic` credential after any 401 from the origin,
+  such as a developer console tab whose token is no longer valid. `/admin/*`
+  API routes accept the same `Basic` credential, the cookie, or
+  `Authorization: Bearer <ADMIN_PASSWORD>` for scripts/curl.
 
 ## Endpoints
 
@@ -90,6 +95,7 @@
 | GET | `/admin/sandboxes` | the agent host's sandboxes: `{vm, limits, accounts: [{uid, chats, running, lastActive, sandbox: {state, status, cpuPercent, memory, memPercent, pids}}]}`; never what is in them; 503 without an agent host |
 | DELETE | `/admin/users/{uid}` | delete that uid's partition and revoke its tokens; returns `{ok, uid, revokedTokens}` (a count), or 404 when the uid had neither data nor live tokens |
 | GET | `/admin` | admin console (accounts, tokens, stored data) — browser login popup |
+| POST | `/admin/signout` | sign the admin console out: clears its session cookie → 204 (no auth) |
 
 ## `/v1/librarian/{method}`
 
@@ -161,7 +167,8 @@ as `http://localhost:8080`, or to `*` for any origin (a workshop setting;
 `/v1/*` responses and `OPTIONS` preflights; other preflights receive 403.
 `*` is safe only because every `/v1/*` route authenticates with a bearer
 token the page must hold itself, never a cookie. Admin APIs never enable
-CORS. A browser POST to `/admin/*` carrying the cached Basic credential must
+CORS. A browser POST to `/admin/*` carrying the cached Basic credential or the
+console's session cookie must
 be same-origin `application/json`, so a foreign page cannot forge one.
 
 ## Accounts and sign-in

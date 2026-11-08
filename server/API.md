@@ -1,6 +1,6 @@
 # Toolkit Service API
 
-_Generated 2026-11-06T23:55:50.279Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
+_Generated 2026-11-08T02:54:13.803Z by `server/scripts/generate-docs.mjs` from the live route table (`server/src/routes.js`) and the Librarian method list (`toolkit/core/librarian.js`, introspected through the `toolkit/index.js` barrel). Do not hand-edit — re-run `npm run docs`._
 
 Version: `0.1.0`
 
@@ -75,7 +75,8 @@ Version: `0.1.0`
 | GET | `/admin/checks` | admin | the agent host's adapter checks (?hours=24, at most 168) -> {capacity, queued, running, recent}: what waits, what runs where (VM or Cloud Run), what finished; 503 without an agent host |
 | GET | `/admin/sandboxes` | admin | the agent host's sandboxes -> {vm, limits, accounts: [{uid, chats, running, lastActive, sandbox: {state, status, cpuPercent, memory, memPercent, pids}}]}; never what is in them; 503 without an agent host |
 | DELETE | `/admin/users/{uid}` | admin | delete that uid's partition and revoke its tokens -> {ok, uid, revokedTokens} (a count); 404 when the uid had neither data nor live tokens |
-| GET | `/admin` | admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts, then attaches the cached credential to the page's own fetches; browser POSTs must be same-origin JSON) | admin console: accounts, tokens, stored data |
+| GET | `/admin` | admin (HTTP Basic. An unauthenticated GET answers 401 + WWW-Authenticate, so the browser prompts; signing in also sets an HttpOnly session cookie for /admin (12 hours), which the page's own fetches carry; browser POSTs must be same-origin JSON) | admin console: accounts, tokens, stored data |
+| POST | `/admin/signout` | none | sign the admin console out: clears its session cookie -> 204 |
 
 ## `/v1/librarian/{method}`
 

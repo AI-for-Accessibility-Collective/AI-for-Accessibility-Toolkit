@@ -2,8 +2,9 @@
 // HTTP Basic login popup (app.js answers an unauthenticated GET with 401 +
 // WWW-Authenticate, so the browser prompts, caches the credential for the
 // session — remembered by default — and offers to save it in the password
-// manager). Every data call the console makes is a plain same-origin fetch():
-// the browser attaches the cached Basic credential automatically, so the page
+// manager). Serving the page after that sign-in also sets the console's
+// session cookie (HttpOnly, /admin only; auth.js), and every data call the
+// console makes is a plain same-origin fetch() that carries it, so the page
 // holds no password of its own.
 //
 // The HTML is gated; its script is public code with no data in it, served
@@ -24,8 +25,8 @@ const SECURITY_HEADERS = {
   'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
 };
 
-export function serveAdminPage(res) {
-  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', ...SECURITY_HEADERS });
+export function serveAdminPage(res, headers = {}) {
+  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', ...SECURITY_HEADERS, ...headers });
   res.end(PAGE);
 }
 

@@ -364,6 +364,31 @@ async function main() {
       assert.equal(r2.status, 401);
     });
 
+    await test('signing in to /admin sets a session cookie the console fetches ride (Chrome drops Basic after any 401)', async () => {
+      const basic = Buffer.from(`admin:${ADMIN_PASSWORD}`).toString('base64');
+      const page = await fetch(base + '/admin', { headers: { authorization: `Basic ${basic}` } });
+      const set = page.headers.get('set-cookie') || '';
+      assert.match(set, /^toolkit_admin=\d+\.[A-Za-z0-9_-]+; Path=\/admin; Max-Age=43200; HttpOnly; SameSite=Strict/);
+      const cookie = set.split(';')[0];
+      // No Authorization header at all: the cookie alone is enough, for every admin route.
+      for (const path of ['/admin', '/admin/tokens', '/admin/users', '/admin/accounts']) {
+        assert.equal((await fetch(base + path, { headers: { cookie } })).status, 200, path);
+      }
+      // A cookie-carrying POST is held to the same-origin JSON rule.
+      const form = await fetch(base + '/admin/tokens', { method: 'POST', headers: { cookie, 'content-type': 'application/x-www-form-urlencoded' }, body: 'uid=x' });
+      assert.equal(form.status, 403);
+      // A forged, tampered or expired cookie is not.
+      const [exp, sig] = cookie.split('=')[1].split('.');
+      for (const bad of [`toolkit_admin=${Number(exp) + 1}.${sig}`, `toolkit_admin=${exp}.${sig.slice(0, -2)}xx`, 'toolkit_admin=1.abc']) {
+        assert.equal((await fetch(base + '/admin/tokens', { headers: { cookie: bad } })).status, 401, bad);
+      }
+      // Bearer callers get no cookie; signing out clears it.
+      assert.equal((await fetch(base + '/admin', { headers: { authorization: `Bearer ${ADMIN_PASSWORD}` } })).headers.get('set-cookie'), null);
+      const out = await fetch(base + '/admin/signout', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: '{}' });
+      assert.equal(out.status, 204);
+      assert.match(out.headers.get('set-cookie') || '', /^toolkit_admin=; Path=\/admin; Max-Age=0/);
+    });
+
     // ---- admin: list + delete user PROFILES (distinct from tokens) ----------
     await test('admin/users: list includes onboarded profiles, delete wipes one, unauth is 401', async () => {
       // Onboard two profiles (writing a profile field creates users/<uid>/).

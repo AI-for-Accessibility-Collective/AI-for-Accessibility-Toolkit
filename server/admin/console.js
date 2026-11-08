@@ -1,6 +1,7 @@
 // The admin console. The page is served only past the browser's HTTP Basic
-// prompt, and every fetch below is same-origin, so the browser attaches that
-// cached credential itself: this script holds no password. POSTs send JSON,
+// prompt, which also sets the console's session cookie (HttpOnly), and every
+// fetch below is same-origin, so the browser attaches it itself: this script
+// holds no password. POSTs send JSON,
 // which the service requires of browser admin requests (its CSRF guard).
 
 const $ = id => document.getElementById(id);
@@ -351,9 +352,11 @@ setInterval(() => {
 // ── sign out ───────────────────────────────────────────────────────────────
 
 $('signOutBtn').addEventListener('click', async () => {
-  // HTTP Basic has no logout API; overwrite the browser's cached credential
-  // for this realm with a bogus one, then reload — the reload sends the bogus
-  // credential, gets 401, and the login prompt reappears.
+  // Clear the session cookie. HTTP Basic has no logout API; overwrite the
+  // browser's cached credential for this realm with a bogus one, then
+  // reload — the reload sends the bogus credential, gets 401, and the login
+  // prompt reappears.
+  try { await api('/admin/signout', { method: 'POST', body: {} }); } catch { /* reload anyway */ }
   try { await fetch('/admin/tokens', { headers: { authorization: `Basic ${btoa(`signout:${Date.now()}`)}` } }); } catch { /* reload anyway */ }
   location.reload();
 });
